@@ -1,0 +1,10 @@
+Most of the code has been wrtten by
+
+  Thomas Zimmermann <s4364144@mail.inf.tu-dresden.de>
+
+The build system is forked from the tanger package , which attributes its
+authors to be
+
+  Torvald Riegel <torvald.riegel at inf.tu-dresden.de>
+  Pascal Felber <pascal.felber at unine.ch>
+

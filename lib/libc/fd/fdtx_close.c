@@ -1,0 +1,137 @@
+/* Copyright (C) 2009  Thomas Zimmermann
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, version 2
+ * of the License.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+#include <assert.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <pthread.h>
+#include <tanger-stm-internal-errcode.h>
+#include "tanger-stm-ext-actions.h"
+#include "types.h"
+#include "range.h"
+#include "mutex.h"
+#include "table.h"
+#include "rwlock.h"
+#include "counter.h"
+#include "pgtree.h"
+#include "pgtreess.h"
+#include "cmap.h"
+#include "cmapss.h"
+#include "rwlockmap.h"
+#include "rwstatemap.h"
+#include "ioop.h"
+#include "iooptab.h"
+#include "seekop.h"
+#include "seekoptab.h"
+#include "fcntlop.h"
+#include "fcntloptab.h"
+#include "ofdid.h"
+#include "ofd.h"
+#include "fd.h"
+#include "fdtab.h"
+#include "fdtx.h"
+
+/*
+ * Exec
+ */
+
+static int
+fdtx_close_exec_noundo(struct fdtx *fdtx, int fildes, int *cookie)
+{
+    return 0;
+}
+
+static int
+fdtx_close_exec_ts(struct fdtx *fdtx, int fildes, int *cookie)
+{
+    return 0;
+}
+
+int
+fdtx_close_exec(struct fdtx *fdtx, int fildes, int *cookie, int noundo)
+{
+    static int (* const close_exec[2])(struct fdtx*, int, int*) = {
+        fdtx_close_exec_noundo, fdtx_close_exec_ts};
+
+    assert(fdtx->ccmode < sizeof(close_exec)/sizeof(close_exec[0]));
+
+    if (noundo) {
+        /* TX irrevokable */
+        fdtx->ccmode = CC_MODE_NOUNDO;
+    } else {
+        /* TX revokable */
+        if ((fdtx->ccmode == CC_MODE_NOUNDO)
+            || !close_exec[fdtx->ccmode]) {
+            return ERR_NOUNDO;
+        }
+    }
+
+    return close_exec[fdtx->ccmode](fdtx, fildes, cookie);
+}
+
+/*
+ * Apply
+ */
+
+static int
+fdtx_close_apply_noundo(struct fdtx *fdtx, int fildes, int cookie)
+{
+    fd_close(fdtab+fildes);
+    return 0;
+}
+
+static int
+fdtx_close_apply_ts(struct fdtx *fdtx, int fildes, int cookie)
+{
+    /* Global data structure 'fdtab' is locked during apply */
+    fd_close(fdtab+fildes);
+    return 0;
+}
+
+int
+fdtx_close_apply(struct fdtx *fdtx, int fildes, int cookie)
+{
+    static int (* const close_apply[2])(struct fdtx*, int, int) = {
+        fdtx_close_apply_noundo, fdtx_close_apply_ts};
+
+    assert(fdtx->ccmode < sizeof(close_apply)/sizeof(close_apply[0]));
+
+    return close_apply[fdtx->ccmode](fdtx, fildes, cookie);
+}
+
+/*
+ * Undo
+ */
+
+static int
+fdtx_close_undo_ts(struct fdtx *fdtx, int fildes, int cookie)
+{
+    return 0;
+}
+
+int
+fdtx_close_undo(struct fdtx *fdtx, int fildes, int cookie)
+{
+    static int (* const close_undo[2])(struct fdtx*, int, int) = {
+        NULL, fdtx_close_undo_ts};
+
+    assert(fdtx->ccmode < sizeof(close_undo)/sizeof(close_undo[0]));
+    assert(close_undo[fdtx->ccmode]);
+
+    return close_undo[fdtx->ccmode](fdtx, fildes, cookie);
+}
+

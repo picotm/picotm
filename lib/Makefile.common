@@ -1,0 +1,21 @@
+
+CC ?= gcc
+AR ?= ar
+LLVMGCC ?= llvm-gcc
+LLVMLD ?= llvm-ld
+
+#CPPFLAGS += -D_GNU_SOURCE=1 -DMAXNUMFD=1024 -DRECSIZE=32 -DNDEBUG
+CPPFLAGS += -D_GNU_SOURCE=1 -DMAXNUMFD=1024 -DRECSIZE=32
+
+#CFLAGS += -Wall -O3 -pthread -std=c99 -pedantic
+CFLAGS += -Wall -O0 -pthread -g -std=c99 -pedantic -pg -fno-builtin
+
+#LLVMLDFLAGS += -link-as-library
+LLVMLDFLAGS += -disable-opt -disable-inlining -link-as-library
+
+%.bc: %.c
+	$(LLVMGCC) $(CPPFLAGS) $(CFLAGS) -emit-llvm -c -o $@ $<
+
+clean:
+	rm -f *.bc *.a *.o
+
