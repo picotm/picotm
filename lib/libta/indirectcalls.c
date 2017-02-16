@@ -1,15 +1,7 @@
-/* Copyright (C) 2008  Torvald Riegel
- * 
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation, version 2
- * of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include "tanger-stm-internal.h"
@@ -39,7 +31,7 @@ void* tanger_stm_indirect_resolve(void *nontxnal_function)
  * Called before transactional versions are registered for nontransactional
  * functions.
  * The parameter returns the exact number of functions that will be registered.
- */ 
+ */
 void tanger_stm_indirect_init(uint32_t number_of_call_targets)
 {
     /*fprintf(stderr, "Tanger STM support: indirect call targets = %u\n", number_of_call_targets);*/

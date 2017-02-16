@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 declare -r OPT="-N -btime -c60000 -n1 -v1"
 declare -r BASEPATH="benchmark.`date -u +%F-%R`"
 declare -r FILENAME="test-benchmark"
@@ -41,7 +45,7 @@ do
     for iterations in 1 10 100
     do
         for ccmode in noundo 2pl ts
-        do 
+        do
             declare fullpath="$BASEPATH/$FILENAME`echo "$OPT" | sed s/\ //g`-o${test}-I${iterations}-R${ccmode}.$EXT"
 
             touch ${fullpath}.$$

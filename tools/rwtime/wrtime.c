@@ -1,3 +1,6 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <fcntl.h>
 #include <stdio.h>
@@ -9,9 +12,9 @@
 typedef unsigned long long ticks;
 static __inline__ ticks getticks(void)
 {
-     unsigned a, d; 
-     __asm__ volatile("rdtsc" : "=a" (a), "=d" (d)); 
-     return ((ticks)a) | (((ticks)d) << 32); 
+     unsigned a, d;
+     __asm__ volatile("rdtsc" : "=a" (a), "=d" (d));
+     return ((ticks)a) | (((ticks)d) << 32);
 }
 
 /* Returns the number of milliseconds since the epoch */

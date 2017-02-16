@@ -1,3 +1,6 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 %option reentrant
 %option debug
@@ -185,7 +188,7 @@ txproto_recv_packet(int fd, struct packet *packet, int flags)
                                             "CMD_TXNNDO"};
 
     fprintf(stderr, "received packet cmd %s\n", cmdstr[packet->cmd]);
-    
+
     return 0;
 }
 

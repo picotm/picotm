@@ -1,15 +1,6 @@
-/* Copyright (C) 2009  Thomas Zimmermann
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation, version 2
- * of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <assert.h>
 #include <stdio.h>
@@ -117,7 +108,7 @@ com_error_tx_pop_commit_error_handler()
 int
 com_error_tx_push_commit_error_handler(stm_error_handler func)
 {
-    extern int com_error_exec_push_commit_error_handler(struct com_error*, 
+    extern int com_error_exec_push_commit_error_handler(struct com_error*,
                                                         stm_error_handler);
 
     struct com_error *data = com_error_tx_aquire_data();

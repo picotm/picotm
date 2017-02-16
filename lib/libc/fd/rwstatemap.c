@@ -1,3 +1,6 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <assert.h>
 #include <pthread.h>
@@ -96,7 +99,7 @@ rwstatemap_page_unlock_regions(struct rwstatemap_page *statepg,
     return 0;
 }
 
-/* 
+/*
  * rwstate map
  */
 
@@ -291,9 +294,9 @@ rwstatemap_wrlock(struct rwstatemap *rwstatemap, unsigned long long length,
 
 
             } else if ( !(statepg->state[pgoffset]&RWSTATE_WRITTEN) ) {
-            
+
                 unsigned long oldlock, newlock;
-                
+
                 do {
                     oldlock = lockpg->lock[pgoffset];
 

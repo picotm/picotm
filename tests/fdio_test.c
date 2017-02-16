@@ -1,15 +1,6 @@
-/* Copyright (C) 2008-2009  Thomas Zimmermann
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation, version 2
- * of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #define _XOPEN_SOURCE 500 /* Needed for pwrite */
 
@@ -381,7 +372,7 @@ void
 tanger_stm_fdio_test_8(unsigned int tid)
 {
     char filename[32];
-    
+
     if (snprintf(filename, sizeof(filename), "/tmp/fdio-%u.test", tid) < 0) {
         perror("snprintf");
         abort();
@@ -1192,9 +1183,9 @@ tanger_stm_fdio_test_20_post()
 /*typedef unsigned long long ticks;
 static __inline__ ticks getticks(void)
 {
-     unsigned a, d; 
-     __asm__ volatile("rdtsc" : "=a" (a), "=d" (d)); 
-     return ((ticks)a) | (((ticks)d) << 32); 
+     unsigned a, d;
+     __asm__ volatile("rdtsc" : "=a" (a), "=d" (d));
+     return ((ticks)a) | (((ticks)d) << 32);
 }*/
 
 void
@@ -2260,7 +2251,7 @@ tanger_stm_fdio_test_36(unsigned int tid)
             perror("pwrite");
             abort();
         }
-        
+
         offset += count;
     }
 
@@ -3317,7 +3308,7 @@ tanger_stm_fdio_test_52(unsigned int tid)
             perror("pwrite");
             abort();
         }
-        
+
         offset += count;
     }
 
@@ -3334,4 +3325,4 @@ tanger_stm_fdio_test_52_post()
         abort();
     }
 }
- 
+
