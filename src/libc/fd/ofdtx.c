@@ -767,7 +767,7 @@ ofdtx_ts_validate_region(struct ofdtx *ofdtx, size_t nbyte, off_t offset)
 {
     assert(ofdtx);
 
-    if (!ofdtx->flags&OFDTX_FL_LOCALBUF) {
+    if (!(ofdtx->flags&OFDTX_FL_LOCALBUF)) {
         return 0;
     }
 
@@ -810,14 +810,14 @@ ofdtx_2pl_lock_region(struct ofdtx *ofdtx, size_t nbyte,
 void
 ofdtx_dump(const struct ofdtx *ofdtx)
 {
-    fprintf(stderr, "%p: %d %p %d %p %d %p %d %ld\n", (void*)ofdtx,
-                                                             ofdtx->ofd,
-                                                      (void*)ofdtx->seektab,
-                                                             ofdtx->seektablen,
-                                                      (void*)ofdtx->wrtab,
-                                                             ofdtx->wrtablen,
-                                                      (void*)ofdtx->rdtab,
-                                                             ofdtx->rdtablen,
-                                                             ofdtx->offset);
+    fprintf(stderr, "%p: %d %p %zu %p %zu %p %zu %ld\n", (void*)ofdtx,
+                                                                ofdtx->ofd,
+                                                         (void*)ofdtx->seektab,
+                                                                ofdtx->seektablen,
+                                                         (void*)ofdtx->wrtab,
+                                                                ofdtx->wrtablen,
+                                                         (void*)ofdtx->rdtab,
+                                                                ofdtx->rdtablen,
+                                                                ofdtx->offset);
 }
 

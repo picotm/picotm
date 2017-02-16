@@ -251,7 +251,7 @@ ofdtx_pread_exec(struct ofdtx *ofdtx, int fildes, void *buf, size_t nbyte, off_t
 ssize_t
 ofdtx_pread_apply(struct ofdtx *ofdtx, int fildes, const struct com_fd_event *event, size_t n);
 
-ssize_t
+int
 ofdtx_pread_undo(struct ofdtx *ofdtx, int fildes, int cookie);
 
 /* pwrite

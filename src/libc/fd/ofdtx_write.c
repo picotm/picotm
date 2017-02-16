@@ -421,7 +421,7 @@ ofdtx_write_any_undo(void)
 int
 ofdtx_write_undo(struct ofdtx *ofdtx, int fildes, int cookie)
 {
-    static ssize_t (* const write_undo[][4])(void) = {
+    static int (* const write_undo[][4])(void) = {
         {NULL, NULL,                 NULL,                 NULL},
         {NULL, ofdtx_write_any_undo, ofdtx_write_any_undo, NULL},
         {NULL, ofdtx_write_any_undo, ofdtx_write_any_undo, NULL},

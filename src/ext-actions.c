@@ -134,7 +134,7 @@ ext_actions_aquire_log(void)
     tanger_stm_tx_t *tx = tanger_stm_get_tx();
     assert(tx);
 
-    if ( !((int)tanger_stm_get_data(tx)) ) {
+    if (!tanger_stm_get_data(tx)) {
         tanger_stm_set_ext_calls(tx, ext_actions_lock,
                                      ext_actions_unlock,
                                      ext_actions_validate,

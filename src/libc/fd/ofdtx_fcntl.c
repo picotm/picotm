@@ -120,7 +120,7 @@ ofdtx_fcntl_exec_ts(struct ofdtx *ofdtx, int fildes,
 
             res = TEMP_FAILURE_RETRY(fcntl(fildes, cmd, arg->arg1));
 
-            if (!res < 0) {
+            if (!(res < 0)) {
                 break;
             }
 

@@ -135,13 +135,13 @@ ofdtx_recv_exec(struct ofdtx *ofdtx, int sockfd,
  * Apply
  */
 
-static int
+static ssize_t
 ofdtx_recv_apply_noundo(void)
 {
     return 0;
 }
 
-static int
+static ssize_t
 ofdtx_recv_apply_socket_2pl_ext(void)
 {
     return 0;

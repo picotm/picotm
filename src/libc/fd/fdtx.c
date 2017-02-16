@@ -254,9 +254,9 @@ fdtx_signal_close(struct fdtx *fdtx)
 void
 fdtx_dump(const struct fdtx *fdtx)
 {
-    fprintf(stderr, "%p: %d %p %d\n", (void*)fdtx,
-                                             fdtx->fildes,
-                                      (void*)fdtx->fcntltab,
-                                             fdtx->fcntltablen);
+    fprintf(stderr, "%p: %d %p %zu\n", (void*)fdtx,
+                                              fdtx->fildes,
+                                       (void*)fdtx->fcntltab,
+                                              fdtx->fcntltablen);
 }
 

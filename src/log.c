@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <pthread.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <tanger-stm-ext-actions.h>
@@ -162,28 +163,30 @@ log_unlock(struct log *log)
 static int
 log_tpc_request_cb_walk(void *com, void *noundo)
 {
-    int res = component_tpc_request(com, (int)noundo);
+    int res = component_tpc_request(com, !!noundo);
     return res < 0 ? res : 1;
 }
 
+#if 0
 static int
 log_validate_cb_walk(void *com, void *noundo)
 {
-    int res = component_validate(com, (int)noundo);
+    int res = component_validate(com, !!noundo);
     return res < 0 ? res : 1;
 }
+#endif
 
 static int
 log_tpc_success_cb_walk(void *com, void *noundo)
 {
-    int res = component_tpc_success(com, (int)noundo);
+    int res = component_tpc_success(com, !!noundo);
     return res < 0 ? res : 1;
 }
 
 static int
 log_tpc_noundo_cb_walk(void *com, void *noundo)
 {
-    int res = component_tpc_noundo(com, (int)noundo);
+    int res = component_tpc_noundo(com, !!noundo);
     return res < 0 ? res : 1;
 }
 
@@ -200,7 +203,7 @@ log_validate(struct log *log, int eotx, int noundo)
                         sizeof(log->com)/sizeof(log->com[0]),
                         sizeof(log->com[0]),
                         log_tpc_request_cb_walk,
-                        (void*)noundo);
+                        (void*)(uintptr_t)noundo);
 
         if (res < 0) {
             return -1;
@@ -230,7 +233,7 @@ log_validate(struct log *log, int eotx, int noundo)
                         sizeof(log->com)/sizeof(log->com[0]),
                         sizeof(log->com[0]),
                         log_tpc_success_cb_walk,
-                        (void*)noundo);
+                        (void*)(uintptr_t)noundo);
     } else {
         /* Send noundo to peer.
          */
@@ -238,7 +241,7 @@ log_validate(struct log *log, int eotx, int noundo)
                         sizeof(log->com)/sizeof(log->com[0]),
                         sizeof(log->com[0]),
                         log_tpc_noundo_cb_walk,
-                        (void*)noundo);
+                        (void*)(uintptr_t)noundo);
     }
 
     return res;
@@ -306,7 +309,7 @@ log_apply_events(struct log *log, int noundo)
 static int
 log_tpc_failure_cb_walk(void *com, void *noundo)
 {
-    int res = component_tpc_failure(com, (int)noundo);
+    int res = component_tpc_failure(com, !!noundo);
     return res < 0 ? res : 1;
 }
 
@@ -322,7 +325,7 @@ log_undo_events(struct log *log, int noundo)
                         sizeof(log->com)/sizeof(log->com[0]),
                         sizeof(log->com[0]),
                         log_tpc_failure_cb_walk,
-                        (void*)noundo);
+                        (void*)(uintptr_t)noundo);
 
     if (res < 0) {
         return -1;
@@ -439,6 +442,7 @@ event_dump(const struct event *ev)
     return 0;
 }
 
+#if 0
 static size_t
 log_table_dump(const struct event *eventtab, size_t eventtablen)
 {
@@ -446,11 +450,11 @@ log_table_dump(const struct event *eventtab, size_t eventtablen)
     const struct event *end = eventtab+eventtablen;
 
     for (; beg < end; ++beg) {
-        fprintf(stderr, "%d: ", beg-eventtab);
+        fprintf(stderr, "%zu: ", beg-eventtab);
         event_dump(beg);
         fprintf(stderr, "\n");
     }
 
     return 0;
 }
-
+#endif

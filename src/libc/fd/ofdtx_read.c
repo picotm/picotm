@@ -263,7 +263,7 @@ ofdtx_read_apply_regular(struct ofdtx *ofdtx, int fildes, const struct com_fd_ev
     return err;
 }
 
-static int
+static ssize_t
 ofdtx_read_apply_socket(struct ofdtx *ofdtx, int sockfd, const struct com_fd_event *event, size_t n)
 {
     return 0;

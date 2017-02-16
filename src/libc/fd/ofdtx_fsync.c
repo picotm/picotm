@@ -63,7 +63,7 @@ ofdtx_fsync_exec_regular_2pl(int fildes, int *cookie)
 int
 ofdtx_fsync_exec(struct ofdtx *ofdtx, int fildes, int noundo, int *cookie)
 {
-    static ssize_t (* const fsync_exec[][4])(int, int*) = {
+    static int (* const fsync_exec[][4])(int, int*) = {
         {ofdtx_fsync_exec_noundo, NULL,                        NULL,                         NULL},
         {ofdtx_fsync_exec_noundo, ofdtx_fsync_exec_regular_ts, ofdtx_fsync_exec_regular_2pl, NULL},
         {ofdtx_fsync_exec_noundo, NULL,                        NULL,                         NULL},
