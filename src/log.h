@@ -5,6 +5,11 @@
 #ifndef LOG_H
 #define LOG_H
 
+#include <tanger-stm-ext-actions.h>
+#include "component.h"
+
+#define MAX_NCOMPONENTS (256)
+
 /**
  * \brief The log is the core part of the framework. It holds the events of a
  *        transaction.
@@ -18,7 +23,7 @@ struct log
     size_t        eventtablen; /** \brief Number of events */
     size_t        eventtabsiz; /** \brief Maximum number of events */
 
-    struct component com[LAST_COMPONENT]; /** \brief Registered components */
+    struct component com[MAX_NCOMPONENTS]; /** \brief Registered components */
 };
 
 /**
