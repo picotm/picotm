@@ -2,7 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-nobase_include_HEADERS = tanger-stm-ext-actions.h \
+nobase_include_HEADERS = systx/compiler.h \
+                         systx/systx.h \
                          tanger-stm-internal.h \
                          tanger-stm-internal-errcode.h \
                          tanger-stm-internal-extact.h
