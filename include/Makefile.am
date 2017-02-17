@@ -4,6 +4,7 @@
 
 nobase_include_HEADERS = systx/compiler.h \
                          systx/systx.h \
+                         systx/systx-module.h \
                          tanger-stm-internal.h \
                          tanger-stm-internal-errcode.h \
                          tanger-stm-internal-extact.h

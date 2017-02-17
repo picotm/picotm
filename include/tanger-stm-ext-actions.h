@@ -5,8 +5,7 @@
 #ifndef TANGERSTMEXTACTIONS_H
 #define TANGERSTMEXTACTIONS_H
 
-#include <stddef.h>
-#include <stdint.h>
+#include "systx/systx-module.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -123,13 +122,6 @@ enum component_name
     COMPONENT_USER2, /**< \brief User component */
     COMPONENT_USER3, /**< \brief User component */
     LAST_COMPONENT
-};
-
-struct event
-{
-    unsigned long  module;
-    unsigned short call;
-    uintptr_t      cookie;
 };
 
 /**

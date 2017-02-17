@@ -168,3 +168,85 @@ systx_release()
     }
     tx_release(tx);
 }
+
+/*
+ * Module interface
+ */
+
+SYSTX_EXPORT
+long
+systx_register_module(int (*lock)(void*),
+                      int (*unlock)(void*),
+                      int (*validate)(void*, int),
+                      int (*apply_event)(const struct event*, size_t, void*),
+                      int (*undo_event)(const struct event*, size_t, void*),
+                      int (*updatecc)(void*, int),
+                      int (*clearcc)(void*, int),
+                      int (*finish)(void*),
+                      int (*uninit)(void*),
+                      int (*tpc_request)(void*, int),
+                      int (*tpc_success)(void*, int),
+                      int (*tpc_failure)(void*, int),
+                      int (*tpc_noundo)(void*, int),
+                      void *data)
+{
+    struct log* log = tx_log(get_non_null_tx());
+
+    long res = log_alloc_module(log);
+    if (res < 0) {
+        return res;
+    }
+
+    unsigned long module = res;
+
+    struct component* com = log_get_component_by_name(log, module);
+    if (!com) {
+        return -EINVAL;
+    }
+
+    res = component_init(com,
+                         lock,
+                         unlock,
+                         validate,
+                         apply_event,
+                         undo_event,
+                         updatecc,
+                         clearcc,
+                         finish,
+                         uninit,
+                         tpc_request,
+                         tpc_success,
+                         tpc_failure,
+                         tpc_noundo, data);
+    if (res < 0) {
+        return res;
+    }
+
+    return module;
+}
+
+SYSTX_EXPORT
+int
+systx_inject_event(unsigned long module, unsigned long op, uintptr_t cookie)
+{
+    int res = log_inject_event(tx_log(get_non_null_tx()), module, op, cookie);
+    if (res < 0) {
+        return res;
+    }
+    return 0;
+}
+
+SYSTX_EXPORT
+void
+systx_resolve_conflict(struct systx_tx* conflicting_tx)
+{
+    restart_tx(get_non_null_tx(), SYSTX_MODE_RETRY);
+}
+
+SYSTX_EXPORT
+void
+systx_resolve_error(int errno_hint)
+{
+    /* Nothing we can do on errors; let's try to restart the TX. */
+    restart_tx(get_non_null_tx(), SYSTX_MODE_RETRY);
+}

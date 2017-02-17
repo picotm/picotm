@@ -5,3 +5,4 @@
 #pragma once
 
 #include <systx/systx.h>
+#include <systx/systx-module.h>
