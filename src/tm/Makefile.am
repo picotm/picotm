@@ -5,7 +5,9 @@
 lib_LTLIBRARIES = libsystx-tm.la
 
 libsystx_tm_la_SOURCES = vmem.c \
-                         vmem.h
+                         vmem.h \
+                         vmem_tx.c \
+                         vmem_tx.h
 
 CC = $(PTHREAD_CC)
 
