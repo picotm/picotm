@@ -4,7 +4,9 @@
 
 lib_LTLIBRARIES = libsystx-tm.la
 
-libsystx_tm_la_SOURCES = vmem.c \
+libsystx_tm_la_SOURCES = tm.c \
+                         tm.h \
+                         vmem.c \
                          vmem.h \
                          vmem_tx.c \
                          vmem_tx.h
