@@ -60,4 +60,71 @@ SYSTX_NOTHROW
 void
 systx_resolve_error(int errno_hint);
 
+/* Tables
+ */
+
+SYSTX_NOTHROW
+/**
+ * Allocate or resize table
+ */
+void*
+systx_tabresize(void* base, size_t nelems, size_t newnelems, size_t siz);
+
+SYSTX_NOTHROW
+/**
+ * Free table memory
+ */
+void
+systx_tabfree(void* base);
+
+SYSTX_NOTHROW
+/**
+ * Walk over table elements
+ */
+int
+systx_tabwalk_1(void* base, size_t nelems, size_t siz,
+                int (*walk)(void*));
+
+SYSTX_NOTHROW
+/**
+ * Walk over table elements
+ */
+int
+systx_tabwalk_2(void* base, size_t nelems, size_t siz,
+                int (*walk)(void*, void*), void* data);
+
+SYSTX_NOTHROW
+/**
+ * Walk over table elements
+ */
+int
+systx_tabwalk_3(void* base, size_t nelems, size_t siz,
+                int (*walk)(void*, void*, void*),
+                void* data1, void* data2);
+
+SYSTX_NOTHROW
+/**
+ * Walk over table in reversed order
+ */
+int
+systx_tabrwalk_1(void* base, size_t nelems, size_t siz,
+                 int (*walk)(void*));
+
+SYSTX_NOTHROW
+/**
+ * Walk over table in reversed order
+ */
+int
+systx_tabrwalk_2(void* base, size_t nelems, size_t siz,
+                 int (*walk)(void*, void*), void* data);
+
+SYSTX_NOTHROW
+/**
+ * Filters out duplicate elements
+ * \return New length
+ */
+size_t
+systx_tabuniq(void* base, size_t nelems, size_t siz,
+              int (*compare)(const void*, const void*));
+
 SYSTX_END_DECLS

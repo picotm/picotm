@@ -62,6 +62,12 @@ tabresize(void * restrict base, size_t nelems, size_t newnelems, size_t siz)
     return mem;
 }
 
+void
+tabfree(void* restrict base)
+{
+    free(base);
+}
+
 int
 tabwalk_1(void * restrict base, size_t nelems, size_t siz, int (*walk)(void*))
 {

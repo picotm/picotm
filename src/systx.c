@@ -6,6 +6,7 @@
 #include <errno.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include "table.h"
 #include "tx.h"
 #include "tx_shared.h"
 
@@ -249,4 +250,67 @@ systx_resolve_error(int errno_hint)
 {
     /* Nothing we can do on errors; let's try to restart the TX. */
     restart_tx(get_non_null_tx(), SYSTX_MODE_RETRY);
+}
+
+/* Tables
+ */
+
+SYSTX_EXPORT
+void*
+systx_tabresize(void* base, size_t nelems, size_t newnelems, size_t siz)
+{
+    return tabresize(base, nelems, newnelems, siz);
+}
+
+SYSTX_EXPORT
+void
+systx_tabfree(void* base)
+{
+    tabfree(base);
+}
+
+SYSTX_EXPORT
+int
+systx_tabwalk_1(void* base, size_t nelems, size_t siz, int (*walk)(void*))
+{
+    return tabwalk_1(base, nelems, siz, walk);
+}
+
+SYSTX_EXPORT
+int
+systx_tabwalk_2(void* base, size_t nelems, size_t siz,
+                int (*walk)(void*, void*), void* data)
+{
+    return tabwalk_2(base, nelems, siz, walk, data);
+}
+
+SYSTX_EXPORT
+int
+systx_tabwalk_3(void* base, size_t nelems, size_t siz,
+                int (*walk)(void*, void*, void*), void* data1, void* data2)
+{
+    return tabwalk_3(base, nelems, siz, walk, data1, data2);
+}
+
+SYSTX_EXPORT
+int
+systx_tabrwalk_1(void* base, size_t nelems, size_t siz, int (*walk)(void*))
+{
+    return tabrwalk_1(base, nelems, siz, walk);
+}
+
+SYSTX_EXPORT
+int
+systx_tabrwalk_2(void* base, size_t nelems, size_t siz,
+                 int (*walk)(void*, void*), void* data)
+{
+    return tabrwalk_2(base, nelems, siz, walk, data);
+}
+
+SYSTX_EXPORT
+size_t
+systx_tabuniq(void* base, size_t nelems, size_t siz,
+              int (*compare)(const void*, const void*))
+{
+    return tabuniq(base, nelems, siz, compare);
 }

@@ -11,6 +11,12 @@
 void *
 tabresize(void * restrict base, size_t nelems, size_t newnelems, size_t siz);
 
+/**
+ * Free table memory.
+ */
+void
+tabfree(void* restrict base);
+
 /* Walk over table elements
  */
 
