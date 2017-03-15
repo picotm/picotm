@@ -5,6 +5,8 @@
 #ifndef TANGERSTMEXTACTIONS_H
 #define TANGERSTMEXTACTIONS_H
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -124,9 +126,9 @@ enum component_name
 
 struct event
 {
-    enum component_name component;
-    unsigned short      call;
-    unsigned short      cookie;
+    unsigned long  module;
+    unsigned short call;
+    uintptr_t      cookie;
 };
 
 /**

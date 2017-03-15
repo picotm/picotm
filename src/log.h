@@ -43,8 +43,8 @@ log_get_component_by_name(struct log *log, enum component_name component);
  * \brief Inject an event into log
  */
 int
-log_inject_event(struct log *log, enum component_name component, unsigned short call,
-                                                                 unsigned short cookie);
+log_inject_event(struct log *log, unsigned long component, unsigned long call,
+                 uintptr_t cookie);
 
 /**
  * \brief Clear log

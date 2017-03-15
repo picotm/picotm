@@ -68,8 +68,8 @@ log_get_component_by_name(struct log *log, enum component_name component)
 }
 
 int
-log_inject_event(struct log *log, enum component_name component, unsigned short call,
-                                                                 unsigned short cookie)
+log_inject_event(struct log *log, unsigned long module, unsigned long call,
+                 uintptr_t cookie)
 {
     assert(log);
 
@@ -89,7 +89,7 @@ log_inject_event(struct log *log, enum component_name component, unsigned short 
     struct event *event = log->eventtab+log->eventtablen;
 
     event->cookie = cookie;
-    event->component = component;
+    event->module = module;
     event->call = call;
 
     return log->eventtablen++;
@@ -266,17 +266,17 @@ log_apply_events(struct log *log, int noundo)
         const struct event *event2 = event+1;
 
         while ((event2 < log->eventtab+log->eventtablen)
-                && (event2->component == event->component)) {
+                && (event2->module == event->module)) {
             ++event2;
         }
 
         /* Apply vector of events from component */
 
-        if (component_apply_events(log->com+event->component, event, event2-event) < 0) {
+        if (component_apply_events(log->com+event->module, event, event2-event) < 0) {
 
             const enum stm_error_action ea =
                 log->errhdlrtablen
-                    ? log->errhdlrtab[log->errhdlrtablen-1](event->component,
+                    ? log->errhdlrtab[log->errhdlrtablen-1](event->module,
                                                             event->call,
                                                             event->cookie)
                     : STM_ERR_EXIT;
@@ -339,7 +339,7 @@ log_undo_events(struct log *log, int noundo)
 
     while ((event > log->eventtab) && (res >= 0)) {
         --event;
-        res = component_undo_events(log->com+event->component, event, 1);
+        res = component_undo_events(log->com+event->module, event, 1);
     }
 
     /* FIXME: Cleanup should be done in finish */
@@ -436,8 +436,8 @@ event_dump(const struct event *ev)
 
     assert(ev);
 
-    fprintf(stderr, "%s %d %d", sysname[ev->component], (int)ev->call,
-                                                        (int)ev->cookie);
+    fprintf(stderr, "%s %d %d", sysname[ev->module], (int)ev->call,
+                                                     (int)ev->cookie);
 
     return 0;
 }
