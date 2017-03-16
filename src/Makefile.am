@@ -6,7 +6,9 @@ bin_PROGRAMS = tlctest
 
 tlctest_SOURCES = main.c \
                   test.c \
-                  test.h
+                  test.h \
+                  tm_test.c \
+                  tm_test.h
 
 CC = $(PTHREAD_CC)
 

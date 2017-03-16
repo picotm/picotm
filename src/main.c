@@ -14,6 +14,7 @@
 #include "malloc_test.h"
 #include "socket_test.h"
 #include "test.h"
+#include "tm_test.h"
 
 /* Note:
  *
@@ -108,6 +109,9 @@ static const struct test_func test[] = {
     {"error_test_3", tanger_stm_error_test_3, NULL, NULL},
     /* Test 68 */
     {"malloc_test_9", tanger_stm_malloc_test_9, NULL, NULL}
+#else
+    /* Test 0 */
+    {"tm_test_1", tm_test_1, tm_test_1_pre, tm_test_1_post}
 #endif
 };
 
