@@ -5,6 +5,7 @@
 #ifndef TANGERSTMEXTACTIONS_H
 #define TANGERSTMEXTACTIONS_H
 
+#include <stddef.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
