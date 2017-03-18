@@ -23,6 +23,7 @@ struct log
     size_t        eventtablen; /** \brief Number of events */
     size_t        eventtabsiz; /** \brief Maximum number of events */
 
+    unsigned long    nmodules; /**< \brief Number allocated modules */
     struct component com[MAX_NCOMPONENTS]; /** \brief Registered components */
 };
 
@@ -37,6 +38,12 @@ log_init(struct log *log);
  */
 int
 log_uninit(struct log *log);
+
+/**
+ * \brief Allocate a new module
+ */
+long
+log_alloc_module(struct log* log);
 
 /**
  * \brief Retrieve component structure by 'name enumerator'

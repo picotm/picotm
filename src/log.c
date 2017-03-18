@@ -27,6 +27,11 @@ log_init(struct log *log)
     log->eventtablen = 0;
     log->eventtabsiz = 0;
 
+    /* TODO: The pre-defined components are already
+     * allocated. This should be fixed with a future
+     * patch set. */
+    log->nmodules = LAST_COMPONENT;
+
     res = 0;
 
     for (com = log->com;
@@ -55,6 +60,15 @@ log_uninit(struct log *log)
     free(log->eventtab);
 
     return 0;
+}
+
+long
+log_alloc_module(struct log* log)
+{
+    if (log->nmodules >= sizeof(log->com)/sizeof(log->com[0])) {
+        return -ENOMEM;
+    }
+    return log->nmodules++;
 }
 
 struct component *
