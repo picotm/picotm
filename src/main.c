@@ -57,18 +57,6 @@ enum loop_mode {
     LOOP_OUTER
 };
 
-struct test_func_args
-{
-    void             (*call)(unsigned int);
-    void             (*pre)(void);
-    void             (*post)(void);
-    pthread_barrier_t* sync_begin;
-    unsigned int       tid; /* Logical thread ID*/
-    enum boundary_type btype; /* Boundary type */
-    unsigned long      bound; /* Time (ms) or Cycles to run */
-    unsigned long long ntx; /* Number of succesful transactions, return value */
-};
-
 static const struct test_func test[] = {
 #if 0
     /* Test 0 */
@@ -394,13 +382,35 @@ getmsofday(void *tzp)
     return t.tv_sec*1000 + t.tv_usec/1000;
 }
 
+/* Thread state
+ */
+
+struct thread_state {
+
+    /* OS threads */
+
+    pthread_t thread;
+    pthread_barrier_t* sync_begin;
+
+    /* Test */
+
+    const struct test_func* test;
+
+    /* Test arguments */
+
+    unsigned int       tid; /* Logical thread ID*/
+    enum boundary_type btype; /* Boundary type */
+    unsigned long      bound; /* Time (ms) or Cycles to run */
+    unsigned long long ntx; /* Number of succesful transactions, return value */
+};
+
 /* Inner loops
  */
 
 static void *
 inner_loop_func_cycles(void *arg)
 {
-    struct test_func_args *args = arg;
+    struct thread_state* args = arg;
 
     assert(arg);
 
@@ -416,7 +426,7 @@ inner_loop_func_cycles(void *arg)
     int i;
 
     for (i = 0; i < args->bound; ++i) {
-        args->call(args->tid);
+        args->test->call(args->tid);
         ++args->ntx;
     }
 
@@ -426,7 +436,7 @@ inner_loop_func_cycles(void *arg)
 static void *
 inner_loop_func_time(void *arg)
 {
-    struct test_func_args *args = arg;
+    struct thread_state* args = arg;
 
     assert(arg);
 
@@ -444,7 +454,7 @@ inner_loop_func_time(void *arg)
     unsigned long long ms = 0;
 
     while (ms < args->bound) {
-        args->call(args->tid);
+        args->test->call(args->tid);
         ++args->ntx;
 
         ms = getmsofday(NULL)-begms;
@@ -455,7 +465,7 @@ inner_loop_func_time(void *arg)
 
 static long long
 run_inner_loop(const struct test_func *test, enum boundary_type btype,
-               unsigned long long bound)
+               unsigned long long bound, struct thread_state* state)
 {
     /* Helgrind 3.3 does not support barriers, so you might
      * get a warning here. */
@@ -467,20 +477,6 @@ run_inner_loop(const struct test_func *test, enum boundary_type btype,
         return -err;
     }
 
-    pthread_t *thread = malloc(g_nthreads*sizeof(thread[0]));
-
-    if (!thread) {
-        perror("malloc");
-        return -1;
-    }
-
-    struct test_func_args *fargs = malloc(g_nthreads*sizeof(fargs[0]));
-
-    if (!fargs) {
-        perror("malloc");
-        return -1;
-    }
-
     if (g_verbose > 1) {
         printf("Running test %s...\n", test->name);
     }
@@ -489,25 +485,22 @@ run_inner_loop(const struct test_func *test, enum boundary_type btype,
         test->pre();
     }
 
-    pthread_t *th;
-
-    for (th = thread; th < thread+g_nthreads; ++th) {
+    for (struct thread_state* s = state; s < state + g_nthreads; ++s) {
 
         static void* (* const inner_loop_func[])(void*) = {
             inner_loop_func_cycles,
-            inner_loop_func_time};
+            inner_loop_func_time
+        };
 
-        const unsigned int i = th-thread;
-        int err;
+        s->sync_begin = &sync_begin;
+        s->test = test;
+        s->tid = s - state;
+        s->btype = btype;
+        s->bound = bound;
+        s->ntx = 0;
 
-        fargs[i].call = test->call;
-        fargs[i].sync_begin = &sync_begin;
-        fargs[i].tid = i;
-        fargs[i].btype = btype;
-        fargs[i].bound = bound;
-        fargs[i].ntx = 0;
-
-        if ( !!(err = pthread_create(th, NULL, inner_loop_func[btype], fargs+i)) ) {
+        int err = pthread_create(&s->thread, NULL, inner_loop_func[btype], s);
+        if (err) {
             errno = err;
             perror("pthread_create");
             exit(EXIT_FAILURE);
@@ -516,25 +509,19 @@ run_inner_loop(const struct test_func *test, enum boundary_type btype,
 
     long long ntx = 0;
 
-    for (th = thread; th < thread+g_nthreads; ++th) {
-        int err;
-        if ( (err = pthread_join(*th, NULL)) != 0 ) {
+    for (struct thread_state* s = state; s < state + g_nthreads; ++s) {
+        int err = pthread_join(s->thread, NULL);
+        if (err) {
             errno = err;
             perror("pthread_join");
             exit(EXIT_FAILURE);
         }
-
-        const unsigned int i = th-thread;
-
-        ntx += fargs[i].ntx;
+        ntx += s->ntx;
     }
 
     if (test->post) {
         test->post();
     }
-
-    free(fargs);
-    free(thread);
 
     err = pthread_barrier_destroy(&sync_begin);
     if (err) {
@@ -551,7 +538,7 @@ run_inner_loop(const struct test_func *test, enum boundary_type btype,
 static void *
 outer_loop_func(void *arg)
 {
-    struct test_func_args *args = arg;
+    struct thread_state* args = arg;
 
     assert(arg);
 
@@ -562,7 +549,7 @@ outer_loop_func(void *arg)
         return NULL;
     }
 
-    args->call(args->tid);
+    args->test->call(args->tid);
 
     args->ntx = 1;
 
@@ -570,30 +557,16 @@ outer_loop_func(void *arg)
 }
 
 static long
-run_outer_loop_cycles(const struct test_func *test, int cycles)
+run_outer_loop_cycles(const struct test_func *test, int cycles,
+                      struct thread_state* state)
 {
-    pthread_t *thread = malloc(g_nthreads*sizeof(thread[0]));
-
-    if (!thread) {
-        perror("malloc");
-        return -1;
-    }
-
-    struct test_func_args *fargs = malloc(g_nthreads*sizeof(fargs[0]));
-
-    if (!fargs) {
-        perror("malloc");
-        return -1;
-    }
-
     if (test->pre) {
         test->pre();
     }
 
     long long ntx = 0;
-    int i;
 
-    for (i = 1; i <= cycles; ++i) {
+    for (int i = 1; i <= cycles; ++i) {
 
         if (g_verbose > 1) {
             printf("Running test %s [%d of %d]...\n", test->name, i, cycles);
@@ -609,38 +582,31 @@ run_outer_loop_cycles(const struct test_func *test, int cycles)
             return -err;
         }
 
-        pthread_t *th;
+        for (struct thread_state* s = state; s < state + g_nthreads; ++s) {
 
-        for (th = thread; th < thread+g_nthreads; ++th) {
+            s->sync_begin = &sync_begin;
+            s->test = test;
+            s->tid = s - state;
+            s->btype = BOUND_CYCLES;
+            s->bound = cycles;
+            s->ntx = 0;
 
-            int err;
-            unsigned int i = th-thread;
-
-            fargs[i].call = test->call;
-            fargs[i].sync_begin = &sync_begin;
-            fargs[i].tid = i;
-            fargs[i].btype = BOUND_CYCLES;
-            fargs[i].bound = cycles;
-            fargs[i].ntx = 0;
-
-            if ( (err = pthread_create(th, NULL, outer_loop_func, fargs+i)) ) {
+            int err = pthread_create(&s->thread, NULL, outer_loop_func, s);
+            if (err) {
                 errno = err;
                 perror("pthread_create");
                 exit(EXIT_FAILURE);
             }
         }
 
-        for (th = thread; th < thread+g_nthreads; ++th) {
-            int err;
-            if ( (err = pthread_join(*th, NULL)) ) {
+        for (struct thread_state* s = state; s < state + g_nthreads; ++s) {
+            int err = pthread_join(s->thread, NULL);
+            if (err) {
                 errno = err;
                 perror("pthread_join");
                 exit(EXIT_FAILURE);
             }
-
-            unsigned int i = th-thread;
-
-            ntx += fargs[i].ntx;
+            ntx += s->ntx;
         }
 
         err = pthread_barrier_destroy(&sync_begin);
@@ -654,29 +620,13 @@ run_outer_loop_cycles(const struct test_func *test, int cycles)
         test->post();
     }
 
-    free(fargs);
-    free(thread);
-
     return ntx;
 }
 
 static long
-run_outer_loop_time(const struct test_func *test, int ival_ms)
+run_outer_loop_time(const struct test_func *test, int ival_ms,
+                    struct thread_state* state)
 {
-    pthread_t *thread = malloc(g_nthreads*sizeof(thread[0]));
-
-    if (!thread) {
-        perror("malloc");
-        return -1;
-    }
-
-    struct test_func_args *fargs = malloc(g_nthreads*sizeof(fargs[0]));
-
-    if (!fargs) {
-        perror("malloc");
-        return -1;
-    }
-
     if (g_verbose > 1) {
         printf("Running test %s [%d ms]...\n", test->name, ival_ms);
     }
@@ -702,37 +652,31 @@ run_outer_loop_time(const struct test_func *test, int ival_ms)
             return -err;
         }
 
-        pthread_t *th;
+        for (struct thread_state* s = state; s < state + g_nthreads; ++s) {
 
-        for (th = thread; th < thread+g_nthreads; ++th) {
+            s->sync_begin = &sync_begin;
+            s->test = test;
+            s->tid = s - state;
+            s->btype = BOUND_TIME;
+            s->bound = ival_ms;
+            s->ntx = 0;
 
-            int err;
-            const unsigned int i = th-thread;
-
-            fargs[i].call = test->call;
-            fargs[i].sync_begin = &sync_begin;
-            fargs[i].tid = i;
-            fargs[i].btype = BOUND_TIME;
-            fargs[i].bound = ival_ms;
-            fargs[i].ntx = 0;
-
-            if ( (err = pthread_create(th, NULL, outer_loop_func, fargs+i)) ) {
+            int err = pthread_create(&s->thread, NULL, outer_loop_func, s);
+            if (err) {
                 errno = err;
                 perror("pthread_create");
                 exit(EXIT_FAILURE);
             }
         }
 
-        for (th = thread; th < thread+g_nthreads; ++th) {
-            int err;
-            if ( (err = pthread_join(*th, NULL)) ) {
+        for (struct thread_state* s = state; s < state + g_nthreads; ++s) {
+            int err = pthread_join(s->thread, NULL);
+            if (err) {
                 errno = err;
                 perror("pthread_join");
                 exit(EXIT_FAILURE);
             }
-
-            const unsigned int i = th-thread;
-            ntx += fargs[i].ntx;
+            ntx += s->ntx;
         }
 
         err = pthread_barrier_destroy(&sync_begin);
@@ -741,29 +685,28 @@ run_outer_loop_time(const struct test_func *test, int ival_ms)
             perror("pthread_barrier_destroy");
         }
 
-        ms = getmsofday(NULL)-begms;
+        ms = getmsofday(NULL) - begms;
     }
 
     if (test->post) {
         test->post();
     }
 
-    free(fargs);
-    free(thread);
-
     return ntx;
 }
 
 static long long
 run_outer_loop(const struct test_func* test, enum boundary_type btype,
-               unsigned long long bound)
+               unsigned long long bound,  struct thread_state* state)
 {
-    static long (* const btype_func[])(const struct test_func*, int) = {
-            run_outer_loop_cycles,
-            run_outer_loop_time
+    static long (* const btype_func[])(const struct test_func*,
+                                       int,
+                                       struct thread_state*) = {
+        run_outer_loop_cycles,
+        run_outer_loop_time
     };
 
-    return btype_func[btype](test, bound);
+    return btype_func[btype](test, bound, state);
 }
 
 static long long
@@ -772,12 +715,31 @@ run_test(const struct test_func* test, enum loop_mode loop,
 {
     static long long (* const loop_func[])(const struct test_func*,
                                            enum boundary_type,
-                                           unsigned long long) = {
-            run_inner_loop,
-            run_outer_loop
+                                           unsigned long long,
+                                           struct thread_state*) = {
+        run_inner_loop,
+        run_outer_loop
     };
 
-    return loop_func[loop](test, btype, bound);
+    struct thread_state* state = malloc(g_nthreads * sizeof(state[0]));
+    if (!state) {
+        perror("malloc");
+        return -errno;
+    }
+
+    long long res = loop_func[loop](test, btype, bound, state);
+    if (res < 0) {
+        goto err_loop_func;
+    }
+    long long ntx = res;
+
+    free(state);
+
+    return ntx;
+
+err_loop_func:
+    free(state);
+    return res;
 }
 
 /* TODO: export this value from systx */
