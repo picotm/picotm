@@ -556,6 +556,59 @@ outer_loop_func(void *arg)
     return NULL;
 }
 
+static long long
+run_outer_loop_iteration(const struct test_func *test,
+                         enum boundary_type btype, int bound,
+                         struct thread_state* state)
+{
+    /* Helgrind 3.3 does not support barriers, so you might
+     * get a warning here. */
+    pthread_barrier_t sync_begin;
+    int err = pthread_barrier_init(&sync_begin, NULL, g_nthreads);
+    if (err) {
+        errno = err;
+        perror("pthread_barrier_init");
+        return -err;
+    }
+
+    for (struct thread_state* s = state; s < state + g_nthreads; ++s) {
+
+        s->sync_begin = &sync_begin;
+        s->test = test;
+        s->tid = s - state;
+        s->btype = btype;
+        s->bound = bound;
+        s->ntx = 0;
+
+        int err = pthread_create(&s->thread, NULL, outer_loop_func, s);
+        if (err) {
+            errno = err;
+            perror("pthread_create");
+            abort();
+        }
+    }
+
+    long long ntx = 0;
+
+    for (struct thread_state* s = state; s < state + g_nthreads; ++s) {
+        int err = pthread_join(s->thread, NULL);
+        if (err) {
+            errno = err;
+            perror("pthread_join");
+            abort();
+        }
+        ntx += s->ntx;
+    }
+
+    err = pthread_barrier_destroy(&sync_begin);
+    if (err) {
+        errno = err;
+        perror("pthread_barrier_destroy");
+    }
+
+    return ntx;
+}
+
 static long
 run_outer_loop_cycles(const struct test_func *test, int cycles,
                       struct thread_state* state)
@@ -566,54 +619,18 @@ run_outer_loop_cycles(const struct test_func *test, int cycles,
 
     long long ntx = 0;
 
-    for (int i = 1; i <= cycles; ++i) {
+    for (int i = 0; i < cycles; ++i) {
 
         if (g_verbose > 1) {
-            printf("Running test %s [%d of %d]...\n", test->name, i, cycles);
+            printf("Running test %s [%d of %d]...\n", test->name, 1 + i, cycles);
         }
 
-        /* Helgrind 3.3 does not support barriers, so you might
-         * get a warning here. */
-        pthread_barrier_t sync_begin;
-        int err = pthread_barrier_init(&sync_begin, NULL, g_nthreads);
-        if (err) {
-            errno = err;
-            perror("pthread_barrier_init");
-            return -err;
+        long long res = run_outer_loop_iteration(test, BOUND_CYCLES, cycles,
+                                                 state);
+        if (res < 0) {
+            abort();
         }
-
-        for (struct thread_state* s = state; s < state + g_nthreads; ++s) {
-
-            s->sync_begin = &sync_begin;
-            s->test = test;
-            s->tid = s - state;
-            s->btype = BOUND_CYCLES;
-            s->bound = cycles;
-            s->ntx = 0;
-
-            int err = pthread_create(&s->thread, NULL, outer_loop_func, s);
-            if (err) {
-                errno = err;
-                perror("pthread_create");
-                exit(EXIT_FAILURE);
-            }
-        }
-
-        for (struct thread_state* s = state; s < state + g_nthreads; ++s) {
-            int err = pthread_join(s->thread, NULL);
-            if (err) {
-                errno = err;
-                perror("pthread_join");
-                exit(EXIT_FAILURE);
-            }
-            ntx += s->ntx;
-        }
-
-        err = pthread_barrier_destroy(&sync_begin);
-        if (err) {
-            errno = err;
-            perror("pthread_barrier_destroy");
-        }
+        ntx += res;
     }
 
     if (test->post) {
@@ -627,65 +644,28 @@ static long
 run_outer_loop_time(const struct test_func *test, int ival_ms,
                     struct thread_state* state)
 {
-    if (g_verbose > 1) {
-        printf("Running test %s [%d ms]...\n", test->name, ival_ms);
-    }
-
     if (test->pre) {
         test->pre();
     }
 
+    if (g_verbose > 1) {
+        printf("Running test %s [for next %d ms]...\n", test->name, ival_ms);
+    }
+
     long long ntx = 0;
 
-    const unsigned long long begms = getmsofday(NULL);
-    unsigned long long ms = 0;
+    const unsigned long long beg_ms = getmsofday(NULL);
 
-    while (ms < ival_ms) {
+    for (unsigned long long ms = 0;
+                            ms < ival_ms;
+                            ms = getmsofday(NULL) - beg_ms) {
 
-        /* Helgrind 3.3 does not support barriers, so you might
-         * get a warning here. */
-        pthread_barrier_t sync_begin;
-        int err = pthread_barrier_init(&sync_begin, NULL, g_nthreads);
-        if (err) {
-            errno = err;
-            perror("pthread_barrier_init");
-            return -err;
+        long long res = run_outer_loop_iteration(test, BOUND_TIME, ival_ms,
+                                                 state);
+        if (res < 0) {
+            abort();
         }
-
-        for (struct thread_state* s = state; s < state + g_nthreads; ++s) {
-
-            s->sync_begin = &sync_begin;
-            s->test = test;
-            s->tid = s - state;
-            s->btype = BOUND_TIME;
-            s->bound = ival_ms;
-            s->ntx = 0;
-
-            int err = pthread_create(&s->thread, NULL, outer_loop_func, s);
-            if (err) {
-                errno = err;
-                perror("pthread_create");
-                exit(EXIT_FAILURE);
-            }
-        }
-
-        for (struct thread_state* s = state; s < state + g_nthreads; ++s) {
-            int err = pthread_join(s->thread, NULL);
-            if (err) {
-                errno = err;
-                perror("pthread_join");
-                exit(EXIT_FAILURE);
-            }
-            ntx += s->ntx;
-        }
-
-        err = pthread_barrier_destroy(&sync_begin);
-        if (err) {
-            errno = err;
-            perror("pthread_barrier_destroy");
-        }
-
-        ms = getmsofday(NULL) - begms;
+        ntx += res;
     }
 
     if (test->post) {
