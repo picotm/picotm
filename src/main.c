@@ -11,7 +11,6 @@
 #include <string.h>
 #include <sys/time.h>
 #include <unistd.h>
-#include <tanger-stm.h>
 #include <tanger-stm-ext-actions.h>
 #include "malloc_test.h"
 #include "fdio_test.h"
@@ -70,6 +69,7 @@ struct test_func_args
 };
 
 static const struct test_func test[] = {
+#if 0
     /* Test 0 */
     {"malloc_test_1", tanger_stm_malloc_test_1, NULL, NULL},
     {"malloc_test_2", tanger_stm_malloc_test_2, NULL, NULL},
@@ -144,7 +144,9 @@ static const struct test_func test[] = {
     {"error_test_2", tanger_stm_error_test_2, NULL, NULL},
     {"error_test_3", tanger_stm_error_test_3, NULL, NULL},
     /* Test 68 */
-    {"malloc_test_9", tanger_stm_malloc_test_9, NULL, NULL}};
+    {"malloc_test_9", tanger_stm_malloc_test_9, NULL, NULL}
+#endif
+};
 
 static enum boundary_type g_btype = BOUND_CYCLES;
 static enum loop_mode     g_loop = LOOP_INNER;
@@ -411,8 +413,6 @@ inner_loop_func_cycles(void *arg)
 
     assert(arg);
 
-    tanger_thread_init();
-
     if (is_barrier_wait_error(pthread_barrier_wait(&g_waitbeg))) {
         perror("pthread_barrier_wait");
         exit(EXIT_FAILURE);
@@ -427,8 +427,6 @@ inner_loop_func_cycles(void *arg)
         ++args->ntx;
     }
 
-    tanger_thread_shutdown();
-
     return NULL;
 }
 
@@ -438,8 +436,6 @@ inner_loop_func_time(void *arg)
     struct test_func_args *args = arg;
 
     assert(arg);
-
-    tanger_thread_init();
 
     if (is_barrier_wait_error(pthread_barrier_wait(&g_waitbeg))) {
         perror("pthread_barrier_wait");
@@ -458,8 +454,6 @@ inner_loop_func_time(void *arg)
 
         ms = getmsofday(NULL)-begms;
     }
-
-    tanger_thread_shutdown();
 
     return NULL;
 }
@@ -548,16 +542,12 @@ outer_loop_func(void *arg)
 
     assert(arg);
 
-    tanger_thread_init();
-
     if (is_barrier_wait_error(pthread_barrier_wait(&g_waitbeg))) {
         perror("pthread_barrier_wait");
         exit(EXIT_FAILURE);
     }
 
     args->call(args->tid);
-
-    tanger_thread_shutdown();
 
     args->ntx = 1;
 
@@ -741,8 +731,8 @@ run_test(const struct test_func* test, enum loop_mode loop,
     return loop_func[loop](test, btype, bound);
 }
 
-/* comes from TinySTM */
-extern long long abort_count;
+/* TODO: export this value from systx */
+long long abort_count;
 
 extern long long fdio_test_21_ticks;
 extern long long fdio_test_21_count;
@@ -813,8 +803,6 @@ main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    tanger_init();
-
     const struct test_func *t;
 
     for (t = test+g_off; t < test+g_off+g_num; ++t) {
@@ -823,8 +811,6 @@ main(int argc, char **argv)
             exit(EXIT_FAILURE);
         }
     }
-
-    tanger_shutdown();
 
     if ( (err = pthread_barrier_destroy(&g_waitbeg)) ) {
         errno = err;
