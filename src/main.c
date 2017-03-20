@@ -53,6 +53,11 @@ enum boundary_type
     BOUND_TIME
 };
 
+enum loop_mode {
+    LOOP_INNER = 0,
+    LOOP_OUTER
+};
+
 struct test_func_args
 {
     void             (*call)(unsigned int);
@@ -142,6 +147,7 @@ static const struct test_func test[] = {
     {"malloc_test_9", tanger_stm_malloc_test_9, NULL, NULL}};
 
 static enum boundary_type g_btype = BOUND_CYCLES;
+static enum loop_mode     g_loop = LOOP_INNER;
 static unsigned int       g_off = 0;
 static unsigned int       g_num = sizeof(test)/sizeof(test[0]);
 static unsigned int       g_cycles = 10;
@@ -253,6 +259,20 @@ opt_regular_ccmode(const char *optarg)
 }
 
 static int
+opt_loop(const char *optarg)
+{
+    if (!strcmp("inner", optarg)) {
+        g_loop = LOOP_INNER;
+    } else if (!strcmp("time", optarg)) {
+        g_loop = LOOP_OUTER;
+    } else {
+        return -1;
+    }
+
+    return 0;
+}
+
+static int
 opt_tx_cycles(const char *optarg)
 {
     errno = 0;
@@ -298,6 +318,7 @@ opt_help(const char *optarg)
            "                                  ts: timestamps\n"
            "                                  2pl: two-phase locking\n"
            "                                  2pl-ext: (inofficial) commit protocol for sockets\n"
+           "  -L {inner|outer}              Loop mode\n"
            "  -b {time|cycles}              Bound for cycles\n"
            "                                  time: bound is maximum run time in milliseconds\n"
            "                                  cycles: cycles is maximum number of transaction runs\n"
@@ -332,6 +353,7 @@ parse_opts(int argc, char *argv[])
 
     static int (* const opt[])(const char*) = {
         ['I'] = opt_tx_cycles,
+        ['L'] = opt_loop,
         ['N'] = opt_normalize,
         ['R'] = opt_regular_ccmode,
         ['V'] = opt_version,
@@ -350,7 +372,7 @@ parse_opts(int argc, char *argv[])
         exit(EXIT_SUCCESS);
     }
 
-    while ((c = getopt(argc, argv, "I:NR:Vb:c:hn:o:t:v:")) != -1) {
+    while ((c = getopt(argc, argv, "I:L:NR:Vb:c:hn:o:t:v:")) != -1) {
         if ((c ==  '?') || (c == ':')) {
             return -1;
         }
@@ -670,9 +692,7 @@ run_outer_loop_time(const struct test_func *test, int ival_ms)
 
         for (th = thread; th < thread+g_nthreads; ++th) {
             int err;
-            unsigned long *tntx;
-            void *tntx_ptr = tntx;
-            if ( (err = pthread_join(*th, &tntx_ptr)) ) {
+            if ( (err = pthread_join(*th, NULL)) ) {
                 errno = err;
                 perror("pthread_join");
                 exit(EXIT_FAILURE);
@@ -693,6 +713,32 @@ run_outer_loop_time(const struct test_func *test, int ival_ms)
     free(thread);
 
     return ntx;
+}
+
+static long long
+run_outer_loop(const struct test_func* test, enum boundary_type btype,
+               unsigned long long bound)
+{
+    static long (* const loop_func[])(const struct test_func*, int) = {
+            run_outer_loop_cycles,
+            run_outer_loop_time
+    };
+    return loop_func[btype](test, bound);
+}
+
+static long long
+run_test(const struct test_func* test, enum loop_mode loop,
+         enum boundary_type btype, unsigned long long bound)
+{
+    static long (* const loop_func[])(const struct test_func*,
+                                      enum loop_mode,
+                                      enum boundary_type,
+                                      unsigned long long) = {
+            run_inner_loop,
+            run_outer_loop
+    };
+
+    return loop_func[loop](test, btype, bound);
 }
 
 /* comes from TinySTM */
@@ -772,7 +818,8 @@ main(int argc, char **argv)
     const struct test_func *t;
 
     for (t = test+g_off; t < test+g_off+g_num; ++t) {
-        if ((ntx = run_inner_loop(t, g_btype, g_cycles)) < 0) {
+        ntx = run_test(t, g_loop, g_btype, g_cycles);
+        if (ntx < 0) {
             exit(EXIT_FAILURE);
         }
     }
