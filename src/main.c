@@ -463,13 +463,6 @@ run_loop_iteration(const struct test_func *test,
 static int
 inner_loop_func_cycles(struct thread_state* state)
 {
-    int res = pthread_barrier_wait(state->sync_begin);
-    if (res && res != PTHREAD_BARRIER_SERIAL_THREAD) {
-        errno = res;
-        perror("pthread_barrier_wait");
-        return -res;
-    }
-
     for (state->ntx = 0; state->ntx < state->bound; ++state->ntx) {
         state->test->call(state->tid);
     }
@@ -477,26 +470,9 @@ inner_loop_func_cycles(struct thread_state* state)
     return 0;
 }
 
-static void*
-inner_loop_func_cycles_cb(void* arg)
-{
-    int res = inner_loop_func_cycles(arg);
-    if (res < 0) {
-        abort();
-    }
-    return NULL;
-}
-
 static int
 inner_loop_func_time(struct thread_state* state)
 {
-    int res = pthread_barrier_wait(state->sync_begin);
-    if (res && res != PTHREAD_BARRIER_SERIAL_THREAD) {
-        errno = res;
-        perror("pthread_barrier_wait");
-        return -res;
-    }
-
     state->ntx = 0;
 
     const unsigned long long beg_ms = getmsofday(NULL);
@@ -511,10 +487,28 @@ inner_loop_func_time(struct thread_state* state)
     return 0;
 }
 
-static void*
-inner_loop_func_time_cb(void* arg)
+static int
+inner_loop_func(struct thread_state* state)
 {
-    int res = inner_loop_func_time(arg);
+    static int (* const btype_func[])(struct thread_state* state) = {
+        inner_loop_func_cycles,
+        inner_loop_func_time
+    };
+
+    int res = pthread_barrier_wait(state->sync_begin);
+    if (res && res != PTHREAD_BARRIER_SERIAL_THREAD) {
+        errno = res;
+        perror("pthread_barrier_wait");
+        return -res;
+    }
+
+    return btype_func[state->btype](state);
+}
+
+static void*
+inner_loop_func_cb(void* arg)
+{
+    int res = inner_loop_func(arg);
     if (res < 0) {
         abort();
     }
@@ -525,11 +519,6 @@ static long long
 run_inner_loop(const struct test_func *test, enum boundary_type btype,
                unsigned long long bound, struct thread_state* state)
 {
-    static void* (* const btype_func[])(void*) = {
-        inner_loop_func_cycles_cb,
-        inner_loop_func_time_cb
-    };
-
     if (test->pre) {
         test->pre();
     }
@@ -539,7 +528,7 @@ run_inner_loop(const struct test_func *test, enum boundary_type btype,
     }
 
     long long res = run_loop_iteration(test, btype, bound, state,
-                                       btype_func[btype]);
+                                       inner_loop_func_cb);
     if (res < 0) {
         abort();
     }
@@ -555,24 +544,29 @@ run_inner_loop(const struct test_func *test, enum boundary_type btype,
 /* Outer loops
  */
 
-static void *
-outer_loop_func(void *arg)
+static int
+outer_loop_func(struct thread_state* state)
 {
-    struct thread_state* args = arg;
-
-    assert(arg);
-
-    int res = pthread_barrier_wait(args->sync_begin);
+    int res = pthread_barrier_wait(state->sync_begin);
     if (res && res != PTHREAD_BARRIER_SERIAL_THREAD) {
         errno = res;
         perror("pthread_barrier_wait");
-        return NULL;
+        return -res;
     }
 
-    args->test->call(args->tid);
+    state->test->call(state->tid);
+    state->ntx = 1;
 
-    args->ntx = 1;
+    return 0;
+}
 
+static void*
+outer_loop_func_cb(void* arg)
+{
+    int res = outer_loop_func(arg);
+    if (res < 0) {
+        abort();
+    }
     return NULL;
 }
 
@@ -581,7 +575,7 @@ run_outer_loop_iteration(const struct test_func *test,
                          enum boundary_type btype, int bound,
                          struct thread_state* state)
 {
-    return run_loop_iteration(test, btype, bound, state, outer_loop_func);
+    return run_loop_iteration(test, btype, bound, state, outer_loop_func_cb);
 }
 
 static long
