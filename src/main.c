@@ -404,6 +404,59 @@ struct thread_state {
     unsigned long long ntx; /* Number of succesful transactions, return value */
 };
 
+static long long
+run_loop_iteration(const struct test_func *test,
+                   enum boundary_type btype, int bound,
+                   struct thread_state* state, void* (*thread_func)(void*))
+{
+    /* Helgrind 3.3 does not support barriers, so you might
+     * get a warning here. */
+    pthread_barrier_t sync_begin;
+    int err = pthread_barrier_init(&sync_begin, NULL, g_nthreads);
+    if (err) {
+        errno = err;
+        perror("pthread_barrier_init");
+        return -err;
+    }
+
+    for (struct thread_state* s = state; s < state + g_nthreads; ++s) {
+
+        s->sync_begin = &sync_begin;
+        s->test = test;
+        s->tid = s - state;
+        s->btype = btype;
+        s->bound = bound;
+        s->ntx = 0;
+
+        int err = pthread_create(&s->thread, NULL, thread_func, s);
+        if (err) {
+            errno = err;
+            perror("pthread_create");
+            abort();
+        }
+    }
+
+    long long ntx = 0;
+
+    for (struct thread_state* s = state; s < state + g_nthreads; ++s) {
+        int err = pthread_join(s->thread, NULL);
+        if (err) {
+            errno = err;
+            perror("pthread_join");
+            abort();
+        }
+        ntx += s->ntx;
+    }
+
+    err = pthread_barrier_destroy(&sync_begin);
+    if (err) {
+        errno = err;
+        perror("pthread_barrier_destroy");
+    }
+
+    return ntx;
+}
+
 /* Inner loops
  */
 
@@ -467,66 +520,28 @@ static long long
 run_inner_loop(const struct test_func *test, enum boundary_type btype,
                unsigned long long bound, struct thread_state* state)
 {
-    /* Helgrind 3.3 does not support barriers, so you might
-     * get a warning here. */
-    pthread_barrier_t sync_begin;
-    int err = pthread_barrier_init(&sync_begin, NULL, g_nthreads);
-    if (err) {
-        errno = err;
-        perror("pthread_barrier_init");
-        return -err;
+    static void* (* const btype_func[])(void*) = {
+        inner_loop_func_cycles,
+        inner_loop_func_time
+    };
+
+    if (test->pre) {
+        test->pre();
     }
 
     if (g_verbose > 1) {
         printf("Running test %s...\n", test->name);
     }
 
-    if (test->pre) {
-        test->pre();
+    long long res = run_loop_iteration(test, btype, bound, state,
+                                       btype_func[btype]);
+    if (res < 0) {
+        abort();
     }
-
-    for (struct thread_state* s = state; s < state + g_nthreads; ++s) {
-
-        static void* (* const inner_loop_func[])(void*) = {
-            inner_loop_func_cycles,
-            inner_loop_func_time
-        };
-
-        s->sync_begin = &sync_begin;
-        s->test = test;
-        s->tid = s - state;
-        s->btype = btype;
-        s->bound = bound;
-        s->ntx = 0;
-
-        int err = pthread_create(&s->thread, NULL, inner_loop_func[btype], s);
-        if (err) {
-            errno = err;
-            perror("pthread_create");
-            exit(EXIT_FAILURE);
-        }
-    }
-
-    long long ntx = 0;
-
-    for (struct thread_state* s = state; s < state + g_nthreads; ++s) {
-        int err = pthread_join(s->thread, NULL);
-        if (err) {
-            errno = err;
-            perror("pthread_join");
-            exit(EXIT_FAILURE);
-        }
-        ntx += s->ntx;
-    }
+    long long ntx = res;
 
     if (test->post) {
         test->post();
-    }
-
-    err = pthread_barrier_destroy(&sync_begin);
-    if (err) {
-        errno = err;
-        perror("pthread_barrier_destroy");
     }
 
     return ntx;
@@ -561,52 +576,7 @@ run_outer_loop_iteration(const struct test_func *test,
                          enum boundary_type btype, int bound,
                          struct thread_state* state)
 {
-    /* Helgrind 3.3 does not support barriers, so you might
-     * get a warning here. */
-    pthread_barrier_t sync_begin;
-    int err = pthread_barrier_init(&sync_begin, NULL, g_nthreads);
-    if (err) {
-        errno = err;
-        perror("pthread_barrier_init");
-        return -err;
-    }
-
-    for (struct thread_state* s = state; s < state + g_nthreads; ++s) {
-
-        s->sync_begin = &sync_begin;
-        s->test = test;
-        s->tid = s - state;
-        s->btype = btype;
-        s->bound = bound;
-        s->ntx = 0;
-
-        int err = pthread_create(&s->thread, NULL, outer_loop_func, s);
-        if (err) {
-            errno = err;
-            perror("pthread_create");
-            abort();
-        }
-    }
-
-    long long ntx = 0;
-
-    for (struct thread_state* s = state; s < state + g_nthreads; ++s) {
-        int err = pthread_join(s->thread, NULL);
-        if (err) {
-            errno = err;
-            perror("pthread_join");
-            abort();
-        }
-        ntx += s->ntx;
-    }
-
-    err = pthread_barrier_destroy(&sync_begin);
-    if (err) {
-        errno = err;
-        perror("pthread_barrier_destroy");
-    }
-
-    return ntx;
+    return run_loop_iteration(test, btype, bound, state, outer_loop_func);
 }
 
 static long
