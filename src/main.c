@@ -519,10 +519,6 @@ static long long
 run_inner_loop(const struct test_func *test, enum boundary_type btype,
                unsigned long long bound, struct thread_state* state)
 {
-    if (test->pre) {
-        test->pre();
-    }
-
     if (g_verbose > 1) {
         printf("Running test %s...\n", test->name);
     }
@@ -533,10 +529,6 @@ run_inner_loop(const struct test_func *test, enum boundary_type btype,
         abort();
     }
     long long ntx = res;
-
-    if (test->post) {
-        test->post();
-    }
 
     return ntx;
 }
@@ -582,10 +574,6 @@ static long
 run_outer_loop_cycles(const struct test_func *test, int cycles,
                       struct thread_state* state)
 {
-    if (test->pre) {
-        test->pre();
-    }
-
     long long ntx = 0;
 
     for (int i = 0; i < cycles; ++i) {
@@ -602,10 +590,6 @@ run_outer_loop_cycles(const struct test_func *test, int cycles,
         ntx += res;
     }
 
-    if (test->post) {
-        test->post();
-    }
-
     return ntx;
 }
 
@@ -613,10 +597,6 @@ static long
 run_outer_loop_time(const struct test_func *test, int ival_ms,
                     struct thread_state* state)
 {
-    if (test->pre) {
-        test->pre();
-    }
-
     if (g_verbose > 1) {
         printf("Running test %s [for next %d ms]...\n", test->name, ival_ms);
     }
@@ -635,10 +615,6 @@ run_outer_loop_time(const struct test_func *test, int ival_ms,
             abort();
         }
         ntx += res;
-    }
-
-    if (test->post) {
-        test->post();
     }
 
     return ntx;
@@ -676,11 +652,19 @@ run_test(const struct test_func* test, enum loop_mode loop,
         return -errno;
     }
 
+    if (test->pre) {
+        test->pre();
+    }
+
     long long res = loop_func[loop](test, btype, bound, state);
     if (res < 0) {
         goto err_loop_func;
     }
     long long ntx = res;
+
+    if (test->post) {
+        test->post();
+    }
 
     free(state);
 
