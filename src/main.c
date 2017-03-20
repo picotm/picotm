@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <pthread.h>
@@ -315,9 +314,7 @@ opt_help(const char *optarg)
            "  -N                            Normalize >commits> to transactions/second\n"
            );
 
-    exit(EXIT_SUCCESS);
-
-    return 0;
+    return 1;
 }
 
 static int
@@ -326,9 +323,7 @@ opt_version(const char *optarg)
     printf("Taglibc test application\n");
     printf("This software is licensed under the Mozilla Public License, v. 2.0.\n");
 
-    exit(EXIT_SUCCESS);
-
-    return 0;
+    return 1;
 }
 
 
@@ -353,19 +348,23 @@ parse_opts(int argc, char *argv[])
         ['t'] = opt_nthreads,
         ['v'] = opt_verbose};
 
-    int c;
-
     if (argc < 2) {
         printf("enter `tlctest -h` for a list of command-line options\n");
-        exit(EXIT_SUCCESS);
+        return 1;
     }
+
+    int c;
 
     while ((c = getopt(argc, argv, "I:L:NR:Vb:c:hn:o:t:v:")) != -1) {
         if ((c ==  '?') || (c == ':')) {
             return -1;
         }
-        if ((c < sizeof(opt)/sizeof(opt[0])) && opt[c] && (opt[c](optarg) < 0)) {
+        if (c >= sizeof(opt)/sizeof(opt[0]) || !opt[c]) {
             return -1;
+        }
+        int res = opt[c](optarg);
+        if (res) {
+            return res;
         }
     }
 
@@ -731,8 +730,13 @@ main(int argc, char **argv)
 {
     /* initialize */
 
-    if (parse_opts(argc, argv) < 0) {
-        exit(EXIT_FAILURE);
+    switch (parse_opts(argc, argv)) {
+        case 0:
+            break;
+        case 1:
+            return EXIT_SUCCESS;
+        default:
+            return EXIT_FAILURE;
     }
 
     long long ntx = 0;
@@ -744,7 +748,7 @@ main(int argc, char **argv)
     for (t = test+g_off; t < test+g_off+g_num; ++t) {
         ntx = run_test(t, g_loop, g_btype, g_cycles);
         if (ntx < 0) {
-            exit(EXIT_FAILURE);
+            abort();
         }
     }
 
@@ -835,6 +839,6 @@ main(int argc, char **argv)
         }
     }
 
-    exit(EXIT_SUCCESS);
+    return EXIT_SUCCESS;
 }
 
