@@ -406,19 +406,20 @@ struct thread_state {
 static long long
 run_loop_iteration(const struct test_func *test,
                    enum boundary_type btype, int bound,
-                   struct thread_state* state, void* (*thread_func)(void*))
+                   struct thread_state* state, unsigned long nthreads,
+                   void* (*thread_func)(void*))
 {
     /* Helgrind 3.3 does not support barriers, so you might
      * get a warning here. */
     pthread_barrier_t sync_begin;
-    int err = pthread_barrier_init(&sync_begin, NULL, g_nthreads);
+    int err = pthread_barrier_init(&sync_begin, NULL, nthreads);
     if (err) {
         errno = err;
         perror("pthread_barrier_init");
         return -err;
     }
 
-    for (struct thread_state* s = state; s < state + g_nthreads; ++s) {
+    for (struct thread_state* s = state; s < state + nthreads; ++s) {
 
         s->sync_begin = &sync_begin;
         s->test = test;
@@ -437,7 +438,7 @@ run_loop_iteration(const struct test_func *test,
 
     long long ntx = 0;
 
-    for (struct thread_state* s = state; s < state + g_nthreads; ++s) {
+    for (struct thread_state* s = state; s < state + nthreads; ++s) {
         int err = pthread_join(s->thread, NULL);
         if (err) {
             errno = err;
@@ -516,14 +517,15 @@ inner_loop_func_cb(void* arg)
 
 static long long
 run_inner_loop(const struct test_func *test, enum boundary_type btype,
-               unsigned long long bound, struct thread_state* state)
+               unsigned long long bound, struct thread_state* state,
+               unsigned long nthreads)
 {
     if (g_verbose > 1) {
         printf("Running test %s...\n", test->name);
     }
 
     long long res = run_loop_iteration(test, btype, bound, state,
-                                       inner_loop_func_cb);
+                                       nthreads, inner_loop_func_cb);
     if (res < 0) {
         abort();
     }
@@ -564,14 +566,15 @@ outer_loop_func_cb(void* arg)
 static long long
 run_outer_loop_iteration(const struct test_func *test,
                          enum boundary_type btype, int bound,
-                         struct thread_state* state)
+                         struct thread_state* state, unsigned long nthreads)
 {
-    return run_loop_iteration(test, btype, bound, state, outer_loop_func_cb);
+    return run_loop_iteration(test, btype, bound, state, nthreads,
+                              outer_loop_func_cb);
 }
 
 static long
 run_outer_loop_cycles(const struct test_func *test, int cycles,
-                      struct thread_state* state)
+                      struct thread_state* state, unsigned long nthreads)
 {
     long long ntx = 0;
 
@@ -582,7 +585,7 @@ run_outer_loop_cycles(const struct test_func *test, int cycles,
         }
 
         long long res = run_outer_loop_iteration(test, BOUND_CYCLES, cycles,
-                                                 state);
+                                                 state, nthreads);
         if (res < 0) {
             abort();
         }
@@ -594,7 +597,7 @@ run_outer_loop_cycles(const struct test_func *test, int cycles,
 
 static long
 run_outer_loop_time(const struct test_func *test, int ival_ms,
-                    struct thread_state* state)
+                    struct thread_state* state, unsigned long nthreads)
 {
     if (g_verbose > 1) {
         printf("Running test %s [for next %d ms]...\n", test->name, ival_ms);
@@ -609,7 +612,7 @@ run_outer_loop_time(const struct test_func *test, int ival_ms,
                             ms = getmsofday(NULL) - beg_ms) {
 
         long long res = run_outer_loop_iteration(test, BOUND_TIME, ival_ms,
-                                                 state);
+                                                 state, nthreads);
         if (res < 0) {
             abort();
         }
@@ -621,31 +624,35 @@ run_outer_loop_time(const struct test_func *test, int ival_ms,
 
 static long long
 run_outer_loop(const struct test_func* test, enum boundary_type btype,
-               unsigned long long bound,  struct thread_state* state)
+               unsigned long long bound,  struct thread_state* state,
+               unsigned long nthreads)
 {
     static long (* const btype_func[])(const struct test_func*,
                                        int,
-                                       struct thread_state*) = {
+                                       struct thread_state*,
+                                       unsigned long) = {
         run_outer_loop_cycles,
         run_outer_loop_time
     };
 
-    return btype_func[btype](test, bound, state);
+    return btype_func[btype](test, bound, state, nthreads);
 }
 
 static long long
-run_test(const struct test_func* test, enum loop_mode loop,
-         enum boundary_type btype, unsigned long long bound)
+run_test(const struct test_func* test, unsigned long nthreads,
+         enum loop_mode loop, enum boundary_type btype,
+         unsigned long long bound)
 {
     static long long (* const loop_func[])(const struct test_func*,
                                            enum boundary_type,
                                            unsigned long long,
-                                           struct thread_state*) = {
+                                           struct thread_state*,
+                                           unsigned long) = {
         run_inner_loop,
         run_outer_loop
     };
 
-    struct thread_state* state = malloc(g_nthreads * sizeof(state[0]));
+    struct thread_state* state = malloc(nthreads * sizeof(state[0]));
     if (!state) {
         perror("malloc");
         return -errno;
@@ -655,7 +662,7 @@ run_test(const struct test_func* test, enum loop_mode loop,
         test->pre();
     }
 
-    long long res = loop_func[loop](test, btype, bound, state);
+    long long res = loop_func[loop](test, btype, bound, state, nthreads);
     if (res < 0) {
         goto err_loop_func;
     }
@@ -746,7 +753,7 @@ main(int argc, char **argv)
     const struct test_func *t;
 
     for (t = test+g_off; t < test+g_off+g_num; ++t) {
-        ntx = run_test(t, g_loop, g_btype, g_cycles);
+        ntx = run_test(t, g_nthreads, g_loop, g_btype, g_cycles);
         if (ntx < 0) {
             abort();
         }
