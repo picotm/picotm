@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <tanger-stm-ext-actions.h>
 #include <unistd.h>
 #include "error_test.h"
 #include "fdio_test.h"
@@ -121,8 +120,8 @@ static unsigned int       g_nthreads = 1;
 static unsigned int       g_verbose = 0;
 static unsigned int       g_normalize = 0;
 
-enum ccmode g_ccmode   = CC_MODE_2PL;
-size_t      g_txcycles = 1;
+int    g_ccmode   = 2; /* corresponds to CC_MODE_2PL */;
+size_t g_txcycles = 1;
 
 static int
 opt_btype(const char *optarg)
@@ -209,7 +208,7 @@ opt_off(const char *optarg)
 static int
 opt_regular_ccmode(const char *optarg)
 {
-    static const char * const optstr[] = { "noundo",  "ts", "2pl", "2pl-ext" };
+    static const char * const optstr[] = { "noundo", "ts", "2pl", "2pl-ext" };
     size_t i;
 
     for (i = 0; i < sizeof(optstr)/sizeof(optstr[0]); ++i) {
