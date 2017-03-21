@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <pthread.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -371,6 +372,37 @@ parse_opts(int argc, char *argv[])
     return 0;
 }
 
+static int
+logmsg(unsigned int verbose, const char* format, va_list ap)
+{
+    if (g_verbose < verbose) {
+        return 0;
+    }
+    return vprintf(format, ap);
+}
+
+static int
+logmsg_result(const char* format, ...)
+{
+    va_list ap;
+    va_start(ap, format);
+    int res = logmsg(1, format, ap);
+    va_end(ap);
+
+    return res;
+}
+
+static int
+logmsg_debug(const char* format, ...)
+{
+    va_list ap;
+    va_start(ap, format);
+    int res = logmsg(2, format, ap);
+    va_end(ap);
+
+    return res;
+}
+
 /* Returns the number of milliseconds since the epoch */
 static unsigned long long
 getmsofday(void *tzp)
@@ -518,11 +550,9 @@ inner_loop_func_cb(void* arg)
 static long long
 run_inner_loop(const struct test_func *test, enum boundary_type btype,
                unsigned long long bound, struct thread_state* state,
-               unsigned long nthreads)
+               unsigned long nthreads, int (*logmsg)(const char*, ...))
 {
-    if (g_verbose > 1) {
-        printf("Running test %s...\n", test->name);
-    }
+    logmsg("Running test %s...\n", test->name);
 
     long long res = run_loop_iteration(test, btype, bound, state,
                                        nthreads, inner_loop_func_cb);
@@ -574,15 +604,14 @@ run_outer_loop_iteration(const struct test_func *test,
 
 static long
 run_outer_loop_cycles(const struct test_func *test, int cycles,
-                      struct thread_state* state, unsigned long nthreads)
+                      struct thread_state* state, unsigned long nthreads,
+                      int (*logmsg)(const char*, ...))
 {
     long long ntx = 0;
 
     for (int i = 0; i < cycles; ++i) {
 
-        if (g_verbose > 1) {
-            printf("Running test %s [%d of %d]...\n", test->name, 1 + i, cycles);
-        }
+        logmsg("Running test %s [%d of %d]...\n", test->name, 1 + i, cycles);
 
         long long res = run_outer_loop_iteration(test, BOUND_CYCLES, cycles,
                                                  state, nthreads);
@@ -597,11 +626,10 @@ run_outer_loop_cycles(const struct test_func *test, int cycles,
 
 static long
 run_outer_loop_time(const struct test_func *test, int ival_ms,
-                    struct thread_state* state, unsigned long nthreads)
+                    struct thread_state* state, unsigned long nthreads,
+                    int (*logmsg)(const char*, ...))
 {
-    if (g_verbose > 1) {
-        printf("Running test %s [for next %d ms]...\n", test->name, ival_ms);
-    }
+    logmsg("Running test %s [for next %d ms]...\n", test->name, ival_ms);
 
     long long ntx = 0;
 
@@ -625,29 +653,31 @@ run_outer_loop_time(const struct test_func *test, int ival_ms,
 static long long
 run_outer_loop(const struct test_func* test, enum boundary_type btype,
                unsigned long long bound,  struct thread_state* state,
-               unsigned long nthreads)
+               unsigned long nthreads, int (*logmsg)(const char*, ...))
 {
     static long (* const btype_func[])(const struct test_func*,
                                        int,
                                        struct thread_state*,
-                                       unsigned long) = {
+                                       unsigned long,
+                                       int (*)(const char*, ...)) = {
         run_outer_loop_cycles,
         run_outer_loop_time
     };
 
-    return btype_func[btype](test, bound, state, nthreads);
+    return btype_func[btype](test, bound, state, nthreads, logmsg);
 }
 
 static long long
 run_test(const struct test_func* test, unsigned long nthreads,
          enum loop_mode loop, enum boundary_type btype,
-         unsigned long long bound)
+         unsigned long long bound, int (*logmsg)(const char*, ...))
 {
     static long long (* const loop_func[])(const struct test_func*,
                                            enum boundary_type,
                                            unsigned long long,
                                            struct thread_state*,
-                                           unsigned long) = {
+                                           unsigned long,
+                                           int (*)(const char*, ...)) = {
         run_inner_loop,
         run_outer_loop
     };
@@ -662,7 +692,8 @@ run_test(const struct test_func* test, unsigned long nthreads,
         test->pre();
     }
 
-    long long res = loop_func[loop](test, btype, bound, state, nthreads);
+    long long res = loop_func[loop](test, btype, bound, state, nthreads,
+                                    logmsg);
     if (res < 0) {
         goto err_loop_func;
     }
@@ -753,7 +784,7 @@ main(int argc, char **argv)
     const struct test_func *t;
 
     for (t = test+g_off; t < test+g_off+g_num; ++t) {
-        ntx = run_test(t, g_nthreads, g_loop, g_btype, g_cycles);
+        ntx = run_test(t, g_nthreads, g_loop, g_btype, g_cycles, logmsg_debug);
         if (ntx < 0) {
             abort();
         }
@@ -761,9 +792,8 @@ main(int argc, char **argv)
 
     /* print results */
 
-    if (g_verbose) {
-        if (g_normalize) {
-            printf("%d %lld %lld\n", g_nthreads, (long long)((ntx*1000)/g_cycles), abort_count);
+    if (g_normalize) {
+        logmsg_result("%d %lld %lld\n", g_nthreads, (long long)((ntx*1000)/g_cycles), abort_count);
 
             /*printf("fdio21_ticks=%lld fdio21_count=%lld, average=%lld\n", fdio_test_21_ticks,
                                                                           fdio_test_21_count,
@@ -841,9 +871,8 @@ main(int argc, char **argv)
 /*            printf("pgtree_lookup_ticks=%lld pgtree_lookup_count=%lld, average=%lld\n", pgtree_lookup_ticks,
                                                                                         pgtree_lookup_count,
                                                                                         pgtree_lookup_count ? (pgtree_lookup_ticks/pgtree_lookup_count): 0);*/
-        } else {
-            printf("%d %lld %lld\n", g_nthreads, ntx, abort_count);
-        }
+    } else {
+        logmsg_result("%d %lld %lld\n", g_nthreads, ntx, abort_count);
     }
 
     return EXIT_SUCCESS;
