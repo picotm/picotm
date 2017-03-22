@@ -14,8 +14,10 @@ enum loop_mode {
     LOOP_OUTER
 };
 
-typedef void (* const pre_func)(void);
-typedef void (* const post_func)(void);
+typedef void (* const pre_func)(unsigned long, enum loop_mode,
+                                enum boundary_type, unsigned long long);
+typedef void (* const post_func)(unsigned long, enum loop_mode,
+                                 enum boundary_type, unsigned long long);
 typedef void (* const call_func)(unsigned int);
 
 struct test_func
