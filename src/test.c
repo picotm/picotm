@@ -292,7 +292,7 @@ run_test(const struct test_func* test, unsigned long nthreads,
     }
 
     if (test->pre) {
-        test->pre(nthreads, loop, btype, bound);
+        test->pre(nthreads, loop, btype, bound, logmsg);
     }
 
     long long res = loop_func[loop](test, btype, bound, state, nthreads,
@@ -303,7 +303,7 @@ run_test(const struct test_func* test, unsigned long nthreads,
     long long ntx = res;
 
     if (test->post) {
-        test->post(nthreads, loop, btype, bound);
+        test->post(nthreads, loop, btype, bound, logmsg);
     }
 
     free(state);

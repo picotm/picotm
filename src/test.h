@@ -15,9 +15,11 @@ enum loop_mode {
 };
 
 typedef void (* const pre_func)(unsigned long, enum loop_mode,
-                                enum boundary_type, unsigned long long);
+                                enum boundary_type, unsigned long long,
+                                int (*)(const char*, ...));
 typedef void (* const post_func)(unsigned long, enum loop_mode,
-                                 enum boundary_type, unsigned long long);
+                                 enum boundary_type, unsigned long long,
+                                 int (*)(const char*, ...));
 typedef void (* const call_func)(unsigned int);
 
 struct test_func
