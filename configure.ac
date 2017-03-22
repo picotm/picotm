@@ -21,6 +21,13 @@ AX_PTHREAD
 
 AC_CHECK_HEADERS([sys/cdefs.h])
 
+AX_CHECK_COMPILE_FLAG([-fvisibility=hidden],
+                      [VISIBILITY_CFLAGS="-fvisibility=hidden"],
+                      [VISIBILITY_CFLAGS=""],
+                      [$PTHREAD_CFLAGS])
+
+AC_SUBST(VISIBILITY_CFLAGS, [$VISIBILITY_CFLAGS])
+
 AC_DEFINE([MAXNUMFD], [1024])
 AC_DEFINE([RECSIZE],  [32])
 

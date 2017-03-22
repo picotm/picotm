@@ -27,3 +27,24 @@
 #else
     #define SYSTX_BEGIN_DECLS   }
 #endif
+
+/**
+ * \def SYSTX_NOTHROW
+ * Exported function does not throw exceptions.
+ */
+#ifdef __THROW
+    #define SYSTX_NOTHROW   __THROW
+#else
+    #define SYSTX_NOTHROW
+#endif
+
+/**
+ * \def SYSTX_EXPORT
+ * Export interface from binary object.
+ */
+
+#if __GNUC__ >= 4
+    #define SYSTX_EXPORT    __attribute__((visibility("default")))
+#else
+    #define SYSTX_EXPORT
+#endif

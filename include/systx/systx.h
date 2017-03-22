@@ -27,4 +27,47 @@ struct __systx_tx {
     jmp_buf env;
 };
 
+SYSTX_NOTHROW
+/**
+ * Returns the internal transaction structure.
+ * \warning This is an internal interface. Don't use it in application code.
+ */
+struct __systx_tx*
+__systx_get_tx(void);
+
+SYSTX_NOTHROW
+/**
+ * Begins or restarts a transaction, or handles an error.
+ * \warning This is an internal interface. Don't use it in application code.
+ */
+void
+__systx_begin(enum __systx_mode mode);
+
+/**
+ * Starts a new transaction.
+ */
+#define systx_begin() \
+    __systx_begin((enum __systx_mode)setjmp(__systx_get_tx()->env));
+
+SYSTX_NOTHROW
+/**
+ * Commits the current transaction.
+ */
+void
+systx_commit(void);
+
+SYSTX_NOTHROW
+/**
+ * Aborts the current transaction.
+ */
+void
+systx_abort(void);
+
+SYSTX_NOTHROW
+void
+/**
+ * Releases all resources of systx on the current thread.
+ */
+systx_release(void);
+
 SYSTX_END_DECLS

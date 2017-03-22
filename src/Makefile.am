@@ -11,6 +11,8 @@ libsystx_la_SOURCES = component.c \
                       indirectcalls.c \
                       log.c \
                       log.h \
+                      systx.c \
+                      systx.h \
                       table.c \
                       table.h \
                       tx.c \
@@ -20,6 +22,7 @@ CC = $(PTHREAD_CC)
 
 AM_CPPFLAGS = -I$(srcdir)/../include
 
-AM_CFLAGS = $(PTHREAD_CFLAGS)
+AM_CFLAGS = @VISIBILITY_CFLAGS@ \
+            $(PTHREAD_CFLAGS)
 
 AM_LDFLAGS = $(PTHREAD_LDFLAGS)
