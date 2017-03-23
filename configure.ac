@@ -17,6 +17,10 @@ AC_PROG_CC_C99
 
 AX_PTHREAD
 
+AC_CHECK_HEADERS([sys/cdefs.h])
+
+CHECK_SYSTX
+
 AC_CONFIG_FILES([Makefile
                  src/Makefile])
 

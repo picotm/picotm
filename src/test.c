@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
+#include <systx/systx.h>
 
 struct thread_state {
 
@@ -36,6 +37,12 @@ getmsofday(void* tzp)
     gettimeofday(&t, tzp);
 
     return t.tv_sec * 1000 + t.tv_usec / 1000;
+}
+
+static void
+cleanup_systx_cb(void* data)
+{
+    systx_release();
 }
 
 static long long
@@ -130,14 +137,22 @@ inner_loop_func(struct thread_state* state)
         inner_loop_func_time
     };
 
-    int res = pthread_barrier_wait(state->sync_begin);
-    if (res && res != PTHREAD_BARRIER_SERIAL_THREAD) {
-        errno = res;
-        perror("pthread_barrier_wait");
-        return -res;
-    }
+    int res;
 
-    return btype_func[state->btype](state);
+    pthread_cleanup_push(cleanup_systx_cb, NULL);
+
+        res = pthread_barrier_wait(state->sync_begin);
+        if (res && res != PTHREAD_BARRIER_SERIAL_THREAD) {
+            errno = res;
+            perror("pthread_barrier_wait");
+            return -res;
+        }
+
+        res = btype_func[state->btype](state);
+
+    pthread_cleanup_pop(1);
+
+    return res;
 }
 
 static void*
@@ -173,15 +188,19 @@ run_inner_loop(const struct test_func *test, enum boundary_type btype,
 static int
 outer_loop_func(struct thread_state* state)
 {
-    int res = pthread_barrier_wait(state->sync_begin);
-    if (res && res != PTHREAD_BARRIER_SERIAL_THREAD) {
-        errno = res;
-        perror("pthread_barrier_wait");
-        return -res;
-    }
+    pthread_cleanup_push(cleanup_systx_cb, NULL);
 
-    state->test->call(state->tid);
-    state->ntx = 1;
+        int res = pthread_barrier_wait(state->sync_begin);
+        if (res && res != PTHREAD_BARRIER_SERIAL_THREAD) {
+            errno = res;
+            perror("pthread_barrier_wait");
+            return -res;
+        }
+
+        state->test->call(state->tid);
+        state->ntx = 1;
+
+    pthread_cleanup_pop(1);
 
     return 0;
 }
