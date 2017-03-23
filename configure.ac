@@ -34,6 +34,7 @@ AC_DEFINE([RECSIZE],  [32])
 AC_CONFIG_FILES([Makefile
                  include/Makefile
                  src/Makefile
+                 src/libc/Makefile
                  src/tm/Makefile])
 
 AC_OUTPUT
