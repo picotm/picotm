@@ -258,7 +258,8 @@ systx_tm_release()
 enum {
     SYSTX_TM_LOAD = 0,
     SYSTX_TM_STORE,
-    SYSTX_TM_LOADSTORE
+    SYSTX_TM_LOADSTORE,
+    SYSTX_TM_PRIVATIZE
 };
 
 SYSTX_EXPORT
@@ -319,6 +320,48 @@ __systx_tm_loadstore(uintptr_t laddr, uintptr_t saddr, size_t siz)
         systx_resolve_error(-res);
     }
     res = systx_inject_event(vmem_tx->module, SYSTX_TM_LOADSTORE, 0);
+    if (res < 0) {
+        systx_resolve_error(-res);
+    }
+}
+
+SYSTX_EXPORT
+void
+__systx_tm_privatize(uintptr_t addr, size_t siz)
+{
+    struct tm_vmem_tx* vmem_tx = get_vmem_tx();
+    if (!vmem_tx) {
+        systx_resolve_error(-ENOMEM);
+    }
+    int res;
+    while ((res = tm_vmem_tx_privatize(vmem_tx, addr, siz)) == -EBUSY) {
+        systx_resolve_conflict(NULL);
+    }
+    if (res < 0) {
+        systx_resolve_error(-res);
+    }
+    res = systx_inject_event(vmem_tx->module, SYSTX_TM_PRIVATIZE, 0);
+    if (res < 0) {
+        systx_resolve_error(-res);
+    }
+}
+
+SYSTX_EXPORT
+void
+__systx_tm_privatize_c(uintptr_t addr, int c)
+{
+    struct tm_vmem_tx* vmem_tx = get_vmem_tx();
+    if (!vmem_tx) {
+        systx_resolve_error(-ENOMEM);
+    }
+    int res;
+    while ((res = tm_vmem_tx_privatize_c(vmem_tx, addr, c)) == -EBUSY) {
+        systx_resolve_conflict(NULL);
+    }
+    if (res < 0) {
+        systx_resolve_error(-res);
+    }
+    res = systx_inject_event(vmem_tx->module, SYSTX_TM_PRIVATIZE, 0);
     if (res < 0) {
         systx_resolve_error(-res);
     }

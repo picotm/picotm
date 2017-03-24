@@ -140,4 +140,65 @@ loadstore_tx(const void* laddr, void* saddr, size_t siz)
                          __SYSTX_TM_ADDRESS(saddr), siz);
 }
 
+/**
+ * Privatizes the memory region starting at address.
+ * \warning This is an internal interface. Don't use it in application code.
+ */
+void
+__systx_tm_privatize(uintptr_t addr, size_t siz);
+
+SYSTX_NOTHROW
+/**
+ * Privatizes the memory region starting at address, ending
+ * at character 'c'.
+ * \warning This is an internal interface. Don't use it in application code.
+ */
+void
+__systx_tm_privatize_c(uintptr_t addr, int c);
+
+/**
+ * Privatizes the memory region starting at address.
+ */
+static inline void
+privatize_tx(const void* addr, size_t siz)
+{
+    __systx_tm_privatize(__SYSTX_TM_ADDRESS(addr), siz);
+}
+
+/**
+ * Privatizes the memory region starting at address, ending
+ * at character 'c'.
+ */
+static inline void
+privatize_c_tx(const void* addr, int c)
+{
+    __systx_tm_privatize_c(__SYSTX_TM_ADDRESS(addr), c);
+}
+
+/**
+ * Defines a C function for conveniently privatizing a
+ * value of a specific type.
+ */
+#define SYSTX_TM_PRIVATIZE_TX(__name, __type)       \
+    static inline void                              \
+    privatize_ ## __name ## _tx(const __type* ptr)  \
+    {                                               \
+        privatize_tx(ptr, sizeof(*ptr));            \
+    }
+
+SYSTX_TM_PRIVATIZE_TX(bool, _Bool)
+SYSTX_TM_PRIVATIZE_TX(char, char)
+SYSTX_TM_PRIVATIZE_TX(schar, signed char)
+SYSTX_TM_PRIVATIZE_TX(uchar, unsigned char)
+SYSTX_TM_PRIVATIZE_TX(short, short)
+SYSTX_TM_PRIVATIZE_TX(ushort, unsigned short)
+SYSTX_TM_PRIVATIZE_TX(int, int)
+SYSTX_TM_PRIVATIZE_TX(uint, unsigned int)
+SYSTX_TM_PRIVATIZE_TX(long, long)
+SYSTX_TM_PRIVATIZE_TX(ulong, unsigned long)
+SYSTX_TM_PRIVATIZE_TX(llong, long long)
+SYSTX_TM_PRIVATIZE_TX(ullong, unsigned long long)
+SYSTX_TM_PRIVATIZE_TX(float, float)
+SYSTX_TM_PRIVATIZE_TX(double, double)
+
 SYSTX_END_DECLS

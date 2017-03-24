@@ -98,7 +98,7 @@ tm_page_st(struct tm_page* page, struct tm_vmem* vmem)
     return 0;
 }
 
-static int
+static void
 tm_page_xchg(struct tm_page* page, struct tm_vmem* vmem)
 {
     struct tm_frame* frame =
@@ -116,8 +116,6 @@ tm_page_xchg(struct tm_page* page, struct tm_vmem* vmem)
     memcpy(pbuf,  buf, sizeof(buf));
 
     tm_vmem_release_frame(vmem, frame);
-
-    return 0;
 }
 
 static int
@@ -420,6 +418,92 @@ tm_vmem_tx_ldst(struct tm_vmem_tx* vmem_tx, uintptr_t laddr, uintptr_t saddr,
         laddr += lpage_diff;
         saddr += spage_diff;
         siz   -= lpage_diff;
+    }
+
+    return 0;
+}
+
+int
+tm_vmem_tx_privatize(struct tm_vmem_tx* vmem_tx, uintptr_t addr, size_t siz)
+{
+    while (siz) {
+
+        /* released as part of apply() or undo() */
+        struct tm_page* page = acquire_page_by_address(vmem_tx, addr);
+        if (!page) {
+            return -ENOMEM;
+        }
+
+        if (!(page->flags & TM_PAGE_FLAG_OWNING_FRAME)) {
+            int res = tm_page_try_lock_frame(page, vmem_tx->vmem);
+            if (res < 0) {
+                return res;
+            }
+            res = tm_page_ld(page, vmem_tx->vmem);
+            if (res < 0) {
+                return res;
+            }
+        }
+
+        if (!(page->flags & TM_PAGE_FLAG_WRITE_THROUGH)) {
+            tm_page_xchg(page, vmem_tx->vmem);
+            page->flags |= TM_PAGE_FLAG_WRITE_THROUGH;
+        }
+
+        uintptr_t page_addr = tm_page_address(page);
+        size_t page_head = addr - page_addr;
+        size_t page_tail = TM_BLOCK_SIZE - page_head;
+        size_t page_diff = siz < page_tail ? siz : page_tail;
+
+        addr += page_diff;
+        siz  -= page_diff;
+    }
+
+    return 0;
+}
+
+int
+tm_vmem_tx_privatize_c(struct tm_vmem_tx* vmem_tx, uintptr_t addr, int c)
+{
+    while (true) {
+
+        /* released as part of apply() or undo() */
+        struct tm_page* page = acquire_page_by_address(vmem_tx, addr);
+        if (!page) {
+            return -ENOMEM;
+        }
+
+        if (!(page->flags & TM_PAGE_FLAG_OWNING_FRAME)) {
+            int res = tm_page_try_lock_frame(page, vmem_tx->vmem);
+            if (res < 0) {
+                return res;
+            }
+            res = tm_page_ld(page, vmem_tx->vmem);
+            if (res < 0) {
+                return res;
+            }
+        }
+
+        /* Privatized pages require write-through semantics,
+         * so that all stores are immediately visible in the
+         * region's memory. */
+        if (!(page->flags & TM_PAGE_FLAG_WRITE_THROUGH)) {
+            tm_page_xchg(page, vmem_tx->vmem);
+            page->flags |= TM_PAGE_FLAG_WRITE_THROUGH;
+        }
+
+        uintptr_t page_addr = tm_page_address(page);
+        size_t page_head = addr - page_addr;
+        size_t page_tail = TM_BLOCK_SIZE - page_head;
+        size_t page_diff = page_tail;
+
+        /* check for 'c' in current page */
+        const uint8_t* mem = tm_page_buffer(page);
+        if (memchr(mem + page_head, c, page_diff)) {
+            break;
+        }
+
+        addr += page_diff;
     }
 
     return 0;
