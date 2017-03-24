@@ -2,369 +2,388 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* TODO
- *
- * Invalid reads within tanger_stm_std_realloc are false positive; it is not
- * possible to init the memcpy src correctly without getting a out-of-bounds
- * write, which is another false positive
- *
- * Test 5+6:
- *  - Allocation before tanger_begin leads to 'invalid free' and
- *    lost bytes from that alloc
- *  - Doesn't occur without valgrind; false positive?
- */
-
-#include <tanger-stm.h>
-#include <tanger-stm-internal.h>
-#include <tanger-stm-std-errno.h>
-#include <tanger-stm-std-stdlib.h>
-#include <tanger-stm-std-string.h>
-#include <tanger-stm-std-stdio.h>
-#include <tanger-stm-std-pthread.h>
-#include <tanger-stm-malloc.h> /* Non-standard */
 #include "malloc_test.h"
+#include <systx/stddef.h>
+#include <systx/stdlib.h>
+#include <systx/systx.h>
+#include <systx/systx-tm.h>
+#include "ptr.h"
 
-static volatile pthread_t g_curself;
-
-static int
-tanger_stm_tidcmp(pthread_t a, pthread_t b)
+/**
+ * Delays a transaction while generating potential conflicts.
+ */
+static void
+delay_transaction(unsigned int tid)
 {
-	return a-b;
-}
+    static unsigned int g_curtid;
 
-static int
-tanger_stm_spin_tid(pthread_t self)
-{
-    int i;
+	store_uint_tx(&g_curtid, tid);
 
-	for (i = 0; i < 10000; ++i) {
-		g_curself = self;
-
-		if (tanger_stm_tidcmp(self, g_curself)) {
-		    return -1;
+	for (int i = 0; i < 10000; ++i) {
+		unsigned int curtid = load_uint_tx(&g_curtid);
+        if (curtid != tid) {
+		    abort_tx();
 		}
 	}
-
-    return 0;
 }
 
+/**
+ * Allocate and free within transaction.
+ */
 void
-tanger_stm_malloc_test_1(unsigned int tid)
+malloc_test_1(unsigned int tid)
 {
-    tanger_begin();
+    systx_begin();
+    {
+        char* mem[10];
 
-    char *mem[10], **ptr;
+        for (char** ptr = mem; ptr < mem + arraylen(mem); ++ptr) {
+            *ptr = calloc_tx(15, 34);
+    	    if (!*ptr) {
+    	        abort_tx();
+    	    }
+        }
 
-    for (ptr = mem; ptr < mem+sizeof(mem)/sizeof(mem[0]); ++ptr) {
+        for (char** ptr = mem; ptr < mem + arraylen(mem); ++ptr) {
+            const char *beg = *ptr;
+            const char *end = *ptr + (15 * 34);
+            while (beg < end) {
+	            if (*beg) {
+	                abort_tx();
+                }
+                ++beg;
+            }
+        }
 
+        delay_transaction(tid);
+
+        for (char** ptr = mem; ptr < mem + arraylen(mem); ++ptr) {
+	        free_tx(*ptr);
+        }
+    }
+    systx_commit();
+}
+
+/**
+ * Allocate outside of transaction; free within transaction.
+ */
+void
+malloc_test_2(unsigned int tid)
+{
+    char* buf[10];
+
+    for (char** ptr = buf; ptr < buf + arraylen(buf); ++ptr) {
         *ptr = calloc(15, 34);
-
     	if (!*ptr) {
-    	    perror("calloc");
     	    abort();
     	}
     }
 
-    size_t j;
-    for (j=0; j < sizeof(mem)/sizeof(mem[0]); ++j) {
+    systx_begin();
+    {
+        char* mem[10];
 
-        char * ptr = mem[j];
-    /*for (ptr = mem; ptr < mem+sizeof(mem)/sizeof(mem[0]); ++ptr) {*/
+        for (size_t i = 0; i < arraylen(mem); ++i) {
+            mem[i] = load_ptr_tx(buf + i);
+        }
 
-        unsigned long i;
-
-    	for (i = 0; i < (15*34); ++i) {
-	        if (ptr[i]) {
-                tanger_commit();
-	            abort();
+        for (char** ptr = mem; ptr < mem + arraylen(mem); ++ptr) {
+            const char *beg = *ptr;
+            const char *end = *ptr + (15 * 34);
+            while (beg < end) {
+	            if (*beg) {
+	                abort_tx();
+                }
+                ++beg;
             }
         }
-    }
 
-    if (tanger_stm_spin_tid(pthread_self()) < 0) {
-        tanger_commit();
-        abort();
-    }
+        delay_transaction(tid);
 
-    for (ptr = mem; ptr < mem+sizeof(mem)/sizeof(mem[0]); ++ptr) {
-	    free(*ptr);
+        for (char** ptr = mem; ptr < mem + arraylen(mem); ++ptr) {
+	        free_tx(*ptr);
+        }
     }
-
-    tanger_commit();
+    systx_commit();
 }
 
+/**
+ * Allocate within transaction; free outside of transaction.
+ */
 void
-tanger_stm_malloc_test_2(unsigned int tid)
+malloc_test_3(unsigned int tid)
 {
-    char *mem[10], **ptr;
+    char* buf[10];
 
-    for (ptr = mem; ptr < mem+sizeof(mem)/sizeof(mem[0]); ++ptr) {
+    systx_begin()
+    {
+        char* mem[10];
 
-        *ptr = calloc(15, 34);
+        for (char** ptr = mem; ptr < mem + arraylen(mem); ++ptr) {
+            *ptr = calloc_tx(15, 34);
+    	    if (!*ptr) {
+    	        abort_tx();
+    	    }
+        }
 
-    	if (!*ptr) {
-    	    perror("calloc");
-    	    abort();
-    	}
-    }
-
-    tanger_begin();
-
-    for (ptr = mem; ptr < mem+sizeof(mem)/sizeof(mem[0]); ++ptr) {
-
-    	unsigned long i;
-
-    	for (i = 0; i < (15*34); ++i) {
-	        if ((*ptr)[i]) {
-                tanger_commit();
-            	fprintf(stderr, "content of mem[%ld] was %d, expected 0\n", i, (*ptr)[i]);
-	            abort();
+        for (char** ptr = mem; ptr < mem + arraylen(mem); ++ptr) {
+            const char *beg = *ptr;
+            const char *end = *ptr + (15 * 34);
+            while (beg < end) {
+	            if (*beg) {
+	                abort_tx();
+                }
+                ++beg;
             }
         }
-    }
 
-    if (tanger_stm_spin_tid(pthread_self()) < 0) {
-        tanger_commit();
-        abort();
-    }
+        delay_transaction(tid);
 
-    for (ptr = mem; ptr < mem+sizeof(mem)/sizeof(mem[0]); ++ptr) {
-	    free(*ptr);
-    }
-
-    tanger_commit();
-}
-
-void
-tanger_stm_malloc_test_3(unsigned int tid)
-{
-    tanger_begin();
-
-    char *mem[10], **ptr;
-
-    for (ptr = mem; ptr < mem+sizeof(mem)/sizeof(mem[0]); ++ptr) {
-
-        *ptr = calloc(15, 34);
-
-    	if (!*ptr) {
-    	    perror("calloc");
-    	    abort();
-    	}
-    }
-
-    for (ptr = mem; ptr < mem+sizeof(mem)/sizeof(mem[0]); ++ptr) {
-
-    	long i;
-
-    	for (i = 0; i < (15*34); ++i) {
-	        if ((*ptr)[i]) {
-                tanger_commit();
-            	fprintf(stderr, "content of mem[%ld] was %d, expected 0\n", i, (*ptr)[i]);
-	            abort();
-            }
+        for (size_t i = 0; i < arraylen(buf); ++i) {
+            store_ptr_tx(buf + i, mem[i]);
         }
     }
+    systx_commit();
 
-    if (tanger_stm_spin_tid(pthread_self()) < 0) {
-        tanger_commit();
-        abort();
-    }
-
-    tanger_commit();
-
-    for (ptr = mem; ptr < mem+sizeof(mem)/sizeof(mem[0]); ++ptr) {
+    for (char** ptr = buf; ptr < buf + arraylen(buf); ++ptr) {
 	    free(*ptr);
     }
 }
 
+/**
+ * Allocate, realloc and free within transaction.
+ */
 void
-tanger_stm_malloc_test_4(unsigned int tid)
+malloc_test_4(unsigned int tid)
 {
-    tanger_begin();
-
-    char *mem = malloc(30*sizeof(mem[0]));
-
-    if (!mem) {
-        perror("malloc");
-        abort();
-    }
-
-    long i;
-
-    for (i = 0; i < 30; ++i) {
-        mem[i] = i;
-    }
-
-    mem = realloc(mem, 15*34*sizeof(mem[0]));
-
-    if (!mem) {
-        perror("realloc");
-        abort();
-    }
-
-    for (i = 0; i < 30; ++i) {
-        if (mem[i] != i) {
-            tanger_commit();
-            fprintf(stderr, "content of mem[%ld] was %d, expected %ld\n", i, mem[i], i);
-            abort();
+    systx_begin();
+    {
+        uint8_t* mem = malloc_tx(30 * sizeof(mem[0]));
+        if (!mem) {
+            abort_tx();
         }
+        for (uint8_t i = 0; i < 30; ++i) {
+            mem[i] = i;
+        }
+
+        mem = realloc_tx(mem, 15 * 34 * sizeof(mem[0]));
+        if (!mem) {
+            abort_tx();
+        }
+        for (uint8_t i = 0; i < 30; ++i) {
+            if (mem[i] != i) {
+                abort_tx();
+            }
+        }
+
+        for (int i = 0; i < (15 * 34); ++i) {
+            mem[i] = 0;
+        }
+
+        delay_transaction(tid);
+
+        free_tx(mem);
     }
-
-    for (i = 0; i < (15*34); ++i) {
-        mem[i] = 0;
-    }
-
-    if (tanger_stm_spin_tid(pthread_self()) < 0) {
-        tanger_commit();
-        abort();
-    }
-
-    free(mem);
-
-    tanger_commit();
+    systx_commit();
 }
 
+/**
+ * Allocate outside of transaction; realloc and free within transaction.
+ */
 void
-tanger_stm_malloc_test_5(unsigned int tid)
+malloc_test_5(unsigned int tid)
 {
-    char *mem = malloc(30*sizeof(mem[0]));
-
-	if (!mem) {
-	    perror("malloc");
+    uint8_t* buf = malloc(30 * sizeof(buf[0]));
+	if (!buf) {
 	    abort();
 	}
 
-	long i;
-
-	for (i = 0; i < 30; ++i) {
-	    mem[i] = i;
+	for (uint8_t i = 0; i < 30; ++i) {
+	    buf[i] = i;
     }
 
-	tanger_begin();
+	systx_begin();
+    {
+        /* Load 'buf' into transaction instead of using it
+         * directly. The return value of realloc_tx() is
+         * stored under the same name. So restarting the
+         * transaction after realloc_tx() would free the
+         * memory in 'buf' and create a dangling pointer.
+         *
+         * _Always_ loading and storing non-transactional
+         * variables explicitly is ideomatic and avoids all
+         * naming problems. */
+        uint8_t* mem = load_ptr_tx(&buf);
 
-	mem = realloc(mem, 15*34*sizeof(mem[0]));
-
-	if (!mem) {
-	    perror("realloc");
-	    abort();
-	}
-
-	for (i = 0; i < 30; ++i) {
-	    if (mem[i] != i) {
-	        abort();
+	    mem = realloc_tx(mem, 15 * 34 * sizeof(mem[0]));
+	    if (!mem) {
+	        abort_tx();
+	    }
+	    for (uint8_t i = 0; i < 30; ++i) {
+	        if (mem[i] != i) {
+	            abort_tx();
+            }
         }
+
+	    for (int i = 0; i < (15 * 34); ++i) {
+	        mem[i] = 0;
+        }
+
+        delay_transaction(tid);
+
+	    free_tx(mem);
     }
-
-	for (i = 0; i < (15*34); ++i) {
-	    mem[i] = 0;
-    }
-
-    if (tanger_stm_spin_tid(pthread_self()) < 0) {
-        tanger_commit();
-        abort();
-    }
-
-	free(mem);
-	mem = NULL;
-
-	tanger_commit();
+	systx_commit();
 }
 
+/**
+ * Allocate outside of transaction; realloc within transaction; free
+ * outside of transaction.
+ */
 void
-tanger_stm_malloc_test_6(unsigned int tid)
+malloc_test_6(unsigned int tid)
 {
-	long i;
-
-    char *mem = malloc(30*sizeof(mem[0]));
-
-	if (!mem) {
-	    perror("malloc");
+    uint8_t* buf = malloc(30 * sizeof(buf[0]));
+	if (!buf) {
 	    abort();
 	}
-
-	for (i = 0; i < 30; ++i) {
-	    mem[i] = i;
+	for (uint8_t i = 0; i < 30; ++i) {
+	    buf[i] = i;
     }
 
-	tanger_begin();
+	systx_begin();
+    {
+        uint8_t* mem = load_ptr_tx(&buf);
 
-	mem = realloc(mem, 15*34*sizeof(mem[0]));
+	    mem = realloc_tx(mem, 15 * 34 * sizeof(mem[0]));
+	    if (!mem) {
+            abort_tx();
+	    }
 
-	if (!mem) {
-	    perror("realloc");
-        abort();
-	}
-
-	for (i = 0; i < 30; ++i) {
-	    if (mem[i] != i) {
-	        abort();
+	    for (uint8_t i = 0; i < 30; ++i) {
+	        if (mem[i] != i) {
+	            abort_tx();
+            }
         }
+
+	    for (int i = 0; i < (15 * 34); ++i) {
+	        mem[i] = 0;
+        }
+
+        delay_transaction(tid);
+
+        /* _Always_ store results in non-transactional variables
+         * explicitly, even if the variable is thread-local or
+         * otherwise not shared.
+         *
+         * This is ideomatic and will work in all cases.
+         */
+        store_ptr_tx(&buf, mem);
     }
+	systx_commit();
 
-	for (i = 0; i < (15*34); ++i) {
-	    mem[i] = 0;
-    }
-
-    if (tanger_stm_spin_tid(pthread_self()) < 0) {
-        tanger_commit();
-        abort();
-    }
-
-	tanger_commit();
-
-	free(mem);
+	free(buf);
 }
 
+static unsigned long long g_test_7_cycles;
+
 void
-tanger_stm_malloc_test_7(unsigned int tid)
+malloc_test_7_pre(unsigned long nthreads, enum loop_mode loop,
+                  enum boundary_type btype, unsigned long long bound,
+                  int (*logmsg)(const char*, ...))
 {
-    extern size_t g_txcycles;
-    size_t i;
-    size_t siz;
+    switch (btype) {
+        case BOUND_CYCLES:
+            g_test_7_cycles = bound;
+            break;
+        default:
+            g_test_7_cycles = 10;
+    }
+}
 
-    siz = tid < 32 ? 32 : tid;
+/**
+ * Multiple allocations and frees within transaction.
+ */
+void
+malloc_test_7(unsigned int tid)
+{
+    const size_t tid_min32 = tid < 32 ? 32 : tid;
 
-    tanger_begin();
+    systx_begin();
+    {
+        unsigned long long cycles = load_ullong_tx(&g_test_7_cycles);
+        size_t siz = load_size_t_tx(&tid_min32);
 
-    for (i = 0; i < g_txcycles; ++i) {
-        unsigned char *mem = malloc(siz);
-        mem[tid] = 1;       /* touch memory to prevent optimization */
+        for (unsigned long long i = 0; i < cycles; ++i) {
+            uint8_t* mem = malloc_tx(siz);
+            mem[tid] = 1;       /* touch memory to prevent optimization */
+            free_tx(mem);
+        }
+    }
+    systx_commit();
+}
+
+static unsigned long long g_test_8_cycles;
+
+void
+malloc_test_8_pre(unsigned long nthreads, enum loop_mode loop,
+                  enum boundary_type btype, unsigned long long bound,
+                  int (*logmsg)(const char*, ...))
+{
+    switch (btype) {
+        case BOUND_CYCLES:
+            g_test_8_cycles = bound;
+            break;
+        default:
+            g_test_8_cycles = 10;
+    }
+}
+
+/**
+ * Multiple allocations and frees outside of transaction. Gives
+ * non-transactional base line for comparing with malloc_test_9().
+ */
+void
+malloc_test_8(unsigned int tid)
+{
+    for (unsigned long long i = 0; i < g_test_8_cycles; ++i) {
+        uint8_t* mem = malloc(32);
+        mem[tid] = 1;   /* touch memory to prevent optimization */
         free(mem);
     }
-
-    tanger_commit();
 }
 
-void
-tanger_stm_malloc_test_8(unsigned int tid)
-{
-    extern size_t g_txcycles;
-    size_t i;
+static unsigned long long g_test_9_cycles;
 
-    for (i = 0; i < g_txcycles; ++i) {
-        unsigned char *mem = malloc(32);
-        mem[tid] = 1;       /* touch memory to prevent optimization */
-        free(mem);
+void
+malloc_test_9_pre(unsigned long nthreads, enum loop_mode loop,
+                  enum boundary_type btype, unsigned long long bound,
+                  int (*logmsg)(const char*, ...))
+{
+    switch (btype) {
+        case BOUND_CYCLES:
+            g_test_9_cycles = bound;
+            break;
+        default:
+            g_test_9_cycles = 10;
     }
 }
 
+/**
+ * Multiple allocations ands frees within transaction.
+ */
 void
-tanger_stm_malloc_test_9(unsigned int tid)
+malloc_test_9(unsigned int tid)
 {
-    extern size_t g_txcycles;
-    tanger_stm_tx_t *tx;
-    size_t i;
+    systx_begin();
+    {
+        unsigned long long cycles = load_ullong_tx(&g_test_9_cycles);
 
-    tx = tanger_stm_get_tx();
-
-    tanger_begin();
-
-    for (i = 0; i < g_txcycles; ++i) {
-        unsigned char *mem = tanger_stm_malloc(32, tx);
-        mem[tid] = 1;       /* touch memory to prevent optimization */
-        tanger_stm_free(mem, tx);
+        for (unsigned long long i = 0; i < cycles; ++i) {
+            uint8_t* mem = malloc_tx(32);
+            mem[tid] = 1;   /* touch memory to prevent optimization */
+            free_tx(mem);
+        }
     }
-
-    tanger_commit();
+    systx_commit();
 }
-

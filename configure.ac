@@ -21,6 +21,7 @@ AC_CHECK_HEADERS([sys/cdefs.h])
 
 CHECK_SYSTX
 CHECK_SYSTX_TM
+CHECK_SYSTX_C
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile])

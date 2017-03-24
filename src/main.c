@@ -111,6 +111,17 @@ static const struct test_func test[] = {
     {"malloc_test_9", tanger_stm_malloc_test_9, NULL, NULL}
 #else
     /* Test 0 */
+    {"malloc_test_1", malloc_test_1, NULL, NULL},
+    {"malloc_test_2", malloc_test_2, NULL, NULL},
+    {"malloc_test_3", malloc_test_3, NULL, NULL},
+    {"malloc_test_4", malloc_test_4, NULL, NULL},
+    {"malloc_test_5", malloc_test_5, NULL, NULL},
+    {"malloc_test_6", malloc_test_6, NULL, NULL},
+    {"malloc_test_7", malloc_test_7, malloc_test_7_pre, NULL},
+    {"malloc_test_8", malloc_test_8, malloc_test_8_pre, NULL},
+    /* Test 8 */
+    {"malloc_test_9", malloc_test_9, malloc_test_9_pre, NULL},
+    /* Test 9 */
     {"tm_test_1", tm_test_1, tm_test_1_pre, tm_test_1_post}
 #endif
 };
