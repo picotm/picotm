@@ -4,7 +4,8 @@
 
 lib_LTLIBRARIES = libsystx-c.la
 
-libsystx_c_la_SOURCES =
+libsystx_c_la_SOURCES = stdlib.c \
+                        unistd.c
 
 CC = $(PTHREAD_CC)
 

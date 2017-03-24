@@ -29,6 +29,16 @@
 #endif
 
 /**
+ * \def SYSTX_NORETURN
+ * Exported function does not return.
+ */
+#ifdef _Noreturn
+    #define SYSTX_NORETURN      _Noreturn
+#else
+    #define SYSTX_NORETURN
+#endif
+
+/**
  * \def SYSTX_NOTHROW
  * Exported function does not throw exceptions.
  */
