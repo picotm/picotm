@@ -2,16 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "comalloc.h"
 #include <assert.h>
 #include <stdlib.h>
-#include <tanger-stm-ext-actions.h>
-#include "table.h"
-#include "comalloc.h"
+#include <systx/systx-module.h>
 
 int
-com_alloc_init(struct com_alloc *comalloc)
+com_alloc_init(struct com_alloc *comalloc, unsigned long module)
 {
     assert(comalloc);
+
+    comalloc->module = module;
 
     comalloc->ptrtab = NULL;
     comalloc->ptrtablen = 0;
@@ -25,7 +26,10 @@ com_alloc_uninit(struct com_alloc *comalloc)
 {
     assert(comalloc);
 
-    free(comalloc->ptrtab);
+    systx_tabfree(comalloc->ptrtab);
+    comalloc->ptrtab = NULL;
+    comalloc->ptrtablen = 0;
+    comalloc->ptrtabsiz = 0;
 }
 
 int
@@ -34,10 +38,10 @@ com_alloc_inject(struct com_alloc *comalloc, enum com_alloc_call call, void *ptr
     assert(comalloc);
 
     if (__builtin_expect(comalloc->ptrtablen >= comalloc->ptrtabsiz, 0)) {
-        void *tmp = tabresize(comalloc->ptrtab,
-                              comalloc->ptrtabsiz,
-                              comalloc->ptrtabsiz+1,
-                              sizeof(comalloc->ptrtab[0]));
+        void *tmp = systx_tabresize(comalloc->ptrtab,
+                                    comalloc->ptrtabsiz,
+                                    comalloc->ptrtabsiz+1,
+                                    sizeof(comalloc->ptrtab[0]));
         if (!tmp) {
             return -1;
         }
@@ -50,7 +54,7 @@ com_alloc_inject(struct com_alloc *comalloc, enum com_alloc_call call, void *ptr
 
     *ptrtab = ptr;
 
-    if (tanger_stm_inject_event(COMPONENT_ALLOC, call, comalloc->ptrtablen) < 0) {
+    if (systx_inject_event(comalloc->module, call, comalloc->ptrtablen) < 0) {
         return -1;
     }
 

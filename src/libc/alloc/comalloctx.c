@@ -2,17 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "comalloctx.h"
 #include <assert.h>
+#include <malloc.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-#include <tanger-stm-internal.h>
-#include <tanger-stm-internal-errcode.h>
-#include <tanger-stm-internal-extact.h>
-#include <tanger-stm-ext-actions.h>
-#include "malloc.h"
-#include "rnd2wb.h"
+#include <systx/systx-module.h>
+#include <systx/systx-tm.h>
 #include "comalloc.h"
-#include "comalloctx.h"
+#include "rnd2wb.h"
 
 static int
 com_alloc_tx_apply_event(const struct event *event, size_t n, void *data)
@@ -38,57 +37,55 @@ static int
 com_alloc_tx_uninit(void *data)
 {
     com_alloc_uninit(data);
-    free(data);
 
     return 0;
 }
 
-struct com_alloc *
-com_alloc_tx_aquire_data()
+static struct com_alloc*
+get_com_alloc()
 {
-    struct com_alloc *data = tanger_stm_get_component_data(COMPONENT_ALLOC);
+    static __thread struct {
+        bool             is_initialized;
+        struct com_alloc instance;
+    } t_com_alloc;
 
-    if (!data) {
-
-        data = malloc(sizeof(*data));
-
-        if (!data) {
-            return NULL;
-        }
-
-        com_alloc_init(data);
-
-        /* See `lib/libta/ext-actions.c' for this function */
-        int res = tanger_stm_register_component(COMPONENT_ALLOC,
-                                                NULL,
-                                                NULL,
-                                                NULL,
-                                                com_alloc_tx_apply_event,
-                                                com_alloc_tx_undo_event,
-                                                NULL,
-                                                NULL,
-                                                com_alloc_tx_finish,
-                                                com_alloc_tx_uninit,
-                                                NULL,
-                                                NULL,
-                                                NULL,
-                                                NULL,
-                                                data);
-
-        if (res < 0) {
-            abort();
-        }
+    if (t_com_alloc.is_initialized) {
+        return &t_com_alloc.instance;
     }
 
-    return data;
+    long res = systx_register_module(NULL,
+                                     NULL,
+                                     NULL,
+                                     com_alloc_tx_apply_event,
+                                     com_alloc_tx_undo_event,
+                                     NULL,
+                                     NULL,
+                                     com_alloc_tx_finish,
+                                     com_alloc_tx_uninit,
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                     &t_com_alloc.instance);
+    if (res < 0) {
+        return NULL;
+    }
+    unsigned long module = res;
+
+    res = com_alloc_init(&t_com_alloc.instance, module);
+    if (res < 0) {
+        return NULL;
+    }
+
+    t_com_alloc.is_initialized = true;
+
+    return &t_com_alloc.instance;
 }
 
 int
 com_alloc_tx_posix_memalign(void **memptr, size_t alignment, size_t size)
 {
-    extern int com_alloc_exec_posix_memalign(struct com_alloc*, void**, size_t, size_t);
-
-    struct com_alloc *data = com_alloc_tx_aquire_data();
+    struct com_alloc *data = get_com_alloc();
     assert(data);
 
     return com_alloc_exec_posix_memalign(data, memptr, alignment, size);
@@ -97,19 +94,15 @@ com_alloc_tx_posix_memalign(void **memptr, size_t alignment, size_t size)
 void
 com_alloc_tx_free(void *mem)
 {
-    extern void com_alloc_exec_free(struct com_alloc*, void*);
-
-    size_t usiz;
-    struct com_alloc *data = com_alloc_tx_aquire_data();
+    struct com_alloc *data = get_com_alloc();
     assert(data);
 
     /* Abort other transactions */
 
-    usiz = malloc_usable_size(mem);
+    size_t usiz = malloc_usable_size(mem);
 
     if (usiz) {
-        tanger_stm_tx_t* tx = tanger_stm_get_tx();
-        tanger_stm_store_mark_written(tx, mem, usiz);
+        privatize_tx(mem, usiz);
     }
 
     com_alloc_exec_free(data, mem);
@@ -142,8 +135,8 @@ com_alloc_tx_malloc(size_t siz)
     return ptr;
 }
 
-void *
-com_alloc_tx_realloc(void *ptr, size_t siz)
+void*
+com_alloc_tx_realloc(void* ptr, size_t siz)
 {
     if (!ptr) {
         return com_alloc_tx_malloc(siz);
@@ -152,37 +145,24 @@ com_alloc_tx_realloc(void *ptr, size_t siz)
         return NULL;
     }
 
-    void *mem = com_alloc_tx_malloc(siz);
-
+    void* mem = com_alloc_tx_malloc(siz);
     if (!mem) {
         return NULL;
     }
 
-    /* Copy data */
-
+    /* Valgrind might report invalid reads and out-of-bounds access
+     * within this function. This is a false positive. The result of
+     * malloc_usable_size() is the maximum available buffer space,
+     * not the amount of allocated or valid memory. Any memcpy() within
+     * load_tx() could therefore operate on uninitialized data.
+     */
     size_t usiz = malloc_usable_size(ptr);
 
     if (usiz) {
-        tanger_stm_tx_t *tx = tanger_stm_get_tx();
-        tanger_stm_store_mark_written(tx, ptr, usiz);
-
-        size_t n = siz<usiz?siz:usiz;
-
-        void *src = tanger_stm_loadregionpre(tx, ptr, n);
-        /* Might create warnings with valgrind
-            when copying uninitialized bytes */
-        memcpy(mem, src, n);
-        tanger_stm_loadregionpost(tx, ptr, n);
+        load_tx(ptr, mem, usiz);
     }
 
-    struct com_alloc *data = com_alloc_tx_aquire_data();
-    assert(data);
-
-    /* Inject events */
-    if (com_alloc_inject(data, ACTION_FREE, ptr) < 0) {
-        return NULL;
-    }
+    com_alloc_tx_free(ptr);
 
     return mem;
 }
-

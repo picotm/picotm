@@ -4,7 +4,15 @@
 
 lib_LTLIBRARIES = libsystx-c.la
 
-libsystx_c_la_SOURCES = stdlib.c \
+libsystx_c_la_SOURCES = alloc/comalloc.c \
+                        alloc/comalloc.h \
+                        alloc/comalloc_free.c \
+                        alloc/comalloc_posix_memalign.c \
+                        alloc/comalloctx.c \
+                        alloc/comalloctx.h \
+                        alloc/rnd2wb.c \
+                        alloc/rnd2wb.h \
+                        stdlib.c \
                         unistd.c
 
 CC = $(PTHREAD_CC)

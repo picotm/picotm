@@ -3,7 +3,47 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <systx/systx.h>
+#include "alloc/comalloctx.h"
 #include "systx/stdlib.h"
+
+/*
+ * Memory management
+ */
+
+SYSTX_EXPORT
+int
+posix_memalign_tx(void** memptr, size_t alignment, size_t size)
+{
+    return com_alloc_tx_posix_memalign(memptr, alignment, size);
+}
+
+SYSTX_EXPORT
+void
+free_tx(void* ptr)
+{
+    return com_alloc_tx_free(ptr);
+}
+
+SYSTX_EXPORT
+void*
+calloc_tx(size_t nmemb, size_t size)
+{
+    return com_alloc_tx_calloc(nmemb, size);
+}
+
+SYSTX_EXPORT
+void*
+malloc_tx(size_t size)
+{
+    return com_alloc_tx_malloc(size);
+}
+
+SYSTX_EXPORT
+void*
+realloc_tx(void* ptr, size_t size)
+{
+    return com_alloc_tx_realloc(ptr, size);
+}
 
 /*
  * Programm termination

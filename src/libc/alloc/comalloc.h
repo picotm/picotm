@@ -5,6 +5,10 @@
 #ifndef COMALLOC_H
 #define COMALLOC_H
 
+#include <stddef.h>
+
+struct event;
+
 enum com_alloc_call
 {
     ACTION_POSIX_MEMALIGN = 0,
@@ -12,15 +16,16 @@ enum com_alloc_call
     LAST_ACTION
 };
 
-struct com_alloc
-{
+struct com_alloc {
+    unsigned long module;
+
     void **ptrtab;
     size_t ptrtablen;
     size_t ptrtabsiz;
 };
 
 int
-com_alloc_init(struct com_alloc *comalloc);
+com_alloc_init(struct com_alloc *comalloc, unsigned long module);
 
 void
 com_alloc_uninit(struct com_alloc *comalloc);
