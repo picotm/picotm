@@ -5,6 +5,7 @@
 bin_PROGRAMS = tlctest
 
 tlctest_SOURCES = main.c \
+                  ptr.h \
                   test.c \
                   test.h \
                   tm_test.c \
