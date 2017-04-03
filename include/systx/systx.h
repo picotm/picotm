@@ -64,6 +64,13 @@ void
 systx_abort(void);
 
 SYSTX_NOTHROW
+/**
+ * Makes the current transaction irrevocable.
+ */
+void
+systx_irrevocable(void);
+
+SYSTX_NOTHROW
 void
 /**
  * Releases all resources of systx on the current thread.

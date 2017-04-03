@@ -7,6 +7,50 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include "tx.h"
+#include "tx_shared.h"
+
+/*
+ * Global data
+ */
+
+static struct tx_shared*
+get_tx_shared(void)
+{
+    static struct tx_shared g_tx_shared;
+    static bool             g_tx_shared_is_initialized;
+
+    if (__atomic_load_n(&g_tx_shared_is_initialized, __ATOMIC_ACQUIRE)) {
+        return &g_tx_shared;
+    }
+
+    static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+
+    int res = pthread_mutex_lock(&lock);
+    if (res) {
+        return NULL;
+    }
+
+    if (__atomic_load_n(&g_tx_shared_is_initialized, __ATOMIC_ACQUIRE)) {
+        /* Another transaction initialized the tx_state structure
+         * concurrently; we're done. */
+        goto out;
+    }
+
+    res = tx_shared_init(&g_tx_shared);
+    if (res < 0) {
+        goto err_tx_shared_init;
+    }
+
+    __atomic_store_n(&g_tx_shared_is_initialized, true, __ATOMIC_RELEASE);
+
+out:
+    pthread_mutex_unlock(&lock);
+    return &g_tx_shared;
+
+err_tx_shared_init:
+    pthread_mutex_unlock(&lock);
+    return NULL;
+}
 
 /*
  * Thread-local data
@@ -23,7 +67,12 @@ get_tx(bool do_init)
         return NULL;
     }
 
-    int res = tx_init(&t_tx);
+    struct tx_shared* tx_shared = get_tx_shared();
+    if (!tx_shared) {
+        return NULL;
+    }
+
+    int res = tx_init(&t_tx, tx_shared);
     if (res < 0) {
         return NULL;
     }
@@ -100,6 +149,13 @@ void
 systx_abort()
 {
     restart_tx(get_non_null_tx(), SYSTX_MODE_RETRY);
+}
+
+SYSTX_EXPORT
+void
+systx_irrevocable()
+{
+    restart_tx(get_non_null_tx(), SYSTX_MODE_IRREVOCABLE);
 }
 
 SYSTX_EXPORT

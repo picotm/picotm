@@ -16,7 +16,9 @@ libsystx_la_SOURCES = component.c \
                       table.c \
                       table.h \
                       tx.c \
-                      tx.h
+                      tx.h \
+                      tx_shared.c \
+                      tx_shared.h
 
 CC = $(PTHREAD_CC)
 

@@ -8,15 +8,18 @@
 #include <systx/systx.h>
 #include "log.h"
 
+struct tx_shared;
+
 struct tx {
     struct __systx_tx public_state;
     struct log        log;
+    struct tx_shared *shared;
     enum __systx_mode mode;
     bool              is_initialized;
 };
 
 int
-tx_init(struct tx* self);
+tx_init(struct tx* self, struct tx_shared* tx_shared);
 
 void
 tx_release(struct tx* self);
