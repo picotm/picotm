@@ -4,22 +4,16 @@
 
 #pragma once
 
-#include <pthread.h>
 #include <stddef.h>
 #include <stdint.h>
-
-struct tm_frame;
+#include "framemap.h"
 
 /**
  * |struct tm_vmem| represents main memory; the resource that
  * the TM module maintains.
  */
 struct tm_vmem {
-    pthread_rwlock_t lock; /**< \brief Structure lock */
-
-    /* frame-allocator fields */
-    struct tm_frame* frametab; /**< \brief Table of frames */
-    size_t           frametablen; /**< \brief Number of elements in frametab */
+    struct tm_frame_map frame_map;
 };
 
 int
