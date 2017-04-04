@@ -6,6 +6,8 @@ lib_LTLIBRARIES = libsystx-tm.la
 
 libsystx_tm_la_SOURCES = frame.c \
                          frame.h \
+                         framemap.c \
+                         framemap.h \
                          tm.c \
                          tm.h \
                          vmem.c \
