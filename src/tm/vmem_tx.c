@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "block.h"
+#include "frame.h"
 #include "vmem.h"
 
 /*
