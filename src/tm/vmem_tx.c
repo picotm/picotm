@@ -337,6 +337,70 @@ tm_vmem_tx_st(struct tm_vmem_tx* vmem_tx, uintptr_t addr, const void* buf,
 }
 
 int
+tm_vmem_tx_ldst(struct tm_vmem_tx* vmem_tx, uintptr_t laddr, uintptr_t saddr,
+                size_t siz)
+{
+    while (siz) {
+
+        /* released as part of apply() or undo() */
+        struct tm_page* lpage = acquire_page_by_address(vmem_tx, laddr);
+        if (!lpage) {
+            return -ENOMEM;
+        }
+
+        if (!(lpage->flags & TM_PAGE_FLAG_OWNING_FRAME)) {
+            int res = tm_page_try_lock_frame(lpage, vmem_tx->vmem);
+            if (res < 0) {
+                return res;
+            }
+            res = tm_page_ld(lpage, vmem_tx->vmem);
+            if (res < 0) {
+                return res;
+            }
+        }
+
+        uintptr_t lpage_addr = tm_page_address(lpage);
+        size_t lpage_head = laddr - lpage_addr;
+        size_t lpage_tail = TM_BLOCK_SIZE - lpage_head;
+        size_t lpage_diff = siz < lpage_tail ? siz : lpage_tail;
+
+        /* released as part of apply() or undo() */
+        struct tm_page* spage = acquire_page_by_address(vmem_tx, saddr);
+        if (!spage) {
+            return -ENOMEM;
+        }
+
+        if (!(spage->flags & TM_PAGE_FLAG_OWNING_FRAME)) {
+            int res = tm_page_try_lock_frame(spage, vmem_tx->vmem);
+            if (res < 0) {
+                return res;
+            }
+            res = tm_page_ld(spage, vmem_tx->vmem);
+            if (res < 0) {
+                return res;
+            }
+        }
+
+        uintptr_t spage_addr = tm_page_address(spage);
+        size_t spage_head = saddr - spage_addr;
+        size_t spage_tail = TM_BLOCK_SIZE - spage_head;
+        size_t spage_diff = siz < spage_tail ? siz : spage_tail;
+
+        uint8_t* lmem = tm_page_buffer(lpage);
+        uint8_t* smem = tm_page_buffer(spage);
+        memcpy(lmem + lpage_head, smem + spage_head, lpage_diff);
+
+        spage->flags |= TM_PAGE_FLAG_WRITTEN;
+
+        laddr += lpage_diff;
+        saddr += spage_diff;
+        siz   -= lpage_diff;
+    }
+
+    return 0;
+}
+
+int
 tm_vmem_tx_lock(struct tm_vmem_tx* vmem_tx)
 {
     /* We've already locked all frames. */

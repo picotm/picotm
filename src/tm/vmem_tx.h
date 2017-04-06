@@ -63,6 +63,13 @@ int tm_vmem_tx_st(struct tm_vmem_tx* vmem_tx, uintptr_t addr,
                   const void* buf, size_t siz);
 
 /**
+ * Executes a load-store operation.
+ */
+int
+tm_vmem_tx_ldst(struct tm_vmem_tx* vmem_tx, uintptr_t laddr, uintptr_t saddr,
+                size_t siz);
+
+/**
  * Acquires exclusive access to the frames of this transaction.
  */
 int tm_vmem_tx_lock(struct tm_vmem_tx* vmem_tx);

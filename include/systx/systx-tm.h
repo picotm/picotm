@@ -122,4 +122,22 @@ SYSTX_TM_STORE_TX(ullong, unsigned long long)
 SYSTX_TM_STORE_TX(float, float)
 SYSTX_TM_STORE_TX(double, double)
 
+SYSTX_NOTHROW
+/**
+ * Copies data between memory regions.
+ * \warning This is an internal interface. Don't use it in application code.
+ */
+void
+__systx_tm_loadstore(uintptr_t laddr, uintptr_t saddr, size_t siz);
+
+/**
+ * Copies data between memory regions.
+ */
+static inline void
+loadstore_tx(const void* laddr, void* saddr, size_t siz)
+{
+    __systx_tm_loadstore(__SYSTX_TM_ADDRESS(laddr),
+                         __SYSTX_TM_ADDRESS(saddr), siz);
+}
+
 SYSTX_END_DECLS
