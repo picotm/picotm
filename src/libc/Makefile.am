@@ -13,6 +13,7 @@ libsystx_c_la_SOURCES = alloc/comalloc.c \
                         alloc/rnd2wb.c \
                         alloc/rnd2wb.h \
                         stdlib.c \
+                        string.c \
                         unistd.c
 
 CC = $(PTHREAD_CC)
