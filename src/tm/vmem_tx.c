@@ -14,8 +14,9 @@
  */
 
 enum {
-    TM_PAGE_FLAG_OWNING_FRAME = 1 << 0,
-    TM_PAGE_FLAG_WRITTEN      = 1 << 1
+    TM_PAGE_FLAG_OWNING_FRAME  = 1 << 0,
+    TM_PAGE_FLAG_WRITTEN       = 1 << 1,
+    TM_PAGE_FLAG_WRITE_THROUGH = 1 << 2
 };
 
 /**
@@ -57,7 +58,10 @@ tm_page_address(const struct tm_page* page)
 static void*
 tm_page_buffer(struct tm_page* page)
 {
-    return page->buf;
+    if (page->flags & TM_PAGE_FLAG_WRITE_THROUGH) {
+        return (void*)tm_page_address(page);
+    }
+    return page->buf; /* write-back is default mode */
 }
 
 static int
@@ -86,9 +90,30 @@ tm_page_st(struct tm_page* page, struct tm_vmem* vmem)
         abort(); /* There's no legal way we should end up here! */
     }
 
-    char* buf = tm_frame_buffer(frame);
-    const char* mem = tm_page_buffer(page);
-    memcpy(buf, mem, sizeof(page->buf));
+    void* buf = tm_frame_buffer(frame);
+    memcpy(buf, page->buf, sizeof(page->buf));
+
+    tm_vmem_release_frame(vmem, frame);
+
+    return 0;
+}
+
+static int
+tm_page_xchg(struct tm_page* page, struct tm_vmem* vmem)
+{
+    struct tm_frame* frame =
+        tm_vmem_acquire_frame_by_block(vmem, tm_page_block_index(page));
+    if (!frame) {
+        abort(); /* There's no legal way we should end up here! */
+    }
+
+    uint8_t buf[TM_BLOCK_SIZE];
+    void* fbuf = tm_frame_buffer(frame);
+    void* pbuf = page->buf;
+
+    memcpy( buf, fbuf, sizeof(buf));
+    memcpy(fbuf, pbuf, sizeof(buf));
+    memcpy(pbuf,  buf, sizeof(buf));
 
     tm_vmem_release_frame(vmem, frame);
 
@@ -427,7 +452,8 @@ tm_vmem_tx_apply(struct tm_vmem_tx* vmem_tx)
 {
     struct tm_page* page;
     SLIST_FOREACH(page, &vmem_tx->active_pages, list) {
-        if (page->flags & TM_PAGE_FLAG_WRITTEN) {
+        if ((page->flags & TM_PAGE_FLAG_WRITTEN) &&
+            !(page->flags & TM_PAGE_FLAG_WRITE_THROUGH)) {
             tm_page_st(page, vmem_tx->vmem);
         }
     }
@@ -437,8 +463,13 @@ tm_vmem_tx_apply(struct tm_vmem_tx* vmem_tx)
 int
 tm_vmem_tx_undo(struct tm_vmem_tx* vmem_tx)
 {
-    /* We don't write to main memory unless in apply(). So
-     * there's nothing to un-do here. */
+    struct tm_page* page;
+    SLIST_FOREACH(page, &vmem_tx->active_pages, list) {
+        if ((page->flags & TM_PAGE_FLAG_WRITTEN) &&
+            (page->flags & TM_PAGE_FLAG_WRITE_THROUGH)) {
+            tm_page_st(page, vmem_tx->vmem);
+        }
+    }
     return 0;
 }
 
