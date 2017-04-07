@@ -40,30 +40,6 @@ com_fd_tx_unlock(void *data)
 }
 
 static int
-com_fd_tx_tpc_request(void *data, int noundo)
-{
-    return com_fd_tpc_request(data, noundo);
-}
-
-static int
-com_fd_tx_tpc_success(void *data, int noundo)
-{
-    return com_fd_tpc_success(data, noundo);
-}
-
-static int
-com_fd_tx_tpc_failure(void *data, int noundo)
-{
-    return com_fd_tpc_failure(data, noundo);
-}
-
-static int
-com_fd_tx_tpc_noundo(void *data, int noundo)
-{
-    return com_fd_tpc_noundo(data, noundo);
-}
-
-static int
 com_fd_tx_validate(void *data, int noundo)
 {
     return com_fd_validate(data, noundo);
@@ -136,10 +112,10 @@ com_fd_tx_aquire_data()
                                             com_fd_tx_clearcc,
                                             com_fd_tx_finish,
                                             com_fd_tx_uninit,
-                                            com_fd_tx_tpc_request,
-                                            com_fd_tx_tpc_success,
-                                            com_fd_tx_tpc_failure,
-                                            com_fd_tx_tpc_noundo,
+                                            NULL,
+                                            NULL,
+                                            NULL,
+                                            NULL,
                                             data);
 
         if (res < 0) {

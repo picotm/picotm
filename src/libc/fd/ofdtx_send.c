@@ -24,7 +24,6 @@
 #include "cmapss.h"
 #include "rwlockmap.h"
 #include "rwstatemap.h"
-#include "connection.h"
 #include "fcntlop.h"
 #include "ofdid.h"
 #include "ofd.h"
@@ -106,55 +105,6 @@ ofdtx_send_exec_socket_2pl(struct ofdtx *ofdtx, int sockfd,
     return nbyte;
 }
 
-static ssize_t
-ofdtx_send_exec_socket_2pl_ext(struct ofdtx *ofdtx, int sockfd,
-                                              const void *buffer,
-                                                    size_t length,
-                                                    int flags,
-                                                    int *cookie)
-{
-    int type;
-    socklen_t typelen = sizeof(type);
-
-    assert(ofdtx);
-
-    if (flags) {
-        return ERR_NOUNDO;
-    }
-
-    /* Exclude non-stream sockets */
-
-    if (getsockopt(sockfd, SOL_SOCKET, SO_TYPE, &type, &typelen) < 0) {
-        return ERR_SYSTEM;
-    }
-    if (type != SOCK_STREAM) {
-        return ERR_NOUNDO;
-    }
-
-    /* If this is the first call to this socket within the transaction, no
-       connection structure exists yet, therefore create one. */
-
-    if (!ofdtx->conn) {
-        ofdtx->conn = connection_create(sockfd);
-
-        if (!ofdtx->conn) {
-            return ERR_SYSTEM;
-        }
-    }
-
-    struct ofd *ofd = ofdtab+ofdtx->ofd;
-
-    /* Write-lock socket */
-
-    int err;
-
-    if ((err = ofd_wrlock_state(ofd, &ofdtx->modedata.tpl.rwstate)) < 0) {
-        return err;
-    }
-
-    return connection_send(ofdtx->conn, buffer, length);
-}
-
 ssize_t
 ofdtx_send_exec(struct ofdtx *ofdtx, int sockfd,
                                const void *buffer,
@@ -171,7 +121,7 @@ ofdtx_send_exec(struct ofdtx *ofdtx, int sockfd,
         {ofdtx_send_exec_noundo, NULL,                      NULL,                       NULL},
         {ofdtx_send_exec_noundo, NULL,                      NULL,                       NULL},
         {ofdtx_send_exec_noundo, NULL,                      NULL,                       NULL},
-        {ofdtx_send_exec_noundo, ofdtx_send_exec_socket_ts, ofdtx_send_exec_socket_2pl, ofdtx_send_exec_socket_2pl_ext}};
+        {ofdtx_send_exec_noundo, ofdtx_send_exec_socket_ts, ofdtx_send_exec_socket_2pl, NULL}};
 
     assert(ofdtx->type < sizeof(send_exec)/sizeof(send_exec[0]));
     assert(send_exec[ofdtx->type]);

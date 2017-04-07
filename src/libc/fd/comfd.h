@@ -103,18 +103,6 @@ void
 com_fd_unlock(struct com_fd *comfd);
 
 int
-com_fd_tpc_request(struct com_fd *comfd, int noundo);
-
-int
-com_fd_tpc_success(struct com_fd *comfd, int noundo);
-
-int
-com_fd_tpc_failure(struct com_fd *comfd, int noundo);
-
-int
-com_fd_tpc_noundo(struct com_fd *comfd, int noundo);
-
-int
 com_fd_validate(struct com_fd *comfd, int noundo);
 
 int

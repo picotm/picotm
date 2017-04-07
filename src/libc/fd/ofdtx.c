@@ -25,7 +25,6 @@
 #include "cmapss.h"
 #include "rwlockmap.h"
 #include "rwstatemap.h"
-#include "connection.h"
 #include "region.h"
 #include "regiontab.h"
 #include "ioop.h"
@@ -95,7 +94,6 @@ ofdtx_init(struct ofdtx *ofdtx)
     ofdtx->fcntltab = NULL;
     ofdtx->fcntltablen = 0;
 
-    ofdtx->conn = NULL;
     ofdtx->offset = 0;
     ofdtx->size = 0;
     ofdtx->type = TYPE_ANY;
@@ -463,8 +461,6 @@ ofdtx_ref(struct ofdtx *ofdtx, int ofdindex, int fildes, unsigned long flags, in
         ofdtx->size = 0;
         ofdtx->flags = 0;
 
-        ofdtx->conn = NULL;
-
         ofdtx->fcntltablen = 0;
         ofdtx->seektablen = 0;
         ofdtx->rdtablen = 0;
@@ -494,10 +490,6 @@ ofdtx_unref(struct ofdtx *ofdtx)
 
     if (!ofdtx_holds_ref(ofdtx)) {
         return;
-    }
-
-    if (ofdtx->conn) {
-        connection_destroy(ofdtx->conn);
     }
 
     struct ofd *ofd = ofdtab+ofdtx->ofd;

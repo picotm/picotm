@@ -24,7 +24,6 @@
 #include "cmapss.h"
 #include "rwlockmap.h"
 #include "rwstatemap.h"
-#include "connection.h"
 #include "fcntlop.h"
 #include "ofdid.h"
 #include "ofd.h"
@@ -47,55 +46,6 @@ ofdtx_recv_exec_noundo(struct ofdtx *ofdtx, int sockfd,
     return TEMP_FAILURE_RETRY(recv(sockfd, buffer, length, flags));
 }
 
-static ssize_t
-ofdtx_recv_exec_socket_2pl_ext(struct ofdtx *ofdtx, int sockfd,
-                                                    void *buffer,
-                                                    size_t length,
-                                                    int flags,
-                                                    int *cookie)
-{
-    int type;
-    socklen_t typelen = sizeof(type);
-
-    assert(ofdtx);
-
-    if (flags) {
-        return ERR_NOUNDO;
-    }
-
-    /* Exclude non-stream sockets */
-
-    if (getsockopt(sockfd, SOL_SOCKET, SO_TYPE, &type, &typelen) < 0) {
-        return ERR_SYSTEM;
-    }
-    if (type != SOCK_STREAM) {
-        return ERR_NOUNDO;
-    }
-
-    /* If this is the first call to this socket within the transaction, no
-       connection structure exists yet, therefore create one. */
-
-    if (!ofdtx->conn) {
-        ofdtx->conn = connection_create(sockfd);
-
-        if (!ofdtx->conn) {
-            return ERR_SYSTEM;
-        }
-    }
-
-    struct ofd *ofd = ofdtab+ofdtx->ofd;
-
-    /* Write-lock socket */
-
-    int err;
-
-    if ((err = ofd_wrlock_state(ofd, &ofdtx->modedata.tpl.rwstate)) < 0) {
-        return err;
-    }
-
-    return connection_recv(ofdtx->conn, buffer, length);
-}
-
 ssize_t
 ofdtx_recv_exec(struct ofdtx *ofdtx, int sockfd,
                                      void *buffer,
@@ -112,7 +62,7 @@ ofdtx_recv_exec(struct ofdtx *ofdtx, int sockfd,
         {ofdtx_recv_exec_noundo, NULL, NULL, NULL},
         {ofdtx_recv_exec_noundo, NULL, NULL, NULL},
         {ofdtx_recv_exec_noundo, NULL, NULL, NULL},
-        {ofdtx_recv_exec_noundo, NULL, NULL, ofdtx_recv_exec_socket_2pl_ext}};
+        {ofdtx_recv_exec_noundo, NULL, NULL, NULL}};
 
     assert(ofdtx->type < sizeof(recv_exec)/sizeof(recv_exec[0]));
     assert(recv_exec[ofdtx->type]);
@@ -141,12 +91,6 @@ ofdtx_recv_apply_noundo(void)
     return 0;
 }
 
-static ssize_t
-ofdtx_recv_apply_socket_2pl_ext(void)
-{
-    return 0;
-}
-
 int
 ofdtx_recv_apply(struct ofdtx *ofdtx, int sockfd, const struct com_fd_event *event, size_t n)
 {
@@ -154,7 +98,7 @@ ofdtx_recv_apply(struct ofdtx *ofdtx, int sockfd, const struct com_fd_event *eve
         {ofdtx_recv_apply_noundo, NULL, NULL, NULL},
         {ofdtx_recv_apply_noundo, NULL, NULL, NULL},
         {ofdtx_recv_apply_noundo, NULL, NULL, NULL},
-        {ofdtx_recv_apply_noundo, NULL, NULL, ofdtx_recv_apply_socket_2pl_ext}};
+        {ofdtx_recv_apply_noundo, NULL, NULL, NULL}};
 
     assert(ofdtx->type < sizeof(recv_apply)/sizeof(recv_apply[0]));
     assert(recv_apply[ofdtx->type]);
@@ -166,12 +110,6 @@ ofdtx_recv_apply(struct ofdtx *ofdtx, int sockfd, const struct com_fd_event *eve
  * Undo
  */
 
-static int
-ofdtx_recv_undo_socket_2pl_ext(struct ofdtx *ofdtx, int sockfd, int cookie)
-{
-    return 0;
-}
-
 int
 ofdtx_recv_undo(struct ofdtx *ofdtx, int sockfd, int cookie)
 {
@@ -179,7 +117,7 @@ ofdtx_recv_undo(struct ofdtx *ofdtx, int sockfd, int cookie)
         {NULL, NULL, NULL, NULL},
         {NULL, NULL, NULL, NULL},
         {NULL, NULL, NULL, NULL},
-        {NULL, NULL, NULL, ofdtx_recv_undo_socket_2pl_ext}};
+        {NULL, NULL, NULL, NULL}};
 
     assert(ofdtx->type < sizeof(recv_undo)/sizeof(recv_undo[0]));
     assert(recv_undo[ofdtx->type]);

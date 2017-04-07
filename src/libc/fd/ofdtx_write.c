@@ -24,7 +24,6 @@
 #include "cmapss.h"
 #include "rwlockmap.h"
 #include "rwstatemap.h"
-#include "connection.h"
 #include "fcntlop.h"
 #include "ofdid.h"
 #include "ofd.h"
@@ -196,51 +195,6 @@ ofdtx_write_exec_socket_2pl(struct ofdtx *ofdtx, int fildes, const void *buf,
     return nbyte;
 }
 
-static ssize_t
-ofdtx_write_exec_socket_2pl_ext(struct ofdtx *ofdtx, int sockfd,
-                                               const void *buf,
-                                                     size_t nbyte,
-                                                     int *cookie)
-{
-    int type;
-    socklen_t typelen = sizeof(type);
-
-    assert(ofdtx);
-
-    /* Exclude non-stream sockets */
-
-    if (getsockopt(sockfd, SOL_SOCKET, SO_TYPE, &type, &typelen) < 0) {
-        return ERR_SYSTEM;
-    }
-    if (type != SOCK_STREAM) {
-        return ERR_NOUNDO;
-    }
-
-    /* If this is the first call to this socket within the transaction, no
-       connection structure exists yet, therefore create one. */
-
-    if (!ofdtx->conn) {
-        ofdtx->conn = connection_create(sockfd);
-
-        if (!ofdtx->conn) {
-            return ERR_SYSTEM;
-        }
-    }
-
-    /* Write-lock socket */
-    {
-        struct ofd *ofd = ofdtab+ofdtx->ofd;
-
-        int err;
-
-        if ((err = ofd_wrlock_state(ofd, &ofdtx->modedata.tpl.rwstate)) < 0) {
-            return err;
-        }
-    }
-
-    return connection_send(ofdtx->conn, buf, nbyte);
-}
-
 ssize_t
 ofdtx_write_exec(struct ofdtx *ofdtx, int fildes, const void *buf,
                                       size_t nbyte, int *cookie, int noundo)
@@ -253,7 +207,7 @@ ofdtx_write_exec(struct ofdtx *ofdtx, int fildes, const void *buf,
         {ofdtx_write_exec_noundo, NULL,                        NULL,                         NULL},
         {ofdtx_write_exec_noundo, ofdtx_write_exec_regular_ts, ofdtx_write_exec_regular_2pl, NULL},
         {ofdtx_write_exec_noundo, ofdtx_write_exec_fifo_ts,    ofdtx_write_exec_fifo_2pl,    NULL},
-        {ofdtx_write_exec_noundo, ofdtx_write_exec_socket_ts,  ofdtx_write_exec_socket_2pl,  ofdtx_write_exec_socket_2pl_ext}};
+        {ofdtx_write_exec_noundo, ofdtx_write_exec_socket_ts,  ofdtx_write_exec_socket_2pl,  NULL}};
 
     assert(ofdtx->type < sizeof(write_exec)/sizeof(write_exec[0]));
     assert(write_exec[ofdtx->type]);
@@ -378,12 +332,6 @@ ofdtx_write_apply_socket(struct ofdtx *ofdtx, int sockfd, int cookie)
     return 0;
 }
 
-static int
-ofdtx_write_apply_socket_2pl_ext(struct ofdtx *ofdtx, int sockfd, int cookie)
-{
-    return 0;
-}
-
 ssize_t
 ofdtx_write_apply(struct ofdtx *ofdtx, int fildes, const struct com_fd_event *event, size_t n)
 {
@@ -391,7 +339,7 @@ ofdtx_write_apply(struct ofdtx *ofdtx, int fildes, const struct com_fd_event *ev
         {ofdtx_write_apply_noundo, NULL,                         NULL,                          NULL},
         {ofdtx_write_apply_noundo, ofdtx_write_apply_regular_ts, ofdtx_write_apply_regular_2pl, NULL},
         {ofdtx_write_apply_noundo, ofdtx_write_apply_fifo,       ofdtx_write_apply_fifo,        NULL},
-        {ofdtx_write_apply_noundo, ofdtx_write_apply_socket,     ofdtx_write_apply_socket,      ofdtx_write_apply_socket_2pl_ext}};
+        {ofdtx_write_apply_noundo, ofdtx_write_apply_socket,     ofdtx_write_apply_socket,      NULL}};
 
     assert(ofdtx->type < sizeof(write_apply)/sizeof(write_apply[0]));
     assert(write_apply[ofdtx->type][ofdtx->ccmode]);

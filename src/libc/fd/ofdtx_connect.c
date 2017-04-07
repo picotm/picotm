@@ -25,7 +25,6 @@
 #include "rwlockmap.h"
 #include "rwstatemap.h"
 #include "counter.h"
-#include "connection.h"
 #include "fcntlop.h"
 #include "ofdid.h"
 #include "ofd.h"
@@ -47,54 +46,6 @@ ofdtx_connect_exec_noundo(struct ofdtx *ofdtx, int sockfd,
     return TEMP_FAILURE_RETRY(connect(sockfd, serv_addr, addrlen));
 }
 
-static int
-ofdtx_connect_exec_socket_2pl_ext(struct ofdtx *ofdtx, int sockfd,
-                                                       const struct sockaddr *serv_addr,
-                                                       socklen_t addrlen,
-                                                       int *cookie)
-{
-    int type;
-    socklen_t typelen = sizeof(type);
-
-    assert(ofdtx);
-
-    /* Exclude non-stream sockets */
-
-    if (getsockopt(sockfd, SOL_SOCKET, SO_TYPE, &type, &typelen) < 0) {
-        return ERR_SYSTEM;
-    }
-    if (type != SOCK_STREAM) {
-        return ERR_NOUNDO;
-    }
-
-    /* Finish first connect, before second connect can start */
-    if (ofdtx->conn) {
-        return ERR_NOUNDO;
-    }
-
-    /* Create connection */
-
-    struct connection *conn = connection_create(sockfd);
-
-    if (!conn) {
-        return ERR_SYSTEM;
-    }
-
-    int err = TEMP_FAILURE_RETRY(connect(sockfd, serv_addr, addrlen));
-
-    if (err) {
-        connection_destroy(conn);
-        return err;
-    }
-
-    ofdtx->conn = conn;
-
-    /* Signal apply/undo */
-    *cookie = 0;
-
-    return 0;
-}
-
 int
 ofdtx_connect_exec(struct ofdtx *ofdtx, int sockfd,
                                         const struct sockaddr *serv_addr,
@@ -110,7 +61,7 @@ ofdtx_connect_exec(struct ofdtx *ofdtx, int sockfd,
         {ofdtx_connect_exec_noundo, NULL, NULL, NULL},
         {ofdtx_connect_exec_noundo, NULL, NULL, NULL},
         {ofdtx_connect_exec_noundo, NULL, NULL, NULL},
-        {ofdtx_connect_exec_noundo, NULL, NULL, ofdtx_connect_exec_socket_2pl_ext}};
+        {ofdtx_connect_exec_noundo, NULL, NULL, NULL}};
 
     assert(ofdtx->type < sizeof(connect_exec)/sizeof(connect_exec[0]));
     assert(connect_exec[ofdtx->type]);
@@ -142,12 +93,6 @@ ofdtx_connect_apply_noundo(struct ofdtx *ofdtx, int sockfd, const struct com_fd_
     return 0;
 }
 
-static int
-ofdtx_connect_apply_socket_2pl_ext(struct ofdtx *ofdtx, int sockfd, const struct com_fd_event *event, size_t n)
-{
-    return 0;
-}
-
 int
 ofdtx_connect_apply(struct ofdtx *ofdtx, int sockfd, const struct com_fd_event *event, size_t n)
 {
@@ -155,7 +100,7 @@ ofdtx_connect_apply(struct ofdtx *ofdtx, int sockfd, const struct com_fd_event *
         {ofdtx_connect_apply_noundo, NULL, NULL, NULL},
         {ofdtx_connect_apply_noundo, NULL, NULL, NULL},
         {ofdtx_connect_apply_noundo, NULL, NULL, NULL},
-        {ofdtx_connect_apply_noundo, NULL, NULL, ofdtx_connect_apply_socket_2pl_ext}};
+        {ofdtx_connect_apply_noundo, NULL, NULL, NULL}};
 
     assert(ofdtx->type < sizeof(connect_apply)/sizeof(connect_apply[0]));
     assert(connect_apply[ofdtx->type]);
@@ -168,20 +113,13 @@ ofdtx_connect_apply(struct ofdtx *ofdtx, int sockfd, const struct com_fd_event *
  */
 
 int
-ofdtx_connect_undo_socket_2pl_ext(struct ofdtx *ofdtx, int sockfd,
-                                                       int cookie)
-{
-    return TEMP_FAILURE_RETRY(shutdown(sockfd, SHUT_RDWR));
-}
-
-int
 ofdtx_connect_undo(struct ofdtx *ofdtx, int sockfd, int cookie)
 {
     static int (* const connect_undo[][4])(struct ofdtx*, int, int) = {
         {NULL, NULL, NULL, NULL},
         {NULL, NULL, NULL, NULL},
         {NULL, NULL, NULL, NULL},
-        {NULL, NULL, NULL, ofdtx_connect_undo_socket_2pl_ext}};
+        {NULL, NULL, NULL, NULL}};
 
     assert(ofdtx->type < sizeof(connect_undo)/sizeof(connect_undo[0]));
     assert(connect_undo[ofdtx->type]);

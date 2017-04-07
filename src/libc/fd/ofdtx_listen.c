@@ -24,7 +24,6 @@
 #include "cmapss.h"
 #include "rwlockmap.h"
 #include "rwstatemap.h"
-#include "connection.h"
 #include "fcntlop.h"
 #include "ofdid.h"
 #include "ofd.h"

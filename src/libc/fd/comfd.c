@@ -26,7 +26,6 @@
 #include "rwlockmap.h"
 #include "rwstatemap.h"
 #include "counter.h"
-#include "connection.h"
 #include "openop.h"
 #include "openoptab.h"
 #include "pipeop.h"
@@ -254,110 +253,6 @@ com_fd_unlock(struct com_fd *comfd)
 
     free(comfd->ifd);
     comfd->ifdlen = 0;
-}
-
-int
-com_fd_tpc_request(struct com_fd *comfd, int noundo)
-{
-    assert(comfd);
-
-    if (noundo) {
-        return 0;
-    }
-
-    struct ofdtx *ofdtx = comfd->ofdtx;
-
-    while (ofdtx < comfd->ofdtx+comfd->ofdtx_max_index) {
-
-        if (ofdtx->conn) {
-            int res = connection_eotx(ofdtx->conn);
-
-            if (res < 0) {
-                return res;
-            }
-        }
-        ++ofdtx;
-    }
-
-    return 0;
-}
-
-int
-com_fd_tpc_success(struct com_fd *comfd, int noundo)
-{
-    assert(comfd);
-
-    if (noundo) {
-        return 0;
-    }
-
-    struct ofdtx *ofdtx = comfd->ofdtx;
-
-    while (ofdtx < comfd->ofdtx+comfd->ofdtx_max_index) {
-
-        if (ofdtx->conn) {
-            int res = connection_commit(ofdtx->conn);
-
-            if (res < 0) {
-                return res;
-            }
-        }
-        ++ofdtx;
-    }
-
-    return 0;
-}
-
-int
-com_fd_tpc_failure(struct com_fd *comfd, int noundo)
-{
-    assert(comfd);
-
-    if (noundo) {
-        return 0;
-    }
-
-    struct ofdtx *ofdtx = comfd->ofdtx;
-
-    while (ofdtx < comfd->ofdtx+comfd->ofdtx_max_index) {
-
-        if (ofdtx->conn) {
-            int res = connection_abort(ofdtx->conn);
-
-            if (res < 0) {
-                return res;
-            }
-        }
-        ++ofdtx;
-    }
-
-    return 0;
-}
-
-int
-com_fd_tpc_noundo(struct com_fd *comfd, int noundo)
-{
-    assert(comfd);
-
-    if (noundo) {
-        return 0;
-    }
-
-    struct ofdtx *ofdtx = comfd->ofdtx;
-
-    while (ofdtx < comfd->ofdtx+comfd->ofdtx_max_index) {
-
-        if (ofdtx->conn) {
-            int res = connection_noundo(ofdtx->conn);
-
-            if (res < 0) {
-                return res;
-            }
-        }
-        ++ofdtx;
-    }
-
-    return 0;
 }
 
 int

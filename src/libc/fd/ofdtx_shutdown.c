@@ -43,17 +43,6 @@ ofdtx_shutdown_exec_noundo(struct ofdtx *ofdtx, int sockfd, int how,
     return shutdown(sockfd, how);
 }
 
-static int
-ofdtx_shutdown_exec_socket_2pl_ext(struct ofdtx *ofdtx, int sockfd,
-                                                        int how,
-                                                        int *cookie)
-{
-    /* Signal apply/undo */
-    *cookie = 0;
-
-    return 0;
-}
-
 int
 ofdtx_shutdown_exec(struct ofdtx *ofdtx, int sockfd,
                                          int how,
@@ -67,7 +56,7 @@ ofdtx_shutdown_exec(struct ofdtx *ofdtx, int sockfd,
         {ofdtx_shutdown_exec_noundo, NULL, NULL, NULL},
         {ofdtx_shutdown_exec_noundo, NULL, NULL, NULL},
         {ofdtx_shutdown_exec_noundo, NULL, NULL, NULL},
-        {ofdtx_shutdown_exec_noundo, NULL, NULL, ofdtx_shutdown_exec_socket_2pl_ext}};
+        {ofdtx_shutdown_exec_noundo, NULL, NULL, NULL}};
 
     assert(ofdtx->type < sizeof(shutdown_exec)/sizeof(shutdown_exec[0]));
     assert(shutdown_exec[ofdtx->type]);
@@ -96,19 +85,6 @@ ofdtx_shutdown_apply_noundo(struct ofdtx *ofdtx, int sockfd, const struct com_fd
     return 0;
 }
 
-static int
-ofdtx_shutdown_apply_socket_2pl_ext(struct ofdtx *ofdtx, int sockfd, const struct com_fd_event *event, size_t n)
-{
-    int err = 0;
-
-    while (n && !err) {
-        err = TEMP_FAILURE_RETRY(shutdown(sockfd, SHUT_RDWR));
-        --n;
-    }
-
-    return err;
-}
-
 int
 ofdtx_shutdown_apply(struct ofdtx *ofdtx, int sockfd, const struct com_fd_event *event, size_t n)
 {
@@ -118,7 +94,7 @@ ofdtx_shutdown_apply(struct ofdtx *ofdtx, int sockfd, const struct com_fd_event 
         {ofdtx_shutdown_apply_noundo, NULL, NULL, NULL},
         {ofdtx_shutdown_apply_noundo, NULL, NULL, NULL},
         {ofdtx_shutdown_apply_noundo, NULL, NULL, NULL},
-        {ofdtx_shutdown_apply_noundo, NULL, NULL, ofdtx_shutdown_apply_socket_2pl_ext}};
+        {ofdtx_shutdown_apply_noundo, NULL, NULL, NULL}};
 
     assert(ofdtx->type < sizeof(shutdown_apply)/sizeof(shutdown_apply[0]));
     assert(shutdown_apply[ofdtx->type]);
@@ -131,20 +107,13 @@ ofdtx_shutdown_apply(struct ofdtx *ofdtx, int sockfd, const struct com_fd_event 
  */
 
 int
-ofdtx_shotdown_undo_socket_2pl_ext(struct ofdtx *ofdtx, int sockfd,
-                                                        int cookie)
-{
-    return 0;
-}
-
-int
 ofdtx_shutdown_undo(struct ofdtx *ofdtx, int sockfd, int cookie)
 {
     static int (* const shutdown_undo[][4])(struct ofdtx*, int, int) = {
         {NULL, NULL, NULL, NULL},
         {NULL, NULL, NULL, NULL},
         {NULL, NULL, NULL, NULL},
-        {NULL, NULL, NULL, ofdtx_shotdown_undo_socket_2pl_ext}};
+        {NULL, NULL, NULL, NULL}};
 
     assert(ofdtx->type < sizeof(shutdown_undo)/sizeof(shutdown_undo[0]));
     assert(shutdown_undo[ofdtx->type]);

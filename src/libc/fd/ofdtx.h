@@ -10,7 +10,6 @@ struct sockaddr;
 struct ioop;
 struct seekop;
 struct fcntlop;
-struct connection;
 struct com_fd_event;
 
 enum {
@@ -44,8 +43,6 @@ struct ofdtx
 
     struct fcntlop *fcntltab;
     size_t          fcntltablen;
-
-    struct connection *conn;
 
     enum ccmode ccmode; /**< \brief CC mode of domain */
     enum ofd_type type;
