@@ -57,20 +57,20 @@ fdtx_close_exec(struct fdtx *fdtx, int fildes, int *cookie, int noundo)
     static int (* const close_exec[2])(struct fdtx*, int, int*) = {
         fdtx_close_exec_noundo, fdtx_close_exec_ts};
 
-    assert(fdtx->ccmode < sizeof(close_exec)/sizeof(close_exec[0]));
+    assert(fdtx->cc_mode < sizeof(close_exec)/sizeof(close_exec[0]));
 
     if (noundo) {
         /* TX irrevokable */
-        fdtx->ccmode = CC_MODE_NOUNDO;
+        fdtx->cc_mode = SYSTX_LIBC_CC_MODE_NOUNDO;
     } else {
         /* TX revokable */
-        if ((fdtx->ccmode == CC_MODE_NOUNDO)
-            || !close_exec[fdtx->ccmode]) {
+        if ((fdtx->cc_mode == SYSTX_LIBC_CC_MODE_NOUNDO)
+            || !close_exec[fdtx->cc_mode]) {
             return ERR_NOUNDO;
         }
     }
 
-    return close_exec[fdtx->ccmode](fdtx, fildes, cookie);
+    return close_exec[fdtx->cc_mode](fdtx, fildes, cookie);
 }
 
 /*
@@ -98,9 +98,9 @@ fdtx_close_apply(struct fdtx *fdtx, int fildes, int cookie)
     static int (* const close_apply[2])(struct fdtx*, int, int) = {
         fdtx_close_apply_noundo, fdtx_close_apply_ts};
 
-    assert(fdtx->ccmode < sizeof(close_apply)/sizeof(close_apply[0]));
+    assert(fdtx->cc_mode < sizeof(close_apply)/sizeof(close_apply[0]));
 
-    return close_apply[fdtx->ccmode](fdtx, fildes, cookie);
+    return close_apply[fdtx->cc_mode](fdtx, fildes, cookie);
 }
 
 /*
@@ -119,9 +119,9 @@ fdtx_close_undo(struct fdtx *fdtx, int fildes, int cookie)
     static int (* const close_undo[2])(struct fdtx*, int, int) = {
         NULL, fdtx_close_undo_ts};
 
-    assert(fdtx->ccmode < sizeof(close_undo)/sizeof(close_undo[0]));
-    assert(close_undo[fdtx->ccmode]);
+    assert(fdtx->cc_mode < sizeof(close_undo)/sizeof(close_undo[0]));
+    assert(close_undo[fdtx->cc_mode]);
 
-    return close_undo[fdtx->ccmode](fdtx, fildes, cookie);
+    return close_undo[fdtx->cc_mode](fdtx, fildes, cookie);
 }
 

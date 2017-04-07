@@ -90,7 +90,7 @@ fdtx_fcntl_apply(struct fdtx *fdtx, int cookie)
     return fd_fcntl_apply(fdtab+fdtx->fildes,
                                 fdtx->fildes, fdtx->fcntltab[cookie].command,
                                              &fdtx->fcntltab[cookie].value,
-                                              fdtx->ccmode);
+                                              fdtx->cc_mode);
 }
 
 /*
@@ -109,7 +109,7 @@ fdtx_fcntl_undo(struct fdtx *fdtx, int cookie)
     int res = fd_fcntl_undo(fdtab+fdtx->fildes,
                                   fdtx->fildes, fdtx->fcntltab[cookie].command,
                                                &fdtx->fcntltab[cookie].oldvalue,
-                                                fdtx->ccmode);
+                                                fdtx->cc_mode);
     fd_unlock(fdtab+fdtx->fildes);
 
     return res;

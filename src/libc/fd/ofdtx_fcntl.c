@@ -225,16 +225,16 @@ ofdtx_fcntl_exec(struct ofdtx *ofdtx, int fildes,
 
     if (noundo) {
         /* TX irrevokable */
-        ofdtx->ccmode = CC_MODE_NOUNDO;
+        ofdtx->cc_mode = SYSTX_LIBC_CC_MODE_NOUNDO;
     } else {
         /* TX revokable */
-        if ((ofdtx->ccmode == CC_MODE_NOUNDO)
-            || !fcntl_exec[ofdtx->type][ofdtx->ccmode]) {
+        if ((ofdtx->cc_mode == SYSTX_LIBC_CC_MODE_NOUNDO)
+            || !fcntl_exec[ofdtx->type][ofdtx->cc_mode]) {
             return ERR_NOUNDO;
         }
     }
 
-    return fcntl_exec[ofdtx->type][ofdtx->ccmode](ofdtx, fildes, cmd, arg, cookie);
+    return fcntl_exec[ofdtx->type][ofdtx->cc_mode](ofdtx, fildes, cmd, arg, cookie);
 }
 
 /*

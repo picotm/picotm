@@ -73,16 +73,16 @@ ofdtx_fsync_exec(struct ofdtx *ofdtx, int fildes, int noundo, int *cookie)
 
     if (noundo) {
         /* TX irrevokable */
-        ofdtx->ccmode = CC_MODE_NOUNDO;
+        ofdtx->cc_mode = SYSTX_LIBC_CC_MODE_NOUNDO;
     } else {
         /* TX revokable */
-        if ((ofdtx->ccmode == CC_MODE_NOUNDO)
-            || !fsync_exec[ofdtx->type][ofdtx->ccmode]) {
+        if ((ofdtx->cc_mode == SYSTX_LIBC_CC_MODE_NOUNDO)
+            || !fsync_exec[ofdtx->type][ofdtx->cc_mode]) {
             return ERR_NOUNDO;
         }
     }
 
-    return fsync_exec[ofdtx->type][ofdtx->ccmode](fildes, cookie);
+    return fsync_exec[ofdtx->type][ofdtx->cc_mode](fildes, cookie);
 }
 
 /*
@@ -117,9 +117,9 @@ ofdtx_fsync_apply(struct ofdtx *ofdtx, int fildes, const struct com_fd_event *ev
         {ofdtx_fsync_apply_noundo, NULL,                         NULL,                          NULL}};
 
     assert(ofdtx->type < sizeof(fsync_apply)/sizeof(fsync_apply[0]));
-    assert(fsync_apply[ofdtx->type][ofdtx->ccmode]);
+    assert(fsync_apply[ofdtx->type][ofdtx->cc_mode]);
 
-    return fsync_apply[ofdtx->type][ofdtx->ccmode](fildes);
+    return fsync_apply[ofdtx->type][ofdtx->cc_mode](fildes);
 }
 
 /*
@@ -148,8 +148,8 @@ ofdtx_fsync_undo(struct ofdtx *ofdtx, int fildes, int cookie)
         {NULL, NULL,                        NULL,                         NULL}};
 
     assert(ofdtx->type < sizeof(fsync_undo)/sizeof(fsync_undo[0]));
-    assert(fsync_undo[ofdtx->type][ofdtx->ccmode]);
+    assert(fsync_undo[ofdtx->type][ofdtx->cc_mode]);
 
-    return fsync_undo[ofdtx->type][ofdtx->ccmode](fildes, cookie);
+    return fsync_undo[ofdtx->type][ofdtx->cc_mode](fildes, cookie);
 }
 

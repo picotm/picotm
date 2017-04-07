@@ -5,6 +5,8 @@
 #ifndef FDTX_H
 #define FDTX_H
 
+#include "systx/systx-libc.h"
+
 #define FDTX_FL_LOCALSTATE 1L /** \brief Signals local state changes */
 
 struct fcntlop;
@@ -15,7 +17,7 @@ struct fdtx
 {
     int fildes;
     int ofd;
-    enum ccmode ccmode;
+    enum systx_libc_cc_mode cc_mode;
 
 	unsigned long flags;
 

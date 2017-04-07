@@ -60,6 +60,8 @@ com_fd_init(struct com_fd *comfd)
 {
     assert(comfd);
 
+    comfd->optcc = false;
+
     comfd->ofdtx_max_index = 0;
     comfd->fdtx_max_fildes = 0;
 
@@ -105,13 +107,13 @@ com_fd_uninit(struct com_fd *comfd)
 void
 com_fd_set_optcc(struct com_fd *comfd, int optcc)
 {
-    tanger_stm_set_optcc(tanger_stm_get_tx(), optcc);
+    comfd->optcc = optcc;
 }
 
 int
 com_fd_get_optcc(const struct com_fd *comfd)
 {
-    return tanger_stm_get_optcc(tanger_stm_get_tx());
+    return comfd->optcc;
 }
 
 void

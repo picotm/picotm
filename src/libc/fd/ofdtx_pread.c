@@ -191,16 +191,16 @@ ofdtx_pread_exec(struct ofdtx *ofdtx, int fildes, void *buf,
 
     if (noundo) {
         /* TX irrevokable */
-        ofdtx->ccmode = CC_MODE_NOUNDO;
+        ofdtx->cc_mode = SYSTX_LIBC_CC_MODE_NOUNDO;
     } else {
         /* TX revokable */
-        if ((ofdtx->ccmode == CC_MODE_NOUNDO)
-            || !pread_exec[ofdtx->type][ofdtx->ccmode]) {
+        if ((ofdtx->cc_mode == SYSTX_LIBC_CC_MODE_NOUNDO)
+            || !pread_exec[ofdtx->type][ofdtx->cc_mode]) {
             return ERR_NOUNDO;
         }
     }
 
-    return pread_exec[ofdtx->type][ofdtx->ccmode](ofdtx, fildes, buf, nbyte, offset, cookie, valmode);
+    return pread_exec[ofdtx->type][ofdtx->cc_mode](ofdtx, fildes, buf, nbyte, offset, cookie, valmode);
 }
 
 /*
@@ -228,7 +228,7 @@ ofdtx_pread_apply(struct ofdtx *ofdtx, int fildes, const struct com_fd_event *ev
     int err;
 
     while (n && !err) {
-        err = pread_apply[ofdtx->type][ofdtx->ccmode]();
+        err = pread_apply[ofdtx->type][ofdtx->cc_mode]();
         --n;
     }
 
@@ -257,6 +257,6 @@ ofdtx_pread_undo(struct ofdtx *ofdtx, int fildes, int cookie)
     assert(ofdtx->type < sizeof(pread_undo)/sizeof(pread_undo[0]));
     assert(pread_undo[ofdtx->type]);
 
-    return pread_undo[ofdtx->type][ofdtx->ccmode]();
+    return pread_undo[ofdtx->type][ofdtx->cc_mode]();
 }
 

@@ -118,6 +118,7 @@ libsystx_c_la_SOURCES = alloc/comalloc.c \
                         fs/fchdirop.h \
                         fs/fchdiroptab.c \
                         fs/fchdiroptab.h \
+                        libc.c \
                         mutex.c \
                         mutex.h \
                         spinlock.c \

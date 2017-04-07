@@ -5,6 +5,8 @@
 #ifndef OFDTX_H
 #define OFDTX_H
 
+#include "systx/systx-libc.h"
+
 struct sockaddr;
 
 struct ioop;
@@ -44,8 +46,8 @@ struct ofdtx
     struct fcntlop *fcntltab;
     size_t          fcntltablen;
 
-    enum ccmode ccmode; /**< \brief CC mode of domain */
-    enum ofd_type type;
+    enum systx_libc_cc_mode cc_mode; /**< \brief CC mode of domain */
+    enum systx_libc_file_type type;
     off_t offset; /**< \brief Local file-pointer position */
     off_t size; /**< \brief Size of regular files */
 

@@ -160,16 +160,16 @@ ofdtx_pwrite_exec(struct ofdtx *ofdtx, int fildes, const void *buf,
 
     if (noundo) {
         /* TX irrevokable */
-        ofdtx->ccmode = CC_MODE_NOUNDO;
+        ofdtx->cc_mode = SYSTX_LIBC_CC_MODE_NOUNDO;
     } else {
         /* TX revokable */
-        if ((ofdtx->ccmode == CC_MODE_NOUNDO)
-            || !pwrite_exec[ofdtx->type][ofdtx->ccmode]) {
+        if ((ofdtx->cc_mode == SYSTX_LIBC_CC_MODE_NOUNDO)
+            || !pwrite_exec[ofdtx->type][ofdtx->cc_mode]) {
             return ERR_NOUNDO;
         }
     }
 
-    return pwrite_exec[ofdtx->type][ofdtx->ccmode](ofdtx, fildes, buf, nbyte, offset, cookie);
+    return pwrite_exec[ofdtx->type][ofdtx->cc_mode](ofdtx, fildes, buf, nbyte, offset, cookie);
 }
 
 /*
@@ -233,7 +233,7 @@ ofdtx_pwrite_apply(struct ofdtx *ofdtx, int fildes, const struct com_fd_event *e
     assert(ofdtx->type < sizeof(pwrite_apply)/sizeof(pwrite_apply[0]));
     assert(pwrite_apply[ofdtx->type]);
 
-    return pwrite_apply[ofdtx->type][ofdtx->ccmode](ofdtx, fildes, event, n);
+    return pwrite_apply[ofdtx->type][ofdtx->cc_mode](ofdtx, fildes, event, n);
 }
 
 /*
@@ -258,6 +258,6 @@ ofdtx_pwrite_undo(struct ofdtx *ofdtx, int fildes, int cookie)
     assert(ofdtx->type < sizeof(pwrite_undo)/sizeof(pwrite_undo[0]));
     assert(pwrite_undo[ofdtx->type]);
 
-    return pwrite_undo[ofdtx->type][ofdtx->ccmode]();
+    return pwrite_undo[ofdtx->type][ofdtx->cc_mode]();
 }
 

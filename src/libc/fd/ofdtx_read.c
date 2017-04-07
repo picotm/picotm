@@ -177,16 +177,16 @@ ofdtx_read_exec(struct ofdtx *ofdtx, int fildes, void *buf,
 
     if (noundo) {
         /* TX irrevokable */
-        ofdtx->ccmode = CC_MODE_NOUNDO;
+        ofdtx->cc_mode = SYSTX_LIBC_CC_MODE_NOUNDO;
     } else {
         /* TX revokable */
-        if ((ofdtx->ccmode == CC_MODE_NOUNDO)
-            || !read_exec[ofdtx->type][ofdtx->ccmode]) {
+        if ((ofdtx->cc_mode == SYSTX_LIBC_CC_MODE_NOUNDO)
+            || !read_exec[ofdtx->type][ofdtx->cc_mode]) {
             return ERR_NOUNDO;
         }
     }
 
-    return read_exec[ofdtx->type][ofdtx->ccmode](ofdtx, fildes, buf, nbyte, cookie, valmode);
+    return read_exec[ofdtx->type][ofdtx->cc_mode](ofdtx, fildes, buf, nbyte, cookie, valmode);
 }
 
 /*
@@ -234,7 +234,7 @@ ofdtx_read_apply(struct ofdtx *ofdtx, int fildes, const struct com_fd_event *eve
     assert(ofdtx->type < sizeof(read_apply)/sizeof(read_apply[0]));
     assert(read_apply[ofdtx->type]);
 
-    return read_apply[ofdtx->type][ofdtx->ccmode](ofdtx, fildes, event, n);
+    return read_apply[ofdtx->type][ofdtx->cc_mode](ofdtx, fildes, event, n);
 }
 
 /*
@@ -259,6 +259,6 @@ ofdtx_read_undo(struct ofdtx *ofdtx, int fildes, int cookie)
     assert(ofdtx->type < sizeof(read_undo)/sizeof(read_undo[0]));
     assert(read_undo[ofdtx->type]);
 
-    return read_undo[ofdtx->type][ofdtx->ccmode]();
+    return read_undo[ofdtx->type][ofdtx->cc_mode]();
 }
 

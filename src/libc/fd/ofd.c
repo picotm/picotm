@@ -11,9 +11,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <unistd.h>
 #include <tanger-stm-internal-errcode.h>
-#include "tanger-stm-ext-actions.h"
+#include <unistd.h>
 #include "types.h"
 #include "range.h"
 #include "mutex.h"
@@ -34,7 +33,7 @@
 static const unsigned long flag_bits = OFD_FL_LAST_BIT+4;
 
 static void
-ofd_set_type(struct ofd *ofd, enum ofd_type type)
+ofd_set_type(struct ofd *ofd, enum systx_libc_file_type type)
 {
 	assert(ofd);
 
@@ -47,11 +46,11 @@ ofd_set_type(struct ofd *ofd, enum ofd_type type)
 }
 
 static void
-ofd_set_ccmode(struct ofd *ofd, enum ccmode ccmode)
+ofd_set_ccmode(struct ofd *ofd, enum systx_libc_cc_mode cc_mode)
 {
     assert(ofd);
 
-    ofd->ccmode = ccmode;
+    ofd->cc_mode = cc_mode;
 }
 
 static off_t
@@ -96,7 +95,7 @@ ofd_init(struct ofd *ofd)
     }
 
     ofd->flags = 0;
-    ofd->type = TYPE_ANY;
+    ofd->type = SYSTX_LIBC_FILE_TYPE_OTHER;
 
     if ((err = counter_init(&ofd->ver)) < 0) {
         counter_uninit(&ofd->ref);
@@ -111,7 +110,7 @@ ofd_init(struct ofd *ofd)
         return err;
     }
 
-    ofd->ccmode = CC_MODE_NOUNDO;
+    ofd->cc_mode = SYSTX_LIBC_CC_MODE_NOUNDO;
 
     /* Type specific data */
 
@@ -184,13 +183,13 @@ ofd_unlock(struct ofd *ofd)
     pthread_rwlock_unlock(&ofd->lock);
 }
 
-enum ccmode
+enum systx_libc_cc_mode
 ofd_get_ccmode_nolock(const struct ofd *ofd)
 {
-    return ofd->ccmode;
+    return ofd->cc_mode;
 }
 
-enum ofd_type
+enum systx_libc_file_type
 ofd_get_type_nolock(const struct ofd *ofd)
 {
 	return ofd->type;
@@ -204,12 +203,12 @@ ofd_get_offset_nolock(const struct ofd *ofd)
     off_t pos;
 
     switch (ofd_get_type_nolock(ofd)) {
-        case TYPE_REGULAR:
+        case SYSTX_LIBC_FILE_TYPE_REGULAR:
             pos = ofd->data.regular.offset;
             break;
-        case TYPE_ANY:
-        case TYPE_FIFO:
-        case TYPE_SOCKET:
+        case SYSTX_LIBC_FILE_TYPE_OTHER:
+        case SYSTX_LIBC_FILE_TYPE_FIFO:
+        case SYSTX_LIBC_FILE_TYPE_SOCKET:
             pos = 0;
             break;
         default:
@@ -245,19 +244,19 @@ ofd_setup_from_fildes(struct ofd *ofd, int fildes)
 	}
 
     if (S_ISREG(buf.st_mode)) {
-        ofd_set_type(ofd, TYPE_REGULAR);
+        ofd_set_type(ofd, SYSTX_LIBC_FILE_TYPE_REGULAR);
     } else if (S_ISFIFO(buf.st_mode)){
-        ofd_set_type(ofd, TYPE_FIFO);
+        ofd_set_type(ofd, SYSTX_LIBC_FILE_TYPE_FIFO);
     } else if (S_ISSOCK(buf.st_mode)){
-        ofd_set_type(ofd, TYPE_SOCKET);
+        ofd_set_type(ofd, SYSTX_LIBC_FILE_TYPE_SOCKET);
     } else {
-        ofd_set_type(ofd, TYPE_ANY);
+        ofd_set_type(ofd, SYSTX_LIBC_FILE_TYPE_OTHER);
     }
 
-    ofd_set_ccmode(ofd, tanger_stm_ofd_type_get_ccmode(ofd_get_type_nolock(ofd)));
+    ofd_set_ccmode(ofd, systx_libc_get_file_type_cc_mode(ofd_get_type_nolock(ofd)));
 
     switch (ofd_get_type_nolock(ofd)) {
-        case TYPE_REGULAR:
+        case SYSTX_LIBC_FILE_TYPE_REGULAR:
             {
                 ofd->data.regular.offset = lseek(fildes, 0, SEEK_CUR);
                 if (ofd->data.regular.offset == (off_t)-1) {
@@ -266,9 +265,9 @@ ofd_setup_from_fildes(struct ofd *ofd, int fildes)
                 }
             }
             break;
-        case TYPE_FIFO:
-        case TYPE_ANY:
-        case TYPE_SOCKET:
+        case SYSTX_LIBC_FILE_TYPE_FIFO:
+        case SYSTX_LIBC_FILE_TYPE_OTHER:
+        case SYSTX_LIBC_FILE_TYPE_SOCKET:
             break;
         default:
             abort();
@@ -313,8 +312,8 @@ ofd_ref_check(struct ofd *ofd, int fildes, unsigned long flags)
 
 count_type
 ofd_ref_state(struct ofd *ofd, int fildes, unsigned long flags,
-              enum ofd_type *type,
-              enum ccmode *ccmode,
+              enum systx_libc_file_type *type,
+              enum systx_libc_cc_mode *ccmode,
               off_t *offset)
 {
     static int (* const ref[])(struct ofd*, int, unsigned long) = {
@@ -369,7 +368,7 @@ count_type
 ofd_ts_get_state_version(struct ofd *ofd)
 {
     assert(ofd);
-    assert(ofd_get_ccmode_nolock(ofd) == CC_MODE_TS);
+    assert(ofd_get_ccmode_nolock(ofd) == SYSTX_LIBC_CC_MODE_TS);
 
     return counter_get(&ofd->ver);
 }
@@ -378,8 +377,8 @@ int
 ofd_ts_get_region_versions(struct ofd *ofd, size_t nbyte, off_t offset, struct cmapss *cmapss)
 {
     assert(ofd);
-    assert(ofd_get_ccmode_nolock(ofd) == CC_MODE_TS);
-    assert(ofd_get_type_nolock(ofd) == TYPE_REGULAR);
+    assert(ofd_get_ccmode_nolock(ofd) == SYSTX_LIBC_CC_MODE_TS);
+    assert(ofd_get_type_nolock(ofd) == SYSTX_LIBC_FILE_TYPE_REGULAR);
     assert(cmapss);
 
     return cmapss_get_region(cmapss, reccount(nbyte),
@@ -391,7 +390,7 @@ int
 ofd_ts_validate_state(struct ofd *ofd, count_type ver)
 {
     assert(ofd);
-    assert(ofd_get_ccmode_nolock(ofd) == CC_MODE_TS);
+    assert(ofd_get_ccmode_nolock(ofd) == SYSTX_LIBC_CC_MODE_TS);
 
     int res;
 
@@ -412,8 +411,8 @@ int
 ofd_ts_validate_region(struct ofd *ofd, size_t nbyte, off_t offset, struct cmapss *cmapss)
 {
     assert(ofd);
-    assert(ofd_get_ccmode_nolock(ofd) == CC_MODE_TS);
-    assert(ofd_get_type_nolock(ofd) == TYPE_REGULAR);
+    assert(ofd_get_ccmode_nolock(ofd) == SYSTX_LIBC_CC_MODE_TS);
+    assert(ofd_get_type_nolock(ofd) == SYSTX_LIBC_FILE_TYPE_REGULAR);
     assert(cmapss);
 
     return cmapss_validate_region(cmapss,
@@ -426,7 +425,7 @@ long long
 ofd_ts_inc_state_version(struct ofd *ofd)
 {
     assert(ofd);
-    assert(ofd_get_ccmode_nolock(ofd) == CC_MODE_TS);
+    assert(ofd_get_ccmode_nolock(ofd) == SYSTX_LIBC_CC_MODE_TS);
 
     return counter_inc(&ofd->ver);
 }
@@ -437,18 +436,18 @@ ofd_ts_inc_region_versions(struct ofd *ofd, size_t nbyte, off_t offset, struct c
     int res;
 
     assert(ofd);
-    assert(ofd_get_ccmode_nolock(ofd) == CC_MODE_TS);
+    assert(ofd_get_ccmode_nolock(ofd) == SYSTX_LIBC_CC_MODE_TS);
 
     switch (ofd_get_type_nolock(ofd)) {
-        case TYPE_REGULAR:
+        case SYSTX_LIBC_FILE_TYPE_REGULAR:
             res = cmapss_inc_region(cmapss,
                                     reccount(nbyte),
                                     recoffset(offset),
                                    &ofd->data.regular.cmap);
             break;
-        case TYPE_ANY:
-        case TYPE_FIFO:
-        case TYPE_SOCKET:
+        case SYSTX_LIBC_FILE_TYPE_OTHER:
+        case SYSTX_LIBC_FILE_TYPE_FIFO:
+        case SYSTX_LIBC_FILE_TYPE_SOCKET:
             res = 0;
             break;
         default:
@@ -464,18 +463,18 @@ ofd_ts_lock_region(struct ofd *ofd, size_t nbyte, off_t offset, struct cmapss *c
     int res;
 
     assert(ofd);
-    assert(ofd_get_ccmode_nolock(ofd) == CC_MODE_TS);
+    assert(ofd_get_ccmode_nolock(ofd) == SYSTX_LIBC_CC_MODE_TS);
 
     switch (ofd_get_type_nolock(ofd)) {
-        case TYPE_REGULAR:
+        case SYSTX_LIBC_FILE_TYPE_REGULAR:
             res = cmapss_lock_region(cmapss,
                                      reccount(nbyte),
                                      recoffset(offset),
                                     &ofd->data.regular.cmap);
             break;
-        case TYPE_ANY:
-        case TYPE_FIFO:
-        case TYPE_SOCKET:
+        case SYSTX_LIBC_FILE_TYPE_OTHER:
+        case SYSTX_LIBC_FILE_TYPE_FIFO:
+        case SYSTX_LIBC_FILE_TYPE_SOCKET:
             res = 0;
             break;
         default:
@@ -491,18 +490,18 @@ ofd_ts_unlock_region(struct ofd *ofd, size_t nbyte, off_t offset, struct cmapss 
     int res;
 
     assert(ofd);
-    assert(ofd_get_ccmode_nolock(ofd) == CC_MODE_TS);
+    assert(ofd_get_ccmode_nolock(ofd) == SYSTX_LIBC_CC_MODE_TS);
 
     switch (ofd_get_type_nolock(ofd)) {
-        case TYPE_REGULAR:
+        case SYSTX_LIBC_FILE_TYPE_REGULAR:
             res = cmapss_unlock_region(cmapss,
                                        reccount(nbyte),
                                        recoffset(offset),
                                       &ofd->data.regular.cmap);
             break;
-        case TYPE_ANY:
-        case TYPE_FIFO:
-        case TYPE_SOCKET:
+        case SYSTX_LIBC_FILE_TYPE_OTHER:
+        case SYSTX_LIBC_FILE_TYPE_FIFO:
+        case SYSTX_LIBC_FILE_TYPE_SOCKET:
             res = 0;
             break;
         default:

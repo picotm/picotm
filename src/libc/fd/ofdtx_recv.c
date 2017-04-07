@@ -69,16 +69,16 @@ ofdtx_recv_exec(struct ofdtx *ofdtx, int sockfd,
 
     if (noundo) {
         /* TX irrevokable */
-        ofdtx->ccmode = CC_MODE_NOUNDO;
+        ofdtx->cc_mode = SYSTX_LIBC_CC_MODE_NOUNDO;
     } else {
         /* TX revokable */
-        if ((ofdtx->ccmode == CC_MODE_NOUNDO)
-            || !recv_exec[ofdtx->type][ofdtx->ccmode]) {
+        if ((ofdtx->cc_mode == SYSTX_LIBC_CC_MODE_NOUNDO)
+            || !recv_exec[ofdtx->type][ofdtx->cc_mode]) {
             return ERR_NOUNDO;
         }
     }
 
-    return recv_exec[ofdtx->type][ofdtx->ccmode](ofdtx, sockfd, buffer, length, flags, cookie);
+    return recv_exec[ofdtx->type][ofdtx->cc_mode](ofdtx, sockfd, buffer, length, flags, cookie);
 }
 
 /*
@@ -103,7 +103,7 @@ ofdtx_recv_apply(struct ofdtx *ofdtx, int sockfd, const struct com_fd_event *eve
     assert(ofdtx->type < sizeof(recv_apply)/sizeof(recv_apply[0]));
     assert(recv_apply[ofdtx->type]);
 
-    return recv_apply[ofdtx->type][ofdtx->ccmode]();
+    return recv_apply[ofdtx->type][ofdtx->cc_mode]();
 }
 
 /*
@@ -122,6 +122,6 @@ ofdtx_recv_undo(struct ofdtx *ofdtx, int sockfd, int cookie)
     assert(ofdtx->type < sizeof(recv_undo)/sizeof(recv_undo[0]));
     assert(recv_undo[ofdtx->type]);
 
-    return recv_undo[ofdtx->type][ofdtx->ccmode](ofdtx, sockfd, cookie);
+    return recv_undo[ofdtx->type][ofdtx->cc_mode](ofdtx, sockfd, cookie);
 }
 

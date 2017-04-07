@@ -5,6 +5,8 @@
 #ifndef COMFD_H
 #define COMFD_H
 
+#include <stdbool.h>
+
 struct pipeop;
 struct openop;
 struct ofdtx;
@@ -43,6 +45,8 @@ struct com_fd_event
 
 struct com_fd
 {
+    bool optcc;
+
     struct ofdtx ofdtx[MAXNUMFD];
     struct fdtx   fdtx[MAXNUMFD];
 

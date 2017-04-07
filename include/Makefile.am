@@ -10,6 +10,7 @@ nobase_include_HEADERS = systx/compiler.h \
                          systx/string.h \
                          systx/sys/types.h \
                          systx/systx.h \
+                         systx/systx-libc.h \
                          systx/systx-module.h \
                          systx/systx-tm.h \
                          systx/unistd.h \

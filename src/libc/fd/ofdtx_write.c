@@ -214,16 +214,16 @@ ofdtx_write_exec(struct ofdtx *ofdtx, int fildes, const void *buf,
 
     if (noundo) {
         /* TX irrevokable */
-        ofdtx->ccmode = CC_MODE_NOUNDO;
+        ofdtx->cc_mode = SYSTX_LIBC_CC_MODE_NOUNDO;
     } else {
         /* TX revokable */
-        if ((ofdtx->ccmode == CC_MODE_NOUNDO)
-            || !write_exec[ofdtx->type][ofdtx->ccmode]) {
+        if ((ofdtx->cc_mode == SYSTX_LIBC_CC_MODE_NOUNDO)
+            || !write_exec[ofdtx->type][ofdtx->cc_mode]) {
             return ERR_NOUNDO;
         }
     }
 
-    return write_exec[ofdtx->type][ofdtx->ccmode](ofdtx, fildes, buf, nbyte, cookie);
+    return write_exec[ofdtx->type][ofdtx->cc_mode](ofdtx, fildes, buf, nbyte, cookie);
 }
 
 /*
@@ -342,12 +342,12 @@ ofdtx_write_apply(struct ofdtx *ofdtx, int fildes, const struct com_fd_event *ev
         {ofdtx_write_apply_noundo, ofdtx_write_apply_socket,     ofdtx_write_apply_socket,      NULL}};
 
     assert(ofdtx->type < sizeof(write_apply)/sizeof(write_apply[0]));
-    assert(write_apply[ofdtx->type][ofdtx->ccmode]);
+    assert(write_apply[ofdtx->type][ofdtx->cc_mode]);
 
     int err = 0;
 
     while (n && !err) {
-        err = write_apply[ofdtx->type][ofdtx->ccmode](ofdtx, fildes, event->cookie);
+        err = write_apply[ofdtx->type][ofdtx->cc_mode](ofdtx, fildes, event->cookie);
         --n;
         ++event;
     }
@@ -375,8 +375,8 @@ ofdtx_write_undo(struct ofdtx *ofdtx, int fildes, int cookie)
         {NULL, ofdtx_write_any_undo, ofdtx_write_any_undo, ofdtx_write_any_undo}};
 
     assert(ofdtx->type < sizeof(write_undo)/sizeof(write_undo[0]));
-    assert(write_undo[ofdtx->type][ofdtx->ccmode]);
+    assert(write_undo[ofdtx->type][ofdtx->cc_mode]);
 
-    return write_undo[ofdtx->type][ofdtx->ccmode]();
+    return write_undo[ofdtx->type][ofdtx->cc_mode]();
 }
 
