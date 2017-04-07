@@ -15,7 +15,6 @@
 #include <tanger-stm-internal-errcode.h>
 #include <tanger-stm-internal-extact.h>
 #include "tanger-stm-ext-actions.h"
-#include "table.h"
 #include "types.h"
 #include "counter.h"
 #include "rwlock.h"

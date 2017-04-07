@@ -4,13 +4,13 @@
 
 #include <assert.h>
 #include <fcntl.h>
-#include <stdlib.h>
-#include <string.h>
 #include <search.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <systx/systx-module.h>
 #include "types.h"
 #include "range.h"
-#include "table.h"
 #include "fcntlop.h"
 #include "fcntloptab.h"
 
@@ -22,7 +22,7 @@ fcntloptab_append(struct fcntlop **tab, size_t *nelems, int command,
     assert(tab);
     assert(nelems);
 
-    void *tmp = tabresize(*tab, *nelems, (*nelems)+1, sizeof((*tab)[0]));
+    void *tmp = systx_tabresize(*tab, *nelems, (*nelems)+1, sizeof((*tab)[0]));
 
     if (!tmp) {
         return -1;
@@ -42,7 +42,7 @@ fcntloptab_clear(struct fcntlop **tab, size_t *nelems)
     assert(tab);
     assert(nelems);
 
-    free(*tab);
+    systx_tabfree(*tab);
     *tab = NULL;
     *nelems = 0;
 }

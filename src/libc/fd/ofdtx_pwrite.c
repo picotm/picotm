@@ -17,7 +17,6 @@
 #include <tanger-stm-internal-extact.h>
 #include "tanger-stm-ext-actions.h"
 #include "types.h"
-#include "table.h"
 #include "mutex.h"
 #include "rwlock.h"
 #include "counter.h"

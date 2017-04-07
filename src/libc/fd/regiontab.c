@@ -6,8 +6,8 @@
 #include <search.h>
 #include <stdlib.h>
 #include <string.h>
+#include <systx/systx-module.h>
 #include "range.h"
-#include "table.h"
 #include "region.h"
 #include "regiontab.h"
 
@@ -21,7 +21,7 @@ regiontab_append(struct region **tab, size_t *nelems,
     assert(nelems);
 
     if (__builtin_expect(*nelems >= *siz, 0)) {
-        void *tmp = tabresize(*tab, *siz, (*siz)+1, sizeof((*tab)[0]));
+        void *tmp = systx_tabresize(*tab, *siz, (*siz)+1, sizeof((*tab)[0]));
 
         if (!tmp) {
             return -1;
@@ -51,9 +51,9 @@ regiontab_clear(struct region **tab, size_t *nelems)
     assert(tab);
     assert(nelems);
 
-    tabwalk_1(*tab, *nelems, sizeof((*tab)[0]), region_uninit_walk);
+    systx_tabwalk_1(*tab, *nelems, sizeof((*tab)[0]), region_uninit_walk);
 
-    free(*tab);
+    systx_tabfree(*tab);
     *tab = NULL;
     *nelems = 0;
 }

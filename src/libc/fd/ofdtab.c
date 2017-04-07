@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <systx/systx-module.h>
 #include <tanger-stm-internal-errcode.h>
 #include "tanger-stm-ext-actions.h"
 #include "types.h"
@@ -21,7 +22,6 @@
 #include "rwlockmap.h"
 #include "rwstatemap.h"
 #include "mutex.h"
-#include "table.h"
 #include "fcntlop.h"
 #include "ofdid.h"
 #include "ofd.h"
@@ -42,10 +42,10 @@ ofdtab_ofd_init_walk(void *ofd)
 static void
 ofdtab_init(void)
 {
-    int res = tabwalk_1(ofdtab,
-                        sizeof(ofdtab)/sizeof(ofdtab[0]), sizeof(ofdtab[0]),
-                        ofdtab_ofd_init_walk);
-
+    int res = systx_tabwalk_1(ofdtab,
+                              sizeof(ofdtab)/sizeof(ofdtab[0]),
+                              sizeof(ofdtab[0]),
+                              ofdtab_ofd_init_walk);
     if (res < 0) {
         abort();
     }
@@ -67,10 +67,10 @@ ofdtab_ofd_uninit_walk(void *ofd)
 static void
 ofdtab_uninit(void)
 {
-    int res = tabwalk_1(ofdtab,
-                        sizeof(ofdtab)/sizeof(ofdtab[0]), sizeof(ofdtab[0]),
-                        ofdtab_ofd_uninit_walk);
-
+    int res = systx_tabwalk_1(ofdtab,
+                              sizeof(ofdtab)/sizeof(ofdtab[0]),
+                              sizeof(ofdtab[0]),
+                              ofdtab_ofd_uninit_walk);
     if (res < 0) {
         abort();
     }

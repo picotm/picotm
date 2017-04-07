@@ -3,12 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <fcntl.h>
+#include <pthread.h>
 #include <stdlib.h>
 #include <sys/types.h>
-#include <pthread.h>
+#include <systx/systx-module.h>
 #include "types.h"
 #include "counter.h"
-#include "table.h"
 #include "fcntlop.h"
 #include "fd.h"
 
@@ -27,9 +27,10 @@ fdtab_fd_init_walk(void *fd)
 static void
 fdtab_init()
 {
-    if (tabwalk_1(fdtab,
-                  sizeof(fdtab)/sizeof(fdtab[0]), sizeof(fdtab[0]),
-                  fdtab_fd_init_walk) < 0) {
+    int res = systx_tabwalk_1(fdtab,
+                              sizeof(fdtab)/sizeof(fdtab[0]), sizeof(fdtab[0]),
+                              fdtab_fd_init_walk);
+    if (res < 0) {
         abort();
     }
 }
@@ -50,9 +51,11 @@ fdtab_fd_uninit_walk(void *fd)
 static void
 fdtab_uninit()
 {
-    if (tabwalk_1(fdtab,
-                  sizeof(fdtab)/sizeof(fdtab[0]), sizeof(fdtab[0]),
-                  fdtab_fd_uninit_walk) < 0) {
+    int res = systx_tabwalk_1(fdtab,
+                              sizeof(fdtab)/sizeof(fdtab[0]),
+                              sizeof(fdtab[0]),
+                              fdtab_fd_uninit_walk);
+    if (res < 0) {
         abort();
     }
 }

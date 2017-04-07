@@ -9,10 +9,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
+#include <systx/systx-module.h>
 #include <tanger-stm-internal.h>
 #include <tanger-stm-ext-actions.h>
-#include "table.h"
+#include <unistd.h>
 #include "types.h"
 #include "mutex.h"
 #include "counter.h"
@@ -41,15 +41,16 @@ com_fs_uninit(struct com_fs *data)
 {
     assert(data);
 
-    free(data->eventtab);
+    systx_tabfree(data->eventtab);
 }
 
 int
 com_fs_inject(struct com_fs *data, enum com_fs_action action, int cookie)
 {
-    void *tmp = tabresize(data->eventtab,
-                          data->eventtablen,
-                          data->eventtablen+1, sizeof(data->eventtab[0]));
+    void *tmp = systx_tabresize(data->eventtab,
+                                data->eventtablen,
+                                data->eventtablen+1,
+                                sizeof(data->eventtab[0]));
     if (!tmp) {
         return -1;
     }

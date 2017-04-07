@@ -3,11 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <assert.h>
-#include <stdlib.h>
-#include <string.h>
 #include <search.h>
+#include <stdlib.h>
 #include <stdio.h>
-#include "table.h"
+#include <string.h>
+#include <systx/systx-module.h>
 #include "pipeop.h"
 #include "pipeoptab.h"
 
@@ -17,7 +17,7 @@ pipeoptab_append(struct pipeop **tab, size_t *nelems, int pipefd[2])
     assert(tab);
     assert(nelems);
 
-    void *tmp = tabresize(*tab, *nelems, (*nelems)+1, sizeof((*tab)[0]));
+    void *tmp = systx_tabresize(*tab, *nelems, (*nelems)+1, sizeof((*tab)[0]));
 
     if (!tmp) {
         return -1;
@@ -37,7 +37,7 @@ pipeoptab_clear(struct pipeop **tab, size_t *nelems)
     assert(tab);
     assert(nelems);
 
-    free(*tab);
+    systx_tabfree(*tab);
     *tab = NULL;
     *nelems = 0;
 }

@@ -17,7 +17,6 @@
 #include "types.h"
 #include "range.h"
 #include "mutex.h"
-#include "table.h"
 #include "rwlock.h"
 #include "counter.h"
 #include "pgtree.h"

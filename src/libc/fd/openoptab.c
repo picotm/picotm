@@ -3,10 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <assert.h>
+#include <search.h>
 #include <stdlib.h>
 #include <string.h>
-#include <search.h>
-#include "table.h"
+#include <systx/systx-module.h>
 #include "openop.h"
 #include "openoptab.h"
 
@@ -16,7 +16,7 @@ openoptab_append(struct openop **tab, size_t *nelems, int unlink)
     assert(tab);
     assert(nelems);
 
-    void *tmp = tabresize(*tab, *nelems, (*nelems)+1, sizeof((*tab)[0]));
+    void *tmp = systx_tabresize(*tab, *nelems, (*nelems)+1, sizeof((*tab)[0]));
 
     if (!tmp) {
         return -1;
@@ -36,7 +36,7 @@ openoptab_clear(struct openop **tab, size_t *nelems)
     assert(tab);
     assert(nelems);
 
-    free(*tab);
+    systx_tabfree(*tab);
     *tab = NULL;
     *nelems = 0;
 }

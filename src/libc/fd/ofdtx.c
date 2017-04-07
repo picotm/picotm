@@ -5,18 +5,18 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <pthread.h>
+#include <systx/systx-module.h>
 #include <tanger-stm-internal.h>
 #include <tanger-stm-internal-errcode.h>
 #include <tanger-stm-internal-extact.h>
 #include <tanger-stm-ext-actions.h>
+#include <unistd.h>
 #include "types.h"
 #include "range.h"
 #include "mutex.h"
-#include "table.h"
 #include "rwlock.h"
 #include "counter.h"
 #include "pgtree.h"
@@ -527,9 +527,10 @@ ofdtx_append_to_iobuffer(struct ofdtx *ofdtx, size_t nbyte, const void *buf)
     if (nbyte && buf) {
 
         /* resize */
-        void *tmp = tabresize(ofdtx->wrbuf,
-                              ofdtx->wrbuflen,
-                              ofdtx->wrbuflen+nbyte, sizeof(ofdtx->wrbuf[0]));
+        void *tmp = systx_tabresize(ofdtx->wrbuf,
+                                    ofdtx->wrbuflen,
+                                    ofdtx->wrbuflen+nbyte,
+                                    sizeof(ofdtx->wrbuf[0]));
         if (!tmp) {
             return (off_t)ERR_SYSTEM;
         }

@@ -8,6 +8,7 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
+#include <systx/systx-module.h>
 #include <unistd.h>
 #include <tanger-stm-internal.h>
 #include <tanger-stm-internal-errcode.h>
@@ -17,7 +18,6 @@
 #include "types.h"
 #include "mutex.h"
 #include "seekop.h"
-#include "table.h"
 #include "rwlock.h"
 #include "pgtree.h"
 #include "pgtreess.h"
@@ -140,7 +140,7 @@ com_fd_get_ifd(const struct fdtx *fdtx, size_t fdtxlen, size_t *ifdlen)
         --fdtxlen;
 
         if (fdtx_holds_ref(fdtx)) {
-            void *tmp = tabresize(ifd, *ifdlen, (*ifdlen)+1, sizeof(ifd[0]));
+            void *tmp = systx_tabresize(ifd, *ifdlen, (*ifdlen)+1, sizeof(ifd[0]));
 
             if (!tmp) {
                 free(ifd);
@@ -166,7 +166,7 @@ com_fd_get_iofd(const struct fdtx *fdtx, const int *ifd, size_t ifdlen, size_t *
     while (ifdlen) {
         --ifdlen;
 
-        void *tmp = tabresize(iofd, *iofdlen, (*iofdlen)+1, sizeof(iofd[0]));
+        void *tmp = systx_tabresize(iofd, *iofdlen, (*iofdlen)+1, sizeof(iofd[0]));
 
         if (!tmp) {
             free(iofd);
@@ -180,7 +180,7 @@ com_fd_get_iofd(const struct fdtx *fdtx, const int *ifd, size_t ifdlen, size_t *
 
     qsort(iofd, *iofdlen, sizeof(iofd[0]), compare_int);
 
-    *iofdlen = tabuniq(iofd, *iofdlen, sizeof(iofd), compare_int);
+    *iofdlen = systx_tabuniq(iofd, *iofdlen, sizeof(*iofd), compare_int);
 
     return iofd;
 }
@@ -669,10 +669,10 @@ com_fd_inject(struct com_fd *comfd, enum com_fd_call call, int fildes,
 {
     if (__builtin_expect(comfd->eventtablen >= comfd->eventtabsiz, 0)) {
 
-        void *tmp = tabresize(comfd->eventtab,
-                              comfd->eventtabsiz,
-                              comfd->eventtabsiz+1,
-                              sizeof(comfd->eventtab[0]));
+        void *tmp = systx_tabresize(comfd->eventtab,
+                                    comfd->eventtabsiz,
+                                    comfd->eventtabsiz+1,
+                                    sizeof(comfd->eventtab[0]));
         if (!tmp) {
             return -1;
         }
