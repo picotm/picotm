@@ -15,7 +15,7 @@ static enum systx_libc_validation_mode g_validation_mode;
 
 SYSTX_EXPORT
 void
-systm_libc_set_file_type_cc_mode(enum systx_libc_file_type file_type,
+systx_libc_set_file_type_cc_mode(enum systx_libc_file_type file_type,
                                  enum systx_libc_cc_mode cc_mode)
 {
     return __atomic_store_n(g_file_type_cc_mode + file_type, cc_mode, __ATOMIC_RELEASE);
@@ -23,7 +23,7 @@ systm_libc_set_file_type_cc_mode(enum systx_libc_file_type file_type,
 
 SYSTX_EXPORT
 enum systx_libc_cc_mode
-systm_libc_get_file_type_cc_mode(enum systx_libc_file_type file_type)
+systx_libc_get_file_type_cc_mode(enum systx_libc_file_type file_type)
 {
     return __atomic_load_n(g_file_type_cc_mode + file_type, __ATOMIC_ACQUIRE);
 }

@@ -11,10 +11,6 @@
 #include <systx/systx-libc.h>
 #include <systx/systx-module.h>
 #include <unistd.h>
-#include <tanger-stm-internal.h>
-#include <tanger-stm-internal-errcode.h>
-#include <tanger-stm-internal-extact.h>
-#include <tanger-stm-ext-actions.h>
 #include "range.h"
 #include "types.h"
 #include "mutex.h"
@@ -57,9 +53,11 @@ compare_int(const void *a, const void *b)
 }
 
 int
-com_fd_init(struct com_fd *comfd)
+com_fd_init(struct com_fd *comfd, unsigned long module)
 {
     assert(comfd);
+
+    comfd->module = module;
 
     comfd->optcc = false;
 
@@ -585,7 +583,7 @@ com_fd_inject(struct com_fd *comfd, enum com_fd_call call, int fildes,
     event->fildes = fildes;
     event->cookie = cookie;
 
-    if (tanger_stm_inject_event(COMPONENT_FD, call, comfd->eventtablen) < 0) {
+    if (systx_inject_event(comfd->module, call, comfd->eventtablen) < 0) {
         return -1;
     }
 

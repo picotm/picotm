@@ -10,8 +10,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <systx/systx-module.h>
-#include <tanger-stm-internal.h>
-#include <tanger-stm-ext-actions.h>
 #include <unistd.h>
 #include "types.h"
 #include "mutex.h"
@@ -23,9 +21,11 @@
 #include "comfs.h"
 
 int
-com_fs_init(struct com_fs *data)
+com_fs_init(struct com_fs *data, unsigned long module)
 {
     assert(data);
+
+    data->module = module;
 
     data->eventtab = NULL;
     data->eventtablen = 0;
@@ -60,7 +60,7 @@ com_fs_inject(struct com_fs *data, enum com_fs_action action, int cookie)
 
     eventtab->cookie = cookie;
 
-    if (tanger_stm_inject_event(COMPONENT_FS, action, data->eventtablen) < 0) {
+    if (systx_inject_event(data->module, action, data->eventtablen) < 0) {
         return -1;
     }
 

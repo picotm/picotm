@@ -18,6 +18,8 @@ struct com_fs_event
 
 struct com_fs
 {
+    unsigned long module;
+
     struct com_fs_event *eventtab; /**< \brief Event table */
     size_t               eventtablen; /**< \brief Length of event table */
 
@@ -26,7 +28,7 @@ struct com_fs
 };
 
 int
-com_fs_init(struct com_fs *data);
+com_fs_init(struct com_fs *data, unsigned long module);
 
 void
 com_fs_uninit(struct com_fs *data);

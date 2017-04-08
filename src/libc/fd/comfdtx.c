@@ -4,6 +4,7 @@
 
 #include <assert.h>
 #include <fcntl.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <systx/systx.h>
@@ -83,48 +84,48 @@ com_fd_tx_uninit(void *data)
 {
     com_fd_uninit(data);
 
-    free(data);
-
     return 0;
 }
 
 struct com_fd *
 com_fd_tx_aquire_data()
 {
-    struct com_fd *data = tanger_stm_get_component_data(COMPONENT_FD);
+    static __thread struct {
+        bool          is_initialized;
+        struct com_fd instance;
+    } t_com_fd;
 
-    if (!data) {
-        int res;
-
-        data = malloc(sizeof(data[0]));
-        assert(data);
-
-        if (com_fd_init(data) < 0) {
-            abort();
-        }
-
-        res = tanger_stm_register_component(COMPONENT_FD,
-                                            com_fd_tx_lock,
-                                            com_fd_tx_unlock,
-                                            com_fd_tx_validate,
-                                            com_fd_tx_apply_event,
-                                            com_fd_tx_undo_event,
-                                            com_fd_tx_updatecc,
-                                            com_fd_tx_clearcc,
-                                            com_fd_tx_finish,
-                                            com_fd_tx_uninit,
-                                            NULL,
-                                            NULL,
-                                            NULL,
-                                            NULL,
-                                            data);
-
-        if (res < 0) {
-            abort();
-        }
+    if (t_com_fd.is_initialized) {
+        return &t_com_fd.instance;
     }
 
-    return data;
+    long res = systx_register_module(com_fd_tx_lock,
+                                     com_fd_tx_unlock,
+                                     com_fd_tx_validate,
+                                     com_fd_tx_apply_event,
+                                     com_fd_tx_undo_event,
+                                     com_fd_tx_updatecc,
+                                     com_fd_tx_clearcc,
+                                     com_fd_tx_finish,
+                                     com_fd_tx_uninit,
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                     &t_com_fd.instance);
+    if (res < 0) {
+        return NULL;
+    }
+    unsigned long module = res;
+
+    res = com_fd_init(&t_com_fd.instance, module);
+    if (res < 0) {
+        return NULL;
+    }
+
+    t_com_fd.is_initialized = true;
+
+    return &t_com_fd.instance;
 }
 
 int

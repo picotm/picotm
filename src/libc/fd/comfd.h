@@ -45,6 +45,8 @@ struct com_fd_event
 
 struct com_fd
 {
+    unsigned long module;
+
     bool optcc;
 
     struct ofdtx ofdtx[MAXNUMFD];
@@ -71,7 +73,7 @@ struct com_fd
 };
 
 int
-com_fd_init(struct com_fd *comfd);
+com_fd_init(struct com_fd *comfd, unsigned long module);
 
 void
 com_fd_uninit(struct com_fd *comfd);

@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -67,51 +68,48 @@ com_fs_tx_uninit(void *data)
 {
     com_fs_uninit(data);
 
-    free(data);
-
     return 0;
 }
 
 struct com_fs *
 com_fs_tx_aquire_data()
 {
-    struct com_fs *data = tanger_stm_get_component_data(COMPONENT_FS);
+    static __thread struct {
+        bool          is_initialized;
+        struct com_fs instance;
+    } t_com_fs;
 
-    if (!data) {
-        int res;
-
-        data = malloc(sizeof(data[0]));
-        assert(data);
-
-        if (com_fs_init(data) < 0) {
-            free(data);
-            return NULL;
-        }
-
-        res = tanger_stm_register_component(COMPONENT_FS,
-                                            com_fs_tx_lock,
-                                            com_fs_tx_unlock,
-                                            com_fs_tx_validate,
-                                            com_fs_tx_apply_event,
-                                            com_fs_tx_undo_event,
-                                            NULL,
-                                            NULL,
-                                            com_fs_tx_finish,
-                                            com_fs_tx_uninit,
-                                            NULL,
-                                            NULL,
-                                            NULL,
-                                            NULL,
-                                            data);
-
-        if (res < 0) {
-            com_fs_uninit(data);
-            free(data);
-            return NULL;
-        }
+    if (t_com_fs.is_initialized) {
+        return &t_com_fs.instance;
     }
 
-    return data;
+    long res = systx_register_module(com_fs_tx_lock,
+                                     com_fs_tx_unlock,
+                                     com_fs_tx_validate,
+                                     com_fs_tx_apply_event,
+                                     com_fs_tx_undo_event,
+                                     NULL,
+                                     NULL,
+                                     com_fs_tx_finish,
+                                     com_fs_tx_uninit,
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                     &t_com_fs.instance);
+    if (res < 0) {
+        return NULL;
+    }
+    unsigned long module = res;
+
+    res = com_fs_init(&t_com_fs.instance, module);
+    if (res < 0) {
+        return NULL;
+    }
+
+    t_com_fs.is_initialized = true;
+
+    return &t_com_fs.instance;
 }
 
 int
