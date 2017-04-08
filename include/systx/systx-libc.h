@@ -28,6 +28,15 @@ enum systx_libc_cc_mode {
     SYSTX_LIBC_CC_MODE_2PL_EXT      /**< \brief (Inofficial)Set CC mode to pessimistic two-phase locking with socket commit protocol */
 };
 
+/**
+ * Validation mode
+ */
+enum systx_libc_validation_mode {
+    SYSTX_LIBC_VALIDATE_OP = 0,
+    SYSTX_LIBC_VALIDATE_DOMAIN,
+    SYSTX_LIBC_VALIDATE_FULL
+};
+
 SYSTX_NOTHROW
 /**
  * Sets the preferred mode of concurrency control for I/O on a specific
@@ -44,5 +53,19 @@ SYSTX_NOTHROW
  */
 enum systx_libc_cc_mode
 systx_libc_get_file_type_cc_mode(enum systx_libc_file_type file_type);
+
+SYSTX_NOTHROW
+/**
+ * Sets the mode of validation.
+ */
+void
+systx_libc_set_validation_mode(enum systx_libc_validation_mode val_mode);
+
+SYSTX_NOTHROW
+/**
+ * Returns the current mode of validation.
+ */
+enum systx_libc_validation_mode
+systx_libc_get_validation_mode(void);
 
 SYSTX_END_DECLS

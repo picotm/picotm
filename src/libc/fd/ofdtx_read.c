@@ -43,7 +43,7 @@ static ssize_t
 ofdtx_read_exec_noundo(struct ofdtx *ofdtx, int fildes, void *buf,
                                                       size_t nbyte,
                                                       int *cookie,
-                                                      enum validation_mode valmode)
+                                                      enum systx_libc_validation_mode val_mode)
 {
     return TEMP_FAILURE_RETRY(read(fildes, buf, nbyte));
 }
@@ -52,7 +52,7 @@ static ssize_t
 ofdtx_read_exec_regular_ts(struct ofdtx *ofdtx, int fildes, void *buf,
                                                       size_t nbyte,
                                                       int *cookie,
-                                                      enum validation_mode valmode)
+                                                      enum systx_libc_validation_mode val_mode)
 {
     int err;
 
@@ -73,7 +73,7 @@ ofdtx_read_exec_regular_ts(struct ofdtx *ofdtx, int fildes, void *buf,
     }
 
     if (!!ofdtx_ts_validate_state(ofdtx)
-        || ((valmode == VALIDATE_OP)
+        || ((val_mode == SYSTX_LIBC_VALIDATE_OP)
             && !!ofdtx_ts_validate_region(ofdtx, nbyte, ofdtx->offset))) {
         return ERR_CONFLICT;
     }
@@ -108,7 +108,7 @@ ofdtx_read_exec_regular_2pl(struct ofdtx *ofdtx, int fildes,
                                                  void *buf,
                                                  size_t nbyte,
                                                  int *cookie,
-                                                 enum validation_mode valmode)
+                                                 enum systx_libc_validation_mode val_mode)
 {
     int err;
 
@@ -159,14 +159,14 @@ ssize_t
 ofdtx_read_exec(struct ofdtx *ofdtx, int fildes, void *buf,
                                            size_t nbyte,
                                            int *cookie, int noundo,
-                                           enum validation_mode valmode)
+                                           enum systx_libc_validation_mode val_mode)
 {
     static ssize_t (* const read_exec[][4])(struct ofdtx*,
                                             int,
                                             void*,
                                             size_t,
                                             int*,
-                                            enum validation_mode) = {
+                                            enum systx_libc_validation_mode) = {
         {ofdtx_read_exec_noundo, NULL,                       NULL,                        NULL},
         {ofdtx_read_exec_noundo, ofdtx_read_exec_regular_ts, ofdtx_read_exec_regular_2pl, NULL},
         {ofdtx_read_exec_noundo, NULL,                       NULL,                        NULL},
@@ -186,7 +186,7 @@ ofdtx_read_exec(struct ofdtx *ofdtx, int fildes, void *buf,
         }
     }
 
-    return read_exec[ofdtx->type][ofdtx->cc_mode](ofdtx, fildes, buf, nbyte, cookie, valmode);
+    return read_exec[ofdtx->type][ofdtx->cc_mode](ofdtx, fildes, buf, nbyte, cookie, val_mode);
 }
 
 /*

@@ -82,7 +82,7 @@ ofdtx_pread_exec_noundo(struct ofdtx *ofdtx, int fildes,
                                              size_t nbyte,
                                              off_t offset,
                                              int *cookie,
-                                             enum validation_mode valmode)
+                                             enum systx_libc_validation_mode val_mode)
 {
     return TEMP_FAILURE_RETRY(pread(fildes, buf, nbyte, offset));
 }
@@ -91,7 +91,7 @@ static ssize_t
 ofdtx_pread_exec_regular_ts(struct ofdtx *ofdtx, int fildes, void *buf,
                                                  size_t nbyte, off_t offset,
                                                  int *cookie,
-                                                 enum validation_mode valmode)
+                                                 enum systx_libc_validation_mode val_mode)
 {
     int err;
     ssize_t len, len2;
@@ -107,7 +107,7 @@ ofdtx_pread_exec_regular_ts(struct ofdtx *ofdtx, int fildes, void *buf,
     }
 
     /* signal conflict, if global version numbers changed */
-    if ((valmode == VALIDATE_OP) &&
+    if ((val_mode == SYSTX_LIBC_VALIDATE_OP) &&
         !!ofdtx_ts_validate_region(ofdtx, nbyte, offset)) {
         return ERR_CONFLICT;
     }
@@ -134,7 +134,7 @@ static ssize_t
 ofdtx_pread_exec_regular_2pl(struct ofdtx *ofdtx, int fildes, void *buf,
                                                   size_t nbyte, off_t offset,
                                                   int *cookie,
-                                                  enum validation_mode valmode)
+                                                  enum systx_libc_validation_mode val_mode)
 {
     int err;
     ssize_t len, len2;
@@ -162,7 +162,7 @@ ofdtx_pread_exec_regular_2pl(struct ofdtx *ofdtx, int fildes, void *buf,
 static ssize_t
 ofdtx_pread_exec_fifo(struct ofdtx *ofdtx, int fildes, void *buf, size_t nbyte,
                                             off_t offset, int *cookie,
-                                            enum validation_mode valmode)
+                                            enum systx_libc_validation_mode val_mode)
 {
     errno = ESPIPE;
     return ERR_SYSTEM;
@@ -172,7 +172,7 @@ ssize_t
 ofdtx_pread_exec(struct ofdtx *ofdtx, int fildes, void *buf,
                                       size_t nbyte, off_t offset,
                                       int *cookie, int noundo,
-                                      enum validation_mode valmode)
+                                      enum systx_libc_validation_mode val_mode)
 {
     static ssize_t (* const pread_exec[][4])(struct ofdtx*,
                                              int,
@@ -180,7 +180,7 @@ ofdtx_pread_exec(struct ofdtx *ofdtx, int fildes, void *buf,
                                              size_t,
                                              off_t,
                                              int*,
-                                             enum validation_mode) = {
+                                             enum systx_libc_validation_mode) = {
         {ofdtx_pread_exec_noundo, NULL,                        NULL,                         NULL},
         {ofdtx_pread_exec_noundo, ofdtx_pread_exec_regular_ts, ofdtx_pread_exec_regular_2pl, NULL},
         {ofdtx_pread_exec_noundo, ofdtx_pread_exec_fifo,       ofdtx_pread_exec_fifo,        NULL},
@@ -200,7 +200,7 @@ ofdtx_pread_exec(struct ofdtx *ofdtx, int fildes, void *buf,
         }
     }
 
-    return pread_exec[ofdtx->type][ofdtx->cc_mode](ofdtx, fildes, buf, nbyte, offset, cookie, valmode);
+    return pread_exec[ofdtx->type][ofdtx->cc_mode](ofdtx, fildes, buf, nbyte, offset, cookie, val_mode);
 }
 
 /*

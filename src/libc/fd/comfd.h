@@ -83,9 +83,10 @@ int
 com_fd_get_optcc(const struct com_fd *comfd);
 
 void
-com_fd_set_validation_mode(struct com_fd *comfd, enum validation_mode valmode);
+com_fd_set_validation_mode(struct com_fd *comfd,
+                           enum systx_libc_validation_mode val_mode);
 
-enum validation_mode
+enum systx_libc_validation_mode
 com_fd_get_validation_mode(const struct com_fd *comfd);
 
 /** \brief Append an fd action to log */

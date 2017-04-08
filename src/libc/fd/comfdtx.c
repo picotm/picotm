@@ -613,7 +613,7 @@ com_fd_tx_pread(int fildes, void *buf, size_t nbyte, off_t off)
         res = com_fd_exec_pread(comfd, fildes, buf, nbyte, off, tanger_stm_is_noundo(tx));
 
         /* possibly validate all optimistic domains */
-        if ((com_fd_get_validation_mode(comfd) == VALIDATE_FULL)
+        if ((com_fd_get_validation_mode(comfd) == SYSTX_LIBC_VALIDATE_FULL)
             && com_fd_get_optcc(comfd)
             && ((err = tanger_stm_validate(tx)) < 0)) {
             res = err;
@@ -708,7 +708,7 @@ com_fd_tx_read(int fildes, void *buf, size_t nbyte)
         res = com_fd_exec_read(comfd, fildes, buf, nbyte, tanger_stm_is_noundo(tx));
 
         /* possibly validate all optimistic domains */
-        if ((com_fd_get_validation_mode(comfd) == VALIDATE_FULL)
+        if ((com_fd_get_validation_mode(comfd) == SYSTX_LIBC_VALIDATE_FULL)
             && com_fd_get_optcc(comfd)
             && ((err = tanger_stm_validate(tx)) < 0)) {
             res = err;

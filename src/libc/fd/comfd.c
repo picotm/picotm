@@ -8,6 +8,7 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
+#include <systx/systx-libc.h>
 #include <systx/systx-module.h>
 #include <unistd.h>
 #include <tanger-stm-internal.h>
@@ -117,15 +118,16 @@ com_fd_get_optcc(const struct com_fd *comfd)
 }
 
 void
-com_fd_set_validation_mode(struct com_fd *comfd, enum validation_mode valmode)
+com_fd_set_validation_mode(struct com_fd *comfd,
+                           enum systx_libc_validation_mode val_mode)
 {
-    tanger_stm_set_validation_mode(tanger_stm_get_tx(), valmode);
+    systx_libc_set_validation_mode(val_mode);
 }
 
-enum validation_mode
+enum systx_libc_validation_mode
 com_fd_get_validation_mode(const struct com_fd *comfd)
 {
-    return tanger_stm_get_validation_mode(tanger_stm_get_tx());
+    return systx_libc_get_validation_mode();
 }
 
 static int *

@@ -245,7 +245,7 @@ ofdtx_lseek_undo(struct ofdtx *ofdtx, int fildes, int cookie);
 ssize_t
 ofdtx_pread_exec(struct ofdtx *ofdtx, int fildes, void *buf, size_t nbyte, off_t off,
                                       int *cookie, int noundo,
-                                      enum validation_mode valmode);
+                                      enum systx_libc_validation_mode val_mode);
 
 ssize_t
 ofdtx_pread_apply(struct ofdtx *ofdtx, int fildes, const struct com_fd_event *event, size_t n);
@@ -272,7 +272,7 @@ ofdtx_pwrite_undo(struct ofdtx *ofdtx, int fildes, int cookie);
 ssize_t
 ofdtx_read_exec(struct ofdtx *ofdtx, int fildes, void *buf, size_t nbyte,
                                      int *cookie, int noundo,
-                                     enum validation_mode valmode);
+                                     enum systx_libc_validation_mode val_mode);
 
 ssize_t
 ofdtx_read_apply(struct ofdtx *ofdtx, int fildes, const struct com_fd_event *event, size_t n);

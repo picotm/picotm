@@ -65,13 +65,13 @@ com_fd_exec_pread(struct com_fd *data, int fildes, void *buf, size_t nbyte, off_
 
     /* pread */
 
-    enum validation_mode valmode = com_fd_get_validation_mode(data);
+    enum systx_libc_validation_mode val_mode = com_fd_get_validation_mode(data);
 
     int cookie = -1;
 
     ssize_t len = ofdtx_pread_exec(ofdtx,
                                    fildes, buf, nbyte, off,
-                                   &cookie, isnoundo, valmode);
+                                   &cookie, isnoundo, val_mode);
 
     if (len < 0) {
         return len;
@@ -79,7 +79,7 @@ com_fd_exec_pread(struct com_fd *data, int fildes, void *buf, size_t nbyte, off_
 
     /* possibly validate optimistic domain */
     if (ofdtx_is_optimistic(ofdtx)
-        && (valmode == VALIDATE_DOMAIN)
+        && (val_mode == SYSTX_LIBC_VALIDATE_DOMAIN)
         && ((err = ofdtx_validate(ofdtx)) < 0)) {
         return err;
     }
