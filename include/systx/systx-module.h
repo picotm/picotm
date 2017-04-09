@@ -63,6 +63,13 @@ systx_resolve_error(int errno_hint);
 
 SYSTX_NOTHROW
 /**
+ * Validates the transaction state.
+ */
+bool
+systx_is_valid(void);
+
+SYSTX_NOTHROW
+/**
  * Makes the current transaction irrevocable.
  */
 void

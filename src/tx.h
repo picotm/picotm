@@ -38,3 +38,6 @@ tx_commit(struct tx* self);
 
 int
 tx_rollback(struct tx* self);
+
+bool
+tx_is_valid(struct tx* self);

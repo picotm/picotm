@@ -153,6 +153,13 @@ systx_abort()
 }
 
 SYSTX_EXPORT
+bool
+systx_is_valid()
+{
+    return tx_is_valid(get_non_null_tx());
+}
+
+SYSTX_EXPORT
 void
 systx_irrevocable()
 {

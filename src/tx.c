@@ -139,3 +139,13 @@ err_log_undo_events:
     log_unlock(&self->log);
     return res;
 }
+
+bool
+tx_is_valid(struct tx* self)
+{
+    int res = log_validate(&self->log, false, tx_is_irrevocable(self));
+    if (res < 0) {
+        return false;
+    }
+    return true;
+}
