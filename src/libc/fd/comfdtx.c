@@ -471,18 +471,14 @@ com_fd_tx_pread(int fildes, void *buf, size_t nbyte, off_t off)
     assert(comfd);
 
     do {
-        tanger_stm_tx_t *tx = tanger_stm_get_tx();
-
-        enum error_code err;
-
         res = com_fd_exec_pread(comfd, fildes, buf, nbyte, off,
                                 systx_is_irrevocable());
 
         /* possibly validate all optimistic domains */
         if ((com_fd_get_validation_mode(comfd) == SYSTX_LIBC_VALIDATE_FULL)
             && com_fd_get_optcc(comfd)
-            && ((err = tanger_stm_validate(tx)) < 0)) {
-            res = err;
+            && !systx_is_valid()) {
+            res = ERR_CONFLICT;
         }
 
         switch (res) {
@@ -545,18 +541,14 @@ com_fd_tx_read(int fildes, void *buf, size_t nbyte)
     assert(comfd);
 
     do {
-        tanger_stm_tx_t *tx = tanger_stm_get_tx();
-
-        enum error_code err;
-
         res = com_fd_exec_read(comfd, fildes, buf, nbyte,
                                systx_is_irrevocable());
 
         /* possibly validate all optimistic domains */
         if ((com_fd_get_validation_mode(comfd) == SYSTX_LIBC_VALIDATE_FULL)
             && com_fd_get_optcc(comfd)
-            && ((err = tanger_stm_validate(tx)) < 0)) {
-            res = err;
+            && !systx_is_valid()) {
+            res = ERR_CONFLICT;
         }
 
         switch (res) {
