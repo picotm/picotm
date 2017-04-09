@@ -160,6 +160,14 @@ systx_irrevocable()
 }
 
 SYSTX_EXPORT
+bool
+systx_is_irrevocable()
+{
+    const struct tx* tx = get_non_null_tx();
+    return tx->mode == SYSTX_MODE_IRREVOCABLE;
+}
+
+SYSTX_EXPORT
 void
 systx_release()
 {

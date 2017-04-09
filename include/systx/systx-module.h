@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include "compiler.h"
@@ -66,6 +67,14 @@ SYSTX_NOTHROW
  */
 void
 systx_irrevocable(void);
+
+SYSTX_NOTHROW
+/**
+ * Returns the transaction irrevocability status.
+ * \return True if the transaction is irrevocable, false otherwise.
+ */
+bool
+systx_is_irrevocable(void);
 
 /* Tables
  */
