@@ -60,6 +60,13 @@ SYSTX_NOTHROW
 void
 systx_resolve_error(int errno_hint);
 
+SYSTX_NOTHROW
+/**
+ * Makes the current transaction irrevocable.
+ */
+void
+systx_irrevocable(void);
+
 /* Tables
  */
 
