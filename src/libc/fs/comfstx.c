@@ -129,7 +129,7 @@ com_fs_tx_fchdir(int fildes)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                tanger_stm_abort_self(tanger_stm_get_tx());
+                systx_abort();
                 break;
             case ERR_NOUNDO:
                 {
@@ -138,7 +138,7 @@ com_fs_tx_fchdir(int fildes)
 
                     if (err) {
                         if (err == ERR_CONFLICT) {
-                            tanger_stm_abort_self(tanger_stm_get_tx());
+                            systx_abort();
                         } else {
                             abort();
                         }
@@ -169,7 +169,7 @@ com_fs_tx_mkstemp(char *pathname)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                tanger_stm_abort_self(tanger_stm_get_tx());
+                systx_abort();
                 break;
             case ERR_NOUNDO:
                 {
@@ -178,7 +178,7 @@ com_fs_tx_mkstemp(char *pathname)
 
                     if (err) {
                         if (err == ERR_CONFLICT) {
-                            tanger_stm_abort_self(tanger_stm_get_tx());
+                            systx_abort();
                         } else {
                             abort();
                         }

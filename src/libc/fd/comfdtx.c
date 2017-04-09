@@ -142,7 +142,7 @@ com_fd_tx_accept(int sockfd, struct sockaddr *address, socklen_t *address_len)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                tanger_stm_abort_self(tanger_stm_get_tx());
+                systx_abort();
                 break;
             case ERR_NOUNDO:
                 {
@@ -151,7 +151,7 @@ com_fd_tx_accept(int sockfd, struct sockaddr *address, socklen_t *address_len)
 
                     if (err) {
                         if (err == ERR_CONFLICT) {
-                            tanger_stm_abort_self(tanger_stm_get_tx());
+                            systx_abort();
                         } else {
                             abort();
                         }
@@ -187,7 +187,7 @@ com_fd_tx_bind(int sockfd, const struct sockaddr *address,
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                tanger_stm_abort_self(tx);
+                systx_abort();
                 break;
             case ERR_NOUNDO:
                 {
@@ -196,7 +196,7 @@ com_fd_tx_bind(int sockfd, const struct sockaddr *address,
 
                     if (err) {
                         if (err == ERR_CONFLICT) {
-                            tanger_stm_abort_self(tx);
+                            systx_abort();
                         } else {
                             abort();
                         }
@@ -229,7 +229,7 @@ com_fd_tx_close(int fildes)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                tanger_stm_abort_self(tx);
+                systx_abort();
                 break;
             case ERR_NOUNDO:
                 {
@@ -238,7 +238,7 @@ com_fd_tx_close(int fildes)
 
                     if (err) {
                         if (err == ERR_CONFLICT) {
-                            tanger_stm_abort_self(tx);
+                            systx_abort();
                         } else {
                             abort();
                         }
@@ -274,7 +274,7 @@ com_fd_tx_connect(int sockfd, const struct sockaddr *serv_addr,
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                tanger_stm_abort_self(tx);
+                systx_abort();
                 break;
             case ERR_NOUNDO:
                 {
@@ -283,7 +283,7 @@ com_fd_tx_connect(int sockfd, const struct sockaddr *serv_addr,
 
                     if (err) {
                         if (err == ERR_CONFLICT) {
-                            tanger_stm_abort_self(tx);
+                            systx_abort();
                         } else {
                             abort();
                         }
@@ -316,7 +316,7 @@ com_fd_tx_dup_internal(int fildes, int cloexec)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                tanger_stm_abort_self(tx);
+                systx_abort();
                 break;
             case ERR_NOUNDO:
                 {
@@ -325,7 +325,7 @@ com_fd_tx_dup_internal(int fildes, int cloexec)
 
                     if (err) {
                         if (err == ERR_CONFLICT) {
-                            tanger_stm_abort_self(tx);
+                            systx_abort();
                         } else {
                             abort();
                         }
@@ -364,7 +364,7 @@ com_fd_tx_fcntl(int fildes, int cmd, union com_fd_fcntl_arg *arg)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                tanger_stm_abort_self(tx);
+                systx_abort();
                 break;
             case ERR_NOUNDO:
                 {
@@ -373,7 +373,7 @@ com_fd_tx_fcntl(int fildes, int cmd, union com_fd_fcntl_arg *arg)
 
                     if (err) {
                         if (err == ERR_CONFLICT) {
-                            tanger_stm_abort_self(tx);
+                            systx_abort();
                         } else {
                             abort();
                         }
@@ -406,7 +406,7 @@ com_fd_tx_fsync(int fildes)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                tanger_stm_abort_self(tx);
+                systx_abort();
                 break;
             case ERR_NOUNDO:
                 {
@@ -415,7 +415,7 @@ com_fd_tx_fsync(int fildes)
 
                     if (err) {
                         if (err == ERR_CONFLICT) {
-                            tanger_stm_abort_self(tx);
+                            systx_abort();
                         } else {
                             abort();
                         }
@@ -448,7 +448,7 @@ com_fd_tx_listen(int sockfd, int backlog)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                tanger_stm_abort_self(tx);
+                systx_abort();
                 break;
             case ERR_NOUNDO:
                 {
@@ -457,7 +457,7 @@ com_fd_tx_listen(int sockfd, int backlog)
 
                     if (err) {
                         if (err == ERR_CONFLICT) {
-                            tanger_stm_abort_self(tx);
+                            systx_abort();
                         } else {
                             abort();
                         }
@@ -490,7 +490,7 @@ com_fd_tx_lseek(int fildes, off_t offset, int whence)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                tanger_stm_abort_self(tx);
+                systx_abort();
                 break;
             case ERR_NOUNDO:
                 {
@@ -499,7 +499,7 @@ com_fd_tx_lseek(int fildes, off_t offset, int whence)
 
                     if (err) {
                         if (err == ERR_CONFLICT) {
-                            tanger_stm_abort_self(tx);
+                            systx_abort();
                         } else {
                             abort();
                         }
@@ -532,7 +532,7 @@ com_fd_tx_open(const char *path, int oflag, mode_t mode)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                tanger_stm_abort_self(tx);
+                systx_abort();
                 break;
             case ERR_NOUNDO:
                 {
@@ -541,7 +541,7 @@ com_fd_tx_open(const char *path, int oflag, mode_t mode)
 
                     if (err) {
                         if (err == ERR_CONFLICT) {
-                            tanger_stm_abort_self(tx);
+                            systx_abort();
                         } else {
                             abort();
                         }
@@ -572,7 +572,7 @@ com_fd_tx_pipe(int pipefd[2])
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                tanger_stm_abort_self(tanger_stm_get_tx());
+                systx_abort();
                 break;
             case ERR_NOUNDO:
                 {
@@ -581,7 +581,7 @@ com_fd_tx_pipe(int pipefd[2])
 
                     if (err) {
                         if (err == ERR_CONFLICT) {
-                            tanger_stm_abort_self(tanger_stm_get_tx());
+                            systx_abort();
                         } else {
                             abort();
                         }
@@ -622,7 +622,7 @@ com_fd_tx_pread(int fildes, void *buf, size_t nbyte, off_t off)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                tanger_stm_abort_self(tx);
+                systx_abort();
                 break;
             case ERR_NOUNDO:
                 {
@@ -631,7 +631,7 @@ com_fd_tx_pread(int fildes, void *buf, size_t nbyte, off_t off)
 
                     if (err) {
                         if (err == ERR_CONFLICT) {
-                            tanger_stm_abort_self(tx);
+                            systx_abort();
                         } else {
                             abort();
                         }
@@ -667,7 +667,7 @@ com_fd_tx_pwrite(int fildes, const void *buf, size_t nbyte, off_t off)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                tanger_stm_abort_self(tx);
+                systx_abort();
                 break;
             case ERR_NOUNDO:
                 {
@@ -676,7 +676,7 @@ com_fd_tx_pwrite(int fildes, const void *buf, size_t nbyte, off_t off)
 
                     if (err) {
                         if (err == ERR_CONFLICT) {
-                            tanger_stm_abort_self(tx);
+                            systx_abort();
                         } else {
                             abort();
                         }
@@ -717,7 +717,7 @@ com_fd_tx_read(int fildes, void *buf, size_t nbyte)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                tanger_stm_abort_self(tx);
+                systx_abort();
                 break;
             case ERR_NOUNDO:
                 {
@@ -726,7 +726,7 @@ com_fd_tx_read(int fildes, void *buf, size_t nbyte)
 
                     if (err) {
                         if (err == ERR_CONFLICT) {
-                            tanger_stm_abort_self(tx);
+                            systx_abort();
                         } else {
                             abort();
                         }
@@ -759,7 +759,7 @@ com_fd_tx_recv(int sockfd, void *buffer, size_t length, int flags)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                tanger_stm_abort_self(tanger_stm_get_tx());
+                systx_abort();
                 break;
             case ERR_NOUNDO:
                 {
@@ -768,7 +768,7 @@ com_fd_tx_recv(int sockfd, void *buffer, size_t length, int flags)
 
                     if (err) {
                         if (err == ERR_CONFLICT) {
-                            tanger_stm_abort_self(tx);
+                            systx_abort();
                         } else {
                             abort();
                         }
@@ -811,7 +811,7 @@ com_fd_tx_select(int nfds, fd_set *readfds,
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                tanger_stm_abort_self(tanger_stm_get_tx());
+                systx_abort();
                 break;
             case ERR_NOUNDO:
                 {
@@ -820,7 +820,7 @@ com_fd_tx_select(int nfds, fd_set *readfds,
 
                     if (err) {
                         if (err == ERR_CONFLICT) {
-                            tanger_stm_abort_self(tanger_stm_get_tx());
+                            systx_abort();
                         } else {
                             abort();
                         }
@@ -853,7 +853,7 @@ com_fd_tx_send(int fildes, const void *buffer, size_t length, int flags)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                tanger_stm_abort_self(tx);
+                systx_abort();
                 break;
             case ERR_NOUNDO:
                 {
@@ -862,7 +862,7 @@ com_fd_tx_send(int fildes, const void *buffer, size_t length, int flags)
 
                     if (err) {
                         if (err == ERR_CONFLICT) {
-                            tanger_stm_abort_self(tx);
+                            systx_abort();
                         } else {
                             abort();
                         }
@@ -895,7 +895,7 @@ com_fd_tx_shutdown(int sockfd, int how)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                tanger_stm_abort_self(tx);
+                systx_abort();
                 break;
             case ERR_NOUNDO:
                 {
@@ -904,7 +904,7 @@ com_fd_tx_shutdown(int sockfd, int how)
 
                     if (err) {
                         if (err == ERR_CONFLICT) {
-                            tanger_stm_abort_self(tx);
+                            systx_abort();
                         } else {
                             abort();
                         }
@@ -935,7 +935,7 @@ com_fd_tx_socket(int domain, int type, int protocol)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                tanger_stm_abort_self(tanger_stm_get_tx());
+                systx_abort();
                 break;
             case ERR_NOUNDO:
                 {
@@ -944,7 +944,7 @@ com_fd_tx_socket(int domain, int type, int protocol)
 
                     if (err) {
                         if (err == ERR_CONFLICT) {
-                            tanger_stm_abort_self(tanger_stm_get_tx());
+                            systx_abort();
                         } else {
                             abort();
                         }
@@ -988,7 +988,7 @@ com_fd_tx_write(int fildes, const void *buf, size_t nbyte)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                tanger_stm_abort_self(tx);
+                systx_abort();
                 break;
             case ERR_NOUNDO:
                 {
@@ -997,7 +997,7 @@ com_fd_tx_write(int fildes, const void *buf, size_t nbyte)
 
                     if (err) {
                         if (err == ERR_CONFLICT) {
-                            tanger_stm_abort_self(tx);
+                            systx_abort();
                         } else {
                             abort();
                         }
