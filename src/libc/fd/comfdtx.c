@@ -170,9 +170,8 @@ com_fd_tx_bind(int sockfd, const struct sockaddr *address,
     assert(comfd);
 
     do {
-        tanger_stm_tx_t *tx = tanger_stm_get_tx();
-
-        res = com_fd_exec_bind(comfd, sockfd, address, address_len, tanger_stm_is_noundo(tx));
+        res = com_fd_exec_bind(comfd, sockfd, address, address_len,
+                               systx_is_irrevocable());
 
         switch (res) {
             case ERR_CONFLICT:
@@ -201,9 +200,7 @@ com_fd_tx_close(int fildes)
     int res;
 
     do {
-        tanger_stm_tx_t *tx = tanger_stm_get_tx();
-
-        res = com_fd_exec_close(comfd, fildes, tanger_stm_is_noundo(tx));
+        res = com_fd_exec_close(comfd, fildes, systx_is_irrevocable());
 
         switch (res) {
             case ERR_CONFLICT:
@@ -235,9 +232,8 @@ com_fd_tx_connect(int sockfd, const struct sockaddr *serv_addr,
     assert(comfd);
 
     do {
-        tanger_stm_tx_t *tx = tanger_stm_get_tx();
-
-        res = com_fd_exec_connect(comfd, sockfd, serv_addr, addr_len, tanger_stm_is_noundo(tx));
+        res = com_fd_exec_connect(comfd, sockfd, serv_addr, addr_len,
+                                  systx_is_irrevocable());
 
         switch (res) {
             case ERR_CONFLICT:
@@ -301,9 +297,7 @@ com_fd_tx_fcntl(int fildes, int cmd, union com_fd_fcntl_arg *arg)
     assert(comfd);
 
     do {
-        tanger_stm_tx_t *tx = tanger_stm_get_tx();
-
-        res = com_fd_exec_fcntl(comfd, fildes, cmd, arg, tanger_stm_is_noundo(tx));
+        res = com_fd_exec_fcntl(comfd, fildes, cmd, arg, systx_is_irrevocable());
 
         switch (res) {
             case ERR_CONFLICT:
@@ -332,9 +326,7 @@ com_fd_tx_fsync(int fildes)
     assert(comfd);
 
     do {
-        tanger_stm_tx_t *tx = tanger_stm_get_tx();
-
-        res = com_fd_exec_fsync(comfd, fildes, tanger_stm_is_noundo(tx));
+        res = com_fd_exec_fsync(comfd, fildes, systx_is_irrevocable());
 
         switch (res) {
             case ERR_CONFLICT:
@@ -363,9 +355,7 @@ com_fd_tx_listen(int sockfd, int backlog)
     assert(comfd);
 
     do {
-        tanger_stm_tx_t *tx = tanger_stm_get_tx();
-
-        res = com_fd_exec_listen(comfd, sockfd, backlog, tanger_stm_is_noundo(tx));
+        res = com_fd_exec_listen(comfd, sockfd, backlog, systx_is_irrevocable());
 
         switch (res) {
             case ERR_CONFLICT:
@@ -394,9 +384,7 @@ com_fd_tx_lseek(int fildes, off_t offset, int whence)
     assert(comfd);
 
     do {
-        tanger_stm_tx_t *tx = tanger_stm_get_tx();
-
-        res = com_fd_exec_lseek(comfd, fildes, offset, whence, tanger_stm_is_noundo(tx));
+        res = com_fd_exec_lseek(comfd, fildes, offset, whence, systx_is_irrevocable());
 
         switch (res) {
             case ERR_CONFLICT:
@@ -425,9 +413,7 @@ com_fd_tx_open(const char *path, int oflag, mode_t mode)
     assert(comfd);
 
     do {
-        tanger_stm_tx_t *tx = tanger_stm_get_tx();
-
-        res = com_fd_exec_open(comfd, path, oflag, mode, tanger_stm_is_noundo(tx));
+        res = com_fd_exec_open(comfd, path, oflag, mode, systx_is_irrevocable());
 
         switch (res) {
             case ERR_CONFLICT:
@@ -485,10 +471,12 @@ com_fd_tx_pread(int fildes, void *buf, size_t nbyte, off_t off)
     assert(comfd);
 
     do {
-        enum error_code err;
         tanger_stm_tx_t *tx = tanger_stm_get_tx();
 
-        res = com_fd_exec_pread(comfd, fildes, buf, nbyte, off, tanger_stm_is_noundo(tx));
+        enum error_code err;
+
+        res = com_fd_exec_pread(comfd, fildes, buf, nbyte, off,
+                                systx_is_irrevocable());
 
         /* possibly validate all optimistic domains */
         if ((com_fd_get_validation_mode(comfd) == SYSTX_LIBC_VALIDATE_FULL)
@@ -527,9 +515,8 @@ com_fd_tx_pwrite(int fildes, const void *buf, size_t nbyte, off_t off)
     assert(comfd);
 
     do {
-        tanger_stm_tx_t *tx = tanger_stm_get_tx();
-
-        res = com_fd_exec_pwrite(comfd, fildes, buf, nbyte, off, tanger_stm_is_noundo(tx));
+        res = com_fd_exec_pwrite(comfd, fildes, buf, nbyte, off,
+                                 systx_is_irrevocable());
 
         switch (res) {
             case ERR_CONFLICT:
@@ -558,10 +545,12 @@ com_fd_tx_read(int fildes, void *buf, size_t nbyte)
     assert(comfd);
 
     do {
-        enum error_code err;
         tanger_stm_tx_t *tx = tanger_stm_get_tx();
 
-        res = com_fd_exec_read(comfd, fildes, buf, nbyte, tanger_stm_is_noundo(tx));
+        enum error_code err;
+
+        res = com_fd_exec_read(comfd, fildes, buf, nbyte,
+                               systx_is_irrevocable());
 
         /* possibly validate all optimistic domains */
         if ((com_fd_get_validation_mode(comfd) == SYSTX_LIBC_VALIDATE_FULL)
@@ -597,9 +586,8 @@ com_fd_tx_recv(int sockfd, void *buffer, size_t length, int flags)
     assert(comfd);
 
     do {
-        tanger_stm_tx_t *tx = tanger_stm_get_tx();
-
-        res = com_fd_exec_recv(comfd, sockfd, buffer, length, flags, tanger_stm_is_noundo(tx));
+        res = com_fd_exec_recv(comfd, sockfd, buffer, length, flags,
+                               systx_is_irrevocable());
 
         switch (res) {
             case ERR_CONFLICT:
@@ -634,13 +622,11 @@ com_fd_tx_select(int nfds, fd_set *readfds,
     assert(comfd);
 
     do {
-        tanger_stm_tx_t *tx = tanger_stm_get_tx();
-
         res = com_fd_exec_select(comfd, nfds, readfds,
                                               writefds,
                                               errorfds,
                                               timeout,
-                                              tanger_stm_is_noundo(tx));
+                                              systx_is_irrevocable());
 
         switch (res) {
             case ERR_CONFLICT:
@@ -669,9 +655,8 @@ com_fd_tx_send(int fildes, const void *buffer, size_t length, int flags)
     assert(comfd);
 
     do {
-        tanger_stm_tx_t *tx = tanger_stm_get_tx();
-
-        res = com_fd_exec_send(comfd, fildes, buffer, length, flags, tanger_stm_is_noundo(tx));
+        res = com_fd_exec_send(comfd, fildes, buffer, length, flags,
+                               systx_is_irrevocable());
 
         switch (res) {
             case ERR_CONFLICT:
@@ -700,9 +685,7 @@ com_fd_tx_shutdown(int sockfd, int how)
     assert(comfd);
 
     do {
-        tanger_stm_tx_t *tx = tanger_stm_get_tx();
-
-        res = com_fd_exec_shutdown(comfd, sockfd, how, tanger_stm_is_noundo(tx));
+        res = com_fd_exec_shutdown(comfd, sockfd, how, systx_is_irrevocable());
 
         switch (res) {
             case ERR_CONFLICT:
@@ -771,9 +754,8 @@ com_fd_tx_write(int fildes, const void *buf, size_t nbyte)
     assert(comfd);
 
     do {
-        tanger_stm_tx_t *tx = tanger_stm_get_tx();
-
-        res = com_fd_exec_write(comfd, fildes, buf, nbyte, tanger_stm_is_noundo(tx));
+        res = com_fd_exec_write(comfd, fildes, buf, nbyte,
+                                systx_is_irrevocable());
 
         switch (res) {
             case ERR_CONFLICT:
