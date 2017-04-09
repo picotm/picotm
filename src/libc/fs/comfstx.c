@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <systx/systx.h>
 #include <unistd.h>
 #include <tanger-stm-internal.h>
 #include <tanger-stm-internal-errcode.h>
@@ -132,18 +133,7 @@ com_fs_tx_fchdir(int fildes)
                 systx_abort();
                 break;
             case ERR_NOUNDO:
-                {
-                    enum error_code err
-                        = tanger_stm_go_noundo(tanger_stm_get_tx());
-
-                    if (err) {
-                        if (err == ERR_CONFLICT) {
-                            systx_abort();
-                        } else {
-                            abort();
-                        }
-                    }
-                }
+                systx_irrevocable();
                 break;
             default:
                 break;
@@ -172,18 +162,7 @@ com_fs_tx_mkstemp(char *pathname)
                 systx_abort();
                 break;
             case ERR_NOUNDO:
-                {
-                    enum error_code err
-                        = tanger_stm_go_noundo(tanger_stm_get_tx());
-
-                    if (err) {
-                        if (err == ERR_CONFLICT) {
-                            systx_abort();
-                        } else {
-                            abort();
-                        }
-                    }
-                }
+                systx_irrevocable();
                 break;
             default:
                 break;

@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <sys/socket.h>
+#include <systx/systx.h>
 #include <tanger-stm-internal.h>
 #include <tanger-stm-internal-errcode.h>
 #include <tanger-stm-internal-extact.h>
@@ -145,18 +146,7 @@ com_fd_tx_accept(int sockfd, struct sockaddr *address, socklen_t *address_len)
                 systx_abort();
                 break;
             case ERR_NOUNDO:
-                {
-                    enum error_code err
-                        = tanger_stm_go_noundo(tanger_stm_get_tx());
-
-                    if (err) {
-                        if (err == ERR_CONFLICT) {
-                            systx_abort();
-                        } else {
-                            abort();
-                        }
-                    }
-                }
+                systx_irrevocable();
                 break;
             default:
                 break;
@@ -190,18 +180,7 @@ com_fd_tx_bind(int sockfd, const struct sockaddr *address,
                 systx_abort();
                 break;
             case ERR_NOUNDO:
-                {
-                    enum error_code err
-                        = tanger_stm_go_noundo(tx);
-
-                    if (err) {
-                        if (err == ERR_CONFLICT) {
-                            systx_abort();
-                        } else {
-                            abort();
-                        }
-                    }
-                }
+                systx_irrevocable();
                 break;
             default:
                 break;
@@ -232,18 +211,7 @@ com_fd_tx_close(int fildes)
                 systx_abort();
                 break;
             case ERR_NOUNDO:
-                {
-                    enum error_code err
-                        = tanger_stm_go_noundo(tx);
-
-                    if (err) {
-                        if (err == ERR_CONFLICT) {
-                            systx_abort();
-                        } else {
-                            abort();
-                        }
-                    }
-                }
+                systx_irrevocable();
                 break;
             default:
                 break;
@@ -277,18 +245,7 @@ com_fd_tx_connect(int sockfd, const struct sockaddr *serv_addr,
                 systx_abort();
                 break;
             case ERR_NOUNDO:
-                {
-                    enum error_code err
-                        = tanger_stm_go_noundo(tx);
-
-                    if (err) {
-                        if (err == ERR_CONFLICT) {
-                            systx_abort();
-                        } else {
-                            abort();
-                        }
-                    }
-                }
+                systx_irrevocable();
                 break;
             default:
                 break;
@@ -309,8 +266,6 @@ com_fd_tx_dup_internal(int fildes, int cloexec)
     assert(comfd);
 
     do {
-        tanger_stm_tx_t *tx = tanger_stm_get_tx();
-
         res = com_fd_exec_dup(comfd, fildes, cloexec);
 
         switch (res) {
@@ -319,18 +274,7 @@ com_fd_tx_dup_internal(int fildes, int cloexec)
                 systx_abort();
                 break;
             case ERR_NOUNDO:
-                {
-                    enum error_code err
-                        = tanger_stm_go_noundo(tx);
-
-                    if (err) {
-                        if (err == ERR_CONFLICT) {
-                            systx_abort();
-                        } else {
-                            abort();
-                        }
-                    }
-                }
+                systx_irrevocable();
                 break;
             default:
                 break;
@@ -367,18 +311,7 @@ com_fd_tx_fcntl(int fildes, int cmd, union com_fd_fcntl_arg *arg)
                 systx_abort();
                 break;
             case ERR_NOUNDO:
-                {
-                    enum error_code err
-                        = tanger_stm_go_noundo(tx);
-
-                    if (err) {
-                        if (err == ERR_CONFLICT) {
-                            systx_abort();
-                        } else {
-                            abort();
-                        }
-                    }
-                }
+                systx_irrevocable();
                 break;
             default:
                 break;
@@ -409,18 +342,7 @@ com_fd_tx_fsync(int fildes)
                 systx_abort();
                 break;
             case ERR_NOUNDO:
-                {
-                    enum error_code err
-                        = tanger_stm_go_noundo(tx);
-
-                    if (err) {
-                        if (err == ERR_CONFLICT) {
-                            systx_abort();
-                        } else {
-                            abort();
-                        }
-                    }
-                }
+                systx_irrevocable();
                 break;
             default:
                 break;
@@ -451,18 +373,7 @@ com_fd_tx_listen(int sockfd, int backlog)
                 systx_abort();
                 break;
             case ERR_NOUNDO:
-                {
-                    enum error_code err
-                        = tanger_stm_go_noundo(tx);
-
-                    if (err) {
-                        if (err == ERR_CONFLICT) {
-                            systx_abort();
-                        } else {
-                            abort();
-                        }
-                    }
-                }
+                systx_irrevocable();
                 break;
             default:
                 break;
@@ -493,18 +404,7 @@ com_fd_tx_lseek(int fildes, off_t offset, int whence)
                 systx_abort();
                 break;
             case ERR_NOUNDO:
-                {
-                    enum error_code err
-                        = tanger_stm_go_noundo(tx);
-
-                    if (err) {
-                        if (err == ERR_CONFLICT) {
-                            systx_abort();
-                        } else {
-                            abort();
-                        }
-                    }
-                }
+                systx_irrevocable();
                 break;
             default:
                 break;
@@ -535,18 +435,7 @@ com_fd_tx_open(const char *path, int oflag, mode_t mode)
                 systx_abort();
                 break;
             case ERR_NOUNDO:
-                {
-                    enum error_code err
-                        = tanger_stm_go_noundo(tx);
-
-                    if (err) {
-                        if (err == ERR_CONFLICT) {
-                            systx_abort();
-                        } else {
-                            abort();
-                        }
-                    }
-                }
+                systx_irrevocable();
                 break;
             default:
                 break;
@@ -575,18 +464,7 @@ com_fd_tx_pipe(int pipefd[2])
                 systx_abort();
                 break;
             case ERR_NOUNDO:
-                {
-                    enum error_code err
-                        = tanger_stm_go_noundo(tanger_stm_get_tx());
-
-                    if (err) {
-                        if (err == ERR_CONFLICT) {
-                            systx_abort();
-                        } else {
-                            abort();
-                        }
-                    }
-                }
+                systx_irrevocable();
                 break;
             default:
                 break;
@@ -625,18 +503,7 @@ com_fd_tx_pread(int fildes, void *buf, size_t nbyte, off_t off)
                 systx_abort();
                 break;
             case ERR_NOUNDO:
-                {
-                    enum error_code err
-                        = tanger_stm_go_noundo(tx);
-
-                    if (err) {
-                        if (err == ERR_CONFLICT) {
-                            systx_abort();
-                        } else {
-                            abort();
-                        }
-                    }
-                }
+                systx_irrevocable();
                 break;
             default:
                 break;
@@ -670,18 +537,7 @@ com_fd_tx_pwrite(int fildes, const void *buf, size_t nbyte, off_t off)
                 systx_abort();
                 break;
             case ERR_NOUNDO:
-                {
-                    enum error_code err
-                        = tanger_stm_go_noundo(tx);
-
-                    if (err) {
-                        if (err == ERR_CONFLICT) {
-                            systx_abort();
-                        } else {
-                            abort();
-                        }
-                    }
-                }
+                systx_irrevocable();
                 break;
             default:
                 break;
@@ -720,18 +576,7 @@ com_fd_tx_read(int fildes, void *buf, size_t nbyte)
                 systx_abort();
                 break;
             case ERR_NOUNDO:
-                {
-                    enum error_code err
-                        = tanger_stm_go_noundo(tx);
-
-                    if (err) {
-                        if (err == ERR_CONFLICT) {
-                            systx_abort();
-                        } else {
-                            abort();
-                        }
-                    }
-                }
+                systx_irrevocable();
                 break;
             default:
                 break;
@@ -762,18 +607,7 @@ com_fd_tx_recv(int sockfd, void *buffer, size_t length, int flags)
                 systx_abort();
                 break;
             case ERR_NOUNDO:
-                {
-                    enum error_code err
-                        = tanger_stm_go_noundo(tx);
-
-                    if (err) {
-                        if (err == ERR_CONFLICT) {
-                            systx_abort();
-                        } else {
-                            abort();
-                        }
-                    }
-                }
+                systx_irrevocable();
                 break;
             default:
                 break;
@@ -814,18 +648,7 @@ com_fd_tx_select(int nfds, fd_set *readfds,
                 systx_abort();
                 break;
             case ERR_NOUNDO:
-                {
-                    enum error_code err
-                        = tanger_stm_go_noundo(tanger_stm_get_tx());
-
-                    if (err) {
-                        if (err == ERR_CONFLICT) {
-                            systx_abort();
-                        } else {
-                            abort();
-                        }
-                    }
-                }
+                systx_irrevocable();
                 break;
             default:
                 break;
@@ -856,18 +679,7 @@ com_fd_tx_send(int fildes, const void *buffer, size_t length, int flags)
                 systx_abort();
                 break;
             case ERR_NOUNDO:
-                {
-                    enum error_code err
-                        = tanger_stm_go_noundo(tx);
-
-                    if (err) {
-                        if (err == ERR_CONFLICT) {
-                            systx_abort();
-                        } else {
-                            abort();
-                        }
-                    }
-                }
+                systx_irrevocable();
                 break;
             default:
                 break;
@@ -898,18 +710,7 @@ com_fd_tx_shutdown(int sockfd, int how)
                 systx_abort();
                 break;
             case ERR_NOUNDO:
-                {
-                    enum error_code err
-                        = tanger_stm_go_noundo(tx);
-
-                    if (err) {
-                        if (err == ERR_CONFLICT) {
-                            systx_abort();
-                        } else {
-                            abort();
-                        }
-                    }
-                }
+                systx_irrevocable();
                 break;
             default:
                 break;
@@ -938,18 +739,7 @@ com_fd_tx_socket(int domain, int type, int protocol)
                 systx_abort();
                 break;
             case ERR_NOUNDO:
-                {
-                    enum error_code err
-                        = tanger_stm_go_noundo(tanger_stm_get_tx());
-
-                    if (err) {
-                        if (err == ERR_CONFLICT) {
-                            systx_abort();
-                        } else {
-                            abort();
-                        }
-                    }
-                }
+                systx_irrevocable();
                 break;
             default:
                 break;
@@ -991,18 +781,7 @@ com_fd_tx_write(int fildes, const void *buf, size_t nbyte)
                 systx_abort();
                 break;
             case ERR_NOUNDO:
-                {
-                    enum error_code err
-                        = tanger_stm_go_noundo(tx);
-
-                    if (err) {
-                        if (err == ERR_CONFLICT) {
-                            systx_abort();
-                        } else {
-                            abort();
-                        }
-                    }
-                }
+                systx_irrevocable();
                 break;
             default:
                 break;
