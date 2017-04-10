@@ -129,7 +129,8 @@ libsystx_c_la_SOURCES = alloc/comalloc.c \
                         string-tm.c \
                         string.c \
                         types.h \
-                        unistd.c
+                        unistd.c \
+                        unistd-tm.c
 
 CC = $(PTHREAD_CC)
 
