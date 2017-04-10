@@ -6,22 +6,18 @@
 #include <systx/systx.h>
 #include "alloc/comalloctx.h"
 
-/*
- * Memory management
- */
+SYSTX_EXPORT
+void
+free_tm(void* ptr)
+{
+    return com_alloc_tx_free(ptr);
+}
 
 SYSTX_EXPORT
 int
 posix_memalign_tm(void** memptr, size_t alignment, size_t size)
 {
     return com_alloc_tx_posix_memalign(memptr, alignment, size);
-}
-
-SYSTX_EXPORT
-void
-free_tm(void* ptr)
-{
-    return com_alloc_tx_free(ptr);
 }
 
 SYSTX_EXPORT
