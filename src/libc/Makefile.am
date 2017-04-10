@@ -132,6 +132,8 @@ libsystx_c_la_SOURCES = alloc/comalloc.c \
                         string.c \
                         sys_socket.c \
                         sys_socket-tm.c \
+                        sys_stat.c \
+                        sys_stat-tm.c \
                         types.h \
                         unistd.c \
                         unistd-tm.c
