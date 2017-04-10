@@ -37,6 +37,9 @@ int
 com_fd_tx_dup(int fildes);
 
 int
+com_fd_tx_dup_internal(int fildes, int cloexec);
+
+int
 com_fd_tx_fcntl(int fildes, int cmd, union com_fd_fcntl_arg* arg);
 
 int

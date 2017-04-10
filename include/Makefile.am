@@ -3,6 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 nobase_include_HEADERS = systx/compiler.h \
+                         systx/fcntl-tm.h \
+                         systx/fcntl.h \
                          systx/stddef.h \
                          systx/stdlib-tm.h \
                          systx/stdlib.h \
