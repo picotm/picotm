@@ -53,6 +53,22 @@ malloc_tx(size_t size)
 }
 
 SYSTX_EXPORT
+char*
+mkdtemp_tx(char* template)
+{
+    privatize_c_tx(template, '\0', SYSTX_TM_PRIVATIZE_LOADSTORE);
+    return mkdtemp_tm(template);
+}
+
+SYSTX_EXPORT
+int
+mkstemp_tx(char* template)
+{
+    privatize_c_tx(template, '\0', SYSTX_TM_PRIVATIZE_LOADSTORE);
+    return mkstemp_tm(template);
+}
+
+SYSTX_EXPORT
 int
 posix_memalign_tx(void** memptr, size_t alignment, size_t size)
 {

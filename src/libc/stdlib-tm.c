@@ -5,12 +5,31 @@
 #include "systx/stdlib-tm.h"
 #include <systx/systx.h>
 #include "alloc/comalloctx.h"
+#include "fs/comfstx.h"
 
 SYSTX_EXPORT
 void
 free_tm(void* ptr)
 {
     return com_alloc_tx_free(ptr);
+}
+
+SYSTX_EXPORT
+char*
+mkdtemp_tm(char* template)
+{
+    char* res = mkdtemp(template);
+    if (!res) {
+        return NULL;
+    }
+    return res;
+}
+
+SYSTX_EXPORT
+int
+mkstemp_tm(char* template)
+{
+    return com_fs_tx_mkstemp(template);
 }
 
 SYSTX_EXPORT

@@ -13,6 +13,20 @@ SYSTX_NOTHROW
  */
 void free_tm(void* ptr);
 
+SYSTX_EXPORT
+/**
+ * Executes mkdtemp() within a transaction.
+ */
+char*
+mkdtemp_tm(char* template);
+
+SYSTX_EXPORT
+/**
+ * Executes mkstemp() within a transaction.
+ */
+int
+mkstemp_tm(char* template);
+
 SYSTX_NOTHROW
 /**
  * Executes posix_memalign() within a transaction.
