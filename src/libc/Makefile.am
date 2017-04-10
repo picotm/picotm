@@ -12,7 +12,9 @@ libsystx_c_la_SOURCES = alloc/comalloc.c \
                         alloc/comalloctx.h \
                         alloc/rnd2wb.c \
                         alloc/rnd2wb.h \
+                        stdlib-tm.c \
                         stdlib.c \
+                        string-tm.c \
                         string.c \
                         unistd.c
 

@@ -4,7 +4,9 @@
 
 nobase_include_HEADERS = systx/compiler.h \
                          systx/stddef.h \
+                         systx/stdlib-tm.h \
                          systx/stdlib.h \
+                         systx/string-tm.h \
                          systx/string.h \
                          systx/systx.h \
                          systx/systx-module.h \
