@@ -6,7 +6,7 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
-#include <tanger-stm-internal-errcode.h>
+#include "errcode.h"
 #include "range.h"
 #include "pgtree.h"
 #include "pgtreess.h"

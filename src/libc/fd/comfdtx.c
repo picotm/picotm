@@ -8,10 +8,7 @@
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <systx/systx.h>
-#include <tanger-stm-internal.h>
-#include <tanger-stm-internal-errcode.h>
-#include <tanger-stm-internal-extact.h>
-#include <tanger-stm-ext-actions.h>
+#include "errcode.h"
 #include "types.h"
 #include "counter.h"
 #include "pgtree.h"

@@ -12,10 +12,7 @@
 #include <stdio.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <tanger-stm-internal.h>
-#include <tanger-stm-internal-errcode.h>
-#include <tanger-stm-internal-extact.h>
-#include <tanger-stm-ext-actions.h>
+#include "errcode.h"
 #include "types.h"
 #include "rwlock.h"
 #include "counter.h"

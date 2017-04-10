@@ -11,8 +11,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <tanger-stm-internal-errcode.h>
 #include <unistd.h>
+#include "errcode.h"
 #include "types.h"
 #include "range.h"
 #include "mutex.h"

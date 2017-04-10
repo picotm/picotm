@@ -12,8 +12,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <tanger-stm-internal-errcode.h>
-#include "tanger-stm-ext-actions.h"
+#include "errcode.h"
 #include "types.h"
 #include "range.h"
 #include "mutex.h"

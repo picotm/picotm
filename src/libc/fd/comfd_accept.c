@@ -11,10 +11,7 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <sys/socket.h>
-#include <tanger-stm-internal.h>
-#include <tanger-stm-internal-errcode.h>
-#include <tanger-stm-internal-extact.h>
-#include <tanger-stm-ext-actions.h>
+#include "errcode.h"
 #include "types.h"
 #include "seekop.h"
 #include "counter.h"

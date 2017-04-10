@@ -6,6 +6,7 @@
 #define COMFD_H
 
 #include <stdbool.h>
+#include <systx/systx-module.h>
 
 struct pipeop;
 struct openop;

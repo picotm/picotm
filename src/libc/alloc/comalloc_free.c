@@ -4,7 +4,6 @@
 
 #include <assert.h>
 #include <stdlib.h>
-#include <tanger-stm-ext-actions.h>
 #include "comalloc.h"
 
 void

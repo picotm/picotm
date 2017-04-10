@@ -9,8 +9,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <tanger-stm-internal-errcode.h>
-#include <tanger-stm-ext-actions.h>
+#include "errcode.h"
 #include "comfs.h"
 
 int

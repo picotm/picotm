@@ -14,6 +14,7 @@ libsystx_c_la_SOURCES = alloc/comalloc.c \
                         alloc/rnd2wb.h \
                         counter.c \
                         counter.h \
+                        errcode.h \
                         fd/cmap.c \
                         fd/cmap.h \
                         fd/cmapss.c \

@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
-#include <tanger-stm-internal-errcode.h>
+#include "errcode.h"
 #include "pgtree.h"
 
 /*

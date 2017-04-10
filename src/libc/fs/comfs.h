@@ -5,6 +5,8 @@
 #ifndef COMFS_H
 #define COMFS_H
 
+#include <systx/systx-module.h>
+
 enum com_fs_action
 {
     ACTION_FCHDIR = 0,

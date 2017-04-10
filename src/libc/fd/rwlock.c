@@ -5,7 +5,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <pthread.h>
-#include <tanger-stm-internal-errcode.h>
+#include "errcode.h"
 #include "rwlock.h"
 
 int

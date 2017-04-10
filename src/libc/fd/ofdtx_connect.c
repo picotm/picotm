@@ -11,10 +11,7 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <tanger-stm-internal.h>
-#include <tanger-stm-internal-errcode.h>
-#include <tanger-stm-internal-extact.h>
-#include "tanger-stm-ext-actions.h"
+#include "errcode.h"
 #include "types.h"
 #include "counter.h"
 #include "rwlock.h"
