@@ -5,6 +5,7 @@
 #include "malloc_test.h"
 #include <systx/stddef.h>
 #include <systx/stdlib.h>
+#include <systx/stdlib-tm.h>
 #include <systx/systx.h>
 #include <systx/systx-tm.h>
 #include "ptr.h"
@@ -58,7 +59,7 @@ malloc_test_1(unsigned int tid)
         delay_transaction(tid);
 
         for (char** ptr = mem; ptr < mem + arraylen(mem); ++ptr) {
-	        free_tx(*ptr);
+	        free_tm(*ptr);
         }
     }
     systx_commit();
@@ -101,7 +102,7 @@ malloc_test_2(unsigned int tid)
         delay_transaction(tid);
 
         for (char** ptr = mem; ptr < mem + arraylen(mem); ++ptr) {
-	        free_tx(*ptr);
+	        free_tm(*ptr);
         }
     }
     systx_commit();
@@ -166,7 +167,7 @@ malloc_test_4(unsigned int tid)
             mem[i] = i;
         }
 
-        mem = realloc_tx(mem, 15 * 34 * sizeof(mem[0]));
+        mem = realloc_tm(mem, 15 * 34 * sizeof(mem[0]));
         if (!mem) {
             abort_tx();
         }
@@ -182,7 +183,7 @@ malloc_test_4(unsigned int tid)
 
         delay_transaction(tid);
 
-        free_tx(mem);
+        free_tm(mem);
     }
     systx_commit();
 }
@@ -215,7 +216,7 @@ malloc_test_5(unsigned int tid)
          * naming problems. */
         uint8_t* mem = load_ptr_tx(&buf);
 
-	    mem = realloc_tx(mem, 15 * 34 * sizeof(mem[0]));
+	    mem = realloc_tm(mem, 15 * 34 * sizeof(mem[0]));
 	    if (!mem) {
 	        abort_tx();
 	    }
@@ -231,7 +232,7 @@ malloc_test_5(unsigned int tid)
 
         delay_transaction(tid);
 
-	    free_tx(mem);
+	    free_tm(mem);
     }
 	systx_commit();
 }
@@ -255,7 +256,7 @@ malloc_test_6(unsigned int tid)
     {
         uint8_t* mem = load_ptr_tx(&buf);
 
-	    mem = realloc_tx(mem, 15 * 34 * sizeof(mem[0]));
+	    mem = realloc_tm(mem, 15 * 34 * sizeof(mem[0]));
 	    if (!mem) {
             abort_tx();
 	    }
@@ -317,7 +318,7 @@ malloc_test_7(unsigned int tid)
         for (unsigned long long i = 0; i < cycles; ++i) {
             uint8_t* mem = malloc_tx(siz);
             mem[tid] = 1;       /* touch memory to prevent optimization */
-            free_tx(mem);
+            free_tm(mem);
         }
     }
     systx_commit();
@@ -382,7 +383,7 @@ malloc_test_9(unsigned int tid)
         for (unsigned long long i = 0; i < cycles; ++i) {
             uint8_t* mem = malloc_tx(32);
             mem[tid] = 1;   /* touch memory to prevent optimization */
-            free_tx(mem);
+            free_tm(mem);
         }
     }
     systx_commit();
