@@ -9,24 +9,7 @@
 #include <systx/systx.h>
 #include <systx/systx-tm.h>
 #include "ptr.h"
-
-/**
- * Delays a transaction while generating potential conflicts.
- */
-static void
-delay_transaction(unsigned int tid)
-{
-    static unsigned int g_curtid;
-
-	store_uint_tx(&g_curtid, tid);
-
-	for (int i = 0; i < 10000; ++i) {
-		unsigned int curtid = load_uint_tx(&g_curtid);
-        if (curtid != tid) {
-		    abort_tx();
-		}
-	}
-}
+#include "testhlp.h"
 
 /**
  * Allocate and free within transaction.

@@ -10,6 +10,8 @@ tlctest_SOURCES = main.c \
                   ptr.h \
                   test.c \
                   test.h \
+                  testhlp.c \
+                  testhlp.h \
                   tm_test.c \
                   tm_test.h
 
