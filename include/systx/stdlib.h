@@ -5,7 +5,20 @@
 #pragma once
 
 #include <stdlib.h>
+#include <systx/systx-tm.h>
 #include "compiler.h"
+
+SYSTX_TM_LOAD_TX(div_t, div_t);
+SYSTX_TM_LOAD_TX(ldiv_t, ldiv_t);
+SYSTX_TM_LOAD_TX(lldiv_t, lldiv_t);
+/*SYSTX_TM_LOAD_TX(size_t, size_t);*/ /* defined in stddef.h */
+/*SYSTX_TM_LOAD_TX(_t, wchar_t);*/ /* defined in stddef.h */
+
+SYSTX_TM_STORE_TX(div_t, div_t);
+SYSTX_TM_STORE_TX(ldiv_t, ldiv_t);
+SYSTX_TM_STORE_TX(lldiv_t, lldiv_t);
+/*SYSTX_TM_STORE_TX(size_t, size_t);*/ /* defined in stddef.h */
+/*SYSTX_TM_LOAD_TX(_t, wchar_t);*/ /* defined in stddef.h */
 
 SYSTX_NOTHROW SYSTX_NORETURN
 void _Exit_tx(int status);
