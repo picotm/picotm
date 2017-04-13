@@ -136,7 +136,7 @@ restart_tx(struct tx* tx, enum __systx_mode mode)
 
 SYSTX_EXPORT
 void
-systx_commit()
+__systx_commit()
 {
     struct tx* tx = get_non_null_tx();
     int res = tx_commit(tx);

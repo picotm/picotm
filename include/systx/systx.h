@@ -46,15 +46,24 @@ __systx_begin(enum __systx_mode mode);
 /**
  * Starts a new transaction.
  */
-#define systx_begin() \
-    __systx_begin((enum __systx_mode)setjmp(__systx_get_tx()->env));
+#define systx_begin()                                                   \
+    __systx_begin((enum __systx_mode)setjmp(__systx_get_tx()->env));    \
+    {
 
 SYSTX_NOTHROW
 /**
  * Commits the current transaction.
+ * \warning This is an internal interface. Don't use it in application code.
  */
 void
-systx_commit(void);
+__systx_commit(void);
+
+/**
+ * Commits the current transaction.
+ */
+#define systx_commit()      \
+        __systx_commit();   \
+    }
 
 SYSTX_NOTHROW
 /**

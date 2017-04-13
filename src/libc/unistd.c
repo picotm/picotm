@@ -14,7 +14,7 @@ SYSTX_EXPORT
 void
 _exit_tx(int status)
 {
-    systx_commit();
+    __systx_commit();
     _exit(status);
 }
 

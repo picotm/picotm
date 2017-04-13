@@ -11,7 +11,7 @@ SYSTX_EXPORT
 void
 _Exit_tx(int status)
 {
-    systx_commit();
+    __systx_commit();
     _Exit(status);
 }
 
@@ -19,7 +19,7 @@ SYSTX_EXPORT
 void
 abort_tx()
 {
-    systx_commit();
+    __systx_commit();
     abort();
 }
 
@@ -34,7 +34,7 @@ SYSTX_EXPORT
 void
 exit_tx(int status)
 {
-    systx_commit();
+    __systx_commit();
     exit(status);
 }
 
