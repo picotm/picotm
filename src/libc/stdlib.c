@@ -2,9 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "systx/stdlib.h"
 #include <systx/systx.h>
 #include "alloc/comalloctx.h"
-#include "systx/stdlib.h"
+#include "systx/stdlib-tm.h"
 
 SYSTX_EXPORT
 void
@@ -63,4 +64,12 @@ void*
 realloc_tx(void* ptr, size_t size)
 {
     return com_alloc_tx_realloc(ptr, size);
+}
+
+SYSTX_EXPORT
+int
+rand_r_tx(unsigned int* seed)
+{
+    privatize_tx(seed, sizeof(*seed), SYSTX_TM_PRIVATIZE_LOADSTORE);
+    return rand_r_tm(seed);
 }

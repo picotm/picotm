@@ -24,3 +24,10 @@ SYSTX_NOTHROW
  * Executes realloc() within a transaction.
  */
 void* realloc_tm(void* ptr, size_t size);
+
+SYSTX_NOTHROW
+/**
+ * Executes rand_r() within a transaction.
+ */
+int
+rand_r_tm(unsigned int* seed);

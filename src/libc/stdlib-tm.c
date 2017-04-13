@@ -26,3 +26,10 @@ realloc_tm(void* ptr, size_t size)
 {
     return com_alloc_tx_realloc(ptr, size);
 }
+
+SYSTX_EXPORT
+int
+rand_r_tm(unsigned int* seed)
+{
+    return rand_r(seed);
+}
