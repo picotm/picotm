@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <systx/systx-libc.h>
 #include <unistd.h>
 #include "error_test.h"
 #include "fdio_test.h"
@@ -120,6 +121,59 @@ static const struct test_func test[] = {
     {"malloc_test_7", malloc_test_7, malloc_test_7_pre, NULL},
     {"malloc_test_8", malloc_test_8, malloc_test_8_pre, NULL},
     /* Test 8 */
+    {"fdio_test_1", fdio_test_1, NULL, NULL},
+    {"fdio_test_2", fdio_test_2, NULL, NULL},
+    {"fdio_test_3", fdio_test_3, NULL, NULL},
+    {"fdio_test_4", fdio_test_4, NULL, NULL},
+    {"fdio_test_5", fdio_test_5, NULL, NULL},
+    {"fdio_test_6", fdio_test_6, NULL, NULL},
+    {"fdio_test_7", fdio_test_7, NULL, NULL},
+    {"fdio_test_8", fdio_test_8, NULL, NULL},
+    {"fdio_test_9", fdio_test_9, NULL, NULL},
+    {"fdio_test_10", fdio_test_10, NULL, NULL},
+    {"fdio_test_11", fdio_test_11, NULL, NULL},
+    {"fdio_test_12", fdio_test_12, NULL, NULL},
+    {"fdio_test_13", fdio_test_13, NULL, NULL},
+    {"fdio_test_14", fdio_test_14, NULL, NULL},
+    {"fdio_test_15", fdio_test_15, NULL, NULL},
+    {"fdio_test_16", fdio_test_16, NULL, NULL},
+    {"fdio_test_17", fdio_test_17, NULL, NULL},
+    {"fdio_test_18", fdio_test_18, NULL, NULL},
+    {"fdio_test_19", fdio_test_19, NULL, NULL},
+    {"fdio_test_20", fdio_test_20, fdio_test_20_pre, fdio_test_20_post},
+    {"fdio_test_21", fdio_test_21, fdio_test_21_pre, fdio_test_21_post},
+    {"fdio_test_22", fdio_test_22, fdio_test_22_pre, fdio_test_22_post},
+    {"fdio_test_23", fdio_test_23, fdio_test_23_pre, fdio_test_23_post},
+    {"fdio_test_24", fdio_test_24, fdio_test_24_pre, fdio_test_24_post},
+    {"fdio_test_25", fdio_test_25, fdio_test_25_pre, fdio_test_25_post},
+    {"fdio_test_26", fdio_test_26, fdio_test_26_pre, fdio_test_26_post},
+    {"fdio_test_27", fdio_test_27, fdio_test_27_pre, fdio_test_27_post},
+    {"fdio_test_28", fdio_test_28, fdio_test_28_pre, fdio_test_28_post},
+    {"fdio_test_29", fdio_test_29, fdio_test_29_pre, fdio_test_29_post},
+    {"fdio_test_30", fdio_test_30, fdio_test_30_pre, fdio_test_30_post},
+    {"fdio_test_31", fdio_test_31, fdio_test_31_pre, fdio_test_31_post},
+    {"fdio_test_32", fdio_test_32, fdio_test_32_pre, fdio_test_32_post},
+    {"fdio_test_33", fdio_test_33, fdio_test_33_pre, fdio_test_33_post},
+    {"fdio_test_34", fdio_test_34, fdio_test_34_pre, fdio_test_34_post},
+    {"fdio_test_35", fdio_test_35, fdio_test_35_pre, fdio_test_35_post},
+    {"fdio_test_36", fdio_test_36, fdio_test_36_pre, fdio_test_36_post},
+    {"fdio_test_37", fdio_test_37, fdio_test_37_pre, fdio_test_37_post},
+    {"fdio_test_38", fdio_test_38, fdio_test_38_pre, fdio_test_38_post},
+    {"fdio_test_39", fdio_test_39, fdio_test_39_pre, fdio_test_39_post},
+    {"fdio_test_40", fdio_test_40, fdio_test_40_pre, fdio_test_40_post},
+    {"fdio_test_41", fdio_test_41, fdio_test_41_pre, fdio_test_41_post},
+    {"fdio_test_42", fdio_test_42, fdio_test_42_pre, fdio_test_42_post},
+    {"fdio_test_43", fdio_test_43, fdio_test_43_pre, fdio_test_43_post},
+    {"fdio_test_44", fdio_test_44, fdio_test_44_pre, fdio_test_44_post},
+    {"fdio_test_45", fdio_test_45, fdio_test_45_pre, fdio_test_45_post},
+    {"fdio_test_46", fdio_test_46, fdio_test_46_pre, fdio_test_46_post},
+    {"fdio_test_47", fdio_test_47, fdio_test_47_pre, fdio_test_47_post},
+    {"fdio_test_48", fdio_test_48, fdio_test_48_pre, fdio_test_48_post},
+    {"fdio_test_49", fdio_test_49, fdio_test_49_pre, fdio_test_49_post},
+    {"fdio_test_52", fdio_test_50, fdio_test_50_pre, fdio_test_50_post},
+    {"fdio_test_51", fdio_test_51, fdio_test_51_pre, fdio_test_51_post},
+    {"fdio_test_52", fdio_test_52, fdio_test_52_pre, fdio_test_52_post},
+    /* Test 60 */
     {"malloc_test_9", malloc_test_9, malloc_test_9_pre, NULL},
     /* Test 9 */
     {"tm_test_1", tm_test_1, tm_test_1_pre, tm_test_1_post}
@@ -135,8 +189,8 @@ static unsigned int       g_nthreads = 1;
 static unsigned int       g_verbose = 0;
 static unsigned int       g_normalize = 0;
 
-int    g_ccmode   = 2; /* corresponds to CC_MODE_2PL */;
-size_t g_txcycles = 1;
+enum systx_libc_cc_mode g_cc_mode = SYSTX_LIBC_CC_MODE_2PL;
+size_t                  g_txcycles = 1;
 
 static int
 opt_btype(const char *optarg)
@@ -228,7 +282,7 @@ opt_regular_ccmode(const char *optarg)
 
     for (i = 0; i < sizeof(optstr)/sizeof(optstr[0]); ++i) {
         if (!strcmp(optstr[i], optarg)) {
-            g_ccmode = i;
+            g_cc_mode = i;
         }
     }
 

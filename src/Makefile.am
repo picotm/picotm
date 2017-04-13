@@ -4,7 +4,9 @@
 
 bin_PROGRAMS = tlctest
 
-tlctest_SOURCES = main.c \
+tlctest_SOURCES = fdio_test.c \
+                  fdio_test.h \
+                  main.c \
                   malloc_test.c \
                   malloc_test.h \
                   ptr.h \
