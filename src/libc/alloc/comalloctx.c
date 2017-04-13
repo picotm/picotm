@@ -102,7 +102,7 @@ com_alloc_tx_free(void *mem)
     size_t usiz = malloc_usable_size(mem);
 
     if (usiz) {
-        privatize_tx(mem, usiz);
+        privatize_tx(mem, usiz, SYSTX_TM_PRIVATIZE_LOADSTORE);
     }
 
     com_alloc_exec_free(data, mem);

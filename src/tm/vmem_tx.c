@@ -8,6 +8,7 @@
 #include <string.h>
 #include "block.h"
 #include "frame.h"
+#include "systx/systx-tm.h"
 #include "vmem.h"
 
 /*
@@ -425,7 +426,8 @@ tm_vmem_tx_ldst(struct tm_vmem_tx* vmem_tx, uintptr_t laddr, uintptr_t saddr,
 }
 
 int
-tm_vmem_tx_privatize(struct tm_vmem_tx* vmem_tx, uintptr_t addr, size_t siz)
+tm_vmem_tx_privatize(struct tm_vmem_tx* vmem_tx, uintptr_t addr, size_t siz,
+                     unsigned long flags)
 {
     while (siz) {
 
@@ -444,10 +446,12 @@ tm_vmem_tx_privatize(struct tm_vmem_tx* vmem_tx, uintptr_t addr, size_t siz)
             if (res < 0) {
                 return res;
             }
-        }
+            page->flags |= TM_PAGE_FLAG_WRITE_THROUGH;
 
-        if (!(page->flags & TM_PAGE_FLAG_WRITE_THROUGH)) {
-            tm_page_xchg(page, vmem_tx->vmem);
+        } else if (!(page->flags & TM_PAGE_FLAG_WRITE_THROUGH)) {
+            if (page->flags & TM_PAGE_FLAG_WRITTEN) {
+                tm_page_xchg(page, vmem_tx->vmem);
+            }
             page->flags |= TM_PAGE_FLAG_WRITE_THROUGH;
         }
 
@@ -455,6 +459,10 @@ tm_vmem_tx_privatize(struct tm_vmem_tx* vmem_tx, uintptr_t addr, size_t siz)
         size_t page_head = addr - page_addr;
         size_t page_tail = TM_BLOCK_SIZE - page_head;
         size_t page_diff = siz < page_tail ? siz : page_tail;
+
+        if (flags & SYSTX_TM_PRIVATIZE_STORE) {
+            page->flags |= TM_PAGE_FLAG_WRITTEN;
+        }
 
         addr += page_diff;
         siz  -= page_diff;
@@ -464,7 +472,8 @@ tm_vmem_tx_privatize(struct tm_vmem_tx* vmem_tx, uintptr_t addr, size_t siz)
 }
 
 int
-tm_vmem_tx_privatize_c(struct tm_vmem_tx* vmem_tx, uintptr_t addr, int c)
+tm_vmem_tx_privatize_c(struct tm_vmem_tx* vmem_tx, uintptr_t addr, int c,
+                       unsigned long flags)
 {
     while (true) {
 
@@ -483,13 +492,15 @@ tm_vmem_tx_privatize_c(struct tm_vmem_tx* vmem_tx, uintptr_t addr, int c)
             if (res < 0) {
                 return res;
             }
-        }
+            page->flags |= TM_PAGE_FLAG_WRITE_THROUGH;
 
-        /* Privatized pages require write-through semantics,
-         * so that all stores are immediately visible in the
-         * region's memory. */
-        if (!(page->flags & TM_PAGE_FLAG_WRITE_THROUGH)) {
-            tm_page_xchg(page, vmem_tx->vmem);
+        } else if (!(page->flags & TM_PAGE_FLAG_WRITE_THROUGH)) {
+            /* Privatized pages require write-through semantics,
+             * so that all stores are immediately visible in the
+             * region's memory. */
+            if (page->flags & TM_PAGE_FLAG_WRITTEN) {
+                tm_page_xchg(page, vmem_tx->vmem);
+            }
             page->flags |= TM_PAGE_FLAG_WRITE_THROUGH;
         }
 
@@ -497,6 +508,10 @@ tm_vmem_tx_privatize_c(struct tm_vmem_tx* vmem_tx, uintptr_t addr, int c)
         size_t page_head = addr - page_addr;
         size_t page_tail = TM_BLOCK_SIZE - page_head;
         size_t page_diff = page_tail;
+
+        if (flags & SYSTX_TM_PRIVATIZE_STORE) {
+            page->flags |= TM_PAGE_FLAG_WRITTEN;
+        }
 
         /* check for 'c' in current page */
         const uint8_t* mem = tm_page_buffer(page);

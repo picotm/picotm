@@ -327,14 +327,14 @@ __systx_tm_loadstore(uintptr_t laddr, uintptr_t saddr, size_t siz)
 
 SYSTX_EXPORT
 void
-__systx_tm_privatize(uintptr_t addr, size_t siz)
+__systx_tm_privatize(uintptr_t addr, size_t siz, unsigned long flags)
 {
     struct tm_vmem_tx* vmem_tx = get_vmem_tx();
     if (!vmem_tx) {
         systx_resolve_error(-ENOMEM);
     }
     int res;
-    while ((res = tm_vmem_tx_privatize(vmem_tx, addr, siz)) == -EBUSY) {
+    while ((res = tm_vmem_tx_privatize(vmem_tx, addr, siz, flags)) == -EBUSY) {
         systx_resolve_conflict(NULL);
     }
     if (res < 0) {
@@ -348,14 +348,14 @@ __systx_tm_privatize(uintptr_t addr, size_t siz)
 
 SYSTX_EXPORT
 void
-__systx_tm_privatize_c(uintptr_t addr, int c)
+__systx_tm_privatize_c(uintptr_t addr, int c, unsigned long flags)
 {
     struct tm_vmem_tx* vmem_tx = get_vmem_tx();
     if (!vmem_tx) {
         systx_resolve_error(-ENOMEM);
     }
     int res;
-    while ((res = tm_vmem_tx_privatize_c(vmem_tx, addr, c)) == -EBUSY) {
+    while ((res = tm_vmem_tx_privatize_c(vmem_tx, addr, c, flags)) == -EBUSY) {
         systx_resolve_conflict(NULL);
     }
     if (res < 0) {

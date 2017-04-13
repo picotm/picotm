@@ -8,6 +8,7 @@
 #include <systx/systx.h>
 #include <systx/systx-tm.h>
 #include "systx/stdlib.h"
+#include "systx/string-tm.h"
 
 /*
  * Memory functions
@@ -49,24 +50,26 @@ SYSTX_EXPORT
 void*
 memchr_tx(const void* s, int c, size_t n)
 {
-    privatize_tx(s, n);
-    return memchr(s, c, n);
+    privatize_tx(s, n, SYSTX_TM_PRIVATIZE_LOAD);
+    return memchr_tm(s, c, n);
 }
 
 SYSTX_EXPORT
 int
 memcmp_tx(const void* s1, const void* s2, size_t n)
 {
-    privatize_tx(s1, n);
-    privatize_tx(s2, n);
-    return memcmp(s1, s2, n);
+    privatize_tx(s1, n, SYSTX_TM_PRIVATIZE_LOAD);
+    privatize_tx(s2, n, SYSTX_TM_PRIVATIZE_LOAD);
+    return memcmp_tm(s1, s2, n);
 }
 
 SYSTX_EXPORT
 void*
 memcpy_tx(void* restrict dest, const void* restrict src, size_t n)
 {
-    return memmove_tx(dest, src, n);
+    privatize_tx(dest, n, SYSTX_TM_PRIVATIZE_STORE);
+    privatize_tx(src, n, SYSTX_TM_PRIVATIZE_LOAD);
+    return memcpy_tm(dest, src, n);
 }
 
 SYSTX_EXPORT
@@ -115,16 +118,16 @@ SYSTX_EXPORT
 void*
 memrchr_tx(const void* s, int c, size_t n)
 {
-    privatize_tx(s, n);
-    return memrchr(s, c, n);
+    privatize_tx(s, n, SYSTX_TM_PRIVATIZE_LOAD);
+    return memrchr_tm(s, c, n);
 }
 
 SYSTX_EXPORT
 void*
 rawmemchr_tx(const void* s, int c)
 {
-    privatize_c_tx(s, c);
-    return rawmemchr(s, c);
+    privatize_c_tx(s, c, SYSTX_TM_PRIVATIZE_LOAD);
+    return rawmemchr_tm(s, c);
 }
 
 /*
@@ -135,7 +138,7 @@ SYSTX_EXPORT
 char*
 stpcpy_tx(char* restrict dest, const char* restrict src)
 {
-    privatize_c_tx(src, '\0');
+    privatize_c_tx(src, '\0', SYSTX_TM_PRIVATIZE_LOAD);
     store_tx(dest, src, strlen(src));
     return dest;
 }
@@ -144,7 +147,7 @@ SYSTX_EXPORT
 char*
 stpncpy_tx(char* restrict dest, const char* restrict src, size_t n)
 {
-    privatize_c_tx(src, '\0');
+    privatize_c_tx(src, '\0', SYSTX_TM_PRIVATIZE_LOAD);
     size_t len = strlen(src) + 1;
     if (len < n) {
         store_tx(dest, src, len);
@@ -159,8 +162,8 @@ SYSTX_EXPORT
 char*
 strcat_tx(char* restrict dest, const char* restrict src)
 {
-    privatize_c_tx(dest, '\0');
-    privatize_c_tx(src, '\0');
+    privatize_c_tx(dest, '\0', SYSTX_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(src, '\0', SYSTX_TM_PRIVATIZE_LOAD);
     size_t dlen = strlen(dest);
     size_t slen = strlen(src) + 1;
     store_tx(dest + dlen, src, slen);
@@ -171,33 +174,33 @@ SYSTX_EXPORT
 char*
 strchr_tx(const char* s, int c)
 {
-    privatize_c_tx(s, c);
-    return strchr(s, c);
+    privatize_c_tx(s, c, SYSTX_TM_PRIVATIZE_LOAD);
+    return strchr_tm(s, c);
 }
 
 SYSTX_EXPORT
 int
 strcmp_tx(const char* s1, const char* s2)
 {
-    privatize_c_tx(s1, '\0');
-    privatize_c_tx(s2, '\0');
-    return strcmp(s1, s2);
+    privatize_c_tx(s1, '\0', SYSTX_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(s2, '\0', SYSTX_TM_PRIVATIZE_LOAD);
+    return strcmp_tm(s1, s2);
 }
 
 SYSTX_EXPORT
 int
 strcoll_l_tx(const char* s1, const char* s2, locale_t locale)
 {
-    privatize_c_tx(s1, '\0');
-    privatize_c_tx(s2, '\0');
-    return strcoll_l(s1, s2, locale);
+    privatize_c_tx(s1, '\0', SYSTX_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(s2, '\0', SYSTX_TM_PRIVATIZE_LOAD);
+    return strcoll_l_tm(s1, s2, locale);
 }
 
 SYSTX_EXPORT
 char*
 strcpy_tx(char* restrict dest, const char* restrict src)
 {
-    privatize_c_tx(src, '\0');
+    privatize_c_tx(src, '\0', SYSTX_TM_PRIVATIZE_LOAD);
     store_tx(dest, src, strlen(src) + 1);
     return dest;
 }
@@ -206,7 +209,7 @@ SYSTX_EXPORT
 size_t
 strcspn_tx(const char* s, const char* reject)
 {
-    privatize_c_tx(s, '\0');
+    privatize_c_tx(s, '\0', SYSTX_TM_PRIVATIZE_LOAD);
     return strcspn(s, reject);
 }
 
@@ -214,7 +217,7 @@ SYSTX_EXPORT
 char*
 strdup_tx(const char* s)
 {
-    privatize_c_tx(s, '\0');
+    privatize_c_tx(s, '\0', SYSTX_TM_PRIVATIZE_LOAD);
     size_t len = strlen(s) + 1;
     char* mem = malloc_tx(len);
     if (!mem) {
@@ -259,7 +262,7 @@ SYSTX_EXPORT
 size_t
 strlen_tx(const char* s)
 {
-    privatize_c_tx(s, '\0');
+    privatize_c_tx(s, '\0', SYSTX_TM_PRIVATIZE_LOAD);
     return strlen(s);
 }
 
@@ -267,8 +270,8 @@ SYSTX_EXPORT
 char*
 strncat_tx(char* restrict dest, const char* restrict src, size_t n)
 {
-    privatize_c_tx(dest, '\0');
-    privatize_c_tx(src, '\0');
+    privatize_c_tx(dest, '\0', SYSTX_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(src, '\0', SYSTX_TM_PRIVATIZE_LOAD);
     size_t dlen = strlen(dest);
     size_t slen = strlen(src) + 1;
     if (n < slen) {
@@ -284,8 +287,8 @@ SYSTX_EXPORT
 int
 strncmp_tx(const char* s1, const char* s2, size_t n)
 {
-    privatize_c_tx(s1, '\0');
-    privatize_c_tx(s2, '\0');
+    privatize_c_tx(s1, '\0', SYSTX_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(s2, '\0', SYSTX_TM_PRIVATIZE_LOAD);
     return strncmp(s1, s2, n);
 }
 
@@ -293,7 +296,7 @@ SYSTX_EXPORT
 char*
 strncpy_tx(char* restrict dest, const char* restrict src, size_t n)
 {
-    privatize_c_tx(src, '\0');
+    privatize_c_tx(src, '\0', SYSTX_TM_PRIVATIZE_LOAD);
     size_t len = strlen(src) + 1;
     if (len < n) {
         store_tx(dest, src, len);
@@ -307,7 +310,7 @@ SYSTX_EXPORT
 char*
 strndup_tx(const char* s, size_t n)
 {
-    privatize_c_tx(s, '\0');
+    privatize_c_tx(s, '\0', SYSTX_TM_PRIVATIZE_LOAD);
     size_t len = strlen(s) + 1;
     if (n < len) {
         len = n + 1;
@@ -327,7 +330,7 @@ SYSTX_EXPORT
 size_t
 strnlen_tx(const char* s, size_t maxlen)
 {
-    privatize_c_tx(s, '\0');
+    privatize_c_tx(s, '\0', SYSTX_TM_PRIVATIZE_LOAD);
     return strnlen(s, maxlen);
 }
 
@@ -335,8 +338,8 @@ SYSTX_EXPORT
 char*
 strpbrk_tx(const char* s, const char* accept)
 {
-    privatize_c_tx(s, '\0');
-    privatize_c_tx(accept, '\0');
+    privatize_c_tx(s, '\0', SYSTX_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(accept, '\0', SYSTX_TM_PRIVATIZE_LOAD);
     return strpbrk(s, accept);
 }
 
@@ -344,7 +347,7 @@ SYSTX_EXPORT
 char*
 strrchr_tx(const char* s, int c)
 {
-    privatize_c_tx(s, '\0');
+    privatize_c_tx(s, '\0', SYSTX_TM_PRIVATIZE_LOAD);
     return strrchr(s, c);
 }
 
@@ -352,8 +355,8 @@ SYSTX_EXPORT
 size_t
 strspn_tx(const char* s, const char* accept)
 {
-    privatize_c_tx(s, '\0');
-    privatize_c_tx(accept, '\0');
+    privatize_c_tx(s, '\0', SYSTX_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(accept, '\0', SYSTX_TM_PRIVATIZE_LOAD);
     return strspn(s, accept);
 }
 
@@ -361,8 +364,8 @@ SYSTX_EXPORT
 char*
 strstr_tx(const char* haystack, const char* needle)
 {
-    privatize_c_tx(haystack, '\0');
-    privatize_c_tx(needle, '\0');
+    privatize_c_tx(haystack, '\0', SYSTX_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(needle, '\0', SYSTX_TM_PRIVATIZE_LOAD);
     return strstr(haystack, needle);
 }
 
@@ -371,8 +374,8 @@ char*
 strtok_r_tx(char* restrict str, const char* restrict delim,
             char** restrict saveptr)
 {
-    privatize_c_tx(str, '\0');
-    privatize_c_tx(delim, '\0');
+    privatize_c_tx(str, '\0', SYSTX_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(delim, '\0', SYSTX_TM_PRIVATIZE_LOAD);
 
     char* ptr = load_ptr_tx(saveptr);
     char* tok = strtok_r(str, delim, &ptr);

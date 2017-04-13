@@ -140,12 +140,20 @@ loadstore_tx(const void* laddr, void* saddr, size_t siz)
                          __SYSTX_TM_ADDRESS(saddr), siz);
 }
 
+enum {
+    SYSTX_TM_PRIVATIZE_LOAD = 1 << 0,
+    SYSTX_TM_PRIVATIZE_STORE = 1 << 1
+};
+
+#define SYSTX_TM_PRIVATIZE_LOADSTORE    \
+    (SYSTX_TM_PRIVATIZE_LOAD | SYSTX_TM_PRIVATIZE_STORE)
+
 /**
  * Privatizes the memory region starting at address.
  * \warning This is an internal interface. Don't use it in application code.
  */
 void
-__systx_tm_privatize(uintptr_t addr, size_t siz);
+__systx_tm_privatize(uintptr_t addr, size_t siz, unsigned long flags);
 
 SYSTX_NOTHROW
 /**
@@ -154,15 +162,15 @@ SYSTX_NOTHROW
  * \warning This is an internal interface. Don't use it in application code.
  */
 void
-__systx_tm_privatize_c(uintptr_t addr, int c);
+__systx_tm_privatize_c(uintptr_t addr, int c, unsigned long flags);
 
 /**
  * Privatizes the memory region starting at address.
  */
 static inline void
-privatize_tx(const void* addr, size_t siz)
+privatize_tx(const void* addr, size_t siz, unsigned long flags)
 {
-    __systx_tm_privatize(__SYSTX_TM_ADDRESS(addr), siz);
+    __systx_tm_privatize(__SYSTX_TM_ADDRESS(addr), siz, flags);
 }
 
 /**
@@ -170,20 +178,20 @@ privatize_tx(const void* addr, size_t siz)
  * at character 'c'.
  */
 static inline void
-privatize_c_tx(const void* addr, int c)
+privatize_c_tx(const void* addr, int c, unsigned long flags)
 {
-    __systx_tm_privatize_c(__SYSTX_TM_ADDRESS(addr), c);
+    __systx_tm_privatize_c(__SYSTX_TM_ADDRESS(addr), c, flags);
 }
 
 /**
  * Defines a C function for conveniently privatizing a
  * value of a specific type.
  */
-#define SYSTX_TM_PRIVATIZE_TX(__name, __type)       \
-    static inline void                              \
-    privatize_ ## __name ## _tx(const __type* ptr)  \
-    {                                               \
-        privatize_tx(ptr, sizeof(*ptr));            \
+#define SYSTX_TM_PRIVATIZE_TX(__name, __type)                           \
+    static inline void                                                  \
+    privatize_ ## __name ## _tx(const __type* ptr, unsigned long flags) \
+    {                                                                   \
+        privatize_tx(ptr, sizeof(*ptr), flags);                         \
     }
 
 SYSTX_TM_PRIVATIZE_TX(bool, _Bool)

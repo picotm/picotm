@@ -73,13 +73,15 @@ tm_vmem_tx_ldst(struct tm_vmem_tx* vmem_tx, uintptr_t laddr, uintptr_t saddr,
  * Privatizes a region of memory.
  */
 int
-tm_vmem_tx_privatize(struct tm_vmem_tx* vmem_tx, uintptr_t addr, size_t siz);
+tm_vmem_tx_privatize(struct tm_vmem_tx* vmem_tx, uintptr_t addr, size_t siz,
+                     unsigned long flags);
 
 /**
  * Privatizes a region of memory.
  */
 int
-tm_vmem_tx_privatize_c(struct tm_vmem_tx* vmem_tx, uintptr_t addr, int c);
+tm_vmem_tx_privatize_c(struct tm_vmem_tx* vmem_tx, uintptr_t addr, int c,
+                       unsigned long flags);
 
 /**
  * Acquires exclusive access to the frames of this transaction.
