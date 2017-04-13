@@ -82,6 +82,11 @@ tx_commit(struct tx* self)
         goto err_log_apply_events;
     }
 
+    res = log_updatecc(&self->log, tx_is_irrevocable(self));
+    if (res < 0) {
+        goto err_log_updatecc;
+    }
+
     res = log_unlock(&self->log);
     if (res < 0) {
         goto err_log_unlock;
@@ -98,6 +103,7 @@ tx_commit(struct tx* self)
 
 err_log_finish:
 err_log_unlock:
+err_log_updatecc:
 err_log_apply_events:
 err_log_validate:
     log_unlock(&self->log);
@@ -119,6 +125,11 @@ tx_rollback(struct tx* self)
         goto err_log_undo_events;
     }
 
+    res = log_clearcc(&self->log, tx_is_irrevocable(self));
+    if (res < 0) {
+        goto err_log_clearcc;
+    }
+
     res = log_unlock(&self->log);
     if (res < 0) {
         goto err_log_unlock;
@@ -135,6 +146,7 @@ tx_rollback(struct tx* self)
 
 err_log_finish:
 err_log_unlock:
+err_log_clearcc:
 err_log_undo_events:
     log_unlock(&self->log);
     return res;
