@@ -54,11 +54,11 @@ com_fd_exec_dup(struct com_fd *data, int fildes, int cloexec)
 
     static const int dupcmd[] = {F_DUPFD, F_DUPFD_CLOEXEC};
 
-    long fildes2;
-
-    if (TEMP_FAILURE_RETRY(fcntl(fildes, dupcmd[!!cloexec], &fildes2)) < 0) {
+    int res = TEMP_FAILURE_RETRY(fcntl(fildes, dupcmd[!!cloexec], 0));
+    if (res < 0) {
         return ERR_SYSTEM;
     }
+    int fildes2 = res;
 
     struct fdtx *fdtx2 = com_fd_get_fdtx(data, fildes2);
     assert(fdtx2);
