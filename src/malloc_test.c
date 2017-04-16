@@ -17,8 +17,8 @@
 void
 malloc_test_1(unsigned int tid)
 {
-    systx_begin();
-    {
+    systx_begin
+
         char* mem[10];
 
         for (char** ptr = mem; ptr < mem + arraylen(mem); ++ptr) {
@@ -44,8 +44,9 @@ malloc_test_1(unsigned int tid)
         for (char** ptr = mem; ptr < mem + arraylen(mem); ++ptr) {
 	        free_tm(*ptr);
         }
-    }
-    systx_commit();
+
+    systx_commit
+    systx_end
 }
 
 /**
@@ -63,8 +64,8 @@ malloc_test_2(unsigned int tid)
     	}
     }
 
-    systx_begin();
-    {
+    systx_begin
+
         char* mem[10];
 
         for (size_t i = 0; i < arraylen(mem); ++i) {
@@ -87,8 +88,9 @@ malloc_test_2(unsigned int tid)
         for (char** ptr = mem; ptr < mem + arraylen(mem); ++ptr) {
 	        free_tm(*ptr);
         }
-    }
-    systx_commit();
+
+    systx_commit
+    systx_end
 }
 
 /**
@@ -99,8 +101,8 @@ malloc_test_3(unsigned int tid)
 {
     char* buf[10];
 
-    systx_begin()
-    {
+    systx_begin
+
         char* mem[10];
 
         for (char** ptr = mem; ptr < mem + arraylen(mem); ++ptr) {
@@ -126,8 +128,9 @@ malloc_test_3(unsigned int tid)
         for (size_t i = 0; i < arraylen(buf); ++i) {
             store_ptr_tx(buf + i, mem[i]);
         }
-    }
-    systx_commit();
+
+    systx_commit
+    systx_end
 
     for (char** ptr = buf; ptr < buf + arraylen(buf); ++ptr) {
 	    free(*ptr);
@@ -140,8 +143,8 @@ malloc_test_3(unsigned int tid)
 void
 malloc_test_4(unsigned int tid)
 {
-    systx_begin();
-    {
+    systx_begin
+
         uint8_t* mem = malloc_tx(30 * sizeof(mem[0]));
         if (!mem) {
             abort_tx();
@@ -167,8 +170,9 @@ malloc_test_4(unsigned int tid)
         delay_transaction(tid);
 
         free_tm(mem);
-    }
-    systx_commit();
+
+    systx_commit
+    systx_end
 }
 
 /**
@@ -186,8 +190,8 @@ malloc_test_5(unsigned int tid)
 	    buf[i] = i;
     }
 
-	systx_begin();
-    {
+	systx_begin
+
         /* Load 'buf' into transaction instead of using it
          * directly. The return value of realloc_tx() is
          * stored under the same name. So restarting the
@@ -216,8 +220,9 @@ malloc_test_5(unsigned int tid)
         delay_transaction(tid);
 
 	    free_tm(mem);
-    }
-	systx_commit();
+
+	systx_commit
+    systx_end
 }
 
 /**
@@ -235,8 +240,8 @@ malloc_test_6(unsigned int tid)
 	    buf[i] = i;
     }
 
-	systx_begin();
-    {
+	systx_begin
+
         uint8_t* mem = load_ptr_tx(&buf);
 
 	    mem = realloc_tm(mem, 15 * 34 * sizeof(mem[0]));
@@ -263,8 +268,9 @@ malloc_test_6(unsigned int tid)
          * This is ideomatic and will work in all cases.
          */
         store_ptr_tx(&buf, mem);
-    }
-	systx_commit();
+
+	systx_commit
+    systx_end
 
 	free(buf);
 }
@@ -293,8 +299,8 @@ malloc_test_7(unsigned int tid)
 {
     const size_t tid_min32 = tid < 32 ? 32 : tid;
 
-    systx_begin();
-    {
+    systx_begin
+
         unsigned long long cycles = load_ullong_tx(&g_test_7_cycles);
         size_t siz = load_size_t_tx(&tid_min32);
 
@@ -303,8 +309,9 @@ malloc_test_7(unsigned int tid)
             mem[tid] = 1;       /* touch memory to prevent optimization */
             free_tm(mem);
         }
-    }
-    systx_commit();
+
+    systx_commit
+    systx_end
 }
 
 static unsigned long long g_test_8_cycles;
@@ -359,8 +366,8 @@ malloc_test_9_pre(unsigned long nthreads, enum loop_mode loop,
 void
 malloc_test_9(unsigned int tid)
 {
-    systx_begin();
-    {
+    systx_begin
+
         unsigned long long cycles = load_ullong_tx(&g_test_9_cycles);
 
         for (unsigned long long i = 0; i < cycles; ++i) {
@@ -368,6 +375,7 @@ malloc_test_9(unsigned int tid)
             mem[tid] = 1;   /* touch memory to prevent optimization */
             free_tm(mem);
         }
-    }
-    systx_commit();
+
+    systx_commit
+    systx_end
 }

@@ -20,13 +20,14 @@ tm_test_1_pre(unsigned long nthreads, enum loop_mode loop,
 void
 tm_test_1(unsigned int tid)
 {
-    systx_begin();
+    systx_begin
 
         unsigned long value = load_ulong_tx(&g_value);
         value += 1;
         store_ulong_tx(&g_value, value);
 
-    systx_commit();
+    systx_commit
+    systx_end
 }
 
 void
