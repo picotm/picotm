@@ -9,7 +9,6 @@
 #include <string.h>
 #include <systx/systx-libc.h>
 #include <unistd.h>
-#include "error_test.h"
 #include "fdio_test.h"
 #include "fs_test.h"
 #include "malloc_test.h"
