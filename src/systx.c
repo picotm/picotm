@@ -4,6 +4,7 @@
 
 #include "systx.h"
 #include <errno.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include "table.h"
@@ -107,18 +108,21 @@ __systx_get_tx()
 }
 
 SYSTX_EXPORT
-void
+_Bool
 __systx_begin(enum __systx_mode mode)
 {
     struct tx* tx = get_tx(true);
     if (!tx) {
-        return;
+        return false;
     }
 
     int res = tx_begin(tx, mode);
     if (res < 0) {
         /* TODO: error handling */
+        return false;
     }
+
+    return true;
 }
 
 static void

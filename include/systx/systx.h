@@ -40,14 +40,14 @@ SYSTX_NOTHROW
  * Begins or restarts a transaction, or handles an error.
  * \warning This is an internal interface. Don't use it in application code.
  */
-void
+_Bool
 __systx_begin(enum __systx_mode mode);
 
 /**
  * Starts a new transaction.
  */
-#define systx_begin()                                                   \
-    __systx_begin((enum __systx_mode)setjmp(__systx_get_tx()->env));    \
+#define systx_begin                                                         \
+    if (__systx_begin((enum __systx_mode)setjmp(__systx_get_tx()->env)))    \
     {
 
 SYSTX_NOTHROW
@@ -61,8 +61,14 @@ __systx_commit(void);
 /**
  * Commits the current transaction.
  */
-#define systx_commit()      \
+#define systx_commit        \
         __systx_commit();   \
+    } else {
+
+/**
+ * Ends the current transaction.
+ */
+#define systx_end   \
     }
 
 SYSTX_NOTHROW
