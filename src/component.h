@@ -5,6 +5,10 @@
 #ifndef COMPONENT_H
 #define COMPONENT_H
 
+#include <stddef.h>
+
+struct event;
+
 struct component
 {
     int (*lock)(void*);

@@ -8,7 +8,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <tanger-stm-ext-actions.h>
+#include <systx/systx-module.h>
 #include "table.h"
 #include "component.h"
 #include "log.h"

@@ -9,7 +9,6 @@ lib_LTLIBRARIES = libsystx.la
 
 libsystx_la_SOURCES = component.c \
                       component.h \
-                      indirectcalls.c \
                       log.c \
                       log.h \
                       systx.c \

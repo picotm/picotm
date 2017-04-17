@@ -4,7 +4,6 @@
 
 #include <assert.h>
 #include <stddef.h>
-#include <tanger-stm-ext-actions.h>
 #include "component.h"
 
 int

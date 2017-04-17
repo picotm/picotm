@@ -5,7 +5,7 @@
 #ifndef LOG_H
 #define LOG_H
 
-#include <tanger-stm-ext-actions.h>
+#include <stdint.h>
 #include "component.h"
 
 #define MAX_NCOMPONENTS (256)
