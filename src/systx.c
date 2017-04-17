@@ -117,6 +117,12 @@ __systx_begin(enum __systx_mode mode)
         TX_MODE_IRREVOCABLE
     };
 
+    if (mode == SYSTX_MODE_RECOVERY) {
+        /* We're recovering from an error. Returning 'false'
+         * will invoke the transaction's recovery code. */
+        return false;
+    }
+
     struct tx* tx = get_tx(true);
     if (!tx) {
         return false;
@@ -273,7 +279,7 @@ void
 systx_resolve_error(int errno_hint)
 {
     /* Nothing we can do on errors; let's try to restart the TX. */
-    restart_tx(get_non_null_tx(), SYSTX_MODE_RETRY);
+    restart_tx(get_non_null_tx(), SYSTX_MODE_RECOVERY);
 }
 
 /* Tables
