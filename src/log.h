@@ -42,10 +42,10 @@ long
 log_alloc_module(struct log* log);
 
 /**
- * \brief Retrieve component structure by 'name enumerator'
+ * \brief Retrieve component structure by module index
  */
 struct component *
-log_get_component_by_name(struct log *log, enum component_name component);
+log_get_component_by_name(struct log *log, unsigned long component);
 
 /**
  * \brief Inject an event into log
