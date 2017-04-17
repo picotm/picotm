@@ -14,11 +14,7 @@
  * \brief The log is the core part of the framework. It holds the events of a
  *        transaction.
  */
-struct log
-{
-    stm_error_handler *errhdlrtab; /** \brief Error-handler stack */
-    size_t             errhdlrtablen; /** \brief Depth of error-handler stack */
-
+struct log {
     struct event *eventtab; /** \brief Table of transction's events */
     size_t        eventtablen; /** \brief Number of events */
     size_t        eventtabsiz; /** \brief Maximum number of events */

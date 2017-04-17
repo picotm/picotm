@@ -21,8 +21,6 @@ log_init(struct log *log)
 
     assert(log);
 
-    log->errhdlrtab = NULL;
-    log->errhdlrtablen = 0;
     log->eventtab = NULL;
     log->eventtablen = 0;
     log->eventtabsiz = 0;
@@ -55,9 +53,6 @@ log_uninit(struct log *log)
          com < log->com+sizeof(log->com)/sizeof(log->com[0]); ++com) {
         component_uninit(com);
     }
-
-    free(log->errhdlrtab);
-    free(log->eventtab);
 
     return 0;
 }
@@ -287,25 +282,7 @@ log_apply_events(struct log *log, int noundo)
         /* Apply vector of events from component */
 
         if (component_apply_events(log->com+event->module, event, event2-event) < 0) {
-
-            const enum stm_error_action ea =
-                log->errhdlrtablen
-                    ? log->errhdlrtab[log->errhdlrtablen-1](event->module,
-                                                            event->call,
-                                                            event->cookie)
-                    : STM_ERR_EXIT;
-
-            switch (ea) {
-                case STM_ERR_AGAIN:
-                    --event;
-                    /* Fall through */
-                case STM_ERR_IGNORE:
-                    break;
-                case STM_ERR_EXIT:
-                    /* Fall through */
-                default:
-                    abort();
-            }
+            return -1;
         }
 
         event = event2;
