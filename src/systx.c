@@ -111,12 +111,18 @@ SYSTX_EXPORT
 _Bool
 __systx_begin(enum __systx_mode mode)
 {
+    static const unsigned char tx_mode[] = {
+        TX_MODE_REVOCABLE,
+        TX_MODE_REVOCABLE,
+        TX_MODE_IRREVOCABLE
+    };
+
     struct tx* tx = get_tx(true);
     if (!tx) {
         return false;
     }
 
-    int res = tx_begin(tx, mode);
+    int res = tx_begin(tx, tx_mode[mode]);
     if (res < 0) {
         /* TODO: error handling */
         return false;
@@ -174,8 +180,7 @@ SYSTX_EXPORT
 bool
 systx_is_irrevocable()
 {
-    const struct tx* tx = get_non_null_tx();
-    return tx->mode == SYSTX_MODE_IRREVOCABLE;
+    return tx_is_irrevocable(get_non_null_tx());
 }
 
 SYSTX_EXPORT

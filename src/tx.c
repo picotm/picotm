@@ -14,7 +14,7 @@ tx_init(struct tx* self, struct tx_shared* tx_shared)
     }
 
     self->shared = tx_shared;
-    self->mode = SYSTX_MODE_START;
+    self->mode = TX_MODE_REVOCABLE;
     self->is_initialized = true;
 
     return 0;
@@ -35,16 +35,16 @@ tx_log(struct tx* self)
 bool
 tx_is_irrevocable(const struct tx* self)
 {
-    return self->mode == SYSTX_MODE_IRREVOCABLE;
+    return self->mode == TX_MODE_IRREVOCABLE;
 }
 
 int
-tx_begin(struct tx* self, enum __systx_mode mode)
+tx_begin(struct tx* self, enum tx_mode mode)
 {
     int res;
 
     switch (mode) {
-        case SYSTX_MODE_IRREVOCABLE:
+        case TX_MODE_IRREVOCABLE:
             /* If we're supposed to run exclusively, we wait
              * for the other transactions to finish. */
             res = tx_shared_make_irrevocable(self->shared, self);

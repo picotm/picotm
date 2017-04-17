@@ -10,11 +10,16 @@
 
 struct tx_shared;
 
+enum tx_mode {
+    TX_MODE_REVOCABLE,
+    TX_MODE_IRREVOCABLE
+};
+
 struct tx {
     struct __systx_tx public_state;
     struct log        log;
     struct tx_shared *shared;
-    enum __systx_mode mode;
+    enum tx_mode      mode;
     bool              is_initialized;
 };
 
@@ -31,7 +36,7 @@ bool
 tx_is_irrevocable(const struct tx* self);
 
 int
-tx_begin(struct tx* self, enum __systx_mode mode);
+tx_begin(struct tx* self, enum tx_mode mode);
 
 int
 tx_commit(struct tx* self);
