@@ -25,10 +25,7 @@ log_init(struct log *log)
     log->eventtablen = 0;
     log->eventtabsiz = 0;
 
-    /* TODO: The pre-defined components are already
-     * allocated. This should be fixed with a future
-     * patch set. */
-    log->nmodules = LAST_COMPONENT;
+    log->nmodules = 0;
 
     res = 0;
 
