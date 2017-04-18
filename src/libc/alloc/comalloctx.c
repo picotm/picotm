@@ -8,8 +8,8 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-#include <systx/systx-module.h>
-#include <systx/systx-tm.h>
+#include <picotm/picotm-module.h>
+#include <picotm/picotm-tm.h>
 #include "comalloc.h"
 #include "rnd2wb.h"
 
@@ -53,20 +53,20 @@ get_com_alloc()
         return &t_com_alloc.instance;
     }
 
-    long res = systx_register_module(NULL,
-                                     NULL,
-                                     NULL,
-                                     com_alloc_tx_apply_event,
-                                     com_alloc_tx_undo_event,
-                                     NULL,
-                                     NULL,
-                                     com_alloc_tx_finish,
-                                     com_alloc_tx_uninit,
-                                     NULL,
-                                     NULL,
-                                     NULL,
-                                     NULL,
-                                     &t_com_alloc.instance);
+    long res = picotm_register_module(NULL,
+                                      NULL,
+                                      NULL,
+                                      com_alloc_tx_apply_event,
+                                      com_alloc_tx_undo_event,
+                                      NULL,
+                                      NULL,
+                                      com_alloc_tx_finish,
+                                      com_alloc_tx_uninit,
+                                      NULL,
+                                      NULL,
+                                      NULL,
+                                      NULL,
+                                      &t_com_alloc.instance);
     if (res < 0) {
         return NULL;
     }
@@ -102,7 +102,7 @@ com_alloc_tx_free(void *mem)
     size_t usiz = malloc_usable_size(mem);
 
     if (usiz) {
-        privatize_tx(mem, usiz, SYSTX_TM_PRIVATIZE_LOADSTORE);
+        privatize_tx(mem, usiz, PICOTM_TM_PRIVATIZE_LOADSTORE);
     }
 
     com_alloc_exec_free(data, mem);

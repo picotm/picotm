@@ -2,22 +2,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "systx/fcntl.h"
+#include "picotm/fcntl.h"
 #include <stdarg.h>
 #include <stdbool.h>
 #include <string.h>
-#include <systx/systx-tm.h>
+#include <picotm/picotm-tm.h>
 #include "fd/comfdtx.h"
-#include "systx/fcntl-tm.h"
+#include "picotm/fcntl-tm.h"
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 int
 creat_tx(const char* path, mode_t mode)
 {
     return open_tx(path, O_CREAT | O_WRONLY | O_TRUNC, mode);
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 int
 fcntl_tx(int fildes, int cmd, ...)
 {
@@ -51,7 +51,7 @@ fcntl_tx(int fildes, int cmd, ...)
                 f = va_arg(arg, struct flock*);
                 va_end(arg);
 
-                privatize_tx(f, sizeof(val.arg1), SYSTX_TM_PRIVATIZE_LOAD);
+                privatize_tx(f, sizeof(val.arg1), PICOTM_TM_PRIVATIZE_LOAD);
                 memcpy(&val.arg1, f, sizeof(val.arg1));
 
                 return com_fd_tx_fcntl(fildes, cmd, &val);
@@ -61,11 +61,11 @@ fcntl_tx(int fildes, int cmd, ...)
     }
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 int
 open_tx(const char* path, int oflag, ...)
 {
-    privatize_c_tx(path, '\0', SYSTX_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(path, '\0', PICOTM_TM_PRIVATIZE_LOAD);
 
     if (!(oflag & O_CREAT)) {
         return open_tm(path, oflag);

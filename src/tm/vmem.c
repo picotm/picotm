@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "vmem.h"
-#include <systx/systx-module.h>
+#include <picotm/picotm-module.h>
 #include "block.h"
 #include "frame.h"
 

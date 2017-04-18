@@ -6,7 +6,7 @@
 #include <search.h>
 #include <stdlib.h>
 #include <string.h>
-#include <systx/systx-module.h>
+#include <picotm/picotm-module.h>
 #include "openop.h"
 #include "openoptab.h"
 
@@ -16,7 +16,7 @@ openoptab_append(struct openop **tab, size_t *nelems, int unlink)
     assert(tab);
     assert(nelems);
 
-    void *tmp = systx_tabresize(*tab, *nelems, (*nelems)+1, sizeof((*tab)[0]));
+    void *tmp = picotm_tabresize(*tab, *nelems, (*nelems)+1, sizeof((*tab)[0]));
 
     if (!tmp) {
         return -1;
@@ -36,7 +36,7 @@ openoptab_clear(struct openop **tab, size_t *nelems)
     assert(tab);
     assert(nelems);
 
-    systx_tabfree(*tab);
+    picotm_tabfree(*tab);
     *tab = NULL;
     *nelems = 0;
 }

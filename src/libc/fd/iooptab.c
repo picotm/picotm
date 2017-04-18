@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <systx/systx-module.h>
+#include <picotm/picotm-module.h>
 #include "range.h"
 #include "ioop.h"
 #include "iooptab.h"
@@ -23,7 +23,7 @@ iooptab_append(struct ioop * restrict * restrict tab, size_t * restrict nelems,
     assert(nelems);
 
     if (__builtin_expect(*nelems >= *siz, 0)) {
-        void *tmp = systx_tabresize(*tab, *siz, (*siz)+1, sizeof((*tab)[0]));
+        void *tmp = picotm_tabresize(*tab, *siz, (*siz)+1, sizeof((*tab)[0]));
 
         if (!tmp) {
             return -1;
@@ -46,9 +46,9 @@ iooptab_clear(struct ioop * restrict * restrict tab, size_t * restrict nelems)
     assert(tab);
     assert(nelems);
 
-    systx_tabwalk_1(*tab, *nelems, sizeof((*tab)[0]), ioop_uninit_walk);
+    picotm_tabwalk_1(*tab, *nelems, sizeof((*tab)[0]), ioop_uninit_walk);
 
-    systx_tabfree(*tab);
+    picotm_tabfree(*tab);
     *tab = NULL;
     *nelems = 0;
 }

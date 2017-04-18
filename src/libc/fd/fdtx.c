@@ -42,7 +42,7 @@ fdtx_init(struct fdtx *fdtx)
     fdtx->fildes = -1;
     fdtx->ofd = -1;
 	fdtx->flags = 0;
-	fdtx->cc_mode = SYSTX_LIBC_CC_MODE_TS;
+	fdtx->cc_mode = PICOTM_LIBC_CC_MODE_TS;
 
     fdtx->fcntltab = NULL;
     fdtx->fcntltablen = 0;

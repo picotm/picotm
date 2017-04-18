@@ -2,20 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "systx/fcntl-tm.h"
+#include "picotm/fcntl-tm.h"
 #include <stdarg.h>
 #include <stdbool.h>
 #include <string.h>
 #include "fd/comfdtx.h"
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 int
 creat_tm(const char* path, mode_t mode)
 {
     return open_tm(path, O_CREAT | O_WRONLY | O_TRUNC, mode);
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 int
 fcntl_tm(int fildes, int cmd, ...)
 {
@@ -58,7 +58,7 @@ fcntl_tm(int fildes, int cmd, ...)
     }
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 int
 open_tm(const char* path, int oflag, ...)
 {

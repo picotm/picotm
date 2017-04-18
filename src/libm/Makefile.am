@@ -4,6 +4,6 @@
 
 AM_CPPFLAGS = -I$(srcdir)/../include
 
-lib_LTLIBRARIES = libsystx-m.la
+lib_LTLIBRARIES = libpicotm-m.la
 
-libsystx_m_la_SOURCES =
+libpicotm_m_la_SOURCES =

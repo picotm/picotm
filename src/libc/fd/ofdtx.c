@@ -8,7 +8,7 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
-#include <systx/systx-module.h>
+#include <picotm/picotm-module.h>
 #include <unistd.h>
 #include "errcode.h"
 #include "types.h"
@@ -93,8 +93,8 @@ ofdtx_init(struct ofdtx *ofdtx)
 
     ofdtx->offset = 0;
     ofdtx->size = 0;
-    ofdtx->type = SYSTX_LIBC_FILE_TYPE_OTHER;
-    ofdtx->cc_mode = SYSTX_LIBC_CC_MODE_NOUNDO;
+    ofdtx->type = PICOTM_LIBC_FILE_TYPE_OTHER;
+    ofdtx->cc_mode = PICOTM_LIBC_CC_MODE_NOUNDO;
 
     /* TL */
 
@@ -177,7 +177,7 @@ ofdtx_validate_ts(struct ofdtx *ofdtx)
     /* validate versions of read records
      */
 
-    if (ofdtx->type == SYSTX_LIBC_FILE_TYPE_REGULAR) {
+    if (ofdtx->type == PICOTM_LIBC_FILE_TYPE_REGULAR) {
 
         struct ioop *ioop;
         int err = 0;
@@ -215,7 +215,7 @@ static int
 ofdtx_validate_2pl_ext(struct ofdtx *ofdtx)
 {
     assert(ofdtx);
-    assert(ofdtx->cc_mode == SYSTX_LIBC_CC_MODE_2PL_EXT);
+    assert(ofdtx->cc_mode == PICOTM_LIBC_CC_MODE_2PL_EXT);
 
     /* Locked regions are ours, so why do we need to validate here. All
      * conflicting transactions will have aborted on encountering our locks.
@@ -256,7 +256,7 @@ static int
 ofdtx_updatecc_ts(struct ofdtx *ofdtx)
 {
     assert(ofdtx);
-    assert(ofdtx->cc_mode == SYSTX_LIBC_CC_MODE_TS);
+    assert(ofdtx->cc_mode == PICOTM_LIBC_CC_MODE_TS);
 
     struct ofd *ofd = ofdtab+ofdtx->ofd;
 
@@ -270,7 +270,7 @@ ofdtx_updatecc_ts(struct ofdtx *ofdtx)
 
     int err = 0;
 
-    if (ofdtx->type == SYSTX_LIBC_FILE_TYPE_REGULAR) {
+    if (ofdtx->type == PICOTM_LIBC_FILE_TYPE_REGULAR) {
 
         const struct ioop *ioop;
 
@@ -290,13 +290,13 @@ static int
 ofdtx_updatecc_2pl(struct ofdtx *ofdtx)
 {
     assert(ofdtx);
-    assert(ofdtx->cc_mode == SYSTX_LIBC_CC_MODE_2PL);
+    assert(ofdtx->cc_mode == PICOTM_LIBC_CC_MODE_2PL);
 
     struct ofd *ofd = ofdtab+ofdtx->ofd;
 
     /* release record locks */
 
-    if (ofdtx->type == SYSTX_LIBC_FILE_TYPE_REGULAR) {
+    if (ofdtx->type == PICOTM_LIBC_FILE_TYPE_REGULAR) {
         ofdtx_2pl_release_locks(ofdtx);
     }
 
@@ -311,13 +311,13 @@ static int
 ofdtx_updatecc_2pl_ext(struct ofdtx *ofdtx)
 {
     assert(ofdtx);
-    assert(ofdtx->cc_mode == SYSTX_LIBC_CC_MODE_2PL_EXT);
+    assert(ofdtx->cc_mode == PICOTM_LIBC_CC_MODE_2PL_EXT);
 
     struct ofd *ofd = ofdtab+ofdtx->ofd;
 
     /* release record locks */
 
-    if (ofdtx->type == SYSTX_LIBC_FILE_TYPE_REGULAR) {
+    if (ofdtx->type == PICOTM_LIBC_FILE_TYPE_REGULAR) {
         ofdtx_2pl_release_locks(ofdtx);
     }
 
@@ -351,7 +351,7 @@ static int
 ofdtx_clearcc_noundo(struct ofdtx *ofdtx)
 {
     assert(ofdtx);
-    assert(ofdtx->cc_mode == SYSTX_LIBC_CC_MODE_NOUNDO);
+    assert(ofdtx->cc_mode == PICOTM_LIBC_CC_MODE_NOUNDO);
 
     return 0;
 }
@@ -360,7 +360,7 @@ static int
 ofdtx_clearcc_ts(struct ofdtx *ofdtx)
 {
     assert(ofdtx);
-    assert(ofdtx->cc_mode == SYSTX_LIBC_CC_MODE_TS);
+    assert(ofdtx->cc_mode == PICOTM_LIBC_CC_MODE_TS);
 
     return 0;
 }
@@ -369,13 +369,13 @@ static int
 ofdtx_clearcc_2pl(struct ofdtx *ofdtx)
 {
     assert(ofdtx);
-    assert(ofdtx->cc_mode == SYSTX_LIBC_CC_MODE_2PL);
+    assert(ofdtx->cc_mode == PICOTM_LIBC_CC_MODE_2PL);
 
     struct ofd *ofd = ofdtab+ofdtx->ofd;
 
     /* release record locks */
 
-    if (ofdtx->type == SYSTX_LIBC_FILE_TYPE_REGULAR) {
+    if (ofdtx->type == PICOTM_LIBC_FILE_TYPE_REGULAR) {
         ofdtx_2pl_release_locks(ofdtx);
     }
 
@@ -390,13 +390,13 @@ static int
 ofdtx_clearcc_2pl_ext(struct ofdtx *ofdtx)
 {
     assert(ofdtx);
-    assert(ofdtx->cc_mode == SYSTX_LIBC_CC_MODE_2PL_EXT);
+    assert(ofdtx->cc_mode == PICOTM_LIBC_CC_MODE_2PL_EXT);
 
     struct ofd *ofd = ofdtab+ofdtx->ofd;
 
     /* release record locks */
 
-    if (ofdtx->type == SYSTX_LIBC_FILE_TYPE_REGULAR) {
+    if (ofdtx->type == PICOTM_LIBC_FILE_TYPE_REGULAR) {
         ofdtx_2pl_release_locks(ofdtx);
     }
 
@@ -438,8 +438,8 @@ ofdtx_ref(struct ofdtx *ofdtx, int ofdindex, int fildes, unsigned long flags, in
         /* get reference and status */
 
         off_t offset;
-        enum systx_libc_file_type type;
-        enum systx_libc_cc_mode cc_mode;
+        enum picotm_libc_file_type type;
+        enum picotm_libc_cc_mode cc_mode;
 
         struct ofd *ofd = ofdtab+ofdindex;
 
@@ -474,7 +474,7 @@ ofdtx_ref(struct ofdtx *ofdtx, int ofdindex, int fildes, unsigned long flags, in
 
     if (optcc) {
         /* Signal optimistic CC */
-        *optcc = (ofdtx->cc_mode == SYSTX_LIBC_CC_MODE_TS);
+        *optcc = (ofdtx->cc_mode == PICOTM_LIBC_CC_MODE_TS);
     }
 
     return 0;
@@ -516,7 +516,7 @@ ofdtx_append_to_iobuffer(struct ofdtx *ofdtx, size_t nbyte, const void *buf)
     if (nbyte && buf) {
 
         /* resize */
-        void *tmp = systx_tabresize(ofdtx->wrbuf,
+        void *tmp = picotm_tabresize(ofdtx->wrbuf,
                                     ofdtx->wrbuflen,
                                     ofdtx->wrbuflen+nbyte,
                                     sizeof(ofdtx->wrbuf[0]));
@@ -582,7 +582,7 @@ ofdtx_pre_commit(struct ofdtx *ofdtx)
 {
     assert(ofdtx);
 
-    if (ofdtx->cc_mode == SYSTX_LIBC_CC_MODE_TS) {
+    if (ofdtx->cc_mode == PICOTM_LIBC_CC_MODE_TS) {
 
         const struct ioop *ioop, *ioopend;
         const struct region *reg, *regend;
@@ -671,7 +671,7 @@ ofdtx_post_commit(struct ofdtx *ofdtx)
 {
     assert(ofdtx);
 
-    if (ofdtx->cc_mode == SYSTX_LIBC_CC_MODE_TS) {
+    if (ofdtx->cc_mode == PICOTM_LIBC_CC_MODE_TS) {
 
         const struct region *reg, *regbeg;
 
@@ -707,7 +707,7 @@ ofdtx_is_optimistic(const struct ofdtx *ofdtx)
 {
     assert(ofdtx);
 
-    return ofdtx->cc_mode == SYSTX_LIBC_CC_MODE_TS;
+    return ofdtx->cc_mode == PICOTM_LIBC_CC_MODE_TS;
 }
 
 /*

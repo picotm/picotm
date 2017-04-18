@@ -7,14 +7,14 @@
 #include <fcntl.h>
 #include "compiler.h"
 
-SYSTX_NOTHROW
+PICOTM_NOTHROW
 int
-creat_tx(const char* path, mode_t mode);
+creat_tm(const char* path, mode_t mode);
 
-SYSTX_NOTHROW
+PICOTM_NOTHROW
 int
-fcntl_tx(int fildes, int cmd, ...);
+fcntl_tm(int fildes, int cmd, ...);
 
-SYSTX_NOTHROW
+PICOTM_NOTHROW
 int
-open_tx(const char* path, int oflag, ...);
+open_tm(const char* path, int oflag, ...);

@@ -8,8 +8,8 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
-#include <systx/systx-libc.h>
-#include <systx/systx-module.h>
+#include <picotm/picotm-libc.h>
+#include <picotm/picotm-module.h>
 #include <unistd.h>
 #include "range.h"
 #include "types.h"
@@ -117,15 +117,15 @@ com_fd_get_optcc(const struct com_fd *comfd)
 
 void
 com_fd_set_validation_mode(struct com_fd *comfd,
-                           enum systx_libc_validation_mode val_mode)
+                           enum picotm_libc_validation_mode val_mode)
 {
-    systx_libc_set_validation_mode(val_mode);
+    picotm_libc_set_validation_mode(val_mode);
 }
 
-enum systx_libc_validation_mode
+enum picotm_libc_validation_mode
 com_fd_get_validation_mode(const struct com_fd *comfd)
 {
-    return systx_libc_get_validation_mode();
+    return picotm_libc_get_validation_mode();
 }
 
 static int *
@@ -141,7 +141,7 @@ com_fd_get_ifd(const struct fdtx *fdtx, size_t fdtxlen, size_t *ifdlen)
         --fdtxlen;
 
         if (fdtx_holds_ref(fdtx)) {
-            void *tmp = systx_tabresize(ifd, *ifdlen, (*ifdlen)+1, sizeof(ifd[0]));
+            void *tmp = picotm_tabresize(ifd, *ifdlen, (*ifdlen)+1, sizeof(ifd[0]));
 
             if (!tmp) {
                 free(ifd);
@@ -167,7 +167,7 @@ com_fd_get_iofd(const struct fdtx *fdtx, const int *ifd, size_t ifdlen, size_t *
     while (ifdlen) {
         --ifdlen;
 
-        void *tmp = systx_tabresize(iofd, *iofdlen, (*iofdlen)+1, sizeof(iofd[0]));
+        void *tmp = picotm_tabresize(iofd, *iofdlen, (*iofdlen)+1, sizeof(iofd[0]));
 
         if (!tmp) {
             free(iofd);
@@ -181,7 +181,7 @@ com_fd_get_iofd(const struct fdtx *fdtx, const int *ifd, size_t ifdlen, size_t *
 
     qsort(iofd, *iofdlen, sizeof(iofd[0]), compare_int);
 
-    *iofdlen = systx_tabuniq(iofd, *iofdlen, sizeof(*iofd), compare_int);
+    *iofdlen = picotm_tabuniq(iofd, *iofdlen, sizeof(*iofd), compare_int);
 
     return iofd;
 }
@@ -566,7 +566,7 @@ com_fd_inject(struct com_fd *comfd, enum com_fd_call call, int fildes,
 {
     if (__builtin_expect(comfd->eventtablen >= comfd->eventtabsiz, 0)) {
 
-        void *tmp = systx_tabresize(comfd->eventtab,
+        void *tmp = picotm_tabresize(comfd->eventtab,
                                     comfd->eventtabsiz,
                                     comfd->eventtabsiz+1,
                                     sizeof(comfd->eventtab[0]));
@@ -583,7 +583,7 @@ com_fd_inject(struct com_fd *comfd, enum com_fd_call call, int fildes,
     event->fildes = fildes;
     event->cookie = cookie;
 
-    if (systx_inject_event(comfd->module, call, comfd->eventtablen) < 0) {
+    if (picotm_inject_event(comfd->module, call, comfd->eventtablen) < 0) {
         return -1;
     }
 

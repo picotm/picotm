@@ -5,7 +5,7 @@
 #ifndef OFD_H
 #define OFD_H
 
-#include "systx/systx-libc.h"
+#include "picotm/picotm-libc.h"
 
 #define OFD_FL_UNLINK   (1<<0)
 #define OFD_FL_WANTNEW  (1<<2)
@@ -21,9 +21,9 @@ struct ofd
     struct counter ref;
 
     unsigned long flags;
-    enum systx_libc_file_type type;
+    enum picotm_libc_file_type type;
 
-    enum systx_libc_cc_mode cc_mode;
+    enum picotm_libc_cc_mode cc_mode;
     struct counter ver; /**< \brief Version, incremented on commit, optimistic CC */
     struct rwlock  rwlock; /**< \brief Lock, pessimistic CC */
 
@@ -62,8 +62,8 @@ ofd_ref(struct ofd *ofd, int fildes, unsigned long flags);
 /** \brief References the open file description and returns its state. */
 count_type
 ofd_ref_state(struct ofd *ofd, int fildes, unsigned long flags,
-              enum systx_libc_file_type *type,
-              enum systx_libc_cc_mode *ccmode,
+              enum picotm_libc_file_type *type,
+              enum picotm_libc_cc_mode *ccmode,
               off_t *offset);
 
 /** \brief Unreferences the open file description. */
@@ -71,11 +71,11 @@ void
 ofd_unref(struct ofd *ofd);
 
 /** \brief Returns the current CC mode of the open file description. */
-enum systx_libc_cc_mode
+enum picotm_libc_cc_mode
 ofd_get_ccmode_nolock(const struct ofd *ofd);
 
 /** \brief Returns the type of the open file description. */
-enum systx_libc_file_type
+enum picotm_libc_file_type
 ofd_get_type_nolock(const struct ofd *ofd);
 
 /** \brief Returns the file offset of the open file description. */

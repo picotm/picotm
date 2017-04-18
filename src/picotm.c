@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "systx.h"
+#include "picotm.h"
 #include <errno.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -96,9 +96,9 @@ get_non_null_tx(void)
  * Public interface
  */
 
-SYSTX_EXPORT
-struct __systx_tx*
-__systx_get_tx()
+PICOTM_EXPORT
+struct __picotm_tx*
+__picotm_get_tx()
 {
     struct tx* tx = get_tx(true);
     if (!tx) {
@@ -107,9 +107,9 @@ __systx_get_tx()
     return &tx->public_state;
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 _Bool
-__systx_begin(enum __systx_mode mode)
+__picotm_begin(enum __picotm_mode mode)
 {
     static const unsigned char tx_mode[] = {
         TX_MODE_REVOCABLE,
@@ -117,7 +117,7 @@ __systx_begin(enum __systx_mode mode)
         TX_MODE_IRREVOCABLE
     };
 
-    if (mode == SYSTX_MODE_RECOVERY) {
+    if (mode == PICOTM_MODE_RECOVERY) {
         /* We're recovering from an error. Returning 'false'
          * will invoke the transaction's recovery code. */
         return false;
@@ -138,7 +138,7 @@ __systx_begin(enum __systx_mode mode)
 }
 
 static void
-restart_tx(struct tx* tx, enum __systx_mode mode)
+restart_tx(struct tx* tx, enum __picotm_mode mode)
 {
     int res = tx_rollback(tx);
     if (res < 0) {
@@ -146,52 +146,52 @@ restart_tx(struct tx* tx, enum __systx_mode mode)
     }
 
     /* Restarting the transaction here transfers control
-     * to __systx_begin(). */
+     * to __picotm_begin(). */
     longjmp(tx->public_state.env, (int)mode);
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 void
-__systx_commit()
+__picotm_commit()
 {
     struct tx* tx = get_non_null_tx();
     int res = tx_commit(tx);
     if (res < 0) {
-        restart_tx(tx, SYSTX_MODE_RETRY);
+        restart_tx(tx, PICOTM_MODE_RETRY);
     }
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 void
-systx_abort()
+picotm_abort()
 {
-    restart_tx(get_non_null_tx(), SYSTX_MODE_RETRY);
+    restart_tx(get_non_null_tx(), PICOTM_MODE_RETRY);
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 bool
-systx_is_valid()
+picotm_is_valid()
 {
     return tx_is_valid(get_non_null_tx());
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 void
-systx_irrevocable()
+picotm_irrevocable()
 {
-    restart_tx(get_non_null_tx(), SYSTX_MODE_IRREVOCABLE);
+    restart_tx(get_non_null_tx(), PICOTM_MODE_IRREVOCABLE);
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 bool
-systx_is_irrevocable()
+picotm_is_irrevocable()
 {
     return tx_is_irrevocable(get_non_null_tx());
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 void
-systx_release()
+picotm_release()
 {
     struct tx* tx = get_tx(false);
     if (!tx) {
@@ -204,9 +204,9 @@ systx_release()
  * Module interface
  */
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 long
-systx_register_module(int (*lock)(void*),
+picotm_register_module(int (*lock)(void*),
                       int (*unlock)(void*),
                       int (*validate)(void*, int),
                       int (*apply_event)(const struct event*, size_t, void*),
@@ -256,9 +256,9 @@ systx_register_module(int (*lock)(void*),
     return module;
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 int
-systx_inject_event(unsigned long module, unsigned long op, uintptr_t cookie)
+picotm_inject_event(unsigned long module, unsigned long op, uintptr_t cookie)
 {
     int res = log_inject_event(tx_log(get_non_null_tx()), module, op, cookie);
     if (res < 0) {
@@ -267,79 +267,79 @@ systx_inject_event(unsigned long module, unsigned long op, uintptr_t cookie)
     return 0;
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 void
-systx_resolve_conflict(struct systx_tx* conflicting_tx)
+picotm_resolve_conflict(struct picotm_tx* conflicting_tx)
 {
-    restart_tx(get_non_null_tx(), SYSTX_MODE_RETRY);
+    restart_tx(get_non_null_tx(), PICOTM_MODE_RETRY);
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 void
-systx_resolve_error(int errno_hint)
+picotm_resolve_error(int errno_hint)
 {
     /* Nothing we can do on errors; let's try to restart the TX. */
-    restart_tx(get_non_null_tx(), SYSTX_MODE_RECOVERY);
+    restart_tx(get_non_null_tx(), PICOTM_MODE_RECOVERY);
 }
 
 /* Tables
  */
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 void*
-systx_tabresize(void* base, size_t nelems, size_t newnelems, size_t siz)
+picotm_tabresize(void* base, size_t nelems, size_t newnelems, size_t siz)
 {
     return tabresize(base, nelems, newnelems, siz);
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 void
-systx_tabfree(void* base)
+picotm_tabfree(void* base)
 {
     tabfree(base);
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 int
-systx_tabwalk_1(void* base, size_t nelems, size_t siz, int (*walk)(void*))
+picotm_tabwalk_1(void* base, size_t nelems, size_t siz, int (*walk)(void*))
 {
     return tabwalk_1(base, nelems, siz, walk);
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 int
-systx_tabwalk_2(void* base, size_t nelems, size_t siz,
+picotm_tabwalk_2(void* base, size_t nelems, size_t siz,
                 int (*walk)(void*, void*), void* data)
 {
     return tabwalk_2(base, nelems, siz, walk, data);
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 int
-systx_tabwalk_3(void* base, size_t nelems, size_t siz,
+picotm_tabwalk_3(void* base, size_t nelems, size_t siz,
                 int (*walk)(void*, void*, void*), void* data1, void* data2)
 {
     return tabwalk_3(base, nelems, siz, walk, data1, data2);
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 int
-systx_tabrwalk_1(void* base, size_t nelems, size_t siz, int (*walk)(void*))
+picotm_tabrwalk_1(void* base, size_t nelems, size_t siz, int (*walk)(void*))
 {
     return tabrwalk_1(base, nelems, siz, walk);
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 int
-systx_tabrwalk_2(void* base, size_t nelems, size_t siz,
+picotm_tabrwalk_2(void* base, size_t nelems, size_t siz,
                  int (*walk)(void*, void*), void* data)
 {
     return tabrwalk_2(base, nelems, siz, walk, data);
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 size_t
-systx_tabuniq(void* base, size_t nelems, size_t siz,
+picotm_tabuniq(void* base, size_t nelems, size_t siz,
               int (*compare)(const void*, const void*))
 {
     return tabuniq(base, nelems, siz, compare);

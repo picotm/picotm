@@ -7,7 +7,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <sys/socket.h>
-#include <systx/systx.h>
+#include <picotm/picotm.h>
 #include "errcode.h"
 #include "types.h"
 #include "counter.h"
@@ -96,7 +96,7 @@ com_fd_tx_aquire_data()
         return &t_com_fd.instance;
     }
 
-    long res = systx_register_module(com_fd_tx_lock,
+    long res = picotm_register_module(com_fd_tx_lock,
                                      com_fd_tx_unlock,
                                      com_fd_tx_validate,
                                      com_fd_tx_apply_event,
@@ -141,10 +141,10 @@ com_fd_tx_accept(int sockfd, struct sockaddr *address, socklen_t *address_len)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                systx_abort();
+                picotm_abort();
                 break;
             case ERR_NOUNDO:
-                systx_irrevocable();
+                picotm_irrevocable();
                 break;
             default:
                 break;
@@ -169,15 +169,15 @@ com_fd_tx_bind(int sockfd, const struct sockaddr *address,
 
     do {
         res = com_fd_exec_bind(comfd, sockfd, address, address_len,
-                               systx_is_irrevocable());
+                               picotm_is_irrevocable());
 
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                systx_abort();
+                picotm_abort();
                 break;
             case ERR_NOUNDO:
-                systx_irrevocable();
+                picotm_irrevocable();
                 break;
             default:
                 break;
@@ -198,15 +198,15 @@ com_fd_tx_close(int fildes)
     int res;
 
     do {
-        res = com_fd_exec_close(comfd, fildes, systx_is_irrevocable());
+        res = com_fd_exec_close(comfd, fildes, picotm_is_irrevocable());
 
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                systx_abort();
+                picotm_abort();
                 break;
             case ERR_NOUNDO:
-                systx_irrevocable();
+                picotm_irrevocable();
                 break;
             default:
                 break;
@@ -231,15 +231,15 @@ com_fd_tx_connect(int sockfd, const struct sockaddr *serv_addr,
 
     do {
         res = com_fd_exec_connect(comfd, sockfd, serv_addr, addr_len,
-                                  systx_is_irrevocable());
+                                  picotm_is_irrevocable());
 
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                systx_abort();
+                picotm_abort();
                 break;
             case ERR_NOUNDO:
-                systx_irrevocable();
+                picotm_irrevocable();
                 break;
             default:
                 break;
@@ -265,10 +265,10 @@ com_fd_tx_dup_internal(int fildes, int cloexec)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                systx_abort();
+                picotm_abort();
                 break;
             case ERR_NOUNDO:
-                systx_irrevocable();
+                picotm_irrevocable();
                 break;
             default:
                 break;
@@ -295,15 +295,15 @@ com_fd_tx_fcntl(int fildes, int cmd, union com_fd_fcntl_arg *arg)
     assert(comfd);
 
     do {
-        res = com_fd_exec_fcntl(comfd, fildes, cmd, arg, systx_is_irrevocable());
+        res = com_fd_exec_fcntl(comfd, fildes, cmd, arg, picotm_is_irrevocable());
 
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                systx_abort();
+                picotm_abort();
                 break;
             case ERR_NOUNDO:
-                systx_irrevocable();
+                picotm_irrevocable();
                 break;
             default:
                 break;
@@ -324,15 +324,15 @@ com_fd_tx_fsync(int fildes)
     assert(comfd);
 
     do {
-        res = com_fd_exec_fsync(comfd, fildes, systx_is_irrevocable());
+        res = com_fd_exec_fsync(comfd, fildes, picotm_is_irrevocable());
 
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                systx_abort();
+                picotm_abort();
                 break;
             case ERR_NOUNDO:
-                systx_irrevocable();
+                picotm_irrevocable();
                 break;
             default:
                 break;
@@ -353,15 +353,15 @@ com_fd_tx_listen(int sockfd, int backlog)
     assert(comfd);
 
     do {
-        res = com_fd_exec_listen(comfd, sockfd, backlog, systx_is_irrevocable());
+        res = com_fd_exec_listen(comfd, sockfd, backlog, picotm_is_irrevocable());
 
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                systx_abort();
+                picotm_abort();
                 break;
             case ERR_NOUNDO:
-                systx_irrevocable();
+                picotm_irrevocable();
                 break;
             default:
                 break;
@@ -382,15 +382,15 @@ com_fd_tx_lseek(int fildes, off_t offset, int whence)
     assert(comfd);
 
     do {
-        res = com_fd_exec_lseek(comfd, fildes, offset, whence, systx_is_irrevocable());
+        res = com_fd_exec_lseek(comfd, fildes, offset, whence, picotm_is_irrevocable());
 
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                systx_abort();
+                picotm_abort();
                 break;
             case ERR_NOUNDO:
-                systx_irrevocable();
+                picotm_irrevocable();
                 break;
             default:
                 break;
@@ -411,15 +411,15 @@ com_fd_tx_open(const char *path, int oflag, mode_t mode)
     assert(comfd);
 
     do {
-        res = com_fd_exec_open(comfd, path, oflag, mode, systx_is_irrevocable());
+        res = com_fd_exec_open(comfd, path, oflag, mode, picotm_is_irrevocable());
 
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                systx_abort();
+                picotm_abort();
                 break;
             case ERR_NOUNDO:
-                systx_irrevocable();
+                picotm_irrevocable();
                 break;
             default:
                 break;
@@ -445,10 +445,10 @@ com_fd_tx_pipe(int pipefd[2])
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                systx_abort();
+                picotm_abort();
                 break;
             case ERR_NOUNDO:
-                systx_irrevocable();
+                picotm_irrevocable();
                 break;
             default:
                 break;
@@ -470,22 +470,22 @@ com_fd_tx_pread(int fildes, void *buf, size_t nbyte, off_t off)
 
     do {
         res = com_fd_exec_pread(comfd, fildes, buf, nbyte, off,
-                                systx_is_irrevocable());
+                                picotm_is_irrevocable());
 
         /* possibly validate all optimistic domains */
-        if ((com_fd_get_validation_mode(comfd) == SYSTX_LIBC_VALIDATE_FULL)
+        if ((com_fd_get_validation_mode(comfd) == PICOTM_LIBC_VALIDATE_FULL)
             && com_fd_get_optcc(comfd)
-            && !systx_is_valid()) {
+            && !picotm_is_valid()) {
             res = ERR_CONFLICT;
         }
 
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                systx_abort();
+                picotm_abort();
                 break;
             case ERR_NOUNDO:
-                systx_irrevocable();
+                picotm_irrevocable();
                 break;
             default:
                 break;
@@ -510,15 +510,15 @@ com_fd_tx_pwrite(int fildes, const void *buf, size_t nbyte, off_t off)
 
     do {
         res = com_fd_exec_pwrite(comfd, fildes, buf, nbyte, off,
-                                 systx_is_irrevocable());
+                                 picotm_is_irrevocable());
 
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                systx_abort();
+                picotm_abort();
                 break;
             case ERR_NOUNDO:
-                systx_irrevocable();
+                picotm_irrevocable();
                 break;
             default:
                 break;
@@ -540,22 +540,22 @@ com_fd_tx_read(int fildes, void *buf, size_t nbyte)
 
     do {
         res = com_fd_exec_read(comfd, fildes, buf, nbyte,
-                               systx_is_irrevocable());
+                               picotm_is_irrevocable());
 
         /* possibly validate all optimistic domains */
-        if ((com_fd_get_validation_mode(comfd) == SYSTX_LIBC_VALIDATE_FULL)
+        if ((com_fd_get_validation_mode(comfd) == PICOTM_LIBC_VALIDATE_FULL)
             && com_fd_get_optcc(comfd)
-            && !systx_is_valid()) {
+            && !picotm_is_valid()) {
             res = ERR_CONFLICT;
         }
 
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                systx_abort();
+                picotm_abort();
                 break;
             case ERR_NOUNDO:
-                systx_irrevocable();
+                picotm_irrevocable();
                 break;
             default:
                 break;
@@ -577,15 +577,15 @@ com_fd_tx_recv(int sockfd, void *buffer, size_t length, int flags)
 
     do {
         res = com_fd_exec_recv(comfd, sockfd, buffer, length, flags,
-                               systx_is_irrevocable());
+                               picotm_is_irrevocable());
 
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                systx_abort();
+                picotm_abort();
                 break;
             case ERR_NOUNDO:
-                systx_irrevocable();
+                picotm_irrevocable();
                 break;
             default:
                 break;
@@ -616,15 +616,15 @@ com_fd_tx_select(int nfds, fd_set *readfds,
                                               writefds,
                                               errorfds,
                                               timeout,
-                                              systx_is_irrevocable());
+                                              picotm_is_irrevocable());
 
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                systx_abort();
+                picotm_abort();
                 break;
             case ERR_NOUNDO:
-                systx_irrevocable();
+                picotm_irrevocable();
                 break;
             default:
                 break;
@@ -646,15 +646,15 @@ com_fd_tx_send(int fildes, const void *buffer, size_t length, int flags)
 
     do {
         res = com_fd_exec_send(comfd, fildes, buffer, length, flags,
-                               systx_is_irrevocable());
+                               picotm_is_irrevocable());
 
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                systx_abort();
+                picotm_abort();
                 break;
             case ERR_NOUNDO:
-                systx_irrevocable();
+                picotm_irrevocable();
                 break;
             default:
                 break;
@@ -675,15 +675,15 @@ com_fd_tx_shutdown(int sockfd, int how)
     assert(comfd);
 
     do {
-        res = com_fd_exec_shutdown(comfd, sockfd, how, systx_is_irrevocable());
+        res = com_fd_exec_shutdown(comfd, sockfd, how, picotm_is_irrevocable());
 
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                systx_abort();
+                picotm_abort();
                 break;
             case ERR_NOUNDO:
-                systx_irrevocable();
+                picotm_irrevocable();
                 break;
             default:
                 break;
@@ -709,10 +709,10 @@ com_fd_tx_socket(int domain, int type, int protocol)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                systx_abort();
+                picotm_abort();
                 break;
             case ERR_NOUNDO:
-                systx_irrevocable();
+                picotm_irrevocable();
                 break;
             default:
                 break;
@@ -745,15 +745,15 @@ com_fd_tx_write(int fildes, const void *buf, size_t nbyte)
 
     do {
         res = com_fd_exec_write(comfd, fildes, buf, nbyte,
-                                systx_is_irrevocable());
+                                picotm_is_irrevocable());
 
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                systx_abort();
+                picotm_abort();
                 break;
             case ERR_NOUNDO:
-                systx_irrevocable();
+                picotm_irrevocable();
                 break;
             default:
                 break;

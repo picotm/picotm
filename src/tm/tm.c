@@ -6,51 +6,51 @@
 #include <errno.h>
 #include <pthread.h>
 #include <stdlib.h>
-#include <systx/systx-module.h>
-#include <systx/systx-tm.h>
+#include <picotm/picotm-module.h>
+#include <picotm/picotm-tm.h>
 #include "vmem.h"
 #include "vmem_tx.h"
 
 static int
 lock_cb(void* data)
 {
-    return systx_tm_lock();
+    return picotm_tm_lock();
 }
 
 static int
 unlock_cb(void* data)
 {
-    return systx_tm_unlock();
+    return picotm_tm_unlock();
 }
 
 static int
 validate_cb(void* data, int eotx)
 {
-    return systx_tm_validate(!!eotx);
+    return picotm_tm_validate(!!eotx);
 }
 
 static int
 apply_event_cb(const struct event* event, size_t nevents, void* data)
 {
-    return systx_tm_apply();
+    return picotm_tm_apply();
 }
 
 static int
 undo_event_cb(const struct event* event, size_t nevents, void* data)
 {
-    return systx_tm_undo();
+    return picotm_tm_undo();
 }
 
 static int
 finish_cb(void* data)
 {
-    return systx_tm_finish();
+    return picotm_tm_finish();
 }
 
 static int
 release_cb(void* data)
 {
-    return systx_tm_release();
+    return picotm_tm_release();
 }
 
 /*
@@ -120,7 +120,7 @@ get_vmem_tx(void)
         return &t_vmem_tx;
     }
 
-    long res = systx_register_module(lock_cb, unlock_cb, validate_cb,
+    long res = picotm_register_module(lock_cb, unlock_cb, validate_cb,
                                      apply_event_cb, undo_event_cb,
                                      NULL, NULL,
                                      finish_cb,
@@ -150,7 +150,7 @@ get_vmem_tx(void)
  */
 
 int
-systx_tm_lock()
+picotm_tm_lock()
 {
     struct tm_vmem_tx* vmem_tx = get_vmem_tx();
     if (!vmem_tx) {
@@ -165,7 +165,7 @@ systx_tm_lock()
 }
 
 int
-systx_tm_unlock()
+picotm_tm_unlock()
 {
     struct tm_vmem_tx* vmem_tx = get_vmem_tx();
     if (!vmem_tx) {
@@ -180,7 +180,7 @@ systx_tm_unlock()
 }
 
 int
-systx_tm_validate(bool eotx)
+picotm_tm_validate(bool eotx)
 {
     struct tm_vmem_tx* vmem_tx = get_vmem_tx();
     if (!vmem_tx) {
@@ -195,7 +195,7 @@ systx_tm_validate(bool eotx)
 }
 
 int
-systx_tm_apply()
+picotm_tm_apply()
 {
     struct tm_vmem_tx* vmem_tx = get_vmem_tx();
     if (!vmem_tx) {
@@ -210,7 +210,7 @@ systx_tm_apply()
 }
 
 int
-systx_tm_undo()
+picotm_tm_undo()
 {
     struct tm_vmem_tx* vmem_tx = get_vmem_tx();
     if (!vmem_tx) {
@@ -225,7 +225,7 @@ systx_tm_undo()
 }
 
 int
-systx_tm_finish()
+picotm_tm_finish()
 {
     struct tm_vmem_tx* vmem_tx = get_vmem_tx();
     if (!vmem_tx) {
@@ -240,7 +240,7 @@ systx_tm_finish()
 }
 
 int
-systx_tm_release()
+picotm_tm_release()
 {
     struct tm_vmem_tx* vmem_tx = get_vmem_tx();
     if (!vmem_tx) {
@@ -256,113 +256,113 @@ systx_tm_release()
  */
 
 enum {
-    SYSTX_TM_LOAD = 0,
-    SYSTX_TM_STORE,
-    SYSTX_TM_LOADSTORE,
-    SYSTX_TM_PRIVATIZE
+    PICOTM_TM_LOAD = 0,
+    PICOTM_TM_STORE,
+    PICOTM_TM_LOADSTORE,
+    PICOTM_TM_PRIVATIZE
 };
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 void
-__systx_tm_load(uintptr_t addr, void* buf, size_t siz)
+__picotm_tm_load(uintptr_t addr, void* buf, size_t siz)
 {
     struct tm_vmem_tx* vmem_tx = get_vmem_tx();
     if (!vmem_tx) {
-        systx_resolve_error(ENOMEM);
+        picotm_resolve_error(ENOMEM);
     }
     int res;
     while ((res = tm_vmem_tx_ld(vmem_tx, addr, buf, siz)) == -EBUSY) {
-        systx_resolve_conflict(NULL);
+        picotm_resolve_conflict(NULL);
     }
     if (res < 0) {
-        systx_resolve_error(-res);
+        picotm_resolve_error(-res);
     }
-    res = systx_inject_event(vmem_tx->module, SYSTX_TM_LOAD, 0);
+    res = picotm_inject_event(vmem_tx->module, PICOTM_TM_LOAD, 0);
     if (res < 0) {
-        systx_resolve_error(-res);
+        picotm_resolve_error(-res);
     }
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 void
-__systx_tm_store(uintptr_t addr, const void* buf, size_t siz)
+__picotm_tm_store(uintptr_t addr, const void* buf, size_t siz)
 {
     struct tm_vmem_tx* vmem_tx = get_vmem_tx();
     if (!vmem_tx) {
-        systx_resolve_error(-ENOMEM);
+        picotm_resolve_error(-ENOMEM);
     }
     int res;
     while ((res = tm_vmem_tx_st(vmem_tx, addr, buf, siz)) == -EBUSY) {
-        systx_resolve_conflict(NULL);
+        picotm_resolve_conflict(NULL);
     }
     if (res < 0) {
-        systx_resolve_error(-res);
+        picotm_resolve_error(-res);
     }
-    res = systx_inject_event(vmem_tx->module, SYSTX_TM_STORE, 0);
+    res = picotm_inject_event(vmem_tx->module, PICOTM_TM_STORE, 0);
     if (res < 0) {
-        systx_resolve_error(-res);
+        picotm_resolve_error(-res);
     }
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 void
-__systx_tm_loadstore(uintptr_t laddr, uintptr_t saddr, size_t siz)
+__picotm_tm_loadstore(uintptr_t laddr, uintptr_t saddr, size_t siz)
 {
     struct tm_vmem_tx* vmem_tx = get_vmem_tx();
     if (!vmem_tx) {
-        systx_resolve_error(-ENOMEM);
+        picotm_resolve_error(-ENOMEM);
     }
     int res;
     while ((res = tm_vmem_tx_ldst(vmem_tx, laddr, saddr, siz)) == -EBUSY) {
-        systx_resolve_conflict(NULL);
+        picotm_resolve_conflict(NULL);
     }
     if (res < 0) {
-        systx_resolve_error(-res);
+        picotm_resolve_error(-res);
     }
-    res = systx_inject_event(vmem_tx->module, SYSTX_TM_LOADSTORE, 0);
+    res = picotm_inject_event(vmem_tx->module, PICOTM_TM_LOADSTORE, 0);
     if (res < 0) {
-        systx_resolve_error(-res);
+        picotm_resolve_error(-res);
     }
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 void
-__systx_tm_privatize(uintptr_t addr, size_t siz, unsigned long flags)
+__picotm_tm_privatize(uintptr_t addr, size_t siz, unsigned long flags)
 {
     struct tm_vmem_tx* vmem_tx = get_vmem_tx();
     if (!vmem_tx) {
-        systx_resolve_error(-ENOMEM);
+        picotm_resolve_error(-ENOMEM);
     }
     int res;
     while ((res = tm_vmem_tx_privatize(vmem_tx, addr, siz, flags)) == -EBUSY) {
-        systx_resolve_conflict(NULL);
+        picotm_resolve_conflict(NULL);
     }
     if (res < 0) {
-        systx_resolve_error(-res);
+        picotm_resolve_error(-res);
     }
-    res = systx_inject_event(vmem_tx->module, SYSTX_TM_PRIVATIZE, 0);
+    res = picotm_inject_event(vmem_tx->module, PICOTM_TM_PRIVATIZE, 0);
     if (res < 0) {
-        systx_resolve_error(-res);
+        picotm_resolve_error(-res);
     }
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 void
-__systx_tm_privatize_c(uintptr_t addr, int c, unsigned long flags)
+__picotm_tm_privatize_c(uintptr_t addr, int c, unsigned long flags)
 {
     struct tm_vmem_tx* vmem_tx = get_vmem_tx();
     if (!vmem_tx) {
-        systx_resolve_error(-ENOMEM);
+        picotm_resolve_error(-ENOMEM);
     }
     int res;
     while ((res = tm_vmem_tx_privatize_c(vmem_tx, addr, c, flags)) == -EBUSY) {
-        systx_resolve_conflict(NULL);
+        picotm_resolve_conflict(NULL);
     }
     if (res < 0) {
-        systx_resolve_error(-res);
+        picotm_resolve_error(-res);
     }
-    res = systx_inject_event(vmem_tx->module, SYSTX_TM_PRIVATIZE, 0);
+    res = picotm_inject_event(vmem_tx->module, PICOTM_TM_PRIVATIZE, 0);
     if (res < 0) {
-        systx_resolve_error(-res);
+        picotm_resolve_error(-res);
     }
 }

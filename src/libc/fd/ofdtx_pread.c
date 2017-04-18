@@ -79,7 +79,7 @@ ofdtx_pread_exec_noundo(struct ofdtx *ofdtx, int fildes,
                                              size_t nbyte,
                                              off_t offset,
                                              int *cookie,
-                                             enum systx_libc_validation_mode val_mode)
+                                             enum picotm_libc_validation_mode val_mode)
 {
     return TEMP_FAILURE_RETRY(pread(fildes, buf, nbyte, offset));
 }
@@ -88,7 +88,7 @@ static ssize_t
 ofdtx_pread_exec_regular_ts(struct ofdtx *ofdtx, int fildes, void *buf,
                                                  size_t nbyte, off_t offset,
                                                  int *cookie,
-                                                 enum systx_libc_validation_mode val_mode)
+                                                 enum picotm_libc_validation_mode val_mode)
 {
     int err;
     ssize_t len, len2;
@@ -104,7 +104,7 @@ ofdtx_pread_exec_regular_ts(struct ofdtx *ofdtx, int fildes, void *buf,
     }
 
     /* signal conflict, if global version numbers changed */
-    if ((val_mode == SYSTX_LIBC_VALIDATE_OP) &&
+    if ((val_mode == PICOTM_LIBC_VALIDATE_OP) &&
         !!ofdtx_ts_validate_region(ofdtx, nbyte, offset)) {
         return ERR_CONFLICT;
     }
@@ -131,7 +131,7 @@ static ssize_t
 ofdtx_pread_exec_regular_2pl(struct ofdtx *ofdtx, int fildes, void *buf,
                                                   size_t nbyte, off_t offset,
                                                   int *cookie,
-                                                  enum systx_libc_validation_mode val_mode)
+                                                  enum picotm_libc_validation_mode val_mode)
 {
     int err;
     ssize_t len, len2;
@@ -159,7 +159,7 @@ ofdtx_pread_exec_regular_2pl(struct ofdtx *ofdtx, int fildes, void *buf,
 static ssize_t
 ofdtx_pread_exec_fifo(struct ofdtx *ofdtx, int fildes, void *buf, size_t nbyte,
                                             off_t offset, int *cookie,
-                                            enum systx_libc_validation_mode val_mode)
+                                            enum picotm_libc_validation_mode val_mode)
 {
     errno = ESPIPE;
     return ERR_SYSTEM;
@@ -169,7 +169,7 @@ ssize_t
 ofdtx_pread_exec(struct ofdtx *ofdtx, int fildes, void *buf,
                                       size_t nbyte, off_t offset,
                                       int *cookie, int noundo,
-                                      enum systx_libc_validation_mode val_mode)
+                                      enum picotm_libc_validation_mode val_mode)
 {
     static ssize_t (* const pread_exec[][4])(struct ofdtx*,
                                              int,
@@ -177,7 +177,7 @@ ofdtx_pread_exec(struct ofdtx *ofdtx, int fildes, void *buf,
                                              size_t,
                                              off_t,
                                              int*,
-                                             enum systx_libc_validation_mode) = {
+                                             enum picotm_libc_validation_mode) = {
         {ofdtx_pread_exec_noundo, NULL,                        NULL,                         NULL},
         {ofdtx_pread_exec_noundo, ofdtx_pread_exec_regular_ts, ofdtx_pread_exec_regular_2pl, NULL},
         {ofdtx_pread_exec_noundo, ofdtx_pread_exec_fifo,       ofdtx_pread_exec_fifo,        NULL},
@@ -188,10 +188,10 @@ ofdtx_pread_exec(struct ofdtx *ofdtx, int fildes, void *buf,
 
     if (noundo) {
         /* TX irrevokable */
-        ofdtx->cc_mode = SYSTX_LIBC_CC_MODE_NOUNDO;
+        ofdtx->cc_mode = PICOTM_LIBC_CC_MODE_NOUNDO;
     } else {
         /* TX revokable */
-        if ((ofdtx->cc_mode == SYSTX_LIBC_CC_MODE_NOUNDO)
+        if ((ofdtx->cc_mode == PICOTM_LIBC_CC_MODE_NOUNDO)
             || !pread_exec[ofdtx->type][ofdtx->cc_mode]) {
             return ERR_NOUNDO;
         }

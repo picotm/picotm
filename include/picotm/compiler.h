@@ -9,52 +9,51 @@
 #endif
 
 /**
- * \def SYSTX_BEGIN_DECLS
+ * \def PICOTM_BEGIN_DECLS
  * Begin interface declarations
  */
 #ifdef __BEGIN_DECLS
-    #define SYSTX_BEGIN_DECLS   __BEGIN_DECLS
+    #define PICOTM_BEGIN_DECLS  __BEGIN_DECLS
 #else
-    #define SYSTX_BEGIN_DECLS   export "C" {
+    #define PICOTM_BEGIN_DECLS  export "C" {
 #endif
 
 /**
- * \def SYSTX_END_DECLS
+ * \def PICOTM_END_DECLS
  * End interface declarations
  */
 #ifdef __END_DECLS
-    #define SYSTX_END_DECLS     __END_DECLS
+    #define PICOTM_END_DECLS    __END_DECLS
 #else
-    #define SYSTX_BEGIN_DECLS   }
+    #define PICOTM_BEGIN_DECLS  }
 #endif
 
 /**
- * \def SYSTX_NORETURN
+ * \def PICOTM_NORETURN
  * Exported function does not return.
  */
 #ifdef _Noreturn
-    #define SYSTX_NORETURN      _Noreturn
+    #define PICOTM_NORETURN     _Noreturn
 #else
-    #define SYSTX_NORETURN
+    #define PICOTM_NORETURN
 #endif
 
 /**
- * \def SYSTX_NOTHROW
+ * \def PICOTM_NOTHROW
  * Exported function does not throw exceptions.
  */
 #ifdef __THROW
-    #define SYSTX_NOTHROW   __THROW
+    #define PICOTM_NOTHROW  __THROW
 #else
-    #define SYSTX_NOTHROW
+    #define PICOTM_NOTHROW
 #endif
 
 /**
- * \def SYSTX_EXPORT
+ * \def PICOTM_EXPORT
  * Export interface from binary object.
  */
-
 #if __GNUC__ >= 4
-    #define SYSTX_EXPORT    __attribute__((visibility("default")))
+    #define PICOTM_EXPORT   __attribute__((visibility("default")))
 #else
-    #define SYSTX_EXPORT
+    #define PICOTM_EXPORT
 #endif

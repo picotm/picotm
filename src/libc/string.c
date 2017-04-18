@@ -2,19 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "systx/string.h"
+#include "picotm/string.h"
 #include <errno.h>
 #include <stdbool.h>
-#include <systx/systx.h>
-#include <systx/systx-tm.h>
-#include "systx/stdlib.h"
-#include "systx/string-tm.h"
+#include <picotm/picotm.h>
+#include <picotm/picotm-tm.h>
+#include "picotm/stdlib.h"
+#include "picotm/string-tm.h"
 
 /*
  * Memory functions
  */
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 void*
 memccpy_tx(void* restrict dest, const void* restrict src, int c, size_t n)
 {
@@ -46,33 +46,33 @@ memccpy_tx(void* restrict dest, const void* restrict src, int c, size_t n)
     return dest;
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 void*
 memchr_tx(const void* s, int c, size_t n)
 {
-    privatize_tx(s, n, SYSTX_TM_PRIVATIZE_LOAD);
+    privatize_tx(s, n, PICOTM_TM_PRIVATIZE_LOAD);
     return memchr_tm(s, c, n);
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 int
 memcmp_tx(const void* s1, const void* s2, size_t n)
 {
-    privatize_tx(s1, n, SYSTX_TM_PRIVATIZE_LOAD);
-    privatize_tx(s2, n, SYSTX_TM_PRIVATIZE_LOAD);
+    privatize_tx(s1, n, PICOTM_TM_PRIVATIZE_LOAD);
+    privatize_tx(s2, n, PICOTM_TM_PRIVATIZE_LOAD);
     return memcmp_tm(s1, s2, n);
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 void*
 memcpy_tx(void* restrict dest, const void* restrict src, size_t n)
 {
-    privatize_tx(dest, n, SYSTX_TM_PRIVATIZE_STORE);
-    privatize_tx(src, n, SYSTX_TM_PRIVATIZE_LOAD);
+    privatize_tx(dest, n, PICOTM_TM_PRIVATIZE_STORE);
+    privatize_tx(src, n, PICOTM_TM_PRIVATIZE_LOAD);
     return memcpy_tm(dest, src, n);
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 void*
 memmove_tx(void* dest, const void* src, size_t n)
 {
@@ -95,7 +95,7 @@ memmove_tx(void* dest, const void* src, size_t n)
     return dest;
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 void*
 memset_tx(void* s, int c, size_t n)
 {
@@ -114,19 +114,19 @@ memset_tx(void* s, int c, size_t n)
     return s;
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 void*
 memrchr_tx(const void* s, int c, size_t n)
 {
-    privatize_tx(s, n, SYSTX_TM_PRIVATIZE_LOAD);
+    privatize_tx(s, n, PICOTM_TM_PRIVATIZE_LOAD);
     return memrchr_tm(s, c, n);
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 void*
 rawmemchr_tx(const void* s, int c)
 {
-    privatize_c_tx(s, c, SYSTX_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(s, c, PICOTM_TM_PRIVATIZE_LOAD);
     return rawmemchr_tm(s, c);
 }
 
@@ -134,20 +134,20 @@ rawmemchr_tx(const void* s, int c)
  * String functions
  */
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 char*
 stpcpy_tx(char* restrict dest, const char* restrict src)
 {
-    privatize_c_tx(src, '\0', SYSTX_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(src, '\0', PICOTM_TM_PRIVATIZE_LOAD);
     store_tx(dest, src, strlen(src));
     return dest;
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 char*
 stpncpy_tx(char* restrict dest, const char* restrict src, size_t n)
 {
-    privatize_c_tx(src, '\0', SYSTX_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(src, '\0', PICOTM_TM_PRIVATIZE_LOAD);
     size_t len = strlen(src) + 1;
     if (len < n) {
         store_tx(dest, src, len);
@@ -158,66 +158,66 @@ stpncpy_tx(char* restrict dest, const char* restrict src, size_t n)
     return dest;
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 char*
 strcat_tx(char* restrict dest, const char* restrict src)
 {
-    privatize_c_tx(dest, '\0', SYSTX_TM_PRIVATIZE_LOAD);
-    privatize_c_tx(src, '\0', SYSTX_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(dest, '\0', PICOTM_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(src, '\0', PICOTM_TM_PRIVATIZE_LOAD);
     size_t dlen = strlen(dest);
     size_t slen = strlen(src) + 1;
     store_tx(dest + dlen, src, slen);
     return dest;
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 char*
 strchr_tx(const char* s, int c)
 {
-    privatize_c_tx(s, c, SYSTX_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(s, c, PICOTM_TM_PRIVATIZE_LOAD);
     return strchr_tm(s, c);
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 int
 strcmp_tx(const char* s1, const char* s2)
 {
-    privatize_c_tx(s1, '\0', SYSTX_TM_PRIVATIZE_LOAD);
-    privatize_c_tx(s2, '\0', SYSTX_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(s1, '\0', PICOTM_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(s2, '\0', PICOTM_TM_PRIVATIZE_LOAD);
     return strcmp_tm(s1, s2);
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 int
 strcoll_l_tx(const char* s1, const char* s2, locale_t locale)
 {
-    privatize_c_tx(s1, '\0', SYSTX_TM_PRIVATIZE_LOAD);
-    privatize_c_tx(s2, '\0', SYSTX_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(s1, '\0', PICOTM_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(s2, '\0', PICOTM_TM_PRIVATIZE_LOAD);
     return strcoll_l_tm(s1, s2, locale);
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 char*
 strcpy_tx(char* restrict dest, const char* restrict src)
 {
-    privatize_c_tx(src, '\0', SYSTX_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(src, '\0', PICOTM_TM_PRIVATIZE_LOAD);
     store_tx(dest, src, strlen(src) + 1);
     return dest;
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 size_t
 strcspn_tx(const char* s, const char* reject)
 {
-    privatize_c_tx(s, '\0', SYSTX_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(s, '\0', PICOTM_TM_PRIVATIZE_LOAD);
     return strcspn(s, reject);
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 char*
 strdup_tx(const char* s)
 {
-    privatize_c_tx(s, '\0', SYSTX_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(s, '\0', PICOTM_TM_PRIVATIZE_LOAD);
     size_t len = strlen(s) + 1;
     char* mem = malloc_tx(len);
     if (!mem) {
@@ -226,7 +226,7 @@ strdup_tx(const char* s)
     return memcpy(mem, s, len);
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 int
 strerror_r_tx(int errnum, char* buf, size_t buflen)
 {
@@ -258,20 +258,20 @@ strerror_r_tx(int errnum, char* buf, size_t buflen)
     return 0;
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 size_t
 strlen_tx(const char* s)
 {
-    privatize_c_tx(s, '\0', SYSTX_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(s, '\0', PICOTM_TM_PRIVATIZE_LOAD);
     return strlen(s);
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 char*
 strncat_tx(char* restrict dest, const char* restrict src, size_t n)
 {
-    privatize_c_tx(dest, '\0', SYSTX_TM_PRIVATIZE_LOAD);
-    privatize_c_tx(src, '\0', SYSTX_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(dest, '\0', PICOTM_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(src, '\0', PICOTM_TM_PRIVATIZE_LOAD);
     size_t dlen = strlen(dest);
     size_t slen = strlen(src) + 1;
     if (n < slen) {
@@ -283,20 +283,20 @@ strncat_tx(char* restrict dest, const char* restrict src, size_t n)
     return dest;
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 int
 strncmp_tx(const char* s1, const char* s2, size_t n)
 {
-    privatize_c_tx(s1, '\0', SYSTX_TM_PRIVATIZE_LOAD);
-    privatize_c_tx(s2, '\0', SYSTX_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(s1, '\0', PICOTM_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(s2, '\0', PICOTM_TM_PRIVATIZE_LOAD);
     return strncmp(s1, s2, n);
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 char*
 strncpy_tx(char* restrict dest, const char* restrict src, size_t n)
 {
-    privatize_c_tx(src, '\0', SYSTX_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(src, '\0', PICOTM_TM_PRIVATIZE_LOAD);
     size_t len = strlen(src) + 1;
     if (len < n) {
         store_tx(dest, src, len);
@@ -306,11 +306,11 @@ strncpy_tx(char* restrict dest, const char* restrict src, size_t n)
     return dest;
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 char*
 strndup_tx(const char* s, size_t n)
 {
-    privatize_c_tx(s, '\0', SYSTX_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(s, '\0', PICOTM_TM_PRIVATIZE_LOAD);
     size_t len = strlen(s) + 1;
     if (n < len) {
         len = n + 1;
@@ -326,56 +326,56 @@ strndup_tx(const char* s, size_t n)
     return mem;
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 size_t
 strnlen_tx(const char* s, size_t maxlen)
 {
-    privatize_c_tx(s, '\0', SYSTX_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(s, '\0', PICOTM_TM_PRIVATIZE_LOAD);
     return strnlen(s, maxlen);
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 char*
 strpbrk_tx(const char* s, const char* accept)
 {
-    privatize_c_tx(s, '\0', SYSTX_TM_PRIVATIZE_LOAD);
-    privatize_c_tx(accept, '\0', SYSTX_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(s, '\0', PICOTM_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(accept, '\0', PICOTM_TM_PRIVATIZE_LOAD);
     return strpbrk(s, accept);
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 char*
 strrchr_tx(const char* s, int c)
 {
-    privatize_c_tx(s, '\0', SYSTX_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(s, '\0', PICOTM_TM_PRIVATIZE_LOAD);
     return strrchr(s, c);
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 size_t
 strspn_tx(const char* s, const char* accept)
 {
-    privatize_c_tx(s, '\0', SYSTX_TM_PRIVATIZE_LOAD);
-    privatize_c_tx(accept, '\0', SYSTX_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(s, '\0', PICOTM_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(accept, '\0', PICOTM_TM_PRIVATIZE_LOAD);
     return strspn(s, accept);
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 char*
 strstr_tx(const char* haystack, const char* needle)
 {
-    privatize_c_tx(haystack, '\0', SYSTX_TM_PRIVATIZE_LOAD);
-    privatize_c_tx(needle, '\0', SYSTX_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(haystack, '\0', PICOTM_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(needle, '\0', PICOTM_TM_PRIVATIZE_LOAD);
     return strstr(haystack, needle);
 }
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 char*
 strtok_r_tx(char* restrict str, const char* restrict delim,
             char** restrict saveptr)
 {
-    privatize_c_tx(str, '\0', SYSTX_TM_PRIVATIZE_LOAD);
-    privatize_c_tx(delim, '\0', SYSTX_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(str, '\0', PICOTM_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(delim, '\0', PICOTM_TM_PRIVATIZE_LOAD);
 
     char* ptr = load_ptr_tx(saveptr);
     char* tok = strtok_r(str, delim, &ptr);

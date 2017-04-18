@@ -8,7 +8,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <systx/systx-module.h>
+#include <picotm/picotm-module.h>
 #include "table.h"
 #include "component.h"
 #include "log.h"

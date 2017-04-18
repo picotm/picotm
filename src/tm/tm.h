@@ -6,10 +6,10 @@
 
 #include <stdbool.h>
 
-int systx_tm_lock(void);
-int systx_tm_unlock(void);
-int systx_tm_validate(bool eotx);
-int systx_tm_apply(void);
-int systx_tm_undo(void);
-int systx_tm_finish(void);
-int systx_tm_release(void);
+int picotm_tm_lock(void);
+int picotm_tm_unlock(void);
+int picotm_tm_validate(bool eotx);
+int picotm_tm_apply(void);
+int picotm_tm_undo(void);
+int picotm_tm_finish(void);
+int picotm_tm_release(void);

@@ -5,7 +5,7 @@
 #ifndef OFDTX_H
 #define OFDTX_H
 
-#include "systx/systx-libc.h"
+#include "picotm/picotm-libc.h"
 
 struct sockaddr;
 
@@ -46,8 +46,8 @@ struct ofdtx
     struct fcntlop *fcntltab;
     size_t          fcntltablen;
 
-    enum systx_libc_cc_mode cc_mode; /**< \brief CC mode of domain */
-    enum systx_libc_file_type type;
+    enum picotm_libc_cc_mode cc_mode; /**< \brief CC mode of domain */
+    enum picotm_libc_file_type type;
     off_t offset; /**< \brief Local file-pointer position */
     off_t size; /**< \brief Size of regular files */
 
@@ -245,7 +245,7 @@ ofdtx_lseek_undo(struct ofdtx *ofdtx, int fildes, int cookie);
 ssize_t
 ofdtx_pread_exec(struct ofdtx *ofdtx, int fildes, void *buf, size_t nbyte, off_t off,
                                       int *cookie, int noundo,
-                                      enum systx_libc_validation_mode val_mode);
+                                      enum picotm_libc_validation_mode val_mode);
 
 ssize_t
 ofdtx_pread_apply(struct ofdtx *ofdtx, int fildes, const struct com_fd_event *event, size_t n);
@@ -272,7 +272,7 @@ ofdtx_pwrite_undo(struct ofdtx *ofdtx, int fildes, int cookie);
 ssize_t
 ofdtx_read_exec(struct ofdtx *ofdtx, int fildes, void *buf, size_t nbyte,
                                      int *cookie, int noundo,
-                                     enum systx_libc_validation_mode val_mode);
+                                     enum picotm_libc_validation_mode val_mode);
 
 ssize_t
 ofdtx_read_apply(struct ofdtx *ofdtx, int fildes, const struct com_fd_event *event, size_t n);

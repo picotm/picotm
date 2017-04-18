@@ -61,10 +61,10 @@ ofdtx_bind_exec(struct ofdtx *ofdtx, int sockfd,
 
     if (noundo) {
         /* TX irrevokable */
-        ofdtx->cc_mode = SYSTX_LIBC_CC_MODE_NOUNDO;
+        ofdtx->cc_mode = PICOTM_LIBC_CC_MODE_NOUNDO;
     } else {
         /* TX revokable */
-        if ((ofdtx->cc_mode == SYSTX_LIBC_CC_MODE_NOUNDO)
+        if ((ofdtx->cc_mode == PICOTM_LIBC_CC_MODE_NOUNDO)
             || !bind_exec[ofdtx->type][ofdtx->cc_mode]) {
             return ERR_NOUNDO;
         }

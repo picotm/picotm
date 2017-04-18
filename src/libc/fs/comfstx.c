@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <systx/systx.h>
+#include <picotm/picotm.h>
 #include <unistd.h>
 #include "errcode.h"
 #include "types.h"
@@ -80,7 +80,7 @@ com_fs_tx_aquire_data()
         return &t_com_fs.instance;
     }
 
-    long res = systx_register_module(com_fs_tx_lock,
+    long res = picotm_register_module(com_fs_tx_lock,
                                      com_fs_tx_unlock,
                                      com_fs_tx_validate,
                                      com_fs_tx_apply_event,
@@ -125,10 +125,10 @@ com_fs_tx_fchdir(int fildes)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                systx_abort();
+                picotm_abort();
                 break;
             case ERR_NOUNDO:
-                systx_irrevocable();
+                picotm_irrevocable();
                 break;
             default:
                 break;
@@ -154,10 +154,10 @@ com_fs_tx_mkstemp(char *pathname)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                systx_abort();
+                picotm_abort();
                 break;
             case ERR_NOUNDO:
-                systx_irrevocable();
+                picotm_irrevocable();
                 break;
             default:
                 break;

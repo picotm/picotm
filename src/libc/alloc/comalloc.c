@@ -5,7 +5,7 @@
 #include "comalloc.h"
 #include <assert.h>
 #include <stdlib.h>
-#include <systx/systx-module.h>
+#include <picotm/picotm-module.h>
 
 int
 com_alloc_init(struct com_alloc *comalloc, unsigned long module)
@@ -26,7 +26,7 @@ com_alloc_uninit(struct com_alloc *comalloc)
 {
     assert(comalloc);
 
-    systx_tabfree(comalloc->ptrtab);
+    picotm_tabfree(comalloc->ptrtab);
     comalloc->ptrtab = NULL;
     comalloc->ptrtablen = 0;
     comalloc->ptrtabsiz = 0;
@@ -38,7 +38,7 @@ com_alloc_inject(struct com_alloc *comalloc, enum com_alloc_call call, void *ptr
     assert(comalloc);
 
     if (__builtin_expect(comalloc->ptrtablen >= comalloc->ptrtabsiz, 0)) {
-        void *tmp = systx_tabresize(comalloc->ptrtab,
+        void *tmp = picotm_tabresize(comalloc->ptrtab,
                                     comalloc->ptrtabsiz,
                                     comalloc->ptrtabsiz+1,
                                     sizeof(comalloc->ptrtab[0]));
@@ -54,7 +54,7 @@ com_alloc_inject(struct com_alloc *comalloc, enum com_alloc_call call, void *ptr
 
     *ptrtab = ptr;
 
-    if (systx_inject_event(comalloc->module, call, comalloc->ptrtablen) < 0) {
+    if (picotm_inject_event(comalloc->module, call, comalloc->ptrtablen) < 0) {
         return -1;
     }
 

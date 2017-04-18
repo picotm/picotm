@@ -60,10 +60,10 @@ fdtx_close_exec(struct fdtx *fdtx, int fildes, int *cookie, int noundo)
 
     if (noundo) {
         /* TX irrevokable */
-        fdtx->cc_mode = SYSTX_LIBC_CC_MODE_NOUNDO;
+        fdtx->cc_mode = PICOTM_LIBC_CC_MODE_NOUNDO;
     } else {
         /* TX revokable */
-        if ((fdtx->cc_mode == SYSTX_LIBC_CC_MODE_NOUNDO)
+        if ((fdtx->cc_mode == PICOTM_LIBC_CC_MODE_NOUNDO)
             || !close_exec[fdtx->cc_mode]) {
             return ERR_NOUNDO;
         }

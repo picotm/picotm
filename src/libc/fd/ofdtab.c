@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <systx/systx-module.h>
+#include <picotm/picotm-module.h>
 #include "errcode.h"
 #include "types.h"
 #include "range.h"
@@ -41,7 +41,7 @@ ofdtab_ofd_init_walk(void *ofd)
 static void
 ofdtab_init(void)
 {
-    int res = systx_tabwalk_1(ofdtab,
+    int res = picotm_tabwalk_1(ofdtab,
                               sizeof(ofdtab)/sizeof(ofdtab[0]),
                               sizeof(ofdtab[0]),
                               ofdtab_ofd_init_walk);
@@ -66,7 +66,7 @@ ofdtab_ofd_uninit_walk(void *ofd)
 static void
 ofdtab_uninit(void)
 {
-    int res = systx_tabwalk_1(ofdtab,
+    int res = picotm_tabwalk_1(ofdtab,
                               sizeof(ofdtab)/sizeof(ofdtab[0]),
                               sizeof(ofdtab[0]),
                               ofdtab_ofd_uninit_walk);

@@ -5,7 +5,7 @@
 #pragma once
 
 #include <stdbool.h>
-#include <systx/systx.h>
+#include <picotm/picotm.h>
 #include "log.h"
 
 struct tx_shared;
@@ -16,7 +16,7 @@ enum tx_mode {
 };
 
 struct tx {
-    struct __systx_tx public_state;
+    struct __picotm_tx public_state;
     struct log        log;
     struct tx_shared *shared;
     enum tx_mode      mode;

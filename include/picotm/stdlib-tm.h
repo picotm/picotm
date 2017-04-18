@@ -7,39 +7,39 @@
 #include <stdlib.h>
 #include "compiler.h"
 
-SYSTX_NOTHROW
+PICOTM_NOTHROW
 /**
  * Executes free() within a transaction.
  */
 void free_tm(void* ptr);
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 /**
  * Executes mkdtemp() within a transaction.
  */
 char*
 mkdtemp_tm(char* template);
 
-SYSTX_EXPORT
+PICOTM_EXPORT
 /**
  * Executes mkstemp() within a transaction.
  */
 int
 mkstemp_tm(char* template);
 
-SYSTX_NOTHROW
+PICOTM_NOTHROW
 /**
  * Executes posix_memalign() within a transaction.
  */
 int posix_memalign_tm(void** memptr, size_t alignment, size_t size);
 
-SYSTX_NOTHROW
+PICOTM_NOTHROW
 /**
  * Executes realloc() within a transaction.
  */
 void* realloc_tm(void* ptr, size_t size);
 
-SYSTX_NOTHROW
+PICOTM_NOTHROW
 /**
  * Executes rand_r() within a transaction.
  */

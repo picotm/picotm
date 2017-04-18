@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <systx/systx-module.h>
+#include <picotm/picotm-module.h>
 #include "fchdirop.h"
 #include "fchdiroptab.h"
 
@@ -18,7 +18,7 @@ fchdiroptab_append(struct fchdirop **tab, size_t *nelems, int oldcwd,
     assert(tab);
     assert(nelems);
 
-    void *tmp = systx_tabresize(*tab, *nelems, (*nelems)+1, sizeof((*tab)[0]));
+    void *tmp = picotm_tabresize(*tab, *nelems, (*nelems)+1, sizeof((*tab)[0]));
 
     if (!tmp) {
         return -1;
@@ -38,7 +38,7 @@ fchdiroptab_clear(struct fchdirop **tab, size_t *nelems)
     assert(tab);
     assert(nelems);
 
-    systx_tabfree(*tab);
+    picotm_tabfree(*tab);
     *tab = NULL;
     *nelems = 0;
 }

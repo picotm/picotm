@@ -7,83 +7,83 @@
 #include <setjmp.h>
 #include "compiler.h"
 
-SYSTX_BEGIN_DECLS
+PICOTM_BEGIN_DECLS
 
 /**
  * The transaction start mode.
  * \warning This is an internal interface. Don't use it in application code.
  */
-enum __systx_mode {
-    SYSTX_MODE_START = 0,
-    SYSTX_MODE_RETRY,
-    SYSTX_MODE_IRREVOCABLE,
-    SYSTX_MODE_RECOVERY
+enum __picotm_mode {
+    PICOTM_MODE_START = 0,
+    PICOTM_MODE_RETRY,
+    PICOTM_MODE_IRREVOCABLE,
+    PICOTM_MODE_RECOVERY
 };
 
 /**
  * Internal transaction structure; touch this to mess up badly.
  * \warning This is an internal interface. Don't use it in application code.
  */
-struct __systx_tx {
+struct __picotm_tx {
     jmp_buf env;
 };
 
-SYSTX_NOTHROW
+PICOTM_NOTHROW
 /**
  * Returns the internal transaction structure.
  * \warning This is an internal interface. Don't use it in application code.
  */
-struct __systx_tx*
-__systx_get_tx(void);
+struct __picotm_tx*
+__picotm_get_tx(void);
 
-SYSTX_NOTHROW
+PICOTM_NOTHROW
 /**
  * Begins or restarts a transaction, or handles an error.
  * \warning This is an internal interface. Don't use it in application code.
  */
 _Bool
-__systx_begin(enum __systx_mode mode);
+__picotm_begin(enum __picotm_mode mode);
 
 /**
  * Starts a new transaction.
  */
-#define systx_begin                                                         \
-    if (__systx_begin((enum __systx_mode)setjmp(__systx_get_tx()->env)))    \
+#define picotm_begin                                                        \
+    if (__picotm_begin((enum __picotm_mode)setjmp(__picotm_get_tx()->env))) \
     {
 
-SYSTX_NOTHROW
+PICOTM_NOTHROW
 /**
  * Commits the current transaction.
  * \warning This is an internal interface. Don't use it in application code.
  */
 void
-__systx_commit(void);
+__picotm_commit(void);
 
 /**
  * Commits the current transaction.
  */
-#define systx_commit        \
-        __systx_commit();   \
+#define picotm_commit       \
+        __picotm_commit();  \
     } else {
 
 /**
  * Ends the current transaction.
  */
-#define systx_end   \
+#define picotm_end  \
     }
 
-SYSTX_NOTHROW
+PICOTM_NOTHROW
 /**
  * Aborts the current transaction.
  */
 void
-systx_abort(void);
+picotm_abort(void);
 
-SYSTX_NOTHROW
+PICOTM_NOTHROW
 void
 /**
- * Releases all resources of systx on the current thread.
+ * Releases all resources of picotm on the current thread.
  */
-systx_release(void);
+picotm_release(void);
 
-SYSTX_END_DECLS
+PICOTM_END_DECLS

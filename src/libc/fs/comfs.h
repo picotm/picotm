@@ -5,7 +5,7 @@
 #ifndef COMFS_H
 #define COMFS_H
 
-#include <systx/systx-module.h>
+#include <picotm/picotm-module.h>
 
 enum com_fs_action
 {

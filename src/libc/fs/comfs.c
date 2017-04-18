@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <systx/systx-module.h>
+#include <picotm/picotm-module.h>
 #include <unistd.h>
 #include "types.h"
 #include "mutex.h"
@@ -41,13 +41,13 @@ com_fs_uninit(struct com_fs *data)
 {
     assert(data);
 
-    systx_tabfree(data->eventtab);
+    picotm_tabfree(data->eventtab);
 }
 
 int
 com_fs_inject(struct com_fs *data, enum com_fs_action action, int cookie)
 {
-    void *tmp = systx_tabresize(data->eventtab,
+    void *tmp = picotm_tabresize(data->eventtab,
                                 data->eventtablen,
                                 data->eventtablen+1,
                                 sizeof(data->eventtab[0]));
@@ -60,7 +60,7 @@ com_fs_inject(struct com_fs *data, enum com_fs_action action, int cookie)
 
     eventtab->cookie = cookie;
 
-    if (systx_inject_event(data->module, action, data->eventtablen) < 0) {
+    if (picotm_inject_event(data->module, action, data->eventtablen) < 0) {
         return -1;
     }
 

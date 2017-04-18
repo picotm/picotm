@@ -5,20 +5,20 @@
 SUBDIRS = libc \
           tm
 
-lib_LTLIBRARIES = libsystx.la
+lib_LTLIBRARIES = libpicotm.la
 
-libsystx_la_SOURCES = component.c \
-                      component.h \
-                      log.c \
-                      log.h \
-                      systx.c \
-                      systx.h \
-                      table.c \
-                      table.h \
-                      tx.c \
-                      tx.h \
-                      tx_shared.c \
-                      tx_shared.h
+libpicotm_la_SOURCES = component.c \
+                       component.h \
+                       log.c \
+                       log.h \
+                       picotm.c \
+                       picotm.h \
+                       table.c \
+                       table.h \
+                       tx.c \
+                       tx.h \
+                       tx_shared.c \
+                       tx_shared.h
 
 CC = $(PTHREAD_CC)
 

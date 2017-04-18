@@ -5,38 +5,38 @@
 #pragma once
 
 #include <sys/stat.h>
-#include <systx/compiler.h>
+#include <picotm/compiler.h>
 
-SYSTX_NOTHROW
+PICOTM_NOTHROW
 int
 chmod_tx(const char* path, mode_t mode);
 
-SYSTX_NOTHROW
+PICOTM_NOTHROW
 int
 fchmod_tx(int fildes, mode_t mode);
 
-SYSTX_NOTHROW
+PICOTM_NOTHROW
 int
 fstat_tx(int fildes, struct stat* buf);
 
-SYSTX_NOTHROW
+PICOTM_NOTHROW
 int
 lstat_tx(const char* path, struct stat* buf);
 
-SYSTX_NOTHROW
+PICOTM_NOTHROW
 int
 mkdir_tx(const char* path, mode_t mode);
 
-SYSTX_NOTHROW
+PICOTM_NOTHROW
 int
 mkfifo_tx(const char* path, mode_t mode);
 
 #if defined(_BSD_SOURCE) || defined(_SVID_SOURCE) || _XOPEN_SOURCE >= 500
-SYSTX_NOTHROW
+PICOTM_NOTHROW
 int
 mknod_tx(const char* path, mode_t mode, dev_t dev);
 #endif
 
-SYSTX_NOTHROW
+PICOTM_NOTHROW
 int
 stat_tx(const char* path, struct stat* buf);

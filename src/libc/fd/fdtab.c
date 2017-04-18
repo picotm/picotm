@@ -6,7 +6,7 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <sys/types.h>
-#include <systx/systx-module.h>
+#include <picotm/picotm-module.h>
 #include "types.h"
 #include "counter.h"
 #include "fcntlop.h"
@@ -27,7 +27,7 @@ fdtab_fd_init_walk(void *fd)
 static void
 fdtab_init()
 {
-    int res = systx_tabwalk_1(fdtab,
+    int res = picotm_tabwalk_1(fdtab,
                               sizeof(fdtab)/sizeof(fdtab[0]), sizeof(fdtab[0]),
                               fdtab_fd_init_walk);
     if (res < 0) {
@@ -51,7 +51,7 @@ fdtab_fd_uninit_walk(void *fd)
 static void
 fdtab_uninit()
 {
-    int res = systx_tabwalk_1(fdtab,
+    int res = picotm_tabwalk_1(fdtab,
                               sizeof(fdtab)/sizeof(fdtab[0]),
                               sizeof(fdtab[0]),
                               fdtab_fd_uninit_walk);

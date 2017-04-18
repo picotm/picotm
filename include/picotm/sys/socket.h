@@ -5,36 +5,36 @@
 #pragma once
 
 #include <sys/socket.h>
-#include <systx/compiler.h>
+#include <picotm/compiler.h>
 
-SYSTX_NOTHROW
+PICOTM_NOTHROW
 int
 accept_tx(int socket, struct sockaddr* address, socklen_t* address_len);
 
-SYSTX_NOTHROW
+PICOTM_NOTHROW
 int
 bind_tx(int socket, const struct sockaddr* address, socklen_t address_len);
 
-SYSTX_NOTHROW
+PICOTM_NOTHROW
 int
 connect_tx(int socket, const struct sockaddr* address, socklen_t address_len);
 
-SYSTX_NOTHROW
+PICOTM_NOTHROW
 int
 listen_tx(int socket, int backlog);
 
-SYSTX_NOTHROW
+PICOTM_NOTHROW
 ssize_t
 send_tx(int socket, const void* buffer, size_t length, int flags);
 
-SYSTX_NOTHROW
+PICOTM_NOTHROW
 int
 shutdown_tx(int socket, int how);
 
-SYSTX_NOTHROW
+PICOTM_NOTHROW
 int
 socket_tx(int domain, int type, int protocol);
 
-SYSTX_NOTHROW
+PICOTM_NOTHROW
 ssize_t
 recv_tx(int socket, void* buffer, size_t length, int flags);

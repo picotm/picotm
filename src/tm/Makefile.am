@@ -2,18 +2,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-lib_LTLIBRARIES = libsystx-tm.la
+lib_LTLIBRARIES = libpicotm-tm.la
 
-libsystx_tm_la_SOURCES = frame.c \
-                         frame.h \
-                         framemap.c \
-                         framemap.h \
-                         tm.c \
-                         tm.h \
-                         vmem.c \
-                         vmem.h \
-                         vmem_tx.c \
-                         vmem_tx.h
+libpicotm_tm_la_SOURCES = frame.c \
+                          frame.h \
+                          framemap.c \
+                          framemap.h \
+                          tm.c \
+                          tm.h \
+                          vmem.c \
+                          vmem.h \
+                          vmem_tx.c \
+                          vmem_tx.h
 
 CC = $(PTHREAD_CC)
 

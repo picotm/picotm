@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <systx/systx-module.h>
+#include <picotm/picotm-module.h>
 #include "seekop.h"
 #include "seekoptab.h"
 
@@ -18,7 +18,7 @@ seekoptab_append(struct seekop **tab, size_t *nelems, off_t from,
     assert(tab);
     assert(nelems);
 
-    void *tmp = systx_tabresize(*tab, *nelems, (*nelems)+1, sizeof((*tab)[0]));
+    void *tmp = picotm_tabresize(*tab, *nelems, (*nelems)+1, sizeof((*tab)[0]));
 
     if (!tmp) {
         return -1;
@@ -38,7 +38,7 @@ seekoptab_clear(struct seekop **tab, size_t *nelems)
     assert(tab);
     assert(nelems);
 
-    systx_tabfree(*tab);
+    picotm_tabfree(*tab);
     *tab = NULL;
     *nelems = 0;
 }

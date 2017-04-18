@@ -7,38 +7,38 @@
 #include <unistd.h>
 #include "compiler.h"
 
-SYSTX_NOTHROW
+PICOTM_NOTHROW
 int
 chdir_tm(const char* path);
 
-SYSTX_NOTHROW
+PICOTM_NOTHROW
 char*
 getcwd_tm(char* buf, size_t size);
 
-SYSTX_NOTHROW
+PICOTM_NOTHROW
 int
 link_tm(const char* path1, const char* path2);
 
-SYSTX_NOTHROW
+PICOTM_NOTHROW
 int
 pipe_tm(int fildes[2]);
 
-SYSTX_NOTHROW
+PICOTM_NOTHROW
 ssize_t
 pread_tm(int fildes, void* buf, size_t nbyte, off_t offset);
 
-SYSTX_NOTHROW
+PICOTM_NOTHROW
 ssize_t
 pwrite_tm(int fildes, const void* buf, size_t nbyte, off_t offset);
 
-SYSTX_NOTHROW
+PICOTM_NOTHROW
 ssize_t
 read_tm(int fildes, void* buf, size_t nbyte);
 
-SYSTX_NOTHROW
+PICOTM_NOTHROW
 int
 unlink_tm(const char* path);
 
-SYSTX_NOTHROW
+PICOTM_NOTHROW
 ssize_t
 write_tm(int fildes, const void* buf, size_t nbyte);
