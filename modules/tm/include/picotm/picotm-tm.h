@@ -70,6 +70,7 @@ PICOTM_TM_LOAD_TX(llong, long long)
 PICOTM_TM_LOAD_TX(ullong, unsigned long long)
 PICOTM_TM_LOAD_TX(float, float)
 PICOTM_TM_LOAD_TX(double, double)
+PICOTM_TM_LOAD_TX(ldouble, long double)
 
 PICOTM_NOTHROW
 /**
@@ -121,6 +122,7 @@ PICOTM_TM_STORE_TX(llong, long long)
 PICOTM_TM_STORE_TX(ullong, unsigned long long)
 PICOTM_TM_STORE_TX(float, float)
 PICOTM_TM_STORE_TX(double, double)
+PICOTM_TM_STORE_TX(ldouble, long double)
 
 PICOTM_NOTHROW
 /**
@@ -208,5 +210,6 @@ PICOTM_TM_PRIVATIZE_TX(llong, long long)
 PICOTM_TM_PRIVATIZE_TX(ullong, unsigned long long)
 PICOTM_TM_PRIVATIZE_TX(float, float)
 PICOTM_TM_PRIVATIZE_TX(double, double)
+PICOTM_TM_PRIVATIZE_TX(ldouble, long double)
 
 PICOTM_END_DECLS
