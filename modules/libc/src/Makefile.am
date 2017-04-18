@@ -140,8 +140,9 @@ libpicotm_c_la_SOURCES = alloc/comalloc.c \
 
 CC = $(PTHREAD_CC)
 
-AM_CPPFLAGS = -I$(top_srcdir)/include \
-              -I$(top_srcdir)/src
+AM_CPPFLAGS = -I$(top_srcdir)/modules/libc/include \
+              -I$(top_srcdir)/modules/tm/include \
+              -I$(top_srcdir)/include
 
 AM_CFLAGS = @VISIBILITY_CFLAGS@ \
             $(PTHREAD_CFLAGS)

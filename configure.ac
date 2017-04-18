@@ -33,8 +33,19 @@ AC_DEFINE([RECSIZE],  [32])
 
 AC_CONFIG_FILES([Makefile
                  include/Makefile
-                 src/Makefile
-                 src/libc/Makefile
-                 src/tm/Makefile])
+                 modules/Makefile
+                 modules/libc/Makefile
+                 modules/libc/include/Makefile
+                 modules/libc/src/Makefile
+                 modules/libm/Makefile
+                 modules/libm/include/Makefile
+                 modules/libm/src/Makefile
+                 modules/libpthread/Makefile
+                 modules/libpthread/include/Makefile
+                 modules/libpthread/src/Makefile
+                 modules/tm/Makefile
+                 modules/tm/include/Makefile
+                 modules/tm/src/Makefile
+                 src/Makefile])
 
 AC_OUTPUT

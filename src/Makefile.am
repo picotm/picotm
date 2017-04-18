@@ -2,9 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-SUBDIRS = libc \
-          tm
-
 lib_LTLIBRARIES = libpicotm.la
 
 libpicotm_la_SOURCES = component.c \

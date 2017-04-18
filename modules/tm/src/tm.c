@@ -7,7 +7,7 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <picotm/picotm-module.h>
-#include <picotm/picotm-tm.h>
+#include "picotm/picotm-tm.h"
 #include "vmem.h"
 #include "vmem_tx.h"
 

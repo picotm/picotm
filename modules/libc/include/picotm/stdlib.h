@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include <stdlib.h>
+#include <picotm/compiler.h>
 #include <picotm/picotm-tm.h>
-#include "compiler.h"
+#include <stdlib.h>
 
 PICOTM_TM_LOAD_TX(div_t, div_t);
 PICOTM_TM_LOAD_TX(ldiv_t, ldiv_t);

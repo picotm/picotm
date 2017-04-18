@@ -4,39 +4,35 @@
 
 #pragma once
 
-#include <sys/stat.h>
 #include <picotm/compiler.h>
+#include <sys/stat.h>
 
 PICOTM_NOTHROW
 int
-chmod_tx(const char* path, mode_t mode);
+chmod_tm(const char* path, mode_t mode);
 
 PICOTM_NOTHROW
 int
-fchmod_tx(int fildes, mode_t mode);
+fstat_tm(int fildes, struct stat* buf);
 
 PICOTM_NOTHROW
 int
-fstat_tx(int fildes, struct stat* buf);
+lstat_tm(const char* path, struct stat* buf);
 
 PICOTM_NOTHROW
 int
-lstat_tx(const char* path, struct stat* buf);
+mkdir_tm(const char* path, mode_t mode);
 
 PICOTM_NOTHROW
 int
-mkdir_tx(const char* path, mode_t mode);
-
-PICOTM_NOTHROW
-int
-mkfifo_tx(const char* path, mode_t mode);
+mkfifo_tm(const char* path, mode_t mode);
 
 #if defined(_BSD_SOURCE) || defined(_SVID_SOURCE) || _XOPEN_SOURCE >= 500
 PICOTM_NOTHROW
 int
-mknod_tx(const char* path, mode_t mode, dev_t dev);
+mknod_tm(const char* path, mode_t mode, dev_t dev);
 #endif
 
 PICOTM_NOTHROW
 int
-stat_tx(const char* path, struct stat* buf);
+stat_tm(const char* path, struct stat* buf);

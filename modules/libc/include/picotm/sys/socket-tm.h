@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include <sys/socket.h>
 #include <picotm/compiler.h>
+#include <sys/socket.h>
 
 PICOTM_NOTHROW
 int

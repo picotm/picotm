@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "compiler.h"
+#include <picotm/compiler.h>
 
 PICOTM_BEGIN_DECLS
 

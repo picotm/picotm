@@ -4,8 +4,8 @@
 
 #pragma once
 
+#include <picotm/compiler.h>
 #include <string.h>
-#include "compiler.h"
 
 /*
  * Memory functions

@@ -5,16 +5,16 @@
 #pragma once
 
 #include <fcntl.h>
-#include "compiler.h"
+#include <picotm/compiler.h>
 
 PICOTM_NOTHROW
 int
-creat_tx(const char* path, mode_t mode);
+creat_tm(const char* path, mode_t mode);
 
 PICOTM_NOTHROW
 int
-fcntl_tx(int fildes, int cmd, ...);
+fcntl_tm(int fildes, int cmd, ...);
 
 PICOTM_NOTHROW
 int
-open_tx(const char* path, int oflag, ...);
+open_tm(const char* path, int oflag, ...);

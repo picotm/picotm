@@ -17,7 +17,8 @@ libpicotm_tm_la_SOURCES = frame.c \
 
 CC = $(PTHREAD_CC)
 
-AM_CPPFLAGS = -I$(top_srcdir)/include
+AM_CPPFLAGS = -I$(top_srcdir)/modules/tm/include \
+              -I$(top_srcdir)/include
 
 AM_CFLAGS = @VISIBILITY_CFLAGS@ \
             $(PTHREAD_CFLAGS)

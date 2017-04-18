@@ -4,8 +4,8 @@
 
 #pragma once
 
+#include <picotm/compiler.h>
 #include <unistd.h>
-#include "compiler.h"
 
 PICOTM_NOTHROW PICOTM_NORETURN
 void _exit_tx(int status);
