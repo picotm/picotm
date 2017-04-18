@@ -1,7 +1,7 @@
 #
 # SYNOPSIS
 #
-#   CHECK_SYSTX
+#   CHECK_PICOTM_TM
 #
 # LICENSE
 #
@@ -12,6 +12,6 @@
 #   notice and this notice are preserved.  This file is offered as-is,
 #   without any warranty.
 
-AC_DEFUN([CHECK_SYSTX], [
-  AC_CHECK_LIB([systx], [systx_commit])
+AC_DEFUN([CHECK_PICOTM_TM], [
+  AC_CHECK_LIB([picotm-tm], [__picotm_tm_load])
 ])

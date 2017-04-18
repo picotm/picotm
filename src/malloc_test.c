@@ -3,11 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "malloc_test.h"
-#include <systx/stddef.h>
-#include <systx/stdlib.h>
-#include <systx/stdlib-tm.h>
-#include <systx/systx.h>
-#include <systx/systx-tm.h>
+#include <picotm/stddef.h>
+#include <picotm/stdlib.h>
+#include <picotm/stdlib-tm.h>
+#include <picotm/picotm.h>
+#include <picotm/picotm-tm.h>
 #include "ptr.h"
 #include "testhlp.h"
 
@@ -17,7 +17,7 @@
 void
 malloc_test_1(unsigned int tid)
 {
-    systx_begin
+    picotm_begin
 
         char* mem[10];
 
@@ -45,8 +45,8 @@ malloc_test_1(unsigned int tid)
 	        free_tm(*ptr);
         }
 
-    systx_commit
-    systx_end
+    picotm_commit
+    picotm_end
 }
 
 /**
@@ -64,7 +64,7 @@ malloc_test_2(unsigned int tid)
     	}
     }
 
-    systx_begin
+    picotm_begin
 
         char* mem[10];
 
@@ -89,8 +89,8 @@ malloc_test_2(unsigned int tid)
 	        free_tm(*ptr);
         }
 
-    systx_commit
-    systx_end
+    picotm_commit
+    picotm_end
 }
 
 /**
@@ -101,7 +101,7 @@ malloc_test_3(unsigned int tid)
 {
     char* buf[10];
 
-    systx_begin
+    picotm_begin
 
         char* mem[10];
 
@@ -129,8 +129,8 @@ malloc_test_3(unsigned int tid)
             store_ptr_tx(buf + i, mem[i]);
         }
 
-    systx_commit
-    systx_end
+    picotm_commit
+    picotm_end
 
     for (char** ptr = buf; ptr < buf + arraylen(buf); ++ptr) {
 	    free(*ptr);
@@ -143,7 +143,7 @@ malloc_test_3(unsigned int tid)
 void
 malloc_test_4(unsigned int tid)
 {
-    systx_begin
+    picotm_begin
 
         uint8_t* mem = malloc_tx(30 * sizeof(mem[0]));
         if (!mem) {
@@ -171,8 +171,8 @@ malloc_test_4(unsigned int tid)
 
         free_tm(mem);
 
-    systx_commit
-    systx_end
+    picotm_commit
+    picotm_end
 }
 
 /**
@@ -190,7 +190,7 @@ malloc_test_5(unsigned int tid)
 	    buf[i] = i;
     }
 
-	systx_begin
+	picotm_begin
 
         /* Load 'buf' into transaction instead of using it
          * directly. The return value of realloc_tx() is
@@ -221,8 +221,8 @@ malloc_test_5(unsigned int tid)
 
 	    free_tm(mem);
 
-	systx_commit
-    systx_end
+	picotm_commit
+    picotm_end
 }
 
 /**
@@ -240,7 +240,7 @@ malloc_test_6(unsigned int tid)
 	    buf[i] = i;
     }
 
-	systx_begin
+	picotm_begin
 
         uint8_t* mem = load_ptr_tx(&buf);
 
@@ -269,8 +269,8 @@ malloc_test_6(unsigned int tid)
          */
         store_ptr_tx(&buf, mem);
 
-	systx_commit
-    systx_end
+	picotm_commit
+    picotm_end
 
 	free(buf);
 }
@@ -299,7 +299,7 @@ malloc_test_7(unsigned int tid)
 {
     const size_t tid_min32 = tid < 32 ? 32 : tid;
 
-    systx_begin
+    picotm_begin
 
         unsigned long long cycles = load_ullong_tx(&g_test_7_cycles);
         size_t siz = load_size_t_tx(&tid_min32);
@@ -310,8 +310,8 @@ malloc_test_7(unsigned int tid)
             free_tm(mem);
         }
 
-    systx_commit
-    systx_end
+    picotm_commit
+    picotm_end
 }
 
 static unsigned long long g_test_8_cycles;
@@ -366,7 +366,7 @@ malloc_test_9_pre(unsigned long nthreads, enum loop_mode loop,
 void
 malloc_test_9(unsigned int tid)
 {
-    systx_begin
+    picotm_begin
 
         unsigned long long cycles = load_ullong_tx(&g_test_9_cycles);
 
@@ -376,6 +376,6 @@ malloc_test_9(unsigned int tid)
             free_tm(mem);
         }
 
-    systx_commit
-    systx_end
+    picotm_commit
+    picotm_end
 }

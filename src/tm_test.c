@@ -4,8 +4,8 @@
 
 #include "tm_test.h"
 #include <stdlib.h>
-#include <systx/systx.h>
-#include <systx/systx-tm.h>
+#include <picotm/picotm.h>
+#include <picotm/picotm-tm.h>
 
 static unsigned long g_value;
 
@@ -20,14 +20,14 @@ tm_test_1_pre(unsigned long nthreads, enum loop_mode loop,
 void
 tm_test_1(unsigned int tid)
 {
-    systx_begin
+    picotm_begin
 
         unsigned long value = load_ulong_tx(&g_value);
         value += 1;
         store_ulong_tx(&g_value, value);
 
-    systx_commit
-    systx_end
+    picotm_commit
+    picotm_end
 }
 
 void

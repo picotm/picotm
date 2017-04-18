@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "testhlp.h"
-#include <systx/stdlib.h>
-#include <systx/systx-tm.h>
+#include <picotm/stdlib.h>
+#include <picotm/picotm-tm.h>
 
 /**
  * Delays a transaction while generating potential conflicts.

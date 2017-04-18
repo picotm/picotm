@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
-#include <systx/systx.h>
+#include <picotm/picotm.h>
 
 struct thread_state {
 
@@ -40,9 +40,9 @@ getmsofday(void* tzp)
 }
 
 static void
-cleanup_systx_cb(void* data)
+cleanup_picotm_cb(void* data)
 {
-    systx_release();
+    picotm_release();
 }
 
 static long long
@@ -139,7 +139,7 @@ inner_loop_func(struct thread_state* state)
 
     int res;
 
-    pthread_cleanup_push(cleanup_systx_cb, NULL);
+    pthread_cleanup_push(cleanup_picotm_cb, NULL);
 
         res = pthread_barrier_wait(state->sync_begin);
         if (res && res != PTHREAD_BARRIER_SERIAL_THREAD) {
@@ -188,7 +188,7 @@ run_inner_loop(const struct test_func *test, enum boundary_type btype,
 static int
 outer_loop_func(struct thread_state* state)
 {
-    pthread_cleanup_push(cleanup_systx_cb, NULL);
+    pthread_cleanup_push(cleanup_picotm_cb, NULL);
 
         int res = pthread_barrier_wait(state->sync_begin);
         if (res && res != PTHREAD_BARRIER_SERIAL_THREAD) {

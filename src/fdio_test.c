@@ -10,16 +10,16 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <systx/fcntl.h>
-#include <systx/stddef.h>
-#include <systx/stdlib.h>
-#include <systx/string.h>
-#include <systx/string-tm.h>
-#include <systx/sys/types.h>
-#include <systx/systx.h>
-#include <systx/systx-libc.h>
-#include <systx/systx-tm.h>
-#include <systx/unistd.h>
+#include <picotm/fcntl.h>
+#include <picotm/stddef.h>
+#include <picotm/stdlib.h>
+#include <picotm/string.h>
+#include <picotm/string-tm.h>
+#include <picotm/sys/types.h>
+#include <picotm/picotm.h>
+#include <picotm/picotm-libc.h>
+#include <picotm/picotm-tm.h>
+#include <picotm/unistd.h>
 #include "ptr.h"
 #include "testhlp.h"
 
@@ -31,7 +31,7 @@ static const char const g_test_str[] = "Hello world!\n";
 void
 fdio_test_1(unsigned int tid)
 {
-    systx_begin
+    picotm_begin
 
         int fildes = open_tx("/tmp/fdio.test",
                              O_WRONLY | O_CREAT,
@@ -48,8 +48,8 @@ fdio_test_1(unsigned int tid)
             abort_tx();
         }
 
-    systx_commit
-    systx_end
+    picotm_commit
+    picotm_end
 }
 
 /**
@@ -60,7 +60,7 @@ fdio_test_1(unsigned int tid)
 void
 fdio_test_2(unsigned int tid)
 {
-    systx_begin
+    picotm_begin
 
         int fildes = open_tx("/tmp/fdio.test",
                              O_WRONLY | O_CREAT | O_APPEND,
@@ -83,8 +83,8 @@ fdio_test_2(unsigned int tid)
             abort_tx();
         }
 
-    systx_commit
-    systx_end
+    picotm_commit
+    picotm_end
 }
 
 /**
@@ -94,7 +94,7 @@ fdio_test_2(unsigned int tid)
 void
 fdio_test_3(unsigned int tid)
 {
-    systx_begin
+    picotm_begin
 
         int fildes = open_tx("/tmp/fdio.test",
                              O_WRONLY | O_CREAT,
@@ -122,8 +122,8 @@ fdio_test_3(unsigned int tid)
             abort_tx();
         }
 
-    systx_commit
-    systx_end
+    picotm_commit
+    picotm_end
 }
 
 /**
@@ -135,7 +135,7 @@ fdio_test_3(unsigned int tid)
 void
 fdio_test_4(unsigned int tid)
 {
-    systx_begin
+    picotm_begin
 
         int fildes = open_tx("/tmp/fdio.test",
                              O_WRONLY | O_CREAT,
@@ -158,8 +158,8 @@ fdio_test_4(unsigned int tid)
             abort_tx();
         }
 
-    systx_commit
-    systx_end
+    picotm_commit
+    picotm_end
 }
 
 /**
@@ -178,7 +178,7 @@ fdio_test_5(unsigned int tid)
     snprintf(tidstr, sizeof(tidstr), "%d", (int)tid);
     memcpy(str, tidstr, strlen(tidstr));
 
-    systx_begin
+    picotm_begin
 
         int fildes = open_tx("/tmp/fdio.test",
                              O_RDWR | O_CREAT,
@@ -214,8 +214,8 @@ fdio_test_5(unsigned int tid)
             abort_tx();
         }
 
-    systx_commit
-    systx_end
+    picotm_commit
+    picotm_end
 }
 
 /**
@@ -229,7 +229,7 @@ fdio_test_6(unsigned int tid)
     char teststr[16];
     snprintf(teststr, 15, "%d\n", (int)tid);
 
-    systx_begin
+    picotm_begin
 
         /* Open file */
 
@@ -273,8 +273,8 @@ fdio_test_6(unsigned int tid)
             abort_tx();
         }
 
-    systx_commit
-    systx_end
+    picotm_commit
+    picotm_end
 }
 
 /**
@@ -290,7 +290,7 @@ fdio_test_7(unsigned int tid)
         abort();
     }
 
-    systx_begin
+    picotm_begin
 
         /* Open */
 
@@ -352,8 +352,8 @@ fdio_test_7(unsigned int tid)
             abort_tx();
         }
 
-    systx_commit
-    systx_end
+    picotm_commit
+    picotm_end
 }
 
 /**
@@ -411,7 +411,7 @@ fdio_test_8(unsigned int tid)
         }
     }
 
-    systx_begin
+    picotm_begin
 
         /* Open file */
 
@@ -466,8 +466,8 @@ fdio_test_8(unsigned int tid)
             }
         }
 
-    systx_commit
-    systx_end
+    picotm_commit
+    picotm_end
 }
 
 /**
@@ -504,7 +504,7 @@ fdio_test_9(unsigned int tid)
         }
     }
 
-    systx_begin
+    picotm_begin
 
         if (lseek_tx(fildes, 0, SEEK_END) == (off_t)-1) {
             perror("lseek");
@@ -518,8 +518,8 @@ fdio_test_9(unsigned int tid)
             }
         }
 
-    systx_commit
-    systx_end
+    picotm_commit
+    picotm_end
 
     /*if (TEMP_FAILURE_RETRY(close(fildes)) < 0) {
         perror("close");
@@ -553,7 +553,7 @@ fdio_test_10(unsigned int tid)
 
     pthread_mutex_unlock(&fd_lock);
 
-    systx_begin
+    picotm_begin
 
         if (pwrite_tx(fildes, g_test_str, strlen_tm(g_test_str), 0) < 0) {
             perror("pwrite");
@@ -573,8 +573,8 @@ fdio_test_10(unsigned int tid)
             abort_tx();
         }
 
-    systx_commit
-    systx_end
+    picotm_commit
+    picotm_end
 }
 
 /**
@@ -608,7 +608,7 @@ fdio_test_11(unsigned int tid)
 
     pthread_mutex_unlock(&fd_lock);
 
-    systx_begin
+    picotm_begin
 
         if (lseek_tx(fildes, 0, SEEK_SET) == (off_t)-1) {
             perror("lseek");
@@ -639,8 +639,8 @@ fdio_test_11(unsigned int tid)
             abort_tx();
         }
 
-    systx_commit
-    systx_end
+    picotm_commit
+    picotm_end
 }
 
 /**
@@ -674,7 +674,7 @@ fdio_test_12(unsigned int tid)
 
     pthread_mutex_unlock(&fd_lock);
 
-    systx_begin
+    picotm_begin
 
         /* Do I/O */
 
@@ -723,8 +723,8 @@ fdio_test_12(unsigned int tid)
             abort_tx();
         }
 
-    systx_commit
-    systx_end
+    picotm_commit
+    picotm_end
 }
 
 /**
@@ -744,7 +744,7 @@ fdio_test_13(unsigned int tid)
         }
     }
 
-    systx_begin
+    picotm_begin
 
     for (i = 0; i < 20; ++i) {
         if (write_tx(STDOUT_FILENO, str[i], strlen_tx(str[i])) < 0) {
@@ -753,8 +753,8 @@ fdio_test_13(unsigned int tid)
         }
     }
 
-    systx_commit
-    systx_end
+    picotm_commit
+    picotm_end
 }
 
 /**
@@ -795,7 +795,7 @@ fdio_test_14(unsigned int tid)
         }
     }
 
-    systx_begin
+    picotm_begin
 
         /*off_t pos = lseek_tx(fildes, 0, SEEK_END);
 
@@ -811,8 +811,8 @@ fdio_test_14(unsigned int tid)
             }
         }
 
-    systx_commit
-    systx_end
+    picotm_commit
+    picotm_end
 
     /*if (TEMP_FAILURE_RETRY(close(fildes)) < 0) {
         perror("close");
@@ -835,7 +835,7 @@ fdio_test_15(unsigned int tid)
         abort();
     }
 
-    systx_begin
+    picotm_begin
 
         int fildes2 = dup_tx(fildes);
 
@@ -851,8 +851,8 @@ fdio_test_15(unsigned int tid)
             abort_tx();
         }
 
-    systx_commit
-    systx_end
+    picotm_commit
+    picotm_end
 
     if (TEMP_FAILURE_RETRY(close(fildes)) < 0) {
         perror("close");
@@ -866,10 +866,10 @@ fdio_test_15(unsigned int tid)
 void
 fdio_test_16(unsigned int tid)
 {
-    extern enum systx_libc_cc_mode g_cc_mode;
-    systx_libc_set_file_type_cc_mode(SYSTX_LIBC_FILE_TYPE_REGULAR, g_cc_mode);
+    extern enum picotm_libc_cc_mode g_cc_mode;
+    picotm_libc_set_file_type_cc_mode(PICOTM_LIBC_FILE_TYPE_REGULAR, g_cc_mode);
 
-    systx_begin
+    picotm_begin
 
         int fildes = open_tx("/tmp/fdio.test",
                              O_WRONLY | O_CREAT,
@@ -899,8 +899,8 @@ fdio_test_16(unsigned int tid)
             abort_tx();
         }
 
-    systx_commit
-    systx_end
+    picotm_commit
+    picotm_end
 }
 
 /**
@@ -909,8 +909,8 @@ fdio_test_16(unsigned int tid)
 void
 fdio_test_17(unsigned int tid)
 {
-    extern enum systx_libc_cc_mode g_cc_mode;
-    systx_libc_set_file_type_cc_mode(SYSTX_LIBC_FILE_TYPE_REGULAR, g_cc_mode);
+    extern enum picotm_libc_cc_mode g_cc_mode;
+    picotm_libc_set_file_type_cc_mode(PICOTM_LIBC_FILE_TYPE_REGULAR, g_cc_mode);
 
     char str[2][128];
 
@@ -923,7 +923,7 @@ fdio_test_17(unsigned int tid)
         }
     }
 
-    systx_begin
+    picotm_begin
 
         int fildes = open_tx("/tmp/fdio.test",
                              O_WRONLY | O_CREAT,
@@ -971,8 +971,8 @@ fdio_test_17(unsigned int tid)
             abort_tx();
         }
 
-    systx_commit
-    systx_end
+    picotm_commit
+    picotm_end
 }
 
 /**
@@ -981,8 +981,8 @@ fdio_test_17(unsigned int tid)
 void
 fdio_test_18(unsigned int tid)
 {
-    extern enum systx_libc_cc_mode g_cc_mode;
-    systx_libc_set_file_type_cc_mode(SYSTX_LIBC_FILE_TYPE_REGULAR, g_cc_mode);
+    extern enum picotm_libc_cc_mode g_cc_mode;
+    picotm_libc_set_file_type_cc_mode(PICOTM_LIBC_FILE_TYPE_REGULAR, g_cc_mode);
 
     static volatile int fildes = -1;
     static pthread_mutex_t fd_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -1013,7 +1013,7 @@ fdio_test_18(unsigned int tid)
         }
     }
 
-    systx_begin
+    picotm_begin
 
         /*int fildes = open_tx("/tmp/fdio.test",
                                O_WRONLY | O_CREAT,
@@ -1056,8 +1056,8 @@ fdio_test_18(unsigned int tid)
             abort_tx();
         }
 
-    systx_commit
-    systx_end
+    picotm_commit
+    picotm_end
 
     /*if (TEMP_FAILURE_RETRY(close(fildes)) < 0) {
         perror("close");
@@ -1122,7 +1122,7 @@ fdio_test_19(unsigned int tid)
     size_t rlen;
 
     do {
-        systx_begin
+        picotm_begin
 
             char rbuf[10];
             memset_tm(rbuf, 0, sizeof(rbuf)); /* Work around valgrind */
@@ -1148,8 +1148,8 @@ fdio_test_19(unsigned int tid)
 
             store_size_t_tx(&rlen, tx_rlen);
 
-        systx_commit
-        systx_end
+        picotm_commit
+        picotm_end
 
     } while (rlen);
 
@@ -1169,8 +1169,8 @@ fdio_test_20_pre(unsigned long nthreads, enum loop_mode loop,
                  enum boundary_type btype, unsigned long long bound,
                  int (*logmsg)(const char*, ...))
 {
-    extern enum systx_libc_cc_mode g_cc_mode;
-    systx_libc_set_file_type_cc_mode(SYSTX_LIBC_FILE_TYPE_REGULAR, g_cc_mode);
+    extern enum picotm_libc_cc_mode g_cc_mode;
+    picotm_libc_set_file_type_cc_mode(PICOTM_LIBC_FILE_TYPE_REGULAR, g_cc_mode);
 
     g_fildes = TEMP_FAILURE_RETRY(open("./testdir/testfile.bin",
                                        O_RDWR | O_CREAT,
@@ -1213,7 +1213,7 @@ fdio_test_20(unsigned int tid)
 
     off_t offset = rand_r(&t_seed) % (1024 * 1024);
 
-    systx_begin
+    picotm_begin
 
         off_t tx_offset = load_off_t_tx(&offset);
 
@@ -1230,8 +1230,8 @@ fdio_test_20(unsigned int tid)
             abort_tx();
         }
 
-    systx_commit
-    systx_end
+    picotm_commit
+    picotm_end
 }
 
 /*
@@ -1241,8 +1241,8 @@ fdio_test_20(unsigned int tid)
 int
 tx_random_rw_pre(const char* filename)
 {
-    extern enum systx_libc_cc_mode g_cc_mode;
-    systx_libc_set_file_type_cc_mode(SYSTX_LIBC_FILE_TYPE_REGULAR, g_cc_mode);
+    extern enum picotm_libc_cc_mode g_cc_mode;
+    picotm_libc_set_file_type_cc_mode(PICOTM_LIBC_FILE_TYPE_REGULAR, g_cc_mode);
 
     int res = TEMP_FAILURE_RETRY(open(filename, O_RDWR,
                                       S_IRWXU | S_IRWXG | S_IRWXO));
@@ -1258,7 +1258,7 @@ void
 tx_random_rw(int fildes, unsigned int* seed, off_t size,
              unsigned long ncycles, unsigned long nreads)
 {
-    systx_begin
+    picotm_begin
 
         off_t tx_size = load_off_t_tx(&size);
         unsigned long tx_ncycles = load_ulong_tx(&ncycles);
@@ -1289,8 +1289,8 @@ tx_random_rw(int fildes, unsigned int* seed, off_t size,
             }
         }
 
-    systx_commit
-    systx_end
+    picotm_commit
+    picotm_end
 }
 
 int
@@ -1626,8 +1626,8 @@ fdio_test_28(unsigned int tid)
 static int
 tx_random_read_pre(const char* filename)
 {
-    extern enum systx_libc_cc_mode g_cc_mode;
-    systx_libc_set_file_type_cc_mode(SYSTX_LIBC_FILE_TYPE_REGULAR, g_cc_mode);
+    extern enum picotm_libc_cc_mode g_cc_mode;
+    picotm_libc_set_file_type_cc_mode(PICOTM_LIBC_FILE_TYPE_REGULAR, g_cc_mode);
 
     int res = TEMP_FAILURE_RETRY(open(filename,
                                       O_RDONLY | O_CREAT,
@@ -1643,7 +1643,7 @@ static void
 tx_random_read(int fildes, unsigned int* seed, off_t size,
                unsigned long ncycles)
 {
-    systx_begin
+    picotm_begin
 
         size_t tx_cycles = load_ulong_tx(&ncycles);
 
@@ -1659,8 +1659,8 @@ tx_random_read(int fildes, unsigned int* seed, off_t size,
             }
         }
 
-    systx_commit
-    systx_end
+    picotm_commit
+    picotm_end
 }
 
 static int
@@ -1784,8 +1784,8 @@ fdio_test_30(unsigned int tid)
 static int
 tx_random_write_pre(const char* filename)
 {
-    extern enum systx_libc_cc_mode g_cc_mode;
-    systx_libc_set_file_type_cc_mode(SYSTX_LIBC_FILE_TYPE_REGULAR, g_cc_mode);
+    extern enum picotm_libc_cc_mode g_cc_mode;
+    picotm_libc_set_file_type_cc_mode(PICOTM_LIBC_FILE_TYPE_REGULAR, g_cc_mode);
 
     int res = TEMP_FAILURE_RETRY(open(filename,
                                       O_WRONLY | O_CREAT,
@@ -1803,7 +1803,7 @@ tx_random_write(int fildes, unsigned int* seed, off_t size, unsigned long ncycle
     unsigned char buf[24];
     memset(buf, 0, sizeof(buf));
 
-    systx_begin
+    picotm_begin
 
         unsigned long tx_cycles = load_ulong_tx(&ncycles);
 
@@ -1818,8 +1818,8 @@ tx_random_write(int fildes, unsigned int* seed, off_t size, unsigned long ncycle
             }
         }
 
-    systx_commit
-    systx_end
+    picotm_commit
+    picotm_end
 }
 
 static int
@@ -1944,8 +1944,8 @@ fdio_test_32_post(unsigned long nthreads, enum loop_mode loop,
 static int
 tx_seq_read_pre(const char* filename)
 {
-    extern enum systx_libc_cc_mode g_cc_mode;
-    systx_libc_set_file_type_cc_mode(SYSTX_LIBC_FILE_TYPE_REGULAR, g_cc_mode);
+    extern enum picotm_libc_cc_mode g_cc_mode;
+    picotm_libc_set_file_type_cc_mode(PICOTM_LIBC_FILE_TYPE_REGULAR, g_cc_mode);
 
     int res = TEMP_FAILURE_RETRY(open(filename,
                                       O_RDONLY | O_CREAT,
@@ -1962,7 +1962,7 @@ tx_seq_read(int fildes, unsigned int* seed, off_t size, unsigned long ncycles)
 {
     off_t offset = rand_r(seed) % size;
 
-    systx_begin
+    picotm_begin
 
         off_t pos = load_off_t_tx(&offset);
         unsigned long cycles = load_ulong_tx(&ncycles);
@@ -1979,8 +1979,8 @@ tx_seq_read(int fildes, unsigned int* seed, off_t size, unsigned long ncycles)
             pos += res;
         }
 
-    systx_commit
-    systx_end
+    picotm_commit
+    picotm_end
 }
 
 static int
@@ -2104,8 +2104,8 @@ fdio_test_34_post(unsigned long nthreads, enum loop_mode loop,
 static int
 tx_seq_write_pre(const char* filename)
 {
-    extern enum systx_libc_cc_mode g_cc_mode;
-    systx_libc_set_file_type_cc_mode(SYSTX_LIBC_FILE_TYPE_REGULAR, g_cc_mode);
+    extern enum picotm_libc_cc_mode g_cc_mode;
+    picotm_libc_set_file_type_cc_mode(PICOTM_LIBC_FILE_TYPE_REGULAR, g_cc_mode);
 
     int res = TEMP_FAILURE_RETRY(open(filename,
                                       O_WRONLY | O_CREAT,
@@ -2125,7 +2125,7 @@ tx_seq_write(int fildes, unsigned int* seed, off_t size, unsigned long ncycles)
 
     off_t offset = rand_r(seed) % size;
 
-    systx_begin
+    picotm_begin
 
         off_t pos = load_off_t_tx(&offset);
         unsigned long tx_ncycles = load_ulong_tx(&ncycles);
@@ -2141,8 +2141,8 @@ tx_seq_write(int fildes, unsigned int* seed, off_t size, unsigned long ncycles)
             pos += res;
         }
 
-    systx_commit
-    systx_end
+    picotm_commit
+    picotm_end
 }
 
 static int

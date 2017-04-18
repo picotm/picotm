@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <systx/systx-libc.h>
+#include <picotm/picotm-libc.h>
 #include <unistd.h>
 #include "fdio_test.h"
 #include "fs_test.h"
@@ -188,7 +188,7 @@ static unsigned int       g_nthreads = 1;
 static unsigned int       g_verbose = 0;
 static unsigned int       g_normalize = 0;
 
-enum systx_libc_cc_mode g_cc_mode = SYSTX_LIBC_CC_MODE_2PL;
+enum picotm_libc_cc_mode g_cc_mode = PICOTM_LIBC_CC_MODE_2PL;
 size_t                  g_txcycles = 1;
 
 static int
@@ -445,7 +445,7 @@ logmsg_debug(const char* format, ...)
     return res;
 }
 
-/* TODO: export this value from systx */
+/* TODO: export this value from picotm */
 long long abort_count;
 
 extern long long fdio_test_21_ticks;
