@@ -15,6 +15,9 @@ libpicotm_c_la_SOURCES = alloc/comalloc.c \
                          counter.c \
                          counter.h \
                          errcode.h \
+                         errno.c \
+                         error_tx.c \
+                         error_tx.h \
                          fcntl-tm.c \
                          fcntl.c \
                          fd/cmap.c \

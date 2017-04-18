@@ -39,6 +39,15 @@ enum picotm_libc_validation_mode {
 
 PICOTM_NOTHROW
 /**
+ * Saves the value of 'errno' during a transaction. Module authors should
+ * call this function before invoking a function that might modify errno's
+ * value.
+ */
+void
+picotm_libc_save_errno(void);
+
+PICOTM_NOTHROW
+/**
  * Sets the preferred mode of concurrency control for I/O on a specific
  * file type.
  */
