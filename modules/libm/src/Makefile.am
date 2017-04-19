@@ -4,7 +4,8 @@
 
 lib_LTLIBRARIES = libpicotm-m.la
 
-libpicotm_m_la_SOURCES = fpu_tx.c \
+libpicotm_m_la_SOURCES = complex.c \
+                         fpu_tx.c \
                          fpu_tx.h \
                          libm.c \
                          math.c \
