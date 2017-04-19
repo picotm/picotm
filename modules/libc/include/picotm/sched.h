@@ -2,13 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-ceuta_hdrl(#ifndef TANGER_STM_STD_SCHED_H);
-ceuta_hdrl(#define TANGER_STM_STD_SCHED_H);
-ceuta_hdrl(#include <sched.h>);
+#pragma once
 
+#include <picotm/compiler.h>
 #include <sched.h>
 
-ceuta_pure(int, sched_yield, sched_yield);
+PICOTM_BEGIN_DECLS
 
-ceuta_hdrl(#endif);
+PICOTM_NOTHROW
+/**
+ * Executes sched_yield() within a transaction.
+ */
+int
+sched_yield_tx(void);
 
+PICOTM_END_DECLS

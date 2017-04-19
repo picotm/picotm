@@ -127,6 +127,7 @@ libpicotm_c_la_SOURCES = alloc/comalloc.c \
                          libc.c \
                          mutex.c \
                          mutex.h \
+                         sched.c \
                          spinlock.c \
                          spinlock.h \
                          stdlib-tm.c \
