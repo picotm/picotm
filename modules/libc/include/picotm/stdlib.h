@@ -69,6 +69,14 @@ int posix_memalign_tx(void** memptr, size_t alignment, size_t size);
 
 PICOTM_NOTHROW
 /**
+ * Executes qsort() within a transaction.
+ */
+void
+qsort_tx(void* base, size_t nel, size_t width,
+         int (*compar)(const void*, const void*));
+
+PICOTM_NOTHROW
+/**
  * Executes realloc() within a transaction.
  */
 void* realloc_tx(void* ptr, size_t size);

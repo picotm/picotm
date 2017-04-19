@@ -40,6 +40,14 @@ posix_memalign_tm(void** memptr, size_t alignment, size_t size)
 }
 
 PICOTM_EXPORT
+void
+qsort_tm(void* base, size_t nel, size_t width,
+         int (*compar)(const void*, const void*))
+{
+    qsort(base, nel, width, compar);
+}
+
+PICOTM_EXPORT
 void*
 realloc_tm(void* ptr, size_t size)
 {
