@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "picotm/errno.h"
 #include "picotm/picotm-libc.h"
 #include <picotm/picotm-module.h>
 #include <stdlib.h>
@@ -141,4 +142,12 @@ picotm_libc_save_errno()
     if (res < 0) {
         picotm_resolve_error(-res);
     }
+}
+
+PICOTM_EXPORT
+int*
+__errno_location_tx()
+{
+    picotm_libc_save_errno();
+    return &errno;
 }
