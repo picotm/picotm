@@ -54,5 +54,12 @@ void
 sync_tx(void);
 
 PICOTM_NOTHROW
+/**
+ * Executes unlink() within a transaction.
+ */
+int
+unlink_tx(const char* path);
+
+PICOTM_NOTHROW
 ssize_t
 write_tx(int fildes, const void* buf, size_t nbyte);
