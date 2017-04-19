@@ -43,6 +43,13 @@ ssize_t
 read_tx(int fildes, void* buf, size_t nbyte);
 
 PICOTM_NOTHROW
+/**
+ * Executes sleep() within a transaction.
+ */
+unsigned
+sleep_tx(unsigned seconds);
+
+PICOTM_NOTHROW
 void
 sync_tx(void);
 

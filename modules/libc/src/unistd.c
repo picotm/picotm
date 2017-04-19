@@ -119,6 +119,16 @@ read_tx(int fildes, void* buf, size_t nbyte)
 }
 
 PICOTM_EXPORT
+unsigned
+sleep_tx(unsigned seconds)
+{
+    do {
+        seconds = sleep(seconds);
+    } while (seconds);
+    return 0;
+}
+
+PICOTM_EXPORT
 void
 sync_tx()
 {
