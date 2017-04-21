@@ -6,6 +6,7 @@
 
 #include "fdio_test.h"
 #include <errno.h>
+#include <limits.h>
 #include <pthread.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -25,6 +26,101 @@
 
 static const char const g_test_str[] = "Hello world!\n";
 
+static char g_filename[PATH_MAX];
+static int  g_fildes = -1;
+
+static const char*
+temp_filename(unsigned long testnum, unsigned long filenum)
+{
+    int res = snprintf(g_filename, sizeof(g_filename),
+                       "/tmp/fdio-test-%lu-%lu-XXXXXX",
+                       testnum, filenum);
+    if (res < 0) {
+        perror("snprintf");
+        abort();
+    }
+    const char* filename = mktemp(g_filename);
+    if (!filename) {
+        perror("mktemp");
+        abort();
+    }
+    return filename;
+}
+
+static void
+set_flags(int fildes, int flags, int get_cmd, int set_cmd)
+{
+    flags &= O_CLOEXEC;
+
+    int current_flags = TEMP_FAILURE_RETRY(fcntl(fildes, get_cmd));
+    if (current_flags < 0) {
+        perror("fcntl");
+        abort();
+    }
+    if (current_flags == flags) {
+        return;
+    }
+    int res = TEMP_FAILURE_RETRY(fcntl(fildes, set_cmd, flags));
+    if (res < 0) {
+        perror("fcntl");
+        abort();
+    }
+}
+
+static void
+set_fildes_flags(int fildes, int flags)
+{
+    set_flags(fildes, flags &= O_CLOEXEC, F_GETFD, F_SETFD);
+}
+
+static void
+set_file_status_flags(int fildes, int flags)
+{
+    set_flags(fildes, flags &= ~O_CLOEXEC, F_GETFL, F_SETFL);
+}
+
+static int
+temp_fildes(unsigned long testnum, unsigned long filenum, int flags)
+{
+    int res = snprintf(g_filename, sizeof(g_filename),
+                       "/tmp/fdio-test-%lu-%lu-XXXXXX",
+                       testnum, filenum);
+    if (res < 0) {
+        perror("snprintf");
+        abort();
+    }
+    int fildes = mkstemp(g_filename);
+    if (fildes < 0) {
+        perror("mkstemp");
+        abort();
+    }
+    if (flags) {
+        set_fildes_flags(fildes, flags);
+        set_file_status_flags(fildes, flags);
+    }
+    return fildes;
+}
+
+static void
+remove_file(const char* filename)
+{
+    int res = unlink(filename);
+    if (res < 0) {
+        perror("unlink");
+        abort();
+    }
+}
+
+static void
+close_fildes(int fildes)
+{
+    int res = TEMP_FAILURE_RETRY(close(fildes));
+    if (res < 0) {
+        perror("close");
+        abort();
+    }
+}
+
 /**
  * Open and close a file.
  */
@@ -33,7 +129,7 @@ fdio_test_1(unsigned int tid)
 {
     picotm_begin
 
-        int fildes = open_tx("/tmp/fdio.test",
+        int fildes = open_tx(g_filename,
                              O_WRONLY | O_CREAT,
                              S_IRWXU | S_IRWXG | S_IRWXO);
         if (fildes < 0) {
@@ -52,6 +148,22 @@ fdio_test_1(unsigned int tid)
     picotm_end
 }
 
+void
+fdio_test_1_pre(unsigned long nthreads, enum loop_mode loop,
+                enum boundary_type btype, unsigned long long bound,
+                int (*logmsg)(const char*, ...))
+{
+    temp_filename(1, 0);
+}
+
+void
+fdio_test_1_post(unsigned long nthreads, enum loop_mode loop,
+                 enum boundary_type btype, unsigned long long bound,
+                 int (*logmsg)(const char*, ...))
+{
+    remove_file(g_filename);
+}
+
 /**
  * Open-and-write test: Each thread open the file and writes a string.
  * Calling open_tx() with O_APPEND creates a load  dependency on the
@@ -62,7 +174,7 @@ fdio_test_2(unsigned int tid)
 {
     picotm_begin
 
-        int fildes = open_tx("/tmp/fdio.test",
+        int fildes = open_tx(g_filename,
                              O_WRONLY | O_CREAT | O_APPEND,
                              S_IRWXU | S_IRWXG | S_IRWXO);
 
@@ -87,6 +199,22 @@ fdio_test_2(unsigned int tid)
     picotm_end
 }
 
+void
+fdio_test_2_pre(unsigned long nthreads, enum loop_mode loop,
+                enum boundary_type btype, unsigned long long bound,
+                int (*logmsg)(const char*, ...))
+{
+    temp_filename(2, 0);
+}
+
+void
+fdio_test_2_post(unsigned long nthreads, enum loop_mode loop,
+                 enum boundary_type btype, unsigned long long bound,
+                 int (*logmsg)(const char*, ...))
+{
+    remove_file(g_filename);
+}
+
 /**
  * Each process writes to the beginning of a file. Only the last written
  * line should survive.
@@ -96,7 +224,7 @@ fdio_test_3(unsigned int tid)
 {
     picotm_begin
 
-        int fildes = open_tx("/tmp/fdio.test",
+        int fildes = open_tx(g_filename,
                              O_WRONLY | O_CREAT,
                              S_IRWXU | S_IRWXG | S_IRWXO);
 
@@ -126,6 +254,22 @@ fdio_test_3(unsigned int tid)
     picotm_end
 }
 
+void
+fdio_test_3_pre(unsigned long nthreads, enum loop_mode loop,
+                enum boundary_type btype, unsigned long long bound,
+                int (*logmsg)(const char*, ...))
+{
+    temp_filename(3, 0);
+}
+
+void
+fdio_test_3_post(unsigned long nthreads, enum loop_mode loop,
+                 enum boundary_type btype, unsigned long long bound,
+                 int (*logmsg)(const char*, ...))
+{
+    remove_file(g_filename);
+}
+
 /**
  * Use pwrite to start writing at byte no. 2.
  *
@@ -137,7 +281,7 @@ fdio_test_4(unsigned int tid)
 {
     picotm_begin
 
-        int fildes = open_tx("/tmp/fdio.test",
+        int fildes = open_tx(g_filename,
                              O_WRONLY | O_CREAT,
                              S_IRWXU | S_IRWXG | S_IRWXO);
 
@@ -162,6 +306,22 @@ fdio_test_4(unsigned int tid)
     picotm_end
 }
 
+void
+fdio_test_4_pre(unsigned long nthreads, enum loop_mode loop,
+                enum boundary_type btype, unsigned long long bound,
+                int (*logmsg)(const char*, ...))
+{
+    temp_filename(4, 0);
+}
+
+void
+fdio_test_4_post(unsigned long nthreads, enum loop_mode loop,
+                 enum boundary_type btype, unsigned long long bound,
+                 int (*logmsg)(const char*, ...))
+{
+    remove_file(g_filename);
+}
+
 /**
  * Write string, read-back and write again; should output 'Hello Hello!'.
  *
@@ -180,7 +340,7 @@ fdio_test_5(unsigned int tid)
 
     picotm_begin
 
-        int fildes = open_tx("/tmp/fdio.test",
+        int fildes = open_tx(g_filename,
                              O_RDWR | O_CREAT,
                              S_IRWXU | S_IRWXG | S_IRWXO);
 
@@ -218,6 +378,22 @@ fdio_test_5(unsigned int tid)
     picotm_end
 }
 
+void
+fdio_test_5_pre(unsigned long nthreads, enum loop_mode loop,
+                enum boundary_type btype, unsigned long long bound,
+                int (*logmsg)(const char*, ...))
+{
+    temp_filename(5, 0);
+}
+
+void
+fdio_test_5_post(unsigned long nthreads, enum loop_mode loop,
+                 enum boundary_type btype, unsigned long long bound,
+                 int (*logmsg)(const char*, ...))
+{
+    remove_file(g_filename);
+}
+
 /**
  * Write string at position 2 using lseek; should output '  Hello world!'.
  *
@@ -233,7 +409,7 @@ fdio_test_6(unsigned int tid)
 
         /* Open file */
 
-        int fildes = open_tx("/tmp/fdio.test",
+        int fildes = open_tx(g_filename,
                              O_WRONLY | O_CREAT,
                              S_IRWXU | S_IRWXG | S_IRWXO);
 
@@ -277,6 +453,22 @@ fdio_test_6(unsigned int tid)
     picotm_end
 }
 
+void
+fdio_test_6_pre(unsigned long nthreads, enum loop_mode loop,
+                enum boundary_type btype, unsigned long long bound,
+                int (*logmsg)(const char*, ...))
+{
+    temp_filename(6, 0);
+}
+
+void
+fdio_test_6_post(unsigned long nthreads, enum loop_mode loop,
+                 enum boundary_type btype, unsigned long long bound,
+                 int (*logmsg)(const char*, ...))
+{
+    remove_file(g_filename);
+}
+
 /**
  * Write string, read-back and write again; should output 'world world!\n<tid>'.
  */
@@ -294,7 +486,7 @@ fdio_test_7(unsigned int tid)
 
         /* Open */
 
-        int fildes = open_tx("/tmp/fdio.test",
+        int fildes = open_tx(g_filename,
                              O_RDWR | O_CREAT,
                              S_IRWXU | S_IRWXG | S_IRWXO);
 
@@ -354,6 +546,22 @@ fdio_test_7(unsigned int tid)
 
     picotm_commit
     picotm_end
+}
+
+void
+fdio_test_7_pre(unsigned long nthreads, enum loop_mode loop,
+                enum boundary_type btype, unsigned long long bound,
+                int (*logmsg)(const char*, ...))
+{
+    temp_filename(7, 0);
+}
+
+void
+fdio_test_7_post(unsigned long nthreads, enum loop_mode loop,
+                 enum boundary_type btype, unsigned long long bound,
+                 int (*logmsg)(const char*, ...))
+{
+    remove_file(g_filename);
 }
 
 /**
@@ -423,8 +631,6 @@ fdio_test_8(unsigned int tid)
             abort_tx();
         }
 
-        size_t rlen;
-
         while (true) {
 
             char rbuf[1024];
@@ -440,7 +646,7 @@ fdio_test_8(unsigned int tid)
                     abort_tx();
                 }
             }
-            rlen = res;
+            size_t rlen = res;
 
             /* Write to file */
             res = write_tx(fildes, rbuf, rlen);
@@ -470,6 +676,32 @@ fdio_test_8(unsigned int tid)
     picotm_end
 }
 
+void
+fdio_test_8_pre(unsigned long nthreads, enum loop_mode loop,
+                enum boundary_type btype, unsigned long long bound,
+                int (*logmsg)(const char*, ...))
+{
+    return;
+}
+
+void
+fdio_test_8_post(unsigned long nthreads, enum loop_mode loop,
+                 enum boundary_type btype, unsigned long long bound,
+                 int (*logmsg)(const char*, ...))
+{
+    for (unsigned long tid = 0; tid < nthreads; ++tid) {
+
+        char filename[32];
+        int res = snprintf(filename, sizeof(filename),
+                           "/tmp/fdio-%lu.test", tid);
+        if (res < 0) {
+            perror("snprintf");
+            abort();
+        }
+        remove_file(filename);
+    }
+}
+
 /**
  * Write some lines at end of file. Should result in an integer record
  * for each thread. The order of records can vary.
@@ -477,24 +709,6 @@ fdio_test_8(unsigned int tid)
 void
 fdio_test_9(unsigned int tid)
 {
-    static int fildes = -1;
-    static pthread_mutex_t fd_lock = PTHREAD_MUTEX_INITIALIZER;
-
-    pthread_mutex_lock(&fd_lock);
-
-    if (fildes < 0) {
-        fildes = TEMP_FAILURE_RETRY(open("/tmp/fdio.test",
-                                         O_WRONLY | O_CREAT,
-                                         S_IRWXU | S_IRWXG | S_IRWXO));
-
-        if (fildes < 0) {
-            perror("open");
-            abort();
-        }
-    }
-
-    pthread_mutex_unlock(&fd_lock);
-
     char str[100][256];
 
     for (char (*s)[256] = str; s < str + arraylen(str); ++s) {
@@ -506,13 +720,13 @@ fdio_test_9(unsigned int tid)
 
     picotm_begin
 
-        if (lseek_tx(fildes, 0, SEEK_END) == (off_t)-1) {
+        if (lseek_tx(g_fildes, 0, SEEK_END) == (off_t)-1) {
             perror("lseek");
             abort_tx();
         }
 
         for (const char (*s)[256] = str; s < str + arraylen(str); ++s) {
-            if (write_tx(fildes, *s, strlen_tm(*s)) < 0) {
+            if (write_tx(g_fildes, *s, strlen_tm(*s)) < 0) {
                 perror("write");
                 abort_tx();
             }
@@ -520,11 +734,23 @@ fdio_test_9(unsigned int tid)
 
     picotm_commit
     picotm_end
+}
 
-    /*if (TEMP_FAILURE_RETRY(close(fildes)) < 0) {
-        perror("close");
-        abort();
-    }*/
+void
+fdio_test_9_pre(unsigned long nthreads, enum loop_mode loop,
+                enum boundary_type btype, unsigned long long bound,
+                int (*logmsg)(const char*, ...))
+{
+    g_fildes = temp_fildes(9, 0, O_CLOEXEC | O_WRONLY);
+}
+
+void
+fdio_test_9_post(unsigned long nthreads, enum loop_mode loop,
+                 enum boundary_type btype, unsigned long long bound,
+                 int (*logmsg)(const char*, ...))
+{
+    close_fildes(g_fildes);
+    remove_file(g_filename);
 }
 
 /**
@@ -535,27 +761,9 @@ fdio_test_9(unsigned int tid)
 void
 fdio_test_10(unsigned int tid)
 {
-    static int fildes = -1;
-    static pthread_mutex_t fd_lock = PTHREAD_MUTEX_INITIALIZER;
-
-    pthread_mutex_lock(&fd_lock);
-
-    if (fildes < 0) {
-        fildes = TEMP_FAILURE_RETRY(open("/tmp/fdio.test",
-                                         O_RDWR | O_CREAT,
-                                         S_IRWXU | S_IRWXG | S_IRWXO));
-
-        if (fildes < 0) {
-            perror("open");
-            abort();
-        }
-    }
-
-    pthread_mutex_unlock(&fd_lock);
-
     picotm_begin
 
-        if (pwrite_tx(fildes, g_test_str, strlen_tm(g_test_str), 0) < 0) {
+        if (pwrite_tx(g_fildes, g_test_str, strlen_tm(g_test_str), 0) < 0) {
             perror("pwrite");
             abort_tx();
         }
@@ -563,18 +771,35 @@ fdio_test_10(unsigned int tid)
         char rbuf[5];
         memset_tm(rbuf, 0, sizeof(rbuf)); /* Workaround valgrind */
 
-        if (pread_tx(fildes, rbuf, sizeof(rbuf), 0) < 0) {
+        if (pread_tx(g_fildes, rbuf, sizeof(rbuf), 0) < 0) {
             perror("pread");
             abort_tx();
         }
 
-        if (pwrite_tx(fildes, rbuf, sizeof(rbuf), 6) < 0) {
+        if (pwrite_tx(g_fildes, rbuf, sizeof(rbuf), 6) < 0) {
             perror("pwrite");
             abort_tx();
         }
 
     picotm_commit
     picotm_end
+}
+
+void
+fdio_test_10_pre(unsigned long nthreads, enum loop_mode loop,
+                 enum boundary_type btype, unsigned long long bound,
+                 int (*logmsg)(const char*, ...))
+{
+    g_fildes = temp_fildes(10, 0, O_CLOEXEC | O_RDWR);
+}
+
+void
+fdio_test_10_post(unsigned long nthreads, enum loop_mode loop,
+                  enum boundary_type btype, unsigned long long bound,
+                  int (*logmsg)(const char*, ...))
+{
+    close_fildes(g_fildes);
+    remove_file(g_filename);
 }
 
 /**
@@ -584,63 +809,62 @@ void
 fdio_test_11(unsigned int tid)
 {
     char teststr[16];
-
-    if (snprintf(teststr, 15, "%d\n", (int)tid) < 0) {
+    int res = snprintf(teststr, 15, "%d\n", (int)tid);
+    if (res < 0) {
         perror("snprintf");
         abort();
     }
 
-    static int fildes = -1;
-    static pthread_mutex_t fd_lock = PTHREAD_MUTEX_INITIALIZER;
-
-    pthread_mutex_lock(&fd_lock);
-
-    if (fildes < 0) {
-        fildes = TEMP_FAILURE_RETRY(open("/tmp/fdio.test",
-                                         O_WRONLY | O_CREAT,
-                                         S_IRWXU | S_IRWXG | S_IRWXO));
-
-        if (fildes < 0) {
-            perror("open");
-            abort();
-        }
-    }
-
-    pthread_mutex_unlock(&fd_lock);
-
     picotm_begin
 
-        if (lseek_tx(fildes, 0, SEEK_SET) == (off_t)-1) {
+        if (lseek_tx(g_fildes, 0, SEEK_SET) == (off_t)-1) {
             perror("lseek");
             abort_tx();
         }
 
         /* Do I/O */
 
-        if (lseek_tx(fildes, 2, SEEK_CUR) == (off_t)-1) {
+        if (lseek_tx(g_fildes, 2, SEEK_CUR) == (off_t)-1) {
             perror("lseek");
             abort_tx();
         }
 
-        if (write_tx(fildes, g_test_str, strlen_tm(g_test_str)) < 0) {
+        if (write_tx(g_fildes, g_test_str, strlen_tm(g_test_str)) < 0) {
             perror("write");
             abort_tx();
         }
 
         /* Write TID to the EOF */
 
-        if (lseek_tx(fildes, 0, SEEK_END) == (off_t)-1) {
+        if (lseek_tx(g_fildes, 0, SEEK_END) == (off_t)-1) {
             perror("lseek");
             abort_tx();
         }
 
-        if (write_tx(fildes, teststr, strlen_tx(teststr)) < 0) {
+        if (write_tx(g_fildes, teststr, strlen_tx(teststr)) < 0) {
             perror("write");
             abort_tx();
         }
 
     picotm_commit
     picotm_end
+}
+
+void
+fdio_test_11_pre(unsigned long nthreads, enum loop_mode loop,
+                 enum boundary_type btype, unsigned long long bound,
+                 int (*logmsg)(const char*, ...))
+{
+    g_fildes = temp_fildes(11, 0, O_CLOEXEC | O_WRONLY);
+}
+
+void
+fdio_test_11_post(unsigned long nthreads, enum loop_mode loop,
+                  enum boundary_type btype, unsigned long long bound,
+                  int (*logmsg)(const char*, ...))
+{
+    close_fildes(g_fildes);
+    remove_file(g_filename);
 }
 
 /**
@@ -650,45 +874,27 @@ void
 fdio_test_12(unsigned int tid)
 {
     char teststr[16];
-
-    if (snprintf(teststr, 15, "%d\n", (int)tid) < 0) {
+    int res = snprintf(teststr, 15, "%d\n", (int)tid);
+    if (res < 0) {
         perror("snprintf");
         abort();
     }
-
-    static int fildes = -1;
-    static pthread_mutex_t fd_lock = PTHREAD_MUTEX_INITIALIZER;
-
-    pthread_mutex_lock(&fd_lock);
-
-    if (fildes < 0) {
-        fildes = TEMP_FAILURE_RETRY(open("/tmp/fdio.test",
-                                         O_RDWR | O_CREAT,
-                                         S_IRWXU | S_IRWXG | S_IRWXO));
-
-        if (fildes < 0) {
-            perror("open");
-            abort();
-        }
-    }
-
-    pthread_mutex_unlock(&fd_lock);
 
     picotm_begin
 
         /* Do I/O */
 
-        if (lseek_tx(fildes, 0, SEEK_SET) == (off_t)-1) {
+        if (lseek_tx(g_fildes, 0, SEEK_SET) == (off_t)-1) {
             perror("lseek");
             abort_tx();
         }
 
-        if (write_tx(fildes, g_test_str, strlen_tm(g_test_str)) < 0) {
+        if (write_tx(g_fildes, g_test_str, strlen_tm(g_test_str)) < 0) {
             perror("write");
             abort_tx();
         }
 
-        if (lseek_tx(fildes, 6, SEEK_SET) == (off_t)-1) {
+        if (lseek_tx(g_fildes, 6, SEEK_SET) == (off_t)-1) {
             perror("lseek");
             abort_tx();
         }
@@ -696,29 +902,29 @@ fdio_test_12(unsigned int tid)
         char buf[5];
         memset_tm(buf, 0, sizeof(buf)); /* Workaround valgrind */
 
-        if (read_tx(fildes, buf, sizeof(buf)) < 0) {
+        if (read_tx(g_fildes, buf, sizeof(buf)) < 0) {
             perror("read");
             abort_tx();
         }
 
-        if (lseek_tx(fildes, 0, SEEK_SET) == (off_t)-1) {
+        if (lseek_tx(g_fildes, 0, SEEK_SET) == (off_t)-1) {
             perror("lseek");
             abort_tx();
         }
 
-        if (write_tx(fildes, buf, sizeof(buf)) < 0) {
+        if (write_tx(g_fildes, buf, sizeof(buf)) < 0) {
             perror("write");
             abort_tx();
         }
 
         /* Write TID to the EOF */
 
-        if (lseek_tx(fildes, 0, SEEK_END) == (off_t)-1) {
+        if (lseek_tx(g_fildes, 0, SEEK_END) == (off_t)-1) {
             perror("lseek");
             abort_tx();
         }
 
-        if (write_tx(fildes, teststr, strlen_tx(teststr)) < 0) {
+        if (write_tx(g_fildes, teststr, strlen_tx(teststr)) < 0) {
             perror("write");
             abort_tx();
         }
@@ -727,18 +933,35 @@ fdio_test_12(unsigned int tid)
     picotm_end
 }
 
+void
+fdio_test_12_pre(unsigned long nthreads, enum loop_mode loop,
+                 enum boundary_type btype, unsigned long long bound,
+                 int (*logmsg)(const char*, ...))
+{
+    g_fildes = temp_fildes(12, 0, O_CLOEXEC | O_RDWR);
+}
+
+void
+fdio_test_12_post(unsigned long nthreads, enum loop_mode loop,
+                  enum boundary_type btype, unsigned long long bound,
+                  int (*logmsg)(const char*, ...))
+{
+    close_fildes(g_fildes);
+    remove_file(g_filename);
+}
+
 /**
  * Write to stdout to test unbuffered writes.
  */
 void
 fdio_test_13(unsigned int tid)
 {
-    int i;
-
     char str[20][128];
 
-    for (i = 0; i < 20; ++i) {
-        if (snprintf(str[i], sizeof(str[i]), "%u %d %s", tid, i, g_test_str) < 0) {
+    for (size_t i = 0; i < arraylen(str); ++i) {
+        int res = snprintf(str[i], sizeof(str[i]), "%u %zu %s",
+                           tid, i, g_test_str);
+        if (res < 0) {
             perror("snprintf");
             abort();
         }
@@ -746,12 +969,12 @@ fdio_test_13(unsigned int tid)
 
     picotm_begin
 
-    for (i = 0; i < 20; ++i) {
-        if (write_tx(STDOUT_FILENO, str[i], strlen_tx(str[i])) < 0) {
-            perror("write");
-            abort_tx();
+        for (size_t i = 0; i < arraylen(str); ++i) {
+            if (write_tx(STDOUT_FILENO, str[i], strlen_tx(str[i])) < 0) {
+                perror("write");
+                abort_tx();
+            }
         }
-    }
 
     picotm_commit
     picotm_end
@@ -765,24 +988,6 @@ fdio_test_13(unsigned int tid)
 void
 fdio_test_14(unsigned int tid)
 {
-    static volatile int fildes = -1;
-    static pthread_mutex_t fd_lock = PTHREAD_MUTEX_INITIALIZER;
-
-    pthread_mutex_lock(&fd_lock);
-
-    if (fildes < 0) {
-        fildes = TEMP_FAILURE_RETRY(open("/tmp/fdio.test",
-                                         O_WRONLY | O_CREAT,
-                                         S_IRWXU | S_IRWXG | S_IRWXO));
-
-        if (fildes < 0) {
-            perror("open");
-            abort();
-        }
-    }
-
-    pthread_mutex_unlock(&fd_lock);
-
     char str[100][256];
     char (*s)[256];
 
@@ -805,7 +1010,7 @@ fdio_test_14(unsigned int tid)
         }*/
 
         for (s = str; s < str+sizeof(str)/sizeof(str[0]); ++s) {
-            if (write_tx(fildes, *s, strlen(*s)) < 0) {
+            if (write_tx(g_fildes, *s, strlen(*s)) < 0) {
                 perror("write");
                 abort_tx();
             }
@@ -813,11 +1018,23 @@ fdio_test_14(unsigned int tid)
 
     picotm_commit
     picotm_end
+}
 
-    /*if (TEMP_FAILURE_RETRY(close(fildes)) < 0) {
-        perror("close");
-        abort();
-    }*/
+void
+fdio_test_14_pre(unsigned long nthreads, enum loop_mode loop,
+                 enum boundary_type btype, unsigned long long bound,
+                 int (*logmsg)(const char*, ...))
+{
+    g_fildes = temp_fildes(14, 0, O_CLOEXEC | O_WRONLY);
+}
+
+void
+fdio_test_14_post(unsigned long nthreads, enum loop_mode loop,
+                  enum boundary_type btype, unsigned long long bound,
+                  int (*logmsg)(const char*, ...))
+{
+    close_fildes(g_fildes);
+    remove_file(g_filename);
 }
 
 /**
@@ -826,10 +1043,9 @@ fdio_test_14(unsigned int tid)
 void
 fdio_test_15(unsigned int tid)
 {
-    int fildes = TEMP_FAILURE_RETRY(open("/tmp/fdio.test",
+    int fildes = TEMP_FAILURE_RETRY(open(g_filename,
                                          O_WRONLY | O_CREAT,
                                          S_IRWXU | S_IRWXG | S_IRWXO));
-
     if (fildes < 0) {
         perror("open");
         abort();
@@ -860,6 +1076,22 @@ fdio_test_15(unsigned int tid)
     }
 }
 
+void
+fdio_test_15_pre(unsigned long nthreads, enum loop_mode loop,
+                 enum boundary_type btype, unsigned long long bound,
+                 int (*logmsg)(const char*, ...))
+{
+    temp_filename(15, 0);
+}
+
+void
+fdio_test_15_post(unsigned long nthreads, enum loop_mode loop,
+                  enum boundary_type btype, unsigned long long bound,
+                  int (*logmsg)(const char*, ...))
+{
+    remove_file(g_filename);
+}
+
 /**
  * Open, dup and close a file descriptor.
  */
@@ -871,7 +1103,7 @@ fdio_test_16(unsigned int tid)
 
     picotm_begin
 
-        int fildes = open_tx("/tmp/fdio.test",
+        int fildes = open_tx(g_filename,
                              O_WRONLY | O_CREAT,
                              S_IRWXU | S_IRWXG | S_IRWXO);
 
@@ -903,6 +1135,22 @@ fdio_test_16(unsigned int tid)
     picotm_end
 }
 
+void
+fdio_test_16_pre(unsigned long nthreads, enum loop_mode loop,
+                 enum boundary_type btype, unsigned long long bound,
+                 int (*logmsg)(const char*, ...))
+{
+    temp_filename(16, 0);
+}
+
+void
+fdio_test_16_post(unsigned long nthreads, enum loop_mode loop,
+                  enum boundary_type btype, unsigned long long bound,
+                  int (*logmsg)(const char*, ...))
+{
+    remove_file(g_filename);
+}
+
 /**
  * Open, dup, write, and close a file descriptor.
  */
@@ -925,7 +1173,7 @@ fdio_test_17(unsigned int tid)
 
     picotm_begin
 
-        int fildes = open_tx("/tmp/fdio.test",
+        int fildes = open_tx(g_filename,
                              O_WRONLY | O_CREAT,
                              S_IRWXU | S_IRWXG | S_IRWXO);
 
@@ -975,6 +1223,22 @@ fdio_test_17(unsigned int tid)
     picotm_end
 }
 
+void
+fdio_test_17_pre(unsigned long nthreads, enum loop_mode loop,
+                 enum boundary_type btype, unsigned long long bound,
+                 int (*logmsg)(const char*, ...))
+{
+    temp_filename(17, 0);
+}
+
+void
+fdio_test_17_post(unsigned long nthreads, enum loop_mode loop,
+                  enum boundary_type btype, unsigned long long bound,
+                  int (*logmsg)(const char*, ...))
+{
+    remove_file(g_filename);
+}
+
 /**
  * Open, dup, write, and close a file descriptor.
  */
@@ -983,24 +1247,6 @@ fdio_test_18(unsigned int tid)
 {
     extern enum picotm_libc_cc_mode g_cc_mode;
     picotm_libc_set_file_type_cc_mode(PICOTM_LIBC_FILE_TYPE_REGULAR, g_cc_mode);
-
-    static volatile int fildes = -1;
-    static pthread_mutex_t fd_lock = PTHREAD_MUTEX_INITIALIZER;
-
-    pthread_mutex_lock(&fd_lock);
-
-    if (fildes < 0) {
-        fildes = TEMP_FAILURE_RETRY(open("/tmp/fdio.test",
-                                         O_WRONLY | O_CREAT,
-                                         S_IRWXU | S_IRWXG | S_IRWXO));
-
-        if (fildes < 0) {
-            perror("open");
-            abort();
-        }
-    }
-
-    pthread_mutex_unlock(&fd_lock);
 
     char str[2][128];
 
@@ -1015,23 +1261,14 @@ fdio_test_18(unsigned int tid)
 
     picotm_begin
 
-        /*int fildes = open_tx("/tmp/fdio.test",
-                               O_WRONLY | O_CREAT,
-                               S_IRWXU | S_IRWXG | S_IRWXO));
-
-        if (fildes < 0) {
-            perror("open");
-            abort_tx();
-        }*/
-
-        int fildes2 = dup_tx(fildes);
+        int fildes2 = dup_tx(g_fildes);
 
         if (fildes2 < 0) {
             perror("dup");
             abort_tx();
         }
 
-        if (lseek_tx(fildes, 0, SEEK_END) == (off_t)-1) {
+        if (lseek_tx(g_fildes, 0, SEEK_END) == (off_t)-1) {
             perror("lseek1");
             abort_tx();
         }
@@ -1041,7 +1278,7 @@ fdio_test_18(unsigned int tid)
             abort_tx();
         }
 
-        if (write_tx(fildes, str[0], strlen_tx(str[0])) < 0) {
+        if (write_tx(g_fildes, str[0], strlen_tx(str[0])) < 0) {
             perror("write1");
             abort_tx();
         }
@@ -1058,13 +1295,24 @@ fdio_test_18(unsigned int tid)
 
     picotm_commit
     picotm_end
-
-    /*if (TEMP_FAILURE_RETRY(close(fildes)) < 0) {
-        perror("close");
-        abort();
-    }*/
 }
 
+void
+fdio_test_18_pre(unsigned long nthreads, enum loop_mode loop,
+                 enum boundary_type btype, unsigned long long bound,
+                 int (*logmsg)(const char*, ...))
+{
+    g_fildes = temp_fildes(18, 0, O_CLOEXEC);
+}
+
+void
+fdio_test_18_post(unsigned long nthreads, enum loop_mode loop,
+                  enum boundary_type btype, unsigned long long bound,
+                  int (*logmsg)(const char*, ...))
+{
+    close_fildes(g_fildes);
+    remove_file(g_filename);
+}
 
 /**
  * Write to stdout to test unbuffered writes.
@@ -1161,8 +1409,6 @@ fdio_test_19(unsigned int tid)
         }
     }*/
 }
-
-static int g_fildes = -1;
 
 void
 fdio_test_20_pre(unsigned long nthreads, enum loop_mode loop,
