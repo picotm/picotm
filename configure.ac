@@ -31,7 +31,37 @@ AC_SUBST(VISIBILITY_CFLAGS, [$VISIBILITY_CFLAGS])
 AC_DEFINE([MAXNUMFD], [1024])
 AC_DEFINE([RECSIZE],  [32])
 
+
+dnl
+dnl Documentation
+dnl
+
+AC_PATH_PROG([DOXYGEN], [doxygen])
+AC_PATH_PROG([DOT], [dot])
+
+if test "x$ac_cv_path_DOT" = "x"; then
+    doxygen_have_dot="NO"
+else
+    doxygen_have_dot="YES"
+fi
+AC_SUBST([DOXYGEN_HAVE_DOT], [$doxygen_have_dot])
+
+doxygen_input="`realpath $srcdir/include`  \
+               `realpath $srcdir/modules`  \
+               `realpath $srcdir/src`"
+AC_SUBST([DOXYGEN_INPUT], [$doxygen_input])
+
+doxygen_strip_from_path="`realpath $srcdir`"
+AC_SUBST([DOXYGEN_STRIP_FROM_PATH], [$doxygen_strip_from_path])
+
+
+dnl
+dnl Output
+dnl
+
 AC_CONFIG_FILES([Makefile
+                 doc/Doxyfile
+                 doc/Makefile
                  include/Makefile
                  modules/Makefile
                  modules/libc/Makefile
