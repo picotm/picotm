@@ -115,41 +115,13 @@ err_log_lock:
 int
 tx_rollback(struct tx* self)
 {
-    int res = log_lock(&self->log);
-    if (res < 0) {
-        return res;
-    }
-
-    res = log_undo_events(&self->log, tx_is_irrevocable(self));
-    if (res < 0) {
-        goto err_log_undo_events;
-    }
-
-    res = log_clearcc(&self->log, tx_is_irrevocable(self));
-    if (res < 0) {
-        goto err_log_clearcc;
-    }
-
-    res = log_unlock(&self->log);
-    if (res < 0) {
-        goto err_log_unlock;
-    }
-
-    res = log_finish(&self->log);
-    if (res < 0) {
-        goto err_log_finish;
-    }
+    log_undo_events(&self->log, tx_is_irrevocable(self));
+    log_clearcc(&self->log, tx_is_irrevocable(self));
+    log_finish(&self->log);
 
     tx_shared_release_irrevocability(self->shared);
 
     return 0;
-
-err_log_finish:
-err_log_unlock:
-err_log_clearcc:
-err_log_undo_events:
-    log_unlock(&self->log);
-    return res;
 }
 
 bool
