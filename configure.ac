@@ -24,6 +24,7 @@ CHECK_PICOTM_TM
 CHECK_PICOTM_C
 
 AC_CONFIG_FILES([Makefile
+                 data/Makefile
                  src/Makefile])
 
 AC_OUTPUT
