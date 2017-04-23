@@ -1,0 +1,45 @@
+
+picotm - Portable Integrated Customizable and Open Transaction Manager
+
+
+About picotm
+============
+
+  Picotm is a system-level transaction manager. It provides transactional
+  semantics for low-level and operating-system functionality. It's flexible
+  and extensible to cover exactly your requirements.
+
+
+Downloads, Contact
+==================
+
+  The latest version is available for download on the project's website at
+
+    https://picotm.github.io
+
+  The website should also be your first stop for any question on picotm. The
+  GitHub repository is available at
+
+    https://github.com/picotm/picotm
+
+  For IRC real-time communication, join #picotm on freenode.net.
+
+
+About this Repository
+=====================
+
+  This repository contains picotm, its modules and test case.
+
+    lib/        picotm library and modules
+    tests/      Test cases
+
+  For the tests, first build and install picotm and its modules, then
+  build the test cases.
+
+
+License
+=======
+
+  Picotm is distributed under the terms of the Mozilla Public License, v. 2.0.
+  It's suitable using picotm in free and proprietary software. You'll find the
+  exact license text in the file LICENSE or at http://mozilla.org/MPL/2.0/.

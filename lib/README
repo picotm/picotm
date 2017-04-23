@@ -55,18 +55,13 @@ Requirements
 Building picotm
 ===============
 
-  Make sure you have all requirements installed. Execute
+  Make sure you have all requirements installed. To prepare your build,
+  execute
 
-   git clone https://github.com/picotm/picotm.git
-
-  to get the latest source code of picotm. To prepare your build, execute
-
-    cd picotm
     tools/bootstrap.sh
 
-  These commands enter the directory with the cloned source code and generate
-  the build system, which uses GNU autotools. If this succeeds without errors,
-  run
+  This command generates the build system, which uses GNU autotools. If
+  it succeeds without errors, run
 
     ./configure
     make
