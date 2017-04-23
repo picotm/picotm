@@ -1,0 +1,95 @@
+
+picotm - Portable Integrated Customizable and Open Transaction Manager
+
+
+About picotm
+============
+
+  Picotm is a system-level transaction manager. It provides transactional
+  semantics for low-level and operating-system functionality. It's flexible
+  and extensible to cover exactly your requirements.
+
+
+Downloads, Contact
+==================
+
+  The latest version is available for download on the project's website at
+
+    https://picotm.github.io
+
+  The website should also be your first stop for any question on picotm. The
+  GitHub repository is available at
+
+    https://github.com/picotm/picotm
+
+  For IRC real-time communication, join #picotm on freenode.net.
+
+
+Requirements
+============
+
+  Picotm is written in C and only requires
+
+    - a recent gcc compiler + environment, such as gcc 4.8 or later.
+
+  The build scripts depend on
+
+    - GNU autotools (autoconf and automake),
+    - GNU autoconf archive,
+    - GNU libtool,
+    - GNU make, and
+    - a recent Linux (for running the build scripts).
+
+  Source-code documentation depends on
+
+    - doxygen, and
+    - dot.
+
+  All source code is held in a git repository, so you'll need
+
+    - git
+
+  for development.
+
+
+Building picotm
+===============
+
+  Make sure you have all requirements installed. To prepare your build,
+  execute
+
+    tools/bootstrap.sh
+
+  This command generates the build system, which uses GNU autotools. If
+  it succeeds without errors, run
+
+    ./configure
+    make
+
+  This should configure and build picotm for your system. Install with
+
+    sudo make install
+
+  You can find more detailed install instructions in the file INSTALL.
+
+  If you want to generate and install source-code documentation, run
+
+    make html
+    sudo make install-html
+
+
+Using picotm
+============
+
+  After installing, all picotm header files are in the sub-directory picotm/
+  in your system's include directory. A number of program libraries should be
+  in the system's library directory, each starting with the prefix picotm-.
+  Which modules are available depends on your system.
+
+
+License
+=======
+
+  Picotm is distributed under the terms of the Mozilla Public License, v. 2.0.
+  It's suitable using picotm in free and proprietary software. You'll find the
+  exact license text in the file LICENSE or at http://mozilla.org/MPL/2.0/.
