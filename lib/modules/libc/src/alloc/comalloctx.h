@@ -10,7 +10,7 @@ int
 com_alloc_tx_posix_memalign(void **memptr, size_t alignment, size_t size);
 
 void
-com_alloc_tx_free(void *mem);
+com_alloc_tx_free(void* mem, size_t usiz);
 
 void *
 com_alloc_tx_calloc(size_t nelem, size_t elsize);
@@ -18,5 +18,5 @@ com_alloc_tx_calloc(size_t nelem, size_t elsize);
 void *
 com_alloc_tx_malloc(size_t siz);
 
-void *
-com_alloc_tx_realloc(void *ptr, size_t siz);
+void*
+com_alloc_tx_realloc(void* ptr, size_t siz, size_t usiz);

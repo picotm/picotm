@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "picotm/stdlib-tm.h"
+#include <malloc.h>
 #include <picotm/picotm.h>
 #include "alloc/comalloctx.h"
 #include "fs/comfstx.h"
@@ -11,7 +12,7 @@ PICOTM_EXPORT
 void
 free_tm(void* ptr)
 {
-    return com_alloc_tx_free(ptr);
+    return com_alloc_tx_free(ptr, malloc_usable_size(ptr));
 }
 
 PICOTM_EXPORT
@@ -51,7 +52,7 @@ PICOTM_EXPORT
 void*
 realloc_tm(void* ptr, size_t size)
 {
-    return com_alloc_tx_realloc(ptr, size);
+    return com_alloc_tx_realloc(ptr, size, malloc_usable_size(ptr));
 }
 
 PICOTM_EXPORT

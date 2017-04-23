@@ -83,52 +83,44 @@ get_com_alloc()
 }
 
 int
-com_alloc_tx_posix_memalign(void **memptr, size_t alignment, size_t size)
+com_alloc_tx_posix_memalign(void** memptr, size_t alignment, size_t size)
 {
-    struct com_alloc *data = get_com_alloc();
+    struct com_alloc* data = get_com_alloc();
     assert(data);
 
     return com_alloc_exec_posix_memalign(data, memptr, alignment, size);
 }
 
 void
-com_alloc_tx_free(void *mem)
+com_alloc_tx_free(void *mem, size_t usiz)
 {
     struct com_alloc *data = get_com_alloc();
     assert(data);
 
-    /* Abort other transactions */
-
-    size_t usiz = malloc_usable_size(mem);
-
-    if (usiz) {
-        privatize_tx(mem, usiz, PICOTM_TM_PRIVATIZE_LOADSTORE);
-    }
-
     com_alloc_exec_free(data, mem);
 }
 
-void *
+void*
 com_alloc_tx_calloc(size_t nelem, size_t elsize)
 {
-    size_t size;
+    size_t size = rnd2wb(nelem*elsize);
+
     void *ptr;
-
-    size = rnd2wb(nelem*elsize);
-
-    if (com_alloc_tx_posix_memalign(&ptr, sizeof(void*)*2, size) < 0) {
+    int res = com_alloc_tx_posix_memalign(&ptr, sizeof(void*)*2, size);
+    if (res < 0) {
         return NULL;
     }
 
     return memset(ptr, 0, size);
 }
 
-void *
+void*
 com_alloc_tx_malloc(size_t siz)
 {
-    void *ptr;
+    void* ptr;
 
-    if (com_alloc_tx_posix_memalign(&ptr, sizeof(void*)*2, siz) < 0) {
+    int res = com_alloc_tx_posix_memalign(&ptr, sizeof(void*) * 2, siz);
+    if (res < 0) {
         return NULL;
     }
 
@@ -136,33 +128,30 @@ com_alloc_tx_malloc(size_t siz)
 }
 
 void*
-com_alloc_tx_realloc(void* ptr, size_t siz)
+com_alloc_tx_realloc(void* ptr, size_t siz, size_t usiz)
 {
-    if (!ptr) {
-        return com_alloc_tx_malloc(siz);
-    } else if (!siz) {
-        com_alloc_tx_free(ptr);
-        return NULL;
+    void* mem = NULL;
+
+    if (siz) {
+        mem = com_alloc_tx_malloc(siz);
+        if (!mem) {
+            return NULL;
+        }
     }
 
-    void* mem = com_alloc_tx_malloc(siz);
-    if (!mem) {
-        return NULL;
+    if (mem && usiz) {
+        /* Valgrind might report invalid reads and out-of-bounds access
+         * within this function. This is a false positive. The result of
+         * malloc_usable_size() is the maximum available buffer space,
+         * not the amount of allocated or valid memory. Any memcpy() within
+         * load_tx() could therefore operate on uninitialized data.
+         */
+        load_tx(ptr, mem, siz < usiz ? siz : usiz);
     }
 
-    /* Valgrind might report invalid reads and out-of-bounds access
-     * within this function. This is a false positive. The result of
-     * malloc_usable_size() is the maximum available buffer space,
-     * not the amount of allocated or valid memory. Any memcpy() within
-     * load_tx() could therefore operate on uninitialized data.
-     */
-    size_t usiz = malloc_usable_size(ptr);
-
-    if (usiz) {
-        load_tx(ptr, mem, usiz);
+    if (ptr && !siz) {
+        com_alloc_tx_free(ptr, usiz);
     }
-
-    com_alloc_tx_free(ptr);
 
     return mem;
 }
