@@ -16,10 +16,6 @@ component_init(struct component *com, int (*lock)(void*),
                                       int (*clearcc)(void*, int),
                                       int (*finish)(void*),
                                       int (*uninit)(void*),
-                                      int (*tpc_request)(void*, int),
-                                      int (*tpc_success)(void*, int),
-                                      int (*tpc_failure)(void*, int),
-                                      int (*tpc_noundo)(void*, int),
                                       void *data)
 {
     assert(com);
@@ -33,10 +29,6 @@ component_init(struct component *com, int (*lock)(void*),
     com->clearcc = clearcc;
     com->finish = finish;
     com->uninit = uninit;
-    com->tpc_request = tpc_request;
-    com->tpc_success = tpc_success;
-    com->tpc_failure = tpc_failure;
-    com->tpc_noundo = tpc_noundo;
     com->data = data;
 
     return 0;
@@ -60,10 +52,6 @@ component_uninit(struct component *com)
     com->clearcc = NULL;
     com->finish = NULL;
     com->uninit = NULL;
-    com->tpc_request = NULL;
-    com->tpc_success = NULL;
-    com->tpc_failure = NULL;
-    com->tpc_noundo = NULL;
     com->data = NULL;
 }
 
@@ -140,36 +128,3 @@ component_finish(const struct component *com)
 
     return com->finish ? com->finish(com->data) : 0;
 }
-
-int
-component_tpc_request(const struct component *com, int noundo)
-{
-    assert(com);
-
-    return com->tpc_request ? com->tpc_request(com->data, noundo) : 0;
-}
-
-int
-component_tpc_success(const struct component *com, int noundo)
-{
-    assert(com);
-
-    return com->tpc_success ? com->tpc_success(com->data, noundo) : 0;
-}
-
-int
-component_tpc_noundo(const struct component *com, int noundo)
-{
-    assert(com);
-
-    return com->tpc_noundo ? com->tpc_noundo(com->data, noundo) : 0;
-}
-
-int
-component_tpc_failure(const struct component *com, int noundo)
-{
-    assert(com);
-
-    return com->tpc_failure ? com->tpc_failure(com->data, noundo) : 0;
-}
-

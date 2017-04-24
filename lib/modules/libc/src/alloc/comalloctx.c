@@ -62,10 +62,6 @@ get_com_alloc()
                                       NULL,
                                       com_alloc_tx_finish,
                                       com_alloc_tx_uninit,
-                                      NULL,
-                                      NULL,
-                                      NULL,
-                                      NULL,
                                       &t_com_alloc.instance);
     if (res < 0) {
         return NULL;

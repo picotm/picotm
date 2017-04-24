@@ -105,10 +105,6 @@ com_fd_tx_aquire_data()
                                      com_fd_tx_clearcc,
                                      com_fd_tx_finish,
                                      com_fd_tx_uninit,
-                                     NULL,
-                                     NULL,
-                                     NULL,
-                                     NULL,
                                      &t_com_fd.instance);
     if (res < 0) {
         return NULL;

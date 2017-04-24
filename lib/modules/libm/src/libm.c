@@ -55,7 +55,6 @@ get_fpu_tx(bool initialize)
                                       NULL, NULL,
                                       finish_cb,
                                       release_cb,
-                                      NULL, NULL, NULL, NULL,
                                       &t_fpu_tx);
     if (res < 0) {
         return NULL;

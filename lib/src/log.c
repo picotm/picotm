@@ -33,7 +33,7 @@ log_init(struct log *log)
         (com < log->com+sizeof(log->com)/sizeof(log->com[0])) && (res >= 0); ++com) {
         res = component_init(com, NULL, NULL, NULL, NULL,
                                   NULL, NULL, NULL, NULL,
-                                  NULL, NULL, NULL, NULL, NULL, NULL);
+                                  NULL, NULL);
     }
 
     return res;
@@ -166,13 +166,6 @@ log_unlock(struct log *log)
 /* Validate
  */
 
-static int
-log_tpc_request_cb_walk(void *com, void *noundo)
-{
-    int res = component_tpc_request(com, !!noundo);
-    return res < 0 ? res : 1;
-}
-
 #if 0
 static int
 log_validate_cb_walk(void *com, void *noundo)
@@ -182,39 +175,10 @@ log_validate_cb_walk(void *com, void *noundo)
 }
 #endif
 
-static int
-log_tpc_success_cb_walk(void *com, void *noundo)
-{
-    int res = component_tpc_success(com, !!noundo);
-    return res < 0 ? res : 1;
-}
-
-static int
-log_tpc_noundo_cb_walk(void *com, void *noundo)
-{
-    int res = component_tpc_noundo(com, !!noundo);
-    return res < 0 ? res : 1;
-}
-
 int
 log_validate(struct log *log, int eotx, int noundo)
 {
-    int res;
-
     assert(log);
-
-    if (eotx) {
-        /* Send commit request to peer */
-        res = tabwalk_2(log->com,
-                        sizeof(log->com)/sizeof(log->com[0]),
-                        sizeof(log->com[0]),
-                        log_tpc_request_cb_walk,
-                        (void*)(uintptr_t)noundo);
-
-        if (res < 0) {
-            return -1;
-        }
-    }
 
     /* Validate local external domains */
 
@@ -231,26 +195,7 @@ log_validate(struct log *log, int eotx, int noundo)
         return -1;
     }
 
-    if (eotx) {
-        /* Send commit success to peer; aborts are signalled while the
-         * transaction is being aborted.
-         */
-        res = tabwalk_2(log->com,
-                        sizeof(log->com)/sizeof(log->com[0]),
-                        sizeof(log->com[0]),
-                        log_tpc_success_cb_walk,
-                        (void*)(uintptr_t)noundo);
-    } else {
-        /* Send noundo to peer.
-         */
-        res = tabwalk_2(log->com,
-                        sizeof(log->com)/sizeof(log->com[0]),
-                        sizeof(log->com[0]),
-                        log_tpc_noundo_cb_walk,
-                        (void*)(uintptr_t)noundo);
-    }
-
-    return res;
+    return 0;
 }
 
 /* Apply
@@ -294,36 +239,16 @@ log_apply_events(struct log *log, int noundo)
 /* Undo
  */
 
-static int
-log_tpc_failure_cb_walk(void *com, void *noundo)
-{
-    int res = component_tpc_failure(com, !!noundo);
-    return res < 0 ? res : 1;
-}
-
 int
 log_undo_events(struct log *log, int noundo)
 {
     assert(log);
 
-
-    /* Signal abort to peer */
-
-    int res = tabwalk_2(log->com,
-                        sizeof(log->com)/sizeof(log->com[0]),
-                        sizeof(log->com[0]),
-                        log_tpc_failure_cb_walk,
-                        (void*)(uintptr_t)noundo);
-
-    if (res < 0) {
-        return -1;
-    }
-
     /* Undo events in reversed-chronological order */
 
     const struct event *event = log->eventtab+log->eventtablen;
 
-    res = 0;
+    int res = 0;
 
     while ((event > log->eventtab) && (res >= 0)) {
         --event;
