@@ -215,38 +215,11 @@ picotm_register_module(int (*lock)(void*),
                       int (*clearcc)(void*, int),
                       int (*finish)(void*),
                       int (*uninit)(void*),
-                      void *data)
+                      void* data)
 {
-    struct log* log = tx_log(get_non_null_tx());
-
-    long res = log_alloc_module(log);
-    if (res < 0) {
-        return res;
-    }
-
-    unsigned long module = res;
-
-    struct component* com = log_get_component_by_name(log, module);
-    if (!com) {
-        return -EINVAL;
-    }
-
-    res = component_init(com,
-                         lock,
-                         unlock,
-                         validate,
-                         apply_event,
-                         undo_event,
-                         updatecc,
-                         clearcc,
-                         finish,
-                         uninit,
-                         data);
-    if (res < 0) {
-        return res;
-    }
-
-    return module;
+    return tx_register_module(get_non_null_tx(), lock, unlock, validate,
+                              apply_event, undo_event, updatecc, clearcc,
+                              finish, uninit, data);
 }
 
 PICOTM_EXPORT

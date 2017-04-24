@@ -6,7 +6,10 @@
 
 #include <stdbool.h>
 #include <picotm/picotm.h>
+#include "component.h"
 #include "log.h"
+
+#define MAX_NCOMPONENTS (256)
 
 struct tx_shared;
 
@@ -20,6 +23,10 @@ struct tx {
     struct log        log;
     struct tx_shared *shared;
     enum tx_mode      mode;
+
+    unsigned long    nmodules; /**< \brief Number allocated modules */
+    struct component com[MAX_NCOMPONENTS]; /** \brief Registered components */
+
     bool              is_initialized;
 };
 
@@ -29,11 +36,25 @@ tx_init(struct tx* self, struct tx_shared* tx_shared);
 void
 tx_release(struct tx* self);
 
-struct log*
-tx_log(struct tx* self);
-
 bool
 tx_is_irrevocable(const struct tx* self);
+
+long
+tx_register_module(struct tx* self,
+                   int (*lock)(void*),
+                   int (*unlock)(void*),
+                   int (*validate)(void*, int),
+                   int (*apply_event)(const struct event*, size_t, void*),
+                   int (*undo_event)(const struct event*, size_t, void*),
+                   int (*updatecc)(void*, int),
+                   int (*clearcc)(void*, int),
+                   int (*finish)(void*),
+                   int (*uninit)(void*),
+                   void* data);
+
+int
+tx_inject_event(struct tx* self, unsigned long module, unsigned long op,
+                uintptr_t cookie);
 
 int
 tx_begin(struct tx* self, enum tx_mode mode);

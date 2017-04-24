@@ -16,61 +16,21 @@
 int
 log_init(struct log *log)
 {
-    int res;
-    struct component *com;
-
     assert(log);
 
     log->eventtab = NULL;
     log->eventtablen = 0;
     log->eventtabsiz = 0;
 
-    log->nmodules = 0;
-
-    res = 0;
-
-    for (com = log->com;
-        (com < log->com+sizeof(log->com)/sizeof(log->com[0])) && (res >= 0); ++com) {
-        res = component_init(com, NULL, NULL, NULL, NULL,
-                                  NULL, NULL, NULL, NULL,
-                                  NULL, NULL);
-    }
-
-    return res;
+    return 0;
 }
 
 int
 log_uninit(struct log *log)
 {
-    struct component *com;
-
     assert(log);
-
-    for (com = log->com;
-         com < log->com+sizeof(log->com)/sizeof(log->com[0]); ++com) {
-        component_uninit(com);
-    }
 
     return 0;
-}
-
-long
-log_alloc_module(struct log* log)
-{
-    if (log->nmodules >= sizeof(log->com)/sizeof(log->com[0])) {
-        return -ENOMEM;
-    }
-    return log->nmodules++;
-}
-
-struct component *
-log_get_component_by_name(struct log *log, unsigned long component)
-{
-    assert(log);
-    assert(component >= 0);
-    assert(component < sizeof(log->com)/sizeof(log->com[0]));
-
-    return log->com+component;
 }
 
 int
@@ -109,121 +69,32 @@ log_clear_events(struct log *log)
     log->eventtablen = 0;
 }
 
-/* Lock
- */
-
-static int
-log_lock_cb_walk(void *com)
-{
-    int res = component_lock(com);
-
-    return res < 0 ? res : 1;
-}
-
 int
-log_lock(struct log *log)
-{
-    int res;
-
-    assert(log);
-
-
-    res = tabwalk_1(log->com,
-                    sizeof(log->com)/sizeof(log->com[0]),
-                    sizeof(log->com[0]),
-                    log_lock_cb_walk);
-
-    return res;
-}
-
-/* Unlock
- */
-
-static int
-log_unlock_cb_walk(void *com)
-{
-    int res = component_unlock(com);
-
-    return res < 0 ? res : 1;
-}
-
-int
-log_unlock(struct log *log)
-{
-    int res;
-
-    assert(log);
-
-
-    res = tabrwalk_1(log->com,
-                     sizeof(log->com)/sizeof(log->com[0]),
-                     sizeof(log->com[0]),
-                     log_unlock_cb_walk);
-
-    return res;
-}
-
-/* Validate
- */
-
-#if 0
-static int
-log_validate_cb_walk(void *com, void *noundo)
-{
-    int res = component_validate(com, !!noundo);
-    return res < 0 ? res : 1;
-}
-#endif
-
-int
-log_validate(struct log *log, int eotx, int noundo)
-{
-    assert(log);
-
-    /* Validate local external domains */
-
-    struct component *com;
-    int err = 0;
-
-    for (com = log->com;
-        (com < log->com+sizeof(log->com)/sizeof(log->com[0])) && !err; ++com) {
-
-        err = component_validate(com, noundo);
-    }
-
-    if (err < 0) {
-        return -1;
-    }
-
-    return 0;
-}
-
-/* Apply
- */
-
-int
-log_apply_events(struct log *log, int noundo)
+log_apply_events(struct log *log, struct component* com, int noundo)
 {
     assert(log);
 
     /* Apply events in chronological order */
 
-    const struct event *event = log->eventtab;
+    const struct event* event = log->eventtab;
+    const struct event* event_end = log->eventtab + log->eventtablen;
 
-    while (event < log->eventtab+log->eventtablen) {
+    while (event < event_end) {
 
         /* Find consectuive events from same component */
 
-        const struct event *event2 = event+1;
+        const struct event* event2 = event + 1;
 
-        while ((event2 < log->eventtab+log->eventtablen)
-                && (event2->module == event->module)) {
+        while ((event2 < event_end) && (event->module == event2->module)) {
             ++event2;
         }
 
         /* Apply vector of events from component */
 
-        if (component_apply_events(log->com+event->module, event, event2-event) < 0) {
+        ptrdiff_t nevents = event2 - event;
+
+        int res = component_apply_events(com+event->module, event, nevents);
+        if (res < 0) {
             return -1;
         }
 
@@ -236,94 +107,26 @@ log_apply_events(struct log *log, int noundo)
     return 0;
 }
 
-/* Undo
- */
-
 int
-log_undo_events(struct log *log, int noundo)
+log_undo_events(struct log *log, struct component* com, int noundo)
 {
     assert(log);
 
     /* Undo events in reversed-chronological order */
 
-    const struct event *event = log->eventtab+log->eventtablen;
+    const struct event* event = log->eventtab + log->eventtablen;
+    const struct event* event_end = log->eventtab;
 
-    int res = 0;
-
-    while ((event > log->eventtab) && (res >= 0)) {
+    while (event > event_end) {
         --event;
-        res = component_undo_events(log->com+event->module, event, 1);
+        int res = component_undo_events(com + event->module, event, 1);
+        if (res < 0) {
+            break;
+        }
     }
 
     /* FIXME: Cleanup should be done in finish */
     log->eventtablen = 0;
-
-    return res;
-}
-
-/* CC
- */
-
-int
-log_updatecc(struct log *log, int noundo)
-{
-    assert(log);
-
-    /* Update external domains' CC */
-
-    struct component *com;
-    int err = 0;
-
-    for (com = log->com;
-        (com < log->com+sizeof(log->com)/sizeof(log->com[0])) && !err; ++com) {
-
-        err = component_updatecc(com, noundo);
-    }
-
-    return err;
-}
-
-int
-log_clearcc(struct log *log, int noundo)
-{
-    assert(log);
-
-    /* Clear external domains' CC */
-
-    struct component *com;
-    int err = 0;
-
-    for (com = log->com;
-        (com < log->com+sizeof(log->com)/sizeof(log->com[0])) && !err; ++com) {
-
-        err = component_clearcc(com, noundo);
-    }
-
-    return err;
-}
-
-/* Finish
- */
-
-static int
-log_finish_cb_walk(void *com)
-{
-    return !component_finish(com) ? 1 : -1;
-}
-
-int
-log_finish(struct log *log)
-{
-    assert(log);
-
-    int res = tabwalk_1(log->com,
-                        sizeof(log->com)/sizeof(log->com[0]),
-                        sizeof(log->com[0]),
-                        log_finish_cb_walk);
-
-    if (res) {
-        return res;
-    }
 
     return 0;
 }
