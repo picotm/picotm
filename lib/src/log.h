@@ -6,9 +6,8 @@
 #define LOG_H
 
 #include <stdint.h>
-#include "component.h"
 
-#define MAX_NCOMPONENTS (256)
+struct component;
 
 /**
  * \brief The log is the core part of the framework. It holds the events of a
@@ -18,9 +17,6 @@ struct log {
     struct event *eventtab; /** \brief Table of transction's events */
     size_t        eventtablen; /** \brief Number of events */
     size_t        eventtabsiz; /** \brief Maximum number of events */
-
-    unsigned long    nmodules; /**< \brief Number allocated modules */
-    struct component com[MAX_NCOMPONENTS]; /** \brief Registered components */
 };
 
 /**
@@ -36,18 +32,6 @@ int
 log_uninit(struct log *log);
 
 /**
- * \brief Allocate a new module
- */
-long
-log_alloc_module(struct log* log);
-
-/**
- * \brief Retrieve component structure by module index
- */
-struct component *
-log_get_component_by_name(struct log *log, unsigned long component);
-
-/**
  * \brief Inject an event into log
  */
 int
@@ -55,59 +39,15 @@ log_inject_event(struct log *log, unsigned long component, unsigned long call,
                  uintptr_t cookie);
 
 /**
- * \brief Clear log
- */
-void
-log_clear_events(struct log *log);
-
-/**
- * \brief Lock transaction's domains
- */
-int
-log_lock(struct log *log);
-
-/**
- * \brief Unlock transaction's domains
- */
-int
-log_unlock(struct log *log);
-
-/**
- * \brief Validate transaction's domains
- */
-int
-log_validate(struct log *log, int eotx, int noundo);
-
-/**
  * \brief Apply events in the log
  */
 int
-log_apply_events(struct log *log, int noundo);
+log_apply_events(struct log *log, struct component* com, int noundo);
 
 /**
  * \brief Undo events in the log
  */
 int
-log_undo_events(struct log *log, int noundo);
-
-/**
- * \brief Update CC data of transaction's domains; called at the end of
- *        commit
- */
-int
-log_updatecc(struct log *log, int noundo);
-
-/**
- * \brief Clear CC data of transaction's domains; called during abort
- */
-int
-log_clearcc(struct log *log, int noundo);
-
-/**
- * \brief Cleanup after transaction
- */
-int
-log_finish(struct log *log);
+log_undo_events(struct log *log, struct component* com, int noundo);
 
 #endif
-
