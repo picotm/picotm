@@ -5,9 +5,10 @@
 #ifndef LOG_H
 #define LOG_H
 
+#include <stddef.h>
 #include <stdint.h>
 
-struct component;
+struct module;
 
 /**
  * \brief The log is the core part of the framework. It holds the events of a
@@ -35,19 +36,19 @@ log_uninit(struct log *log);
  * \brief Inject an event into log
  */
 int
-log_inject_event(struct log *log, unsigned long component, unsigned long call,
+log_inject_event(struct log *log, unsigned long module, unsigned long call,
                  uintptr_t cookie);
 
 /**
  * \brief Apply events in the log
  */
 int
-log_apply_events(struct log *log, struct component* com, int noundo);
+log_apply_events(struct log *log, struct module* module, int noundo);
 
 /**
  * \brief Undo events in the log
  */
 int
-log_undo_events(struct log *log, struct component* com, int noundo);
+log_undo_events(struct log *log, struct module* module, int noundo);
 
 #endif

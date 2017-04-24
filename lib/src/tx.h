@@ -6,10 +6,10 @@
 
 #include <stdbool.h>
 #include <picotm/picotm.h>
-#include "component.h"
 #include "log.h"
+#include "module.h"
 
-#define MAX_NCOMPONENTS (256)
+#define MAX_NMODULES    (256)
 
 struct tx_shared;
 
@@ -24,10 +24,10 @@ struct tx {
     struct tx_shared *shared;
     enum tx_mode      mode;
 
-    unsigned long    nmodules; /**< \brief Number allocated modules */
-    struct component com[MAX_NCOMPONENTS]; /** \brief Registered components */
+    unsigned long nmodules; /**< \brief Number allocated modules */
+    struct module module[MAX_NMODULES]; /** \brief Registered modules */
 
-    bool              is_initialized;
+    bool is_initialized;
 };
 
 int

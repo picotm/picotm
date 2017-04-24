@@ -30,12 +30,12 @@ tx_release(struct tx* self)
 {
     log_uninit(&self->log);
 
-    struct component* com = self->com;
-    const struct component* com_end = self->com + self->nmodules;
+    struct module* module = self->module;
+    const struct module* module_end = self->module + self->nmodules;
 
-    while (com < com_end) {
-        component_uninit(com);
-        ++com;
+    while (module < module_end) {
+        module_uninit(module);
+        ++module;
     }
 }
 
@@ -58,15 +58,15 @@ tx_register_module(struct tx* self,
                    int (*uninit)(void*),
                    void* data)
 {
-    if (self->nmodules >= arraylen(self->com)) {
+    if (self->nmodules >= arraylen(self->module)) {
         return -ENOMEM;
     }
 
     long module = self->nmodules;
 
-    int res = component_init(self->com + module, lock, unlock, validate,
-                             apply_event, undo_event, updatecc, clearcc,
-                             finish, uninit, data);
+    int res = module_init(self->module + module, lock, unlock, validate,
+                          apply_event, undo_event, updatecc, clearcc,
+                          finish, uninit, data);
     if (res < 0) {
         return res;
     }
@@ -115,16 +115,16 @@ tx_begin(struct tx* self, enum tx_mode mode)
 }
 
 static int
-lock_cb(void* com)
+lock_cb(void* module)
 {
-    int res = component_lock(com);
+    int res = module_lock(module);
     return res < 0 ? res : 1;
 }
 
 static int
-lock_components(struct component* com, unsigned long ncomponents)
+lock_modules(struct module* module, unsigned long nmodules)
 {
-    int res = tabwalk_1(com, ncomponents, sizeof(*com), lock_cb);
+    int res = tabwalk_1(module, nmodules, sizeof(*module), lock_cb);
     if (res < 0) {
         return res;
     }
@@ -132,16 +132,16 @@ lock_components(struct component* com, unsigned long ncomponents)
 }
 
 static int
-unlock_cb(void* com)
+unlock_cb(void* module)
 {
-    int res = component_unlock(com);
+    int res = module_unlock(module);
     return res < 0 ? res : 1;
 }
 
 static void
-unlock_components(struct component* com, unsigned long ncomponents)
+unlock_modules(struct module* module, unsigned long nmodules)
 {
-    int res = tabrwalk_1(com, ncomponents, sizeof(*com), unlock_cb);
+    int res = tabrwalk_1(module, nmodules, sizeof(*module), unlock_cb);
     if (res) {
         /* TODO: may never fail */
         abort();
@@ -149,72 +149,72 @@ unlock_components(struct component* com, unsigned long ncomponents)
 }
 
 static int
-validate_components(struct component* com, unsigned long ncomponents,
+validate_modules(struct module* module, unsigned long nmodules,
                     bool is_irrevocable)
 {
     int err = 0;
 
-    const struct component* com_end = com + ncomponents;
+    const struct module* module_end = module  + nmodules;
 
-    while (com < com_end) {
-        err = component_validate(com, is_irrevocable);
+    while (module < module_end) {
+        err = module_validate(module, is_irrevocable);
         if (err < 0) {
             break;
         }
-        ++com;
+        ++module;
     }
 
     return err;
 }
 
 static int
-update_components_cc(struct component* com, unsigned long ncomponents,
+update_modules_cc(struct module* module, unsigned long nmodules,
                      bool is_irrevocable)
 {
     int err = 0;
 
-    const struct component* com_end = com + ncomponents;
+    const struct module* module_end = module + nmodules;
 
-    while (com < com_end) {
-        err = component_updatecc(com, is_irrevocable);
+    while (module < module_end) {
+        err = module_update_cc(module, is_irrevocable);
         if (err) {
             break;
         }
-        ++com;
+        ++module;
     }
 
     return err;
 }
 
 static int
-clear_components_cc(struct component* com, unsigned long ncomponents,
+clear_modules_cc(struct module* module, unsigned long nmodules,
                     bool is_irrevocable)
 {
     int err = 0;
 
-    const struct component* com_end = com + ncomponents;
+    const struct module* module_end = module + nmodules;
 
-    while (com < com_end) {
-        err = component_clearcc(com, is_irrevocable);
+    while (module < module_end) {
+        err = module_clear_cc(module, is_irrevocable);
         if (err) {
             break;
         }
-        ++com;
+        ++module;
     }
 
     return err;
 }
 
 static int
-log_finish_cb_walk(void* com)
+log_finish_cb_walk(void* module)
 {
-    return !component_finish(com) ? 1 : -1;
+    return !module_finish(module) ? 1 : -1;
 }
 
 static void
-finish_components(struct component* com, unsigned long ncomponents)
+finish_modules(struct module* module, unsigned long nmodules)
 {
-    int res = tabwalk_1(com, ncomponents, sizeof(*com), log_finish_cb_walk);
+    int res = tabwalk_1(module, nmodules, sizeof(*module), log_finish_cb_walk);
     if (res) {
         /* TODO: may never fail */
         abort();
@@ -224,40 +224,40 @@ finish_components(struct component* com, unsigned long ncomponents)
 int
 tx_commit(struct tx* self)
 {
-    int res = lock_components(self->com, self->nmodules);
+    int res = lock_modules(self->module, self->nmodules);
     if (res < 0) {
-        goto err_lock_components;
+        goto err_lock_modules;
     }
 
-    res = validate_components(self->com, self->nmodules,
+    res = validate_modules(self->module, self->nmodules,
                               tx_is_irrevocable(self));
     if (res < 0) {
-        goto err_validate_components;
+        goto err_validate_modules;
     }
 
-    res = log_apply_events(&self->log, self->com, tx_is_irrevocable(self));
+    res = log_apply_events(&self->log, self->module, tx_is_irrevocable(self));
     if (res < 0) {
         goto err_log_apply_events;
     }
 
-    res = update_components_cc(self->com, self->nmodules,
+    res = update_modules_cc(self->module, self->nmodules,
                                tx_is_irrevocable(self));
     if (res < 0) {
-        goto err_update_components_cc;
+        goto err_update_modules_cc;
     }
 
-    unlock_components(self->com, self->nmodules);
-    finish_components(self->com, self->nmodules);
+    unlock_modules(self->module, self->nmodules);
+    finish_modules(self->module, self->nmodules);
 
     tx_shared_release_irrevocability(self->shared);
 
     return 0;
 
-err_update_components_cc:
+err_update_modules_cc:
 err_log_apply_events:
-err_validate_components:
-    unlock_components(self->com, self->nmodules);
-err_lock_components:
+err_validate_modules:
+    unlock_modules(self->module, self->nmodules);
+err_lock_modules:
     tx_shared_release_irrevocability(self->shared);
     return res;
 }
@@ -265,10 +265,10 @@ err_lock_components:
 int
 tx_rollback(struct tx* self)
 {
-    log_undo_events(&self->log, self->com, tx_is_irrevocable(self));
+    log_undo_events(&self->log, self->module, tx_is_irrevocable(self));
 
-    clear_components_cc(self->com, self->nmodules, tx_is_irrevocable(self));
-    finish_components(self->com, self->nmodules);
+    clear_modules_cc(self->module, self->nmodules, tx_is_irrevocable(self));
+    finish_modules(self->module, self->nmodules);
 
     tx_shared_release_irrevocability(self->shared);
 
@@ -278,7 +278,7 @@ tx_rollback(struct tx* self)
 bool
 tx_is_valid(struct tx* self)
 {
-    int res = validate_components(self->com, self->nmodules,
+    int res = validate_modules(self->module, self->nmodules,
                                   tx_is_irrevocable(self));
     if (res < 0) {
         return false;

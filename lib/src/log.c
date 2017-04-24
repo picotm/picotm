@@ -9,8 +9,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <picotm/picotm-module.h>
+#include "module.h"
 #include "table.h"
-#include "component.h"
 #include "log.h"
 
 int
@@ -70,7 +70,7 @@ log_clear_events(struct log *log)
 }
 
 int
-log_apply_events(struct log *log, struct component* com, int noundo)
+log_apply_events(struct log *log, struct module* module, int noundo)
 {
     assert(log);
 
@@ -81,7 +81,7 @@ log_apply_events(struct log *log, struct component* com, int noundo)
 
     while (event < event_end) {
 
-        /* Find consectuive events from same component */
+        /* Find consecutive events from same module */
 
         const struct event* event2 = event + 1;
 
@@ -89,11 +89,11 @@ log_apply_events(struct log *log, struct component* com, int noundo)
             ++event2;
         }
 
-        /* Apply vector of events from component */
+        /* Apply vector of events from module */
 
         ptrdiff_t nevents = event2 - event;
 
-        int res = component_apply_events(com+event->module, event, nevents);
+        int res = module_apply_events(module + event->module, event, nevents);
         if (res < 0) {
             return -1;
         }
@@ -108,7 +108,7 @@ log_apply_events(struct log *log, struct component* com, int noundo)
 }
 
 int
-log_undo_events(struct log *log, struct component* com, int noundo)
+log_undo_events(struct log *log, struct module* module, int noundo)
 {
     assert(log);
 
@@ -119,7 +119,7 @@ log_undo_events(struct log *log, struct component* com, int noundo)
 
     while (event > event_end) {
         --event;
-        int res = component_undo_events(com + event->module, event, 1);
+        int res = module_undo_events(module + event->module, event, 1);
         if (res < 0) {
             break;
         }
