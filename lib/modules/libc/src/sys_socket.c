@@ -3,8 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "picotm/sys/socket.h"
+#include <errno.h>
+#include <picotm/picotm-module.h>
 #include <picotm/picotm-tm.h>
 #include "fd/comfdtx.h"
+#include "picotm/picotm-libc.h"
 #include "picotm/sys/socket-tm.h"
 
 PICOTM_EXPORT
@@ -38,7 +41,18 @@ PICOTM_EXPORT
 int
 listen_tx(int socket, int backlog)
 {
-    return com_fd_tx_listen(socket, backlog);
+    picotm_libc_save_errno();
+
+    int res;
+
+    do {
+        res = com_fd_tx_listen(socket, backlog);
+        if (res < 0) {
+            picotm_recover_from_errno(errno);
+        }
+    } while (res < 0);
+
+    return res;
 }
 
 PICOTM_EXPORT
@@ -53,14 +67,36 @@ PICOTM_EXPORT
 int
 shutdown_tx(int socket, int how)
 {
-    return com_fd_tx_shutdown(socket, how);
+    picotm_libc_save_errno();
+
+    int res;
+
+    do {
+        res = com_fd_tx_shutdown(socket, how);
+        if (res < 0) {
+            picotm_recover_from_errno(errno);
+        }
+    } while (res < 0);
+
+    return res;
 }
 
 PICOTM_EXPORT
 int
 socket_tx(int domain, int type, int protocol)
 {
-    return com_fd_tx_socket(domain, type, protocol);
+    picotm_libc_save_errno();
+
+    int res;
+
+    do {
+        res = com_fd_tx_socket(domain, type, protocol);
+        if (res < 0) {
+            picotm_recover_from_errno(errno);
+        }
+    } while (res < 0);
+
+    return res;
 }
 
 PICOTM_EXPORT

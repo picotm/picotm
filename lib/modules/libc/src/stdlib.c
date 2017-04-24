@@ -3,9 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "picotm/stdlib.h"
+#include <errno.h>
 #include <malloc.h>
 #include <picotm/picotm.h>
+#include <picotm/picotm-module.h>
 #include "alloc/comalloctx.h"
+#include "picotm/picotm-libc.h"
 #include "picotm/stdlib-tm.h"
 
 PICOTM_EXPORT
@@ -28,7 +31,20 @@ PICOTM_EXPORT
 void*
 calloc_tx(size_t nmemb, size_t size)
 {
-    return com_alloc_tx_calloc(nmemb, size);
+    picotm_libc_save_errno();
+
+    void* mem;
+
+    size_t alloc_size = nmemb * size;
+
+    do {
+        mem = com_alloc_tx_calloc(nmemb, size);
+        if (alloc_size && !mem) {
+            picotm_recover_from_errno(errno);
+        }
+    } while (alloc_size && ! mem);
+
+    return mem;
 }
 
 PICOTM_EXPORT
@@ -47,14 +63,25 @@ free_tx(void* ptr)
     if (usiz) {
         privatize_tx(ptr, usiz, PICOTM_TM_PRIVATIZE_LOADSTORE);
     }
-    return com_alloc_tx_free(ptr, usiz);
+    com_alloc_tx_free(ptr, usiz);
 }
 
 PICOTM_EXPORT
 void*
 malloc_tx(size_t size)
 {
-    return com_alloc_tx_malloc(size);
+    picotm_libc_save_errno();
+
+    void* mem;
+
+    do {
+        mem = com_alloc_tx_malloc(size);
+        if (size && !mem) {
+            picotm_recover_from_errno(errno);
+        }
+    } while (size && !mem);
+
+    return mem;
 }
 
 PICOTM_EXPORT
@@ -78,7 +105,7 @@ int
 posix_memalign_tx(void** memptr, size_t alignment, size_t size)
 {
     privatize_tx(*memptr, sizeof(*memptr), PICOTM_TM_PRIVATIZE_STORE);
-    return com_alloc_tx_posix_memalign(memptr, alignment, size);
+    return posix_memalign_tm(memptr, alignment, size);
 }
 
 PICOTM_EXPORT
@@ -98,7 +125,19 @@ realloc_tx(void* ptr, size_t size)
     if (usiz) {
         privatize_tx(ptr, usiz, PICOTM_TM_PRIVATIZE_LOADSTORE);
     }
-    return com_alloc_tx_realloc(ptr, size, usiz);
+
+    picotm_libc_save_errno();
+
+    void* mem;
+
+    do {
+        mem = com_alloc_tx_realloc(ptr, size, usiz);
+        if (size && !mem) {
+            picotm_recover_from_errno(errno);
+        }
+    } while (size && !mem);
+
+    return mem;
 }
 
 PICOTM_EXPORT

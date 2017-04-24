@@ -3,11 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "picotm/fcntl.h"
+#include <errno.h>
+#include <picotm/picotm-module.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <string.h>
 #include <picotm/picotm-tm.h>
 #include "fd/comfdtx.h"
+#include "picotm/picotm-libc.h"
 #include "picotm/fcntl-tm.h"
 
 PICOTM_EXPORT
@@ -21,16 +24,21 @@ PICOTM_EXPORT
 int
 fcntl_tx(int fildes, int cmd, ...)
 {
-    switch (cmd) {
-        case F_DUPFD:
-            /* Handle like dup() */
-            return com_fd_tx_dup_internal(fildes, false);
-        case F_DUPFD_CLOEXEC:
-            /* Handle like dup() with CLOEXEC */
-            return com_fd_tx_dup_internal(fildes, true);
-        case F_SETFD:
-        case F_SETFL:
-        case F_SETOWN:
+    picotm_libc_save_errno();
+
+    int res;
+
+    do {
+        switch (cmd) {
+            case F_DUPFD:
+                /* Handle like dup() */
+                res = com_fd_tx_dup_internal(fildes, false);
+            case F_DUPFD_CLOEXEC:
+                /* Handle like dup() with CLOEXEC */
+                res = com_fd_tx_dup_internal(fildes, true);
+            case F_SETFD:
+            case F_SETFL:
+            case F_SETOWN:
             {
                 union com_fd_fcntl_arg val;
                 va_list arg;
@@ -38,11 +46,11 @@ fcntl_tx(int fildes, int cmd, ...)
                 val.arg0 = va_arg(arg, int);
                 va_end(arg);
 
-                return com_fd_tx_fcntl(fildes, cmd, &val);
+                res = com_fd_tx_fcntl(fildes, cmd, &val);
             }
-        case F_GETLK:
-        case F_SETLK:
-        case F_SETLKW:
+            case F_GETLK:
+            case F_SETLK:
+            case F_SETLKW:
             {
                 union com_fd_fcntl_arg val;
                 struct flock* f;
@@ -54,11 +62,17 @@ fcntl_tx(int fildes, int cmd, ...)
                 privatize_tx(f, sizeof(val.arg1), PICOTM_TM_PRIVATIZE_LOAD);
                 memcpy(&val.arg1, f, sizeof(val.arg1));
 
-                return com_fd_tx_fcntl(fildes, cmd, &val);
+                res = com_fd_tx_fcntl(fildes, cmd, &val);
             }
-        default:
-            return com_fd_tx_fcntl(fildes, cmd, NULL);
-    }
+            default:
+                res = com_fd_tx_fcntl(fildes, cmd, NULL);
+        }
+        if (res < 0) {
+            picotm_recover_from_errno(errno);
+        }
+    } while (res < 0);
+
+    return res;
 }
 
 PICOTM_EXPORT
@@ -73,12 +87,8 @@ open_tx(const char* path, int oflag, ...)
 
     va_list arg;
     va_start(arg, oflag);
-
     mode_t mode = va_arg(arg, mode_t);
-
-    int res = open_tm(path, oflag, mode);
-
     va_end(arg);
 
-    return res;
+    return open_tm(path, oflag, mode);
 }

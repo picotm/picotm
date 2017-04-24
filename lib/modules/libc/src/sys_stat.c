@@ -3,8 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "picotm/sys/stat.h"
+#include <errno.h>
+#include <picotm/picotm-module.h>
 #include <picotm/picotm-tm.h>
 #include "fs/comfstx.h"
+#include "picotm/picotm-libc.h"
 #include "picotm/sys/stat-tm.h"
 
 PICOTM_EXPORT
@@ -19,7 +22,18 @@ PICOTM_EXPORT
 int
 fchmod_tx(int fildes, mode_t mode)
 {
-    return com_fs_tx_fchmod(fildes, mode);
+    picotm_libc_save_errno();
+
+    int res;
+
+    do {
+        res = com_fs_tx_fchmod(fildes, mode);
+        if (res < 0) {
+            picotm_recover_from_errno(errno);
+        }
+    } while (res < 0);
+
+    return res;
 }
 
 PICOTM_EXPORT

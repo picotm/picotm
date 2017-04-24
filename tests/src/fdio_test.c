@@ -196,17 +196,10 @@ fdio_test_1(unsigned int tid)
         int fildes = open_tx(g_filename,
                              O_WRONLY | O_CREAT,
                              S_IRWXU | S_IRWXG | S_IRWXO);
-        if (fildes < 0) {
-            perror("open");
-            abort_tx();
-        }
 
         delay_transaction(tid);
 
-        if (close_tx(fildes) < 0) {
-            perror("close");
-            abort_tx();
-        }
+        close_tx(fildes);
 
     picotm_commit
     picotm_end
@@ -242,22 +235,11 @@ fdio_test_2(unsigned int tid)
                              O_WRONLY | O_CREAT | O_APPEND,
                              S_IRWXU | S_IRWXG | S_IRWXO);
 
-        if (fildes < 0) {
-            perror("open");
-            abort_tx();
-        }
-
-        if (write_tx(fildes, g_test_str, strlen_tm(g_test_str)) < 0) {
-            perror("write");
-            abort_tx();
-        }
+        write_tx(fildes, g_test_str, strlen_tm(g_test_str));
 
         delay_transaction(tid);
 
-        if (close_tx(fildes) < 0) {
-            perror("close");
-            abort_tx();
-        }
+        close_tx(fildes);
 
     picotm_commit
     picotm_end
@@ -292,27 +274,12 @@ fdio_test_3(unsigned int tid)
                              O_WRONLY | O_CREAT,
                              S_IRWXU | S_IRWXG | S_IRWXO);
 
-        if (fildes < 0) {
-            perror("open");
-            abort_tx();
-        }
-
-        if (lseek_tx(fildes, 0, SEEK_SET) == (off_t)-1) {
-            perror("lseek");
-            abort_tx();
-        }
-
-        if (write_tx(fildes, g_test_str, strlen_tm(g_test_str)) < 0) {
-            perror("write");
-            abort_tx();
-        }
+        lseek_tx(fildes, 0, SEEK_SET);
+        write_tx(fildes, g_test_str, strlen_tm(g_test_str));
 
         /*delay_transaction(tid)*/
 
-        if (close_tx(fildes) < 0) {
-            perror("close");
-            abort_tx();
-        }
+        close_tx(fildes);
 
     picotm_commit
     picotm_end
@@ -349,22 +316,11 @@ fdio_test_4(unsigned int tid)
                              O_WRONLY | O_CREAT,
                              S_IRWXU | S_IRWXG | S_IRWXO);
 
-        if (fildes < 0) {
-            perror("open");
-            abort_tx();
-        }
-
-        if (pwrite_tx(fildes, g_test_str, strlen_tm(g_test_str), 2) < 0) {
-            perror("pwrite");
-            abort_tx();
-        }
+        pwrite_tx(fildes, g_test_str, strlen_tm(g_test_str), 2);
 
         /*delay_transaction(tid)*/
 
-        if (close_tx(fildes) < 0) {
-            perror("close");
-            abort_tx();
-        }
+        close_tx(fildes);
 
     picotm_commit
     picotm_end
@@ -408,35 +364,17 @@ fdio_test_5(unsigned int tid)
                              O_RDWR | O_CREAT,
                              S_IRWXU | S_IRWXG | S_IRWXO);
 
-        if (fildes < 0) {
-            perror("open");
-            abort_tx();
-        }
-
-        if (pwrite_tx(fildes, str, strlen_tm(g_test_str), 0) < 0) {
-            perror("pwrite");
-            abort_tx();
-        }
+        pwrite_tx(fildes, str, strlen_tm(g_test_str), 0);
 
         char rbuf[5]; /* 5 characters for reading 'Hello' */
         memset_tm(rbuf, 0, sizeof(rbuf)); /* Workaround valgrind */
 
-        if (pread_tx(fildes, rbuf, sizeof(rbuf), 0) < 0) {
-            perror("pread");
-            abort_tx();
-        }
-
-        if (pwrite_tx(fildes, rbuf, sizeof(rbuf), 6) < 0) {
-            perror("pwrite");
-            abort_tx();
-        }
+        pread_tx(fildes, rbuf, sizeof(rbuf), 0);
+        pwrite_tx(fildes, rbuf, sizeof(rbuf), 6);
 
         delay_transaction(tid);
 
-        if (close_tx(fildes) < 0) {
-            perror("close");
-            abort_tx();
-        }
+        close_tx(fildes);
 
     picotm_commit
     picotm_end
@@ -472,46 +410,20 @@ fdio_test_6(unsigned int tid)
     picotm_begin
 
         /* Open file */
-
         int fildes = open_tx(g_filename,
                              O_WRONLY | O_CREAT,
                              S_IRWXU | S_IRWXG | S_IRWXO);
 
-        if (fildes < 0) {
-            perror("open");
-            abort_tx();
-        }
-
         /* Do I/O */
-
-        if (lseek_tx(fildes, 2, SEEK_CUR) == (off_t)-1) {
-            perror("lseek");
-            abort_tx();
-        }
-
-        if (write_tx(fildes, g_test_str, strlen(g_test_str)) < 0) {
-            perror("write");
-            abort_tx();
-        }
+        lseek_tx(fildes, 2, SEEK_CUR);
+        write_tx(fildes, g_test_str, strlen(g_test_str));
 
         /* Write TID to the EOF */
-
-        if (lseek_tx(fildes, 0, SEEK_END) == (off_t)-1) {
-            perror("lseek");
-            abort_tx();
-        }
-
-        if (write_tx(fildes, teststr, strlen_tm(teststr)) < 0) {
-            perror("write");
-            abort_tx();
-        }
+        lseek_tx(fildes, 0, SEEK_END);
+        write_tx(fildes, teststr, strlen_tm(teststr));
 
         /* Close */
-
-        if (close_tx(fildes) < 0) {
-            perror("close");
-            abort_tx();
-        }
+        close_tx(fildes);
 
     picotm_commit
     picotm_end
@@ -549,64 +461,27 @@ fdio_test_7(unsigned int tid)
     picotm_begin
 
         /* Open */
-
         int fildes = open_tx(g_filename,
                              O_RDWR | O_CREAT,
                              S_IRWXU | S_IRWXG | S_IRWXO);
 
-        if (fildes < 0) {
-            perror("open");
-            abort_tx();
-        }
-
         /* Do I/O */
-
-        if (write_tx(fildes, g_test_str, strlen_tm(g_test_str)) < 0) {
-            perror("write");
-            abort_tx();
-        }
-
-        if (lseek_tx(fildes, 6, SEEK_SET) == (off_t)-1) {
-            perror("lseek");
-            abort_tx();
-        }
+        write_tx(fildes, g_test_str, strlen_tm(g_test_str));
+        lseek_tx(fildes, 6, SEEK_SET);
 
         char buf[5];
         memset_tm(buf, 0, sizeof(buf)); /* Workaround valgrind */
 
-        if (read_tx(fildes, buf, sizeof(buf)) < 0) {
-            perror("read");
-            abort_tx();
-        }
-
-        if (lseek_tx(fildes, 0, SEEK_SET) == (off_t)-1) {
-            perror("lseek");
-            abort_tx();
-        }
-
-        if (write_tx(fildes, buf, sizeof(buf)) < 0) {
-            perror("write");
-            abort_tx();
-        }
+        read_tx(fildes, buf, sizeof(buf));
+        lseek_tx(fildes, 0, SEEK_SET);
+        write_tx(fildes, buf, sizeof(buf));
 
         /* Write TID to the EOF */
-
-        if (lseek_tx(fildes, 0, SEEK_END) == (off_t)-1) {
-            perror("lseek");
-            abort_tx();
-        }
-
-        if (write_tx(fildes, teststr, strlen_tm(teststr)) < 0) {
-            perror("write");
-            abort_tx();
-        }
+        lseek_tx(fildes, 0, SEEK_END);
+        write_tx(fildes, teststr, strlen_tm(teststr));
 
         /* Close */
-
-        if (close_tx(fildes) < 0) {
-            perror("close");
-            abort_tx();
-        }
+        close_tx(fildes);
 
     picotm_commit
     picotm_end
@@ -690,50 +565,32 @@ fdio_test_8(unsigned int tid)
         int fildes = open_tx(filename,
                              O_WRONLY | O_CREAT | O_TRUNC,
                              S_IRWXU | S_IRWXG | S_IRWXO);
-        if (fildes < 0) {
-            perror("open");
-            abort_tx();
-        }
 
         while (true) {
 
             char rbuf[1024];
             memset_tm(rbuf, 0, sizeof(rbuf)); /* Work around valgrind */
 
-            /* Read from pipe */
+            /* Read from pipe; non-blocking I/O can signal error! */
             ssize_t res = read_tx(pfd[0], rbuf, sizeof(rbuf));
             if (res < 0) {
-                if (errno == EAGAIN) { /* Pipe empty; leave loop */
+                if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
+                    /* Pipe empty; leave loop */
                     break;
-                } else {
-                    perror("read");
-                    abort_tx();
                 }
             }
             size_t rlen = res;
 
             /* Write to file */
-            res = write_tx(fildes, rbuf, rlen);
-            if (res < 0) {
-                perror("write");
-                abort_tx();
-            }
+            write_tx(fildes, rbuf, rlen);
         }
 
-        int res = close_tx(fildes);
-        if (res < 0) {
-            perror("close");
-            abort_tx();
-        }
+        close_tx(fildes);
 
         /* Close pipe */
 
         for (size_t i = 0; i < arraylen(pfd); ++i) {
-            int res = close_tx(pfd[i]);
-            if (res < 0) {
-                perror("close");
-                abort_tx();
-            }
+            close_tx(pfd[i]);
         }
 
     picotm_commit
@@ -784,16 +641,10 @@ fdio_test_9(unsigned int tid)
 
     picotm_begin
 
-        if (lseek_tx(g_fildes, 0, SEEK_END) == (off_t)-1) {
-            perror("lseek");
-            abort_tx();
-        }
+        lseek_tx(g_fildes, 0, SEEK_END);
 
         for (const char (*s)[256] = str; s < str + arraylen(str); ++s) {
-            if (write_tx(g_fildes, *s, strlen_tm(*s)) < 0) {
-                perror("write");
-                abort_tx();
-            }
+            write_tx(g_fildes, *s, strlen_tm(*s));
         }
 
     picotm_commit
@@ -827,23 +678,13 @@ fdio_test_10(unsigned int tid)
 {
     picotm_begin
 
-        if (pwrite_tx(g_fildes, g_test_str, strlen_tm(g_test_str), 0) < 0) {
-            perror("pwrite");
-            abort_tx();
-        }
+        pwrite_tx(g_fildes, g_test_str, strlen_tm(g_test_str), 0);
 
         char rbuf[5];
         memset_tm(rbuf, 0, sizeof(rbuf)); /* Workaround valgrind */
 
-        if (pread_tx(g_fildes, rbuf, sizeof(rbuf), 0) < 0) {
-            perror("pread");
-            abort_tx();
-        }
-
-        if (pwrite_tx(g_fildes, rbuf, sizeof(rbuf), 6) < 0) {
-            perror("pwrite");
-            abort_tx();
-        }
+        pread_tx(g_fildes, rbuf, sizeof(rbuf), 0);
+        pwrite_tx(g_fildes, rbuf, sizeof(rbuf), 6);
 
     picotm_commit
     picotm_end
@@ -881,34 +722,15 @@ fdio_test_11(unsigned int tid)
 
     picotm_begin
 
-        if (lseek_tx(g_fildes, 0, SEEK_SET) == (off_t)-1) {
-            perror("lseek");
-            abort_tx();
-        }
+        lseek_tx(g_fildes, 0, SEEK_SET);
 
         /* Do I/O */
-
-        if (lseek_tx(g_fildes, 2, SEEK_CUR) == (off_t)-1) {
-            perror("lseek");
-            abort_tx();
-        }
-
-        if (write_tx(g_fildes, g_test_str, strlen_tm(g_test_str)) < 0) {
-            perror("write");
-            abort_tx();
-        }
+        lseek_tx(g_fildes, 2, SEEK_CUR);
+        write_tx(g_fildes, g_test_str, strlen_tm(g_test_str));
 
         /* Write TID to the EOF */
-
-        if (lseek_tx(g_fildes, 0, SEEK_END) == (off_t)-1) {
-            perror("lseek");
-            abort_tx();
-        }
-
-        if (write_tx(g_fildes, teststr, strlen_tx(teststr)) < 0) {
-            perror("write");
-            abort_tx();
-        }
+        lseek_tx(g_fildes, 0, SEEK_END);
+        write_tx(g_fildes, teststr, strlen_tx(teststr));
 
     picotm_commit
     picotm_end
@@ -947,51 +769,20 @@ fdio_test_12(unsigned int tid)
     picotm_begin
 
         /* Do I/O */
-
-        if (lseek_tx(g_fildes, 0, SEEK_SET) == (off_t)-1) {
-            perror("lseek");
-            abort_tx();
-        }
-
-        if (write_tx(g_fildes, g_test_str, strlen_tm(g_test_str)) < 0) {
-            perror("write");
-            abort_tx();
-        }
-
-        if (lseek_tx(g_fildes, 6, SEEK_SET) == (off_t)-1) {
-            perror("lseek");
-            abort_tx();
-        }
+        lseek_tx(g_fildes, 0, SEEK_SET);
+        write_tx(g_fildes, g_test_str, strlen_tm(g_test_str));
+        lseek_tx(g_fildes, 6, SEEK_SET);
 
         char buf[5];
         memset_tm(buf, 0, sizeof(buf)); /* Workaround valgrind */
 
-        if (read_tx(g_fildes, buf, sizeof(buf)) < 0) {
-            perror("read");
-            abort_tx();
-        }
-
-        if (lseek_tx(g_fildes, 0, SEEK_SET) == (off_t)-1) {
-            perror("lseek");
-            abort_tx();
-        }
-
-        if (write_tx(g_fildes, buf, sizeof(buf)) < 0) {
-            perror("write");
-            abort_tx();
-        }
+        read_tx(g_fildes, buf, sizeof(buf));
+        lseek_tx(g_fildes, 0, SEEK_SET);
+        write_tx(g_fildes, buf, sizeof(buf));
 
         /* Write TID to the EOF */
-
-        if (lseek_tx(g_fildes, 0, SEEK_END) == (off_t)-1) {
-            perror("lseek");
-            abort_tx();
-        }
-
-        if (write_tx(g_fildes, teststr, strlen_tx(teststr)) < 0) {
-            perror("write");
-            abort_tx();
-        }
+        lseek_tx(g_fildes, 0, SEEK_END);
+        write_tx(g_fildes, teststr, strlen_tx(teststr));
 
     picotm_commit
     picotm_end
@@ -1034,10 +825,7 @@ fdio_test_13(unsigned int tid)
     picotm_begin
 
         for (size_t i = 0; i < arraylen(str); ++i) {
-            if (write_tx(STDOUT_FILENO, str[i], strlen_tx(str[i])) < 0) {
-                perror("write");
-                abort_tx();
-            }
+            write_tx(STDOUT_FILENO, str[i], strlen_tx(str[i]));
         }
 
     picotm_commit
@@ -1066,18 +854,10 @@ fdio_test_14(unsigned int tid)
 
     picotm_begin
 
-        /*off_t pos = lseek_tx(fildes, 0, SEEK_END);
-
-        if (pos == (off_t)-1) {
-            perror("lseek");
-            abort_tx();
-        }*/
+        /*lseek_tx(fildes, 0, SEEK_END);*/
 
         for (s = str; s < str+sizeof(str)/sizeof(str[0]); ++s) {
-            if (write_tx(g_fildes, *s, strlen(*s)) < 0) {
-                perror("write");
-                abort_tx();
-            }
+            write_tx(g_fildes, *s, strlen(*s));
         }
 
     picotm_commit
@@ -1119,17 +899,9 @@ fdio_test_15(unsigned int tid)
 
         int fildes2 = dup_tx(fildes);
 
-        if (fildes2 < 0) {
-            perror("dup");
-            abort_tx();
-        }
-
         delay_transaction(tid);
 
-        if (close_tx(fildes2) < 0) {
-            perror("close");
-            abort_tx();
-        }
+        close_tx(fildes2);
 
     picotm_commit
     picotm_end
@@ -1171,29 +943,12 @@ fdio_test_16(unsigned int tid)
                              O_WRONLY | O_CREAT,
                              S_IRWXU | S_IRWXG | S_IRWXO);
 
-        if (fildes < 0) {
-            perror("open");
-            abort_tx();
-        }
-
         int fildes2 = dup_tx(fildes);
-
-        if (fildes2 < 0) {
-            perror("dup");
-            abort_tx();
-        }
 
         delay_transaction(tid);
 
-        if (close_tx(fildes2) < 0) {
-            perror("close");
-            abort_tx();
-        }
-
-        if (close_tx(fildes) < 0) {
-            perror("close");
-            abort_tx();
-        }
+        close_tx(fildes2);
+        close_tx(fildes);
 
     picotm_commit
     picotm_end
@@ -1241,47 +996,15 @@ fdio_test_17(unsigned int tid)
                              O_WRONLY | O_CREAT,
                              S_IRWXU | S_IRWXG | S_IRWXO);
 
-        if (fildes < 0) {
-            perror("open");
-            abort_tx();
-        }
-
         int fildes2 = dup_tx(fildes);
 
-        if (fildes2 < 0) {
-            perror("dup");
-            abort_tx();
-        }
+        lseek_tx(fildes, 0, SEEK_END);
+        lseek_tx(fildes2, 0, SEEK_END);
+        write_tx(fildes, str[0], strlen_tx(str[0]));
+        write_tx(fildes2, str[1], strlen_tx(str[1]));
 
-        if (lseek_tx(fildes, 0, SEEK_END) == (off_t)-1) {
-            perror("lseek1");
-            abort_tx();
-        }
-
-        if (lseek_tx(fildes2, 0, SEEK_END) == (off_t)-1) {
-            perror("lseek2");
-            abort_tx();
-        }
-
-        if (write_tx(fildes, str[0], strlen_tx(str[0])) < 0) {
-            perror("write1");
-            abort_tx();
-        }
-
-        if (write_tx(fildes2, str[1], strlen_tx(str[1])) < 0) {
-            perror("write2");
-            abort_tx();
-        }
-
-        if (close_tx(fildes2) < 0) {
-            perror("close2");
-            abort_tx();
-        }
-
-        if (close_tx(fildes) < 0) {
-            perror("close1");
-            abort_tx();
-        }
+        close_tx(fildes2);
+        close_tx(fildes);
 
     picotm_commit
     picotm_end
@@ -1327,35 +1050,12 @@ fdio_test_18(unsigned int tid)
 
         int fildes2 = dup_tx(g_fildes);
 
-        if (fildes2 < 0) {
-            perror("dup");
-            abort_tx();
-        }
+        lseek_tx(g_fildes, 0, SEEK_END);
+        lseek_tx(fildes2, 0, SEEK_END);
+        write_tx(g_fildes, str[0], strlen_tx(str[0]));
+        write_tx(fildes2, str[1], strlen_tx(str[1]));
 
-        if (lseek_tx(g_fildes, 0, SEEK_END) == (off_t)-1) {
-            perror("lseek1");
-            abort_tx();
-        }
-
-        if (lseek_tx(fildes2, 0, SEEK_END) == (off_t)-1) {
-            perror("lseek2");
-            abort_tx();
-        }
-
-        if (write_tx(g_fildes, str[0], strlen_tx(str[0])) < 0) {
-            perror("write1");
-            abort_tx();
-        }
-
-        if (write_tx(fildes2, str[1], strlen_tx(str[1])) < 0) {
-            perror("write2");
-            abort_tx();
-        }
-
-        if (close_tx(fildes2) < 0) {
-            perror("close");
-            abort_tx();
-        }
+        close_tx(fildes2);
 
     picotm_commit
     picotm_end
@@ -1442,21 +1142,15 @@ fdio_test_19(unsigned int tid)
             /* Read from pipe */
             ssize_t res = read_tx(pfd[0], rbuf, sizeof(rbuf));
             if (res < 0) {
-                if (errno == EAGAIN) { /* Pipe empty */
+                if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
+                    /* Pipe empty */
                     res = 0;
-                } else {
-                    perror("read");
-                    abort_tx();
                 }
             }
             size_t tx_rlen = res;
 
             /* Write to stdout */
-            res = write_tx(STDOUT_FILENO, rbuf, tx_rlen);
-            if (res < 0) {
-                perror("write");
-                abort_tx();
-            }
+            write_tx(STDOUT_FILENO, rbuf, tx_rlen);
 
             store_size_t_tx(&rlen, tx_rlen);
 
@@ -1513,17 +1207,9 @@ fdio_test_20(unsigned int tid)
         off_t tx_offset = load_off_t_tx(&offset);
 
         unsigned char buf[24];
-        ssize_t res = pread_tx(g_fildes, buf, sizeof(buf), tx_offset);
-        if (res < 0) {
-            perror("pread");
-            abort_tx();
-        }
-        size_t count = res;
+        ssize_t count = pread_tx(g_fildes, buf, sizeof(buf), tx_offset);
 
-        if (pwrite_tx(g_fildes, buf, count, offset) < 0) {
-            perror("pwrite");
-            abort_tx();
-        }
+        pwrite_tx(g_fildes, buf, count, offset);
 
     picotm_commit
     picotm_end
@@ -1560,22 +1246,11 @@ tx_random_rw(int fildes, unsigned int* seed, off_t size,
             size_t count;
 
             for (unsigned long j = 0; j < tx_nreads; ++j) {
-
                 offset = rand_r_tx(seed) % tx_size;
-
-                ssize_t res = pread_tx(fildes, buf, sizeof(buf), offset);
-                if (res < 0) {
-                    perror("pread");
-                    abort();
-                }
-                count = res;
+                count = pread_tx(fildes, buf, sizeof(buf), offset);
             }
 
-            ssize_t res = pwrite_tx(fildes, buf, count, offset);
-            if (res < 0) {
-                perror("pwrite");
-                abort();
-            }
+            pwrite_tx(fildes, buf, count, offset);
         }
 
     picotm_commit
@@ -1920,11 +1595,7 @@ tx_random_read(int fildes, unsigned int* seed, off_t size,
             off_t offset = rand_r_tx(seed) % size;
 
             unsigned char buf[24];
-            ssize_t res = pread_tx(fildes, buf, sizeof(buf), offset);
-            if (res < 0) {
-                perror("pread");
-                abort_tx();
-            }
+            pread_tx(fildes, buf, sizeof(buf), offset);
         }
 
     picotm_commit
@@ -2057,11 +1728,7 @@ tx_random_write(int fildes, unsigned int* seed, off_t size, unsigned long ncycle
 
             off_t offset = rand_r_tx(seed) % size;
 
-            ssize_t res = pwrite_tx(fildes, buf, sizeof(buf), offset);
-            if (res < 0) {
-                perror("pwrite");
-                abort_tx();
-            }
+            pwrite_tx(fildes, buf, sizeof(buf), offset);
         }
 
     picotm_commit
@@ -2193,15 +1860,8 @@ tx_seq_read(int fildes, unsigned int* seed, off_t size, unsigned long ncycles)
         unsigned long cycles = load_ulong_tx(&ncycles);
 
         for (unsigned long i = 0; i < cycles; ++i) {
-
             unsigned char buf[24];
-            ssize_t res = pread_tx(fildes, buf, sizeof(buf), pos);
-            if (res < 0) {
-                perror("pread");
-                abort_tx();
-            }
-
-            pos += res;
+            pos += pread_tx(fildes, buf, sizeof(buf), pos);
         }
 
     picotm_commit
@@ -2334,14 +1994,7 @@ tx_seq_write(int fildes, unsigned int* seed, off_t size, unsigned long ncycles)
         unsigned long tx_ncycles = load_ulong_tx(&ncycles);
 
         for (unsigned long i = 0; i < tx_ncycles; ++i) {
-
-            ssize_t res = pwrite_tx(fildes, buf, sizeof(buf), pos);
-            if (res < 0) {
-                perror("pwrite");
-                abort_tx();
-            }
-
-            pos += res;
+            pos += pwrite_tx(fildes, buf, sizeof(buf), pos);
         }
 
     picotm_commit
