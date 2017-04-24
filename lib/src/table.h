@@ -2,14 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef TABLE_H
-#define TABLE_H
+#pragma once
+
+#include <stddef.h>
 
 /**
- * \brief Allocate or resize table
+ * Allocate or resize table.
  */
-void *
-tabresize(void * restrict base, size_t nelems, size_t newnelems, size_t siz);
+void*
+tabresize(void* restrict base, size_t nelems, size_t newnelems, size_t siz);
 
 /**
  * Free table memory.
@@ -21,38 +22,32 @@ tabfree(void* restrict base);
  */
 
 int
-tabwalk_1(void * restrict base, size_t nelems, size_t siz, int (*walk)(void*));
+tabwalk_1(void* restrict base, size_t nelems, size_t siz,
+          int (*walk)(void*));
 
 int
-tabwalk_2(void * restrict base, size_t nelems,
-                                size_t siz, int (*walk)(void*, void*), void *data);
+tabwalk_2(void* restrict base, size_t nelems, size_t siz,
+          int (*walk)(void*, void*), void* data);
 
 int
-tabwalk_3(void * restrict base, size_t nelems,
-                                size_t siz,
-                                int (*walk)(void*, void*, void*), void *data1,
-                                                                  void *data2);
+tabwalk_3(void* restrict base, size_t nelems, size_t siz,
+          int (*walk)(void*, void*, void*), void* data1, void* data2);
 
 /* Walk over table in reversed order
  */
 
 int
-tabrwalk_1(void * restrict base, size_t nelems,
-                                 size_t siz, int (*walk)(void*));
+tabrwalk_1(void* restrict base, size_t nelems, size_t siz,
+           int (*walk)(void*));
 
 int
-tabrwalk_2(void * restrict base, size_t nelems,
-                                 size_t siz,
-                                 int (*walk)(void*, void*), void *data);
+tabrwalk_2(void* restrict base, size_t nelems, size_t siz,
+           int (*walk)(void*, void*), void* data);
 
 /**
- * \brief Filter out duplicate elements
+ * Filter out duplicate elements.
  * \return New length
  */
 size_t
-tabuniq(void * restrict base, size_t nelems,
-                              size_t siz,
-                              int (*compare)(const void*, const void*));
-
-#endif
-
+tabuniq(void* restrict base, size_t nelems, size_t siz,
+        int (*compare)(const void*, const void*));
