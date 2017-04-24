@@ -33,10 +33,6 @@ picotm_register_module(int (*lock)(void*),
                        int (*clearcc)(void*, int),
                        int (*finish)(void*),
                        int (*uninit)(void*),
-                       int (*tpc_request)(void*, int),
-                       int (*tpc_success)(void*, int),
-                       int (*tpc_failure)(void*, int),
-                       int (*tpc_noundo)(void*, int),
                        void *cbdata);
 
 PICOTM_NOTHROW

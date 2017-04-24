@@ -125,7 +125,6 @@ get_vmem_tx(void)
                                      NULL, NULL,
                                      finish_cb,
                                      release_cb,
-                                     NULL, NULL, NULL, NULL,
                                      NULL);
     if (res < 0) {
         return NULL;

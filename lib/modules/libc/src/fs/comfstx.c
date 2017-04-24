@@ -89,10 +89,6 @@ com_fs_tx_aquire_data()
                                      NULL,
                                      com_fs_tx_finish,
                                      com_fs_tx_uninit,
-                                     NULL,
-                                     NULL,
-                                     NULL,
-                                     NULL,
                                      &t_com_fs.instance);
     if (res < 0) {
         return NULL;

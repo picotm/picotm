@@ -20,10 +20,6 @@ struct component
     int (*clearcc)(void*, int);
     int (*finish)(void*);
     int (*uninit)(void*);
-    int (*tpc_request)(void*, int);
-    int (*tpc_success)(void*, int);
-    int (*tpc_failure)(void*, int);
-    int (*tpc_noundo)(void*, int);
     void *data;
 };
 
@@ -37,10 +33,6 @@ component_init(struct component *com, int (*lock)(void*),
                                       int (*clearcc)(void*, int),
                                       int (*finish)(void*),
                                       int (*uninit)(void*),
-                                      int (*tpc_request)(void*, int),
-                                      int (*tpc_success)(void*, int),
-                                      int (*tpc_failure)(void*, int),
-                                      int (*tpc_noundo)(void*, int),
                                       void *data);
 
 void
@@ -72,18 +64,6 @@ component_clearcc(const struct component *com, int noundo);
 
 int
 component_finish(const struct component *com);
-
-int
-component_tpc_request(const struct component *com, int noundo);
-
-int
-component_tpc_success(const struct component *com, int noundo);
-
-int
-component_tpc_noundo(const struct component *com, int noundo);
-
-int
-component_tpc_failure(const struct component *com, int noundo);
 
 #endif
 

@@ -215,10 +215,6 @@ picotm_register_module(int (*lock)(void*),
                       int (*clearcc)(void*, int),
                       int (*finish)(void*),
                       int (*uninit)(void*),
-                      int (*tpc_request)(void*, int),
-                      int (*tpc_success)(void*, int),
-                      int (*tpc_failure)(void*, int),
-                      int (*tpc_noundo)(void*, int),
                       void *data)
 {
     struct log* log = tx_log(get_non_null_tx());
@@ -245,10 +241,7 @@ picotm_register_module(int (*lock)(void*),
                          clearcc,
                          finish,
                          uninit,
-                         tpc_request,
-                         tpc_success,
-                         tpc_failure,
-                         tpc_noundo, data);
+                         data);
     if (res < 0) {
         return res;
     }
