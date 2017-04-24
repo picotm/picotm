@@ -2,82 +2,62 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <assert.h>
-#include <errno.h>
-#include <pthread.h>
-#include <stdint.h>
+#include "log.h"
 #include <stdlib.h>
-#include <string.h>
 #include <picotm/picotm-module.h>
 #include "module.h"
 #include "table.h"
-#include "log.h"
 
 int
-log_init(struct log *log)
+log_init(struct log* self)
 {
-    assert(log);
-
-    log->eventtab = NULL;
-    log->eventtablen = 0;
-    log->eventtabsiz = 0;
+    self->eventtab = NULL;
+    self->eventtablen = 0;
+    self->eventtabsiz = 0;
 
     return 0;
 }
 
-int
-log_uninit(struct log *log)
+void
+log_uninit(struct log* self)
 {
-    assert(log);
-
-    return 0;
+    free(self->eventtab);
 }
 
 int
-log_inject_event(struct log *log, unsigned long module, unsigned long call,
+log_inject_event(struct log* self, unsigned long module, unsigned long call,
                  uintptr_t cookie)
 {
-    assert(log);
+    if (self->eventtablen >= self->eventtabsiz) {
 
-    if (log->eventtablen >= log->eventtabsiz) {
+        size_t eventtabsiz = self->eventtabsiz + 1;
 
-        void *tmp = tabresize(log->eventtab,
-                              log->eventtabsiz,
-                              log->eventtabsiz+1, sizeof(log->eventtab[0]));
+        void* tmp = tabresize(self->eventtab,
+                              self->eventtabsiz, eventtabsiz,
+                              sizeof(self->eventtab[0]));
         if (!tmp) {
             return -1;
         }
-        log->eventtab = tmp;
-
-        ++log->eventtabsiz;
+        self->eventtab = tmp;
+        self->eventtabsiz = eventtabsiz;
     }
 
-    struct event *event = log->eventtab+log->eventtablen;
+    struct event* event = self->eventtab + self->eventtablen;
 
     event->cookie = cookie;
     event->module = module;
     event->call = call;
 
-    return log->eventtablen++;
-}
-
-void
-log_clear_events(struct log *log)
-{
-    assert(log);
-
-    log->eventtablen = 0;
+    return self->eventtablen++;
 }
 
 int
-log_apply_events(struct log *log, struct module* module, int noundo)
+log_apply_events(struct log* self, const struct module* module, bool noundo)
 {
-    assert(log);
-
     /* Apply events in chronological order */
 
-    const struct event* event = log->eventtab;
-    const struct event* event_end = log->eventtab + log->eventtablen;
+    const struct event* event = self->eventtab;
+    const struct event* event_end = self->eventtab + self->eventtablen;
 
     while (event < event_end) {
 
@@ -101,21 +81,18 @@ log_apply_events(struct log *log, struct module* module, int noundo)
         event = event2;
     }
 
-    /* FIXME: Cleanup should be done in finish */
-    log->eventtablen = 0;
+    self->eventtablen = 0;
 
     return 0;
 }
 
 int
-log_undo_events(struct log *log, struct module* module, int noundo)
+log_undo_events(struct log* self, const struct module* module, bool noundo)
 {
-    assert(log);
-
     /* Undo events in reversed-chronological order */
 
-    const struct event* event = log->eventtab + log->eventtablen;
-    const struct event* event_end = log->eventtab;
+    const struct event* event = self->eventtab + self->eventtablen;
+    const struct event* event_end = self->eventtab;
 
     while (event > event_end) {
         --event;
@@ -125,52 +102,7 @@ log_undo_events(struct log *log, struct module* module, int noundo)
         }
     }
 
-    /* FIXME: Cleanup should be done in finish */
-    log->eventtablen = 0;
+    self->eventtablen = 0;
 
     return 0;
 }
-
-#include <stdio.h>
-
-int
-event_dump(const struct event *ev)
-{
-    static const char * const sysname[] = {
-        "COMPONENT_ERROR",
-        "COMPONENT_ALLOC",
-        "COMPONENT_FD",
-        "COMPONENT_STREAM",
-        "COMPONENT_FS",
-        "(unused)",
-        "(unused)",
-        "(unused)",
-        "COMPONENT_USER0",
-        "COMPONENT_USER1",
-        "COMPONENT_USER2",
-        "COMPONENT_USER3"};
-
-    assert(ev);
-
-    fprintf(stderr, "%s %d %d", sysname[ev->module], (int)ev->call,
-                                                     (int)ev->cookie);
-
-    return 0;
-}
-
-#if 0
-static size_t
-log_table_dump(const struct event *eventtab, size_t eventtablen)
-{
-    const struct event *beg = eventtab;
-    const struct event *end = eventtab+eventtablen;
-
-    for (; beg < end; ++beg) {
-        fprintf(stderr, "%zu: ", beg-eventtab);
-        event_dump(beg);
-        fprintf(stderr, "\n");
-    }
-
-    return 0;
-}
-#endif
