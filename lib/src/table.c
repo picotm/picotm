@@ -2,24 +2,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <assert.h>
+#include "table.h"
 #include <errno.h>
-#include <stddef.h>
-#include <stdio.h>
+#include <limits.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-#include "table.h"
 
 /* Based on http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
  */
 static size_t
 rndpow2(size_t val)
 {
-    size_t i;
-
     --val;
 
-    for (i = 1; i < sizeof(val)*8; i*=2) {
+    for (size_t i = 1; i < (sizeof(val) * CHAR_BIT); i *= 2) {
         val |= val >> i;
     }
 
@@ -28,34 +25,33 @@ rndpow2(size_t val)
     return val;
 }
 
-void *
-tabresize(void * restrict base, size_t nelems, size_t newnelems, size_t siz)
+void*
+tabresize(void* restrict base, size_t nelems, size_t newnelems, size_t siz)
 {
-    static int lowmem = 0;
-    void *mem;
+    static bool s_lowmem = false;
 
-    doalloc:
+    void* mem;
 
-    if (!lowmem) {
+do_alloc:
+
+    if (!s_lowmem) {
 
         const size_t nelems2 = rndpow2(nelems);
         const size_t newnelems2 = rndpow2(newnelems);
 
         if (nelems2 != newnelems2) {
-            mem = realloc(base, newnelems2*siz);
+            mem = realloc(base, newnelems2 * siz);
         } else {
             mem = base;
         }
     } else {
-        mem = realloc(base, newnelems*siz);
+        mem = realloc(base, newnelems * siz);
     }
 
     if (!mem && newnelems) {
-        if (errno == ENOMEM && !lowmem) {
-            lowmem = 1;
-            goto doalloc; /* Try with linear-complexity algorithm */
-        } else {
-            perror("realloc");
+        if (errno == ENOMEM && !s_lowmem) {
+            s_lowmem = true;
+            goto do_alloc; /* Try with linear-growth algorithm */
         }
     }
 
@@ -69,16 +65,14 @@ tabfree(void* restrict base)
 }
 
 int
-tabwalk_1(void * restrict base, size_t nelems, size_t siz, int (*walk)(void*))
+tabwalk_1(void* restrict base, size_t nelems, size_t siz, int (*walk)(void*))
 {
-    assert(walk);
-
-    unsigned char *beg = base;
-    unsigned char *end = beg + nelems*siz;
+    unsigned char* beg = base;
+    const unsigned char* end = beg + nelems * siz;
 
     int inc;
 
-    for (inc = 1; (inc > 0) && (beg < end); beg += inc*siz) {
+    for (inc = 1; (inc > 0) && (beg < end); beg += inc * siz) {
         inc = walk(beg);
     }
 
@@ -86,18 +80,15 @@ tabwalk_1(void * restrict base, size_t nelems, size_t siz, int (*walk)(void*))
 }
 
 int
-tabwalk_2(void * restrict base, size_t nelems,
-                                size_t siz,
-                                int (*walk)(void*, void*), void *data)
+tabwalk_2(void* restrict base, size_t nelems, size_t siz,
+          int (*walk)(void*, void*), void* data)
 {
-    assert(walk);
-
-    unsigned char *beg = base;
-    unsigned char *end = beg + nelems*siz;
+    unsigned char* beg = base;
+    const unsigned char* end = beg + nelems * siz;
 
     int inc;
 
-    for (inc = 1; (inc > 0) && (beg < end); beg += inc*siz) {
+    for (inc = 1; (inc > 0) && (beg < end); beg += inc * siz) {
         inc = walk(beg, data);
     }
 
@@ -105,19 +96,15 @@ tabwalk_2(void * restrict base, size_t nelems,
 }
 
 int
-tabwalk_3(void * restrict base, size_t nelems,
-                                size_t siz,
-                                int (*walk)(void*, void*, void*), void *data1,
-                                                                  void *data2)
+tabwalk_3(void* restrict base, size_t nelems, size_t siz,
+          int (*walk)(void*, void*, void*), void* data1, void* data2)
 {
-    assert(walk);
-
-    unsigned char *beg = base;
-    unsigned char *end = beg + nelems*siz;
+    unsigned char* beg = base;
+    const unsigned char* end = beg + nelems * siz;
 
     int inc;
 
-    for (inc = 1; (inc > 0) && (beg < end); beg += inc*siz) {
+    for (inc = 1; (inc > 0) && (beg < end); beg += inc * siz) {
         inc = walk(beg, data1, data2);
     }
 
@@ -125,18 +112,16 @@ tabwalk_3(void * restrict base, size_t nelems,
 }
 
 int
-tabrwalk_1(void * restrict base, size_t nelems,
-                                 size_t siz, int (*walk)(void*))
+tabrwalk_1(void* restrict base, size_t nelems, size_t siz,
+           int (*walk)(void*))
 {
-    assert(walk);
-
-    unsigned char *beg = base;
-    unsigned char *end = beg + nelems*siz;
+    const unsigned char* beg = base;
+    unsigned char* end = base + nelems * siz;
 
     int dec;
 
     for (dec = 1; (dec > 0) && (end > beg);) {
-        end -= dec*siz;
+        end -= dec * siz;
         dec = walk(end);
     }
 
@@ -144,19 +129,16 @@ tabrwalk_1(void * restrict base, size_t nelems,
 }
 
 int
-tabrwalk_2(void * restrict base, size_t nelems,
-                                 size_t siz,
-                                 int (*walk)(void*, void*), void *data)
+tabrwalk_2(void* restrict base, size_t nelems, size_t siz,
+           int (*walk)(void*, void*), void* data)
 {
-    assert(walk);
-
-    unsigned char *beg = base;
-    unsigned char *end = beg + nelems*siz;
+    const unsigned char* beg = base;
+    unsigned char* end = base + nelems * siz;
 
     int dec;
 
     for (dec = 1; (dec > 0) && (end > beg);) {
-        end -= dec*siz;
+        end -= dec * siz;
         dec = walk(end, data);
     }
 
@@ -164,20 +146,14 @@ tabrwalk_2(void * restrict base, size_t nelems,
 }
 
 size_t
-tabuniq(void * restrict base, size_t nelems,
-                              size_t siz,
-                              int (*compare)(const void*, const void*))
+tabuniq(void* restrict base, size_t nelems, size_t siz,
+        int (*compare)(const void*, const void*))
 {
     size_t uniqelems = 0;
 
-    assert(base || !nelems);
-    assert(siz);
-    assert(compare);
-
-    unsigned char *beg = base;
-
-    const unsigned char *end = beg + nelems*siz;
-    const unsigned char *next = beg;
+    unsigned char* beg = base;
+    const unsigned char* end = beg + nelems * siz;
+    const unsigned char* next = beg;
 
     while (next < end) {
 
@@ -187,7 +163,7 @@ tabuniq(void * restrict base, size_t nelems,
 
         if (next != end) {
 
-            const ptrdiff_t diff = next-beg;
+            const ptrdiff_t diff = next - beg;
 
             if (diff == siz) {
                 beg += siz;
@@ -201,4 +177,3 @@ tabuniq(void * restrict base, size_t nelems,
 
     return uniqelems;
 }
-
