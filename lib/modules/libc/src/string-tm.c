@@ -3,7 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "picotm/string-tm.h"
+#include <errno.h>
+#include <picotm/picotm-module.h>
 #include "alloc/comalloctx.h"
+#include "picotm/picotm-libc.h"
 
 /*
  * Memory functions
@@ -129,11 +132,19 @@ PICOTM_EXPORT
 char*
 strdup_tm(const char* s)
 {
-    size_t len = strlen(s) + 1;
-    char* mem = com_alloc_tx_malloc(len);
-    if (!mem) {
-        return NULL;
-    }
+    picotm_libc_save_errno();
+
+    size_t len = strlen(s) + sizeof(*s);
+
+    char* mem;
+
+    do {
+        mem = com_alloc_tx_malloc(len);
+        if (!mem) {
+            picotm_recover_from_errno(errno);
+        }
+    } while (!mem);
+
     return memcpy(mem, s, len);
 }
 
@@ -141,12 +152,29 @@ PICOTM_EXPORT
 int
 strerror_r_tm(int errnum, char* buf, size_t buflen)
 {
+    picotm_libc_save_errno();
+
+    int res;
+
 #if (_POSIX_C_SOURCE >= 200112L) && !_GNU_SOURCE
-    return strerror_r(errnum, buf, buflen);
+    do {
+        res = strerror_r(errnum, buf, buflen);
+        if (res < 0) {
+            picotm_recover_from_errno(errno);
+        }
+    } while (res < 0);
 #else
-    strerror_r(errnum, buf, buflen);
-    return 0;
+    const char* str;
+    do {
+        str = strerror_r(errnum, buf, buflen);
+        if (!str) {
+            picotm_recover_from_errno(errno);
+        }
+    } while (!str);
+    res = 0;
 #endif
+
+    return res;
 }
 
 PICOTM_EXPORT
@@ -181,14 +209,22 @@ PICOTM_EXPORT
 char*
 strndup_tm(const char* s, size_t n)
 {
-    size_t len = strlen(s) + 1;
+    picotm_libc_save_errno();
+
+    size_t len = strlen(s) + sizeof(*s);
     if (n < len) {
-        len = n + 1;
+        len = n + sizeof(*s);
     }
-    char* mem = com_alloc_tx_malloc(len);
-    if (!mem) {
-        return NULL;
-    }
+
+    char* mem;
+
+    do {
+        mem = com_alloc_tx_malloc(len);
+        if (!mem) {
+            picotm_recover_from_errno(errno);
+        }
+    } while (!mem);
+
     memcpy(mem, s, len);
     if (n < len) {
         mem[n + 1] = '\0';

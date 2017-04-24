@@ -23,9 +23,6 @@ malloc_test_1(unsigned int tid)
 
         for (char** ptr = mem; ptr < mem + arraylen(mem); ++ptr) {
             *ptr = calloc_tx(15, 34);
-    	    if (!*ptr) {
-    	        abort_tx();
-    	    }
         }
 
         for (char** ptr = mem; ptr < mem + arraylen(mem); ++ptr) {
@@ -107,9 +104,6 @@ malloc_test_3(unsigned int tid)
 
         for (char** ptr = mem; ptr < mem + arraylen(mem); ++ptr) {
             *ptr = calloc_tx(15, 34);
-    	    if (!*ptr) {
-    	        abort_tx();
-    	    }
         }
 
         for (char** ptr = mem; ptr < mem + arraylen(mem); ++ptr) {
@@ -146,17 +140,13 @@ malloc_test_4(unsigned int tid)
     picotm_begin
 
         uint8_t* mem = malloc_tx(30 * sizeof(mem[0]));
-        if (!mem) {
-            abort_tx();
-        }
+
         for (uint8_t i = 0; i < 30; ++i) {
             mem[i] = i;
         }
 
         mem = realloc_tm(mem, 15 * 34 * sizeof(mem[0]));
-        if (!mem) {
-            abort_tx();
-        }
+
         for (uint8_t i = 0; i < 30; ++i) {
             if (mem[i] != i) {
                 abort_tx();
@@ -204,9 +194,7 @@ malloc_test_5(unsigned int tid)
         uint8_t* mem = load_ptr_tx(&buf);
 
 	    mem = realloc_tm(mem, 15 * 34 * sizeof(mem[0]));
-	    if (!mem) {
-	        abort_tx();
-	    }
+
 	    for (uint8_t i = 0; i < 30; ++i) {
 	        if (mem[i] != i) {
 	            abort_tx();
@@ -245,9 +233,6 @@ malloc_test_6(unsigned int tid)
         uint8_t* mem = load_ptr_tx(&buf);
 
 	    mem = realloc_tm(mem, 15 * 34 * sizeof(mem[0]));
-	    if (!mem) {
-            abort_tx();
-	    }
 
 	    for (uint8_t i = 0; i < 30; ++i) {
 	        if (mem[i] != i) {

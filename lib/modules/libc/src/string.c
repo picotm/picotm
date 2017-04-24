@@ -218,44 +218,15 @@ char*
 strdup_tx(const char* s)
 {
     privatize_c_tx(s, '\0', PICOTM_TM_PRIVATIZE_LOAD);
-    size_t len = strlen(s) + 1;
-    char* mem = malloc_tx(len);
-    if (!mem) {
-        return NULL;
-    }
-    return memcpy(mem, s, len);
+    return strdup_tm(s);
 }
 
 PICOTM_EXPORT
 int
 strerror_r_tx(int errnum, char* buf, size_t buflen)
 {
-    /* We cannot easily allocate memory dynamically here. Use a
-     * fixed-size buffer instead. Errno strings are not that long,
-     * so a small buffer should be sufficient. */
-    char tmpbuf[256];
-
-#if (_POSIX_C_SOURCE >= 200112L) && !_GNU_SOURCE
-    int res = strerror_r(errnum, tmpbuf, sizeof(tmpbuf));
-#else
-    strerror_r(errnum, tmpbuf, sizeof(tmpbuf));
-    int res = 0;
-#endif
-    if (res) {
-        return res;
-    }
-    size_t len = strlen(tmpbuf) + 1;
-
-    if (len > buflen) {
-        len = buflen;
-        if (!len) {
-            return ERANGE;
-        }
-        tmpbuf[len - 1] = '\0';
-    }
-    store_tx(buf, tmpbuf, len);
-
-    return 0;
+    privatize_tx(buf, buflen, PICOTM_TM_PRIVATIZE_STORE);
+    return strerror_r_tm(errnum, buf, buflen);
 }
 
 PICOTM_EXPORT
@@ -311,19 +282,7 @@ char*
 strndup_tx(const char* s, size_t n)
 {
     privatize_c_tx(s, '\0', PICOTM_TM_PRIVATIZE_LOAD);
-    size_t len = strlen(s) + 1;
-    if (n < len) {
-        len = n + 1;
-    }
-    char* mem = malloc_tx(len);
-    if (!mem) {
-        return NULL;
-    }
-    memcpy(mem, s, len);
-    if (n < len) {
-        mem[n + 1] = '\0';
-    }
-    return mem;
+    return strndup_tm(s, n);
 }
 
 PICOTM_EXPORT

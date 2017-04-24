@@ -3,11 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "picotm/unistd.h"
+#include <errno.h>
 #include <picotm/picotm.h>
 #include <picotm/picotm-module.h>
 #include <picotm/picotm-tm.h>
 #include "fd/comfdtx.h"
 #include "fs/comfstx.h"
+#include "picotm/picotm-libc.h"
 #include "picotm/unistd-tm.h"
 
 PICOTM_EXPORT
@@ -30,14 +32,36 @@ PICOTM_EXPORT
 int
 close_tx(int fildes)
 {
-    return com_fd_tx_close(fildes);
+    picotm_libc_save_errno();
+
+    int res;
+
+    do {
+        res = com_fd_tx_close(fildes);
+        if (res < 0) {
+            picotm_recover_from_errno(errno);
+        }
+    } while (res < 0);
+
+    return res;
 }
 
 PICOTM_EXPORT
 int
 dup_tx(int fildes)
 {
-    return com_fd_tx_dup(fildes);
+    picotm_libc_save_errno();
+
+    int res;
+
+    do {
+        res = com_fd_tx_dup(fildes);
+        if (res < 0) {
+            picotm_recover_from_errno(errno);
+        }
+    } while (res < 0);
+
+    return res;
 }
 
 PICOTM_EXPORT
@@ -45,21 +69,54 @@ int
 dup2_tx(int fildes, int fildes2)
 {
     picotm_irrevocable();
-    return dup2(fildes, fildes2);
+    picotm_libc_save_errno();
+
+    int res;
+
+    do {
+        res = dup2(fildes, fildes2);
+        if (res < 0) {
+            picotm_recover_from_errno(errno);
+        }
+    } while (res < 0);
+
+    return res;
 }
 
 PICOTM_EXPORT
 int
 fchdir_tx(int fildes)
 {
-    return com_fs_tx_fchdir(fildes);
+    picotm_libc_save_errno();
+
+    int res;
+
+    do {
+        res = com_fs_tx_fchdir(fildes);
+        if (res < 0) {
+            picotm_recover_from_errno(errno);
+        }
+    } while (res < 0);
+
+    return res;
 }
 
 PICOTM_EXPORT
 int
 fsync_tx(int fildes)
 {
-    return com_fd_tx_fsync(fildes);
+    picotm_libc_save_errno();
+
+    int res;
+
+    do {
+        res = com_fd_tx_fsync(fildes);
+        if (res < 0) {
+            picotm_recover_from_errno(errno);
+        }
+    } while (res < 0);
+
+    return res;
 }
 
 PICOTM_EXPORT
@@ -83,7 +140,18 @@ PICOTM_EXPORT
 off_t
 lseek_tx(int fildes, off_t offset, int whence)
 {
-    return com_fd_tx_lseek(fildes, offset, whence);
+    picotm_libc_save_errno();
+
+    off_t res;
+
+    do {
+        res = com_fd_tx_lseek(fildes, offset, whence);
+        if (res == (off_t)-1) {
+            picotm_recover_from_errno(errno);
+        }
+    } while (res == (off_t)-1);
+
+    return res;
 }
 
 PICOTM_EXPORT

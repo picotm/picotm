@@ -3,11 +3,24 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "picotm/sched.h"
+#include <errno.h>
+#include <picotm/picotm-module.h>
+#include "picotm/picotm-libc.h"
 
 PICOTM_EXPORT
 int
 sched_yield_tx()
 {
-    /* Always succeeds in practice */
-    return sched_yield();
+    picotm_libc_save_errno();
+
+    int res;
+
+    do {
+        res = sched_yield();
+        if (res < 0) {
+            picotm_recover_from_errno(errno);
+        }
+    } while (res < 0);
+
+    return res;
 }
