@@ -8,6 +8,50 @@
 
 PICOTM_BEGIN_DECLS
 
+/*
+ * Error handling
+ */
+
+/**
+ * The error-recovery strategy for system calls.
+ *
+ * Each module detects errors and initiates recovery. Sometimes reported
+ * errors are not failures of the component, but expected corner cases.
+ * For example 'read()' on non-blocking file descriptors signals `EAGAIN`
+ * if there's no data available.
+ *
+ * The libc modules has to distiguish such cases from actual errors to
+ * decide when to initiate recovery. `enum picotm_libc_error_recovery` is
+ * a list of possible strategies.
+ *
+ * It is recommended to use `PICOTM_LIBC_ERROR_RECOVERY_AUTO`.
+ */
+enum picotm_libc_error_recovery {
+    /** Use heuristics to decide which errors to recover from. This is
+     * the default. */
+    PICOTM_LIBC_ERROR_RECOVERY_AUTO,
+    /** Recover from all errors. */
+    PICOTM_LIBC_ERROR_RECOVERY_FULL
+};
+
+PICOTM_NOTHROW
+/**
+ * Sets the strategy for deciding when to recover from errors.
+ */
+void
+picotm_libc_set_error_recovery(enum picotm_libc_error_recovery recovery);
+
+PICOTM_NOTHROW
+/**
+ * Returns the strategy for deciding when to recover from errors.
+ */
+enum picotm_libc_error_recovery
+picotm_libc_get_error_recovery(void);
+
+/*
+ * File I/O
+ */
+
 /**
  * File-type constants
  */
