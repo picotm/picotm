@@ -139,12 +139,12 @@ picotm_libm_save_fenv()
 
     int res = fpu_tx_save_fenv(fpu_tx);
     if (res < 0) {
-        picotm_resolve_error(0);
+        picotm_recover_from_errno(0);
     }
 
     res = picotm_inject_event(fpu_tx->module, SAVE_FENV, 0);
     if (res < 0) {
-        picotm_resolve_error(-res);
+        picotm_recover_from_errno(0);
     }
 }
 
@@ -162,12 +162,12 @@ picotm_libm_save_fexcept()
 
     int res  = fpu_tx_save_fexcept(fpu_tx);
     if (res < 0) {
-        picotm_resolve_error(0);
+        picotm_recover_from_errno(0);
     }
 
     res = picotm_inject_event(fpu_tx->module, SAVE_FEXCEPT, 0);
     if (res < 0) {
-        picotm_resolve_error(-res);
+        picotm_recover_from_errno(0);
     }
 }
 

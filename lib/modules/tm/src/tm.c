@@ -268,18 +268,18 @@ __picotm_tm_load(uintptr_t addr, void* buf, size_t siz)
 {
     struct tm_vmem_tx* vmem_tx = get_vmem_tx();
     if (!vmem_tx) {
-        picotm_resolve_error(ENOMEM);
+        picotm_recover_from_errno(ENOMEM);
     }
     int res;
     while ((res = tm_vmem_tx_ld(vmem_tx, addr, buf, siz)) == -EBUSY) {
         picotm_resolve_conflict(NULL);
     }
     if (res < 0) {
-        picotm_resolve_error(-res);
+        picotm_recover_from_errno(-res);
     }
     res = picotm_inject_event(vmem_tx->module, PICOTM_TM_LOAD, 0);
     if (res < 0) {
-        picotm_resolve_error(-res);
+        picotm_recover_from_errno(0);
     }
 }
 
@@ -289,18 +289,18 @@ __picotm_tm_store(uintptr_t addr, const void* buf, size_t siz)
 {
     struct tm_vmem_tx* vmem_tx = get_vmem_tx();
     if (!vmem_tx) {
-        picotm_resolve_error(-ENOMEM);
+        picotm_recover_from_errno(ENOMEM);
     }
     int res;
     while ((res = tm_vmem_tx_st(vmem_tx, addr, buf, siz)) == -EBUSY) {
         picotm_resolve_conflict(NULL);
     }
     if (res < 0) {
-        picotm_resolve_error(-res);
+        picotm_recover_from_errno(-res);
     }
     res = picotm_inject_event(vmem_tx->module, PICOTM_TM_STORE, 0);
     if (res < 0) {
-        picotm_resolve_error(-res);
+        picotm_recover_from_errno(0);
     }
 }
 
@@ -310,18 +310,18 @@ __picotm_tm_loadstore(uintptr_t laddr, uintptr_t saddr, size_t siz)
 {
     struct tm_vmem_tx* vmem_tx = get_vmem_tx();
     if (!vmem_tx) {
-        picotm_resolve_error(-ENOMEM);
+        picotm_recover_from_errno(ENOMEM);
     }
     int res;
     while ((res = tm_vmem_tx_ldst(vmem_tx, laddr, saddr, siz)) == -EBUSY) {
         picotm_resolve_conflict(NULL);
     }
     if (res < 0) {
-        picotm_resolve_error(-res);
+        picotm_recover_from_errno(-res);
     }
     res = picotm_inject_event(vmem_tx->module, PICOTM_TM_LOADSTORE, 0);
     if (res < 0) {
-        picotm_resolve_error(-res);
+        picotm_recover_from_errno(0);
     }
 }
 
@@ -331,18 +331,18 @@ __picotm_tm_privatize(uintptr_t addr, size_t siz, unsigned long flags)
 {
     struct tm_vmem_tx* vmem_tx = get_vmem_tx();
     if (!vmem_tx) {
-        picotm_resolve_error(-ENOMEM);
+        picotm_recover_from_errno(ENOMEM);
     }
     int res;
     while ((res = tm_vmem_tx_privatize(vmem_tx, addr, siz, flags)) == -EBUSY) {
         picotm_resolve_conflict(NULL);
     }
     if (res < 0) {
-        picotm_resolve_error(-res);
+        picotm_recover_from_errno(res);
     }
     res = picotm_inject_event(vmem_tx->module, PICOTM_TM_PRIVATIZE, 0);
     if (res < 0) {
-        picotm_resolve_error(-res);
+        picotm_recover_from_errno(0);
     }
 }
 
@@ -352,17 +352,17 @@ __picotm_tm_privatize_c(uintptr_t addr, int c, unsigned long flags)
 {
     struct tm_vmem_tx* vmem_tx = get_vmem_tx();
     if (!vmem_tx) {
-        picotm_resolve_error(-ENOMEM);
+        picotm_recover_from_errno(ENOMEM);
     }
     int res;
     while ((res = tm_vmem_tx_privatize_c(vmem_tx, addr, c, flags)) == -EBUSY) {
         picotm_resolve_conflict(NULL);
     }
     if (res < 0) {
-        picotm_resolve_error(-res);
+        picotm_recover_from_errno(-res);
     }
     res = picotm_inject_event(vmem_tx->module, PICOTM_TM_PRIVATIZE, 0);
     if (res < 0) {
-        picotm_resolve_error(-res);
+        picotm_recover_from_errno(0);
     }
 }

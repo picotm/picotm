@@ -140,7 +140,7 @@ picotm_libc_save_errno()
 
     int res = picotm_inject_event(error_tx->module, SAVE_ERRNO, 0);
     if (res < 0) {
-        picotm_resolve_error(-res);
+        picotm_recover_from_errno(res);
     }
 }
 
