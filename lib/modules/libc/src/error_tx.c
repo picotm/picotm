@@ -13,6 +13,7 @@ int
 error_tx_init(struct error_tx* self, unsigned long module)
 {
     self->module = module;
+    self->recovery = PICOTM_LIBC_ERROR_RECOVERY_AUTO;
     self->flags = 0;
     self->saved_errno = 0;
 
@@ -23,6 +24,19 @@ void
 error_tx_uninit(struct error_tx* self)
 {
     return;
+}
+
+void
+error_tx_set_error_recovery(struct error_tx* self,
+                            enum picotm_libc_error_recovery recovery)
+{
+    self->recovery = recovery;
+}
+
+enum picotm_libc_error_recovery
+error_tx_get_error_recovery(const struct error_tx* self)
+{
+    return self->recovery;
 }
 
 bool

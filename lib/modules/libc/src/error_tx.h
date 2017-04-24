@@ -5,6 +5,7 @@
 #pragma once
 
 #include <stdbool.h>
+#include "picotm/picotm-libc.h"
 
 /**
  * The data structure |struct error_tx| represents a transaction on the
@@ -18,6 +19,7 @@
  */
 struct error_tx {
     unsigned long module;
+    enum picotm_libc_error_recovery recovery;
     unsigned long flags;
     int saved_errno;
 };
@@ -33,6 +35,19 @@ error_tx_init(struct error_tx* self, unsigned long module);
  */
 void
 error_tx_uninit(struct error_tx* self);
+
+/**
+ * Sets the transaction's error-recovery strategy.
+ */
+void
+error_tx_set_error_recovery(struct error_tx* self,
+                            enum picotm_libc_error_recovery recovery);
+
+/**
+ * Returns the transaction's current error-recovery strategy.
+ */
+enum picotm_libc_error_recovery
+error_tx_get_error_recovery(const struct error_tx* self);
 
 /**
  * Returns true if the value of 'errno' has been saved; false otherwise.

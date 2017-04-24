@@ -151,3 +151,17 @@ __errno_location_tx()
     picotm_libc_save_errno();
     return &errno;
 }
+
+PICOTM_EXPORT
+void
+picotm_libc_set_error_recovery(enum picotm_libc_error_recovery recovery)
+{
+    return error_tx_set_error_recovery(get_non_null_error_tx(true), recovery);
+}
+
+PICOTM_EXPORT
+enum picotm_libc_error_recovery
+picotm_libc_get_error_recovery()
+{
+    return error_tx_get_error_recovery(get_non_null_error_tx(true));
+}
