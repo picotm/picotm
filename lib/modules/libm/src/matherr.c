@@ -33,19 +33,19 @@ matherr_test_and_resolve(int except)
 {
     if (math_errhandling & MATH_ERRNO) {
         if (errno) {
-            picotm_resolve_error(errno);
+            picotm_recover_from_errno(errno);
         }
     }
     if (math_errhandling & MATH_ERREXCEPT) {
         int set_except = fetestexcept(except);
         if (set_except & FE_INVALID) {
-            picotm_resolve_error(EDOM);
+            picotm_recover_from_errno(EDOM);
         } else if (set_except & FE_DIVBYZERO) {
-            picotm_resolve_error(ERANGE);
+            picotm_recover_from_errno(ERANGE);
         } else if (set_except & FE_OVERFLOW) {
-            picotm_resolve_error(ERANGE);
+            picotm_recover_from_errno(ERANGE);
         } else if (set_except & FE_UNDERFLOW) {
-            picotm_resolve_error(ERANGE);
+            picotm_recover_from_errno(ERANGE);
         }
     }
 }

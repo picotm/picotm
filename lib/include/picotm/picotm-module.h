@@ -56,10 +56,11 @@ picotm_resolve_conflict(struct picotm_tx* conflicting_tx);
 
 PICOTM_NOTHROW
 /**
- * Instructs the transaction management system to resolve an error.
+ * Instructs the transaction management system to recover from an error. The
+ * errno code is given as a hint.
  */
 void
-picotm_resolve_error(int errno_hint);
+picotm_recover_from_errno(int errno_hint);
 
 PICOTM_NOTHROW
 /**
