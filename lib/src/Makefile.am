@@ -4,10 +4,10 @@
 
 lib_LTLIBRARIES = libpicotm.la
 
-libpicotm_la_SOURCES = component.c \
-                       component.h \
-                       log.c \
+libpicotm_la_SOURCES = log.c \
                        log.h \
+                       module.c \
+                       module.h \
                        picotm.c \
                        picotm.h \
                        ptr.h \

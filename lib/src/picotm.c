@@ -226,7 +226,7 @@ PICOTM_EXPORT
 int
 picotm_inject_event(unsigned long module, unsigned long op, uintptr_t cookie)
 {
-    int res = log_inject_event(tx_log(get_non_null_tx()), module, op, cookie);
+    int res = tx_inject_event(get_non_null_tx(), module, op, cookie);
     if (res < 0) {
         return res;
     }
