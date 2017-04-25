@@ -6,7 +6,17 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <picotm/picotm-module.h>
-#include "rnd2wb.h"
+
+/**
+ * Round size up to next multiple of word size.
+ */
+static size_t
+rnd2wb(size_t size)
+{
+    const unsigned int mask = sizeof(void*) - 1;
+
+    return (size + mask) & ~mask;
+}
 
 int
 com_alloc_init(struct com_alloc *comalloc, unsigned long module)
