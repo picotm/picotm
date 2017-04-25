@@ -2,14 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "counter.h"
 #include <assert.h>
 #include <errno.h>
-#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "types.h"
 #include "spinlock.h"
-#include "counter.h"
 
 static void
 counter_lock(struct counter *c)

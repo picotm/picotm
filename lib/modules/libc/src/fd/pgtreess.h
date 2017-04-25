@@ -5,6 +5,8 @@
 #ifndef PGTREESS_H
 #define PGTREESS_H
 
+#include <stddef.h>
+
 union pgtreess_dir_entry
 {
     struct pgtreess_dir *dir;

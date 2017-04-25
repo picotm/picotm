@@ -5,13 +5,13 @@
 #ifndef COMFD_H
 #define COMFD_H
 
-#include <stdbool.h>
 #include <picotm/picotm-module.h>
+#include <stdbool.h>
+#include "ofdtx.h"
+#include "fdtx.h"
 
 struct pipeop;
 struct openop;
-struct ofdtx;
-struct fdtx;
 
 enum com_fd_call
 {

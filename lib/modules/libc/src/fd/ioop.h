@@ -5,6 +5,8 @@
 #ifndef IOOP_H
 #define IOOP_H
 
+#include <sys/types.h>
+
 struct ioop
 {
     off_t  off;

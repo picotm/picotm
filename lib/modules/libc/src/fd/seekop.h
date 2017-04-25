@@ -5,6 +5,8 @@
 #ifndef SEEKOP_H
 #define SEEKOP_H
 
+#include <sys/types.h>
+
 struct seekop
 {
     off_t from;

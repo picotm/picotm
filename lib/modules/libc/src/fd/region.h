@@ -5,6 +5,8 @@
 #ifndef REGION_H
 #define REGION_H
 
+#include <sys/types.h>
+
 struct region
 {
     size_t nbyte;

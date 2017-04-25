@@ -5,6 +5,8 @@
 #ifndef FDTAB_H
 #define FDTAB_H
 
+#include "fd.h"
+
 extern struct fd fdtab[MAXNUMFD];
 
 /*int

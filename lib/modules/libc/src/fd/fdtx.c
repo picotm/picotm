@@ -2,37 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <assert.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <pthread.h>
-#include "errcode.h"
-#include "types.h"
-#include "range.h"
-#include "mutex.h"
-#include "rwlock.h"
-#include "counter.h"
-#include "pgtree.h"
-#include "pgtreess.h"
-#include "cmap.h"
-#include "cmapss.h"
-#include "rwlockmap.h"
-#include "rwstatemap.h"
-#include "ioop.h"
-#include "iooptab.h"
-#include "seekop.h"
-#include "seekoptab.h"
-#include "fcntlop.h"
-#include "fcntloptab.h"
-#include "ofdid.h"
-#include "ofd.h"
-#include "fd.h"
-#include "fdtab.h"
 #include "fdtx.h"
+#include <assert.h>
+#include <stdio.h>
+#include "errcode.h"
+#include "fdtab.h"
+#include "ofd.h"
 
 int
 fdtx_init(struct fdtx *fdtx)

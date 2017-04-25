@@ -5,6 +5,10 @@
 #ifndef SEEKOPTAB_H
 #define SEEKOPTAB_H
 
+#include <sys/types.h>
+
+struct seekop;
+
 unsigned long
 seekoptab_append(struct seekop **tab, size_t *nelems, off_t from,
                                                       off_t offset, int whence);

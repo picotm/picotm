@@ -5,6 +5,8 @@
 #ifndef RWLOCKMAP_H
 #define RWLOCKMAP_H
 
+#include "pgtree.h"
+
 struct rwlockmap_page
 {
     unsigned long lock[PGTREE_NENTRIES];

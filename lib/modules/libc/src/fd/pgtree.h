@@ -5,6 +5,9 @@
 #ifndef PGTREE_H
 #define PGTREE_H
 
+#include <pthread.h>
+#include <stddef.h>
+
 enum {
     PGTREE_ENTRY_NBITS = 9,
     PGTREE_ENTRY_MASK  = 0x1ff,

@@ -2,15 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <fcntl.h>
-#include <pthread.h>
-#include <stdlib.h>
-#include <sys/types.h>
+#include "fdtab.h"
 #include <picotm/picotm-module.h>
-#include "types.h"
-#include "counter.h"
-#include "fcntlop.h"
-#include "fd.h"
+#include <stdlib.h>
 
 struct fd fdtab[MAXNUMFD];
 

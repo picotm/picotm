@@ -5,6 +5,10 @@
 #ifndef OPENOPTAB_H
 #define OPENOPTAB_H
 
+#include <sys/types.h>
+
+struct openop;
+
 unsigned long
 openoptab_append(struct openop **tab, size_t *nelems, int unlink);
 

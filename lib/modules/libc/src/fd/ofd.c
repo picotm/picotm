@@ -2,31 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ofd.h"
 #include <assert.h>
 #include <errno.h>
-#include <fcntl.h>
 #include <limits.h>
-#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include "errcode.h"
-#include "types.h"
-#include "range.h"
-#include "mutex.h"
-#include "rwlock.h"
-#include "counter.h"
-#include "pgtree.h"
-#include "pgtreess.h"
-#include "cmap.h"
 #include "cmapss.h"
-#include "rwlockmap.h"
+#include "errcode.h"
 #include "rwstatemap.h"
-#include "fcntlop.h"
-#include "ofdid.h"
-#include "ofd.h"
 
 #define bitsof(_x)  (sizeof(_x)*CHAR_BIT)
 

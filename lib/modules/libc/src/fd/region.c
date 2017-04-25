@@ -2,9 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <assert.h>
-#include <sys/types.h>
 #include "region.h"
+#include <assert.h>
 
 int
 region_init(struct region *region, size_t nbyte, off_t offset)

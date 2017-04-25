@@ -5,6 +5,9 @@
 #ifndef RWLOCK_H
 #define RWLOCK_H
 
+#include <pthread.h>
+#include "errcode.h"
+
 enum rwstate {
     RW_NOLOCK = 0,
     RW_RDLOCK = 0x1,

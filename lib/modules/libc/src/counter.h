@@ -5,6 +5,9 @@
 #ifndef COUNTER_H
 #define COUNTER_H
 
+#include <pthread.h>
+#include "types.h"
+
 /**
  * \brief Counter with locking
  */

@@ -2,14 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <assert.h>
-#include <search.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <picotm/picotm-module.h>
-#include "pipeop.h"
 #include "pipeoptab.h"
+#include <assert.h>
+#include <picotm/picotm-module.h>
+#include <stdio.h>
+#include "pipeop.h"
 
 unsigned long
 pipeoptab_append(struct pipeop **tab, size_t *nelems, int pipefd[2])

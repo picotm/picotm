@@ -5,6 +5,10 @@
 #ifndef FD_H
 #define FD_H
 
+#include "counter.h"
+
+union com_fd_fcntl_arg;
+
 #define FD_FL_LAST_BIT  (OFD_FL_LAST_BIT+1)
 
 enum fd_state

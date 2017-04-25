@@ -5,13 +5,20 @@
 #ifndef OFD_H
 #define OFD_H
 
+#include "cmap.h"
+#include "counter.h"
+#include "ofdid.h"
 #include "picotm/picotm-libc.h"
+#include "rwlock.h"
+#include "rwlockmap.h"
 
 #define OFD_FL_UNLINK   (1<<0)
 #define OFD_FL_WANTNEW  (1<<2)
 #define OFD_FL_LAST_BIT (2)
 
+struct cmapss;
 struct rwlocktab;
+struct rwstatemap;
 
 struct ofd
 {
