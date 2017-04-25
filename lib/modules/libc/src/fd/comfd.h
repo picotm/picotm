@@ -7,8 +7,9 @@
 
 #include <picotm/picotm-module.h>
 #include <stdbool.h>
-#include "ofdtx.h"
+#include "event.h"
 #include "fdtx.h"
+#include "ofdtx.h"
 
 struct pipeop;
 struct openop;
@@ -36,12 +37,6 @@ enum com_fd_call
     ACTION_RECV,
     ACTION_SHUTDOWN,
     ACTION_BIND
-};
-
-struct com_fd_event
-{
-    int fildes;
-    int cookie;
 };
 
 struct com_fd

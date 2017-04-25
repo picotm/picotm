@@ -28,8 +28,7 @@
 #include "ioop.h"
 #include "iooptab.h"
 #include "ofdtx.h"
-#include "fdtx.h"
-#include "comfd.h"
+#include "event.h"
 
 /*
  * Exec
