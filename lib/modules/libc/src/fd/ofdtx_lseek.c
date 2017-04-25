@@ -31,8 +31,7 @@
 #include "ofd.h"
 #include "ofdtab.h"
 #include "ofdtx.h"
-#include "fdtx.h"
-#include "comfd.h"
+#include "event.h"
 
 static off_t
 filesize(int fildes)
