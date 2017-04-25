@@ -4,10 +4,10 @@
 
 lib_LTLIBRARIES = libpicotm-c.la
 
-libpicotm_c_la_SOURCES = alloc/allocator_tx.c \
-                         alloc/allocator_tx.h \
-                         alloc/module.c \
-                         alloc/module.h \
+libpicotm_c_la_SOURCES = allocator/allocator_tx.c \
+                         allocator/allocator_tx.h \
+                         allocator/module.c \
+                         allocator/module.h \
                          counter.c \
                          counter.h \
                          errcode.h \
