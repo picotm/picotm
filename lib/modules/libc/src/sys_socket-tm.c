@@ -5,8 +5,8 @@
 #include "picotm/sys/socket-tm.h"
 #include <errno.h>
 #include <picotm/picotm-module.h>
-#include "fd/comfdtx.h"
 #include "error/module.h"
+#include "fd/module.h"
 
 static bool
 perform_recovery(int errno_hint)
@@ -30,7 +30,7 @@ accept_tm(int socket, struct sockaddr* address, socklen_t* address_len)
     int res;
 
     do {
-        res = com_fd_tx_accept(socket, address, address_len);
+        res = fd_module_accept(socket, address, address_len);
         if (res < 0) {
             if (perform_recovery(errno)) {
                 picotm_recover_from_errno(errno);
@@ -52,7 +52,7 @@ bind_tm(int socket, const struct sockaddr* address, socklen_t address_len)
     int res;
 
     do {
-        res = com_fd_tx_bind(socket, address, address_len);
+        res = fd_module_bind(socket, address, address_len);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }
@@ -70,7 +70,7 @@ connect_tm(int socket, const struct sockaddr* address, socklen_t address_len)
     int res;
 
     do {
-        res = com_fd_tx_connect(socket, address, address_len);
+        res = fd_module_connect(socket, address, address_len);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }
@@ -88,7 +88,7 @@ send_tm(int socket, const void* buffer, size_t length, int flags)
     ssize_t res;
 
     do {
-        res = com_fd_tx_send(socket, buffer, length, flags);
+        res = fd_module_send(socket, buffer, length, flags);
         if (res < 0) {
             if (perform_recovery(errno)) {
                 picotm_recover_from_errno(errno);
@@ -110,7 +110,7 @@ recv_tm(int socket, void* buffer, size_t length, int flags)
     ssize_t res;
 
     do {
-        res = com_fd_tx_recv(socket, buffer, length, flags);
+        res = fd_module_recv(socket, buffer, length, flags);
         if (res < 0) {
             if (perform_recovery(errno)) {
                 picotm_recover_from_errno(errno);

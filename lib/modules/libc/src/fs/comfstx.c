@@ -17,6 +17,7 @@
 #include "fd/fcntlop.h"
 #include "fd/fd.h"
 #include "fd/fdtab.h"
+#include "fd/module.h"
 #include "comfs.h"
 #include "comfstx.h"
 
@@ -166,12 +167,9 @@ com_fs_tx_mkstemp(char *pathname)
 int
 com_fs_tx_chdir(const char *path)
 {
-    extern int com_fd_tx_open(const char*, int, mode_t);
-    extern int com_fs_tx_fchdir(int);
-
     assert(path);
 
-    int fildes = TEMP_FAILURE_RETRY(com_fd_tx_open(path, O_RDONLY, 0));
+    int fildes = fd_module_open(path, O_RDONLY, 0);
 
     if (fildes < 0) {
         return -1;

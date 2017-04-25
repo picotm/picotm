@@ -5,12 +5,12 @@
 #include "picotm/fcntl.h"
 #include <errno.h>
 #include <picotm/picotm-module.h>
+#include <picotm/picotm-tm.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <string.h>
-#include <picotm/picotm-tm.h>
 #include "error/module.h"
-#include "fd/comfdtx.h"
+#include "fd/module.h"
 #include "picotm/fcntl-tm.h"
 
 PICOTM_EXPORT
@@ -32,10 +32,10 @@ fcntl_tx(int fildes, int cmd, ...)
         switch (cmd) {
             case F_DUPFD:
                 /* Handle like dup() */
-                res = com_fd_tx_dup_internal(fildes, false);
+                res = fd_module_dup_internal(fildes, false);
             case F_DUPFD_CLOEXEC:
                 /* Handle like dup() with CLOEXEC */
-                res = com_fd_tx_dup_internal(fildes, true);
+                res = fd_module_dup_internal(fildes, true);
             case F_SETFD:
             case F_SETFL:
             case F_SETOWN:
@@ -46,7 +46,7 @@ fcntl_tx(int fildes, int cmd, ...)
                 val.arg0 = va_arg(arg, int);
                 va_end(arg);
 
-                res = com_fd_tx_fcntl(fildes, cmd, &val);
+                res = fd_module_fcntl(fildes, cmd, &val);
             }
             case F_GETLK:
             case F_SETLK:
@@ -62,10 +62,10 @@ fcntl_tx(int fildes, int cmd, ...)
                 privatize_tx(f, sizeof(val.arg1), PICOTM_TM_PRIVATIZE_LOAD);
                 memcpy(&val.arg1, f, sizeof(val.arg1));
 
-                res = com_fd_tx_fcntl(fildes, cmd, &val);
+                res = fd_module_fcntl(fildes, cmd, &val);
             }
             default:
-                res = com_fd_tx_fcntl(fildes, cmd, NULL);
+                res = fd_module_fcntl(fildes, cmd, NULL);
         }
         if (res < 0) {
             picotm_recover_from_errno(errno);

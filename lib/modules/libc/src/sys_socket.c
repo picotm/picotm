@@ -7,7 +7,7 @@
 #include <picotm/picotm-module.h>
 #include <picotm/picotm-tm.h>
 #include "error/module.h"
-#include "fd/comfdtx.h"
+#include "fd/module.h"
 #include "picotm/sys/socket-tm.h"
 
 PICOTM_EXPORT
@@ -46,7 +46,7 @@ listen_tx(int socket, int backlog)
     int res;
 
     do {
-        res = com_fd_tx_listen(socket, backlog);
+        res = fd_module_listen(socket, backlog);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }
@@ -72,7 +72,7 @@ shutdown_tx(int socket, int how)
     int res;
 
     do {
-        res = com_fd_tx_shutdown(socket, how);
+        res = fd_module_shutdown(socket, how);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }
@@ -90,7 +90,7 @@ socket_tx(int domain, int type, int protocol)
     int res;
 
     do {
-        res = com_fd_tx_socket(domain, type, protocol);
+        res = fd_module_socket(domain, type, protocol);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }

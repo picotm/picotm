@@ -7,7 +7,7 @@
 #include <picotm/picotm.h>
 #include <picotm/picotm-module.h>
 #include "error/module.h"
-#include "fd/comfdtx.h"
+#include "fd/module.h"
 #include "fs/comfstx.h"
 
 static bool
@@ -86,7 +86,7 @@ pipe_tm(int fildes[2])
     int res;
 
     do {
-        res = com_fd_tx_pipe(fildes);
+        res = fd_module_pipe(fildes);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }
@@ -104,7 +104,7 @@ pread_tm(int fildes, void* buf, size_t nbyte, off_t offset)
     ssize_t res;
 
     do {
-        res = com_fd_tx_pread(fildes, buf, nbyte, offset);
+        res = fd_module_pread(fildes, buf, nbyte, offset);
         if (res < 0) {
             if (perform_recovery(errno)) {
                 picotm_recover_from_errno(errno);
@@ -126,7 +126,7 @@ pwrite_tm(int fildes, const void* buf, size_t nbyte, off_t offset)
     ssize_t res;
 
     do {
-        res = com_fd_tx_pwrite(fildes, buf, nbyte, offset);
+        res = fd_module_pwrite(fildes, buf, nbyte, offset);
         if (res < 0) {
             if (perform_recovery(errno)) {
                 picotm_recover_from_errno(errno);
@@ -148,7 +148,7 @@ read_tm(int fildes, void* buf, size_t nbyte)
     ssize_t res;
 
     do {
-        res = com_fd_tx_read(fildes, buf, nbyte);
+        res = fd_module_read(fildes, buf, nbyte);
         if (res < 0) {
             if (perform_recovery(errno)) {
                 picotm_recover_from_errno(errno);
@@ -188,7 +188,7 @@ write_tm(int fildes, const void* buf, size_t nbyte)
     int res;
 
     do {
-        res = com_fd_tx_write(fildes, buf, nbyte);
+        res = fd_module_write(fildes, buf, nbyte);
         if (res < 0) {
             if (perform_recovery(errno)) {
                 picotm_recover_from_errno(errno);
