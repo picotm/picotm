@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <picotm/picotm-module.h>
+#include "rnd2wb.h"
 
 int
 com_alloc_init(struct com_alloc *comalloc, unsigned long module)
@@ -113,3 +114,81 @@ com_alloc_finish(struct com_alloc *comalloc)
     comalloc->ptrtablen = 0;
 }
 
+/*
+ * free()
+ */
+
+void
+com_alloc_exec_free(struct com_alloc *comalloc, void *mem)
+{
+    assert(comalloc);
+
+    /* Inject event */
+    if (com_alloc_inject(comalloc, ACTION_FREE, mem) < 0) {
+        return;
+    }
+}
+
+int
+com_alloc_apply_free(struct com_alloc *comalloc, unsigned int cookie)
+{
+    assert(comalloc);
+    assert(cookie < comalloc->ptrtablen);
+
+    free(comalloc->ptrtab[cookie]);
+
+    return 0;
+}
+
+int
+com_alloc_undo_free(struct com_alloc *comalloc, unsigned int cookie)
+{
+    assert(comalloc);
+    assert(cookie < comalloc->ptrtablen);
+
+    return 0;
+}
+
+/*
+ * posix_memalign()
+ */
+
+int
+com_alloc_exec_posix_memalign(struct com_alloc *comalloc, void **memptr, size_t alignment, size_t size)
+{
+    assert(comalloc);
+
+    /* Allocate memory */
+
+    if (posix_memalign(memptr, alignment, rnd2wb(size)) < 0) {
+        return -1;
+    }
+
+    /* Inject event */
+    if (com_alloc_inject(comalloc, ACTION_POSIX_MEMALIGN, *memptr) < 0) {
+        free(*memptr);
+        return -1;
+    }
+
+    return 0;
+}
+
+int
+com_alloc_apply_posix_memalign(struct com_alloc *comalloc, unsigned int cookie)
+{
+    assert(comalloc);
+    assert(cookie < comalloc->ptrtablen);
+
+    return 0;
+}
+
+int
+com_alloc_undo_posix_memalign(struct com_alloc *comalloc, unsigned int cookie)
+{
+    assert(comalloc);
+    assert(cookie < comalloc->ptrtablen);
+
+    free(comalloc->ptrtab[cookie]);
+
+    return 0;
+}
