@@ -6,11 +6,11 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <picotm/picotm-module.h>
-#include "comalloc.h"
+#include "allocator_tx.h"
 
 struct allocator_module {
-    bool             is_initialized;
-    struct com_alloc instance;
+    bool                is_initialized;
+    struct allocator_tx tx;
 };
 
 static int
@@ -18,7 +18,7 @@ apply_event_cb(const struct event* event, size_t nevents, void* data)
 {
     struct allocator_module* module = data;
 
-    return com_alloc_apply_event(&module->instance, event, nevents);
+    return allocator_tx_apply_event(&module->tx, event, nevents);
 }
 
 static int
@@ -26,7 +26,7 @@ undo_event_cb(const struct event* event, size_t nevents, void* data)
 {
     struct allocator_module* module = data;
 
-    return com_alloc_undo_event(&module->instance, event, nevents);
+    return allocator_tx_undo_event(&module->tx, event, nevents);
 }
 
 static int
@@ -34,7 +34,7 @@ finish_cb(void* data)
 {
     struct allocator_module* module = data;
 
-    com_alloc_finish(&module->instance);
+    allocator_tx_finish(&module->tx);
 
     return 0;
 }
@@ -44,20 +44,20 @@ uninit_cb(void* data)
 {
     struct allocator_module* module = data;
 
-    com_alloc_uninit(&module->instance);
+    allocator_tx_uninit(&module->tx);
 
     module->is_initialized = false;
 
     return 0;
 }
 
-static struct com_alloc*
-get_com_alloc(void)
+static struct allocator_tx*
+get_allocator_tx(void)
 {
     static __thread struct allocator_module t_module;
 
     if (t_module.is_initialized) {
-        return &t_module.instance;
+        return &t_module.tx;
     }
 
     long res = picotm_register_module(NULL,
@@ -75,23 +75,23 @@ get_com_alloc(void)
     }
     unsigned long module = res;
 
-    res = com_alloc_init(&t_module.instance, module);
+    res = allocator_tx_init(&t_module.tx, module);
     if (res < 0) {
         return NULL;
     }
 
     t_module.is_initialized = true;
 
-    return &t_module.instance;
+    return &t_module.tx;
 }
 
 int
 allocator_module_free(void* mem, size_t usiz)
 {
-    struct com_alloc* data = get_com_alloc();
+    struct allocator_tx* data = get_allocator_tx();
     assert(data);
 
-    com_alloc_exec_free(data, mem);
+    allocator_tx_exec_free(data, mem);
 
     return 0;
 }
@@ -99,8 +99,8 @@ allocator_module_free(void* mem, size_t usiz)
 int
 allocator_module_posix_memalign(void** memptr, size_t alignment, size_t size)
 {
-    struct com_alloc* data = get_com_alloc();
+    struct allocator_tx* data = get_allocator_tx();
     assert(data);
 
-    return com_alloc_exec_posix_memalign(data, memptr, alignment, size);
+    return allocator_tx_exec_posix_memalign(data, memptr, alignment, size);
 }
