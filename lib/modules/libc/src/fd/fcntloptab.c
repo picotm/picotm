@@ -2,17 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <assert.h>
-#include <fcntl.h>
-#include <search.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <picotm/picotm-module.h>
-#include "types.h"
-#include "range.h"
-#include "fcntlop.h"
 #include "fcntloptab.h"
+#include <assert.h>
+#include <picotm/picotm-module.h>
+#include <stdio.h>
+#include <string.h>
+#include "fcntlop.h"
 
 unsigned long
 fcntloptab_append(struct fcntlop **tab, size_t *nelems, int command,

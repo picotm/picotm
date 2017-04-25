@@ -2,13 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "openoptab.h"
 #include <assert.h>
-#include <search.h>
 #include <stdlib.h>
-#include <string.h>
 #include <picotm/picotm-module.h>
 #include "openop.h"
-#include "openoptab.h"
 
 unsigned long
 openoptab_append(struct openop **tab, size_t *nelems, int unlink)

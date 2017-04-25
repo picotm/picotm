@@ -2,13 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "fcntlop.h"
 #include <assert.h>
-#include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/types.h>
-#include "types.h"
-#include "fcntlop.h"
 
 int
 fcntlop_init(struct fcntlop *fcntlop, int command, const union com_fd_fcntl_arg *value,

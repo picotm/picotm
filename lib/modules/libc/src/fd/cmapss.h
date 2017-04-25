@@ -5,6 +5,11 @@
 #ifndef CMAPSS_H
 #define CMAPSS_H
 
+#include <sys/types.h>
+#include "pgtreess.h"
+
+struct cmap;
+
 struct cmapss
 {
     struct pgtreess super;

@@ -5,6 +5,10 @@
 #ifndef REGIONTAB_H
 #define REGIONTAB_H
 
+#include <sys/types.h>
+
+struct region;
+
 unsigned long
 regiontab_append(struct region **tab, size_t *nelems,
                                       size_t *siz,

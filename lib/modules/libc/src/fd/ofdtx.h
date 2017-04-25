@@ -5,14 +5,20 @@
 #ifndef OFDTX_H
 #define OFDTX_H
 
+#include <sys/socket.h>
+#include <sys/types.h>
+#include "cmapss.h"
+#include "counter.h"
+#include "fcntlop.h"
 #include "picotm/picotm-libc.h"
+#include "rwlock.h"
+#include "rwstatemap.h"
 
-struct sockaddr;
-
+struct com_fd_event;
+struct fcntlop;
 struct ioop;
 struct seekop;
-struct fcntlop;
-struct com_fd_event;
+struct sockaddr;
 
 enum {
     OFDTX_FL_LOCALSTATE = 0x1, /** \brief Signals local changes to state */

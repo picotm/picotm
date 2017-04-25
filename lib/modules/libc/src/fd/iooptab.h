@@ -5,6 +5,10 @@
 #ifndef IOOPTAB_H_
 #define IOOPTAB_H_
 
+#include <sys/types.h>
+
+struct ioop;
+
 unsigned long
 iooptab_append(struct ioop * restrict * restrict tab, size_t * restrict nelems,
                                                       size_t * restrict siz,

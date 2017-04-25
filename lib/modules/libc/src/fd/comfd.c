@@ -2,40 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <assert.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <pthread.h>
-#include <stdlib.h>
-#include <string.h>
-#include <picotm/picotm-libc.h>
-#include <picotm/picotm-module.h>
-#include <unistd.h>
-#include "range.h"
-#include "types.h"
-#include "mutex.h"
-#include "seekop.h"
-#include "rwlock.h"
-#include "pgtree.h"
-#include "pgtreess.h"
-#include "cmap.h"
-#include "cmapss.h"
-#include "rwlockmap.h"
-#include "rwstatemap.h"
-#include "counter.h"
-#include "openop.h"
-#include "openoptab.h"
-#include "pipeop.h"
-#include "pipeoptab.h"
-#include "fcntlop.h"
-#include "ofdid.h"
-#include "ofd.h"
-#include "ofdtab.h"
-#include "ofdtx.h"
-#include "fd.h"
-#include "fdtab.h"
-#include "fdtx.h"
 #include "comfd.h"
+#include <assert.h>
+#include <stdlib.h>
+#include "openoptab.h"
+#include "pipeoptab.h"
+#include "range.h"
 
 static int
 intcmp(int a, int b)

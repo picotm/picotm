@@ -2,14 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "pgtree.h"
 #include <assert.h>
 #include <errno.h>
-#include <pthread.h>
 #include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
 #include "errcode.h"
-#include "pgtree.h"
 
 /*
  * directory entries

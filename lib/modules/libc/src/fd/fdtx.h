@@ -5,11 +5,14 @@
 #ifndef FDTX_H
 #define FDTX_H
 
+#include "counter.h"
 #include "picotm/picotm-libc.h"
 
 #define FDTX_FL_LOCALSTATE 1L /** \brief Signals local state changes */
 
 struct fcntlop;
+
+union com_fd_fcntl_arg;
 
 /** \brief Holds transaction-local reads and writes for a file descriptor
  */

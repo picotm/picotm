@@ -5,6 +5,8 @@
 #ifndef FCNTLOP_H
 #define FCNTLOP_H
 
+#include <fcntl.h>
+
 union com_fd_fcntl_arg
 {
     int          arg0;

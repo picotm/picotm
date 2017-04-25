@@ -5,6 +5,10 @@
 #ifndef RWSTATEMAP_H
 #define RWSTATEMAP_H
 
+#include "pgtreess.h"
+
+struct rwlockmap;
+
 struct rwstatemap
 {
     struct pgtreess super;

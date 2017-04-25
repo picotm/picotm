@@ -2,12 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ofdid.h"
 #include <assert.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/stat.h>
-#include <sys/types.h>
-#include "ofdid.h"
 
 void
 ofdid_init(struct ofdid *id, dev_t dev, ino_t ino, mode_t mode, int fl)

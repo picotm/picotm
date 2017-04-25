@@ -2,11 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ioop.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include "range.h"
-#include "ioop.h"
 
 static int
 rangeisect(off_t off0, size_t siz0,

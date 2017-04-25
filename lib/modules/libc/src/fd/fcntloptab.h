@@ -5,6 +5,12 @@
 #ifndef FCNTLOPTAB_H
 #define FCNTLOPTAB_H
 
+#include <stddef.h>
+
+struct fcntlop;
+
+union com_fd_fcntl_arg;
+
 unsigned long
 fcntloptab_append(struct fcntlop **tab, size_t *nelems, int command,
                                                         const union com_fd_fcntl_arg *value,

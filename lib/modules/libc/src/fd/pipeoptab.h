@@ -5,6 +5,10 @@
 #ifndef PIPEOPTAB_H
 #define PIPEOPTAB_H
 
+#include <sys/types.h>
+
+struct pipeop;
+
 unsigned long
 pipeoptab_append(struct pipeop **tab, size_t *nelems, int pipefd[2]);
 

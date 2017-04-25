@@ -5,6 +5,9 @@
 #ifndef CMAP_H
 #define CMAP_H
 
+#include <pthread.h>
+#include "pgtree.h"
+
 struct cmap_page
 {
     pthread_mutex_t    lock;

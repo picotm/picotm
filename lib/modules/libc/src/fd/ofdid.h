@@ -5,6 +5,8 @@
 #ifndef OFDID_H
 #define OFDID_H
 
+#include <sys/types.h>
+
 struct ofdid
 {
     dev_t  dev;

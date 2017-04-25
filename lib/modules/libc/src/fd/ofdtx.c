@@ -2,38 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ofdtx.h"
 #include <assert.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <pthread.h>
+#include <picotm/picotm-module.h>
 #include <stdlib.h>
 #include <string.h>
-#include <picotm/picotm-module.h>
-#include <unistd.h>
 #include "errcode.h"
-#include "types.h"
-#include "range.h"
-#include "mutex.h"
-#include "rwlock.h"
-#include "counter.h"
-#include "pgtree.h"
-#include "pgtreess.h"
-#include "cmap.h"
-#include "cmapss.h"
-#include "rwlockmap.h"
-#include "rwstatemap.h"
-#include "region.h"
-#include "regiontab.h"
+#include "fcntloptab.h"
 #include "ioop.h"
 #include "iooptab.h"
-#include "seekop.h"
-#include "seekoptab.h"
-#include "fcntlop.h"
-#include "fcntloptab.h"
-#include "ofdid.h"
-#include "ofd.h"
 #include "ofdtab.h"
-#include "ofdtx.h"
+#include "region.h"
+#include "regiontab.h"
+#include "seekoptab.h"
 
 static int
 ofdtx_2pl_release_locks(struct ofdtx *ofdtx)

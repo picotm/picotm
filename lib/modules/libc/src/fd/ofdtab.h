@@ -5,8 +5,7 @@
 #ifndef OFDTAB_H
 #define OFDTAB_H
 
-struct ofdid;
-struct ofd;
+#include "ofd.h"
 
 extern struct ofd ofdtab[MAXNUMFD];
 
