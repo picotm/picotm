@@ -2,132 +2,144 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "comfdtx.h"
+#include "module.h"
 #include <assert.h>
-#include <fcntl.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <sys/socket.h>
 #include <picotm/picotm.h>
 #include "errcode.h"
-#include "types.h"
-#include "counter.h"
-#include "pgtree.h"
-#include "pgtreess.h"
-#include "cmap.h"
-#include "cmapss.h"
-#include "rwlock.h"
-#include "rwlockmap.h"
-#include "rwstatemap.h"
-#include "fcntlop.h"
-#include "ofdtx.h"
-#include "fdtx.h"
 #include "comfd.h"
 
+struct fd_module {
+    bool          is_initialized;
+    struct com_fd instance;
+};
+
 static int
-com_fd_tx_lock(void *data)
+lock_cb(void* data)
 {
-    return com_fd_lock(data);
+    struct fd_module* module = data;
+
+    return com_fd_lock(&module->instance);
 }
 
 static int
-com_fd_tx_unlock(void *data)
+unlock_cb(void* data)
 {
-    com_fd_unlock(data);
+    struct fd_module* module = data;
+
+    com_fd_unlock(&module->instance);
 
     return 0;
 }
 
 static int
-com_fd_tx_validate(void *data, int noundo)
+validate_cb(void* data, int noundo)
 {
-    return com_fd_validate(data, noundo);
+    struct fd_module* module = data;
+
+    return com_fd_validate(&module->instance, noundo);
 }
 
 static int
-com_fd_tx_apply_event(const struct event *event, size_t n, void *data)
+apply_event_cb(const struct event* event, size_t n, void* data)
 {
-    return com_fd_apply_event(data, event, n);
+    struct fd_module* module = data;
+
+    return com_fd_apply_event(&module->instance, event, n);
 }
 
 static int
-com_fd_tx_undo_event(const struct event *event, size_t n, void *data)
+undo_event_cb(const struct event* event, size_t n, void *data)
 {
-    return com_fd_undo_event(data, event, n);
+    struct fd_module* module = data;
+
+    return com_fd_undo_event(&module->instance, event, n);
 }
 
 static int
-com_fd_tx_updatecc(void *data, int noundo)
+update_cc_cb(void* data, int noundo)
 {
-    return com_fd_updatecc(data, noundo);
+    struct fd_module* module = data;
+
+    return com_fd_updatecc(&module->instance, noundo);
 }
 
 static int
-com_fd_tx_clearcc(void *data, int noundo)
+clear_cc_cb(void* data, int noundo)
 {
-    return com_fd_clearcc(data, noundo);
+    struct fd_module* module = data;
+
+    return com_fd_clearcc(&module->instance, noundo);
 }
 
 static int
-com_fd_tx_finish(void *data)
+finish_cb(void* data)
 {
-    com_fd_finish(data);
+    struct fd_module* module = data;
+
+    com_fd_finish(&module->instance);
 
     return 0;
 }
 
 static int
-com_fd_tx_uninit(void *data)
+uninit_cb(void* data)
 {
-    com_fd_uninit(data);
+    struct fd_module* module = data;
+
+    com_fd_uninit(&module->instance);
+
+    module->is_initialized = false;
 
     return 0;
 }
 
-struct com_fd *
-com_fd_tx_aquire_data()
+static struct com_fd*
+get_com_fd(void)
 {
-    static __thread struct {
-        bool          is_initialized;
-        struct com_fd instance;
-    } t_com_fd;
+    static __thread struct fd_module t_module;
 
-    if (t_com_fd.is_initialized) {
-        return &t_com_fd.instance;
+    if (t_module.is_initialized) {
+        return &t_module.instance;
     }
 
-    long res = picotm_register_module(com_fd_tx_lock,
-                                     com_fd_tx_unlock,
-                                     com_fd_tx_validate,
-                                     com_fd_tx_apply_event,
-                                     com_fd_tx_undo_event,
-                                     com_fd_tx_updatecc,
-                                     com_fd_tx_clearcc,
-                                     com_fd_tx_finish,
-                                     com_fd_tx_uninit,
-                                     &t_com_fd.instance);
+    long res = picotm_register_module(lock_cb,
+                                      unlock_cb,
+                                      validate_cb,
+                                      apply_event_cb,
+                                      undo_event_cb,
+                                      update_cc_cb,
+                                      clear_cc_cb,
+                                      finish_cb,
+                                      uninit_cb,
+                                      &t_module);
     if (res < 0) {
         return NULL;
     }
     unsigned long module = res;
 
-    res = com_fd_init(&t_com_fd.instance, module);
+    res = com_fd_init(&t_module.instance, module);
     if (res < 0) {
         return NULL;
     }
 
-    t_com_fd.is_initialized = true;
+    t_module.is_initialized = true;
 
-    return &t_com_fd.instance;
+    return &t_module.instance;
+}
+
+static struct com_fd*
+get_non_null_com_fd(void)
+{
+    struct com_fd* com_fd = get_com_fd();
+    assert(com_fd);
+
+    return com_fd;
 }
 
 int
-com_fd_tx_accept(int sockfd, struct sockaddr *address, socklen_t *address_len)
+fd_module_accept(int sockfd, struct sockaddr* address, socklen_t* address_len)
 {
-    extern int com_fd_exec_accept(struct com_fd*, int, struct sockaddr*, socklen_t*);
-
-    struct com_fd *comfd = com_fd_tx_aquire_data();
-    assert(comfd);
+    struct com_fd* comfd = get_non_null_com_fd();
 
     int res;
 
@@ -151,17 +163,12 @@ com_fd_tx_accept(int sockfd, struct sockaddr *address, socklen_t *address_len)
 }
 
 int
-com_fd_tx_bind(int sockfd, const struct sockaddr *address,
-                                         socklen_t address_len)
+fd_module_bind(int sockfd, const struct sockaddr* address,
+                socklen_t address_len)
 {
-    extern int com_fd_exec_bind(struct com_fd*, int,
-                                                const struct sockaddr*,
-                                                socklen_t, int);
-
     int res;
 
-    struct com_fd *comfd = com_fd_tx_aquire_data();
-    assert(comfd);
+    struct com_fd* comfd = get_non_null_com_fd();
 
     do {
         res = com_fd_exec_bind(comfd, sockfd, address, address_len,
@@ -184,12 +191,9 @@ com_fd_tx_bind(int sockfd, const struct sockaddr *address,
 }
 
 int
-com_fd_tx_close(int fildes)
+fd_module_close(int fildes)
 {
-    extern int com_fd_exec_close(struct com_fd*, int, int);
-
-    struct com_fd *comfd = com_fd_tx_aquire_data();
-    assert(comfd);
+    struct com_fd* comfd = get_non_null_com_fd();
 
     int res;
 
@@ -213,17 +217,12 @@ com_fd_tx_close(int fildes)
 }
 
 int
-com_fd_tx_connect(int sockfd, const struct sockaddr *serv_addr,
-                                               socklen_t addr_len)
+fd_module_connect(int sockfd, const struct sockaddr* serv_addr,
+                   socklen_t addr_len)
 {
-    extern int com_fd_exec_connect(struct com_fd*, int,
-                                                   const struct sockaddr*,
-                                                   socklen_t, int);
-
     int res;
 
-    struct com_fd *comfd = com_fd_tx_aquire_data();
-    assert(comfd);
+    struct com_fd* comfd = get_non_null_com_fd();
 
     do {
         res = com_fd_exec_connect(comfd, sockfd, serv_addr, addr_len,
@@ -246,14 +245,11 @@ com_fd_tx_connect(int sockfd, const struct sockaddr *serv_addr,
 }
 
 int
-com_fd_tx_dup_internal(int fildes, int cloexec)
+fd_module_dup_internal(int fildes, int cloexec)
 {
-    extern int com_fd_exec_dup(struct com_fd*, int, int);
-
     int res;
 
-    struct com_fd *comfd = com_fd_tx_aquire_data();
-    assert(comfd);
+    struct com_fd* comfd = get_non_null_com_fd();
 
     do {
         res = com_fd_exec_dup(comfd, fildes, cloexec);
@@ -275,20 +271,17 @@ com_fd_tx_dup_internal(int fildes, int cloexec)
 }
 
 int
-com_fd_tx_dup(int fildes)
+fd_module_dup(int fildes)
 {
-    return com_fd_tx_dup_internal(fildes, 0);
+    return fd_module_dup_internal(fildes, 0);
 }
 
 int
-com_fd_tx_fcntl(int fildes, int cmd, union com_fd_fcntl_arg *arg)
+fd_module_fcntl(int fildes, int cmd, union com_fd_fcntl_arg* arg)
 {
-    extern int com_fd_exec_fcntl(struct com_fd*, int, int, union com_fd_fcntl_arg*, int);
-
     int res;
 
-    struct com_fd *comfd = com_fd_tx_aquire_data();
-    assert(comfd);
+    struct com_fd* comfd = get_non_null_com_fd();
 
     do {
         res = com_fd_exec_fcntl(comfd, fildes, cmd, arg, picotm_is_irrevocable());
@@ -310,14 +303,11 @@ com_fd_tx_fcntl(int fildes, int cmd, union com_fd_fcntl_arg *arg)
 }
 
 int
-com_fd_tx_fsync(int fildes)
+fd_module_fsync(int fildes)
 {
-    extern int com_fd_exec_fsync(struct com_fd*, int, int);
-
     int res;
 
-    struct com_fd *comfd = com_fd_tx_aquire_data();
-    assert(comfd);
+    struct com_fd* comfd = get_non_null_com_fd();
 
     do {
         res = com_fd_exec_fsync(comfd, fildes, picotm_is_irrevocable());
@@ -339,14 +329,11 @@ com_fd_tx_fsync(int fildes)
 }
 
 int
-com_fd_tx_listen(int sockfd, int backlog)
+fd_module_listen(int sockfd, int backlog)
 {
-    extern int com_fd_exec_listen(struct com_fd*, int, int, int);
-
     int res;
 
-    struct com_fd *comfd = com_fd_tx_aquire_data();
-    assert(comfd);
+    struct com_fd* comfd = get_non_null_com_fd();
 
     do {
         res = com_fd_exec_listen(comfd, sockfd, backlog, picotm_is_irrevocable());
@@ -368,14 +355,11 @@ com_fd_tx_listen(int sockfd, int backlog)
 }
 
 off_t
-com_fd_tx_lseek(int fildes, off_t offset, int whence)
+fd_module_lseek(int fildes, off_t offset, int whence)
 {
-    extern off_t com_fd_exec_lseek(struct com_fd*, int, off_t, int, int);
-
     off_t res;
 
-    struct com_fd *comfd = com_fd_tx_aquire_data();
-    assert(comfd);
+    struct com_fd* comfd = get_non_null_com_fd();
 
     do {
         res = com_fd_exec_lseek(comfd, fildes, offset, whence, picotm_is_irrevocable());
@@ -397,14 +381,11 @@ com_fd_tx_lseek(int fildes, off_t offset, int whence)
 }
 
 int
-com_fd_tx_open(const char *path, int oflag, mode_t mode)
+fd_module_open(const char* path, int oflag, mode_t mode)
 {
-    extern int com_fd_exec_open(struct com_fd*, const char*, int, mode_t, int);
-
     int res;
 
-    struct com_fd *comfd = com_fd_tx_aquire_data();
-    assert(comfd);
+    struct com_fd* comfd = get_non_null_com_fd();
 
     do {
         res = com_fd_exec_open(comfd, path, oflag, mode, picotm_is_irrevocable());
@@ -426,14 +407,11 @@ com_fd_tx_open(const char *path, int oflag, mode_t mode)
 }
 
 int
-com_fd_tx_pipe(int pipefd[2])
+fd_module_pipe(int pipefd[2])
 {
-    extern int com_fd_exec_pipe(struct com_fd*, int[2]);
-
     int res;
 
-    struct com_fd *comfd = com_fd_tx_aquire_data();
-    assert(comfd);
+    struct com_fd* comfd = get_non_null_com_fd();
 
     do {
         res = com_fd_exec_pipe(comfd, pipefd);
@@ -455,14 +433,11 @@ com_fd_tx_pipe(int pipefd[2])
 }
 
 ssize_t
-com_fd_tx_pread(int fildes, void *buf, size_t nbyte, off_t off)
+fd_module_pread(int fildes, void* buf, size_t nbyte, off_t off)
 {
-    extern ssize_t com_fd_exec_pread(struct com_fd*, int, void*, size_t, off_t, int);
-
     ssize_t res;
 
-    struct com_fd *comfd = com_fd_tx_aquire_data();
-    assert(comfd);
+    struct com_fd* comfd = get_non_null_com_fd();
 
     do {
         res = com_fd_exec_pread(comfd, fildes, buf, nbyte, off,
@@ -492,17 +467,11 @@ com_fd_tx_pread(int fildes, void *buf, size_t nbyte, off_t off)
 }
 
 ssize_t
-com_fd_tx_pwrite(int fildes, const void *buf, size_t nbyte, off_t off)
+fd_module_pwrite(int fildes, const void* buf, size_t nbyte, off_t off)
 {
-    extern ssize_t com_fd_exec_pwrite(struct com_fd*, int,
-                                                      const void*,
-                                                      size_t,
-                                                      off_t, int);
-
     ssize_t res;
 
-    struct com_fd *comfd = com_fd_tx_aquire_data();
-    assert(comfd);
+    struct com_fd* comfd = get_non_null_com_fd();
 
     do {
         res = com_fd_exec_pwrite(comfd, fildes, buf, nbyte, off,
@@ -525,14 +494,11 @@ com_fd_tx_pwrite(int fildes, const void *buf, size_t nbyte, off_t off)
 }
 
 ssize_t
-com_fd_tx_read(int fildes, void *buf, size_t nbyte)
+fd_module_read(int fildes, void* buf, size_t nbyte)
 {
-    extern ssize_t com_fd_exec_read(struct com_fd*, int, void*, size_t, int);
-
     ssize_t res;
 
-    struct com_fd *comfd = com_fd_tx_aquire_data();
-    assert(comfd);
+    struct com_fd* comfd = get_non_null_com_fd();
 
     do {
         res = com_fd_exec_read(comfd, fildes, buf, nbyte,
@@ -562,14 +528,11 @@ com_fd_tx_read(int fildes, void *buf, size_t nbyte)
 }
 
 ssize_t
-com_fd_tx_recv(int sockfd, void *buffer, size_t length, int flags)
+fd_module_recv(int sockfd, void* buffer, size_t length, int flags)
 {
-    extern ssize_t com_fd_exec_recv(struct com_fd*, int, void*, size_t, int, int);
-
     ssize_t res;
 
-    struct com_fd *comfd = com_fd_tx_aquire_data();
-    assert(comfd);
+    struct com_fd* comfd = get_non_null_com_fd();
 
     do {
         res = com_fd_exec_recv(comfd, sockfd, buffer, length, flags,
@@ -592,20 +555,12 @@ com_fd_tx_recv(int sockfd, void *buffer, size_t length, int flags)
 }
 
 int
-com_fd_tx_select(int nfds, fd_set *readfds,
-                               fd_set *writefds,
-                               fd_set *errorfds, struct timeval *timeout)
+fd_module_select(int nfds, fd_set* readfds, fd_set* writefds,
+                  fd_set* errorfds, struct timeval* timeout)
 {
-    extern int com_fd_exec_select(struct com_fd*, int, fd_set*,
-                                                       fd_set*,
-                                                       fd_set*,
-                                                       struct timeval*,
-                                                       int);
-
     int res;
 
-    struct com_fd *comfd = com_fd_tx_aquire_data();
-    assert(comfd);
+    struct com_fd* comfd = get_non_null_com_fd();
 
     do {
         res = com_fd_exec_select(comfd, nfds, readfds,
@@ -631,14 +586,11 @@ com_fd_tx_select(int nfds, fd_set *readfds,
 }
 
 ssize_t
-com_fd_tx_send(int fildes, const void *buffer, size_t length, int flags)
+fd_module_send(int fildes, const void* buffer, size_t length, int flags)
 {
-    extern ssize_t com_fd_exec_send(struct com_fd*, int, const void*, size_t, int, int);
-
     ssize_t res;
 
-    struct com_fd *comfd = com_fd_tx_aquire_data();
-    assert(comfd);
+    struct com_fd* comfd = get_non_null_com_fd();
 
     do {
         res = com_fd_exec_send(comfd, fildes, buffer, length, flags,
@@ -661,14 +613,11 @@ com_fd_tx_send(int fildes, const void *buffer, size_t length, int flags)
 }
 
 int
-com_fd_tx_shutdown(int sockfd, int how)
+fd_module_shutdown(int sockfd, int how)
 {
-    extern int com_fd_exec_shutdown(struct com_fd*, int, int, int);
-
     int res;
 
-    struct com_fd *comfd = com_fd_tx_aquire_data();
-    assert(comfd);
+    struct com_fd* comfd = get_non_null_com_fd();
 
     do {
         res = com_fd_exec_shutdown(comfd, sockfd, how, picotm_is_irrevocable());
@@ -690,14 +639,11 @@ com_fd_tx_shutdown(int sockfd, int how)
 }
 
 int
-com_fd_tx_socket(int domain, int type, int protocol)
+fd_module_socket(int domain, int type, int protocol)
 {
-    extern int com_fd_exec_socket(struct com_fd*, int, int, int);
-
     int res;
 
-    struct com_fd *comfd = com_fd_tx_aquire_data();
-    assert(comfd);
+    struct com_fd* comfd = get_non_null_com_fd();
 
     do {
         res = com_fd_exec_socket(comfd, domain, type, protocol);
@@ -719,25 +665,19 @@ com_fd_tx_socket(int domain, int type, int protocol)
 }
 
 void
-com_fd_tx_sync(void)
+fd_module_sync()
 {
-    extern void com_fd_exec_sync(struct com_fd*);
-
-    struct com_fd *comfd = com_fd_tx_aquire_data();
-    assert(comfd);
+    struct com_fd* comfd = get_non_null_com_fd();
 
     com_fd_exec_sync(comfd);
 }
 
 ssize_t
-com_fd_tx_write(int fildes, const void *buf, size_t nbyte)
+fd_module_write(int fildes, const void* buf, size_t nbyte)
 {
-    extern ssize_t com_fd_exec_write(struct com_fd*, int, const void*, size_t, int);
-
     ssize_t res;
 
-    struct com_fd *comfd = com_fd_tx_aquire_data();
-    assert(comfd);
+    struct com_fd* comfd = get_non_null_com_fd();
 
     do {
         res = com_fd_exec_write(comfd, fildes, buf, nbyte,
@@ -758,4 +698,3 @@ com_fd_tx_write(int fildes, const void *buf, size_t nbyte)
 
     return res;
 }
-

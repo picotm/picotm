@@ -8,7 +8,7 @@
 #include <picotm/picotm-module.h>
 #include <picotm/picotm-tm.h>
 #include "error/module.h"
-#include "fd/comfdtx.h"
+#include "fd/module.h"
 #include "fs/comfstx.h"
 #include "picotm/unistd-tm.h"
 
@@ -37,7 +37,7 @@ close_tx(int fildes)
     int res;
 
     do {
-        res = com_fd_tx_close(fildes);
+        res = fd_module_close(fildes);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }
@@ -55,7 +55,7 @@ dup_tx(int fildes)
     int res;
 
     do {
-        res = com_fd_tx_dup(fildes);
+        res = fd_module_dup(fildes);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }
@@ -110,7 +110,7 @@ fsync_tx(int fildes)
     int res;
 
     do {
-        res = com_fd_tx_fsync(fildes);
+        res = fd_module_fsync(fildes);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }
@@ -145,7 +145,7 @@ lseek_tx(int fildes, off_t offset, int whence)
     off_t res;
 
     do {
-        res = com_fd_tx_lseek(fildes, offset, whence);
+        res = fd_module_lseek(fildes, offset, whence);
         if (res == (off_t)-1) {
             picotm_recover_from_errno(errno);
         }
@@ -200,7 +200,7 @@ PICOTM_EXPORT
 void
 sync_tx()
 {
-    com_fd_tx_sync();
+    fd_module_sync();
 }
 
 PICOTM_EXPORT

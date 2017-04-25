@@ -41,6 +41,8 @@ libpicotm_c_la_SOURCES = allocator/allocator_tx.c \
                          fd/ioop.h \
                          fd/iooptab.c \
                          fd/iooptab.h \
+                         fd/module.c \
+                         fd/module.h \
                          fd/ofd.c \
                          fd/ofd.h \
                          fd/ofdid.c \
