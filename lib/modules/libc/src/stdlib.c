@@ -8,7 +8,7 @@
 #include <picotm/picotm.h>
 #include <picotm/picotm-module.h>
 #include <string.h>
-#include "alloc/module.h"
+#include "allocator/module.h"
 #include "picotm/picotm-libc.h"
 #include "picotm/stdlib-tm.h"
 

@@ -5,7 +5,7 @@
 #include "picotm/string-tm.h"
 #include <errno.h>
 #include <picotm/picotm-module.h>
-#include "alloc/module.h"
+#include "allocator/module.h"
 #include "picotm/picotm-libc.h"
 
 /*
