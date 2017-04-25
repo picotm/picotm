@@ -5,7 +5,7 @@
 #include "picotm/string-tm.h"
 #include <errno.h>
 #include <picotm/picotm-module.h>
-#include "alloc/comalloctx.h"
+#include "alloc/module.h"
 #include "picotm/picotm-libc.h"
 
 /*
@@ -140,7 +140,7 @@ strdup_tm(const char* s)
     int err;
 
     do {
-        err = com_alloc_tx_posix_memalign(&mem, 2 * sizeof(void*), len);
+        err = allocator_module_posix_memalign(&mem, 2 * sizeof(void*), len);
         if (err) {
             picotm_recover_from_errno(err);
         }
@@ -221,7 +221,7 @@ strndup_tm(const char* s, size_t n)
     int err;
 
     do {
-        err = com_alloc_tx_posix_memalign(&mem, 2 * sizeof(void*), len);
+        err = allocator_module_posix_memalign(&mem, 2 * sizeof(void*), len);
         if (err) {
             picotm_recover_from_errno(errno);
         }

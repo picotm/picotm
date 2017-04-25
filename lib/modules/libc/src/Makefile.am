@@ -6,8 +6,8 @@ lib_LTLIBRARIES = libpicotm-c.la
 
 libpicotm_c_la_SOURCES = alloc/comalloc.c \
                          alloc/comalloc.h \
-                         alloc/comalloctx.c \
-                         alloc/comalloctx.h \
+                         alloc/module.c \
+                         alloc/module.h \
                          alloc/rnd2wb.c \
                          alloc/rnd2wb.h \
                          counter.c \

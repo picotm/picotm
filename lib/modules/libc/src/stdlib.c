@@ -8,7 +8,7 @@
 #include <picotm/picotm.h>
 #include <picotm/picotm-module.h>
 #include <string.h>
-#include "alloc/comalloctx.h"
+#include "alloc/module.h"
 #include "picotm/picotm-libc.h"
 #include "picotm/stdlib-tm.h"
 
@@ -63,7 +63,7 @@ free_tx(void* ptr)
     if (usiz) {
         privatize_tx(ptr, usiz, PICOTM_TM_PRIVATIZE_LOADSTORE);
     }
-    com_alloc_tx_free(ptr, usiz);
+    allocator_module_free(ptr, usiz);
 }
 
 PICOTM_EXPORT
@@ -132,7 +132,8 @@ realloc_tx(void* ptr, size_t size)
     if (size) {
         int err;
         do {
-            err = com_alloc_tx_posix_memalign(&mem, 2 * sizeof(void*), size);
+            err = allocator_module_posix_memalign(&mem, 2 * sizeof(void*),
+                                                  size);
             if (err) {
                 picotm_recover_from_errno(err);
             }
@@ -150,7 +151,7 @@ realloc_tx(void* ptr, size_t size)
     }
 
     if (ptr && !size) {
-        com_alloc_tx_free(ptr, usiz);
+        allocator_module_free(ptr, usiz);
     }
 
     return mem;

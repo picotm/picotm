@@ -4,10 +4,10 @@
 
 #pragma once
 
-#include <stdlib.h>
-
-void
-com_alloc_tx_free(void* mem, size_t usiz);
+#include <stddef.h>
 
 int
-com_alloc_tx_posix_memalign(void **memptr, size_t alignment, size_t size);
+allocator_module_free(void* mem, size_t usiz);
+
+int
+allocator_module_posix_memalign(void** memptr, size_t alignment, size_t size);
