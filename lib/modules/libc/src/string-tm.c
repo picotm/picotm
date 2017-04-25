@@ -136,14 +136,15 @@ strdup_tm(const char* s)
 
     size_t len = strlen(s) + sizeof(*s);
 
-    char* mem;
+    void* mem;
+    int err;
 
     do {
-        mem = com_alloc_tx_malloc(len);
-        if (!mem) {
-            picotm_recover_from_errno(errno);
+        err = com_alloc_tx_posix_memalign(&mem, 2 * sizeof(void*), len);
+        if (err) {
+            picotm_recover_from_errno(err);
         }
-    } while (!mem);
+    } while (err);
 
     return memcpy(mem, s, len);
 }
@@ -216,20 +217,21 @@ strndup_tm(const char* s, size_t n)
         len = n + sizeof(*s);
     }
 
-    char* mem;
+    void* mem;
+    int err;
 
     do {
-        mem = com_alloc_tx_malloc(len);
-        if (!mem) {
+        err = com_alloc_tx_posix_memalign(&mem, 2 * sizeof(void*), len);
+        if (err) {
             picotm_recover_from_errno(errno);
         }
-    } while (!mem);
+    } while (err);
 
-    memcpy(mem, s, len);
+    char* s2 = memcpy(mem, s, len);
     if (n < len) {
-        mem[n + 1] = '\0';
+        s2[n + 1] = '\0';
     }
-    return mem;
+    return s2;
 }
 
 PICOTM_EXPORT

@@ -78,15 +78,6 @@ get_com_alloc()
     return &t_com_alloc.instance;
 }
 
-int
-com_alloc_tx_posix_memalign(void** memptr, size_t alignment, size_t size)
-{
-    struct com_alloc* data = get_com_alloc();
-    assert(data);
-
-    return com_alloc_exec_posix_memalign(data, memptr, alignment, size);
-}
-
 void
 com_alloc_tx_free(void *mem, size_t usiz)
 {
@@ -96,58 +87,11 @@ com_alloc_tx_free(void *mem, size_t usiz)
     com_alloc_exec_free(data, mem);
 }
 
-void*
-com_alloc_tx_calloc(size_t nelem, size_t elsize)
+int
+com_alloc_tx_posix_memalign(void** memptr, size_t alignment, size_t size)
 {
-    size_t size = rnd2wb(nelem*elsize);
+    struct com_alloc* data = get_com_alloc();
+    assert(data);
 
-    void *ptr;
-    int res = com_alloc_tx_posix_memalign(&ptr, sizeof(void*)*2, size);
-    if (res < 0) {
-        return NULL;
-    }
-
-    return memset(ptr, 0, size);
-}
-
-void*
-com_alloc_tx_malloc(size_t siz)
-{
-    void* ptr;
-
-    int res = com_alloc_tx_posix_memalign(&ptr, sizeof(void*) * 2, siz);
-    if (res < 0) {
-        return NULL;
-    }
-
-    return ptr;
-}
-
-void*
-com_alloc_tx_realloc(void* ptr, size_t siz, size_t usiz)
-{
-    void* mem = NULL;
-
-    if (siz) {
-        mem = com_alloc_tx_malloc(siz);
-        if (!mem) {
-            return NULL;
-        }
-    }
-
-    if (mem && usiz) {
-        /* Valgrind might report invalid reads and out-of-bounds access
-         * within this function. This is a false positive. The result of
-         * malloc_usable_size() is the maximum available buffer space,
-         * not the amount of allocated or valid memory. Any memcpy() within
-         * load_tx() could therefore operate on uninitialized data.
-         */
-        load_tx(ptr, mem, siz < usiz ? siz : usiz);
-    }
-
-    if (ptr && !siz) {
-        com_alloc_tx_free(ptr, usiz);
-    }
-
-    return mem;
+    return com_alloc_exec_posix_memalign(data, memptr, alignment, size);
 }

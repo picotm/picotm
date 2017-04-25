@@ -7,6 +7,7 @@
 #include <malloc.h>
 #include <picotm/picotm-module.h>
 #include <picotm/picotm.h>
+#include <string.h>
 #include "alloc/comalloctx.h"
 #include "fs/comfstx.h"
 #include "picotm/picotm-libc.h"
@@ -84,16 +85,33 @@ realloc_tm(void* ptr, size_t size)
 {
     picotm_libc_save_errno();
 
-    void* mem;
-
     size_t usiz = malloc_usable_size(ptr);
 
-    do {
-        mem = com_alloc_tx_realloc(ptr, size, usiz);
-        if (size && !mem) {
-            picotm_recover_from_errno(errno);
-        }
-    } while (size && !mem);
+    void* mem = NULL;
+
+    if (size) {
+        int err;
+        do {
+            err = com_alloc_tx_posix_memalign(&mem, 2 * sizeof(void*), size);
+            if (err) {
+                picotm_recover_from_errno(err);
+            }
+        } while (err);
+    }
+
+    if (ptr && mem) {
+        /* Valgrind might report invalid reads and out-of-bounds access
+         * within this function. This is a false positive. The result of
+         * malloc_usable_size() is the maximum available buffer space,
+         * not the amount of allocated or valid memory. Any memcpy() could
+         * therefore operate on uninitialized data.
+         */
+        memcpy(mem, ptr, size < usiz ? size : usiz);
+    }
+
+    if (ptr && !size) {
+        com_alloc_tx_free(ptr, usiz);
+    }
 
     return mem;
 }
