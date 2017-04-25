@@ -22,31 +22,8 @@ libpicotm_c_la_SOURCES = allocator/allocator_tx.c \
                          fd/cmap.h \
                          fd/cmapss.c \
                          fd/cmapss.h \
-                         fd/comfd_accept.c \
-                         fd/comfd_bind.c \
                          fd/comfd.c \
-                         fd/comfd_close.c \
-                         fd/comfd_connect.c \
-                         fd/comfd_dup.c \
-                         fd/comfd_fcntl.c \
-                         fd/comfd_fsync.c \
                          fd/comfd.h \
-                         fd/comfd_listen.c \
-                         fd/comfd_lseek.c \
-                         fd/comfd_open.c \
-                         fd/comfd_pipe.c \
-                         fd/comfd_pread.c \
-                         fd/comfd_pwrite.c \
-                         fd/comfd_read.c \
-                         fd/comfd_recv.c \
-                         fd/comfd_select.c \
-                         fd/comfd_send.c \
-                         fd/comfd_shutdown.c \
-                         fd/comfd_socket.c \
-                         fd/comfd_sync.c \
-                         fd/comfdtx.c \
-                         fd/comfdtx.h \
-                         fd/comfd_write.c \
                          fd/fcntlop.c \
                          fd/fcntlop.h \
                          fd/fcntloptab.c \
