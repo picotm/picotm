@@ -3,9 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "allocator_tx.h"
-#include <assert.h>
-#include <stdlib.h>
 #include <picotm/picotm-module.h>
+#include <stdlib.h>
+
+enum allocator_tx_cmd {
+    CMD_FREE = 0,
+    CMD_POSIX_MEMALIGN,
+    LAST_CMD
+};
 
 /**
  * Round size up to next multiple of word size.
@@ -19,10 +24,8 @@ rnd2wb(size_t size)
 }
 
 int
-allocator_tx_init(struct allocator_tx *self, unsigned long module)
+allocator_tx_init(struct allocator_tx* self, unsigned long module)
 {
-    assert(self);
-
     self->module = module;
 
     self->ptrtab = NULL;
@@ -33,26 +36,19 @@ allocator_tx_init(struct allocator_tx *self, unsigned long module)
 }
 
 void
-allocator_tx_uninit(struct allocator_tx *self)
+allocator_tx_uninit(struct allocator_tx* self)
 {
-    assert(self);
-
     picotm_tabfree(self->ptrtab);
-    self->ptrtab = NULL;
-    self->ptrtablen = 0;
-    self->ptrtabsiz = 0;
 }
 
-int
-allocator_tx_inject(struct allocator_tx *self, enum allocator_tx_call call, void *ptr)
+static int
+append_cmd(struct allocator_tx* self, enum allocator_tx_cmd cmd, void* ptr)
 {
-    assert(self);
-
     if (__builtin_expect(self->ptrtablen >= self->ptrtabsiz, 0)) {
-        void *tmp = picotm_tabresize(self->ptrtab,
-                                    self->ptrtabsiz,
-                                    self->ptrtabsiz+1,
-                                    sizeof(self->ptrtab[0]));
+        void* tmp = picotm_tabresize(self->ptrtab,
+                                     self->ptrtabsiz,
+                                     self->ptrtabsiz + 1,
+                                     sizeof(self->ptrtab[0]));
         if (!tmp) {
             return -1;
         }
@@ -61,101 +57,43 @@ allocator_tx_inject(struct allocator_tx *self, enum allocator_tx_call call, void
         ++self->ptrtabsiz;
     }
 
-    void **ptrtab = self->ptrtab+self->ptrtablen;
+    void** ptrtab = self->ptrtab + self->ptrtablen;
 
     *ptrtab = ptr;
 
-    if (picotm_inject_event(self->module, call, self->ptrtablen) < 0) {
+    int res = picotm_inject_event(self->module, cmd, self->ptrtablen);
+    if (res < 0) {
         return -1;
     }
 
     return self->ptrtablen++;
 }
 
-int
-allocator_tx_apply_event(struct allocator_tx *self, const struct event *event, size_t n)
-{
-    static int (* const apply_func[LAST_ACTION])(struct allocator_tx*, unsigned int) = {
-        allocator_tx_apply_posix_memalign,
-        allocator_tx_apply_free};
-
-    assert(event || !n);
-    assert(event->call < LAST_ACTION);
-
-    int err = 0;
-
-    while (n && !err) {
-        err = apply_func[event->call](self, event->cookie);
-        --n;
-        ++event;
-    }
-
-    return err;
-}
-
-int
-allocator_tx_undo_event(struct allocator_tx *self, const struct event *event, size_t n)
-{
-    static int (* const undo_func[LAST_ACTION])(struct allocator_tx*, unsigned int) = {
-        allocator_tx_undo_posix_memalign,
-        allocator_tx_undo_free};
-
-    assert(event || !n);
-    assert(event->call < LAST_ACTION);
-
-    int err = 0;
-
-    event += n;
-
-    while (n && !err) {
-        --event;
-        err = undo_func[event->call](self, event->cookie);
-        --n;
-    }
-
-    return err;
-}
-
-void
-allocator_tx_finish(struct allocator_tx *self)
-{
-    assert(self);
-
-    self->ptrtablen = 0;
-}
-
 /*
  * free()
  */
 
-void
-allocator_tx_exec_free(struct allocator_tx *self, void *mem)
+int
+allocator_tx_exec_free(struct allocator_tx* self, void *mem)
 {
-    assert(self);
-
-    /* Inject event */
-    if (allocator_tx_inject(self, ACTION_FREE, mem) < 0) {
-        return;
+    int res = append_cmd(self, CMD_FREE, mem);
+    if (res < 0) {
+        return res;
     }
+    return 0;
 }
 
-int
-allocator_tx_apply_free(struct allocator_tx *self, unsigned int cookie)
+static int
+apply_free(struct allocator_tx* self, unsigned int cookie)
 {
-    assert(self);
-    assert(cookie < self->ptrtablen);
-
     free(self->ptrtab[cookie]);
 
     return 0;
 }
 
-int
-allocator_tx_undo_free(struct allocator_tx *self, unsigned int cookie)
+static int
+undo_free(struct allocator_tx* self, unsigned int cookie)
 {
-    assert(self);
-    assert(cookie < self->ptrtablen);
-
     return 0;
 }
 
@@ -164,41 +102,93 @@ allocator_tx_undo_free(struct allocator_tx *self, unsigned int cookie)
  */
 
 int
-allocator_tx_exec_posix_memalign(struct allocator_tx *self, void **memptr, size_t alignment, size_t size)
+allocator_tx_exec_posix_memalign(struct allocator_tx* self, void** memptr,
+                                 size_t alignment, size_t size)
 {
-    assert(self);
+    void* mem;
 
-    /* Allocate memory */
-
-    if (posix_memalign(memptr, alignment, rnd2wb(size)) < 0) {
-        return -1;
+    int err = posix_memalign(&mem, alignment, rnd2wb(size));
+    if (err) {
+        return -err;
     }
 
-    /* Inject event */
-    if (allocator_tx_inject(self, ACTION_POSIX_MEMALIGN, *memptr) < 0) {
-        free(*memptr);
-        return -1;
+    int res = append_cmd(self, CMD_POSIX_MEMALIGN, mem);
+    if (res < 0) {
+        goto err_append_cmd;
     }
 
+    *memptr = mem;
+
+    return 0;
+
+err_append_cmd:
+    free(mem);
+    return res;
+}
+
+static int
+apply_posix_memalign(struct allocator_tx* self, unsigned int cookie)
+{
     return 0;
 }
 
-int
-allocator_tx_apply_posix_memalign(struct allocator_tx *self, unsigned int cookie)
+static int
+undo_posix_memalign(struct allocator_tx* self, unsigned int cookie)
 {
-    assert(self);
-    assert(cookie < self->ptrtablen);
-
-    return 0;
-}
-
-int
-allocator_tx_undo_posix_memalign(struct allocator_tx *self, unsigned int cookie)
-{
-    assert(self);
-    assert(cookie < self->ptrtablen);
-
     free(self->ptrtab[cookie]);
 
     return 0;
+}
+
+/*
+ * Module interface
+ */
+
+int
+allocator_tx_apply_event(struct allocator_tx* self, const struct event* event,
+                         size_t nevents)
+{
+    static int (* const apply[LAST_CMD])(struct allocator_tx*,
+                                         unsigned int) = {
+        apply_free,
+        apply_posix_memalign
+    };
+
+    int err = 0;
+
+    while (nevents && !err) {
+        err = apply[event->call](self, event->cookie);
+        --nevents;
+        ++event;
+    }
+
+    return err;
+}
+
+int
+allocator_tx_undo_event(struct allocator_tx* self, const struct event* event,
+                        size_t nevents)
+{
+    static int (* const undo[LAST_CMD])(struct allocator_tx*, unsigned int) = {
+        undo_free,
+        undo_posix_memalign
+    };
+
+    int err = 0;
+
+    event += nevents;
+
+    while (nevents && !err) {
+        --event;
+        err = undo[event->call](self, event->cookie);
+        --nevents;
+    }
+
+    return err;
+}
+
+void
+allocator_tx_finish(struct allocator_tx* self)
+{
+    self->ptrtablen = 0;
 }
