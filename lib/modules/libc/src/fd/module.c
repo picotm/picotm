@@ -6,11 +6,11 @@
 #include <assert.h>
 #include <picotm/picotm.h>
 #include "errcode.h"
-#include "comfd.h"
+#include "fildes_tx.h"
 
 struct fd_module {
     bool          is_initialized;
-    struct com_fd instance;
+    struct fildes_tx tx;
 };
 
 static int
@@ -18,7 +18,7 @@ lock_cb(void* data)
 {
     struct fd_module* module = data;
 
-    return com_fd_lock(&module->instance);
+    return fildes_tx_lock(&module->tx);
 }
 
 static int
@@ -26,7 +26,7 @@ unlock_cb(void* data)
 {
     struct fd_module* module = data;
 
-    com_fd_unlock(&module->instance);
+    fildes_tx_unlock(&module->tx);
 
     return 0;
 }
@@ -36,7 +36,7 @@ validate_cb(void* data, int noundo)
 {
     struct fd_module* module = data;
 
-    return com_fd_validate(&module->instance, noundo);
+    return fildes_tx_validate(&module->tx, noundo);
 }
 
 static int
@@ -44,7 +44,7 @@ apply_event_cb(const struct event* event, size_t n, void* data)
 {
     struct fd_module* module = data;
 
-    return com_fd_apply_event(&module->instance, event, n);
+    return fildes_tx_apply_event(&module->tx, event, n);
 }
 
 static int
@@ -52,7 +52,7 @@ undo_event_cb(const struct event* event, size_t n, void *data)
 {
     struct fd_module* module = data;
 
-    return com_fd_undo_event(&module->instance, event, n);
+    return fildes_tx_undo_event(&module->tx, event, n);
 }
 
 static int
@@ -60,7 +60,7 @@ update_cc_cb(void* data, int noundo)
 {
     struct fd_module* module = data;
 
-    return com_fd_updatecc(&module->instance, noundo);
+    return fildes_tx_update_cc(&module->tx, noundo);
 }
 
 static int
@@ -68,7 +68,7 @@ clear_cc_cb(void* data, int noundo)
 {
     struct fd_module* module = data;
 
-    return com_fd_clearcc(&module->instance, noundo);
+    return fildes_tx_clear_cc(&module->tx, noundo);
 }
 
 static int
@@ -76,7 +76,7 @@ finish_cb(void* data)
 {
     struct fd_module* module = data;
 
-    com_fd_finish(&module->instance);
+    fildes_tx_finish(&module->tx);
 
     return 0;
 }
@@ -86,20 +86,20 @@ uninit_cb(void* data)
 {
     struct fd_module* module = data;
 
-    com_fd_uninit(&module->instance);
+    fildes_tx_uninit(&module->tx);
 
     module->is_initialized = false;
 
     return 0;
 }
 
-static struct com_fd*
-get_com_fd(void)
+static struct fildes_tx*
+get_fildes_tx(void)
 {
     static __thread struct fd_module t_module;
 
     if (t_module.is_initialized) {
-        return &t_module.instance;
+        return &t_module.tx;
     }
 
     long res = picotm_register_module(lock_cb,
@@ -117,34 +117,34 @@ get_com_fd(void)
     }
     unsigned long module = res;
 
-    res = com_fd_init(&t_module.instance, module);
+    res = fildes_tx_init(&t_module.tx, module);
     if (res < 0) {
         return NULL;
     }
 
     t_module.is_initialized = true;
 
-    return &t_module.instance;
+    return &t_module.tx;
 }
 
-static struct com_fd*
-get_non_null_com_fd(void)
+static struct fildes_tx*
+get_non_null_fildes_tx(void)
 {
-    struct com_fd* com_fd = get_com_fd();
-    assert(com_fd);
+    struct fildes_tx* fildes_tx = get_fildes_tx();
+    assert(fildes_tx);
 
-    return com_fd;
+    return fildes_tx;
 }
 
 int
 fd_module_accept(int sockfd, struct sockaddr* address, socklen_t* address_len)
 {
-    struct com_fd* comfd = get_non_null_com_fd();
+    struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     int res;
 
     do {
-        res = com_fd_exec_accept(comfd, sockfd, address, address_len);
+        res = fildes_tx_exec_accept(fildes_tx, sockfd, address, address_len);
 
         switch (res) {
             case ERR_CONFLICT:
@@ -168,10 +168,10 @@ fd_module_bind(int sockfd, const struct sockaddr* address,
 {
     int res;
 
-    struct com_fd* comfd = get_non_null_com_fd();
+    struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     do {
-        res = com_fd_exec_bind(comfd, sockfd, address, address_len,
+        res = fildes_tx_exec_bind(fildes_tx, sockfd, address, address_len,
                                picotm_is_irrevocable());
 
         switch (res) {
@@ -193,12 +193,12 @@ fd_module_bind(int sockfd, const struct sockaddr* address,
 int
 fd_module_close(int fildes)
 {
-    struct com_fd* comfd = get_non_null_com_fd();
+    struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     int res;
 
     do {
-        res = com_fd_exec_close(comfd, fildes, picotm_is_irrevocable());
+        res = fildes_tx_exec_close(fildes_tx, fildes, picotm_is_irrevocable());
 
         switch (res) {
             case ERR_CONFLICT:
@@ -222,10 +222,10 @@ fd_module_connect(int sockfd, const struct sockaddr* serv_addr,
 {
     int res;
 
-    struct com_fd* comfd = get_non_null_com_fd();
+    struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     do {
-        res = com_fd_exec_connect(comfd, sockfd, serv_addr, addr_len,
+        res = fildes_tx_exec_connect(fildes_tx, sockfd, serv_addr, addr_len,
                                   picotm_is_irrevocable());
 
         switch (res) {
@@ -249,10 +249,10 @@ fd_module_dup_internal(int fildes, int cloexec)
 {
     int res;
 
-    struct com_fd* comfd = get_non_null_com_fd();
+    struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     do {
-        res = com_fd_exec_dup(comfd, fildes, cloexec);
+        res = fildes_tx_exec_dup(fildes_tx, fildes, cloexec);
 
         switch (res) {
             case ERR_CONFLICT:
@@ -281,10 +281,10 @@ fd_module_fcntl(int fildes, int cmd, union com_fd_fcntl_arg* arg)
 {
     int res;
 
-    struct com_fd* comfd = get_non_null_com_fd();
+    struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     do {
-        res = com_fd_exec_fcntl(comfd, fildes, cmd, arg, picotm_is_irrevocable());
+        res = fildes_tx_exec_fcntl(fildes_tx, fildes, cmd, arg, picotm_is_irrevocable());
 
         switch (res) {
             case ERR_CONFLICT:
@@ -307,10 +307,10 @@ fd_module_fsync(int fildes)
 {
     int res;
 
-    struct com_fd* comfd = get_non_null_com_fd();
+    struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     do {
-        res = com_fd_exec_fsync(comfd, fildes, picotm_is_irrevocable());
+        res = fildes_tx_exec_fsync(fildes_tx, fildes, picotm_is_irrevocable());
 
         switch (res) {
             case ERR_CONFLICT:
@@ -333,10 +333,10 @@ fd_module_listen(int sockfd, int backlog)
 {
     int res;
 
-    struct com_fd* comfd = get_non_null_com_fd();
+    struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     do {
-        res = com_fd_exec_listen(comfd, sockfd, backlog, picotm_is_irrevocable());
+        res = fildes_tx_exec_listen(fildes_tx, sockfd, backlog, picotm_is_irrevocable());
 
         switch (res) {
             case ERR_CONFLICT:
@@ -359,10 +359,10 @@ fd_module_lseek(int fildes, off_t offset, int whence)
 {
     off_t res;
 
-    struct com_fd* comfd = get_non_null_com_fd();
+    struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     do {
-        res = com_fd_exec_lseek(comfd, fildes, offset, whence, picotm_is_irrevocable());
+        res = fildes_tx_exec_lseek(fildes_tx, fildes, offset, whence, picotm_is_irrevocable());
 
         switch (res) {
             case ERR_CONFLICT:
@@ -385,10 +385,10 @@ fd_module_open(const char* path, int oflag, mode_t mode)
 {
     int res;
 
-    struct com_fd* comfd = get_non_null_com_fd();
+    struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     do {
-        res = com_fd_exec_open(comfd, path, oflag, mode, picotm_is_irrevocable());
+        res = fildes_tx_exec_open(fildes_tx, path, oflag, mode, picotm_is_irrevocable());
 
         switch (res) {
             case ERR_CONFLICT:
@@ -411,10 +411,10 @@ fd_module_pipe(int pipefd[2])
 {
     int res;
 
-    struct com_fd* comfd = get_non_null_com_fd();
+    struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     do {
-        res = com_fd_exec_pipe(comfd, pipefd);
+        res = fildes_tx_exec_pipe(fildes_tx, pipefd);
 
         switch (res) {
             case ERR_CONFLICT:
@@ -437,15 +437,15 @@ fd_module_pread(int fildes, void* buf, size_t nbyte, off_t off)
 {
     ssize_t res;
 
-    struct com_fd* comfd = get_non_null_com_fd();
+    struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     do {
-        res = com_fd_exec_pread(comfd, fildes, buf, nbyte, off,
+        res = fildes_tx_exec_pread(fildes_tx, fildes, buf, nbyte, off,
                                 picotm_is_irrevocable());
 
         /* possibly validate all optimistic domains */
-        if ((com_fd_get_validation_mode(comfd) == PICOTM_LIBC_VALIDATE_FULL)
-            && com_fd_get_optcc(comfd)
+        if ((fildes_tx_get_validation_mode(fildes_tx) == PICOTM_LIBC_VALIDATE_FULL)
+            && fildes_tx_get_optcc(fildes_tx)
             && !picotm_is_valid()) {
             res = ERR_CONFLICT;
         }
@@ -471,10 +471,10 @@ fd_module_pwrite(int fildes, const void* buf, size_t nbyte, off_t off)
 {
     ssize_t res;
 
-    struct com_fd* comfd = get_non_null_com_fd();
+    struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     do {
-        res = com_fd_exec_pwrite(comfd, fildes, buf, nbyte, off,
+        res = fildes_tx_exec_pwrite(fildes_tx, fildes, buf, nbyte, off,
                                  picotm_is_irrevocable());
 
         switch (res) {
@@ -498,15 +498,15 @@ fd_module_read(int fildes, void* buf, size_t nbyte)
 {
     ssize_t res;
 
-    struct com_fd* comfd = get_non_null_com_fd();
+    struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     do {
-        res = com_fd_exec_read(comfd, fildes, buf, nbyte,
+        res = fildes_tx_exec_read(fildes_tx, fildes, buf, nbyte,
                                picotm_is_irrevocable());
 
         /* possibly validate all optimistic domains */
-        if ((com_fd_get_validation_mode(comfd) == PICOTM_LIBC_VALIDATE_FULL)
-            && com_fd_get_optcc(comfd)
+        if ((fildes_tx_get_validation_mode(fildes_tx) == PICOTM_LIBC_VALIDATE_FULL)
+            && fildes_tx_get_optcc(fildes_tx)
             && !picotm_is_valid()) {
             res = ERR_CONFLICT;
         }
@@ -532,10 +532,10 @@ fd_module_recv(int sockfd, void* buffer, size_t length, int flags)
 {
     ssize_t res;
 
-    struct com_fd* comfd = get_non_null_com_fd();
+    struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     do {
-        res = com_fd_exec_recv(comfd, sockfd, buffer, length, flags,
+        res = fildes_tx_exec_recv(fildes_tx, sockfd, buffer, length, flags,
                                picotm_is_irrevocable());
 
         switch (res) {
@@ -560,10 +560,10 @@ fd_module_select(int nfds, fd_set* readfds, fd_set* writefds,
 {
     int res;
 
-    struct com_fd* comfd = get_non_null_com_fd();
+    struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     do {
-        res = com_fd_exec_select(comfd, nfds, readfds,
+        res = fildes_tx_exec_select(fildes_tx, nfds, readfds,
                                               writefds,
                                               errorfds,
                                               timeout,
@@ -590,10 +590,10 @@ fd_module_send(int fildes, const void* buffer, size_t length, int flags)
 {
     ssize_t res;
 
-    struct com_fd* comfd = get_non_null_com_fd();
+    struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     do {
-        res = com_fd_exec_send(comfd, fildes, buffer, length, flags,
+        res = fildes_tx_exec_send(fildes_tx, fildes, buffer, length, flags,
                                picotm_is_irrevocable());
 
         switch (res) {
@@ -617,10 +617,10 @@ fd_module_shutdown(int sockfd, int how)
 {
     int res;
 
-    struct com_fd* comfd = get_non_null_com_fd();
+    struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     do {
-        res = com_fd_exec_shutdown(comfd, sockfd, how, picotm_is_irrevocable());
+        res = fildes_tx_exec_shutdown(fildes_tx, sockfd, how, picotm_is_irrevocable());
 
         switch (res) {
             case ERR_CONFLICT:
@@ -643,10 +643,10 @@ fd_module_socket(int domain, int type, int protocol)
 {
     int res;
 
-    struct com_fd* comfd = get_non_null_com_fd();
+    struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     do {
-        res = com_fd_exec_socket(comfd, domain, type, protocol);
+        res = fildes_tx_exec_socket(fildes_tx, domain, type, protocol);
 
         switch (res) {
             case ERR_CONFLICT:
@@ -667,9 +667,9 @@ fd_module_socket(int domain, int type, int protocol)
 void
 fd_module_sync()
 {
-    struct com_fd* comfd = get_non_null_com_fd();
+    struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
-    com_fd_exec_sync(comfd);
+    fildes_tx_exec_sync(fildes_tx);
 }
 
 ssize_t
@@ -677,10 +677,10 @@ fd_module_write(int fildes, const void* buf, size_t nbyte)
 {
     ssize_t res;
 
-    struct com_fd* comfd = get_non_null_com_fd();
+    struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     do {
-        res = com_fd_exec_write(comfd, fildes, buf, nbyte,
+        res = fildes_tx_exec_write(fildes_tx, fildes, buf, nbyte,
                                 picotm_is_irrevocable());
 
         switch (res) {
