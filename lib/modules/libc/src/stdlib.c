@@ -7,6 +7,7 @@
 #include <malloc.h>
 #include <picotm/picotm.h>
 #include <picotm/picotm-module.h>
+#include <string.h>
 #include "alloc/comalloctx.h"
 #include "picotm/picotm-libc.h"
 #include "picotm/stdlib-tm.h"
@@ -33,18 +34,17 @@ calloc_tx(size_t nmemb, size_t size)
 {
     picotm_libc_save_errno();
 
-    void* mem;
-
     size_t alloc_size = nmemb * size;
 
-    do {
-        mem = com_alloc_tx_calloc(nmemb, size);
-        if (alloc_size && !mem) {
-            picotm_recover_from_errno(errno);
-        }
-    } while (alloc_size && ! mem);
+    void* mem;
 
-    return mem;
+    int res = posix_memalign_tm(&mem, 2 * sizeof(void*), alloc_size);
+    if (res) {
+        errno = res;
+        return NULL;
+    }
+
+    return memset(mem, 0, alloc_size);
 }
 
 PICOTM_EXPORT
@@ -74,12 +74,11 @@ malloc_tx(size_t size)
 
     void* mem;
 
-    do {
-        mem = com_alloc_tx_malloc(size);
-        if (size && !mem) {
-            picotm_recover_from_errno(errno);
-        }
-    } while (size && !mem);
+    int res = posix_memalign_tm(&mem, 2 * sizeof(void*), size);
+    if (res) {
+        errno = res;
+        return NULL;
+    }
 
     return mem;
 }
@@ -128,14 +127,31 @@ realloc_tx(void* ptr, size_t size)
 
     picotm_libc_save_errno();
 
-    void* mem;
+    void* mem = NULL;
 
-    do {
-        mem = com_alloc_tx_realloc(ptr, size, usiz);
-        if (size && !mem) {
-            picotm_recover_from_errno(errno);
-        }
-    } while (size && !mem);
+    if (size) {
+        int err;
+        do {
+            err = com_alloc_tx_posix_memalign(&mem, 2 * sizeof(void*), size);
+            if (err) {
+                picotm_recover_from_errno(err);
+            }
+        } while (err);
+    }
+
+    if (ptr && mem) {
+        /* Valgrind might report invalid reads and out-of-bounds access
+         * within this function. This is a false positive. The result of
+         * malloc_usable_size() is the maximum available buffer space,
+         * not the amount of allocated or valid memory. Any memcpy() could
+         * therefore operate on uninitialized data.
+         */
+        memcpy(mem, ptr, size < usiz ? size : usiz);
+    }
+
+    if (ptr && !size) {
+        com_alloc_tx_free(ptr, usiz);
+    }
 
     return mem;
 }
