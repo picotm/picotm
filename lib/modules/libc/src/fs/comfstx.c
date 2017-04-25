@@ -232,46 +232,36 @@ com_fs_tx_fstat(int fildes, struct stat *buf)
 char *
 com_fs_tx_getcwd(char *buf, size_t size)
 {
-    extern void* com_alloc_tx_malloc(size_t);
-
     struct com_fs *comfs = com_fs_tx_aquire_data();
     assert(comfs);
 
-    if (buf && !size) {
+    if (!size) {
         errno = EINVAL;
         return NULL;
     }
 
-    /* get transaction-local working directory */
+    /* return transaction-local working directory */
 
-    char *cwd = com_fs_get_cwd_path(comfs);
-
+    char* cwd = com_fs_get_cwd_path(comfs);
     if (!cwd) {
         return NULL;
     }
 
-    size_t len = 1+strlen(cwd);
+    size_t len = strlen(cwd) + sizeof(*cwd);
 
-    if (buf) {
-        if (size < len) {
-            free(cwd);
-            errno = ERANGE;
-            return NULL;
-        }
-    } else {
-        buf = com_alloc_tx_malloc(len);
-
-        if (!buf) {
-            free(cwd);
-            return NULL;
-        }
+    if (!(size >= len)) {
+        errno = ERANGE;
+        goto err_size_ge_len;
     }
 
     memcpy(buf, cwd, len);
-
     free(cwd);
 
     return buf;
+
+err_size_ge_len:
+    free(cwd);
+    return NULL;
 }
 
 int
