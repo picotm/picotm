@@ -14,19 +14,19 @@
 #include "rnd2wb.h"
 
 static int
-com_alloc_tx_apply_event(const struct event *event, size_t n, void *data)
+apply_event_cb(const struct event *event, size_t n, void *data)
 {
     return com_alloc_apply_event(data, event, n);
 }
 
 static int
-com_alloc_tx_undo_event(const struct event *event, size_t n, void *data)
+undo_event_cb(const struct event *event, size_t n, void *data)
 {
     return com_alloc_undo_event(data, event, n);
 }
 
 static int
-com_alloc_tx_finish(void *data)
+finish_cb(void *data)
 {
     com_alloc_finish(data);
 
@@ -34,7 +34,7 @@ com_alloc_tx_finish(void *data)
 }
 
 static int
-com_alloc_tx_uninit(void *data)
+uninit_cb(void *data)
 {
     com_alloc_uninit(data);
 
@@ -56,12 +56,12 @@ get_com_alloc()
     long res = picotm_register_module(NULL,
                                       NULL,
                                       NULL,
-                                      com_alloc_tx_apply_event,
-                                      com_alloc_tx_undo_event,
+                                      apply_event_cb,
+                                      undo_event_cb,
                                       NULL,
                                       NULL,
-                                      com_alloc_tx_finish,
-                                      com_alloc_tx_uninit,
+                                      finish_cb,
+                                      uninit_cb,
                                       &t_com_alloc.instance);
     if (res < 0) {
         return NULL;
