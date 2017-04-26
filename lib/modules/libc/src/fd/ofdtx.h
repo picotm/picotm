@@ -159,7 +159,8 @@ void
 ofdtx_dump(const struct ofdtx *ofdtx);
 
 
-/* bind
+/*
+ * bind()
  */
 
 int
@@ -175,7 +176,8 @@ ofdtx_bind_apply(struct ofdtx *ofdtx, int sockfd, const struct com_fd_event *eve
 int
 ofdtx_bind_undo(struct ofdtx *ofdtx, int sockfd, int cookie);
 
-/* connect
+/*
+ * connect()
  */
 
 int
@@ -191,7 +193,8 @@ ofdtx_connect_apply(struct ofdtx *ofdtx, int sockfd, const struct com_fd_event *
 int
 ofdtx_connect_undo(struct ofdtx *ofdtx, int sockfd, int cookie);
 
-/* fcntl
+/*
+ * fcntl()
  */
 
 int
@@ -205,7 +208,8 @@ ofdtx_fcntl_apply(struct ofdtx *ofdtx, int fildes, const struct com_fd_event *ev
 int
 ofdtx_fcntl_undo(struct ofdtx *ofdtx, int fildes, int cookie);
 
-/* fsync
+/*
+ * fsync()
  */
 
 int
@@ -217,7 +221,8 @@ ofdtx_fsync_apply(struct ofdtx *ofdtx, int fildes, const struct com_fd_event *ev
 int
 ofdtx_fsync_undo(struct ofdtx *ofdtx, int fildes, int cookie);
 
-/* listen
+/*
+ * listen()
  */
 
 int
@@ -232,7 +237,8 @@ ofdtx_listen_apply(struct ofdtx *ofdtx, int sockfd, const struct com_fd_event *e
 int
 ofdtx_listen_undo(struct ofdtx *ofdtx, int sockfd, int cookie);
 
-/* lseek
+/*
+ * lseek()
  */
 
 off_t
@@ -245,7 +251,8 @@ ofdtx_lseek_apply(struct ofdtx *ofdtx, int fildes, const struct com_fd_event *ev
 int
 ofdtx_lseek_undo(struct ofdtx *ofdtx, int fildes, int cookie);
 
-/* pread
+/*
+ * pread()
  */
 
 ssize_t
@@ -259,7 +266,8 @@ ofdtx_pread_apply(struct ofdtx *ofdtx, int fildes, const struct com_fd_event *ev
 int
 ofdtx_pread_undo(struct ofdtx *ofdtx, int fildes, int cookie);
 
-/* pwrite
+/*
+ * pwrite()
  */
 
 ssize_t
@@ -272,7 +280,8 @@ ofdtx_pwrite_apply(struct ofdtx *ofdtx, int fildes, const struct com_fd_event *e
 int
 ofdtx_pwrite_undo(struct ofdtx *ofdtx, int fildes, int cookie);
 
-/* read
+/*
+ * read()
  */
 
 ssize_t
@@ -286,7 +295,8 @@ ofdtx_read_apply(struct ofdtx *ofdtx, int fildes, const struct com_fd_event *eve
 off_t
 ofdtx_read_undo(struct ofdtx *ofdtx, int fildes, int cookie);
 
-/* recv
+/*
+ * recv()
  */
 
 ssize_t
@@ -302,7 +312,8 @@ ofdtx_recv_apply(struct ofdtx *ofdtx, int sockfd, const struct com_fd_event *eve
 int
 ofdtx_recv_undo(struct ofdtx *ofdtx, int sockfd, int cookie);
 
-/* send
+/*
+ * send()
  */
 
 ssize_t
@@ -318,7 +329,8 @@ ofdtx_send_apply(struct ofdtx *ofdtx, int fildes, const struct com_fd_event *eve
 int
 ofdtx_send_undo(struct ofdtx *ofdtx, int fildes, int cookie);
 
-/* shutdown
+/*
+ * shutdown()
  */
 
 int
@@ -333,7 +345,8 @@ ofdtx_shutdown_apply(struct ofdtx *ofdtx, int fildes, const struct com_fd_event 
 int
 ofdtx_shutdown_undo(struct ofdtx *ofdtx, int fildes, int cookie);
 
-/* write
+/*
+ * write()
  */
 
 ssize_t
