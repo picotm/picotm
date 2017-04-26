@@ -11,7 +11,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include "errcode.h"
-#include "event.h"
 #include "fcntloptab.h"
 #include "ioop.h"
 #include "iooptab.h"
@@ -21,6 +20,7 @@
 #include "regiontab.h"
 #include "seekop.h"
 #include "seekoptab.h"
+#include "fd_event.h"
 
 static int
 ofd_tx_2pl_release_locks(struct ofd_tx* self)
@@ -845,18 +845,18 @@ ofd_tx_bind_exec(struct ofd_tx* self, int sockfd, const struct sockaddr* addr,
 
 static int
 bind_apply_noundo(struct ofd_tx* self, int sockfd,
-                  const struct com_fd_event* event, size_t n)
+                  const struct fd_event* event, size_t n)
 {
     return 0;
 }
 
 int
 ofd_tx_bind_apply(struct ofd_tx* self, int sockfd,
-                  const struct com_fd_event* event, size_t n)
+                  const struct fd_event* event, size_t n)
 {
     static int (* const bind_apply[][4])(struct ofd_tx*,
                                          int,
-                                         const struct com_fd_event*,
+                                         const struct fd_event*,
                                          size_t) = {
         {bind_apply_noundo, NULL, NULL, NULL},
         {bind_apply_noundo, NULL, NULL, NULL},
@@ -936,18 +936,18 @@ ofd_tx_connect_exec(struct ofd_tx* self, int sockfd,
 
 static int
 connect_apply_noundo(struct ofd_tx* self, int sockfd,
-                     const struct com_fd_event* event, size_t n)
+                     const struct fd_event* event, size_t n)
 {
     return 0;
 }
 
 int
 ofd_tx_connect_apply(struct ofd_tx* self, int sockfd,
-                     const struct com_fd_event* event, size_t n)
+                     const struct fd_event* event, size_t n)
 {
     static int (* const connect_apply[][4])(struct ofd_tx*,
                                             int,
-                                            const struct com_fd_event*,
+                                            const struct fd_event*,
                                             size_t) = {
         {connect_apply_noundo, NULL, NULL, NULL},
         {connect_apply_noundo, NULL, NULL, NULL},
@@ -1180,7 +1180,7 @@ ofd_tx_fcntl_exec(struct ofd_tx* self, int fildes, int cmd,
 
 int
 ofd_tx_fcntl_apply(struct ofd_tx* self, int fildes,
-                   const struct com_fd_event* event, size_t n)
+                   const struct fd_event* event, size_t n)
 {
     return 0;
 }
@@ -1265,7 +1265,7 @@ fsync_apply_regular_2pl(int fildes)
 
 int
 ofd_tx_fsync_apply(struct ofd_tx* self, int fildes,
-                   const struct com_fd_event* event, size_t n)
+                   const struct fd_event* event, size_t n)
 {
     static int (* const fsync_apply[][4])(int) = {
         {fsync_apply_noundo, NULL,                   NULL,                    NULL},
@@ -1427,7 +1427,7 @@ listen_apply_socket_2pl_ext()
 
 int
 ofd_tx_listen_apply(struct ofd_tx* self, int sockfd,
-                    const struct com_fd_event* event, size_t n)
+                    const struct fd_event* event, size_t n)
 {
     static int (* const listen_apply[][4])(void) = {
         {listen_apply_noundo, NULL, NULL, NULL},
@@ -1688,14 +1688,14 @@ ofd_tx_lseek_exec(struct ofd_tx* self, int fildes,  off_t offset, int whence,
 
 static int
 lseek_apply_noundo(struct ofd_tx* self, int fildes,
-                   const struct com_fd_event* event, size_t n)
+                   const struct fd_event* event, size_t n)
 {
     return 0;
 }
 
 static int
 lseek_apply_regular(struct ofd_tx* self, int fildes,
-                    const struct com_fd_event* event, size_t n)
+                    const struct fd_event* event, size_t n)
 {
     int err = 0;
 
@@ -1721,11 +1721,11 @@ lseek_apply_regular(struct ofd_tx* self, int fildes,
 
 int
 ofd_tx_lseek_apply(struct ofd_tx* self, int fildes,
-                   const struct com_fd_event* event, size_t n)
+                   const struct fd_event* event, size_t n)
 {
     static int (* const lseek_apply[][4])(struct ofd_tx*,
                                           int,
-                                          const struct com_fd_event*,
+                                          const struct fd_event*,
                                           size_t) = {
         {lseek_apply_noundo, NULL,                NULL,                NULL},
         {lseek_apply_noundo, lseek_apply_regular, lseek_apply_regular, NULL},
@@ -1931,7 +1931,7 @@ pread_apply_any(void)
 
 ssize_t
 ofd_tx_pread_apply(struct ofd_tx* self, int fildes,
-                   const struct com_fd_event* event, size_t n)
+                   const struct fd_event* event, size_t n)
 {
     static ssize_t (* const pread_apply[][4])(void) = {
         {pread_apply_any, NULL,            NULL,            NULL},
@@ -2107,14 +2107,14 @@ ofd_tx_pwrite_exec(struct ofd_tx* self, int fildes, const void* buf,
 
 static ssize_t
 pwrite_apply_noundo(struct ofd_tx* self, int fildes,
-                    const struct com_fd_event* event, size_t n)
+                    const struct fd_event* event, size_t n)
 {
     return 0;
 }
 
 static ssize_t
 pwrite_apply_regular(struct ofd_tx* self, int fildes,
-                     const struct com_fd_event* event, size_t n)
+                     const struct fd_event* event, size_t n)
 {
     assert(self);
     assert(fildes >= 0);
@@ -2154,11 +2154,11 @@ pwrite_apply_regular(struct ofd_tx* self, int fildes,
 
 ssize_t
 ofd_tx_pwrite_apply(struct ofd_tx* self, int fildes,
-                    const struct com_fd_event* event, size_t n)
+                    const struct fd_event* event, size_t n)
 {
     static ssize_t (* const pwrite_apply[][4])(struct ofd_tx*,
                                                int,
-                                               const struct com_fd_event*,
+                                               const struct fd_event*,
                                                size_t) = {
         {pwrite_apply_noundo, NULL,                 NULL,                 NULL},
         {pwrite_apply_noundo, pwrite_apply_regular, pwrite_apply_regular, NULL},
@@ -2346,14 +2346,14 @@ ofd_tx_read_exec(struct ofd_tx* self, int fildes, void* buf, size_t nbyte,
 
 static ssize_t
 read_apply_noundo(struct ofd_tx* self, int fildes,
-                  const struct com_fd_event* event, size_t n)
+                  const struct fd_event* event, size_t n)
 {
     return 0;
 }
 
 static ssize_t
 read_apply_regular(struct ofd_tx* self, int fildes,
-                   const struct com_fd_event* event, size_t n)
+                   const struct fd_event* event, size_t n)
 {
     int err = 0;
 
@@ -2371,18 +2371,18 @@ read_apply_regular(struct ofd_tx* self, int fildes,
 
 static ssize_t
 read_apply_socket(struct ofd_tx* self, int sockfd,
-                  const struct com_fd_event* event, size_t n)
+                  const struct fd_event* event, size_t n)
 {
     return 0;
 }
 
 ssize_t
 ofd_tx_read_apply(struct ofd_tx* self, int fildes,
-                  const struct com_fd_event* event, size_t n)
+                  const struct fd_event* event, size_t n)
 {
     static ssize_t (* const read_apply[][4])(struct ofd_tx*,
                                              int,
-                                             const struct com_fd_event*,
+                                             const struct fd_event*,
                                              size_t) = {
         {read_apply_noundo, NULL,               NULL,               NULL},
         {read_apply_noundo, read_apply_regular, read_apply_regular, NULL},
@@ -2470,7 +2470,7 @@ recv_apply_noundo(void)
 
 int
 ofd_tx_recv_apply(struct ofd_tx* self, int sockfd,
-                  const struct com_fd_event* event, size_t n)
+                  const struct fd_event* event, size_t n)
 {
     static ssize_t (* const recv_apply[][4])(void) = {
         {recv_apply_noundo, NULL, NULL, NULL},
@@ -2650,7 +2650,7 @@ send_apply_socket_2pl_ext(struct ofd_tx* self, int sockfd, int cookie)
 
 int
 ofd_tx_send_apply(struct ofd_tx* self, int sockfd,
-                  const struct com_fd_event* event, size_t n)
+                  const struct fd_event* event, size_t n)
 {
     static int (* const send_apply[][4])(struct ofd_tx*, int, int) = {
         {send_apply_noundo, NULL,                 NULL,                  NULL},
@@ -2751,18 +2751,18 @@ ofd_tx_shutdown_exec(struct ofd_tx* self, int sockfd, int how, int* cookie,
 
 static int
 shutdown_apply_noundo(struct ofd_tx* self, int sockfd,
-                      const struct com_fd_event* event, size_t n)
+                      const struct fd_event* event, size_t n)
 {
     return 0;
 }
 
 int
 ofd_tx_shutdown_apply(struct ofd_tx* self, int sockfd,
-                      const struct com_fd_event* event, size_t n)
+                      const struct fd_event* event, size_t n)
 {
     static int (* const shutdown_apply[][4])(struct ofd_tx*,
                                              int,
-                                             const struct com_fd_event*,
+                                             const struct fd_event*,
                                              size_t) = {
         {shutdown_apply_noundo, NULL, NULL, NULL},
         {shutdown_apply_noundo, NULL, NULL, NULL},
@@ -3085,7 +3085,7 @@ write_apply_socket(struct ofd_tx* self, int sockfd, int cookie)
 
 ssize_t
 ofd_tx_write_apply(struct ofd_tx* self, int fildes,
-                   const struct com_fd_event* event, size_t n)
+                   const struct fd_event* event, size_t n)
 {
     static int (* const write_apply[][4])(struct ofd_tx*, int, int) = {
         {write_apply_noundo, NULL,                   NULL,                    NULL},
