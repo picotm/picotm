@@ -8,8 +8,8 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include <string.h>
+#include "error/module.h"
 #include "fd/comfdtx.h"
-#include "picotm/picotm-libc.h"
 
 PICOTM_EXPORT
 int
@@ -22,7 +22,7 @@ PICOTM_EXPORT
 int
 fcntl_tm(int fildes, int cmd, ...)
 {
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     int res;
 
@@ -78,7 +78,7 @@ PICOTM_EXPORT
 int
 open_tm(const char* path, int oflag, ...)
 {
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     mode_t mode = 0;
 

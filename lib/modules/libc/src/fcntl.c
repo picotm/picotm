@@ -9,8 +9,8 @@
 #include <stdbool.h>
 #include <string.h>
 #include <picotm/picotm-tm.h>
+#include "error/module.h"
 #include "fd/comfdtx.h"
-#include "picotm/picotm-libc.h"
 #include "picotm/fcntl-tm.h"
 
 PICOTM_EXPORT
@@ -24,7 +24,7 @@ PICOTM_EXPORT
 int
 fcntl_tx(int fildes, int cmd, ...)
 {
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     int res;
 

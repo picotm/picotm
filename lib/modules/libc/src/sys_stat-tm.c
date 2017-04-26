@@ -5,14 +5,14 @@
 #include "picotm/sys/stat.h"
 #include <errno.h>
 #include <picotm/picotm-module.h>
+#include "error/module.h"
 #include "fs/comfstx.h"
-#include "picotm/picotm-libc.h"
 
 PICOTM_EXPORT
 int
 chmod_tm(const char* path, mode_t mode)
 {
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     int res;
 
@@ -30,7 +30,7 @@ PICOTM_EXPORT
 int
 fstat_tm(int fildes, struct stat* buf)
 {
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     int res;
 
@@ -48,7 +48,7 @@ PICOTM_EXPORT
 int
 lstat_tm(const char* path, struct stat* buf)
 {
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     int res;
 
@@ -66,7 +66,7 @@ PICOTM_EXPORT
 int
 mkdir_tm(const char* path, mode_t mode)
 {
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     int res;
 
@@ -84,7 +84,7 @@ PICOTM_EXPORT
 int
 mkfifo_tm(const char* path, mode_t mode)
 {
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     int res;
 
@@ -103,7 +103,7 @@ PICOTM_EXPORT
 int
 mknod_tm(const char* path, mode_t mode, dev_t dev)
 {
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     int res;
 
@@ -122,7 +122,7 @@ PICOTM_EXPORT
 int
 stat_tm(const char* path, struct stat* buf)
 {
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     int res;
 

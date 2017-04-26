@@ -5,13 +5,13 @@
 #include "picotm/sched.h"
 #include <errno.h>
 #include <picotm/picotm-module.h>
-#include "picotm/picotm-libc.h"
+#include "error/module.h"
 
 PICOTM_EXPORT
 int
 sched_yield_tx()
 {
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     int res;
 

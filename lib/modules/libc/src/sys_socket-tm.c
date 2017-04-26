@@ -6,7 +6,7 @@
 #include <errno.h>
 #include <picotm/picotm-module.h>
 #include "fd/comfdtx.h"
-#include "picotm/picotm-libc.h"
+#include "error/module.h"
 
 static bool
 perform_recovery(int errno_hint)
@@ -25,7 +25,7 @@ PICOTM_EXPORT
 int
 accept_tm(int socket, struct sockaddr* address, socklen_t* address_len)
 {
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     int res;
 
@@ -47,7 +47,7 @@ PICOTM_EXPORT
 int
 bind_tm(int socket, const struct sockaddr* address, socklen_t address_len)
 {
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     int res;
 
@@ -65,7 +65,7 @@ PICOTM_EXPORT
 int
 connect_tm(int socket, const struct sockaddr* address, socklen_t address_len)
 {
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     int res;
 
@@ -83,7 +83,7 @@ PICOTM_EXPORT
 ssize_t
 send_tm(int socket, const void* buffer, size_t length, int flags)
 {
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     ssize_t res;
 
@@ -105,7 +105,7 @@ PICOTM_EXPORT
 ssize_t
 recv_tm(int socket, void* buffer, size_t length, int flags)
 {
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     ssize_t res;
 

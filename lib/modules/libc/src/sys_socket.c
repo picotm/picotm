@@ -6,8 +6,8 @@
 #include <errno.h>
 #include <picotm/picotm-module.h>
 #include <picotm/picotm-tm.h>
+#include "error/module.h"
 #include "fd/comfdtx.h"
-#include "picotm/picotm-libc.h"
 #include "picotm/sys/socket-tm.h"
 
 PICOTM_EXPORT
@@ -41,7 +41,7 @@ PICOTM_EXPORT
 int
 listen_tx(int socket, int backlog)
 {
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     int res;
 
@@ -67,7 +67,7 @@ PICOTM_EXPORT
 int
 shutdown_tx(int socket, int how)
 {
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     int res;
 
@@ -85,7 +85,7 @@ PICOTM_EXPORT
 int
 socket_tx(int domain, int type, int protocol)
 {
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     int res;
 

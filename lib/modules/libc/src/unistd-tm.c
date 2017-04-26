@@ -6,9 +6,9 @@
 #include <errno.h>
 #include <picotm/picotm.h>
 #include <picotm/picotm-module.h>
+#include "error/module.h"
 #include "fd/comfdtx.h"
 #include "fs/comfstx.h"
-#include "picotm/picotm-libc.h"
 
 static bool
 perform_recovery(int errno_hint)
@@ -27,7 +27,7 @@ PICOTM_EXPORT
 int
 chdir_tm(const char* path)
 {
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     int res;
 
@@ -45,7 +45,7 @@ PICOTM_EXPORT
 char*
 getcwd_tm(char* buf, size_t size)
 {
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     char* str;
 
@@ -63,7 +63,7 @@ PICOTM_EXPORT
 int
 link_tm(const char* path1, const char* path2)
 {
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     int res;
 
@@ -81,7 +81,7 @@ PICOTM_EXPORT
 int
 pipe_tm(int fildes[2])
 {
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     int res;
 
@@ -99,7 +99,7 @@ PICOTM_EXPORT
 ssize_t
 pread_tm(int fildes, void* buf, size_t nbyte, off_t offset)
 {
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     ssize_t res;
 
@@ -121,7 +121,7 @@ PICOTM_EXPORT
 ssize_t
 pwrite_tm(int fildes, const void* buf, size_t nbyte, off_t offset)
 {
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     ssize_t res;
 
@@ -143,7 +143,7 @@ PICOTM_EXPORT
 ssize_t
 read_tm(int fildes, void* buf, size_t nbyte)
 {
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     ssize_t res;
 
@@ -165,7 +165,7 @@ PICOTM_EXPORT
 int
 unlink_tm(const char* path)
 {
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     int res;
 
@@ -183,7 +183,7 @@ PICOTM_EXPORT
 ssize_t
 write_tm(int fildes, const void* buf, size_t nbyte)
 {
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     int res;
 

@@ -9,7 +9,7 @@
 #include <picotm/picotm-module.h>
 #include <string.h>
 #include "allocator/module.h"
-#include "picotm/picotm-libc.h"
+#include "error/module.h"
 #include "picotm/stdlib-tm.h"
 
 PICOTM_EXPORT
@@ -32,7 +32,7 @@ PICOTM_EXPORT
 void*
 calloc_tx(size_t nmemb, size_t size)
 {
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     size_t alloc_size = nmemb * size;
 
@@ -70,7 +70,7 @@ PICOTM_EXPORT
 void*
 malloc_tx(size_t size)
 {
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     void* mem;
 
@@ -125,7 +125,7 @@ realloc_tx(void* ptr, size_t size)
         privatize_tx(ptr, usiz, PICOTM_TM_PRIVATIZE_LOADSTORE);
     }
 
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     void* mem = NULL;
 

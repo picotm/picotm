@@ -9,8 +9,8 @@
 #include <picotm/picotm.h>
 #include <string.h>
 #include "allocator/module.h"
+#include "error/module.h"
 #include "fs/comfstx.h"
-#include "picotm/picotm-libc.h"
 
 PICOTM_EXPORT
 void
@@ -23,7 +23,7 @@ PICOTM_EXPORT
 char*
 mkdtemp_tm(char* template)
 {
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     char* str;
 
@@ -41,7 +41,7 @@ PICOTM_EXPORT
 int
 mkstemp_tm(char* template)
 {
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     int res;
 
@@ -83,7 +83,7 @@ PICOTM_EXPORT
 void*
 realloc_tm(void* ptr, size_t size)
 {
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     size_t usiz = malloc_usable_size(ptr);
 
