@@ -5,7 +5,10 @@
 #include "fdtx.h"
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "errcode.h"
+#include "fcntlop.h"
+#include "fcntloptab.h"
 #include "fdtab.h"
 #include "ofd.h"
 
@@ -231,5 +234,159 @@ fdtx_dump(const struct fdtx *fdtx)
                                               fdtx->fildes,
                                        (void*)fdtx->fcntltab,
                                               fdtx->fcntltablen);
+}
+
+/*
+ * close()
+ */
+
+static int
+fdtx_close_exec_noundo(struct fdtx *fdtx, int fildes, int *cookie)
+{
+    return 0;
+}
+
+static int
+fdtx_close_exec_ts(struct fdtx *fdtx, int fildes, int *cookie)
+{
+    return 0;
+}
+
+int
+fdtx_close_exec(struct fdtx *fdtx, int fildes, int *cookie, int noundo)
+{
+    static int (* const close_exec[2])(struct fdtx*, int, int*) = {
+        fdtx_close_exec_noundo, fdtx_close_exec_ts};
+
+    assert(fdtx->cc_mode < sizeof(close_exec)/sizeof(close_exec[0]));
+
+    if (noundo) {
+        /* TX irrevokable */
+        fdtx->cc_mode = PICOTM_LIBC_CC_MODE_NOUNDO;
+    } else {
+        /* TX revokable */
+        if ((fdtx->cc_mode == PICOTM_LIBC_CC_MODE_NOUNDO)
+            || !close_exec[fdtx->cc_mode]) {
+            return ERR_NOUNDO;
+        }
+    }
+
+    return close_exec[fdtx->cc_mode](fdtx, fildes, cookie);
+}
+
+static int
+fdtx_close_apply_noundo(struct fdtx *fdtx, int fildes, int cookie)
+{
+    fd_close(fdtab+fildes);
+    return 0;
+}
+
+static int
+fdtx_close_apply_ts(struct fdtx *fdtx, int fildes, int cookie)
+{
+    /* Global data structure 'fdtab' is locked during apply */
+    fd_close(fdtab+fildes);
+    return 0;
+}
+
+int
+fdtx_close_apply(struct fdtx *fdtx, int fildes, int cookie)
+{
+    static int (* const close_apply[2])(struct fdtx*, int, int) = {
+        fdtx_close_apply_noundo, fdtx_close_apply_ts};
+
+    assert(fdtx->cc_mode < sizeof(close_apply)/sizeof(close_apply[0]));
+
+    return close_apply[fdtx->cc_mode](fdtx, fildes, cookie);
+}
+
+static int
+fdtx_close_undo_ts(struct fdtx *fdtx, int fildes, int cookie)
+{
+    return 0;
+}
+
+int
+fdtx_close_undo(struct fdtx *fdtx, int fildes, int cookie)
+{
+    static int (* const close_undo[2])(struct fdtx*, int, int) = {
+        NULL, fdtx_close_undo_ts};
+
+    assert(fdtx->cc_mode < sizeof(close_undo)/sizeof(close_undo[0]));
+    assert(close_undo[fdtx->cc_mode]);
+
+    return close_undo[fdtx->cc_mode](fdtx, fildes, cookie);
+}
+
+/*
+ * fcntl()
+ */
+
+int
+fdtx_fcntl_exec(struct fdtx *fdtx, int cmd, union com_fd_fcntl_arg *arg,
+                                   int *cookie, int noundo)
+{
+    assert(fdtx);
+    assert(fdtx->fildes >= 0);
+    assert(fdtx->fildes < sizeof(fdtab)/sizeof(fdtab[0]));
+
+    union com_fd_fcntl_arg oldvalue;
+
+    fd_lock(fdtab+fdtx->fildes);
+    int res = fd_fcntl_exec(fdtab+fdtx->fildes,
+                                  fdtx->fildes, cmd, arg, &oldvalue,
+                                  fdtx->fdver, noundo);
+    fd_unlock(fdtab+fdtx->fildes);
+
+    if (res < 0) {
+        return res;
+    }
+
+    /* register fcntl */
+
+    if (cookie) {
+        *cookie = fcntloptab_append(&fdtx->fcntltab,
+                                    &fdtx->fcntltablen, cmd, arg, &oldvalue);
+
+        if (*cookie < 0) {
+            abort();
+        }
+    }
+
+	fdtx->flags |= FDTX_FL_LOCALSTATE;
+
+    return res;
+}
+
+int
+fdtx_fcntl_apply(struct fdtx *fdtx, int cookie)
+{
+    assert(fdtx);
+    assert(fdtx->fildes >= 0);
+    assert(fdtx->fildes < sizeof(fdtab)/sizeof(fdtab[0]));
+    assert(cookie < fdtx->fcntltablen);
+
+    return fd_fcntl_apply(fdtab+fdtx->fildes,
+                                fdtx->fildes, fdtx->fcntltab[cookie].command,
+                                             &fdtx->fcntltab[cookie].value,
+                                              fdtx->cc_mode);
+}
+
+int
+fdtx_fcntl_undo(struct fdtx *fdtx, int cookie)
+{
+    assert(fdtx);
+    assert(fdtx->fildes >= 0);
+    assert(fdtx->fildes < sizeof(fdtab)/sizeof(fdtab[0]));
+    assert(cookie < fdtx->fcntltablen);
+
+    fd_lock(fdtab+fdtx->fildes);
+    int res = fd_fcntl_undo(fdtab+fdtx->fildes,
+                                  fdtx->fildes, fdtx->fcntltab[cookie].command,
+                                               &fdtx->fcntltab[cookie].oldvalue,
+                                                fdtx->cc_mode);
+    fd_unlock(fdtab+fdtx->fildes);
+
+    return res;
 }
 
