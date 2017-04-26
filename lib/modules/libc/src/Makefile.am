@@ -12,8 +12,10 @@ libpicotm_c_la_SOURCES = allocator/allocator_tx.c \
                          counter.h \
                          errcode.h \
                          errno.c \
-                         error_tx.c \
-                         error_tx.h \
+                         error/error_tx.c \
+                         error/error_tx.h \
+                         error/module.c \
+                         error/module.h \
                          fcntl-tm.c \
                          fcntl.c \
                          fd/cmap.c \
