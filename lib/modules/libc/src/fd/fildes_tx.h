@@ -6,9 +6,9 @@
 
 #include <picotm/picotm-module.h>
 #include <stdbool.h>
-#include "event.h"
 #include "fd_tx.h"
 #include "ofd_tx.h"
+#include "fd_event.h"
 
 struct pipeop;
 struct openop;
@@ -24,9 +24,9 @@ struct fildes_tx {
     size_t ofd_tx_max_index;
     size_t fd_tx_max_fildes;
 
-    struct com_fd_event* eventtab;
-    size_t               eventtablen;
-    size_t               eventtabsiz;
+    struct fd_event* eventtab;
+    size_t           eventtablen;
+    size_t           eventtabsiz;
 
     struct openop* openoptab;
     size_t         openoptablen;

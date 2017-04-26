@@ -22,7 +22,6 @@ libpicotm_c_la_SOURCES = allocator/allocator_tx.c \
                          fd/cmap.h \
                          fd/cmapss.c \
                          fd/cmapss.h \
-                         fd/event.h \
                          fd/fcntlop.c \
                          fd/fcntlop.h \
                          fd/fcntloptab.c \
@@ -31,6 +30,7 @@ libpicotm_c_la_SOURCES = allocator/allocator_tx.c \
                          fd/fd.h \
                          fd/fdtab.c \
                          fd/fdtab.h \
+                         fd/fd_event.h \
                          fd/fd_tx.c \
                          fd/fd_tx.h \
                          fd/fildes_tx.c \

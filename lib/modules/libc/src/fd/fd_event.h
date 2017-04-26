@@ -4,7 +4,7 @@
 
 #pragma once
 
-struct com_fd_event {
+struct fd_event {
     int fildes;
     int cookie;
 };

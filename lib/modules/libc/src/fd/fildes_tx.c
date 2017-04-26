@@ -238,7 +238,7 @@ append_cmd(struct fildes_tx* self, enum fildes_tx_cmd cmd, int fildes,
         ++self->eventtabsiz;
     }
 
-    struct com_fd_event* event = self->eventtab + self->eventtablen;
+    struct fd_event* event = self->eventtab + self->eventtablen;
 
     event->fildes = fildes;
     event->cookie = cookie;
@@ -309,8 +309,7 @@ fildes_tx_exec_accept(struct fildes_tx* self, int sockfd,
 }
 
 static int
-apply_accept(struct fildes_tx* self, const struct com_fd_event* event,
-             size_t n)
+apply_accept(struct fildes_tx* self, const struct fd_event* event, size_t n)
 {
     assert(self);
     assert(event || !n);
@@ -389,7 +388,7 @@ fildes_tx_exec_bind(struct fildes_tx* self, int socket,
 }
 
 static int
-apply_bind(struct fildes_tx* self, const struct com_fd_event* event, size_t n)
+apply_bind(struct fildes_tx* self, const struct fd_event* event, size_t n)
 {
     assert(self);
     assert(event || !n);
@@ -427,7 +426,7 @@ undo_bind(struct fildes_tx* self, int fildes, int cookie)
     assert(self);
     assert(cookie < self->eventtablen);
 
-    const struct com_fd_event* ev = self->eventtab+cookie;
+    const struct fd_event* ev = self->eventtab+cookie;
 
     assert(ev->fildes >= 0);
     assert(ev->fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
@@ -478,7 +477,7 @@ fildes_tx_exec_close(struct fildes_tx* self, int fildes, int isnoundo)
 }
 
 static int
-apply_close(struct fildes_tx* self, const struct com_fd_event* event, size_t n)
+apply_close(struct fildes_tx* self, const struct fd_event* event, size_t n)
 {
     assert(self);
     assert(event || !n);
@@ -570,8 +569,7 @@ fildes_tx_exec_connect(struct fildes_tx* self, int sockfd,
 }
 
 static int
-apply_connect(struct fildes_tx* self, const struct com_fd_event* event,
-              size_t n)
+apply_connect(struct fildes_tx* self, const struct fd_event* event, size_t n)
 {
     assert(self);
     assert(event || !n);
@@ -675,7 +673,7 @@ fildes_tx_exec_dup(struct fildes_tx* self, int fildes, int cloexec)
 }
 
 static int
-apply_dup(struct fildes_tx* self, const struct com_fd_event* event, size_t n)
+apply_dup(struct fildes_tx* self, const struct fd_event* event, size_t n)
 {
     assert(self);
     assert(event || !n);
@@ -767,8 +765,7 @@ fildes_tx_exec_fcntl(struct fildes_tx* self, int fildes, int cmd,
 }
 
 static int
-apply_fcntl(struct fildes_tx* self, const struct com_fd_event* event,
-            size_t n)
+apply_fcntl(struct fildes_tx* self, const struct fd_event* event, size_t n)
 {
     assert(self);
     assert(event || !n);
@@ -878,8 +875,7 @@ fildes_tx_exec_fsync(struct fildes_tx* self, int fildes, int isnoundo)
 }
 
 static int
-apply_fsync(struct fildes_tx* self, const struct com_fd_event* event,
-            size_t n)
+apply_fsync(struct fildes_tx* self, const struct fd_event* event, size_t n)
 {
     assert(self);
     assert(event || !n);
@@ -982,8 +978,7 @@ fildes_tx_exec_listen(struct fildes_tx* self, int sockfd, int backlog,
 }
 
 int
-apply_listen(struct fildes_tx* self, const struct com_fd_event* event,
-             size_t n)
+apply_listen(struct fildes_tx* self, const struct fd_event* event, size_t n)
 {
     assert(self);
     assert(event || !n);
@@ -1088,7 +1083,7 @@ fildes_tx_exec_lseek(struct fildes_tx* self, int fildes, off_t offset,
 }
 
 int
-apply_lseek(struct fildes_tx* self, const struct com_fd_event* event, size_t n)
+apply_lseek(struct fildes_tx* self, const struct fd_event* event, size_t n)
 {
     assert(self);
     assert(event || !n);
@@ -1201,7 +1196,7 @@ fildes_tx_exec_open(struct fildes_tx* self, const char* path, int oflag,
 }
 
 static int
-apply_open(struct fildes_tx* self, const struct com_fd_event* event, size_t n)
+apply_open(struct fildes_tx* self, const struct fd_event* event, size_t n)
 {
     assert(self);
     assert(event || !n);
@@ -1320,7 +1315,7 @@ fildes_tx_exec_pipe(struct fildes_tx* self, int pipefd[2])
 }
 
 static int
-apply_pipe(struct fildes_tx* self, const struct com_fd_event* event, size_t n)
+apply_pipe(struct fildes_tx* self, const struct fd_event* event, size_t n)
 {
     assert(self);
     assert(event || !n);
@@ -1412,7 +1407,7 @@ fildes_tx_exec_pread(struct fildes_tx* self, int fildes, void* buf,
 }
 
 static int
-apply_pread(struct fildes_tx* self, const struct com_fd_event* event, size_t n)
+apply_pread(struct fildes_tx* self, const struct fd_event* event, size_t n)
 {
     assert(self);
     assert(event || !n);
@@ -1517,8 +1512,7 @@ fildes_tx_exec_pwrite(struct fildes_tx* self, int fildes, const void* buf,
 }
 
 static int
-apply_pwrite(struct fildes_tx* self, const struct com_fd_event* event,
-             size_t n)
+apply_pwrite(struct fildes_tx* self, const struct fd_event* event, size_t n)
 {
     assert(self);
     assert(event || !n);
@@ -1633,7 +1627,7 @@ fildes_tx_exec_read(struct fildes_tx* self, int fildes, void* buf,
 }
 
 static int
-apply_read(struct fildes_tx* self, const struct com_fd_event* event, size_t n)
+apply_read(struct fildes_tx* self, const struct fd_event* event, size_t n)
 {
     assert(self);
     assert(event || !n);
@@ -1738,7 +1732,7 @@ fildes_tx_exec_recv(struct fildes_tx* self, int sockfd, void* buffer,
 }
 
 static int
-apply_recv(struct fildes_tx* self, const struct com_fd_event* event, size_t n)
+apply_recv(struct fildes_tx* self, const struct fd_event* event, size_t n)
 {
     assert(self);
     assert(event || !n);
@@ -1922,7 +1916,7 @@ fildes_tx_exec_send(struct fildes_tx* self, int sockfd, const void* buffer,
 }
 
 static int
-apply_send(struct fildes_tx* self, const struct com_fd_event* event, size_t n)
+apply_send(struct fildes_tx* self, const struct fd_event* event, size_t n)
 {
     assert(self);
     assert(event && !n);
@@ -2025,8 +2019,7 @@ fildes_tx_exec_shutdown(struct fildes_tx* self, int sockfd, int how,
 }
 
 static int
-apply_shutdown(struct fildes_tx* self, const struct com_fd_event* event,
-               size_t n)
+apply_shutdown(struct fildes_tx* self, const struct fd_event* event, size_t n)
 {
     assert(self);
     assert(event || !n);
@@ -2118,8 +2111,7 @@ fildes_tx_exec_socket(struct fildes_tx* self, int domain, int type,
 }
 
 static int
-apply_socket(struct fildes_tx* self, const struct com_fd_event* event,
-             size_t n)
+apply_socket(struct fildes_tx* self, const struct fd_event* event, size_t n)
 {
     assert(self);
     assert(event || !n);
@@ -2162,7 +2154,7 @@ fildes_tx_exec_sync(struct fildes_tx* self)
 }
 
 static int
-apply_sync(struct fildes_tx* self, const struct com_fd_event* event, size_t n)
+apply_sync(struct fildes_tx* self, const struct fd_event* event, size_t n)
 {
     assert(self);
     assert(event || !n);
@@ -2237,7 +2229,7 @@ fildes_tx_exec_write(struct fildes_tx* self, int fildes, const void* buf,
 }
 
 static int
-apply_write(struct fildes_tx* self, const struct com_fd_event* event, size_t n)
+apply_write(struct fildes_tx* self, const struct fd_event* event, size_t n)
 {
     assert(self);
     assert(event || !n);
@@ -2396,7 +2388,7 @@ fildes_tx_apply_event(struct fildes_tx* self, const struct event* event,
                       size_t n)
 {
     static int (* const apply[])(struct fildes_tx*,
-                                 const struct com_fd_event*,
+                                 const struct fd_event*,
                                  size_t) = {
         apply_close,
         apply_open,
