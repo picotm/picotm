@@ -32,8 +32,6 @@ libpicotm_c_la_SOURCES = allocator/allocator_tx.c \
                          fd/fdtab.c \
                          fd/fdtab.h \
                          fd/fdtx.c \
-                         fd/fdtx_close.c \
-                         fd/fdtx_fcntl.c \
                          fd/fdtx.h \
                          fd/fildes_tx.c \
                          fd/fildes_tx.h \
