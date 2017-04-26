@@ -19,7 +19,6 @@
 #include "fd/fcntlop.h"
 #include "fd/fd.h"
 #include "fd/fdtab.h"
-#include "fd/fdtx.h"
 #include "comfs.h"
 
 int
