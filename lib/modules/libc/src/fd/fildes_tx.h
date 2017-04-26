@@ -7,7 +7,7 @@
 #include <picotm/picotm-module.h>
 #include <stdbool.h>
 #include "event.h"
-#include "fdtx.h"
+#include "fd_tx.h"
 #include "ofdtx.h"
 
 struct pipeop;
@@ -19,10 +19,10 @@ struct fildes_tx {
     bool optcc;
 
     struct ofdtx ofdtx[MAXNUMFD];
-    struct fdtx   fdtx[MAXNUMFD];
+    struct fd_tx fd_tx[MAXNUMFD];
 
     size_t ofdtx_max_index;
-    size_t fdtx_max_fildes;
+    size_t fd_tx_max_fildes;
 
     struct com_fd_event* eventtab;
     size_t               eventtablen;

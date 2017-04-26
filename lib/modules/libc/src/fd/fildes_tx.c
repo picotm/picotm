@@ -65,7 +65,7 @@ fildes_tx_init(struct fildes_tx* self, unsigned long module)
     self->optcc = false;
 
     self->ofdtx_max_index = 0;
-    self->fdtx_max_fildes = 0;
+    self->fd_tx_max_fildes = 0;
 
     self->eventtab = NULL;
     self->eventtablen = 0;
@@ -91,12 +91,12 @@ fildes_tx_uninit(struct fildes_tx* self)
         ofdtx_uninit(ofdtx);
     }
 
-    /* Uninit fdtxs */
+    /* Uninit fd_txs */
 
-    for (struct fdtx* fdtx = self->fdtx;
-                      fdtx < self->fdtx + self->fdtx_max_fildes;
-                    ++fdtx) {
-        fdtx_uninit(fdtx);
+    for (struct fd_tx* fd_tx = self->fd_tx;
+                       fd_tx < self->fd_tx + self->fd_tx_max_fildes;
+                     ++fd_tx) {
+        fd_tx_uninit(fd_tx);
     }
 
     pipeoptab_clear(&self->pipeoptab, &self->pipeoptablen);
@@ -131,15 +131,15 @@ fildes_tx_get_validation_mode(const struct fildes_tx* self)
 }
 
 static int*
-get_ifd(const struct fdtx* fdtx, size_t fdtxlen, size_t* ifdlen)
+get_ifd(const struct fd_tx* fd_tx, size_t fd_txlen, size_t* ifdlen)
 {
     int* ifd = NULL;
     *ifdlen = 0;
 
-    while (fdtxlen) {
-        --fdtxlen;
+    while (fd_txlen) {
+        --fd_txlen;
 
-        if (fdtx_holds_ref(fdtx)) {
+        if (fd_tx_holds_ref(fd_tx)) {
             void* tmp = picotm_tabresize(ifd, *ifdlen, (*ifdlen) + 1,
                                           sizeof(ifd[0]));
             if (!tmp) {
@@ -148,17 +148,17 @@ get_ifd(const struct fdtx* fdtx, size_t fdtxlen, size_t* ifdlen)
             }
             ifd = tmp;
 
-            ifd[(*ifdlen)++] = fdtx->fildes;
+            ifd[(*ifdlen)++] = fd_tx->fildes;
         }
 
-        ++fdtx;
+        ++fd_tx;
     }
 
     return ifd;
 }
 
 static int*
-get_iofd(const struct fdtx* fdtx, const int* ifd, size_t ifdlen,
+get_iofd(const struct fd_tx* fd_tx, const int* ifd, size_t ifdlen,
          size_t* iofdlen)
 {
     int* iofd = NULL;
@@ -175,7 +175,7 @@ get_iofd(const struct fdtx* fdtx, const int* ifd, size_t ifdlen,
         }
         iofd = tmp;
 
-        iofd[(*iofdlen)++] = fdtx[*ifd].ofd;
+        iofd[(*iofdlen)++] = fd_tx[*ifd].ofd;
         ++ifd;
     }
 
@@ -186,24 +186,24 @@ get_iofd(const struct fdtx* fdtx, const int* ifd, size_t ifdlen,
     return iofd;
 }
 
-static struct fdtx*
-get_fdtx(struct fildes_tx* self, int fildes)
+struct fd_tx*
+get_fd_tx(struct fildes_tx* self, int fildes)
 {
-    for (struct fdtx* fdtx = self->fdtx + self->fdtx_max_fildes;
-                      fdtx < self->fdtx + fildes + 1;
-                    ++fdtx) {
+    for (struct fd_tx* fd_tx = self->fd_tx + self->fd_tx_max_fildes;
+                       fd_tx < self->fd_tx + fildes + 1;
+                     ++fd_tx) {
 
-        if (fdtx_init(fdtx) < 0) {
+        if (fd_tx_init(fd_tx) < 0) {
             return NULL;
         }
     }
 
-    self->fdtx_max_fildes = lmax(fildes + 1, self->fdtx_max_fildes);
+    self->fd_tx_max_fildes = lmax(fildes + 1, self->fd_tx_max_fildes);
 
-    return self->fdtx + fildes;
+    return self->fd_tx + fildes;
 }
 
-static struct ofdtx*
+struct ofdtx*
 get_ofdtx(struct fildes_tx* self, int index)
 {
     for (struct ofdtx* ofdtx = self->ofdtx + self->ofdtx_max_index;
@@ -259,23 +259,23 @@ int
 fildes_tx_exec_accept(struct fildes_tx* self, int sockfd,
                       struct sockaddr* address, socklen_t* address_len)
 {
-    /* Update/create fdtx */
+    /* Update/create fd_tx */
 
-    struct fdtx* fdtx = get_fdtx(self, sockfd);
-    assert(fdtx);
+    struct fd_tx* fd_tx = get_fd_tx(self, sockfd);
+    assert(fd_tx);
 
-    enum error_code err = fdtx_ref_or_validate(fdtx, sockfd, 0);
+    enum error_code err = fd_tx_ref_or_validate(fd_tx, sockfd, 0);
     if (err) {
         return err;
     }
 
     /* Update/create ofdtx */
 
-    struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+    struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
     assert(ofdtx);
 
     int optcc;
-    err = ofdtx_ref(ofdtx, fdtx->ofd, sockfd, 0, &optcc);
+    err = ofdtx_ref(ofdtx, fd_tx->ofd, sockfd, 0, &optcc);
     if (err) {
         return err;
     }
@@ -289,11 +289,11 @@ fildes_tx_exec_accept(struct fildes_tx* self, int sockfd,
         return ERR_SYSTEM;
     }
 
-    fdtx = self->fdtx+connfd;
+    fd_tx = self->fd_tx + connfd;
 
-    /* Reference fdtx */
+    /* Reference fd_tx */
 
-    if ( (err = fdtx_ref(fdtx, connfd, 0)) ) {
+    if ( (err = fd_tx_ref(fd_tx, connfd, 0)) ) {
         if (TEMP_FAILURE_RETRY(close(connfd)) < 0) {
             perror("close");
         }
@@ -326,11 +326,11 @@ undo_accept(struct fildes_tx* self, int fildes, int cookie)
     assert(fildes >= 0);
     assert(fildes < MAXNUMFD);
 
-    struct fdtx* fdtx = get_fdtx(self, fildes);
-    assert(fdtx);
+    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    assert(fd_tx);
 
     /* Mark file descriptor to be closed */
-    fdtx_signal_close(fdtx);
+    fd_tx_signal_close(fd_tx);
 
     return 0;
 }
@@ -344,23 +344,23 @@ fildes_tx_exec_bind(struct fildes_tx* self, int socket,
                     const struct sockaddr* address, socklen_t addresslen,
                     int isnoundo)
 {
-    /* Update/create fdtx */
+    /* Update/create fd_tx */
 
-    struct fdtx* fdtx = get_fdtx(self, socket);
-    assert(fdtx);
+    struct fd_tx* fd_tx = get_fd_tx(self, socket);
+    assert(fd_tx);
 
-    enum error_code err = fdtx_ref_or_validate(fdtx, socket, 0);
+    enum error_code err = fd_tx_ref_or_validate(fd_tx, socket, 0);
     if (err) {
         return err;
     }
 
     /* Update/create ofdtx */
 
-    struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+    struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
     assert(ofdtx);
 
     int optcc;
-    err = ofdtx_ref(ofdtx, fdtx->ofd, socket, 0, &optcc);
+    err = ofdtx_ref(ofdtx, fd_tx->ofd, socket, 0, &optcc);
     if (err) {
         return err;
     }
@@ -399,12 +399,12 @@ apply_bind(struct fildes_tx* self, const struct com_fd_event* event, size_t n)
     while (n && !err) {
 
         assert(event->fildes >= 0);
-        assert(event->fildes < sizeof(self->fdtx)/sizeof(self->fdtx[0]));
+        assert(event->fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
 
-        const struct fdtx* fdtx = get_fdtx(self, event->fildes);
-        assert(fdtx);
+        const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
+        assert(fd_tx);
 
-        struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+        struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
         assert(ofdtx);
 
         int m = 1;
@@ -430,12 +430,12 @@ undo_bind(struct fildes_tx* self, int fildes, int cookie)
     const struct com_fd_event* ev = self->eventtab+cookie;
 
     assert(ev->fildes >= 0);
-    assert(ev->fildes < sizeof(self->fdtx)/sizeof(self->fdtx[0]));
+    assert(ev->fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
 
-    const struct fdtx* fdtx = get_fdtx(self, ev->fildes);
-    assert(fdtx);
+    const struct fd_tx* fd_tx = get_fd_tx(self, ev->fildes);
+    assert(fd_tx);
 
-    struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+    struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
     assert(ofdtx);
 
     return ofdtx_bind_undo(ofdtx, ev->fildes, ev->cookie) < 0 ? -1 : 0;
@@ -448,12 +448,12 @@ undo_bind(struct fildes_tx* self, int fildes, int cookie)
 int
 fildes_tx_exec_close(struct fildes_tx* self, int fildes, int isnoundo)
 {
-    /* Update/create fdtx */
+    /* Update/create fd_tx */
 
-    struct fdtx* fdtx = get_fdtx(self, fildes);
-    assert(fdtx);
+    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    assert(fd_tx);
 
-    enum error_code err = fdtx_ref_or_validate(fdtx, fildes, 0);
+    enum error_code err = fd_tx_ref_or_validate(fd_tx, fildes, 0);
     if (err) {
         return err;
     }
@@ -462,7 +462,7 @@ fildes_tx_exec_close(struct fildes_tx* self, int fildes, int isnoundo)
 
     int cookie = -1;
 
-    err = fdtx_close_exec(fdtx, fildes, &cookie, isnoundo);
+    err = fd_tx_close_exec(fd_tx, fildes, &cookie, isnoundo);
 
     if (err < 0) {
         return err;
@@ -488,12 +488,12 @@ apply_close(struct fildes_tx* self, const struct com_fd_event* event, size_t n)
     while (n && !err) {
 
         assert(event->fildes >= 0);
-        assert(event->fildes < sizeof(self->fdtx)/sizeof(self->fdtx[0]));
+        assert(event->fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
 
-        struct fdtx* fdtx = get_fdtx(self, event->fildes);
-        assert(fdtx);
+        struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
+        assert(fd_tx);
 
-        err = fdtx_close_apply(fdtx, event->fildes, event->cookie) < 0 ? -1 : 0;
+        err = fd_tx_close_apply(fd_tx, event->fildes, event->cookie) < 0 ? -1 : 0;
         --n;
         ++event;
     }
@@ -506,12 +506,12 @@ undo_close(struct fildes_tx* self, int fildes, int cookie)
 {
     assert(self);
     assert(fildes >= 0);
-    assert(fildes < sizeof(self->fdtx)/sizeof(self->fdtx[0]));
+    assert(fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
 
-    struct fdtx* fdtx = get_fdtx(self, fildes);
-    assert(fdtx);
+    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    assert(fd_tx);
 
-    return fdtx_close_undo(fdtx, fildes, cookie) < 0 ? -1 : 0;
+    return fd_tx_close_undo(fd_tx, fildes, cookie) < 0 ? -1 : 0;
 }
 
 /*
@@ -523,12 +523,12 @@ fildes_tx_exec_connect(struct fildes_tx* self, int sockfd,
                        const struct sockaddr* serv_addr, socklen_t addrlen,
                        int isnoundo)
 {
-    /* Update/create fdtx */
+    /* Update/create fd_tx */
 
-    struct fdtx* fdtx = get_fdtx(self, sockfd);
-    assert(fdtx);
+    struct fd_tx* fd_tx = get_fd_tx(self, sockfd);
+    assert(fd_tx);
 
-    enum error_code err = fdtx_ref_or_validate(fdtx, sockfd, 0);
+    enum error_code err = fd_tx_ref_or_validate(fd_tx, sockfd, 0);
 
     if (err) {
         return err;
@@ -536,11 +536,11 @@ fildes_tx_exec_connect(struct fildes_tx* self, int sockfd,
 
     /* Update/create ofdtx */
 
-    struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+    struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
     assert(ofdtx);
 
     int optcc;
-    err = ofdtx_ref(ofdtx, fdtx->ofd, sockfd, 0, &optcc);
+    err = ofdtx_ref(ofdtx, fd_tx->ofd, sockfd, 0, &optcc);
 
     if (err) {
         return err;
@@ -581,12 +581,12 @@ apply_connect(struct fildes_tx* self, const struct com_fd_event* event,
     while (n && !err) {
 
         assert(event->fildes >= 0);
-        assert(event->fildes < sizeof(self->fdtx)/sizeof(self->fdtx[0]));
+        assert(event->fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
 
-        const struct fdtx* fdtx = get_fdtx(self, event->fildes);
-        assert(fdtx);
+        const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
+        assert(fd_tx);
 
-        struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+        struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
         assert(ofdtx);
 
         int m = 1;
@@ -608,12 +608,12 @@ undo_connect(struct fildes_tx* self, int fildes, int cookie)
 {
     assert(self);
     assert(fildes >= 0);
-    assert(fildes < sizeof(self->fdtx)/sizeof(self->fdtx[0]));
+    assert(fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
 
-    const struct fdtx* fdtx = get_fdtx(self, fildes);
-    assert(fdtx);
+    const struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    assert(fd_tx);
 
-    struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+    struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
     assert(ofdtx);
 
     return ofdtx_connect_undo(ofdtx, fildes, cookie) < 0 ? -1 : 0;
@@ -628,12 +628,12 @@ fildes_tx_exec_dup(struct fildes_tx* self, int fildes, int cloexec)
 {
     assert(self);
 
-    /* Reference/validate fdtx for fildes */
+    /* Reference/validate fd_tx for fildes */
 
-    struct fdtx* fdtx = get_fdtx(self, fildes);
-    assert(fdtx);
+    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    assert(fd_tx);
 
-    enum error_code err = fdtx_ref_or_validate(fdtx, fildes, 0);
+    enum error_code err = fd_tx_ref_or_validate(fd_tx, fildes, 0);
 
     if (err) {
         return err;
@@ -649,12 +649,12 @@ fildes_tx_exec_dup(struct fildes_tx* self, int fildes, int cloexec)
     }
     int fildes2 = res;
 
-    struct fdtx* fdtx2 = get_fdtx(self, fildes2);
-    assert(fdtx2);
+    struct fd_tx* fd_tx2 = get_fd_tx(self, fildes2);
+    assert(fd_tx2);
 
-    /* Reference fdtx for fildes2 */
+    /* Reference fd_tx for fildes2 */
 
-    err = fdtx_ref(fdtx2, fildes2, 0);
+    err = fd_tx_ref(fd_tx2, fildes2, 0);
 
     if (err) {
         if (TEMP_FAILURE_RETRY(close(fildes2)) < 0) {
@@ -690,12 +690,12 @@ undo_dup(struct fildes_tx* self, int fildes, int cookie)
     assert(fildes >= 0);
     assert(fildes < MAXNUMFD);
 
-    struct fdtx* fdtx = get_fdtx(self, fildes);
-    assert(fdtx);
+    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    assert(fd_tx);
 
     /* Mark file descriptor to be closed. This works, because dup() occured
        inside transaction. So no other transaction should have access to it. */
-    fdtx_signal_close(fdtx);
+    fd_tx_signal_close(fd_tx);
 
     return 0;
 }
@@ -710,12 +710,12 @@ fildes_tx_exec_fcntl(struct fildes_tx* self, int fildes, int cmd,
 {
     assert(self);
 
-    /* Update/create fdtx */
+    /* Update/create fd_tx */
 
-    struct fdtx* fdtx = get_fdtx(self, fildes);
-    assert(fdtx);
+    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    assert(fd_tx);
 
-    enum error_code err = fdtx_ref_or_validate(fdtx, fildes, 0);
+    enum error_code err = fd_tx_ref_or_validate(fd_tx, fildes, 0);
 
     if (err) {
         return err;
@@ -725,7 +725,7 @@ fildes_tx_exec_fcntl(struct fildes_tx* self, int fildes, int cmd,
 
     int cookie = -1;
 
-    int res = fdtx_fcntl_exec(fdtx, cmd, arg, &cookie, isnoundo);
+    int res = fd_tx_fcntl_exec(fd_tx, cmd, arg, &cookie, isnoundo);
 
     if (res < 0) {
         if (res == ERR_DOMAIN) {
@@ -737,11 +737,11 @@ fildes_tx_exec_fcntl(struct fildes_tx* self, int fildes, int cmd,
 
     /* Update/create ofdtx */
 
-    struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+    struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
     assert(ofdtx);
 
     int optcc;
-    err = ofdtx_ref(ofdtx, fdtx->ofd, fildes, 0, &optcc);
+    err = ofdtx_ref(ofdtx, fd_tx->ofd, fildes, 0, &optcc);
 
     if (err) {
         return err;
@@ -778,16 +778,16 @@ apply_fcntl(struct fildes_tx* self, const struct com_fd_event* event,
     while (n && !err) {
 
         assert(event->fildes >= 0);
-        assert(event->fildes < sizeof(self->fdtx)/sizeof(self->fdtx[0]));
+        assert(event->fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
 
-        struct fdtx* fdtx = get_fdtx(self, event->fildes);
-        assert(fdtx);
+        struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
+        assert(fd_tx);
 
-        int res = fdtx_fcntl_apply(fdtx, event->cookie);
+        int res = fd_tx_fcntl_apply(fd_tx, event->cookie);
 
         if (res == ERR_DOMAIN)  {
 
-            struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+            struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
             assert(ofdtx);
 
             res = ofdtx_fcntl_apply(ofdtx, event->fildes, event, 1);
@@ -806,16 +806,16 @@ undo_fcntl(struct fildes_tx* self, int fildes, int cookie)
 {
     assert(self);
     assert(fildes >= 0);
-    assert(fildes < sizeof(self->fdtx)/sizeof(self->fdtx[0]));
+    assert(fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
 
-    struct fdtx* fdtx = get_fdtx(self, fildes);
-    assert(fdtx);
+    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    assert(fd_tx);
 
-    int res = fdtx_fcntl_undo(fdtx, cookie);
+    int res = fd_tx_fcntl_undo(fd_tx, cookie);
 
     if (res == ERR_DOMAIN)  {
 
-        struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+        struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
         assert(ofdtx);
 
         res = ofdtx_fcntl_undo(ofdtx, fildes, cookie);
@@ -833,12 +833,12 @@ fildes_tx_exec_fsync(struct fildes_tx* self, int fildes, int isnoundo)
 {
     assert(self);
 
-    /* Update/create fdtx */
+    /* Update/create fd_tx */
 
-    struct fdtx* fdtx = get_fdtx(self, fildes);
-    assert(fdtx);
+    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    assert(fd_tx);
 
-    enum error_code err = fdtx_ref_or_validate(fdtx, fildes, 0);
+    enum error_code err = fd_tx_ref_or_validate(fd_tx, fildes, 0);
 
     if (err) {
         return err;
@@ -846,11 +846,11 @@ fildes_tx_exec_fsync(struct fildes_tx* self, int fildes, int isnoundo)
 
     /* Update/create ofdtx */
 
-    struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+    struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
     assert(ofdtx);
 
     int optcc;
-    err = ofdtx_ref(ofdtx, fdtx->ofd, fildes, 0, &optcc);
+    err = ofdtx_ref(ofdtx, fd_tx->ofd, fildes, 0, &optcc);
 
     if (err) {
         return err;
@@ -889,12 +889,12 @@ apply_fsync(struct fildes_tx* self, const struct com_fd_event* event,
     while (n && !err) {
 
         assert(event->fildes >= 0);
-        assert(event->fildes < sizeof(self->fdtx)/sizeof(self->fdtx[0]));
+        assert(event->fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
 
-        const struct fdtx* fdtx = get_fdtx(self, event->fildes);
-        assert(fdtx);
+        const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
+        assert(fd_tx);
 
-        struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+        struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
         assert(ofdtx);
 
         int m = 1;
@@ -916,12 +916,12 @@ undo_fsync(struct fildes_tx* self, int fildes, int cookie)
 {
     assert(self);
     assert(fildes >= 0);
-    assert(fildes < sizeof(self->fdtx)/sizeof(self->fdtx[0]));
+    assert(fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
 
-    const struct fdtx* fdtx = get_fdtx(self, fildes);
-    assert(fdtx);
+    const struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    assert(fd_tx);
 
-    struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+    struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
     assert(ofdtx);
 
     return ofdtx_fsync_undo(ofdtx, fildes, cookie) < 0 ? -1 : 0;
@@ -937,12 +937,12 @@ fildes_tx_exec_listen(struct fildes_tx* self, int sockfd, int backlog,
 {
     assert(self);
 
-    /* Update/create fdtx */
+    /* Update/create fd_tx */
 
-    struct fdtx* fdtx = get_fdtx(self, sockfd);
-    assert(fdtx);
+    struct fd_tx* fd_tx = get_fd_tx(self, sockfd);
+    assert(fd_tx);
 
-    enum error_code err = fdtx_ref_or_validate(fdtx, sockfd, 0);
+    enum error_code err = fd_tx_ref_or_validate(fd_tx, sockfd, 0);
 
     if (err) {
         return err;
@@ -950,11 +950,11 @@ fildes_tx_exec_listen(struct fildes_tx* self, int sockfd, int backlog,
 
     /* Update/create ofdtx */
 
-    struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+    struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
     assert(ofdtx);
 
     int optcc;
-    err = ofdtx_ref(ofdtx, fdtx->ofd, sockfd, 0, &optcc);
+    err = ofdtx_ref(ofdtx, fd_tx->ofd, sockfd, 0, &optcc);
 
     if (err < 0) {
         return err;
@@ -993,12 +993,12 @@ apply_listen(struct fildes_tx* self, const struct com_fd_event* event,
     while (n && !err) {
 
         assert(event->fildes >= 0);
-        assert(event->fildes < sizeof(self->fdtx)/sizeof(self->fdtx[0]));
+        assert(event->fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
 
-        const struct fdtx* fdtx = get_fdtx(self, event->fildes);
-        assert(fdtx);
+        const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
+        assert(fd_tx);
 
-        struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+        struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
         assert(ofdtx);
 
         int m = 1;
@@ -1020,12 +1020,12 @@ undo_listen(struct fildes_tx* self, int fildes, int cookie)
 {
     assert(self);
     assert(fildes >= 0);
-    assert(fildes < sizeof(self->fdtx)/sizeof(self->fdtx[0]));
+    assert(fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
 
-    const struct fdtx* fdtx = get_fdtx(self, fildes);
-    assert(fdtx);
+    const struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    assert(fd_tx);
 
-    struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+    struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
     assert(ofdtx);
 
     return ofdtx_listen_undo(ofdtx, fildes, cookie) < 0 ? -1 : 0;
@@ -1041,12 +1041,12 @@ fildes_tx_exec_lseek(struct fildes_tx* self, int fildes, off_t offset,
 {
     assert(self);
 
-    /* Update/create fdtx */
+    /* Update/create fd_tx */
 
-    struct fdtx* fdtx = get_fdtx(self, fildes);
-    assert(fdtx);
+    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    assert(fd_tx);
 
-    enum error_code err = fdtx_ref_or_validate(fdtx, fildes, 0);
+    enum error_code err = fd_tx_ref_or_validate(fd_tx, fildes, 0);
 
     if (err) {
         return err;
@@ -1054,11 +1054,11 @@ fildes_tx_exec_lseek(struct fildes_tx* self, int fildes, off_t offset,
 
     /* Update/create ofdtx */
 
-    struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+    struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
     assert(ofdtx);
 
     int optcc;
-    err = ofdtx_ref(ofdtx, fdtx->ofd, fildes, 0, &optcc);
+    err = ofdtx_ref(ofdtx, fd_tx->ofd, fildes, 0, &optcc);
 
     if (err) {
         return err;
@@ -1098,12 +1098,12 @@ apply_lseek(struct fildes_tx* self, const struct com_fd_event* event, size_t n)
     while (n && !err) {
 
         assert(event->fildes >= 0);
-        assert(event->fildes < sizeof(self->fdtx)/sizeof(self->fdtx[0]));
+        assert(event->fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
 
-        const struct fdtx* fdtx = get_fdtx(self, event->fildes);
-        assert(fdtx);
+        const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
+        assert(fd_tx);
 
-        struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+        struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
         assert(ofdtx);
 
         int m = 1;
@@ -1125,12 +1125,12 @@ undo_lseek(struct fildes_tx* self, int fildes, int cookie)
 {
     assert(self);
     assert(fildes >= 0);
-    assert(fildes < sizeof(self->fdtx)/sizeof(self->fdtx[0]));
+    assert(fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
 
-    const struct fdtx* fdtx = get_fdtx(self, fildes);
-    assert(fdtx);
+    const struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    assert(fd_tx);
 
-    struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+    struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
     assert(ofdtx);
 
     return ofdtx_lseek_undo(ofdtx, fildes, cookie) < 0 ? -1 : 0;
@@ -1171,12 +1171,12 @@ fildes_tx_exec_open(struct fildes_tx* self, const char* path, int oflag,
               Ideas: Maybe introduce open index (0: outside of Tx,
               n>0 inside Tx), or maybe reset file position on commiting open */
 
-    /* Update/create fdtx */
+    /* Update/create fd_tx */
 
-    struct fdtx* fdtx = get_fdtx(self, fildes);
-    assert(fdtx);
+    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    assert(fd_tx);
 
-    enum error_code err = fdtx_ref(fdtx, fildes, OFD_FL_WANTNEW);
+    enum error_code err = fd_tx_ref(fd_tx, fildes, OFD_FL_WANTNEW);
 
     if (err) {
         if (TEMP_FAILURE_RETRY(close(fildes)) < 0) {
@@ -1245,11 +1245,11 @@ undo_open(struct fildes_tx* self, int fildes, int cookie)
         }
     }
 
-    struct fdtx* fdtx = get_fdtx(self, fildes);
-    assert(fdtx);
+    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    assert(fd_tx);
 
     /* Mark file descriptor to be closed */
-    fdtx_signal_close(fdtx);
+    fd_tx_signal_close(fd_tx);
 
     return 0;
 }
@@ -1269,12 +1269,12 @@ fildes_tx_exec_pipe(struct fildes_tx* self, int pipefd[2])
         return ERR_SYSTEM;
     }
 
-    /* Update/create fdtx */
+    /* Update/create fd_tx */
 
-    struct fdtx* fdtx = get_fdtx(self, pipefd[0]);
-    assert(fdtx);
+    struct fd_tx* fd_tx = get_fd_tx(self, pipefd[0]);
+    assert(fd_tx);
 
-    enum error_code err = fdtx_ref(fdtx, pipefd[0], 0);
+    enum error_code err = fd_tx_ref(fd_tx, pipefd[0], 0);
 
     if (err) {
         if (TEMP_FAILURE_RETRY(close(pipefd[0])) < 0) {
@@ -1286,10 +1286,10 @@ fildes_tx_exec_pipe(struct fildes_tx* self, int pipefd[2])
         return err;
     }
 
-    fdtx = get_fdtx(self, pipefd[1]);
-    assert(fdtx);
+    fd_tx = get_fd_tx(self, pipefd[1]);
+    assert(fd_tx);
 
-    err = fdtx_ref(fdtx, pipefd[1], 0);
+    err = fd_tx_ref(fd_tx, pipefd[1], 0);
 
     if (err) {
         if (TEMP_FAILURE_RETRY(close(pipefd[0])) < 0) {
@@ -1355,12 +1355,12 @@ fildes_tx_exec_pread(struct fildes_tx* self, int fildes, void* buf,
 {
     assert(self);
 
-    /* update/create fdtx */
+    /* update/create fd_tx */
 
-    struct fdtx* fdtx = get_fdtx(self, fildes);
-    assert(fdtx);
+    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    assert(fd_tx);
 
-    enum error_code err = fdtx_ref_or_validate(fdtx, fildes, 0);
+    enum error_code err = fd_tx_ref_or_validate(fd_tx, fildes, 0);
 
     if (err) {
         return err;
@@ -1368,11 +1368,11 @@ fildes_tx_exec_pread(struct fildes_tx* self, int fildes, void* buf,
 
     /* update/create ofdtx */
 
-    struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+    struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
     assert(ofdtx);
 
     int optcc;
-    err = ofdtx_ref(ofdtx, fdtx->ofd, fildes, 0, &optcc);
+    err = ofdtx_ref(ofdtx, fd_tx->ofd, fildes, 0, &optcc);
 
     if (err) {
         return err;
@@ -1422,12 +1422,12 @@ apply_pread(struct fildes_tx* self, const struct com_fd_event* event, size_t n)
     while (n && !err) {
 
         assert(event->fildes >= 0);
-        assert(event->fildes < sizeof(self->fdtx)/sizeof(self->fdtx[0]));
+        assert(event->fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
 
-        const struct fdtx* fdtx = get_fdtx(self, event->fildes);
-        assert(fdtx);
+        const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
+        assert(fd_tx);
 
-        struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+        struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
         assert(ofdtx);
 
         int m = 1;
@@ -1449,12 +1449,12 @@ undo_pread(struct fildes_tx* self, int fildes, int cookie)
 {
     assert(self);
     assert(fildes >= 0);
-    assert(fildes < sizeof(self->fdtx)/sizeof(self->fdtx[0]));
+    assert(fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
 
-    const struct fdtx* fdtx = get_fdtx(self, fildes);
-    assert(fdtx);
+    const struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    assert(fd_tx);
 
-    struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+    struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
     assert(ofdtx);
 
     return ofdtx_pread_undo(ofdtx, fildes, cookie) < 0 ? -1 : 0;
@@ -1470,12 +1470,12 @@ fildes_tx_exec_pwrite(struct fildes_tx* self, int fildes, const void* buf,
 {
     assert(self);
 
-    /* Update/create fdtx */
+    /* Update/create fd_tx */
 
-    struct fdtx* fdtx = get_fdtx(self, fildes);
-    assert(fdtx);
+    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    assert(fd_tx);
 
-    enum error_code err = fdtx_ref_or_validate(fdtx, fildes, 0);
+    enum error_code err = fd_tx_ref_or_validate(fd_tx, fildes, 0);
 
     if (err) {
         return err;
@@ -1483,11 +1483,11 @@ fildes_tx_exec_pwrite(struct fildes_tx* self, int fildes, const void* buf,
 
     /* Update/create ofdtx */
 
-    struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+    struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
     assert(ofdtx);
 
     int optcc;
-    err = ofdtx_ref(ofdtx, fdtx->ofd, fildes, 0, &optcc);
+    err = ofdtx_ref(ofdtx, fd_tx->ofd, fildes, 0, &optcc);
 
     if (err) {
         return err;
@@ -1499,7 +1499,7 @@ fildes_tx_exec_pwrite(struct fildes_tx* self, int fildes, const void* buf,
 
     int cookie = -1;
 
-    ssize_t len = ofdtx_pwrite_exec(self->ofdtx+fdtx->ofd,
+    ssize_t len = ofdtx_pwrite_exec(self->ofdtx + fd_tx->ofd,
                                     fildes, buf, nbyte, off,
                                     &cookie, isnoundo);
 
@@ -1528,12 +1528,12 @@ apply_pwrite(struct fildes_tx* self, const struct com_fd_event* event,
     while (n && !err) {
 
         assert(event->fildes >= 0);
-        assert(event->fildes < sizeof(self->fdtx)/sizeof(self->fdtx[0]));
+        assert(event->fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
 
-        const struct fdtx* fdtx = get_fdtx(self, event->fildes);
-        assert(fdtx);
+        const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
+        assert(fd_tx);
 
-        struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+        struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
         assert(ofdtx);
 
         int m = 1;
@@ -1555,12 +1555,12 @@ undo_pwrite(struct fildes_tx* self, int fildes, int cookie)
 {
     assert(self);
     assert(fildes >= 0);
-    assert(fildes < sizeof(self->fdtx)/sizeof(self->fdtx[0]));
+    assert(fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
 
-    const struct fdtx* fdtx = get_fdtx(self, fildes);
-    assert(fdtx);
+    const struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    assert(fd_tx);
 
-    struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+    struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
     assert(ofdtx);
 
     return ofdtx_pwrite_undo(ofdtx, fildes, cookie) < 0 ? -1 : 0;
@@ -1576,12 +1576,12 @@ fildes_tx_exec_read(struct fildes_tx* self, int fildes, void* buf,
 {
     assert(self);
 
-    /* Update/create fdtx */
+    /* Update/create fd_tx */
 
-    struct fdtx* fdtx = get_fdtx(self, fildes);
-    assert(fdtx);
+    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    assert(fd_tx);
 
-    enum error_code err = fdtx_ref_or_validate(fdtx, fildes, 0);
+    enum error_code err = fd_tx_ref_or_validate(fd_tx, fildes, 0);
 
     if (err) {
         return err;
@@ -1589,11 +1589,11 @@ fildes_tx_exec_read(struct fildes_tx* self, int fildes, void* buf,
 
     /* Update/create ofdtx */
 
-    struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+    struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
     assert(ofdtx);
 
     int optcc;
-    err = ofdtx_ref(ofdtx, fdtx->ofd, fildes, 0, &optcc);
+    err = ofdtx_ref(ofdtx, fd_tx->ofd, fildes, 0, &optcc);
 
     if (err) {
         return err;
@@ -1643,12 +1643,12 @@ apply_read(struct fildes_tx* self, const struct com_fd_event* event, size_t n)
     while (n && !err) {
 
         assert(event->fildes >= 0);
-        assert(event->fildes < sizeof(self->fdtx)/sizeof(self->fdtx[0]));
+        assert(event->fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
 
-        const struct fdtx* fdtx = get_fdtx(self, event->fildes);
-        assert(fdtx);
+        const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
+        assert(fd_tx);
 
-        struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+        struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
         assert(ofdtx);
 
         int m = 1;
@@ -1670,12 +1670,12 @@ undo_read(struct fildes_tx* self, int fildes, int cookie)
 {
     assert(self);
     assert(fildes >= 0);
-    assert(fildes < sizeof(self->fdtx)/sizeof(self->fdtx[0]));
+    assert(fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
 
-    const struct fdtx* fdtx = get_fdtx(self, fildes);
-    assert(fdtx);
+    const struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    assert(fd_tx);
 
-    struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+    struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
     assert(ofdtx);
 
     return ofdtx_read_undo(ofdtx, fildes, cookie) == (off_t)-1 ? -1 : 0;
@@ -1691,12 +1691,12 @@ fildes_tx_exec_recv(struct fildes_tx* self, int sockfd, void* buffer,
 {
     assert(self);
 
-    /* Update/create fdtx */
+    /* Update/create fd_tx */
 
-    struct fdtx* fdtx = get_fdtx(self, sockfd);
-    assert(fdtx);
+    struct fd_tx* fd_tx = get_fd_tx(self, sockfd);
+    assert(fd_tx);
 
-    enum error_code err = fdtx_ref_or_validate(fdtx, sockfd, 0);
+    enum error_code err = fd_tx_ref_or_validate(fd_tx, sockfd, 0);
 
     if (err) {
         return err;
@@ -1704,11 +1704,11 @@ fildes_tx_exec_recv(struct fildes_tx* self, int sockfd, void* buffer,
 
     /* Update/create ofdtx */
 
-    struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+    struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
     assert(ofdtx);
 
     int optcc;
-    err = ofdtx_ref(ofdtx, fdtx->ofd, sockfd, 0, &optcc);
+    err = ofdtx_ref(ofdtx, fd_tx->ofd, sockfd, 0, &optcc);
 
     if (err) {
         return err;
@@ -1748,12 +1748,12 @@ apply_recv(struct fildes_tx* self, const struct com_fd_event* event, size_t n)
     while (n && !err) {
 
         assert(event->fildes >= 0);
-        assert(event->fildes < sizeof(self->fdtx)/sizeof(self->fdtx[0]));
+        assert(event->fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
 
-        const struct fdtx* fdtx = get_fdtx(self, event->fildes);
-        assert(fdtx);
+        const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
+        assert(fd_tx);
 
-        struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+        struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
         assert(ofdtx);
 
         int m = 1;
@@ -1775,12 +1775,12 @@ undo_recv(struct fildes_tx* self, int fildes, int cookie)
 {
     assert(self);
     assert(fildes >= 0);
-    assert(fildes < sizeof(self->fdtx)/sizeof(self->fdtx[0]));
+    assert(fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
 
-    const struct fdtx* fdtx = get_fdtx(self, fildes);
-    assert(fdtx);
+    const struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    assert(fd_tx);
 
-    struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+    struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
     assert(ofdtx);
 
     return ofdtx_recv_undo(ofdtx, fildes, cookie) == (off_t)-1 ? -1 : 0;
@@ -1801,13 +1801,13 @@ ref_fdset(struct fildes_tx* self, int nfds, const fd_set* fdset)
     for (fildes = 0; fildes < nfds; ++fildes) {
         if (FD_ISSET(fildes, fdset)) {
 
-            /* Update/create fdtx */
+            /* Update/create fd_tx */
 
-            struct fdtx* fdtx = get_fdtx(self, fildes);
-            assert(fdtx);
+            struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+            assert(fd_tx);
 
             enum error_code err =
-                fdtx_ref_or_validate(fdtx, fildes, 0);
+                fd_tx_ref_or_validate(fd_tx, fildes, 0);
 
             if (err) {
                 return err;
@@ -1875,12 +1875,12 @@ fildes_tx_exec_send(struct fildes_tx* self, int sockfd, const void* buffer,
 {
     assert(self);
 
-    /* Update/create fdtx */
+    /* Update/create fd_tx */
 
-    struct fdtx* fdtx = get_fdtx(self, sockfd);
-    assert(fdtx);
+    struct fd_tx* fd_tx = get_fd_tx(self, sockfd);
+    assert(fd_tx);
 
-    enum error_code err = fdtx_ref_or_validate(fdtx, sockfd, 0);
+    enum error_code err = fd_tx_ref_or_validate(fd_tx, sockfd, 0);
 
     if (err) {
         return err;
@@ -1888,11 +1888,11 @@ fildes_tx_exec_send(struct fildes_tx* self, int sockfd, const void* buffer,
 
     /* Update/create ofdtx */
 
-    struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+    struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
     assert(ofdtx);
 
     int optcc;
-    err = ofdtx_ref(ofdtx, fdtx->ofd, sockfd, 0, &optcc);
+    err = ofdtx_ref(ofdtx, fd_tx->ofd, sockfd, 0, &optcc);
 
     if (err) {
         return err;
@@ -1932,12 +1932,12 @@ apply_send(struct fildes_tx* self, const struct com_fd_event* event, size_t n)
     while (n && !err) {
 
         assert(event->fildes >= 0);
-        assert(event->fildes < sizeof(self->fdtx)/sizeof(self->fdtx[0]));
+        assert(event->fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
 
-        const struct fdtx* fdtx = get_fdtx(self, event->fildes);
-        assert(fdtx);
+        const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
+        assert(fd_tx);
 
-        struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+        struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
         assert(ofdtx);
 
         int m = 1;
@@ -1959,12 +1959,12 @@ undo_send(struct fildes_tx* self, int fildes, int cookie)
 {
     assert(self);
     assert(fildes >= 0);
-    assert(fildes < sizeof(self->fdtx)/sizeof(self->fdtx[0]));
+    assert(fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
 
-    const struct fdtx* fdtx = get_fdtx(self, fildes);
-    assert(fdtx);
+    const struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    assert(fd_tx);
 
-    struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+    struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
     assert(ofdtx);
 
     return ofdtx_send_undo(ofdtx, fildes, cookie) < 0 ? -1 : 0;
@@ -1980,12 +1980,12 @@ fildes_tx_exec_shutdown(struct fildes_tx* self, int sockfd, int how,
 {
     assert(self);
 
-    /* Update/create fdtx */
+    /* Update/create fd_tx */
 
-    struct fdtx* fdtx = get_fdtx(self, sockfd);
-    assert(fdtx);
+    struct fd_tx* fd_tx = get_fd_tx(self, sockfd);
+    assert(fd_tx);
 
-    enum error_code err = fdtx_ref_or_validate(fdtx, sockfd, 0);
+    enum error_code err = fd_tx_ref_or_validate(fd_tx, sockfd, 0);
 
     if (err) {
         return err;
@@ -1993,11 +1993,11 @@ fildes_tx_exec_shutdown(struct fildes_tx* self, int sockfd, int how,
 
     /* Update/create ofdtx */
 
-    struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+    struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
     assert(ofdtx);
 
     int optcc;
-    err = ofdtx_ref(ofdtx, fdtx->ofd, sockfd, 0, &optcc);
+    err = ofdtx_ref(ofdtx, fd_tx->ofd, sockfd, 0, &optcc);
 
     if (err < 0) {
         return err;
@@ -2036,12 +2036,12 @@ apply_shutdown(struct fildes_tx* self, const struct com_fd_event* event,
     while (n && !err) {
 
         assert(event->fildes >= 0);
-        assert(event->fildes < sizeof(self->fdtx)/sizeof(self->fdtx[0]));
+        assert(event->fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
 
-        const struct fdtx* fdtx = get_fdtx(self, event->fildes);
-        assert(fdtx);
+        const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
+        assert(fd_tx);
 
-        struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+        struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
         assert(ofdtx);
 
         int m = 1;
@@ -2063,12 +2063,12 @@ undo_shutdown(struct fildes_tx* self, int fildes, int cookie)
 {
     assert(self);
     assert(fildes >= 0);
-    assert(fildes < sizeof(self->fdtx)/sizeof(self->fdtx[0]));
+    assert(fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
 
-    const struct fdtx* fdtx = get_fdtx(self, fildes);
-    assert(fdtx);
+    const struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    assert(fd_tx);
 
-    struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+    struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
     assert(ofdtx);
 
     return ofdtx_shutdown_undo(ofdtx, fildes, cookie) < 0 ? -1 : 0;
@@ -2092,12 +2092,12 @@ fildes_tx_exec_socket(struct fildes_tx* self, int domain, int type,
         return -1;
     }
 
-    /* Update/create fdtx */
+    /* Update/create fd_tx */
 
-    struct fdtx* fdtx = get_fdtx(self, sockfd);
-    assert(fdtx);
+    struct fd_tx* fd_tx = get_fd_tx(self, sockfd);
+    assert(fd_tx);
 
-    enum error_code err = fdtx_ref(fdtx, sockfd, 0);
+    enum error_code err = fd_tx_ref(fd_tx, sockfd, 0);
 
     if (err) {
         if (TEMP_FAILURE_RETRY(close(sockfd)) < 0) {
@@ -2134,13 +2134,13 @@ undo_socket(struct fildes_tx* self, int fildes, int cookie)
     assert(fildes >= 0);
     assert(fildes < MAXNUMFD);
 
-    struct fdtx* fdtx = get_fdtx(self, fildes);
-    assert(fdtx);
+    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    assert(fd_tx);
 
     /* Mark file descriptor to be closed. This works, because dup() occured
      * inside the transaction. So no other transaction should have access to
      * it. */
-    fdtx_signal_close(fdtx);
+    fd_tx_signal_close(fd_tx);
 
     return 0;
 }
@@ -2188,12 +2188,12 @@ fildes_tx_exec_write(struct fildes_tx* self, int fildes, const void* buf,
 {
     assert(self);
 
-    /* Update/create fdtx */
+    /* Update/create fd_tx */
 
-    struct fdtx* fdtx = get_fdtx(self, fildes);
-    assert(fdtx);
+    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    assert(fd_tx);
 
-    enum error_code err = fdtx_ref_or_validate(fdtx, fildes, 0);
+    enum error_code err = fd_tx_ref_or_validate(fd_tx, fildes, 0);
 
     if (err) {
         return err;
@@ -2201,11 +2201,11 @@ fildes_tx_exec_write(struct fildes_tx* self, int fildes, const void* buf,
 
     /* Update/create ofdtx */
 
-    struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+    struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
     assert(ofdtx);
 
     int optcc;
-    err = ofdtx_ref(ofdtx, fdtx->ofd, fildes, 0, &optcc);
+    err = ofdtx_ref(ofdtx, fd_tx->ofd, fildes, 0, &optcc);
 
     if (err) {
         return err;
@@ -2247,12 +2247,12 @@ apply_write(struct fildes_tx* self, const struct com_fd_event* event, size_t n)
     while (n && !err) {
 
         assert(event->fildes >= 0);
-        assert(event->fildes < sizeof(self->fdtx)/sizeof(self->fdtx[0]));
+        assert(event->fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
 
-        const struct fdtx* fdtx = get_fdtx(self, event->fildes);
-        assert(fdtx);
+        const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
+        assert(fd_tx);
 
-        struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+        struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
         assert(ofdtx);
 
         int m = 1;
@@ -2274,12 +2274,12 @@ undo_write(struct fildes_tx* self, int fildes, int cookie)
 {
     assert(self);
     assert(fildes >= 0);
-    assert(fildes < sizeof(self->fdtx)/sizeof(self->fdtx[0]));
+    assert(fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
 
-    const struct fdtx* fdtx = get_fdtx(self, fildes);
-    assert(fdtx);
+    const struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    assert(fd_tx);
 
-    struct ofdtx* ofdtx = get_ofdtx(self, fdtx->ofd);
+    struct ofdtx* ofdtx = get_ofdtx(self, fd_tx->ofd);
     assert(ofdtx);
 
     return ofdtx_write_undo(ofdtx, fildes, cookie) < 0 ? -1 : 0;
@@ -2296,7 +2296,7 @@ fildes_tx_lock(struct fildes_tx* self)
 
     /* Lock fds */
 
-    self->ifd = get_ifd(self->fdtx, self->fdtx_max_fildes, &len);
+    self->ifd = get_ifd(self->fd_tx, self->fd_tx_max_fildes, &len);
 
     if (!self->ifd) {
         return -1;
@@ -2307,14 +2307,14 @@ fildes_tx_lock(struct fildes_tx* self)
     self->ifdlen = 0;
 
     while (ifd < self->ifd+len) {
-        fdtx_pre_commit(self->fdtx+(*ifd));
+        fd_tx_pre_commit(self->fd_tx+(*ifd));
         ++ifd;
         ++self->ifdlen;
     }
 
     /* Lock ofds */
 
-    self->iofd = get_iofd(self->fdtx, self->ifd, self->ifdlen, &len);
+    self->iofd = get_iofd(self->fd_tx, self->ifd, self->ifdlen, &len);
 
     const int* iofd = self->iofd;
 
@@ -2350,7 +2350,7 @@ fildes_tx_unlock(struct fildes_tx* self)
 
     while (ifd && (self->ifd < ifd)) {
         --ifd;
-        fdtx_post_commit(self->fdtx+(*ifd));
+        fd_tx_post_commit(self->fd_tx+(*ifd));
     }
 
     free(self->ifd);
@@ -2360,18 +2360,18 @@ fildes_tx_unlock(struct fildes_tx* self)
 int
 fildes_tx_validate(struct fildes_tx* self, int noundo)
 {
-    /* Validate fdtxs */
+    /* Validate fd_txs */
 
-    struct fdtx* fdtx = self->fdtx;
+    struct fd_tx* fd_tx = self->fd_tx;
 
-    while (fdtx < self->fdtx+self->fdtx_max_fildes) {
+    while (fd_tx < self->fd_tx+self->fd_tx_max_fildes) {
 
-        int res = fdtx_validate(fdtx);
+        int res = fd_tx_validate(fd_tx);
 
         if (res < 0) {
             return res;
         }
-        ++fdtx;
+        ++fd_tx;
     }
 
     /* Validate ofdtxs */
@@ -2489,20 +2489,20 @@ fildes_tx_undo_event(struct fildes_tx* self, const struct event* event,
 int
 fildes_tx_update_cc(struct fildes_tx* self, int noundo)
 {
-    /* Update fdtxs */
+    /* Update fd_txs */
 
-    struct fdtx* fdtx = self->fdtx;
+    struct fd_tx* fd_tx = self->fd_tx;
 
-    while (fdtx < self->fdtx+self->fdtx_max_fildes) {
+    while (fd_tx < self->fd_tx+self->fd_tx_max_fildes) {
 
-        if (fdtx_holds_ref(fdtx)) {
-            int res = fdtx_updatecc(fdtx);
+        if (fd_tx_holds_ref(fd_tx)) {
+            int res = fd_tx_update_cc(fd_tx);
 
             if (res < 0) {
                 return res;
             }
         }
-        ++fdtx;
+        ++fd_tx;
     }
 
     /* Update ofdtxs */
@@ -2527,20 +2527,20 @@ fildes_tx_update_cc(struct fildes_tx* self, int noundo)
 int
 fildes_tx_clear_cc(struct fildes_tx* self, int noundo)
 {
-    /* Clear fdtxs' CC */
+    /* Clear fd_txs' CC */
 
-    struct fdtx* fdtx = self->fdtx;
+    struct fd_tx* fd_tx = self->fd_tx;
 
-    while (fdtx < self->fdtx+self->fdtx_max_fildes) {
+    while (fd_tx < self->fd_tx+self->fd_tx_max_fildes) {
 
-        if (fdtx_holds_ref(fdtx)) {
-            int res = fdtx_clearcc(fdtx);
+        if (fd_tx_holds_ref(fd_tx)) {
+            int res = fd_tx_clear_cc(fd_tx);
 
             if (res < 0) {
                 return res;
             }
         }
-        ++fdtx;
+        ++fd_tx;
     }
 
     /* Clear ofdtxs' CC */
@@ -2574,11 +2574,11 @@ fildes_tx_finish(struct fildes_tx* self)
         ofdtx_unref(ofdtx);
     }
 
-    /* Unref fdtxs */
+    /* Unref fd_txs */
 
-    for (struct fdtx* fdtx = self->fdtx;
-                      fdtx < self->fdtx + self->fdtx_max_fildes;
-                    ++fdtx) {
-        fdtx_unref(fdtx);
+    for (struct fd_tx* fd_tx = self->fd_tx;
+                       fd_tx < self->fd_tx + self->fd_tx_max_fildes;
+                     ++fd_tx) {
+        fd_tx_unref(fd_tx);
     }
 }
