@@ -11,7 +11,7 @@
 
 struct fcntlop;
 
-union com_fd_fcntl_arg;
+union fcntl_arg;
 
 /**
  * Holds transaction-local reads and writes for a file descriptor
@@ -113,7 +113,7 @@ fd_tx_close_undo(struct fd_tx* self, int fildes, int cookie);
  */
 
 int
-fd_tx_fcntl_exec(struct fd_tx* self, int cmd, union com_fd_fcntl_arg *arg,
+fd_tx_fcntl_exec(struct fd_tx* self, int cmd, union fcntl_arg *arg,
                  int* cookie, int noundo);
 
 int

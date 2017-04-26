@@ -32,7 +32,7 @@ int
 fd_module_dup_internal(int fildes, int cloexec);
 
 int
-fd_module_fcntl(int fildes, int cmd, union com_fd_fcntl_arg* arg);
+fd_module_fcntl(int fildes, int cmd, union fcntl_arg* arg);
 
 int
 fd_module_fsync(int fildes);

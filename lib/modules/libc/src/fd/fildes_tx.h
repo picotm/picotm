@@ -82,7 +82,7 @@ fildes_tx_exec_dup(struct fildes_tx* self, int fildes, int cloexec);
 
 int
 fildes_tx_exec_fcntl(struct fildes_tx* self, int fildes, int cmd,
-                     union com_fd_fcntl_arg* arg, int isnoundo);
+                     union fcntl_arg* arg, int isnoundo);
 
 int
 fildes_tx_exec_fsync(struct fildes_tx* self, int fildes, int isnoundo);

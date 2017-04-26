@@ -983,7 +983,7 @@ ofd_tx_connect_undo(struct ofd_tx* self, int sockfd, int cookie)
 
 static int
 fcntl_exec_noundo(struct ofd_tx* self, int fildes, int cmd,
-                  union com_fd_fcntl_arg* arg, int* cookie)
+                  union fcntl_arg* arg, int* cookie)
 {
     int res = 0;
 
@@ -1023,7 +1023,7 @@ fcntl_exec_noundo(struct ofd_tx* self, int fildes, int cmd,
 
 static int
 fcntl_exec_ts(struct ofd_tx* self, int fildes, int cmd,
-              union com_fd_fcntl_arg* arg, int* cookie)
+              union fcntl_arg* arg, int* cookie)
 {
     int res = 0;
     int err, valid;
@@ -1097,7 +1097,7 @@ fcntl_exec_ts(struct ofd_tx* self, int fildes, int cmd,
 
 static int
 fcntl_exec_2pl(struct ofd_tx* self, int fildes, int cmd,
-               union com_fd_fcntl_arg* arg, int* cookie)
+               union fcntl_arg* arg, int* cookie)
 {
     int res = 0;
 
@@ -1149,12 +1149,12 @@ fcntl_exec_2pl(struct ofd_tx* self, int fildes, int cmd,
 
 int
 ofd_tx_fcntl_exec(struct ofd_tx* self, int fildes, int cmd,
-                  union com_fd_fcntl_arg* arg, int* cookie, int noundo)
+                  union fcntl_arg* arg, int* cookie, int noundo)
 {
     static int (* const fcntl_exec[][4])(struct ofd_tx*,
                                          int,
                                          int,
-                                         union com_fd_fcntl_arg*, int*) = {
+                                         union fcntl_arg*, int*) = {
         {fcntl_exec_noundo, NULL,          NULL,           NULL},
         {fcntl_exec_noundo, fcntl_exec_ts, fcntl_exec_2pl, NULL},
         {fcntl_exec_noundo, fcntl_exec_ts, fcntl_exec_2pl, NULL},

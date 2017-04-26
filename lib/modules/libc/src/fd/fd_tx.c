@@ -282,14 +282,14 @@ fd_tx_close_undo(struct fd_tx* self, int fildes, int cookie)
  */
 
 int
-fd_tx_fcntl_exec(struct fd_tx* self, int cmd, union com_fd_fcntl_arg *arg,
+fd_tx_fcntl_exec(struct fd_tx* self, int cmd, union fcntl_arg *arg,
                  int* cookie, int noundo)
 {
     assert(self);
     assert(self->fildes >= 0);
     assert(self->fildes < sizeof(fdtab)/sizeof(fdtab[0]));
 
-    union com_fd_fcntl_arg oldvalue;
+    union fcntl_arg oldvalue;
 
     fd_lock(fdtab+self->fildes);
     int res = fd_fcntl_exec(fdtab+self->fildes,

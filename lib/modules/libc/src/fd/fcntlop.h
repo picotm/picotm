@@ -7,7 +7,7 @@
 
 #include <fcntl.h>
 
-union com_fd_fcntl_arg
+union fcntl_arg
 {
     int          arg0;
     struct flock arg1;
@@ -16,13 +16,14 @@ union com_fd_fcntl_arg
 struct fcntlop
 {
     int command;
-    union com_fd_fcntl_arg value;
-    union com_fd_fcntl_arg oldvalue;
+    union fcntl_arg value;
+    union fcntl_arg oldvalue;
 };
 
 int
-fcntlop_init(struct fcntlop *fcntlop, int command, const union com_fd_fcntl_arg *value,
-                                                   const union com_fd_fcntl_arg *oldvalue);
+fcntlop_init(struct fcntlop *fcntlop, int command,
+             const union fcntl_arg *value,
+             const union fcntl_arg *oldvalue);
 
 void
 fcntlop_dump(struct fcntlop *fcntlop);
