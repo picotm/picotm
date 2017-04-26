@@ -7,15 +7,47 @@
 #include <stdlib.h>
 #include "error_tx.h"
 
-struct error_tx_thread_state {
-    struct error_tx instance;
+struct error_module {
+    struct error_tx tx;
     bool            is_initialized;
 };
 
-static int errno_undo_events(const struct event* event, size_t nevents,
-                             struct error_tx_thread_state* t_error_tx);
-static int errno_finish(struct error_tx_thread_state* t_error_tx);
-static int errno_release(struct error_tx_thread_state* t_error_tx);
+/*
+ * Module interface
+ */
+
+int
+errno_undo_events(const struct event* event, size_t nevents,
+                  struct error_module* module)
+{
+    int res = error_tx_undo(&module->tx);
+    if (res < 0) {
+        return res;
+    }
+    return 0;
+}
+
+int
+errno_finish(struct error_module* module)
+{
+    int res = error_tx_finish(&module->tx);
+    if (res < 0) {
+        return res;
+    }
+    return 0;
+}
+
+int
+errno_release(struct error_module* module)
+{
+    error_tx_uninit(&module->tx);
+    module->is_initialized = false;
+    return 0;
+}
+
+/*
+ * Thread-local data
+ */
 
 static int
 undo_events_cb(const struct event* event, size_t nevents, void* data)
@@ -35,17 +67,13 @@ release_cb(void* data)
     return errno_release(data);
 }
 
-/*
- * Thread-local data
- */
-
 struct error_tx*
 get_error_tx(bool initialize)
 {
-    static __thread struct error_tx_thread_state t_error_tx;
+    static __thread struct error_module t_module;
 
-    if (t_error_tx.is_initialized) {
-        return &t_error_tx.instance;
+    if (t_module.is_initialized) {
+        return &t_module.tx;
     } else if (!initialize) {
         return NULL;
     }
@@ -55,20 +83,20 @@ get_error_tx(bool initialize)
                                       NULL, NULL,
                                       finish_cb,
                                       release_cb,
-                                      &t_error_tx);
+                                      &t_module);
     if (res < 0) {
         return NULL;
     }
     unsigned long module = res;
 
-    res = error_tx_init(&t_error_tx.instance, module);
+    res = error_tx_init(&t_module.tx, module);
     if (res < 0) {
         return NULL;
     }
 
-    t_error_tx.is_initialized = true;
+    t_module.is_initialized = true;
 
-    return &t_error_tx.instance;
+    return &t_module.tx;
 }
 
 static struct error_tx*
@@ -80,39 +108,6 @@ get_non_null_error_tx(bool initialize)
         abort();
     }
     return error_tx;
-}
-
-/*
- * Module interface
- */
-
-int
-errno_undo_events(const struct event* event, size_t nevents,
-                  struct error_tx_thread_state* t_error_tx)
-{
-    int res = error_tx_undo(&t_error_tx->instance);
-    if (res < 0) {
-        return res;
-    }
-    return 0;
-}
-
-int
-errno_finish(struct error_tx_thread_state* t_error_tx)
-{
-    int res = error_tx_finish(&t_error_tx->instance);
-    if (res < 0) {
-        return res;
-    }
-    return 0;
-}
-
-int
-errno_release(struct error_tx_thread_state* t_error_tx)
-{
-    error_tx_uninit(&t_error_tx->instance);
-    t_error_tx->is_initialized = false;
-    return 0;
 }
 
 /*
