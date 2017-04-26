@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include "event.h"
 #include "fd_tx.h"
-#include "ofdtx.h"
+#include "ofd_tx.h"
 
 struct pipeop;
 struct openop;
@@ -18,10 +18,10 @@ struct fildes_tx {
 
     bool optcc;
 
-    struct ofdtx ofdtx[MAXNUMFD];
-    struct fd_tx fd_tx[MAXNUMFD];
+    struct ofd_tx ofd_tx[MAXNUMFD];
+    struct fd_tx  fd_tx[MAXNUMFD];
 
-    size_t ofdtx_max_index;
+    size_t ofd_tx_max_index;
     size_t fd_tx_max_fildes;
 
     struct com_fd_event* eventtab;
