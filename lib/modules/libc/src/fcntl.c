@@ -40,7 +40,7 @@ fcntl_tx(int fildes, int cmd, ...)
             case F_SETFL:
             case F_SETOWN:
             {
-                union com_fd_fcntl_arg val;
+                union fcntl_arg val;
                 va_list arg;
                 va_start(arg, cmd);
                 val.arg0 = va_arg(arg, int);
@@ -52,7 +52,7 @@ fcntl_tx(int fildes, int cmd, ...)
             case F_SETLK:
             case F_SETLKW:
             {
-                union com_fd_fcntl_arg val;
+                union fcntl_arg val;
                 struct flock* f;
                 va_list arg;
                 va_start(arg, cmd);

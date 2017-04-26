@@ -253,8 +253,8 @@ fd_dump(const struct fd *fd)
 
 int
 fd_fcntl_exec(struct fd *fd, int fildes, int cmd,
-                                         union com_fd_fcntl_arg *arg,
-                                         union com_fd_fcntl_arg *oldarg,
+                                         union fcntl_arg *arg,
+                                         union fcntl_arg *oldarg,
                                          count_type ver, int noundo)
 {
     assert(fd);
@@ -292,7 +292,7 @@ fd_fcntl_exec(struct fd *fd, int fildes, int cmd,
 
 int
 fd_fcntl_apply(struct fd *fd, int fildes, int cmd,
-                              union com_fd_fcntl_arg *arg, int ccmode)
+                              union fcntl_arg *arg, int ccmode)
 {
     assert(fd);
     assert(fd->ofd >= 0);
@@ -316,7 +316,7 @@ fd_fcntl_apply(struct fd *fd, int fildes, int cmd,
 
 int
 fd_fcntl_undo(struct fd *fd, int fildes, int cmd,
-                             union com_fd_fcntl_arg *oldarg, int ccmode)
+                             union fcntl_arg *oldarg, int ccmode)
 {
     assert(fd);
     assert(fd->ofd >= 0);

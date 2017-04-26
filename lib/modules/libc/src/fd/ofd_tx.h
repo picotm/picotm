@@ -231,7 +231,7 @@ ofd_tx_connect_undo(struct ofd_tx* self, int sockfd, int cookie);
 
 int
 ofd_tx_fcntl_exec(struct ofd_tx* self, int fildes, int cmd,
-                  union com_fd_fcntl_arg* arg, int* cookie, int noundo);
+                  union fcntl_arg* arg, int* cookie, int noundo);
 
 int
 ofd_tx_fcntl_apply(struct ofd_tx* self, int fildes,

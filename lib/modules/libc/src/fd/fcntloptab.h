@@ -9,12 +9,12 @@
 
 struct fcntlop;
 
-union com_fd_fcntl_arg;
+union fcntl_arg;
 
 unsigned long
 fcntloptab_append(struct fcntlop **tab, size_t *nelems, int command,
-                                                        const union com_fd_fcntl_arg *value,
-                                                        const union com_fd_fcntl_arg *oldvalue);
+                  const union fcntl_arg *value,
+                  const union fcntl_arg *oldvalue);
 
 void
 fcntloptab_clear(struct fcntlop **tab, size_t *nelems);

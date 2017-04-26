@@ -704,7 +704,7 @@ undo_dup(struct fildes_tx* self, int fildes, int cookie)
 
 int
 fildes_tx_exec_fcntl(struct fildes_tx* self, int fildes, int cmd,
-                     union com_fd_fcntl_arg* arg, int isnoundo)
+                     union fcntl_arg* arg, int isnoundo)
 {
     assert(self);
 

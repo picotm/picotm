@@ -7,7 +7,7 @@
 
 #include "counter.h"
 
-union com_fd_fcntl_arg;
+union fcntl_arg;
 
 #define FD_FL_LAST_BIT  (OFD_FL_LAST_BIT+1)
 
@@ -87,17 +87,17 @@ fd_dump(const struct fd *fd);
 
 int
 fd_fcntl_exec(struct fd *fd, int fildes, int cmd,
-                                         union com_fd_fcntl_arg *arg,
-                                         union com_fd_fcntl_arg *oldarg,
+                                         union fcntl_arg *arg,
+                                         union fcntl_arg *oldarg,
                                          count_type ver, int noundo);
 
 int
 fd_fcntl_apply(struct fd *fd, int fildes, int cmd,
-                              union com_fd_fcntl_arg *arg, int ccmode);
+                              union fcntl_arg *arg, int ccmode);
 
 int
 fd_fcntl_undo(struct fd *fd, int fildes, int cmd,
-                             union com_fd_fcntl_arg *oldarg, int ccmode);
+                             union fcntl_arg *oldarg, int ccmode);
 
 #endif
 

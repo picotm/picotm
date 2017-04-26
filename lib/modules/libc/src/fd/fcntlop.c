@@ -8,8 +8,8 @@
 #include <string.h>
 
 int
-fcntlop_init(struct fcntlop *fcntlop, int command, const union com_fd_fcntl_arg *value,
-                                                   const union com_fd_fcntl_arg *oldvalue)
+fcntlop_init(struct fcntlop *fcntlop, int command, const union fcntl_arg *value,
+                                                   const union fcntl_arg *oldvalue)
 {
     assert(fcntlop);
 
