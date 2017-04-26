@@ -6,7 +6,7 @@
 #include <errno.h>
 #include <picotm/picotm-module.h>
 #include "allocator/module.h"
-#include "picotm/picotm-libc.h"
+#include "error/module.h"
 
 /*
  * Memory functions
@@ -132,7 +132,7 @@ PICOTM_EXPORT
 char*
 strdup_tm(const char* s)
 {
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     size_t len = strlen(s) + sizeof(*s);
 
@@ -153,7 +153,7 @@ PICOTM_EXPORT
 int
 strerror_r_tm(int errnum, char* buf, size_t buflen)
 {
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     int res;
 
@@ -210,7 +210,7 @@ PICOTM_EXPORT
 char*
 strndup_tm(const char* s, size_t n)
 {
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     size_t len = strlen(s) + sizeof(*s);
     if (n < len) {

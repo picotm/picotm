@@ -6,8 +6,8 @@
 #include <errno.h>
 #include <picotm/picotm-module.h>
 #include <picotm/picotm-tm.h>
+#include "error/module.h"
 #include "fs/comfstx.h"
-#include "picotm/picotm-libc.h"
 #include "picotm/sys/stat-tm.h"
 
 PICOTM_EXPORT
@@ -22,7 +22,7 @@ PICOTM_EXPORT
 int
 fchmod_tx(int fildes, mode_t mode)
 {
-    picotm_libc_save_errno();
+    error_module_save_errno();
 
     int res;
 
