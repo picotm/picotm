@@ -47,21 +47,8 @@ libpicotm_c_la_SOURCES = allocator/allocator_tx.c \
                          fd/ofdid.h \
                          fd/ofdtab.c \
                          fd/ofdtab.h \
-                         fd/ofdtx_bind.c \
                          fd/ofdtx.c \
-                         fd/ofdtx_connect.c \
-                         fd/ofdtx_fcntl.c \
-                         fd/ofdtx_fsync.c \
                          fd/ofdtx.h \
-                         fd/ofdtx_listen.c \
-                         fd/ofdtx_lseek.c \
-                         fd/ofdtx_pread.c \
-                         fd/ofdtx_pwrite.c \
-                         fd/ofdtx_read.c \
-                         fd/ofdtx_recv.c \
-                         fd/ofdtx_send.c \
-                         fd/ofdtx_shutdown.c \
-                         fd/ofdtx_write.c \
                          fd/openop.c \
                          fd/openop.h \
                          fd/openoptab.c \
