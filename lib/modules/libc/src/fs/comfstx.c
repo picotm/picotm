@@ -261,6 +261,15 @@ err_size_ge_len:
 }
 
 int
+com_fs_tx_getcwd_fildes()
+{
+    struct com_fs* com_fs = com_fs_tx_aquire_data();
+    assert(com_fs);
+
+    return com_fs_get_cwd(com_fs);
+}
+
+int
 com_fs_tx_link(const char *oldpath, const char *newpath)
 {
     struct com_fs *comfs = com_fs_tx_aquire_data();
