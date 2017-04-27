@@ -389,7 +389,7 @@ vfs_tx_finish(struct vfs_tx* self)
     if (self->newcwd >= 0) {
         struct fd* fd = fdtab + self->newcwd;
         fd_unref(fd, self->newcwd);
-        self->inicwd = -1;
+        self->newcwd = -1;
     }
 
     return 0;
