@@ -2,14 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <assert.h>
-#include <search.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <picotm/picotm-module.h>
-#include "fchdirop.h"
 #include "fchdiroptab.h"
+#include <assert.h>
+#include <picotm/picotm-module.h>
+#include <stdio.h>
+#include "fchdirop.h"
 
 unsigned long
 fchdiroptab_append(struct fchdirop **tab, size_t *nelems, int oldcwd,

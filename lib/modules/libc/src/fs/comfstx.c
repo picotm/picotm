@@ -2,24 +2,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "comfstx.h"
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <picotm/picotm.h>
+#include <picotm/picotm-module.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <picotm/picotm.h>
 #include <unistd.h>
 #include "errcode.h"
-#include "types.h"
-#include "counter.h"
-#include "fd/fcntlop.h"
 #include "fd/fd.h"
 #include "fd/fdtab.h"
 #include "fd/module.h"
 #include "comfs.h"
-#include "comfstx.h"
 
 static int
 com_fs_tx_lock(void *data)

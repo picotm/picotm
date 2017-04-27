@@ -5,8 +5,10 @@
 #ifndef COMFSTX_H
 #define COMFSTX_H
 
-#include <fcntl.h>
-#include <sys/stat.h>
+#include <sys/types.h>
+
+struct com_fs;
+struct stat;
 
 struct com_fs *
 com_fs_tx_aquire_data(void);

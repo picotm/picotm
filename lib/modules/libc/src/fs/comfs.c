@@ -2,10 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "comfs.h"
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,14 +13,8 @@
 #include <picotm/picotm-module.h>
 #include <unistd.h>
 #include "errcode.h"
-#include "types.h"
-#include "mutex.h"
-#include "counter.h"
-#include "fd/seekop.h"
-#include "fd/fcntlop.h"
 #include "fd/fd.h"
 #include "fd/fdtab.h"
-#include "comfs.h"
 
 int
 com_fs_init(struct com_fs *data, unsigned long module)

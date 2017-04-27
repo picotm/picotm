@@ -5,7 +5,10 @@
 #ifndef COMFS_H
 #define COMFS_H
 
-#include <picotm/picotm-module.h>
+#include <stddef.h>
+
+struct com_fs_event;
+struct event;
 
 enum com_fs_action
 {

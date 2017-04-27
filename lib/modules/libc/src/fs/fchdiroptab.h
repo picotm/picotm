@@ -5,6 +5,10 @@
 #ifndef FCHDIROPTAB_H
 #define FCHDIROPTAB_H
 
+#include <stddef.h>
+
+struct fchdirop;
+
 unsigned long
 fchdiroptab_append(struct fchdirop **tab, size_t *nelems, int oldcwd,
                                                           int newcwd);
