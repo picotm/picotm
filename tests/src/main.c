@@ -402,7 +402,7 @@ parse_opts(int argc, char *argv[])
         if ((c ==  '?') || (c == ':')) {
             return -1;
         }
-        if (c >= sizeof(opt)/sizeof(opt[0]) || !opt[c]) {
+        if (c >= (ssize_t)(sizeof(opt)/sizeof(opt[0])) || !opt[c]) {
             return -1;
         }
         int res = opt[c](optarg);
