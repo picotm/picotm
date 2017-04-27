@@ -9,7 +9,6 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include "fs/comfs.h"
 #include "fs/comfstx.h"
 #include "ofd.h"
 #include "openop.h"
@@ -1142,9 +1141,6 @@ int
 fildes_tx_exec_open(struct fildes_tx* self, const char* path, int oflag,
                     mode_t mode, int isnoundo)
 {
-    struct com_fs* com_fs = com_fs_tx_aquire_data();
-    assert(com_fs);
-
     /* O_TRUNC needs irrevocability */
 
     if ((mode&O_TRUNC) && !isnoundo) {
@@ -1153,8 +1149,8 @@ fildes_tx_exec_open(struct fildes_tx* self, const char* path, int oflag,
 
     /* Open file */
 
-    int fildes =
-        TEMP_FAILURE_RETRY(openat(com_fs_get_cwd(com_fs), path, oflag, mode));
+    int fildes = TEMP_FAILURE_RETRY(
+        openat(com_fs_tx_getcwd_fildes(), path, oflag, mode));
 
     if (fildes < 0) {
         return ERR_SYSTEM;

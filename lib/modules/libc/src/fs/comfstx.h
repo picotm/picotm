@@ -32,6 +32,9 @@ char*
 com_fs_tx_getcwd(char* buf, size_t size);
 
 int
+com_fs_tx_getcwd_fildes(void);
+
+int
 com_fs_tx_link(const char* path1, const char* path2);
 
 int
