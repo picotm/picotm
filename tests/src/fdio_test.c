@@ -1242,8 +1242,8 @@ tx_random_rw(int fildes, unsigned int* seed, off_t size,
         for (unsigned long i = 0; i < tx_ncycles; ++i) {
 
             unsigned char buf[24];
-            off_t offset;
-            size_t count;
+            off_t offset = 0;
+            size_t count = 0;
 
             for (unsigned long j = 0; j < tx_nreads; ++j) {
                 offset = rand_r_tx(seed) % tx_size;
