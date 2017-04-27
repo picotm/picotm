@@ -22,10 +22,10 @@ rangeisect(off_t off0, size_t siz0,
         return 0;
     }
 
-    if ((off0 < off1) && (off0+siz0 > off1)) {
+    if ((off0 < off1) && ((off_t)(off0+siz0) > off1)) {
         ioff = off1;
         iend = off1+siz1 < off0+siz0 ? off1+siz1-1 : off0+siz0-1;
-    } else if ((off1 < off0) && (off1+siz1 > off0)) {
+    } else if ((off1 < off0) && ((off_t)(off1+siz1) > off0)) {
         ioff = off0;
         iend = off0+siz0 < off1+siz1 ? off0+siz0-1 : off1+siz1-1;
     } else if (off0 == off1) {

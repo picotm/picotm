@@ -419,7 +419,7 @@ ofd_tx_ref(struct ofd_tx* self, int ofdindex, int fildes, unsigned long flags,
 {
     assert(self);
     assert(ofdindex >= 0);
-    assert(ofdindex < sizeof(ofdtab)/sizeof(ofdtab[0]));
+    assert(ofdindex < (ssize_t)(sizeof(ofdtab)/sizeof(ofdtab[0])));
 
     if (!ofd_tx_holds_ref(self)) {
 
@@ -489,7 +489,7 @@ ofd_tx_holds_ref(struct ofd_tx* self)
     assert(self);
 
     return (self->ofd >= 0) &&
-           (self->ofd < sizeof(ofdtab)/sizeof(ofdtab[0]));
+           (self->ofd < (ssize_t)(sizeof(ofdtab)/sizeof(ofdtab[0])));
 }
 
 static off_t
@@ -2130,10 +2130,10 @@ pwrite_apply_regular(struct ofd_tx* self, int fildes,
         size_t nbyte = self->wrtab[event->cookie].nbyte;
         off_t  bufoff = self->wrtab[event->cookie].bufoff;
 
-        int m = 1;
+        size_t m = 1;
 
         while ((m < n)
-                && (self->wrtab[event[m].cookie].off == off+nbyte)
+                && (self->wrtab[event[m].cookie].off == (off_t)(off+nbyte))
                 && (self->wrtab[event[m].cookie].bufoff == bufoff+nbyte)) {
 
             nbyte += self->wrtab[event[m].cookie].nbyte;
