@@ -77,12 +77,12 @@ libpicotm_c_la_SOURCES = allocator/allocator_tx.c \
                          fd/seekop.h \
                          fd/seekoptab.c \
                          fd/seekoptab.h \
-                         fs/comfstx.c \
-                         fs/comfstx.h \
                          fs/fchdirop.c \
                          fs/fchdirop.h \
                          fs/fchdiroptab.c \
                          fs/fchdiroptab.h \
+                         fs/module.c \
+                         fs/module.h \
                          fs/vfs_tx.c \
                          fs/vfs_tx.h \
                          libc.c \

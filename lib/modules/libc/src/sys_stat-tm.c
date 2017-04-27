@@ -6,7 +6,7 @@
 #include <errno.h>
 #include <picotm/picotm-module.h>
 #include "error/module.h"
-#include "fs/comfstx.h"
+#include "fs/module.h"
 
 PICOTM_EXPORT
 int
@@ -17,7 +17,7 @@ chmod_tm(const char* path, mode_t mode)
     int res;
 
     do {
-        res = com_fs_tx_chmod(path, mode);
+        res = vfs_module_chmod(path, mode);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }
@@ -35,7 +35,7 @@ fstat_tm(int fildes, struct stat* buf)
     int res;
 
     do {
-        res = com_fs_tx_fstat(fildes, buf);
+        res = vfs_module_fstat(fildes, buf);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }
@@ -53,7 +53,7 @@ lstat_tm(const char* path, struct stat* buf)
     int res;
 
     do {
-        res = com_fs_tx_lstat(path, buf);
+        res = vfs_module_lstat(path, buf);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }
@@ -71,7 +71,7 @@ mkdir_tm(const char* path, mode_t mode)
     int res;
 
     do {
-        res = com_fs_tx_mkdir(path, mode);
+        res = vfs_module_mkdir(path, mode);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }
@@ -89,7 +89,7 @@ mkfifo_tm(const char* path, mode_t mode)
     int res;
 
     do {
-        res = com_fs_tx_mkfifo(path, mode);
+        res = vfs_module_mkfifo(path, mode);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }
@@ -108,7 +108,7 @@ mknod_tm(const char* path, mode_t mode, dev_t dev)
     int res;
 
     do {
-        res = com_fs_tx_mknod(path, mode, dev);
+        res = vfs_module_mknod(path, mode, dev);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }
@@ -127,7 +127,7 @@ stat_tm(const char* path, struct stat* buf)
     int res;
 
     do {
-        res = com_fs_tx_stat(path, buf);
+        res = vfs_module_stat(path, buf);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }

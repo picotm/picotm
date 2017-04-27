@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "comfstx.h"
+#include "module.h"
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -19,50 +19,70 @@
 #include "fd/module.h"
 #include "vfs_tx.h"
 
+struct vfs_module {
+    bool          is_initialized;
+    struct vfs_tx tx;
+};
+
 static int
-com_fs_tx_lock(void *data)
+lock_cb(void* data)
 {
-    return vfs_tx_lock(data);
+    struct vfs_module* module = data;
+
+    return vfs_tx_lock(&module->tx);
 }
 
 static int
-com_fs_tx_unlock(void *data)
+unlock_cb(void* data)
 {
-    vfs_tx_unlock(data);
+    struct vfs_module* module = data;
+
+    vfs_tx_unlock(&module->tx);
 
     return 0;
 }
 
 static int
-com_fs_tx_validate(void *data, int noundo)
+validate_cb(void* data, int noundo)
 {
-    return vfs_tx_validate(data);
+    struct vfs_module* module = data;
+
+    return vfs_tx_validate(&module->tx);
 }
 
 static int
-com_fs_tx_apply_event(const struct event *event, size_t n, void *data)
+apply_event_cb(const struct event* event, size_t n, void* data)
 {
-    return vfs_tx_apply_event(data, event, n);
+    struct vfs_module* module = data;
+
+    return vfs_tx_apply_event(&module->tx, event, n);
 }
 
 static int
-com_fs_tx_undo_event(const struct event *event, size_t n, void *data)
+undo_event_cb(const struct event* event, size_t n, void* data)
 {
-    return vfs_tx_undo_event(data, event, n);
+    struct vfs_module* module = data;
+
+    return vfs_tx_undo_event(&module->tx, event, n);
 }
 
 static int
-com_fs_tx_finish(void *data)
+finish_cb(void* data)
 {
-    vfs_tx_finish(data);
+    struct vfs_module* module = data;
+
+    vfs_tx_finish(&module->tx);
 
     return 0;
 }
 
 static int
-com_fs_tx_uninit(void *data)
+uninit_cb(void* data)
 {
-    vfs_tx_uninit(data);
+    struct vfs_module* module = data;
+
+    vfs_tx_uninit(&module->tx);
+    module->is_initialized = false;
 
     return 0;
 }
@@ -70,42 +90,59 @@ com_fs_tx_uninit(void *data)
 static struct vfs_tx*
 get_vfs_tx(void)
 {
-    static __thread struct {
-        bool          is_initialized;
-        struct vfs_tx tx;
-    } t_com_fs;
+    static __thread struct vfs_module t_module;
 
-    if (t_com_fs.is_initialized) {
-        return &t_com_fs.tx;
+    if (t_module.is_initialized) {
+        return &t_module.tx;
     }
 
-    long res = picotm_register_module(com_fs_tx_lock,
-                                      com_fs_tx_unlock,
-                                      com_fs_tx_validate,
-                                      com_fs_tx_apply_event,
-                                      com_fs_tx_undo_event,
+    long res = picotm_register_module(lock_cb,
+                                      unlock_cb,
+                                      validate_cb,
+                                      apply_event_cb,
+                                      undo_event_cb,
                                       NULL,
                                       NULL,
-                                      com_fs_tx_finish,
-                                      com_fs_tx_uninit,
-                                      &t_com_fs.tx);
+                                      finish_cb,
+                                      uninit_cb,
+                                      &t_module);
     if (res < 0) {
         return NULL;
     }
     unsigned long module = res;
 
-    res = vfs_tx_init(&t_com_fs.tx, module);
+    res = vfs_tx_init(&t_module.tx, module);
     if (res < 0) {
         return NULL;
     }
 
-    t_com_fs.is_initialized = true;
+    t_module.is_initialized = true;
 
-    return &t_com_fs.tx;
+    return &t_module.tx;
 }
 
 int
-com_fs_tx_fchdir(int fildes)
+vfs_module_chdir(const char* path)
+{
+    int fildes = fd_module_open(path, O_RDONLY, 0);
+    if (fildes < 0) {
+        return -1;
+    }
+
+    return vfs_module_fchdir(fildes);
+}
+
+int
+vfs_module_chmod(const char* path, mode_t mode)
+{
+    struct vfs_tx* vfs_tx = get_vfs_tx();
+    assert(vfs_tx);
+
+    return fchmodat(vfs_tx_get_cwd(vfs_tx), path, mode, 0);
+}
+
+int
+vfs_module_fchdir(int fildes)
 {
     int res;
 
@@ -132,64 +169,13 @@ com_fs_tx_fchdir(int fildes)
 }
 
 int
-com_fs_tx_mkstemp(char *pathname)
-{
-    int res;
-
-    struct vfs_tx* vfs_tx = get_vfs_tx();
-    assert(vfs_tx);
-
-    do {
-        res = vfs_tx_exec_mkstemp(vfs_tx, pathname);
-
-        switch (res) {
-            case ERR_CONFLICT:
-            case ERR_PEERABORT:
-                picotm_abort();
-                break;
-            case ERR_NOUNDO:
-                picotm_irrevocable();
-                break;
-            default:
-                break;
-        }
-    } while (res == ERR_NOUNDO);
-
-    return res;
-}
-
-int
-com_fs_tx_chdir(const char *path)
-{
-    assert(path);
-
-    int fildes = fd_module_open(path, O_RDONLY, 0);
-
-    if (fildes < 0) {
-        return -1;
-    }
-
-    return com_fs_tx_fchdir(fildes);
-}
-
-int
-com_fs_tx_chmod(const char *pathname, mode_t mode)
-{
-    struct vfs_tx* vfs_tx = get_vfs_tx();
-    assert(vfs_tx);
-
-    return fchmodat(vfs_tx_get_cwd(vfs_tx), pathname, mode, 0);
-}
-
-int
-com_fs_tx_fchmod(int fildes, mode_t mode)
+vfs_module_fchmod(int fildes, mode_t mode)
 {
     /* reference file descriptor while working on it */
 
-    struct fd *fd = fdtab+fildes;
+    struct fd* fd = fdtab + fildes;
 
     int err = fd_ref(fd, fildes, 0);
-
     if (err) {
         return err;
     }
@@ -202,14 +188,13 @@ com_fs_tx_fchmod(int fildes, mode_t mode)
 }
 
 int
-com_fs_tx_fstat(int fildes, struct stat *buf)
+vfs_module_fstat(int fildes, struct stat* buf)
 {
     /* reference file descriptor while working on it */
 
-    struct fd *fd = fdtab+fildes;
+    struct fd* fd = fdtab + fildes;
 
     int err = fd_ref(fd, fildes, 0);
-
     if (err) {
         return err;
     }
@@ -221,8 +206,8 @@ com_fs_tx_fstat(int fildes, struct stat *buf)
     return res;
 }
 
-char *
-com_fs_tx_getcwd(char *buf, size_t size)
+char*
+vfs_module_getcwd(char* buf, size_t size)
 {
     struct vfs_tx* vfs_tx = get_vfs_tx();
     assert(vfs_tx);
@@ -257,7 +242,7 @@ err_size_ge_len:
 }
 
 int
-com_fs_tx_getcwd_fildes()
+vfs_module_getcwd_fildes()
 {
     struct vfs_tx* vfs_tx = get_vfs_tx();
     assert(vfs_tx);
@@ -266,18 +251,18 @@ com_fs_tx_getcwd_fildes()
 }
 
 int
-com_fs_tx_link(const char *oldpath, const char *newpath)
+vfs_module_link(const char* path1, const char* path2)
 {
     struct vfs_tx* vfs_tx = get_vfs_tx();
     assert(vfs_tx);
 
     int cwd = vfs_tx_get_cwd(vfs_tx);
 
-    return linkat(cwd, oldpath, cwd, newpath, AT_SYMLINK_FOLLOW);
+    return linkat(cwd, path1, cwd, path2, AT_SYMLINK_FOLLOW);
 }
 
 int
-com_fs_tx_lstat(const char *path, struct stat *buf)
+vfs_module_lstat(const char* path, struct stat* buf)
 {
     struct vfs_tx* vfs_tx = get_vfs_tx();
     assert(vfs_tx);
@@ -286,16 +271,16 @@ com_fs_tx_lstat(const char *path, struct stat *buf)
 }
 
 int
-com_fs_tx_mkdir(const char *pathname, mode_t mode)
+vfs_module_mkdir(const char* path, mode_t mode)
 {
     struct vfs_tx* vfs_tx = get_vfs_tx();
     assert(vfs_tx);
 
-    return mkdirat(vfs_tx_get_cwd(vfs_tx), pathname, mode);
+    return mkdirat(vfs_tx_get_cwd(vfs_tx), path, mode);
 }
 
 int
-com_fs_tx_mkfifo(const char *path, mode_t mode)
+vfs_module_mkfifo(const char* path, mode_t mode)
 {
     struct vfs_tx* vfs_tx = get_vfs_tx();
     assert(vfs_tx);
@@ -304,7 +289,7 @@ com_fs_tx_mkfifo(const char *path, mode_t mode)
 }
 
 int
-com_fs_tx_mknod(const char *path, mode_t mode, dev_t dev)
+vfs_module_mknod(const char* path, mode_t mode, dev_t dev)
 {
     struct vfs_tx* vfs_tx = get_vfs_tx();
     assert(vfs_tx);
@@ -313,7 +298,34 @@ com_fs_tx_mknod(const char *path, mode_t mode, dev_t dev)
 }
 
 int
-com_fs_tx_stat(const char *path, struct stat *buf)
+vfs_module_mkstemp(char* template)
+{
+    int res;
+
+    struct vfs_tx* vfs_tx = get_vfs_tx();
+    assert(vfs_tx);
+
+    do {
+        res = vfs_tx_exec_mkstemp(vfs_tx, template);
+
+        switch (res) {
+            case ERR_CONFLICT:
+            case ERR_PEERABORT:
+                picotm_abort();
+                break;
+            case ERR_NOUNDO:
+                picotm_irrevocable();
+                break;
+            default:
+                break;
+        }
+    } while (res == ERR_NOUNDO);
+
+    return res;
+}
+
+int
+vfs_module_stat(const char* path, struct stat* buf)
 {
     struct vfs_tx* vfs_tx = get_vfs_tx();
     assert(vfs_tx);
@@ -322,11 +334,10 @@ com_fs_tx_stat(const char *path, struct stat *buf)
 }
 
 int
-com_fs_tx_unlink(const char *pathname)
+vfs_module_unlink(const char* path)
 {
     struct vfs_tx* vfs_tx = get_vfs_tx();
     assert(vfs_tx);
 
-    return unlinkat(vfs_tx_get_cwd(vfs_tx), pathname, 0);
+    return unlinkat(vfs_tx_get_cwd(vfs_tx), path, 0);
 }
-

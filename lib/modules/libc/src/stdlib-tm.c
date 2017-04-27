@@ -10,7 +10,7 @@
 #include <string.h>
 #include "allocator/module.h"
 #include "error/module.h"
-#include "fs/comfstx.h"
+#include "fs/module.h"
 
 PICOTM_EXPORT
 void
@@ -46,7 +46,7 @@ mkstemp_tm(char* template)
     int res;
 
     do {
-        res = com_fs_tx_mkstemp(template);
+        res = vfs_module_mkstemp(template);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }

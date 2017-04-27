@@ -7,7 +7,7 @@
 #include <picotm/picotm-module.h>
 #include <picotm/picotm-tm.h>
 #include "error/module.h"
-#include "fs/comfstx.h"
+#include "fs/module.h"
 #include "picotm/sys/stat-tm.h"
 
 PICOTM_EXPORT
@@ -27,7 +27,7 @@ fchmod_tx(int fildes, mode_t mode)
     int res;
 
     do {
-        res = com_fs_tx_fchmod(fildes, mode);
+        res = vfs_module_fchmod(fildes, mode);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }
