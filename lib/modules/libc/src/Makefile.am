@@ -78,9 +78,7 @@ libpicotm_c_la_SOURCES = allocator/allocator_tx.c \
                          fd/seekoptab.c \
                          fd/seekoptab.h \
                          fs/comfs.c \
-                         fs/comfs_fchdir.c \
                          fs/comfs.h \
-                         fs/comfs_mkstemp.c \
                          fs/comfstx.c \
                          fs/comfstx.h \
                          fs/fchdirop.c \
