@@ -9,8 +9,8 @@
 #include <picotm/picotm-tm.h>
 #include "error/module.h"
 #include "fd/module.h"
-#include "fs/module.h"
 #include "picotm/unistd-tm.h"
+#include "vfs/module.h"
 
 PICOTM_EXPORT
 void

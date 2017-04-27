@@ -6,7 +6,7 @@
 #include <errno.h>
 #include <picotm/picotm-module.h>
 #include "error/module.h"
-#include "fs/module.h"
+#include "vfs/module.h"
 
 PICOTM_EXPORT
 int

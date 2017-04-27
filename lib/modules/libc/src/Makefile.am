@@ -77,14 +77,6 @@ libpicotm_c_la_SOURCES = allocator/allocator_tx.c \
                          fd/seekop.h \
                          fd/seekoptab.c \
                          fd/seekoptab.h \
-                         fs/fchdirop.c \
-                         fs/fchdirop.h \
-                         fs/fchdiroptab.c \
-                         fs/fchdiroptab.h \
-                         fs/module.c \
-                         fs/module.h \
-                         fs/vfs_tx.c \
-                         fs/vfs_tx.h \
                          libc.c \
                          mutex.c \
                          mutex.h \
@@ -101,7 +93,15 @@ libpicotm_c_la_SOURCES = allocator/allocator_tx.c \
                          sys_stat-tm.c \
                          types.h \
                          unistd.c \
-                         unistd-tm.c
+                         unistd-tm.c \
+                         vfs/fchdirop.c \
+                         vfs/fchdirop.h \
+                         vfs/fchdiroptab.c \
+                         vfs/fchdiroptab.h \
+                         vfs/module.c \
+                         vfs/module.h \
+                         vfs/vfs_tx.c \
+                         vfs/vfs_tx.h
 
 CC = $(PTHREAD_CC)
 

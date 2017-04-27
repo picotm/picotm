@@ -10,7 +10,7 @@
 #include <string.h>
 #include "allocator/module.h"
 #include "error/module.h"
-#include "fs/module.h"
+#include "vfs/module.h"
 
 PICOTM_EXPORT
 void

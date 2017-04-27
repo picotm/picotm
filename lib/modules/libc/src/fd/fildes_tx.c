@@ -9,13 +9,13 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include "fs/module.h"
 #include "ofd.h"
 #include "openop.h"
 #include "openoptab.h"
 #include "pipeop.h"
 #include "pipeoptab.h"
 #include "range.h"
+#include "vfs/module.h"
 
 enum fildes_tx_cmd {
     CMD_CLOSE = 0,

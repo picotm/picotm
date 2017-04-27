@@ -7,8 +7,8 @@
 #include <picotm/picotm-module.h>
 #include <picotm/picotm-tm.h>
 #include "error/module.h"
-#include "fs/module.h"
 #include "picotm/sys/stat-tm.h"
+#include "vfs/module.h"
 
 PICOTM_EXPORT
 int
