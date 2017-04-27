@@ -397,7 +397,7 @@ apply_bind(struct fildes_tx* self, const struct fd_event* event, size_t n)
     while (n && !err) {
 
         assert(event->fildes >= 0);
-        assert(event->fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
+        assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
         const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
         assert(fd_tx);
@@ -405,7 +405,7 @@ apply_bind(struct fildes_tx* self, const struct fd_event* event, size_t n)
         struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
         assert(ofd_tx);
 
-        int m = 1;
+        size_t m = 1;
 
         while ((m < n) && (event[m].fildes == event->fildes)) {
             ++m;
@@ -423,12 +423,12 @@ static int
 undo_bind(struct fildes_tx* self, int fildes, int cookie)
 {
     assert(self);
-    assert(cookie < self->eventtablen);
+    assert(cookie < (ssize_t)self->eventtablen);
 
     const struct fd_event* ev = self->eventtab+cookie;
 
     assert(ev->fildes >= 0);
-    assert(ev->fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
+    assert(ev->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
     const struct fd_tx* fd_tx = get_fd_tx(self, ev->fildes);
     assert(fd_tx);
@@ -486,7 +486,7 @@ apply_close(struct fildes_tx* self, const struct fd_event* event, size_t n)
     while (n && !err) {
 
         assert(event->fildes >= 0);
-        assert(event->fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
+        assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
         struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
         assert(fd_tx);
@@ -504,7 +504,7 @@ undo_close(struct fildes_tx* self, int fildes, int cookie)
 {
     assert(self);
     assert(fildes >= 0);
-    assert(fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
+    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
     struct fd_tx* fd_tx = get_fd_tx(self, fildes);
     assert(fd_tx);
@@ -578,7 +578,7 @@ apply_connect(struct fildes_tx* self, const struct fd_event* event, size_t n)
     while (n && !err) {
 
         assert(event->fildes >= 0);
-        assert(event->fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
+        assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
         const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
         assert(fd_tx);
@@ -586,7 +586,7 @@ apply_connect(struct fildes_tx* self, const struct fd_event* event, size_t n)
         struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
         assert(ofd_tx);
 
-        int m = 1;
+        size_t m = 1;
 
         while ((m < n) && (event[m].fildes == event->fildes)) {
             ++m;
@@ -605,7 +605,7 @@ undo_connect(struct fildes_tx* self, int fildes, int cookie)
 {
     assert(self);
     assert(fildes >= 0);
-    assert(fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
+    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
     const struct fd_tx* fd_tx = get_fd_tx(self, fildes);
     assert(fd_tx);
@@ -774,7 +774,7 @@ apply_fcntl(struct fildes_tx* self, const struct fd_event* event, size_t n)
     while (n && !err) {
 
         assert(event->fildes >= 0);
-        assert(event->fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
+        assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
         struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
         assert(fd_tx);
@@ -802,7 +802,7 @@ undo_fcntl(struct fildes_tx* self, int fildes, int cookie)
 {
     assert(self);
     assert(fildes >= 0);
-    assert(fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
+    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
     struct fd_tx* fd_tx = get_fd_tx(self, fildes);
     assert(fd_tx);
@@ -884,7 +884,7 @@ apply_fsync(struct fildes_tx* self, const struct fd_event* event, size_t n)
     while (n && !err) {
 
         assert(event->fildes >= 0);
-        assert(event->fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
+        assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
         const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
         assert(fd_tx);
@@ -892,7 +892,7 @@ apply_fsync(struct fildes_tx* self, const struct fd_event* event, size_t n)
         struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
         assert(ofd_tx);
 
-        int m = 1;
+        size_t m = 1;
 
         while ((m < n) && (event[m].fildes == event->fildes)) {
             ++m;
@@ -911,7 +911,7 @@ undo_fsync(struct fildes_tx* self, int fildes, int cookie)
 {
     assert(self);
     assert(fildes >= 0);
-    assert(fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
+    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
     const struct fd_tx* fd_tx = get_fd_tx(self, fildes);
     assert(fd_tx);
@@ -987,7 +987,7 @@ apply_listen(struct fildes_tx* self, const struct fd_event* event, size_t n)
     while (n && !err) {
 
         assert(event->fildes >= 0);
-        assert(event->fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
+        assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
         const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
         assert(fd_tx);
@@ -995,7 +995,7 @@ apply_listen(struct fildes_tx* self, const struct fd_event* event, size_t n)
         struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
         assert(ofd_tx);
 
-        int m = 1;
+        size_t m = 1;
 
         while ((m < n) && (event[m].fildes == event->fildes)) {
             ++m;
@@ -1014,7 +1014,7 @@ undo_listen(struct fildes_tx* self, int fildes, int cookie)
 {
     assert(self);
     assert(fildes >= 0);
-    assert(fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
+    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
     const struct fd_tx* fd_tx = get_fd_tx(self, fildes);
     assert(fd_tx);
@@ -1092,7 +1092,7 @@ apply_lseek(struct fildes_tx* self, const struct fd_event* event, size_t n)
     while (n && !err) {
 
         assert(event->fildes >= 0);
-        assert(event->fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
+        assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
         const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
         assert(fd_tx);
@@ -1100,7 +1100,7 @@ apply_lseek(struct fildes_tx* self, const struct fd_event* event, size_t n)
         struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
         assert(ofd_tx);
 
-        int m = 1;
+        size_t m = 1;
 
         while ((m < n) && (event[m].fildes == event->fildes)) {
             ++m;
@@ -1119,7 +1119,7 @@ undo_lseek(struct fildes_tx* self, int fildes, int cookie)
 {
     assert(self);
     assert(fildes >= 0);
-    assert(fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
+    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
     const struct fd_tx* fd_tx = get_fd_tx(self, fildes);
     assert(fd_tx);
@@ -1206,7 +1206,7 @@ undo_open(struct fildes_tx* self, int fildes, int cookie)
     assert(self);
     assert(fildes >= 0);
     assert(fildes < MAXNUMFD);
-    assert(cookie < self->openoptablen);
+    assert(cookie < (ssize_t)self->openoptablen);
 
     if (self->openoptab[cookie].unlink) {
 
@@ -1413,7 +1413,7 @@ apply_pread(struct fildes_tx* self, const struct fd_event* event, size_t n)
     while (n && !err) {
 
         assert(event->fildes >= 0);
-        assert(event->fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
+        assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
         const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
         assert(fd_tx);
@@ -1421,7 +1421,7 @@ apply_pread(struct fildes_tx* self, const struct fd_event* event, size_t n)
         struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
         assert(ofd_tx);
 
-        int m = 1;
+        size_t m = 1;
 
         while ((m < n) && (event[m].fildes == event->fildes)) {
             ++m;
@@ -1440,7 +1440,7 @@ undo_pread(struct fildes_tx* self, int fildes, int cookie)
 {
     assert(self);
     assert(fildes >= 0);
-    assert(fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
+    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
     const struct fd_tx* fd_tx = get_fd_tx(self, fildes);
     assert(fd_tx);
@@ -1518,7 +1518,7 @@ apply_pwrite(struct fildes_tx* self, const struct fd_event* event, size_t n)
     while (n && !err) {
 
         assert(event->fildes >= 0);
-        assert(event->fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
+        assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
         const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
         assert(fd_tx);
@@ -1526,7 +1526,7 @@ apply_pwrite(struct fildes_tx* self, const struct fd_event* event, size_t n)
         struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
         assert(ofd_tx);
 
-        int m = 1;
+        size_t m = 1;
 
         while ((m < n) && (event[m].fildes == event->fildes)) {
             ++m;
@@ -1545,7 +1545,7 @@ undo_pwrite(struct fildes_tx* self, int fildes, int cookie)
 {
     assert(self);
     assert(fildes >= 0);
-    assert(fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
+    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
     const struct fd_tx* fd_tx = get_fd_tx(self, fildes);
     assert(fd_tx);
@@ -1633,7 +1633,7 @@ apply_read(struct fildes_tx* self, const struct fd_event* event, size_t n)
     while (n && !err) {
 
         assert(event->fildes >= 0);
-        assert(event->fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
+        assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
         const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
         assert(fd_tx);
@@ -1641,7 +1641,7 @@ apply_read(struct fildes_tx* self, const struct fd_event* event, size_t n)
         struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
         assert(ofd_tx);
 
-        int m = 1;
+        size_t m = 1;
 
         while ((m < n) && (event[m].fildes == event->fildes)) {
             ++m;
@@ -1660,7 +1660,7 @@ undo_read(struct fildes_tx* self, int fildes, int cookie)
 {
     assert(self);
     assert(fildes >= 0);
-    assert(fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
+    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
     const struct fd_tx* fd_tx = get_fd_tx(self, fildes);
     assert(fd_tx);
@@ -1738,7 +1738,7 @@ apply_recv(struct fildes_tx* self, const struct fd_event* event, size_t n)
     while (n && !err) {
 
         assert(event->fildes >= 0);
-        assert(event->fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
+        assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
         const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
         assert(fd_tx);
@@ -1746,7 +1746,7 @@ apply_recv(struct fildes_tx* self, const struct fd_event* event, size_t n)
         struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
         assert(ofd_tx);
 
-        int m = 1;
+        size_t m = 1;
 
         while ((m < n) && (event[m].fildes == event->fildes)) {
             ++m;
@@ -1765,7 +1765,7 @@ undo_recv(struct fildes_tx* self, int fildes, int cookie)
 {
     assert(self);
     assert(fildes >= 0);
-    assert(fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
+    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
     const struct fd_tx* fd_tx = get_fd_tx(self, fildes);
     assert(fd_tx);
@@ -1922,7 +1922,7 @@ apply_send(struct fildes_tx* self, const struct fd_event* event, size_t n)
     while (n && !err) {
 
         assert(event->fildes >= 0);
-        assert(event->fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
+        assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
         const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
         assert(fd_tx);
@@ -1930,7 +1930,7 @@ apply_send(struct fildes_tx* self, const struct fd_event* event, size_t n)
         struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
         assert(ofd_tx);
 
-        int m = 1;
+        size_t m = 1;
 
         while ((m < n) && (event[m].fildes == event->fildes)) {
             ++m;
@@ -1949,7 +1949,7 @@ undo_send(struct fildes_tx* self, int fildes, int cookie)
 {
     assert(self);
     assert(fildes >= 0);
-    assert(fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
+    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
     const struct fd_tx* fd_tx = get_fd_tx(self, fildes);
     assert(fd_tx);
@@ -2025,7 +2025,7 @@ apply_shutdown(struct fildes_tx* self, const struct fd_event* event, size_t n)
     while (n && !err) {
 
         assert(event->fildes >= 0);
-        assert(event->fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
+        assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
         const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
         assert(fd_tx);
@@ -2033,7 +2033,7 @@ apply_shutdown(struct fildes_tx* self, const struct fd_event* event, size_t n)
         struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
         assert(ofd_tx);
 
-        int m = 1;
+        size_t m = 1;
 
         while ((m < n) && (event[m].fildes == event->fildes)) {
             ++m;
@@ -2052,7 +2052,7 @@ undo_shutdown(struct fildes_tx* self, int fildes, int cookie)
 {
     assert(self);
     assert(fildes >= 0);
-    assert(fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
+    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
     const struct fd_tx* fd_tx = get_fd_tx(self, fildes);
     assert(fd_tx);
@@ -2235,7 +2235,7 @@ apply_write(struct fildes_tx* self, const struct fd_event* event, size_t n)
     while (n && !err) {
 
         assert(event->fildes >= 0);
-        assert(event->fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
+        assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
         const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
         assert(fd_tx);
@@ -2243,7 +2243,7 @@ apply_write(struct fildes_tx* self, const struct fd_event* event, size_t n)
         struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
         assert(ofd_tx);
 
-        int m = 1;
+        size_t m = 1;
 
         while ((m < n) && (event[m].fildes == event->fildes)) {
             ++m;
@@ -2262,7 +2262,7 @@ undo_write(struct fildes_tx* self, int fildes, int cookie)
 {
     assert(self);
     assert(fildes >= 0);
-    assert(fildes < sizeof(self->fd_tx)/sizeof(self->fd_tx[0]));
+    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
     const struct fd_tx* fd_tx = get_fd_tx(self, fildes);
     assert(fd_tx);

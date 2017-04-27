@@ -78,7 +78,7 @@ fd_validate(struct fd *fd, count_type ver)
 {
     assert(fd);
     assert(fd->ofd >= 0);
-    assert(fd->ofd < sizeof(ofdtab)/sizeof(ofdtab[0]));
+    assert(fd->ofd < (ssize_t)(sizeof(ofdtab)/sizeof(ofdtab[0])));
 
     int res;
 
@@ -178,7 +178,7 @@ fd_unref(struct fd *fd, int fildes)
 {
     assert(fd);
     assert(fd->ofd >= 0);
-    assert(fd->ofd < sizeof(ofdtab)/sizeof(ofdtab[0]));
+    assert(fd->ofd < (ssize_t)(sizeof(ofdtab)/sizeof(ofdtab[0])));
 
     fd_lock(fd);
 
@@ -259,7 +259,7 @@ fd_fcntl_exec(struct fd *fd, int fildes, int cmd,
 {
     assert(fd);
     assert(fd->ofd >= 0);
-    assert(fd->ofd < sizeof(ofdtab)/sizeof(ofdtab[0]));
+    assert(fd->ofd < (ssize_t)(sizeof(ofdtab)/sizeof(ofdtab[0])));
 
     int res;
 
@@ -296,7 +296,7 @@ fd_fcntl_apply(struct fd *fd, int fildes, int cmd,
 {
     assert(fd);
     assert(fd->ofd >= 0);
-    assert(fd->ofd < sizeof(ofdtab)/sizeof(ofdtab[0]));
+    assert(fd->ofd < (ssize_t)(sizeof(ofdtab)/sizeof(ofdtab[0])));
 
     int res = 0;
 
@@ -320,7 +320,7 @@ fd_fcntl_undo(struct fd *fd, int fildes, int cmd,
 {
     assert(fd);
     assert(fd->ofd >= 0);
-    assert(fd->ofd < sizeof(ofdtab)/sizeof(ofdtab[0]));
+    assert(fd->ofd < (ssize_t)(sizeof(ofdtab)/sizeof(ofdtab[0])));
 
     int res = 0;
 

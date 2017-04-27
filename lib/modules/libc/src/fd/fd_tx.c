@@ -41,7 +41,7 @@ fd_tx_ref_or_validate(struct fd_tx* self, int fildes, unsigned long flags)
 {
     assert(self);
     assert(fildes >= 0);
-    assert(fildes < sizeof(fdtab)/sizeof(fdtab[0]));
+    assert(fildes < (ssize_t)(sizeof(fdtab)/sizeof(fdtab[0])));
 
     count_type fdver;
 
@@ -93,7 +93,7 @@ fd_tx_ref(struct fd_tx* self, int fildes, unsigned long flags)
 {
     assert(self);
     assert(fildes >= 0);
-    assert(fildes < sizeof(fdtab)/sizeof(fdtab[0]));
+    assert(fildes < (ssize_t)(sizeof(fdtab)/sizeof(fdtab[0])));
 
     if (fd_tx_holds_ref(self)) {
         return 0;
@@ -141,7 +141,7 @@ fd_tx_holds_ref(const struct fd_tx* self)
     assert(self);
 
     return (self->fildes >= 0) &&
-           (self->fildes < sizeof(fdtab)/sizeof(fdtab[0]));
+           (self->fildes < (ssize_t)(sizeof(fdtab)/sizeof(fdtab[0])));
 }
 
 int
@@ -287,7 +287,7 @@ fd_tx_fcntl_exec(struct fd_tx* self, int cmd, union fcntl_arg *arg,
 {
     assert(self);
     assert(self->fildes >= 0);
-    assert(self->fildes < sizeof(fdtab)/sizeof(fdtab[0]));
+    assert(self->fildes < (ssize_t)(sizeof(fdtab)/sizeof(fdtab[0])));
 
     union fcntl_arg oldvalue;
 
@@ -322,8 +322,8 @@ fd_tx_fcntl_apply(struct fd_tx* self, int cookie)
 {
     assert(self);
     assert(self->fildes >= 0);
-    assert(self->fildes < sizeof(fdtab)/sizeof(fdtab[0]));
-    assert(cookie < self->fcntltablen);
+    assert(self->fildes < (ssize_t)(sizeof(fdtab)/sizeof(fdtab[0])));
+    assert(cookie < (ssize_t)self->fcntltablen);
 
     return fd_fcntl_apply(fdtab+self->fildes,
                                 self->fildes, self->fcntltab[cookie].command,
@@ -336,8 +336,8 @@ fd_tx_fcntl_undo(struct fd_tx* self, int cookie)
 {
     assert(self);
     assert(self->fildes >= 0);
-    assert(self->fildes < sizeof(fdtab)/sizeof(fdtab[0]));
-    assert(cookie < self->fcntltablen);
+    assert(self->fildes < (ssize_t)(sizeof(fdtab)/sizeof(fdtab[0])));
+    assert(cookie < (ssize_t)self->fcntltablen);
 
     fd_lock(fdtab+self->fildes);
     int res = fd_fcntl_undo(fdtab+self->fildes,

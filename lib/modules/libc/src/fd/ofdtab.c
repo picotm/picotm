@@ -108,14 +108,14 @@ ofdtab_search_by_id(const struct ofdid *id, size_t len)
 
     i = ofdtab_find_by_id(id, max_len);
 
-    if (i == max_len) {
+    if (i == (ssize_t)max_len) {
         /* Get an empty entry */
         struct ofdid empty;
         ofdid_clear(&empty);
 
         i = ofdtab_find_by_id(&empty, len);
 
-        if (i == len) {
+        if (i == (ssize_t)len) {
             i = ERR_CONFLICT; /* Abort if not enough ids available*/
         }
     }
