@@ -10,6 +10,36 @@
 PICOTM_BEGIN_DECLS
 
 /**
+ * Marks non-transactional variables in a function.
+ *
+ * When restarting a transaction, picotm uses non-local goto, based on
+ * the `sigjmp()` and `longjmp()` functions provided by the C Standard
+ * Library. These functions save and restore the thread's instruction
+ * and stack pointer, but don't save any variables. This can lead to
+ * program errors, if a variable is held in a register that changes its
+ * value between invocations of `sigjmp()` and `longjmp()`. The call
+ * to `longjmp()` will not restore the variable's original value.
+ *
+ * To avoid this problem, mark local, non-transactional variables with
+ * `picotm_safe` as shown below.
+ * ```
+ *      picotm_safe int var = 0;
+ *
+ *      picotm_begin
+ *          ...
+ *      picotm_commit
+ *      picotm_end
+ * ```
+ *
+ * Even with `picotm_save`, you still have to privatize the variable when
+ * using it within the transaction.
+ *
+ * With gcc, the command-line option '-Wclobbered' will enable a warning
+ * about this problem.
+ */
+#define picotm_safe volatile
+
+/**
  * The transaction start mode.
  * \warning This is an internal interface. Don't use it in application code.
  */
