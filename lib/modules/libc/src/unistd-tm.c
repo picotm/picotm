@@ -8,7 +8,7 @@
 #include <picotm/picotm-module.h>
 #include "error/module.h"
 #include "fd/module.h"
-#include "fs/module.h"
+#include "vfs/module.h"
 
 static bool
 perform_recovery(int errno_hint)
