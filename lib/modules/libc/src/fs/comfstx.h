@@ -7,11 +7,7 @@
 
 #include <sys/types.h>
 
-struct com_fs;
 struct stat;
-
-struct com_fs *
-com_fs_tx_aquire_data(void);
 
 int
 com_fs_tx_chdir(const char* path);
