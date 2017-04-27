@@ -165,7 +165,7 @@ tabuniq(void* restrict base, size_t nelems, size_t siz,
 
             const ptrdiff_t diff = next - beg;
 
-            if (diff == siz) {
+            if (diff == (ptrdiff_t)siz) {
                 beg += siz;
             } else {
                 beg = memcpy(beg+siz, next, siz);
