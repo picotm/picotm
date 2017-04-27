@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include "fs/comfstx.h"
+#include "fs/module.h"
 #include "ofd.h"
 #include "openop.h"
 #include "openoptab.h"
@@ -1150,7 +1150,7 @@ fildes_tx_exec_open(struct fildes_tx* self, const char* path, int oflag,
     /* Open file */
 
     int fildes = TEMP_FAILURE_RETRY(
-        openat(com_fs_tx_getcwd_fildes(), path, oflag, mode));
+        openat(vfs_module_getcwd_fildes(), path, oflag, mode));
 
     if (fildes < 0) {
         return ERR_SYSTEM;

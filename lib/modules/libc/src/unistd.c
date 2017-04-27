@@ -9,7 +9,7 @@
 #include <picotm/picotm-tm.h>
 #include "error/module.h"
 #include "fd/module.h"
-#include "fs/comfstx.h"
+#include "fs/module.h"
 #include "picotm/unistd-tm.h"
 
 PICOTM_EXPORT
@@ -92,7 +92,7 @@ fchdir_tx(int fildes)
     int res;
 
     do {
-        res = com_fs_tx_fchdir(fildes);
+        res = vfs_module_fchdir(fildes);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }
