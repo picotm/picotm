@@ -1943,7 +1943,7 @@ ofd_tx_pread_apply(struct ofd_tx* self, int fildes,
     assert(self->type < sizeof(pread_apply)/sizeof(pread_apply[0]));
     assert(pread_apply[self->type]);
 
-    int err;
+    int err = 0;
 
     while (n && !err) {
         err = pread_apply[self->type][self->cc_mode]();
