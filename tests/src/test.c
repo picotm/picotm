@@ -225,15 +225,15 @@ run_outer_loop_iteration(const struct test_func *test,
 }
 
 static long
-run_outer_loop_cycles(const struct test_func *test, int cycles,
+run_outer_loop_cycles(const struct test_func *test, unsigned long long cycles,
                       struct thread_state* state, unsigned long nthreads,
                       int (*logmsg)(const char*, ...))
 {
     long long ntx = 0;
 
-    for (int i = 0; i < cycles; ++i) {
+    for (unsigned long long i = 0; i < cycles; ++i) {
 
-        logmsg("Running test %s [%d of %d]...\n", test->name, 1 + i, cycles);
+        logmsg("Running test %s [%llu of %llu]...\n", test->name, 1 + i, cycles);
 
         long long res = run_outer_loop_iteration(test, BOUND_CYCLES, cycles,
                                                  state, nthreads);
@@ -247,7 +247,7 @@ run_outer_loop_cycles(const struct test_func *test, int cycles,
 }
 
 static long
-run_outer_loop_time(const struct test_func *test, int ival_ms,
+run_outer_loop_time(const struct test_func *test, unsigned long long ival_ms,
                     struct thread_state* state, unsigned long nthreads,
                     int (*logmsg)(const char*, ...))
 {
@@ -278,7 +278,7 @@ run_outer_loop(const struct test_func* test, enum boundary_type btype,
                unsigned long nthreads, int (*logmsg)(const char*, ...))
 {
     static long (* const btype_func[])(const struct test_func*,
-                                       int,
+                                       unsigned long long,
                                        struct thread_state*,
                                        unsigned long,
                                        int (*)(const char*, ...)) = {
