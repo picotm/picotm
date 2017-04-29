@@ -11,8 +11,12 @@ AC_CONFIG_MACRO_DIR([m4])
 
 AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
 
-AC_USE_SYSTEM_EXTENSIONS
 
+dnl
+dnl Compiler support
+dnl
+
+AC_USE_SYSTEM_EXTENSIONS
 AC_PROG_CC_C99
 
 AX_PTHREAD
@@ -21,17 +25,30 @@ CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
 LDFLAGS="$LDFLAGS $PTHREAD_LDFLAGS"
 LIBS="$PTHREAD_LIBS $LIBS"
 
+AX_CHECK_COMPILE_FLAG([-fvisibility=hidden],
+                      [VISIBILITY_CFLAGS="-fvisibility=hidden"],
+                      [VISIBILITY_CFLAGS=""])
+AC_SUBST(VISIBILITY_CFLAGS, [$VISIBILITY_CFLAGS])
+
+
+dnl
+dnl Build toolchain
+dnl
+
 AM_PROG_AR
 AC_PROG_LIBTOOL
 
+
+dnl
+dnl System headers and libraries
+dnl
+
 AC_CHECK_HEADERS([sys/cdefs.h])
 
-AX_CHECK_COMPILE_FLAG([-fvisibility=hidden],
-                      [VISIBILITY_CFLAGS="-fvisibility=hidden"],
-                      [VISIBILITY_CFLAGS=""],
-                      [$PTHREAD_CFLAGS])
 
-AC_SUBST(VISIBILITY_CFLAGS, [$VISIBILITY_CFLAGS])
+dnl
+dnl Picotm compile-time variables
+dnl
 
 AC_DEFINE([MAXNUMFD], [1024])
 AC_DEFINE([RECSIZE],  [32])
@@ -82,5 +99,12 @@ AC_CONFIG_FILES([Makefile
                  modules/tm/include/Makefile
                  modules/tm/src/Makefile
                  src/Makefile])
-
 AC_OUTPUT
+
+AC_MSG_RESULT([])
+AC_MSG_RESULT([  Configuration finished.])
+AC_MSG_RESULT([])
+AC_MSG_RESULT([  Continue installation with:])
+AC_MSG_RESULT([    make])
+AC_MSG_RESULT([    make install])
+AC_MSG_RESULT([])
