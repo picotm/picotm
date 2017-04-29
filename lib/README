@@ -10,15 +10,15 @@ About picotm
   and extensible to cover exactly your requirements.
 
 
-Downloads, Contact
-==================
+Downloads and Contact
+=====================
 
   The latest version is available for download on the project's website at
 
     https://picotm.github.io
 
-  The website should also be your first stop for any question on picotm. The
-  GitHub repository is available at
+  The website should also be your first stop for any question about picotm.
+  The GitHub repository is available at
 
     https://github.com/picotm/picotm
 
@@ -56,12 +56,12 @@ Building picotm
 ===============
 
   Make sure you have all requirements installed. To prepare your build,
-  execute
+  invoke
 
     tools/bootstrap.sh
 
-  This command generates the build system, which uses GNU autotools. If
-  it succeeds without errors, run
+  This command generates the build system based on GNU autotools. If it
+  succeeds without errors, invoke
 
     ./configure
     make
@@ -70,7 +70,8 @@ Building picotm
 
     sudo make install
 
-  You can find more detailed install instructions in the file INSTALL.
+  You can find more detailed install instructions in the file INSTALL
+  that comes with this package.
 
   If you want to generate and install source-code documentation, run
 
@@ -91,5 +92,5 @@ License
 =======
 
   Picotm is distributed under the terms of the Mozilla Public License, v. 2.0.
-  It's suitable using picotm in free and proprietary software. You'll find the
-  exact license text in the file LICENSE or at http://mozilla.org/MPL/2.0/.
+  It's suitable for using picotm in free and proprietary software. You'll find
+  the license text in the file LICENSE or at http://mozilla.org/MPL/2.0/.
