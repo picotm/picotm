@@ -1,0 +1,28 @@
+
+picotm 0.1.0 (2017-04-29)
+------------
+
+    * Added new paradigm for error handling. The original error handling
+      had to be provided by the user and was split between execution and
+      commit phase of the transaction. Under the new paradigm, the error
+      detection and recovery is provided by picotm. Users most only provide
+      fall-back code when recovery fails.
+
+    * Cleaned up and restructured existing source code. All code is now
+      self-contained without dependencies on external compiler tools,
+      besides the GNU toolchain.
+
+    * Restored modules for memory allocation, file-descriptor I/O, VFS,
+      math, and helper functions from libc.
+
+    * Added module for Software Transactional Memory. The old STM was
+      a fork of TinySTM, which also served as TM.
+
+    * Added core transaction manager. The new TM provides an updated
+      public interface and from-scratch implementation.
+
+    * Moved tests into separate package.
+
+    * Added build system based on GNU autotools
+
+    * Licensed all source code under the Mozilla Public License, v. 2.0
