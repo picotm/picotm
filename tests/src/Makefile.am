@@ -17,11 +17,4 @@ tlctest_SOURCES = fdio_test.c \
                   tm_test.c \
                   tm_test.h
 
-CC = $(PTHREAD_CC)
-
-AM_CFLAGS = -DPKGDATADIR=\"$(pkgdatadir)\" \
-            $(PTHREAD_CFLAGS)
-
-AM_LDFLAGS = $(PTHREAD_LDFLAGS)
-
-LDADD = $(PTHREAD_LIBS)
+AM_CFLAGS = -DPKGDATADIR=\"$(pkgdatadir)\"
