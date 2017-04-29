@@ -13,14 +13,9 @@ libpicotm_m_la_SOURCES = complex.c \
                          matherr.h \
                          math-tm.c
 
-CC = $(PTHREAD_CC)
-
 AM_CPPFLAGS = -I$(top_srcdir)/modules/libm/include \
               -I$(top_srcdir)/modules/libc/include \
               -I$(top_srcdir)/modules/tm/include \
               -I$(top_srcdir)/include
 
-AM_CFLAGS = @VISIBILITY_CFLAGS@ \
-            $(PTHREAD_CFLAGS)
-
-AM_LDFLAGS = $(PTHREAD_LDFLAGS)
+AM_CFLAGS = @VISIBILITY_CFLAGS@

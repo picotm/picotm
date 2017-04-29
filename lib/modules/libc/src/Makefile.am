@@ -103,13 +103,8 @@ libpicotm_c_la_SOURCES = allocator/allocator_tx.c \
                          vfs/vfs_tx.c \
                          vfs/vfs_tx.h
 
-CC = $(PTHREAD_CC)
-
 AM_CPPFLAGS = -I$(top_srcdir)/modules/libc/include \
               -I$(top_srcdir)/modules/tm/include \
               -I$(top_srcdir)/include
 
-AM_CFLAGS = @VISIBILITY_CFLAGS@ \
-            $(PTHREAD_CFLAGS)
-
-AM_LDFLAGS = $(PTHREAD_LDFLAGS)
+AM_CFLAGS = @VISIBILITY_CFLAGS@
