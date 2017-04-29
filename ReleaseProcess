@@ -1,0 +1,62 @@
+
+How to make a new release?
+==========================
+
+Here's a list of steps to follow when releasing a new version of release
+of picotm. If any of these steps fails, stop the release process.
+
+  1a) If you are making a major or minor release:
+
+        From the git master branch, create a new branch 'vx.y', where 'x'
+        and 'y' are the major and minor version numbers of your release.
+        The micro version 'z' should be 0. This branch can later be used
+        for bug-fix releases with increasing micro versions.
+
+  1b) If you are making a bug-fix release:
+
+        Make sure the git branch 'vx.y' is based on the git tag 'vx.y.0'
+        in the git master branch.
+
+  2) Update
+
+        * the Changelog files in lib/ and tests/, and
+
+        * the package version in configure.ac in lib/ and tests/.
+
+  3) Commit your changes to the branch 'vx.y'.
+
+  4) Generate packages by running 'make dist' for lib/ and test/. This
+     should produce the package files picotm-x.y.z.tar.gz and
+     picotm-tests-x.y.z.tar.gz.
+
+  5) Test generated packages by unpacking and building the content
+     of both package files. You can merge steps 4) and 5) by running
+     'make distcheck', instead of 'make dist'.
+
+  6a) If you are making a major or minor release:
+
+        Generate documentation by running 'make html' for lib/. Create
+        a new documentation package by packing the resulting directory
+        doc/html in the package 'picotm-doc-x.y.tar.gz'.
+
+  6b) If you are making a bug-fix release:
+
+        You should not have to recreate the documentation package. If
+        any public interface changed, it's not a bug-fix release.
+
+  7a) If you are making a major or minor release:
+
+        Rebase-merge your changes into the master branch of the git repository
+        and upload the changes to GitHub. You can do this by opening a pull
+        request.
+
+  7b) If you are making a bug-fix release:
+
+        You should not have to merge your changes into master, as they are
+        already present there. Bugs are first fixed on the master branch and
+        then ported to bug-fix releases.
+
+  8) Tag the new release in git as 'vx.y.z' by tagging the revision in the
+     master branch. Sign the tag. Push the new tag to GitHub.
+
+  9) Upload the package files and ChangeLog to GitHub.
