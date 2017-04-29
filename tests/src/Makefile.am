@@ -16,5 +16,3 @@ tlctest_SOURCES = fdio_test.c \
                   testhlp.h \
                   tm_test.c \
                   tm_test.h
-
-AM_CFLAGS = -DPKGDATADIR=\"$(pkgdatadir)\"
