@@ -27,10 +27,11 @@
 #include "ptr.h"
 #include "testhlp.h"
 
-static const char g_random_100mib[] = PKGDATADIR "/random-100mib.bin";
-static const char g_random_1mib[] = PKGDATADIR "/random-1mib.bin";
-static const char g_zero_100mib[] = PKGDATADIR "/zero-100mib.bin";
-static const char g_zero_1mib[] = PKGDATADIR "/zero-1mib.bin";
+static size_t
+MiB_to_bytes(unsigned short MiB)
+{
+    return 1024 * 1024 * MiB;
+}
 
 static const char const g_test_str[] = "Hello world!\n";
 
@@ -107,17 +108,6 @@ temp_fildes(unsigned long testnum, unsigned long filenum, int flags)
     return fildes;
 }
 
-static int
-data_fildes(int flags, const char* filename)
-{
-    int fildes = TEMP_FAILURE_RETRY(open(filename, flags));
-    if (fildes < 0) {
-        perror("open");
-        abort();
-    }
-    return fildes;
-}
-
 static void
 close_fildes(int fildes)
 {
@@ -128,51 +118,57 @@ close_fildes(int fildes)
     }
 }
 
-static void
-copy_fbuf(int fildes_in, int fildes_out)
+static int
+temp_fildes_gen(unsigned long testnum, unsigned long filenum, int flags,
+                size_t filsiz, int32_t (*gen_i32)(void))
 {
-    struct stat buf;
-    int res = fstat(fildes_in, &buf);
-    if (res < 0) {
-        perror("fstat");
-        abort();
-    }
+    int fildes = temp_fildes(testnum, filenum, 0);
 
-    off_t offset = lseek(fildes_out, 0, SEEK_SET);
-    if (offset < 0) {
-        perror("lseek");
-        abort();
-    }
+    while (filsiz) {
+        int32_t val = gen_i32();
+        size_t count = filsiz > sizeof(val) ? sizeof(val) : filsiz;
 
-    size_t count = buf.st_size;
-
-    while (count) {
-        ssize_t len = sendfile(fildes_out, fildes_in, &offset, count);
-        if (len < 0) {
-            perror("sendfile");
+        ssize_t res = TEMP_FAILURE_RETRY(write(fildes, &val, count));
+        if (res < 0) {
+            perror("write");
             abort();
         }
-        count -= len;
+        filsiz -= res;
     }
+
+    if (flags) {
+        set_fildes_flags(fildes, flags);
+        set_file_status_flags(fildes, flags);
+    }
+
+    return fildes;
+}
+
+static int32_t
+gen_mrand48_i32(void)
+{
+    return mrand48();
 }
 
 static int
-temp_fildes_copy(unsigned long testnum, unsigned long filenum, int flags,
-                 const char* src)
+temp_fildes_rand(unsigned long testnum, unsigned long filenum, int flags,
+                 size_t filsiz)
 {
-    int fildes_in = data_fildes(O_CLOEXEC | O_RDONLY, src);
-    int fildes_out = temp_fildes(testnum, filenum, 0);
+    srand48(0);
+    return temp_fildes_gen(testnum, filenum, flags, filsiz, gen_mrand48_i32);
+}
 
-    copy_fbuf(fildes_in, fildes_out);
+static int32_t
+gen_zero_i32(void)
+{
+    return 0;
+}
 
-    close_fildes(fildes_in);
-
-    if (flags) {
-        set_fildes_flags(fildes_out, flags);
-        set_file_status_flags(fildes_out, flags);
-    }
-
-    return fildes_out;
+static int
+temp_fildes_zero(unsigned long testnum, unsigned long filenum, int flags,
+                 size_t filsiz)
+{
+    return temp_fildes_gen(testnum, filenum, flags, filsiz, gen_zero_i32);
 }
 
 static void
@@ -1176,7 +1172,7 @@ fdio_test_20_pre(unsigned long nthreads, enum loop_mode loop,
     extern enum picotm_libc_cc_mode g_cc_mode;
     picotm_libc_set_file_type_cc_mode(PICOTM_LIBC_FILE_TYPE_REGULAR, g_cc_mode);
 
-    g_fildes = temp_fildes_copy(20, 0, O_CLOEXEC | O_RDWR, g_random_1mib);
+    g_fildes = temp_fildes_rand(20, 0, O_CLOEXEC | O_RDWR, MiB_to_bytes(1));
 }
 
 void
@@ -1220,13 +1216,12 @@ fdio_test_20(unsigned int tid)
  */
 
 int
-tx_random_rw_pre(unsigned long testnum, unsigned long filenum,
-                 const char* src)
+tx_random_rw_pre(unsigned long testnum, unsigned long filenum, size_t filsiz)
 {
     extern enum picotm_libc_cc_mode g_cc_mode;
     picotm_libc_set_file_type_cc_mode(PICOTM_LIBC_FILE_TYPE_REGULAR, g_cc_mode);
 
-    return temp_fildes_copy(testnum, filenum, O_CLOEXEC | O_RDWR, src);
+    return temp_fildes_rand(testnum, filenum, O_CLOEXEC | O_RDWR, filsiz);
 }
 
 void
@@ -1259,9 +1254,9 @@ tx_random_rw(int fildes, unsigned int* seed, off_t size,
 
 int
 locked_random_rw_pre(unsigned long testnum, unsigned long filenum,
-                     const char* src)
+                     size_t filsiz)
 {
-    return temp_fildes_copy(testnum, filenum, O_CLOEXEC | O_RDWR, src);
+    return temp_fildes_rand(testnum, filenum, O_CLOEXEC | O_RDWR, filsiz);
 }
 
 void
@@ -1317,7 +1312,7 @@ fdio_test_21_pre(unsigned long nthreads, enum loop_mode loop,
                  enum boundary_type btype, unsigned long long bound,
                  int (*logmsg)(const char*, ...))
 {
-    g_fildes = tx_random_rw_pre(21, 0, g_random_1mib);
+    g_fildes = tx_random_rw_pre(21, 0, MiB_to_bytes(1));
 }
 
 void
@@ -1347,7 +1342,7 @@ fdio_test_22_pre(unsigned long nthreads, enum loop_mode loop,
                  enum boundary_type btype, unsigned long long bound,
                  int (*logmsg)(const char*, ...))
 {
-    g_fildes = locked_random_rw_pre(22, 0, g_random_1mib);
+    g_fildes = locked_random_rw_pre(22, 0, MiB_to_bytes(1));
 }
 
 void
@@ -1382,7 +1377,7 @@ fdio_test_23_pre(unsigned long nthreads, enum loop_mode loop,
                  enum boundary_type btype, unsigned long long bound,
                  int (*logmsg)(const char*, ...))
 {
-    g_fildes = tx_random_rw_pre(23, 0, g_random_1mib);
+    g_fildes = tx_random_rw_pre(23, 0, MiB_to_bytes(1));
 }
 
 void
@@ -1412,7 +1407,7 @@ fdio_test_24_pre(unsigned long nthreads, enum loop_mode loop,
                  enum boundary_type btype, unsigned long long bound,
                  int (*logmsg)(const char*, ...))
 {
-    g_fildes = locked_random_rw_pre(24, 0, g_random_1mib);
+    g_fildes = locked_random_rw_pre(24, 0, MiB_to_bytes(1));
 }
 
 void
@@ -1447,7 +1442,7 @@ fdio_test_25_pre(unsigned long nthreads, enum loop_mode loop,
                  enum boundary_type btype, unsigned long long bound,
                  int (*logmsg)(const char*, ...))
 {
-    g_fildes = tx_random_rw_pre(25, 0, g_random_1mib);
+    g_fildes = tx_random_rw_pre(25, 0, MiB_to_bytes(1));
 }
 
 void
@@ -1477,7 +1472,7 @@ fdio_test_26_pre(unsigned long nthreads, enum loop_mode loop,
                  enum boundary_type btype, unsigned long long bound,
                  int (*logmsg)(const char*, ...))
 {
-    g_fildes = locked_random_rw_pre(26, 0, g_random_1mib);
+    g_fildes = locked_random_rw_pre(26, 0, MiB_to_bytes(1));
 }
 
 void
@@ -1512,7 +1507,7 @@ fdio_test_27_pre(unsigned long nthreads, enum loop_mode loop,
                  enum boundary_type btype, unsigned long long bound,
                  int (*logmsg)(const char*, ...))
 {
-    g_fildes = tx_random_rw_pre(27, 0, g_random_1mib);
+    g_fildes = tx_random_rw_pre(27, 0, MiB_to_bytes(1));
 }
 
 void
@@ -1542,7 +1537,7 @@ fdio_test_28_pre(unsigned long nthreads, enum loop_mode loop,
                  enum boundary_type btype, unsigned long long bound,
                  int (*logmsg)(const char*, ...))
 {
-    g_fildes = locked_random_rw_pre(28, 0, g_random_1mib);
+    g_fildes = locked_random_rw_pre(28, 0, MiB_to_bytes(1));
 }
 
 void
@@ -1574,12 +1569,12 @@ fdio_test_28(unsigned int tid)
 
 static int
 tx_random_read_pre(unsigned long testnum, unsigned long filenum,
-                   const char* src)
+                   size_t filsiz)
 {
     extern enum picotm_libc_cc_mode g_cc_mode;
     picotm_libc_set_file_type_cc_mode(PICOTM_LIBC_FILE_TYPE_REGULAR, g_cc_mode);
 
-    return data_fildes(O_CLOEXEC | O_RDONLY, src);
+    return temp_fildes_rand(testnum, filenum, O_CLOEXEC | O_RDONLY, filsiz);
 }
 
 static void
@@ -1604,9 +1599,9 @@ tx_random_read(int fildes, unsigned int* seed, off_t size,
 
 static int
 locked_random_read_pre(unsigned long testnum, unsigned long filenum,
-                       const char* src)
+                       size_t filsiz)
 {
-    return data_fildes(O_CLOEXEC | O_RDONLY, src);
+    return temp_fildes_rand(testnum, filenum, O_CLOEXEC | O_RDONLY, filsiz);
 }
 
 static void
@@ -1637,6 +1632,7 @@ static void
 random_read_post(int fildes)
 {
     close_fildes(fildes);
+    remove_file(g_filename);
 }
 
 void
@@ -1644,7 +1640,7 @@ fdio_test_29_pre(unsigned long nthreads, enum loop_mode loop,
                  enum boundary_type btype, unsigned long long bound,
                  int (*logmsg)(const char*, ...))
 {
-    g_fildes = tx_random_read_pre(29, 0, g_random_1mib);
+    g_fildes = tx_random_read_pre(29, 0, MiB_to_bytes(1));
 }
 
 void
@@ -1674,7 +1670,7 @@ fdio_test_30_pre(unsigned long nthreads, enum loop_mode loop,
                  enum boundary_type btype, unsigned long long bound,
                  int (*logmsg)(const char*, ...))
 {
-    g_fildes = locked_random_read_pre(30, 0, g_random_1mib);
+    g_fildes = locked_random_read_pre(30, 0, MiB_to_bytes(1));
 }
 
 void
@@ -1706,12 +1702,12 @@ fdio_test_30(unsigned int tid)
 
 static int
 tx_random_write_pre(unsigned long testnum, unsigned long filenum,
-                    const char* src)
+                    size_t filsiz)
 {
     extern enum picotm_libc_cc_mode g_cc_mode;
     picotm_libc_set_file_type_cc_mode(PICOTM_LIBC_FILE_TYPE_REGULAR, g_cc_mode);
 
-    return temp_fildes_copy(testnum, filenum, O_CLOEXEC | O_WRONLY, src);
+    return temp_fildes_zero(testnum, filenum, O_CLOEXEC | O_WRONLY, filsiz);
 }
 
 static void
@@ -1737,9 +1733,9 @@ tx_random_write(int fildes, unsigned int* seed, off_t size, unsigned long ncycle
 
 static int
 locked_random_write_pre(unsigned long testnum, unsigned long filenum,
-                        const char* src)
+                        size_t filsiz)
 {
-    return temp_fildes_copy(testnum, filenum, O_CLOEXEC | O_WRONLY, src);
+    return temp_fildes_zero(testnum, filenum, O_CLOEXEC | O_WRONLY, filsiz);
 }
 
 static void
@@ -1779,7 +1775,7 @@ fdio_test_31_pre(unsigned long nthreads, enum loop_mode loop,
                  enum boundary_type btype, unsigned long long bound,
                  int (*logmsg)(const char*, ...))
 {
-    g_fildes = tx_random_write_pre(31, 0, g_zero_1mib);
+    g_fildes = tx_random_write_pre(31, 0, MiB_to_bytes(1));
 }
 
 void
@@ -1809,7 +1805,7 @@ fdio_test_32_pre(unsigned long nthreads, enum loop_mode loop,
                  enum boundary_type btype, unsigned long long bound,
                  int (*logmsg)(const char*, ...))
 {
-    g_fildes = locked_random_read_pre(32, 0, g_zero_1mib);
+    g_fildes = locked_random_write_pre(32, 0, MiB_to_bytes(1));
 }
 
 void
@@ -1824,7 +1820,7 @@ fdio_test_32(unsigned int tid)
         t_seed = tid + 1;
     }
 
-    locked_random_read(&s_lock, g_fildes, &t_seed, 1024 * 1024, g_txcycles);
+    locked_random_write(&s_lock, g_fildes, &t_seed, 1024 * 1024, g_txcycles);
 }
 
 void
@@ -1832,7 +1828,7 @@ fdio_test_32_post(unsigned long nthreads, enum loop_mode loop,
                   enum boundary_type btype, unsigned long long bound,
                   int (*logmsg)(const char*, ...))
 {
-    random_read_post(g_fildes);
+    random_write_post(g_fildes);
 }
 
 /*
@@ -1841,12 +1837,12 @@ fdio_test_32_post(unsigned long nthreads, enum loop_mode loop,
 
 static int
 tx_seq_read_pre(unsigned long testnum, unsigned long filenum,
-                const char* src)
+                size_t filsiz)
 {
     extern enum picotm_libc_cc_mode g_cc_mode;
     picotm_libc_set_file_type_cc_mode(PICOTM_LIBC_FILE_TYPE_REGULAR, g_cc_mode);
 
-    return data_fildes(O_CLOEXEC | O_RDONLY, src);
+    return temp_fildes_rand(testnum, filenum, O_CLOEXEC | O_RDONLY, filsiz);
 }
 
 static void
@@ -1870,9 +1866,9 @@ tx_seq_read(int fildes, unsigned int* seed, off_t size, unsigned long ncycles)
 
 static int
 locked_seq_read_pre(unsigned long testnum, unsigned long filenum,
-                    const char* src)
+                    size_t filsiz)
 {
-    return data_fildes(O_CLOEXEC | O_RDONLY, src);
+    return temp_fildes_rand(testnum, filenum, O_CLOEXEC | O_RDONLY, filsiz);
 }
 
 static void
@@ -1903,6 +1899,7 @@ static void
 seq_read_post(int fildes)
 {
     close_fildes(fildes);
+    remove_file(g_filename);
 }
 
 void
@@ -1910,7 +1907,7 @@ fdio_test_33_pre(unsigned long nthreads, enum loop_mode loop,
                  enum boundary_type btype, unsigned long long bound,
                  int (*logmsg)(const char*, ...))
 {
-    g_fildes = tx_seq_read_pre(33, 0, g_random_1mib);
+    g_fildes = tx_seq_read_pre(33, 0, MiB_to_bytes(1));
 }
 
 void
@@ -1940,7 +1937,7 @@ fdio_test_34_pre(unsigned long nthreads, enum loop_mode loop,
                  enum boundary_type btype, unsigned long long bound,
                  int (*logmsg)(const char*, ...))
 {
-    g_fildes = locked_seq_read_pre(34, 0, g_random_1mib);
+    g_fildes = locked_seq_read_pre(34, 0, MiB_to_bytes(1));
 }
 
 void
@@ -1972,12 +1969,12 @@ fdio_test_34_post(unsigned long nthreads, enum loop_mode loop,
 
 static int
 tx_seq_write_pre(unsigned long testnum, unsigned long filenum,
-                 const char* src)
+                 size_t fildes)
 {
     extern enum picotm_libc_cc_mode g_cc_mode;
     picotm_libc_set_file_type_cc_mode(PICOTM_LIBC_FILE_TYPE_REGULAR, g_cc_mode);
 
-    return temp_fildes_copy(testnum, filenum, O_CLOEXEC | O_WRONLY, src);
+    return temp_fildes_zero(testnum, filenum, O_CLOEXEC | O_WRONLY, fildes);
 }
 
 static void
@@ -2003,9 +2000,9 @@ tx_seq_write(int fildes, unsigned int* seed, off_t size, unsigned long ncycles)
 
 static int
 locked_seq_write_pre(unsigned long testnum, unsigned long filenum,
-                     const char* src)
+                     size_t filsiz)
 {
-    return temp_fildes_copy(testnum, filenum, O_CLOEXEC | O_WRONLY, src);
+    return temp_fildes_zero(testnum, filenum, O_CLOEXEC | O_WRONLY, filsiz);
 }
 
 static void
@@ -2046,7 +2043,7 @@ fdio_test_35_pre(unsigned long nthreads, enum loop_mode loop,
                  enum boundary_type btype, unsigned long long bound,
                  int (*logmsg)(const char*, ...))
 {
-    g_fildes = tx_seq_write_pre(35, 0, g_zero_1mib);
+    g_fildes = tx_seq_write_pre(35, 0, MiB_to_bytes(1));
 }
 
 void
@@ -2076,7 +2073,7 @@ fdio_test_36_pre(unsigned long nthreads, enum loop_mode loop,
                  enum boundary_type btype, unsigned long long bound,
                  int (*logmsg)(const char*, ...))
 {
-    locked_seq_write_pre(36, 0, g_zero_1mib);
+    locked_seq_write_pre(36, 0, MiB_to_bytes(1));
 }
 
 void
@@ -2119,7 +2116,7 @@ fdio_test_37_pre(unsigned long nthreads, enum loop_mode loop,
                  enum boundary_type btype, unsigned long long bound,
                  int (*logmsg)(const char*, ...))
 {
-    g_fildes = tx_random_rw_pre(37, 0, g_random_100mib);
+    g_fildes = tx_random_rw_pre(37, 0, MiB_to_bytes(100));
 }
 
 void
@@ -2149,7 +2146,7 @@ fdio_test_38_pre(unsigned long nthreads, enum loop_mode loop,
                  enum boundary_type btype, unsigned long long bound,
                  int (*logmsg)(const char*, ...))
 {
-    g_fildes = locked_random_rw_pre(38, 0, g_random_100mib);
+    g_fildes = locked_random_rw_pre(38, 0, MiB_to_bytes(100));
 }
 
 void
@@ -2185,7 +2182,7 @@ fdio_test_39_pre(unsigned long nthreads, enum loop_mode loop,
                  enum boundary_type btype, unsigned long long bound,
                  int (*logmsg)(const char*, ...))
 {
-    g_fildes = tx_random_rw_pre(39, 0, g_random_100mib);
+    g_fildes = tx_random_rw_pre(39, 0, MiB_to_bytes(100));
 }
 
 void
@@ -2215,7 +2212,7 @@ fdio_test_40_pre(unsigned long nthreads, enum loop_mode loop,
                  enum boundary_type btype, unsigned long long bound,
                  int (*logmsg)(const char*, ...))
 {
-    g_fildes = locked_random_rw_pre(40, 0, g_random_100mib);
+    g_fildes = locked_random_rw_pre(40, 0, MiB_to_bytes(100));
 }
 
 void
@@ -2251,7 +2248,7 @@ fdio_test_41_pre(unsigned long nthreads, enum loop_mode loop,
                  enum boundary_type btype, unsigned long long bound,
                  int (*logmsg)(const char*, ...))
 {
-    g_fildes = tx_random_rw_pre(41, 0, g_random_100mib);
+    g_fildes = tx_random_rw_pre(41, 0, MiB_to_bytes(100));
 }
 
 void
@@ -2281,7 +2278,7 @@ fdio_test_42_pre(unsigned long nthreads, enum loop_mode loop,
                  enum boundary_type btype, unsigned long long bound,
                  int (*logmsg)(const char*, ...))
 {
-    g_fildes = locked_random_rw_pre(42, 0, g_random_100mib);
+    g_fildes = locked_random_rw_pre(42, 0, MiB_to_bytes(100));
 }
 
 void
@@ -2317,7 +2314,7 @@ fdio_test_43_pre(unsigned long nthreads, enum loop_mode loop,
                  enum boundary_type btype, unsigned long long bound,
                  int (*logmsg)(const char*, ...))
 {
-    g_fildes = tx_random_rw_pre(43, 0, g_random_100mib);
+    g_fildes = tx_random_rw_pre(43, 0, MiB_to_bytes(100));
 }
 
 void
@@ -2347,7 +2344,7 @@ fdio_test_44_pre(unsigned long nthreads, enum loop_mode loop,
                  enum boundary_type btype, unsigned long long bound,
                  int (*logmsg)(const char*, ...))
 {
-    g_fildes = locked_random_rw_pre(43, 0, g_random_100mib);
+    g_fildes = locked_random_rw_pre(43, 0, MiB_to_bytes(100));
 }
 
 void
@@ -2383,7 +2380,7 @@ fdio_test_45_pre(unsigned long nthreads, enum loop_mode loop,
                  enum boundary_type btype, unsigned long long bound,
                  int (*logmsg)(const char*, ...))
 {
-    g_fildes = tx_random_read_pre(45, 0, g_random_100mib);
+    g_fildes = tx_random_read_pre(45, 0, MiB_to_bytes(100));
 }
 
 void
@@ -2413,7 +2410,7 @@ fdio_test_46_pre(unsigned long nthreads, enum loop_mode loop,
                  enum boundary_type btype, unsigned long long bound,
                  int (*logmsg)(const char*, ...))
 {
-    g_fildes = locked_random_read_pre(46, 0, g_random_100mib);
+    g_fildes = locked_random_read_pre(46, 0, MiB_to_bytes(100));
 }
 
 void
@@ -2449,7 +2446,7 @@ fdio_test_47_pre(unsigned long nthreads, enum loop_mode loop,
                  enum boundary_type btype, unsigned long long bound,
                  int (*logmsg)(const char*, ...))
 {
-    g_fildes = tx_random_write_pre(47, 0, g_zero_100mib);
+    g_fildes = tx_random_write_pre(47, 0, MiB_to_bytes(100));
 }
 
 void
@@ -2479,7 +2476,7 @@ fdio_test_48_pre(unsigned long nthreads, enum loop_mode loop,
                  enum boundary_type btype, unsigned long long bound,
                  int (*logmsg)(const char*, ...))
 {
-    g_fildes = locked_random_write_pre(48, 0, g_zero_100mib);
+    g_fildes = locked_random_write_pre(48, 0, MiB_to_bytes(100));
 }
 
 void
@@ -2514,7 +2511,7 @@ fdio_test_49_pre(unsigned long nthreads, enum loop_mode loop,
                  enum boundary_type btype, unsigned long long bound,
                  int (*logmsg)(const char*, ...))
 {
-    g_fildes = tx_seq_read_pre(49, 0, g_random_100mib);
+    g_fildes = tx_seq_read_pre(49, 0, MiB_to_bytes(100));
 }
 
 void
@@ -2544,7 +2541,7 @@ fdio_test_50_pre(unsigned long nthreads, enum loop_mode loop,
                  enum boundary_type btype, unsigned long long bound,
                  int (*logmsg)(const char*, ...))
 {
-    g_fildes = locked_seq_read_pre(50, 0, g_random_100mib);
+    g_fildes = locked_seq_read_pre(50, 0, MiB_to_bytes(100));
 }
 
 void
@@ -2579,7 +2576,7 @@ fdio_test_51_pre(unsigned long nthreads, enum loop_mode loop,
                  enum boundary_type btype, unsigned long long bound,
                  int (*logmsg)(const char*, ...))
 {
-    g_fildes = tx_seq_write_pre(51, 0, g_zero_100mib);
+    g_fildes = tx_seq_write_pre(51, 0, MiB_to_bytes(100));
 }
 
 void
@@ -2609,7 +2606,7 @@ fdio_test_52_pre(unsigned long nthreads, enum loop_mode loop,
                  enum boundary_type btype, unsigned long long bound,
                  int (*logmsg)(const char*, ...))
 {
-    g_fildes = locked_seq_write_pre(52, 0, g_zero_100mib);
+    g_fildes = locked_seq_write_pre(52, 0, MiB_to_bytes(100));
 }
 
 void
