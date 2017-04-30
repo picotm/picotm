@@ -12,45 +12,101 @@
 #include "vmem_tx.h"
 
 static int
-lock_cb(void* data)
+lock_cb(void* data, struct picotm_error* error)
 {
-    return picotm_tm_lock();
+    int res = picotm_tm_lock();
+    if (res < 0) {
+        if (res == -EBUSY) {
+            picotm_error_set_conflicting(error, NULL);
+        } else {
+            picotm_error_set_errno(error, -res);
+        }
+        return -1;
+    }
+    return 0;
 }
 
 static int
-unlock_cb(void* data)
+unlock_cb(void* data, struct picotm_error* error)
 {
-    return picotm_tm_unlock();
+    int res = picotm_tm_unlock();
+    if (res < 0) {
+        if (res == -EBUSY) {
+            picotm_error_set_conflicting(error, NULL);
+        } else {
+            picotm_error_set_errno(error, -res);
+        }
+        return -1;
+    }
+    return 0;
 }
 
 static int
-validate_cb(void* data, int eotx)
+validate_cb(void* data, int eotx, struct picotm_error* error)
 {
-    return picotm_tm_validate(!!eotx);
+    int res = picotm_tm_validate(!!eotx);
+    if (res < 0) {
+        if (res == -EBUSY) {
+            picotm_error_set_conflicting(error, NULL);
+        } else {
+            picotm_error_set_errno(error, -res);
+        }
+        return -1;
+    }
+    return 0;
 }
 
 static int
-apply_event_cb(const struct event* event, size_t nevents, void* data)
+apply_event_cb(const struct event* event, size_t nevents, void* data,
+               struct picotm_error* error)
 {
-    return picotm_tm_apply();
+    int res = picotm_tm_apply();
+    if (res < 0) {
+        if (res == -EBUSY) {
+            picotm_error_set_conflicting(error, NULL);
+        } else {
+            picotm_error_set_errno(error, -res);
+        }
+        return -1;
+    }
+    return 0;
 }
 
 static int
-undo_event_cb(const struct event* event, size_t nevents, void* data)
+undo_event_cb(const struct event* event, size_t nevents, void* data,
+              struct picotm_error* error)
 {
-    return picotm_tm_undo();
+    int res = picotm_tm_undo();
+    if (res < 0) {
+        if (res == -EBUSY) {
+            picotm_error_set_conflicting(error, NULL);
+        } else {
+            picotm_error_set_errno(error, -res);
+        }
+        return -1;
+    }
+    return 0;
 }
 
 static int
-finish_cb(void* data)
+finish_cb(void* data, struct picotm_error* error)
 {
-    return picotm_tm_finish();
+    int res = picotm_tm_finish();
+    if (res < 0) {
+        if (res == -EBUSY) {
+            picotm_error_set_conflicting(error, NULL);
+        } else {
+            picotm_error_set_errno(error, -res);
+        }
+        return -1;
+    }
+    return 0;
 }
 
-static int
-release_cb(void* data)
+static void
+uninit_cb(void* data)
 {
-    return picotm_tm_release();
+    picotm_tm_release();
 }
 
 /*
@@ -124,7 +180,7 @@ get_vmem_tx(void)
                                      apply_event_cb, undo_event_cb,
                                      NULL, NULL,
                                      finish_cb,
-                                     release_cb,
+                                     uninit_cb,
                                      NULL);
     if (res < 0) {
         return NULL;

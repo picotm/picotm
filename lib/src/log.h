@@ -9,6 +9,7 @@
 #include <stdint.h>
 
 struct event;
+struct picotm_error;
 struct module;
 
 /**
@@ -47,12 +48,26 @@ log_inject_event(struct log* self, unsigned long module, unsigned long call,
 
 /**
  * Apply events in the log.
+ *
+ * \param self          The log.
+ * \param module        The table of registered modules.
+ * \param noundo        True if the transaction is irrevokable, or false otherwise.
+ * \param[out] error    An error returned by an apply operation.
+ * \returns             0 on success, or a negative value otherwise.
  */
 int
-log_apply_events(struct log* self, const struct module* module, bool noundo);
+log_apply_events(struct log* self, const struct module* module, bool noundo,
+                 struct picotm_error* error);
 
 /**
  * Undo events in the log.
+ *
+ * \param self          The log.
+ * \param module        The table of registered modules.
+ * \param noundo        True if the transaction is irrevokable, or false otherwise.
+ * \param[out] error    An error returned by an undo operation.
+ * \returns             0 on success, or a negative otherwise.
  */
 int
-log_undo_events(struct log* self, const struct module* module, bool noundo);
+log_undo_events(struct log* self, const struct module* module, bool noundo,
+                struct picotm_error* error);

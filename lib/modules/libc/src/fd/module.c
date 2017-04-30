@@ -14,15 +14,20 @@ struct fd_module {
 };
 
 static int
-lock_cb(void* data)
+lock_cb(void* data, struct picotm_error* error)
 {
     struct fd_module* module = data;
 
-    return fildes_tx_lock(&module->tx);
+    int res = fildes_tx_lock(&module->tx);
+    if (res < 0) {
+        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
+        return -1;
+    }
+    return 0;
 }
 
 static int
-unlock_cb(void* data)
+unlock_cb(void* data, struct picotm_error* error)
 {
     struct fd_module* module = data;
 
@@ -32,47 +37,74 @@ unlock_cb(void* data)
 }
 
 static int
-validate_cb(void* data, int noundo)
+validate_cb(void* data, int noundo, struct picotm_error* error)
 {
     struct fd_module* module = data;
 
-    return fildes_tx_validate(&module->tx, noundo);
+    int res = fildes_tx_validate(&module->tx, noundo);
+    if (res < 0) {
+        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
+        return -1;
+    }
+    return 0;
 }
 
 static int
-apply_event_cb(const struct event* event, size_t n, void* data)
+apply_event_cb(const struct event* event, size_t n, void* data,
+               struct picotm_error* error)
 {
     struct fd_module* module = data;
 
-    return fildes_tx_apply_event(&module->tx, event, n);
+    int res = fildes_tx_apply_event(&module->tx, event, n);
+    if (res < 0) {
+        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
+        return -1;
+    }
+    return 0;
 }
 
 static int
-undo_event_cb(const struct event* event, size_t n, void *data)
+undo_event_cb(const struct event* event, size_t n, void *data,
+              struct picotm_error* error)
 {
     struct fd_module* module = data;
 
-    return fildes_tx_undo_event(&module->tx, event, n);
+    int res = fildes_tx_undo_event(&module->tx, event, n);
+    if (res < 0) {
+        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
+        return -1;
+    }
+    return 0;
 }
 
 static int
-update_cc_cb(void* data, int noundo)
+update_cc_cb(void* data, int noundo, struct picotm_error* error)
 {
     struct fd_module* module = data;
 
-    return fildes_tx_update_cc(&module->tx, noundo);
+    int res = fildes_tx_update_cc(&module->tx, noundo);
+    if (res < 0) {
+        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
+        return -1;
+    }
+    return 0;
 }
 
 static int
-clear_cc_cb(void* data, int noundo)
+clear_cc_cb(void* data, int noundo, struct picotm_error* error)
 {
     struct fd_module* module = data;
 
-    return fildes_tx_clear_cc(&module->tx, noundo);
+    int res = fildes_tx_clear_cc(&module->tx, noundo);
+    if (res < 0) {
+        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
+        return -1;
+    }
+    return 0;
 }
 
 static int
-finish_cb(void* data)
+finish_cb(void* data, struct picotm_error* error)
 {
     struct fd_module* module = data;
 
@@ -81,16 +113,13 @@ finish_cb(void* data)
     return 0;
 }
 
-static int
+static void
 uninit_cb(void* data)
 {
     struct fd_module* module = data;
 
     fildes_tx_uninit(&module->tx);
-
     module->is_initialized = false;
-
-    return 0;
 }
 
 static struct fildes_tx*

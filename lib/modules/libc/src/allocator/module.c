@@ -14,23 +14,35 @@ struct allocator_module {
 };
 
 static int
-apply_event_cb(const struct event* event, size_t nevents, void* data)
+apply_event_cb(const struct event* event, size_t nevents, void* data,
+               struct picotm_error* error)
 {
     struct allocator_module* module = data;
 
-    return allocator_tx_apply_event(&module->tx, event, nevents);
+    int res = allocator_tx_apply_event(&module->tx, event, nevents);
+    if (res < 0) {
+        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
+        return -1;
+    }
+    return 0;
 }
 
 static int
-undo_event_cb(const struct event* event, size_t nevents, void* data)
+undo_event_cb(const struct event* event, size_t nevents, void* data,
+              struct picotm_error* error)
 {
     struct allocator_module* module = data;
 
-    return allocator_tx_undo_event(&module->tx, event, nevents);
+    int res = allocator_tx_undo_event(&module->tx, event, nevents);
+    if (res < 0) {
+        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
+        return -1;
+    }
+    return 0;
 }
 
 static int
-finish_cb(void* data)
+finish_cb(void* data, struct picotm_error* error)
 {
     struct allocator_module* module = data;
 
@@ -39,16 +51,13 @@ finish_cb(void* data)
     return 0;
 }
 
-static int
+static void
 uninit_cb(void* data)
 {
     struct allocator_module* module = data;
 
     allocator_tx_uninit(&module->tx);
-
     module->is_initialized = false;
-
-    return 0;
 }
 
 static struct allocator_tx*

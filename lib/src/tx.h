@@ -41,15 +41,15 @@ tx_is_irrevocable(const struct tx* self);
 
 long
 tx_register_module(struct tx* self,
-                   int (*lock)(void*),
-                   int (*unlock)(void*),
-                   int (*validate)(void*, int),
-                   int (*apply_event)(const struct event*, size_t, void*),
-                   int (*undo_event)(const struct event*, size_t, void*),
-                   int (*updatecc)(void*, int),
-                   int (*clearcc)(void*, int),
-                   int (*finish)(void*),
-                   int (*uninit)(void*),
+                   int (*lock)(void*, struct picotm_error*),
+                   int (*unlock)(void*, struct picotm_error*),
+                   int (*validate)(void*, int, struct picotm_error*),
+                   int (*apply_event)(const struct event*, size_t, void*, struct picotm_error*),
+                   int (*undo_event)(const struct event*, size_t, void*, struct picotm_error*),
+                   int (*updatecc)(void*, int, struct picotm_error*),
+                   int (*clearcc)(void*, int, struct picotm_error*),
+                   int (*finish)(void*, struct picotm_error*),
+                   void (*uninit)(void*),
                    void* data);
 
 int
