@@ -8,31 +8,32 @@
 #include <stddef.h>
 
 struct event;
+struct picotm_error;
 
 struct module {
-    int (*lock)(void*);
-    int (*unlock)(void*);
-    int (*validate)(void*, int);
-    int (*apply_event)(const struct event*, size_t, void*);
-    int (*undo_event)(const struct event*, size_t, void*);
-    int (*update_cc)(void*, int);
-    int (*clear_cc)(void*, int);
-    int (*finish)(void*);
-    int (*uninit)(void*);
+    int (*lock)(void*, struct picotm_error*);
+    int (*unlock)(void*, struct picotm_error*);
+    int (*validate)(void*, int, struct picotm_error*);
+    int (*apply_event)(const struct event*, size_t, void*, struct picotm_error*);
+    int (*undo_event)(const struct event*, size_t, void*, struct picotm_error*);
+    int (*update_cc)(void*, int, struct picotm_error*);
+    int (*clear_cc)(void*, int, struct picotm_error*);
+    int (*finish)(void*, struct picotm_error*);
+    void (*uninit)(void*);
     void *data;
 };
 
 int
 module_init(struct module* self,
-            int (*lock)(void*),
-            int (*unlock)(void*),
-            int (*validate)(void*, int),
-            int (*apply_event)(const struct event*, size_t, void*),
-            int (*undo_event)(const struct event*, size_t, void*),
-            int (*update_cc)(void*, int),
-            int (*clear_cc)(void*, int),
-            int (*finish)(void*),
-            int (*uninit)(void*),
+            int (*lock)(void*, struct picotm_error*),
+            int (*unlock)(void*, struct picotm_error*),
+            int (*validate)(void*, int, struct picotm_error*),
+            int (*apply_event)(const struct event*, size_t, void*, struct picotm_error*),
+            int (*undo_event)(const struct event*, size_t, void*, struct picotm_error*),
+            int (*update_cc)(void*, int, struct picotm_error*),
+            int (*clear_cc)(void*, int, struct picotm_error*),
+            int (*finish)(void*, struct picotm_error*),
+            void (*uninit)(void*),
             void* data);
 
 void
@@ -42,27 +43,30 @@ void *
 module_get_data(const struct module* self);
 
 int
-module_lock(const struct module* self);
+module_lock(const struct module* self, struct picotm_error* error);
 
 int
-module_unlock(const struct module* self);
+module_unlock(const struct module* self, struct picotm_error* error);
 
 int
-module_validate(const struct module* self, bool noundo);
+module_validate(const struct module* self, bool noundo,
+                struct picotm_error* error);
 
 int
 module_apply_events(const struct module* self, const struct event *event,
-                    size_t nevents);
+                    size_t nevents, struct picotm_error* error);
 
 int
 module_undo_events(const struct module* self, const struct event *event,
-                   size_t nevents);
+                   size_t nevents, struct picotm_error* error);
 
 int
-module_update_cc(const struct module* self, bool noundo);
+module_update_cc(const struct module* self, bool noundo,
+                 struct picotm_error* error);
 
 int
-module_clear_cc(const struct module* self, bool noundo);
+module_clear_cc(const struct module* self, bool noundo,
+                struct picotm_error* error);
 
 int
-module_finish(const struct module* self);
+module_finish(const struct module* self, struct picotm_error* error);

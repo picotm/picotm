@@ -50,21 +50,32 @@ errno_release(struct error_module* module)
  */
 
 static int
-undo_events_cb(const struct event* event, size_t nevents, void* data)
+undo_events_cb(const struct event* event, size_t nevents, void* data,
+               struct picotm_error* error)
 {
-    return errno_undo_events(event, nevents, data);
+    int res = errno_undo_events(event, nevents, data);
+    if (res < 0) {
+        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
+        return -1;
+    }
+    return 0;
 }
 
 static int
-finish_cb(void* data)
+finish_cb(void* data, struct picotm_error* error)
 {
-    return errno_finish(data);
+    int res = errno_finish(data);
+    if (res < 0) {
+        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
+        return -1;
+    }
+    return 0;
 }
 
-static int
-release_cb(void* data)
+static void
+uninit_cb(void* data)
 {
-    return errno_release(data);
+    errno_release(data);
 }
 
 struct error_tx*
@@ -82,7 +93,7 @@ get_error_tx(bool initialize)
                                       NULL, undo_events_cb,
                                       NULL, NULL,
                                       finish_cb,
-                                      release_cb,
+                                      uninit_cb,
                                       &t_module);
     if (res < 0) {
         return NULL;

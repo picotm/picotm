@@ -18,21 +18,32 @@ static int fpu_finish(struct fpu_tx_thread_state* t_fpu_tx);
 static int fpu_release(struct fpu_tx_thread_state* t_fpu_tx);
 
 static int
-undo_events_cb(const struct event* event, size_t nevents, void* data)
+undo_events_cb(const struct event* event, size_t nevents, void* data,
+               struct picotm_error* error)
 {
-    return fpu_undo_events(event, nevents, data);
+    int res = fpu_undo_events(event, nevents, data);
+    if (res < 0) {
+        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
+        return -1;
+    }
+    return 0;
 }
 
 static int
-finish_cb(void* data)
+finish_cb(void* data, struct picotm_error* error)
 {
-    return fpu_finish(data);
+    int res = fpu_finish(data);
+    if (res < 0) {
+        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
+        return -1;
+    }
+    return 0;
 }
 
-static int
-release_cb(void* data)
+static void
+uninit_cb(void* data)
 {
-    return fpu_release(data);
+    fpu_release(data);
 }
 
 /*
@@ -54,7 +65,7 @@ get_fpu_tx(bool initialize)
                                       NULL, undo_events_cb,
                                       NULL, NULL,
                                       finish_cb,
-                                      release_cb,
+                                      uninit_cb,
                                       &t_fpu_tx);
     if (res < 0) {
         return NULL;

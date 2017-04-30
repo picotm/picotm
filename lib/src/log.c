@@ -52,7 +52,8 @@ log_inject_event(struct log* self, unsigned long module, unsigned long call,
 }
 
 int
-log_apply_events(struct log* self, const struct module* module, bool noundo)
+log_apply_events(struct log* self, const struct module* module, bool noundo,
+                 struct picotm_error* error)
 {
     /* Apply events in chronological order */
 
@@ -73,7 +74,8 @@ log_apply_events(struct log* self, const struct module* module, bool noundo)
 
         ptrdiff_t nevents = event2 - event;
 
-        int res = module_apply_events(module + event->module, event, nevents);
+        int res = module_apply_events(module + event->module, event, nevents,
+                                      error);
         if (res < 0) {
             return -1;
         }
@@ -87,7 +89,8 @@ log_apply_events(struct log* self, const struct module* module, bool noundo)
 }
 
 int
-log_undo_events(struct log* self, const struct module* module, bool noundo)
+log_undo_events(struct log* self, const struct module* module, bool noundo,
+                struct picotm_error* error)
 {
     /* Undo events in reversed-chronological order */
 
@@ -96,9 +99,10 @@ log_undo_events(struct log* self, const struct module* module, bool noundo)
 
     while (event > event_end) {
         --event;
-        int res = module_undo_events(module + event->module, event, 1);
+        int res = module_undo_events(module + event->module, event, 1,
+                                     error);
         if (res < 0) {
-            break;
+            return -1;
         }
     }
 
