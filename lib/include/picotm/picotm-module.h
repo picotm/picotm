@@ -8,6 +8,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "compiler.h"
+#include "picotm-error.h"
 
 PICOTM_BEGIN_DECLS
 
@@ -49,6 +50,16 @@ PICOTM_NOTHROW
  */
 void
 picotm_resolve_conflict(struct picotm_tx* conflicting_tx);
+
+PICOTM_NOTHROW
+/**
+ * Instructs the transaction management system to recover from an error. The
+ * error code is given as a hint.
+ *
+ * \param error_hint    The error code for the detected error.
+ */
+void
+picotm_recover_from_error_code(enum picotm_error_code error_hint);
 
 PICOTM_NOTHROW
 /**

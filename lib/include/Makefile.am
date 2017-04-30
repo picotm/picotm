@@ -3,5 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 nobase_include_HEADERS = picotm/compiler.h \
+                         picotm/picotm-error.h \
                          picotm/picotm-module.h \
                          picotm/picotm.h

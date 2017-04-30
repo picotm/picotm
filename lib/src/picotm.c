@@ -242,6 +242,14 @@ picotm_resolve_conflict(struct picotm_tx* conflicting_tx)
 
 PICOTM_EXPORT
 void
+picotm_recover_from_error_code(enum picotm_error_code error_hint)
+{
+    /* Nothing we can do on errors; let's try to restart the TX. */
+    restart_tx(get_non_null_tx(), PICOTM_MODE_RECOVERY);
+}
+
+PICOTM_EXPORT
+void
 picotm_recover_from_errno(int errno_hint)
 {
     /* Nothing we can do on errors; let's try to restart the TX. */
