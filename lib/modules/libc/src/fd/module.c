@@ -149,7 +149,7 @@ fd_module_accept(int sockfd, struct sockaddr* address, socklen_t* address_len)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                picotm_abort();
+                picotm_restart();
                 break;
             case ERR_NOUNDO:
                 picotm_irrevocable();
@@ -177,7 +177,7 @@ fd_module_bind(int sockfd, const struct sockaddr* address,
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                picotm_abort();
+                picotm_restart();
                 break;
             case ERR_NOUNDO:
                 picotm_irrevocable();
@@ -203,7 +203,7 @@ fd_module_close(int fildes)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                picotm_abort();
+                picotm_restart();
                 break;
             case ERR_NOUNDO:
                 picotm_irrevocable();
@@ -231,7 +231,7 @@ fd_module_connect(int sockfd, const struct sockaddr* serv_addr,
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                picotm_abort();
+                picotm_restart();
                 break;
             case ERR_NOUNDO:
                 picotm_irrevocable();
@@ -257,7 +257,7 @@ fd_module_dup_internal(int fildes, int cloexec)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                picotm_abort();
+                picotm_restart();
                 break;
             case ERR_NOUNDO:
                 picotm_irrevocable();
@@ -289,7 +289,7 @@ fd_module_fcntl(int fildes, int cmd, union fcntl_arg* arg)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                picotm_abort();
+                picotm_restart();
                 break;
             case ERR_NOUNDO:
                 picotm_irrevocable();
@@ -315,7 +315,7 @@ fd_module_fsync(int fildes)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                picotm_abort();
+                picotm_restart();
                 break;
             case ERR_NOUNDO:
                 picotm_irrevocable();
@@ -341,7 +341,7 @@ fd_module_listen(int sockfd, int backlog)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                picotm_abort();
+                picotm_restart();
                 break;
             case ERR_NOUNDO:
                 picotm_irrevocable();
@@ -367,7 +367,7 @@ fd_module_lseek(int fildes, off_t offset, int whence)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                picotm_abort();
+                picotm_restart();
                 break;
             case ERR_NOUNDO:
                 picotm_irrevocable();
@@ -393,7 +393,7 @@ fd_module_open(const char* path, int oflag, mode_t mode)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                picotm_abort();
+                picotm_restart();
                 break;
             case ERR_NOUNDO:
                 picotm_irrevocable();
@@ -419,7 +419,7 @@ fd_module_pipe(int pipefd[2])
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                picotm_abort();
+                picotm_restart();
                 break;
             case ERR_NOUNDO:
                 picotm_irrevocable();
@@ -453,7 +453,7 @@ fd_module_pread(int fildes, void* buf, size_t nbyte, off_t off)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                picotm_abort();
+                picotm_restart();
                 break;
             case ERR_NOUNDO:
                 picotm_irrevocable();
@@ -480,7 +480,7 @@ fd_module_pwrite(int fildes, const void* buf, size_t nbyte, off_t off)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                picotm_abort();
+                picotm_restart();
                 break;
             case ERR_NOUNDO:
                 picotm_irrevocable();
@@ -514,7 +514,7 @@ fd_module_read(int fildes, void* buf, size_t nbyte)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                picotm_abort();
+                picotm_restart();
                 break;
             case ERR_NOUNDO:
                 picotm_irrevocable();
@@ -541,7 +541,7 @@ fd_module_recv(int sockfd, void* buffer, size_t length, int flags)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                picotm_abort();
+                picotm_restart();
                 break;
             case ERR_NOUNDO:
                 picotm_irrevocable();
@@ -572,7 +572,7 @@ fd_module_select(int nfds, fd_set* readfds, fd_set* writefds,
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                picotm_abort();
+                picotm_restart();
                 break;
             case ERR_NOUNDO:
                 picotm_irrevocable();
@@ -599,7 +599,7 @@ fd_module_send(int fildes, const void* buffer, size_t length, int flags)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                picotm_abort();
+                picotm_restart();
                 break;
             case ERR_NOUNDO:
                 picotm_irrevocable();
@@ -625,7 +625,7 @@ fd_module_shutdown(int sockfd, int how)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                picotm_abort();
+                picotm_restart();
                 break;
             case ERR_NOUNDO:
                 picotm_irrevocable();
@@ -651,7 +651,7 @@ fd_module_socket(int domain, int type, int protocol)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                picotm_abort();
+                picotm_restart();
                 break;
             case ERR_NOUNDO:
                 picotm_irrevocable();
@@ -686,7 +686,7 @@ fd_module_write(int fildes, const void* buf, size_t nbyte)
         switch (res) {
             case ERR_CONFLICT:
             case ERR_PEERABORT:
-                picotm_abort();
+                picotm_restart();
                 break;
             case ERR_NOUNDO:
                 picotm_irrevocable();
