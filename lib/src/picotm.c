@@ -209,6 +209,34 @@ picotm_release()
     tx_release(tx);
 }
 
+PICOTM_EXPORT
+enum picotm_error_status
+picotm_error_status()
+{
+    return get_non_null_error()->status;
+}
+
+PICOTM_EXPORT
+bool
+picotm_error_is_non_recoverable()
+{
+    return get_non_null_error()->is_non_recoverable;
+}
+
+PICOTM_EXPORT
+enum picotm_error_code
+picotm_error_as_error_code()
+{
+    return get_non_null_error()->value.error_hint;
+}
+
+PICOTM_EXPORT
+int
+picotm_error_as_errno()
+{
+    return get_non_null_error()->value.errno_hint;
+}
+
 /*
  * Module interface
  */
