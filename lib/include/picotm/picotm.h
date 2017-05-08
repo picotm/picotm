@@ -6,6 +6,7 @@
 
 #include <setjmp.h>
 #include "compiler.h"
+#include "picotm-error.h"
 
 PICOTM_BEGIN_DECLS
 
@@ -115,5 +116,53 @@ void
  * Releases all resources of picotm on the current thread.
  */
 picotm_release(void);
+
+PICOTM_NOTHROW
+/**
+ * Returns the current error status.
+ *
+ * \warning This function is only valid during the transaction's recovery
+ *          phase.
+ *
+ * \returns The current error status.
+ */
+enum picotm_error_status
+picotm_error_status();
+
+PICOTM_EXPORT
+/**
+ * Returns the current error's recoverable status.
+ *
+ * \warning This function is only valid during the transaction's recovery
+ *          phase.
+ *
+ * \returns The current error status.
+ */
+bool
+picotm_error_is_non_recoverable(void);
+
+PICOTM_EXPORT
+/**
+ * Returns the current picotm error code.
+ *
+ * \warning This function is only valid during the transaction's recovery
+ *          phase, and if `picotm_error_status()` is PICOTM_ERROR_CODE.
+ *
+ * \returns The current picotm error code.
+ */
+enum picotm_error_code
+picotm_error_as_error_code(void);
+
+PICOTM_EXPORT
+/**
+ * Returns the current picotm errno code.
+ *
+ * \warning This function is only valid during the transaction's recovery
+ *          phase, and if `picotm_error_status()` is PICOTM_ERRNO.
+ *
+ * \returns The current picotm errno code.
+ */
+int
+picotm_error_as_errno(void);
 
 PICOTM_END_DECLS
