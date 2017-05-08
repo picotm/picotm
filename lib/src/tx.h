@@ -5,9 +5,9 @@
 #pragma once
 
 #include <stdbool.h>
-#include <picotm/picotm.h>
 #include "log.h"
 #include "module.h"
+#include "picotm/picotm.h"
 
 #define MAX_NMODULES    (256)
 
@@ -60,10 +60,10 @@ int
 tx_begin(struct tx* self, enum tx_mode mode);
 
 int
-tx_commit(struct tx* self);
+tx_commit(struct tx* self, struct picotm_error* error);
 
 int
-tx_rollback(struct tx* self);
+tx_rollback(struct tx* self, struct picotm_error* error);
 
 bool
 tx_is_valid(struct tx* self);

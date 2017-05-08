@@ -149,9 +149,19 @@ __picotm_begin(enum __picotm_mode mode)
 static void
 restart_tx(struct tx* tx, enum __picotm_mode mode)
 {
-    int res = tx_rollback(tx);
+    struct picotm_error error;
+    int res = tx_rollback(tx, &error);
     if (res < 0) {
-        /* TODO: warn and push forward */
+        switch (error.status) {
+        case PICOTM_CONFLICTING:
+            /* Should be avoided, but no problem per se. */
+            break;
+        case PICOTM_ERROR_CODE:
+        case PICOTM_ERRNO:
+            /* If we were restarting before, we're now recovering. */
+            mode = PICOTM_MODE_RECOVERY;
+            break;
+        }
     }
 
     /* Restarting the transaction here transfers control
@@ -164,9 +174,19 @@ void
 __picotm_commit()
 {
     struct tx* tx = get_non_null_tx();
-    int res = tx_commit(tx);
+
+    struct picotm_error* error = get_non_null_error();
+    int res = tx_commit(tx, error);
     if (res < 0) {
-        restart_tx(tx, PICOTM_MODE_RETRY);
+        switch (error->status) {
+        case PICOTM_CONFLICTING:
+            restart_tx(tx, PICOTM_MODE_RETRY);
+            break;
+        case PICOTM_ERROR_CODE:
+        case PICOTM_ERRNO:
+            restart_tx(tx, PICOTM_MODE_RECOVERY);
+            break;
+        }
     }
 }
 
