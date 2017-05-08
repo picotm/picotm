@@ -104,10 +104,10 @@ __picotm_commit(void);
 
 PICOTM_NOTHROW
 /**
- * Aborts the current transaction.
+ * Restarts the current transaction.
  */
 void
-picotm_abort(void);
+picotm_restart(void);
 
 PICOTM_NOTHROW
 void

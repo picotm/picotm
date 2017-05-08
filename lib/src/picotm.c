@@ -163,7 +163,7 @@ __picotm_commit()
 
 PICOTM_EXPORT
 void
-picotm_abort()
+picotm_restart()
 {
     restart_tx(get_non_null_tx(), PICOTM_MODE_RETRY);
 }
