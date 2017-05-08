@@ -92,6 +92,14 @@ get_non_null_tx(void)
     return tx;
 }
 
+static struct picotm_error*
+get_non_null_error(void)
+{
+    static __thread struct picotm_error t_error;
+
+    return &t_error;
+}
+
 /*
  * Public interface
  */
@@ -237,6 +245,8 @@ PICOTM_EXPORT
 void
 picotm_resolve_conflict(struct picotm_tx* conflicting_tx)
 {
+    picotm_error_set_conflicting(get_non_null_error(), conflicting_tx);
+
     restart_tx(get_non_null_tx(), PICOTM_MODE_RETRY);
 }
 
@@ -244,7 +254,9 @@ PICOTM_EXPORT
 void
 picotm_recover_from_error_code(enum picotm_error_code error_hint)
 {
-    /* Nothing we can do on errors; let's try to restart the TX. */
+    picotm_error_set_error_code(get_non_null_error(), error_hint);
+
+    /* Nothing we can do on errors; let's try to recover. */
     restart_tx(get_non_null_tx(), PICOTM_MODE_RECOVERY);
 }
 
@@ -252,7 +264,9 @@ PICOTM_EXPORT
 void
 picotm_recover_from_errno(int errno_hint)
 {
-    /* Nothing we can do on errors; let's try to restart the TX. */
+    picotm_error_set_errno(get_non_null_error(), errno_hint);
+
+    /* Nothing we can do on errors; let's try to recover. */
     restart_tx(get_non_null_tx(), PICOTM_MODE_RECOVERY);
 }
 
