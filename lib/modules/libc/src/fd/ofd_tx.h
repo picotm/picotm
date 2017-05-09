@@ -15,6 +15,7 @@
 
 struct fcntlop;
 struct ioop;
+struct picotm_error;
 struct seekop;
 struct sockaddr;
 struct fd_event;
@@ -105,19 +106,19 @@ ofd_tx_uninit(struct ofd_tx* self);
  * Validate the local state
  */
 int
-ofd_tx_validate(struct ofd_tx* self);
+ofd_tx_validate(struct ofd_tx* self, struct picotm_error* error);
 
 /**
  * Updates the data structures for concurrency control after a successful apply
  */
 int
-ofd_tx_update_cc(struct ofd_tx* self);
+ofd_tx_update_cc(struct ofd_tx* self, struct picotm_error* error);
 
 /**
  * Clears the data structures for concurrency control after a successful undo
  */
 int
-ofd_tx_clear_cc(struct ofd_tx* self);
+ofd_tx_clear_cc(struct ofd_tx* self, struct picotm_error* error);
 
 /**
  * Acquire a reference on the open file description
@@ -204,10 +205,12 @@ ofd_tx_bind_exec(struct ofd_tx* self, int sockfd, const struct sockaddr *addr,
 
 int
 ofd_tx_bind_apply(struct ofd_tx* self, int sockfd,
-                  const struct fd_event* event, size_t n);
+                  const struct fd_event* event, size_t n,
+                  struct picotm_error* error);
 
 int
-ofd_tx_bind_undo(struct ofd_tx* self, int sockfd, int cookie);
+ofd_tx_bind_undo(struct ofd_tx* self, int sockfd, int cookie,
+                 struct picotm_error* error);
 
 /*
  * connect()
@@ -220,10 +223,12 @@ ofd_tx_connect_exec(struct ofd_tx* self, int sockfd,
 
 int
 ofd_tx_connect_apply(struct ofd_tx* self, int sockfd,
-                     const struct fd_event* event, size_t n);
+                     const struct fd_event* event, size_t n,
+                     struct picotm_error* error);
 
 int
-ofd_tx_connect_undo(struct ofd_tx* self, int sockfd, int cookie);
+ofd_tx_connect_undo(struct ofd_tx* self, int sockfd, int cookie,
+                    struct picotm_error* error);
 
 /*
  * fcntl()
@@ -235,10 +240,12 @@ ofd_tx_fcntl_exec(struct ofd_tx* self, int fildes, int cmd,
 
 int
 ofd_tx_fcntl_apply(struct ofd_tx* self, int fildes,
-                   const struct fd_event* event, size_t n);
+                   const struct fd_event* event, size_t n,
+                   struct picotm_error* error);
 
 int
-ofd_tx_fcntl_undo(struct ofd_tx* self, int fildes, int cookie);
+ofd_tx_fcntl_undo(struct ofd_tx* self, int fildes, int cookie,
+                  struct picotm_error* error);
 
 /*
  * fsync()
@@ -249,10 +256,12 @@ ofd_tx_fsync_exec(struct ofd_tx* self, int fildes, int noundo, int* cookie);
 
 int
 ofd_tx_fsync_apply(struct ofd_tx* self, int fildes,
-                   const struct fd_event* event, size_t n);
+                   const struct fd_event* event, size_t n,
+                   struct picotm_error* error);
 
 int
-ofd_tx_fsync_undo(struct ofd_tx* self, int fildes, int cookie);
+ofd_tx_fsync_undo(struct ofd_tx* self, int fildes, int cookie,
+                  struct picotm_error* error);
 
 /*
  * listen()
@@ -264,10 +273,12 @@ ofd_tx_listen_exec(struct ofd_tx* self, int sockfd, int backlog, int* cookie,
 
 int
 ofd_tx_listen_apply(struct ofd_tx* self, int sockfd,
-                    const struct fd_event* event, size_t n);
+                    const struct fd_event* event, size_t n,
+                    struct picotm_error* error);
 
 int
-ofd_tx_listen_undo(struct ofd_tx* self, int sockfd, int cookie);
+ofd_tx_listen_undo(struct ofd_tx* self, int sockfd, int cookie,
+                   struct picotm_error* error);
 
 /*
  * lseek()
@@ -279,10 +290,12 @@ ofd_tx_lseek_exec(struct ofd_tx* self, int fildes, off_t offset, int whence,
 
 int
 ofd_tx_lseek_apply(struct ofd_tx* self, int fildes,
-                   const struct fd_event* event, size_t n);
+                   const struct fd_event* event, size_t n,
+                   struct picotm_error* error);
 
 int
-ofd_tx_lseek_undo(struct ofd_tx* self, int fildes, int cookie);
+ofd_tx_lseek_undo(struct ofd_tx* self, int fildes, int cookie,
+                  struct picotm_error* error);
 
 /*
  * pread()
@@ -295,10 +308,12 @@ ofd_tx_pread_exec(struct ofd_tx* self, int fildes, void* buf, size_t nbyte,
 
 ssize_t
 ofd_tx_pread_apply(struct ofd_tx* self, int fildes,
-                   const struct fd_event* event, size_t n);
+                   const struct fd_event* event, size_t n,
+                   struct picotm_error* error);
 
 int
-ofd_tx_pread_undo(struct ofd_tx* self, int fildes, int cookie);
+ofd_tx_pread_undo(struct ofd_tx* self, int fildes, int cookie,
+                  struct picotm_error* error);
 
 /*
  * pwrite()
@@ -310,10 +325,12 @@ ofd_tx_pwrite_exec(struct ofd_tx* self, int fildes, const void* buf,
 
 ssize_t
 ofd_tx_pwrite_apply(struct ofd_tx* self, int fildes,
-                    const struct fd_event* event, size_t n);
+                    const struct fd_event* event, size_t n,
+                    struct picotm_error* error);
 
 int
-ofd_tx_pwrite_undo(struct ofd_tx* self, int fildes, int cookie);
+ofd_tx_pwrite_undo(struct ofd_tx* self, int fildes, int cookie,
+                   struct picotm_error* error);
 
 /*
  * read()
@@ -326,10 +343,12 @@ ofd_tx_read_exec(struct ofd_tx* self, int fildes, void *buf, size_t nbyte,
 
 ssize_t
 ofd_tx_read_apply(struct ofd_tx* self, int fildes,
-                  const struct fd_event* event, size_t n);
+                  const struct fd_event* event, size_t n,
+                  struct picotm_error* error);
 
 off_t
-ofd_tx_read_undo(struct ofd_tx* self, int fildes, int cookie);
+ofd_tx_read_undo(struct ofd_tx* self, int fildes, int cookie,
+                 struct picotm_error* error);
 
 /*
  * recv()
@@ -341,10 +360,12 @@ ofd_tx_recv_exec(struct ofd_tx* self, int sockfd, void* buffer, size_t length,
 
 int
 ofd_tx_recv_apply(struct ofd_tx* self, int sockfd,
-                  const struct fd_event* event, size_t n);
+                  const struct fd_event* event, size_t n,
+                  struct picotm_error* error);
 
 int
-ofd_tx_recv_undo(struct ofd_tx* self, int sockfd, int cookie);
+ofd_tx_recv_undo(struct ofd_tx* self, int sockfd, int cookie,
+                 struct picotm_error* error);
 
 /*
  * send()
@@ -356,10 +377,12 @@ ofd_tx_send_exec(struct ofd_tx* self, int sockfd, const void* buffer,
 
 int
 ofd_tx_send_apply(struct ofd_tx* self, int fildes,
-                  const struct fd_event* event, size_t n);
+                  const struct fd_event* event, size_t n,
+                  struct picotm_error* error);
 
 int
-ofd_tx_send_undo(struct ofd_tx* self, int fildes, int cookie);
+ofd_tx_send_undo(struct ofd_tx* self, int fildes, int cookie,
+                 struct picotm_error* error);
 
 /*
  * shutdown()
@@ -371,10 +394,12 @@ ofd_tx_shutdown_exec(struct ofd_tx* self, int sockfd, int how, int* cookie,
 
 int
 ofd_tx_shutdown_apply(struct ofd_tx* self, int fildes,
-                      const struct fd_event* event, size_t n);
+                      const struct fd_event* event, size_t n,
+                      struct picotm_error* error);
 
 int
-ofd_tx_shutdown_undo(struct ofd_tx* self, int fildes, int cookie);
+ofd_tx_shutdown_undo(struct ofd_tx* self, int fildes, int cookie,
+                     struct picotm_error* error);
 
 /*
  * write()
@@ -386,7 +411,9 @@ ofd_tx_write_exec(struct ofd_tx* self, int fildes, const void* buf,
 
 ssize_t
 ofd_tx_write_apply(struct ofd_tx* self, int fildes,
-                   const struct fd_event* event, size_t n);
+                   const struct fd_event* event, size_t n,
+                   struct picotm_error* error);
 
 int
-ofd_tx_write_undo(struct ofd_tx* self, int fildes, int cookie);
+ofd_tx_write_undo(struct ofd_tx* self, int fildes, int cookie,
+                  struct picotm_error* error);
