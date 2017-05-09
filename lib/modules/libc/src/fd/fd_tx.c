@@ -4,6 +4,7 @@
 
 #include "fd_tx.h"
 #include <assert.h>
+#include <picotm/picotm-error.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "errcode.h"
@@ -230,43 +231,56 @@ fd_tx_close_exec(struct fd_tx* self, int fildes, int* cookie, int noundo)
 }
 
 static int
-close_apply_noundo(struct fd_tx* self, int fildes, int cookie)
+close_apply_noundo(struct fd_tx* self, int fildes, int cookie,
+                   struct picotm_error* error)
 {
-    fd_close(fdtab+fildes);
+    fd_close(fdtab + fildes);
+
     return 0;
 }
 
 static int
-close_apply_ts(struct fd_tx* self, int fildes, int cookie)
+close_apply_ts(struct fd_tx* self, int fildes, int cookie,
+               struct picotm_error* error)
 {
     /* Global data structure 'fdtab' is locked during apply */
-    fd_close(fdtab+fildes);
+    fd_close(fdtab + fildes);
+
     return 0;
 }
 
 int
-fd_tx_close_apply(struct fd_tx* self, int fildes, int cookie)
+fd_tx_close_apply(struct fd_tx* self, int fildes, int cookie,
+                  struct picotm_error* error)
 {
-    static int (* const close_apply[2])(struct fd_tx*, int, int) = {
+    static int (* const close_apply[2])(struct fd_tx*,
+                                        int,
+                                        int,
+                                        struct picotm_error*) = {
         close_apply_noundo,
         close_apply_ts
     };
 
     assert(self->cc_mode < sizeof(close_apply)/sizeof(close_apply[0]));
 
-    return close_apply[self->cc_mode](self, fildes, cookie);
+    return close_apply[self->cc_mode](self, fildes, cookie, error);
 }
 
 static int
-close_undo_ts(struct fd_tx* self, int fildes, int cookie)
+close_undo_ts(struct fd_tx* self, int fildes, int cookie,
+              struct picotm_error* error)
 {
     return 0;
 }
 
 int
-fd_tx_close_undo(struct fd_tx* self, int fildes, int cookie)
+fd_tx_close_undo(struct fd_tx* self, int fildes, int cookie,
+                 struct picotm_error* error)
 {
-    static int (* const close_undo[2])(struct fd_tx*, int, int) = {
+    static int (* const close_undo[2])(struct fd_tx*,
+                                       int,
+                                       int,
+                                       struct picotm_error*) = {
         NULL,
         close_undo_ts
     };
@@ -274,7 +288,7 @@ fd_tx_close_undo(struct fd_tx* self, int fildes, int cookie)
     assert(self->cc_mode < sizeof(close_undo)/sizeof(close_undo[0]));
     assert(close_undo[self->cc_mode]);
 
-    return close_undo[self->cc_mode](self, fildes, cookie);
+    return close_undo[self->cc_mode](self, fildes, cookie, error);
 }
 
 /*
@@ -318,21 +332,26 @@ fd_tx_fcntl_exec(struct fd_tx* self, int cmd, union fcntl_arg *arg,
 }
 
 int
-fd_tx_fcntl_apply(struct fd_tx* self, int cookie)
+fd_tx_fcntl_apply(struct fd_tx* self, int cookie, struct picotm_error* error)
 {
     assert(self);
     assert(self->fildes >= 0);
     assert(self->fildes < (ssize_t)(sizeof(fdtab)/sizeof(fdtab[0])));
     assert(cookie < (ssize_t)self->fcntltablen);
 
-    return fd_fcntl_apply(fdtab+self->fildes,
-                                self->fildes, self->fcntltab[cookie].command,
-                                             &self->fcntltab[cookie].value,
-                                              self->cc_mode);
+    int res = fd_fcntl_apply(fdtab+self->fildes,
+                             self->fildes, self->fcntltab[cookie].command,
+                                          &self->fcntltab[cookie].value,
+                                           self->cc_mode);
+    if (res < 0) {
+        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
+        return -1;
+    }
+    return 0;
 }
 
 int
-fd_tx_fcntl_undo(struct fd_tx* self, int cookie)
+fd_tx_fcntl_undo(struct fd_tx* self, int cookie, struct picotm_error* error)
 {
     assert(self);
     assert(self->fildes >= 0);
@@ -346,6 +365,10 @@ fd_tx_fcntl_undo(struct fd_tx* self, int cookie)
                                                 self->cc_mode);
     fd_unlock(fdtab+self->fildes);
 
+    if (res < 0) {
+        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
+        return -1;
+    }
     return res;
 }
 
@@ -354,10 +377,8 @@ fd_tx_fcntl_undo(struct fd_tx* self, int cookie)
  */
 
 int
-fd_tx_validate(struct fd_tx* self)
+fd_tx_validate(struct fd_tx* self, struct picotm_error* error)
 {
-	int res;
-
     assert(self);
 
     if (!fd_tx_holds_ref(self)) {
@@ -366,6 +387,7 @@ fd_tx_validate(struct fd_tx* self)
 
 	/* file descriptor is still open; previously locked */
 	if (!fd_is_open_nl(fdtab+self->fildes)) {
+        picotm_error_set_conflicting(error, NULL);
 		return ERR_CONFLICT;
 	}
 
@@ -375,7 +397,9 @@ fd_tx_validate(struct fd_tx* self)
 	}
 
 	/* validate version of file descriptor */
-    if ((res = fd_validate(fdtab+self->fildes, self->fdver)) < 0) {
+    int res = fd_validate(fdtab+self->fildes, self->fdver);
+    if (res < 0) {
+        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
         return res;
     }
 
@@ -383,7 +407,7 @@ fd_tx_validate(struct fd_tx* self)
 }
 
 int
-fd_tx_update_cc(struct fd_tx* self)
+fd_tx_update_cc(struct fd_tx* self, struct picotm_error* error)
 {
     assert(self);
     assert(fd_tx_holds_ref(self));
@@ -392,7 +416,7 @@ fd_tx_update_cc(struct fd_tx* self)
 }
 
 int
-fd_tx_clear_cc(struct fd_tx* self)
+fd_tx_clear_cc(struct fd_tx* self, struct picotm_error* error)
 {
     assert(self);
     assert(fd_tx_holds_ref(self));
