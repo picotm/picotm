@@ -19,12 +19,7 @@ apply_event_cb(const struct event* event, size_t nevents, void* data,
 {
     struct allocator_module* module = data;
 
-    int res = allocator_tx_apply_event(&module->tx, event, nevents);
-    if (res < 0) {
-        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
-        return -1;
-    }
-    return 0;
+    return allocator_tx_apply_event(&module->tx, event, nevents, error);
 }
 
 static int
@@ -33,12 +28,7 @@ undo_event_cb(const struct event* event, size_t nevents, void* data,
 {
     struct allocator_module* module = data;
 
-    int res = allocator_tx_undo_event(&module->tx, event, nevents);
-    if (res < 0) {
-        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
-        return -1;
-    }
-    return 0;
+    return allocator_tx_undo_event(&module->tx, event, nevents, error);
 }
 
 static int
@@ -46,9 +36,7 @@ finish_cb(void* data, struct picotm_error* error)
 {
     struct allocator_module* module = data;
 
-    allocator_tx_finish(&module->tx);
-
-    return 0;
+    return allocator_tx_finish(&module->tx, error);
 }
 
 static void
@@ -100,9 +88,7 @@ allocator_module_free(void* mem, size_t usiz)
     struct allocator_tx* data = get_allocator_tx();
     assert(data);
 
-    allocator_tx_exec_free(data, mem);
-
-    return 0;
+    return allocator_tx_exec_free(data, mem);
 }
 
 int
