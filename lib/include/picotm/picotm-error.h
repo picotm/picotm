@@ -21,7 +21,9 @@ enum picotm_error_code {
     /** The exact error is unknown. */
     PICOTM_GENERAL_ERROR = 0,
     /** Out-of-Memory error. */
-    PICOTM_OUT_OF_MEMORY
+    PICOTM_OUT_OF_MEMORY,
+    /** Invalid floating-point environment. */
+    PICOTM_INVALID_FENV
 };
 
 /**

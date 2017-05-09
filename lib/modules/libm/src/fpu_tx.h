@@ -7,6 +7,8 @@
 #include <fenv.h>
 #include <stdbool.h>
 
+struct picotm_error;
+
 /**
  * The data structure |struct fpu_tx| represents a transaction on the
  * state of the thread's FPU state.
@@ -29,7 +31,8 @@ struct fpu_tx {
  * Initializes an FPU transaction.
  */
 int
-fpu_tx_init(struct fpu_tx* self, unsigned long module);
+fpu_tx_init(struct fpu_tx* self, unsigned long module,
+            struct picotm_error* error);
 
 /**
  * Cleans up an FPU transaction.
@@ -55,22 +58,22 @@ fpu_tx_fexcept_saved(const struct fpu_tx* self);
  * Saves the current thread-local floating-point environment.
  */
 int
-fpu_tx_save_fenv(struct fpu_tx* self);
+fpu_tx_save_fenv(struct fpu_tx* self, struct picotm_error* error);
 
 /**
  * Saves the current thread-local floating-point status flags.
  */
 int
-fpu_tx_save_fexcept(struct fpu_tx* self);
+fpu_tx_save_fexcept(struct fpu_tx* self, struct picotm_error* error);
 
 /**
  * Reverts all transaction-local changes.
  */
 int
-fpu_tx_undo(struct fpu_tx* self);
+fpu_tx_undo(struct fpu_tx* self, struct picotm_error* error);
 
 /**
  * Cleans up a transaction's FPU state.
  */
 int
-fpu_tx_finish(struct fpu_tx* self);
+fpu_tx_finish(struct fpu_tx* self, struct picotm_error* error);

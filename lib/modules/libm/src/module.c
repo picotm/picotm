@@ -18,15 +18,15 @@ struct fpu_module {
 
 static int
 fpu_module_undo_events(const struct event* event, size_t nevents,
-                       struct fpu_module* module)
+                       struct fpu_module* module, struct picotm_error* error)
 {
-    return fpu_tx_undo(&module->tx);
+    return fpu_tx_undo(&module->tx, error);
 }
 
 static int
-fpu_module_finish(struct fpu_module* module)
+fpu_module_finish(struct fpu_module* module, struct picotm_error* error)
 {
-    return fpu_tx_finish(&module->tx);
+    return fpu_tx_finish(&module->tx, error);
 }
 
 static void
@@ -44,23 +44,13 @@ static int
 undo_events_cb(const struct event* event, size_t nevents, void* data,
                struct picotm_error* error)
 {
-    int res = fpu_module_undo_events(event, nevents, data);
-    if (res < 0) {
-        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
-        return -1;
-    }
-    return 0;
+    return fpu_module_undo_events(event, nevents, data, error);
 }
 
 static int
 finish_cb(void* data, struct picotm_error* error)
 {
-    int res = fpu_module_finish(data);
-    if (res < 0) {
-        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
-        return -1;
-    }
-    return 0;
+    return fpu_module_finish(data, error);
 }
 
 static void
@@ -70,7 +60,7 @@ uninit_cb(void* data)
 }
 
 static struct fpu_tx*
-get_fpu_tx(bool initialize)
+get_fpu_tx(bool initialize, struct picotm_error* error)
 {
     static __thread struct fpu_module t_module;
 
@@ -91,7 +81,7 @@ get_fpu_tx(bool initialize)
     }
     unsigned long module = res;
 
-    res = fpu_tx_init(&t_module.tx, module);
+    res = fpu_tx_init(&t_module.tx, module, error);
     if (res < 0) {
         return NULL;
     }
@@ -104,7 +94,8 @@ get_fpu_tx(bool initialize)
 static struct fpu_tx*
 get_non_null_fpu_tx(bool initialize)
 {
-    struct fpu_tx* fpu_tx = get_fpu_tx(initialize);
+    struct picotm_error error;
+    struct fpu_tx* fpu_tx = get_fpu_tx(initialize, &error);
     if (!fpu_tx) {
         /* abort here as there's no legal way that fpu_tx could be NULL */
         abort();
@@ -132,9 +123,11 @@ fpu_module_save_fenv()
         return;
     }
 
-    int res = fpu_tx_save_fenv(fpu_tx);
+    struct picotm_error error;
+
+    int res = fpu_tx_save_fenv(fpu_tx, &error);
     if (res < 0) {
-        picotm_recover_from_errno(0);
+        picotm_recover_from_error(&error);
     }
 
     res = picotm_inject_event(fpu_tx->module, SAVE_FENV, 0);
@@ -154,9 +147,11 @@ fpu_module_save_fexcept()
         return;
     }
 
-    int res  = fpu_tx_save_fexcept(fpu_tx);
+    struct picotm_error error;
+
+    int res  = fpu_tx_save_fexcept(fpu_tx, &error);
     if (res < 0) {
-        picotm_recover_from_errno(0);
+        picotm_recover_from_error(&error);
     }
 
     res = picotm_inject_event(fpu_tx->module, SAVE_FEXCEPT, 0);
