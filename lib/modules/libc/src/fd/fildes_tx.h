@@ -143,27 +143,30 @@ fildes_tx_exec_write(struct fildes_tx* self, int fildes, const void* buf,
                      size_t nbyte, int isnoundo);
 
 int
-fildes_tx_lock(struct fildes_tx* self);
+fildes_tx_lock(struct fildes_tx* self, struct picotm_error* error);
 
 void
 fildes_tx_unlock(struct fildes_tx* self);
 
 int
-fildes_tx_validate(struct fildes_tx* self, int noundo);
+fildes_tx_validate(struct fildes_tx* self, int noundo,
+                   struct picotm_error* error);
 
 int
 fildes_tx_apply_event(struct fildes_tx* self, const struct event* event,
-                      size_t nevents);
+                      size_t nevents, struct picotm_error* error);
 
 int
 fildes_tx_undo_event(struct fildes_tx* self, const struct event* event,
-                     size_t nevents);
+                     size_t nevents, struct picotm_error* error);
 
 int
-fildes_tx_update_cc(struct fildes_tx* self, int noundo);
+fildes_tx_update_cc(struct fildes_tx* self, int noundo,
+                    struct picotm_error* error);
 
 int
-fildes_tx_clear_cc(struct fildes_tx* self, int noundo);
+fildes_tx_clear_cc(struct fildes_tx* self, int noundo,
+                   struct picotm_error* error);
 
 void
 fildes_tx_finish(struct fildes_tx* self);
