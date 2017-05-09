@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 #include "table.h"
 #include "tx.h"
 #include "tx_shared.h"
@@ -268,6 +269,25 @@ picotm_recover_from_errno(int errno_hint)
 
     /* Nothing we can do on errors; let's try to recover. */
     restart_tx(get_non_null_tx(), PICOTM_MODE_RECOVERY);
+}
+
+PICOTM_EXPORT
+void
+picotm_recover_from_error(const struct picotm_error* error)
+{
+    memcpy(get_non_null_error(), error, sizeof(*error));
+
+    switch (error->status) {
+    case PICOTM_CONFLICTING:
+        restart_tx(get_non_null_tx(), PICOTM_MODE_RETRY);
+        break;
+    case PICOTM_ERROR_CODE:
+        restart_tx(get_non_null_tx(), PICOTM_MODE_RECOVERY);
+        break;
+    case PICOTM_ERRNO:
+        restart_tx(get_non_null_tx(), PICOTM_MODE_RECOVERY);
+        break;
+    }
 }
 
 /* Tables

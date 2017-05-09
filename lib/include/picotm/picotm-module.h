@@ -71,6 +71,14 @@ picotm_recover_from_errno(int errno_hint);
 
 PICOTM_NOTHROW
 /**
+ * Instructs the transaction management system to recover from an error. The
+ * full error is supplied as an argument.
+ */
+void
+picotm_recover_from_error(const struct picotm_error* error);
+
+PICOTM_NOTHROW
+/**
  * Validates the transaction state.
  */
 bool
