@@ -174,7 +174,6 @@ vfs_module_fchdir(int fildes)
 
         switch (res) {
             case ERR_CONFLICT:
-            case ERR_PEERABORT:
                 picotm_restart();
                 break;
             case ERR_NOUNDO:
@@ -330,7 +329,6 @@ vfs_module_mkstemp(char* template)
 
         switch (res) {
             case ERR_CONFLICT:
-            case ERR_PEERABORT:
                 picotm_restart();
                 break;
             case ERR_NOUNDO:
