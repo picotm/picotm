@@ -7,21 +7,44 @@
 #include <stdlib.h>
 #include "fpu_tx.h"
 
-struct fpu_tx_thread_state {
-    struct fpu_tx instance;
+struct fpu_module {
+    struct fpu_tx tx;
     bool          is_initialized;
 };
 
-static int fpu_undo_events(const struct event* event, size_t nevents,
-                           struct fpu_tx_thread_state* t_fpu_tx);
-static int fpu_finish(struct fpu_tx_thread_state* t_fpu_tx);
-static int fpu_release(struct fpu_tx_thread_state* t_fpu_tx);
+/*
+ * Module interface
+ */
+
+static int
+fpu_module_undo_events(const struct event* event, size_t nevents,
+                       struct fpu_module* module)
+{
+    return fpu_tx_undo(&module->tx);
+}
+
+static int
+fpu_module_finish(struct fpu_module* module)
+{
+    return fpu_tx_finish(&module->tx);
+}
+
+static void
+fpu_module_uninit(struct fpu_module* module)
+{
+    fpu_tx_uninit(&module->tx);
+    module->is_initialized = false;
+}
+
+/*
+ * Thread-local data
+ */
 
 static int
 undo_events_cb(const struct event* event, size_t nevents, void* data,
                struct picotm_error* error)
 {
-    int res = fpu_undo_events(event, nevents, data);
+    int res = fpu_module_undo_events(event, nevents, data);
     if (res < 0) {
         picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
         return -1;
@@ -32,7 +55,7 @@ undo_events_cb(const struct event* event, size_t nevents, void* data,
 static int
 finish_cb(void* data, struct picotm_error* error)
 {
-    int res = fpu_finish(data);
+    int res = fpu_module_finish(data);
     if (res < 0) {
         picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
         return -1;
@@ -43,20 +66,16 @@ finish_cb(void* data, struct picotm_error* error)
 static void
 uninit_cb(void* data)
 {
-    fpu_release(data);
+    fpu_module_uninit(data);
 }
 
-/*
- * Thread-local data
- */
-
-struct fpu_tx*
+static struct fpu_tx*
 get_fpu_tx(bool initialize)
 {
-    static __thread struct fpu_tx_thread_state t_fpu_tx;
+    static __thread struct fpu_module t_module;
 
-    if (t_fpu_tx.is_initialized) {
-        return &t_fpu_tx.instance;
+    if (t_module.is_initialized) {
+        return &t_module.tx;
     } else if (!initialize) {
         return NULL;
     }
@@ -66,20 +85,20 @@ get_fpu_tx(bool initialize)
                                       NULL, NULL,
                                       finish_cb,
                                       uninit_cb,
-                                      &t_fpu_tx);
+                                      &t_module);
     if (res < 0) {
         return NULL;
     }
     unsigned long module = res;
 
-    res = fpu_tx_init(&t_fpu_tx.instance, module);
+    res = fpu_tx_init(&t_module.tx, module);
     if (res < 0) {
         return NULL;
     }
 
-    t_fpu_tx.is_initialized = true;
+    t_module.is_initialized = true;
 
-    return &t_fpu_tx.instance;
+    return &t_module.tx;
 }
 
 static struct fpu_tx*
@@ -91,39 +110,6 @@ get_non_null_fpu_tx(bool initialize)
         abort();
     }
     return fpu_tx;
-}
-
-/*
- * Module interface
- */
-
-int
-fpu_undo_events(const struct event* event, size_t nevents,
-                  struct fpu_tx_thread_state* t_fpu_tx)
-{
-    int res = fpu_tx_undo(&t_fpu_tx->instance);
-    if (res < 0) {
-        return res;
-    }
-    return 0;
-}
-
-int
-fpu_finish(struct fpu_tx_thread_state* t_fpu_tx)
-{
-    int res = fpu_tx_finish(&t_fpu_tx->instance);
-    if (res < 0) {
-        return res;
-    }
-    return 0;
-}
-
-int
-fpu_release(struct fpu_tx_thread_state* t_fpu_tx)
-{
-    fpu_tx_uninit(&t_fpu_tx->instance);
-    t_fpu_tx->is_initialized = false;
-    return 0;
 }
 
 /*
