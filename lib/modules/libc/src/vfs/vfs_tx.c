@@ -209,15 +209,21 @@ vfs_tx_exec_fchdir(struct vfs_tx* self, int fildes)
 }
 
 int
-apply_fchdir(struct vfs_tx* self, int cookie)
+apply_fchdir(struct vfs_tx* self, int cookie, struct picotm_error* error)
 {
     assert(self);
 
-    return TEMP_FAILURE_RETRY(fchdir(self->newcwd));
+    int res = TEMP_FAILURE_RETRY(fchdir(self->newcwd));
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return ERR_SYSTEM;
+    }
+
+    return 0;
 }
 
 int
-undo_fchdir(struct vfs_tx* self, int cookie)
+undo_fchdir(struct vfs_tx* self, int cookie, struct picotm_error* error)
 {
     assert(self);
 
@@ -269,7 +275,7 @@ err_mkstemp:
 }
 
 static int
-apply_mkstemp(struct vfs_tx* self, int cookie)
+apply_mkstemp(struct vfs_tx* self, int cookie, struct picotm_error* error)
 {
     return 0;
 }
@@ -281,7 +287,7 @@ apply_mkstemp(struct vfs_tx* self, int cookie)
  * unlink.
  */
 static int
-undo_mkstemp(struct vfs_tx* self, int cookie)
+undo_mkstemp(struct vfs_tx* self, int cookie, struct picotm_error* error)
 {
     char path[64];
     snprintf(path, sizeof(path), "/proc/self/fd/%d", cookie);
@@ -307,7 +313,13 @@ undo_mkstemp(struct vfs_tx* self, int cookie)
         perror("canonicalize_file_name");
     }
 
-    return TEMP_FAILURE_RETRY(close(cookie));
+    int res = TEMP_FAILURE_RETRY(close(cookie));
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return ERR_SYSTEM;
+    }
+
+    return 0;
 }
 
 /*
@@ -315,27 +327,28 @@ undo_mkstemp(struct vfs_tx* self, int cookie)
  */
 
 int
-vfs_tx_lock(struct vfs_tx* self)
+vfs_tx_lock(struct vfs_tx* self, struct picotm_error* error)
 {
     return 0;
 }
 
 void
 vfs_tx_unlock(struct vfs_tx* self)
-{
-    return;
-}
+{ }
 
 int
-vfs_tx_validate(struct vfs_tx* self)
+vfs_tx_validate(struct vfs_tx* self, struct picotm_error* error)
 {
     return 0;
 }
 
 int
-vfs_tx_apply_event(struct vfs_tx* self, const struct event* event, size_t n)
+vfs_tx_apply_event(struct vfs_tx* self, const struct event* event, size_t n,
+                   struct picotm_error* error)
 {
-    static int (* const apply_func[LAST_CMD])(struct vfs_tx*, int) = {
+    static int (* const apply_func[LAST_CMD])(struct vfs_tx*,
+                                              int,
+                                              struct picotm_error*) = {
         apply_fchdir,
         apply_mkstemp
     };
@@ -343,21 +356,25 @@ vfs_tx_apply_event(struct vfs_tx* self, const struct event* event, size_t n)
     assert(event || !n);
     assert(event->call < sizeof(apply_func)/sizeof(apply_func[0]));
 
-    int err = 0;
-
-    while (n && !err) {
-        err = apply_func[event->call](self, event->cookie);
+    while (n) {
+        int res = apply_func[event->call](self, event->cookie, error);
+        if (res < 0) {
+            return res;
+        }
         --n;
         ++event;
     }
 
-    return err;
+    return 0;
 }
 
 int
-vfs_tx_undo_event(struct vfs_tx* self, const struct event* event, size_t n)
+vfs_tx_undo_event(struct vfs_tx* self, const struct event* event, size_t n,
+                  struct picotm_error* error)
 {
-    static int (* const undo_func[LAST_CMD])(struct vfs_tx*, int) = {
+    static int (* const undo_func[LAST_CMD])(struct vfs_tx*,
+                                             int,
+                                             struct picotm_error*) = {
         undo_fchdir,
         undo_mkstemp
     };
@@ -365,21 +382,22 @@ vfs_tx_undo_event(struct vfs_tx* self, const struct event* event, size_t n)
     assert(event || !n);
     assert(event->call < sizeof(undo_func)/sizeof(undo_func[0]));
 
-    int err = 0;
-
     event += n;
 
-    while (n && !err) {
+    while (n) {
         --event;
-        err = undo_func[event->call](self, event->cookie);
+        int res = undo_func[event->call](self, event->cookie, error);
+        if (res < 0) {
+            return res;
+        }
         --n;
     }
 
-    return err;
+    return 0;
 }
 
 int
-vfs_tx_finish(struct vfs_tx* self)
+vfs_tx_finish(struct vfs_tx* self, struct picotm_error* error)
 {
     if (self->inicwd >= 0) {
         TEMP_FAILURE_RETRY(close(self->inicwd));

@@ -29,12 +29,7 @@ lock_cb(void* data, struct picotm_error* error)
 {
     struct vfs_module* module = data;
 
-    int res = vfs_tx_lock(&module->tx);
-    if (res < 0) {
-        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
-        return -1;
-    }
-    return 0;
+    return vfs_tx_lock(&module->tx, error);
 }
 
 static int
@@ -52,12 +47,7 @@ validate_cb(void* data, int noundo, struct picotm_error* error)
 {
     struct vfs_module* module = data;
 
-    int res = vfs_tx_validate(&module->tx);
-    if (res < 0) {
-        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
-        return -1;
-    }
-    return 0;
+    return vfs_tx_validate(&module->tx, error);
 }
 
 static int
@@ -66,12 +56,7 @@ apply_event_cb(const struct event* event, size_t n, void* data,
 {
     struct vfs_module* module = data;
 
-    int res = vfs_tx_apply_event(&module->tx, event, n);
-    if (res < 0) {
-        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
-        return -1;
-    }
-    return 0;
+    return vfs_tx_apply_event(&module->tx, event, n, error);
 }
 
 static int
@@ -80,12 +65,7 @@ undo_event_cb(const struct event* event, size_t n, void* data,
 {
     struct vfs_module* module = data;
 
-    int res = vfs_tx_undo_event(&module->tx, event, n);
-    if (res < 0) {
-        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
-        return -1;
-    }
-    return 0;
+    return vfs_tx_undo_event(&module->tx, event, n, error);
 }
 
 static int
@@ -93,7 +73,7 @@ finish_cb(void* data, struct picotm_error* error)
 {
     struct vfs_module* module = data;
 
-    vfs_tx_finish(&module->tx);
+    vfs_tx_finish(&module->tx, error);
 
     return 0;
 }
