@@ -7,6 +7,8 @@
 #include <stdbool.h>
 #include "picotm/picotm-libc.h"
 
+struct picotm_error;
+
 /**
  * The data structure |struct error_tx| represents a transaction on the
  * state of the thread's errno variable.
@@ -65,10 +67,10 @@ error_tx_save_errno(struct error_tx* self);
  * Reverts all transaction-local changes.
  */
 int
-error_tx_undo(struct error_tx* self);
+error_tx_undo(struct error_tx* self, struct picotm_error* error);
 
 /**
  * Cleans up a transaction's error state.
  */
 int
-error_tx_finish(struct error_tx* self);
+error_tx_finish(struct error_tx* self, struct picotm_error* error);

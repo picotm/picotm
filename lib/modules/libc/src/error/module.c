@@ -18,23 +18,15 @@ struct error_module {
 
 int
 errno_undo_events(const struct event* event, size_t nevents,
-                  struct error_module* module)
+                  struct error_module* module, struct picotm_error* error)
 {
-    int res = error_tx_undo(&module->tx);
-    if (res < 0) {
-        return res;
-    }
-    return 0;
+    return error_tx_undo(&module->tx, error);
 }
 
 int
-errno_finish(struct error_module* module)
+errno_finish(struct error_module* module, struct picotm_error* error)
 {
-    int res = error_tx_finish(&module->tx);
-    if (res < 0) {
-        return res;
-    }
-    return 0;
+    return error_tx_finish(&module->tx, error);
 }
 
 int
@@ -53,23 +45,13 @@ static int
 undo_events_cb(const struct event* event, size_t nevents, void* data,
                struct picotm_error* error)
 {
-    int res = errno_undo_events(event, nevents, data);
-    if (res < 0) {
-        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
-        return -1;
-    }
-    return 0;
+    return errno_undo_events(event, nevents, data, error);
 }
 
 static int
 finish_cb(void* data, struct picotm_error* error)
 {
-    int res = errno_finish(data);
-    if (res < 0) {
-        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
-        return -1;
-    }
-    return 0;
+    return errno_finish(data, error);
 }
 
 static void

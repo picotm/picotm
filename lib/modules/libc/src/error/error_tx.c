@@ -57,7 +57,7 @@ error_tx_save_errno(struct error_tx* self)
 }
 
 int
-error_tx_undo(struct error_tx* self)
+error_tx_undo(struct error_tx* self, struct picotm_error* error)
 {
     if (self->flags & ERROR_TX_FLAG_ERRNO_SAVED) {
         errno = self->saved_errno;
@@ -66,7 +66,7 @@ error_tx_undo(struct error_tx* self)
 }
 
 int
-error_tx_finish(struct error_tx* self)
+error_tx_finish(struct error_tx* self, struct picotm_error* error)
 {
     self->flags = 0; /* marks errno as 'not saved' */
 
