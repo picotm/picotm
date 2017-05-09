@@ -7,8 +7,6 @@
 enum error_code {
     ERR_SYSTEM = -1,
     ERR_CONFLICT = -2,
-    ERR_CCMODE = -3,
     ERR_NOUNDO = -4,
-    ERR_DOMAIN = -5,
-    ERR_PEERABORT = -6
+    ERR_DOMAIN = -5
 };
