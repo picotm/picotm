@@ -11,7 +11,9 @@ libpicotm_m_la_SOURCES = complex.c \
                          math.c \
                          matherr.c \
                          matherr.h \
-                         math-tm.c
+                         math-tm.c \
+                         module.c \
+                         module.h
 
 AM_CPPFLAGS = -I$(top_srcdir)/modules/libm/include \
               -I$(top_srcdir)/modules/libc/include \
