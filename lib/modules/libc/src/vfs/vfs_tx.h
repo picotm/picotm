@@ -7,6 +7,7 @@
 #include <stddef.h>
 
 struct event;
+struct picotm_error;
 
 struct vfs_tx_event {
     int cookie;
@@ -64,19 +65,21 @@ vfs_tx_exec_mkstemp(struct vfs_tx* self, char* pathname);
  */
 
 int
-vfs_tx_lock(struct vfs_tx* self);
+vfs_tx_lock(struct vfs_tx* self, struct picotm_error* error);
 
 void
 vfs_tx_unlock(struct vfs_tx* self);
 
 int
-vfs_tx_validate(struct vfs_tx* self);
+vfs_tx_validate(struct vfs_tx* self, struct picotm_error* error);
 
 int
-vfs_tx_apply_event(struct vfs_tx* self, const struct event* event, size_t n);
+vfs_tx_apply_event(struct vfs_tx* self, const struct event* event, size_t n,
+                   struct picotm_error* error);
 
 int
-vfs_tx_undo_event(struct vfs_tx* self, const struct event* event, size_t n);
+vfs_tx_undo_event(struct vfs_tx* self, const struct event* event, size_t n,
+                  struct picotm_error* error);
 
 int
-vfs_tx_finish(struct vfs_tx* self);
+vfs_tx_finish(struct vfs_tx* self, struct picotm_error* error);
