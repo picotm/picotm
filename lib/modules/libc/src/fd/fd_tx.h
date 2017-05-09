@@ -10,6 +10,7 @@
 #define FDTX_FL_LOCALSTATE 1L /** \brief Signals local state changes */
 
 struct fcntlop;
+struct picotm_error;
 
 union fcntl_arg;
 
@@ -45,13 +46,13 @@ fd_tx_uninit(struct fd_tx* self);
  * Validate transaction-local state
  */
 int
-fd_tx_validate(struct fd_tx* self);
+fd_tx_validate(struct fd_tx* self, struct picotm_error* error);
 
 int
-fd_tx_update_cc(struct fd_tx* self);
+fd_tx_update_cc(struct fd_tx* self, struct picotm_error* error);
 
 int
-fd_tx_clear_cc(struct fd_tx* self);
+fd_tx_clear_cc(struct fd_tx* self, struct picotm_error* error);
 
 /**
  * Aquire a reference on file-descriptor state or validate
@@ -103,10 +104,12 @@ int
 fd_tx_close_exec(struct fd_tx* self, int fildes, int* cookie, int noundo);
 
 int
-fd_tx_close_apply(struct fd_tx* self, int fildes, int cookie);
+fd_tx_close_apply(struct fd_tx* self, int fildes, int cookie,
+                  struct picotm_error* error);
 
 int
-fd_tx_close_undo(struct fd_tx* self, int fildes, int cookie);
+fd_tx_close_undo(struct fd_tx* self, int fildes, int cookie,
+                 struct picotm_error* error);
 
 /*
  * fcntl()
@@ -117,7 +120,7 @@ fd_tx_fcntl_exec(struct fd_tx* self, int cmd, union fcntl_arg *arg,
                  int* cookie, int noundo);
 
 int
-fd_tx_fcntl_apply(struct fd_tx* self, int cookie);
+fd_tx_fcntl_apply(struct fd_tx* self, int cookie, struct picotm_error* error);
 
 int
-fd_tx_fcntl_undo(struct fd_tx* self, int cookie);
+fd_tx_fcntl_undo(struct fd_tx* self, int cookie, struct picotm_error* error);
