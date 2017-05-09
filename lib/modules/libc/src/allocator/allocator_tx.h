@@ -7,6 +7,7 @@
 #include <stddef.h>
 
 struct event;
+struct picotm_error;
 
 struct allocator_tx {
     unsigned long module;
@@ -31,11 +32,11 @@ allocator_tx_exec_free(struct allocator_tx* self, void* ptr);
 
 int
 allocator_tx_apply_event(struct allocator_tx* self, const struct event* event,
-                         size_t nevents);
+                         size_t nevents, struct picotm_error* error);
 
 int
 allocator_tx_undo_event(struct allocator_tx* self, const struct event* event,
-                        size_t nevents);
+                        size_t nevents, struct picotm_error* error);
 
-void
-allocator_tx_finish(struct allocator_tx* self);
+int
+allocator_tx_finish(struct allocator_tx* self, struct picotm_error* error);

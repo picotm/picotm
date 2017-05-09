@@ -84,7 +84,8 @@ allocator_tx_exec_free(struct allocator_tx* self, void *mem)
 }
 
 static int
-apply_free(struct allocator_tx* self, unsigned int cookie)
+apply_free(struct allocator_tx* self, unsigned int cookie,
+           struct picotm_error* error)
 {
     free(self->ptrtab[cookie]);
 
@@ -92,7 +93,8 @@ apply_free(struct allocator_tx* self, unsigned int cookie)
 }
 
 static int
-undo_free(struct allocator_tx* self, unsigned int cookie)
+undo_free(struct allocator_tx* self, unsigned int cookie,
+          struct picotm_error* error)
 {
     return 0;
 }
@@ -127,13 +129,15 @@ err_append_cmd:
 }
 
 static int
-apply_posix_memalign(struct allocator_tx* self, unsigned int cookie)
+apply_posix_memalign(struct allocator_tx* self, unsigned int cookie,
+                     struct picotm_error* error)
 {
     return 0;
 }
 
 static int
-undo_posix_memalign(struct allocator_tx* self, unsigned int cookie)
+undo_posix_memalign(struct allocator_tx* self, unsigned int cookie,
+                    struct picotm_error* error)
 {
     free(self->ptrtab[cookie]);
 
@@ -146,49 +150,56 @@ undo_posix_memalign(struct allocator_tx* self, unsigned int cookie)
 
 int
 allocator_tx_apply_event(struct allocator_tx* self, const struct event* event,
-                         size_t nevents)
+                         size_t nevents, struct picotm_error* error)
 {
     static int (* const apply[LAST_CMD])(struct allocator_tx*,
-                                         unsigned int) = {
+                                         unsigned int,
+                                         struct picotm_error*) = {
         apply_free,
         apply_posix_memalign
     };
 
-    int err = 0;
-
-    while (nevents && !err) {
-        err = apply[event->call](self, event->cookie);
+    while (nevents) {
+        int res = apply[event->call](self, event->cookie, error);
+        if (res < 0) {
+            return -1;
+        }
         --nevents;
         ++event;
     }
 
-    return err;
+    return 0;
 }
 
 int
 allocator_tx_undo_event(struct allocator_tx* self, const struct event* event,
-                        size_t nevents)
+                        size_t nevents, struct picotm_error* error)
 {
-    static int (* const undo[LAST_CMD])(struct allocator_tx*, unsigned int) = {
+    static int (* const undo[LAST_CMD])(struct allocator_tx*,
+                                        unsigned int,
+                                        struct picotm_error*) = {
         undo_free,
         undo_posix_memalign
     };
 
-    int err = 0;
-
     event += nevents;
 
-    while (nevents && !err) {
+    while (nevents) {
         --event;
-        err = undo[event->call](self, event->cookie);
+        int res = undo[event->call](self, event->cookie, error);
+        if (res < 0) {
+            return -1;
+        }
         --nevents;
     }
 
-    return err;
+    return 0;
 }
 
-void
-allocator_tx_finish(struct allocator_tx* self)
+int
+allocator_tx_finish(struct allocator_tx* self, struct picotm_error* error)
 {
     self->ptrtablen = 0;
+
+    return 0;
 }
