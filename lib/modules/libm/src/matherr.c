@@ -7,8 +7,8 @@
 #include <fenv.h>
 #include <math.h>
 #include <picotm/picotm-libc.h>
-#include <picotm/picotm-libm.h>
 #include <picotm/picotm-module.h>
+#include "module.h"
 
 /* Gcc does not support the FENV_ACCESS pragma. */
 #ifndef __GNUC__
@@ -23,7 +23,7 @@ matherr_save_and_clear(int except)
         errno = 0;
     }
     if (math_errhandling & MATH_ERREXCEPT) {
-        picotm_libm_save_fexcept();
+        fpu_module_save_fexcept();
         feclearexcept(except);
     }
 }
