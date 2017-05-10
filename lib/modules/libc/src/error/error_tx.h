@@ -37,7 +37,7 @@ struct error_tx {
 /**
  * Initializes an error transaction.
  */
-int
+void
 error_tx_init(struct error_tx* self, unsigned long module);
 
 /**
@@ -74,11 +74,11 @@ error_tx_save_errno(struct error_tx* self);
 /**
  * Reverts all transaction-local changes.
  */
-int
+void
 error_tx_undo(struct error_tx* self, struct picotm_error* error);
 
 /**
  * Cleans up a transaction's error state.
  */
-int
+void
 error_tx_finish(struct error_tx* self, struct picotm_error* error);

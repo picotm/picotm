@@ -9,22 +9,18 @@ enum {
     ERROR_TX_FLAG_ERRNO_SAVED = 1 << 0
 };
 
-int
+void
 error_tx_init(struct error_tx* self, unsigned long module)
 {
     self->module = module;
     self->recovery = PICOTM_LIBC_ERROR_RECOVERY_AUTO;
     self->flags = 0;
     self->saved_errno = 0;
-
-    return 0;
 }
 
 void
 error_tx_uninit(struct error_tx* self)
-{
-    return;
-}
+{ }
 
 void
 error_tx_set_error_recovery(struct error_tx* self,
@@ -56,19 +52,16 @@ error_tx_save_errno(struct error_tx* self)
     self->flags |= ERROR_TX_FLAG_ERRNO_SAVED;
 }
 
-int
+void
 error_tx_undo(struct error_tx* self, struct picotm_error* error)
 {
     if (self->flags & ERROR_TX_FLAG_ERRNO_SAVED) {
         errno = self->saved_errno;
     }
-    return 0;
 }
 
-int
+void
 error_tx_finish(struct error_tx* self, struct picotm_error* error)
 {
     self->flags = 0; /* marks errno as 'not saved' */
-
-    return 0;
 }
