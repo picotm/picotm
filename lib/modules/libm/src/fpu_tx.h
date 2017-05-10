@@ -37,7 +37,7 @@ struct fpu_tx {
 /**
  * Initializes an FPU transaction.
  */
-int
+void
 fpu_tx_init(struct fpu_tx* self, unsigned long module,
             struct picotm_error* error);
 
@@ -64,13 +64,13 @@ fpu_tx_fexcept_saved(const struct fpu_tx* self);
 /**
  * Saves the current thread-local floating-point environment.
  */
-int
+void
 fpu_tx_save_fenv(struct fpu_tx* self, struct picotm_error* error);
 
 /**
  * Saves the current thread-local floating-point status flags.
  */
-int
+void
 fpu_tx_save_fexcept(struct fpu_tx* self, struct picotm_error* error);
 
 /**
