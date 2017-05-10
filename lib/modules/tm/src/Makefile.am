@@ -8,6 +8,8 @@ libpicotm_tm_la_SOURCES = frame.c \
                           frame.h \
                           framemap.c \
                           framemap.h \
+                          module.c \
+                          module.h \
                           tm.c \
                           vmem.c \
                           vmem.h \
