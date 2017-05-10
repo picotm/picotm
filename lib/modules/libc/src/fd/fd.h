@@ -7,6 +7,8 @@
 
 #include "counter.h"
 
+struct picotm_error;
+
 union fcntl_arg;
 
 #define FD_FL_LAST_BIT  (OFD_FL_LAST_BIT+1)
@@ -49,7 +51,7 @@ fd_unlock(struct fd *fd);
 
 /** \brief Validates that ver is not smaller than the global version */
 int
-fd_validate(struct fd *fd, count_type ver);
+fd_validate(struct fd* fd, count_type ver, struct picotm_error* error);
 
 /** \brief Aquires a reference on the file dscriptor */
 int
@@ -92,12 +94,12 @@ fd_fcntl_exec(struct fd *fd, int fildes, int cmd,
                                          count_type ver, int noundo);
 
 int
-fd_fcntl_apply(struct fd *fd, int fildes, int cmd,
-                              union fcntl_arg *arg, int ccmode);
+fd_fcntl_apply(struct fd* fd, int fildes, int cmd, union fcntl_arg* arg,
+               int ccmode, struct picotm_error* error);
 
 int
-fd_fcntl_undo(struct fd *fd, int fildes, int cmd,
-                             union fcntl_arg *oldarg, int ccmode);
+fd_fcntl_undo(struct fd* fd, int fildes, int cmd, union fcntl_arg* oldarg,
+              int ccmode, struct picotm_error* error);
 
 #endif
 
