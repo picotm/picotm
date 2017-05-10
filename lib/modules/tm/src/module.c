@@ -78,93 +78,39 @@ struct tm_module {
 static int
 lock(struct tm_module* module, struct picotm_error* error)
 {
-    int res = tm_vmem_tx_lock(&module->tx);
-    if (res < 0) {
-        if (res == -EBUSY) {
-            picotm_error_set_conflicting(error, NULL);
-        } else {
-            picotm_error_set_errno(error, -res);
-        }
-        return -1;
-    }
-    return 0;
+    return tm_vmem_tx_lock(&module->tx, error);
 }
 
 static int
 unlock(struct tm_module* module, struct picotm_error* error)
 {
-    int res = tm_vmem_tx_unlock(&module->tx);
-    if (res < 0) {
-        if (res == -EBUSY) {
-            picotm_error_set_conflicting(error, NULL);
-        } else {
-            picotm_error_set_errno(error, -res);
-        }
-        return -1;
-    }
-    return 0;
+    return tm_vmem_tx_unlock(&module->tx, error);
 }
 
 static int
 validate(struct tm_module* module, bool eotx, struct picotm_error* error)
 {
-    int res = tm_vmem_tx_validate(&module->tx, eotx);
-    if (res < 0) {
-        if (res == -EBUSY) {
-            picotm_error_set_conflicting(error, NULL);
-        } else {
-            picotm_error_set_errno(error, -res);
-        }
-        return -1;
-    }
-    return 0;
+    return tm_vmem_tx_validate(&module->tx, eotx, error);
 }
 
 static int
 apply(struct tm_module* module, const struct event* event, size_t nevents,
       struct picotm_error* error)
 {
-    int res = tm_vmem_tx_apply(&module->tx);
-    if (res < 0) {
-        if (res == -EBUSY) {
-            picotm_error_set_conflicting(error, NULL);
-        } else {
-            picotm_error_set_errno(error, -res);
-        }
-        return -1;
-    }
-    return 0;
+    return tm_vmem_tx_apply(&module->tx, error);
 }
 
 static int
 undo(struct tm_module* module, const struct event* event, size_t nevents,
      struct picotm_error* error)
 {
-    int res = tm_vmem_tx_undo(&module->tx);
-    if (res < 0) {
-        if (res == -EBUSY) {
-            picotm_error_set_conflicting(error, NULL);
-        } else {
-            picotm_error_set_errno(error, -res);
-        }
-        return -1;
-    }
-    return 0;
+    return tm_vmem_tx_undo(&module->tx, error);
 }
 
 static int
 finish(struct tm_module* module, struct picotm_error* error)
 {
-    int res = tm_vmem_tx_finish(&module->tx);
-    if (res < 0) {
-        if (res == -EBUSY) {
-            picotm_error_set_conflicting(error, NULL);
-        } else {
-            picotm_error_set_errno(error, -res);
-        }
-        return -1;
-    }
-    return 0;
+    return tm_vmem_tx_finish(&module->tx, error);
 }
 
 static void
