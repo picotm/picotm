@@ -31,7 +31,7 @@ enum picotm_error_code {
  */
 enum picotm_error_status {
     /** Conflict among transactions detected. */
-    PICOTM_CONFLICTING,
+    PICOTM_CONFLICTING = 1,
     /** Error detected. Encoded as `enum picotm_error_code`. */
     PICOTM_ERROR_CODE,
     /** Error detected. Encoded as errno code. */
@@ -57,6 +57,25 @@ struct picotm_error {
         int                    errno_hint;
     } value;
 };
+
+#define PICOTM_ERROR_INITIALIZER    \
+    { \
+        .status = 0, \
+        .is_non_recoverable = false \
+    }
+
+PICOTM_NOTHROW
+/**
+ * Clears an error structure.
+ *
+ * \param error The error to clear.
+ */
+inline void
+picotm_error_clear(struct picotm_error* error)
+{
+    error->status = 0;
+    error->is_non_recoverable = false;
+}
 
 PICOTM_NOTHROW
 /**
@@ -104,6 +123,47 @@ picotm_error_set_errno(struct picotm_error* error, int errno_hint)
     error->status = PICOTM_ERRNO;
     error->is_non_recoverable = false;
     error->value.errno_hint = errno_hint;
+}
+
+PICOTM_NOTHROW
+/**
+ * Tests if an error has been set.
+ *
+ * \param error The error to set.
+ * \returns     True if an error has been set, or false otherwise.
+ */
+inline bool
+picotm_error_is_set(const struct picotm_error* error)
+{
+    return !!error->status;
+}
+
+PICOTM_NOTHROW
+/**
+ * Tests if an error has been set to CONFLICTING status.
+ *
+ * \param error The error to set.
+ * \returns     True if an error has been set to CONFLICTING, or false
+ *              otherwise.
+ */
+inline bool
+picotm_error_is_conflicting(const struct picotm_error* error)
+{
+    return error->status == PICOTM_CONFLICTING;
+}
+
+PICOTM_NOTHROW
+/**
+ * Tests if an error has been set to an error status.
+ *
+ * \param error The error to set.
+ * \returns     True if an error has been set to an error status, or false
+ *              otherwise.
+ */
+inline bool
+picotm_error_is_error(const struct picotm_error* error)
+{
+    return picotm_error_is_set(error) && !picotm_error_is_conflicting(error);
 }
 
 PICOTM_NOTHROW
