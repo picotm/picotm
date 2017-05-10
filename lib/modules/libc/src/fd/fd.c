@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <picotm/picotm-error.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include "errcode.h"
@@ -74,23 +75,20 @@ fd_is_open_nl(const struct fd *fd)
 }
 
 int
-fd_validate(struct fd *fd, count_type ver)
+fd_validate(struct fd* fd, count_type ver, struct picotm_error* error)
 {
     assert(fd);
     assert(fd->ofd >= 0);
     assert(fd->ofd < (ssize_t)(sizeof(ofdtab)/sizeof(ofdtab[0])));
 
-    int res;
-
     count_type myver = counter_get(&fd->ver);
 
     if (ver < myver) {
-        res = ERR_CONFLICT;
-    } else {
-        res = 0;
+        picotm_error_set_conflicting(error, NULL);
+        return ERR_CONFLICT;
     }
 
-    return res;
+    return 0;
 }
 
 static int
@@ -291,50 +289,53 @@ fd_fcntl_exec(struct fd *fd, int fildes, int cmd,
 }
 
 int
-fd_fcntl_apply(struct fd *fd, int fildes, int cmd,
-                              union fcntl_arg *arg, int ccmode)
+fd_fcntl_apply(struct fd* fd, int fildes, int cmd, union fcntl_arg* arg,
+               int ccmode, struct picotm_error* error)
 {
     assert(fd);
     assert(fd->ofd >= 0);
     assert(fd->ofd < (ssize_t)(sizeof(ofdtab)/sizeof(ofdtab[0])));
 
-    int res = 0;
-
     switch (cmd) {
-        case F_SETFD:
-            res = fcntl(fildes, cmd, arg->arg0);
-            /* Fall through */
-        case F_GETFD:
-            break;
-        default:
-            res = ERR_DOMAIN; /* Caller should try other domain, e.g OFD. */
-            break;
+    case F_SETFD: {
+        int res = fcntl(fildes, cmd, arg->arg0);
+        if (res < 0) {
+            picotm_error_set_errno(error, errno);
+            return ERR_SYSTEM;
+        }
+        break;
+    }
+    case F_GETFD:
+        break;
+    default:
+        return ERR_DOMAIN; /* Caller should try other domain, e.g OFD. */
     }
 
-    return res;
+    return 0;
 }
 
 int
-fd_fcntl_undo(struct fd *fd, int fildes, int cmd,
-                             union fcntl_arg *oldarg, int ccmode)
+fd_fcntl_undo(struct fd* fd, int fildes, int cmd, union fcntl_arg* oldarg,
+              int ccmode, struct picotm_error* error)
 {
     assert(fd);
     assert(fd->ofd >= 0);
     assert(fd->ofd < (ssize_t)(sizeof(ofdtab)/sizeof(ofdtab[0])));
 
-    int res = 0;
-
     switch (cmd) {
-        case F_SETFD:
-            res = fcntl(fildes, cmd, oldarg->arg0);
-            break;
-        case F_GETFD:
-            break;
-        default:
-            res = ERR_DOMAIN; /* Caller should try other domain, e.g OFD. */
-            break;
+    case F_SETFD: {
+        int res = fcntl(fildes, cmd, oldarg->arg0);
+        if (res < 0) {
+            picotm_error_set_errno(error, errno);
+            return ERR_SYSTEM;
+        }
+        break;
+    }
+    case F_GETFD:
+        break;
+    default:
+        return ERR_DOMAIN; /* Caller should try other domain, e.g OFD. */
     }
 
-    return res;
+    return 0;
 }
-

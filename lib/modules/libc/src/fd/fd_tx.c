@@ -342,9 +342,8 @@ fd_tx_fcntl_apply(struct fd_tx* self, int cookie, struct picotm_error* error)
     int res = fd_fcntl_apply(fdtab+self->fildes,
                              self->fildes, self->fcntltab[cookie].command,
                                           &self->fcntltab[cookie].value,
-                                           self->cc_mode);
+                                           self->cc_mode, error);
     if (res < 0) {
-        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
         return -1;
     }
     return 0;
@@ -362,11 +361,10 @@ fd_tx_fcntl_undo(struct fd_tx* self, int cookie, struct picotm_error* error)
     int res = fd_fcntl_undo(fdtab+self->fildes,
                                   self->fildes, self->fcntltab[cookie].command,
                                                &self->fcntltab[cookie].oldvalue,
-                                                self->cc_mode);
+                                                self->cc_mode, error);
     fd_unlock(fdtab+self->fildes);
 
     if (res < 0) {
-        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
         return -1;
     }
     return res;
@@ -397,9 +395,8 @@ fd_tx_validate(struct fd_tx* self, struct picotm_error* error)
 	}
 
 	/* validate version of file descriptor */
-    int res = fd_validate(fdtab+self->fildes, self->fdver);
+    int res = fd_validate(fdtab+self->fildes, self->fdver, error);
     if (res < 0) {
-        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
         return res;
     }
 
