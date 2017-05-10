@@ -96,7 +96,7 @@ get_non_null_tx(void)
 static struct picotm_error*
 get_non_null_error(void)
 {
-    static __thread struct picotm_error t_error;
+    static __thread struct picotm_error t_error = PICOTM_ERROR_INITIALIZER;
 
     return &t_error;
 }
@@ -153,7 +153,7 @@ __picotm_begin(enum __picotm_mode mode)
 static void
 restart_tx(struct tx* tx, enum __picotm_mode mode)
 {
-    struct picotm_error error;
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
     int res = tx_rollback(tx, &error);
     if (res < 0) {
         switch (error.status) {

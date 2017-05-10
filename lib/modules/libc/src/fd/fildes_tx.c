@@ -1430,7 +1430,7 @@ fildes_tx_exec_pread(struct fildes_tx* self, int fildes, void* buf,
         return len;
     }
 
-    struct picotm_error error;
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
     /* possibly validate optimistic domain */
     if (ofd_tx_is_optimistic(ofd_tx)
@@ -1660,7 +1660,7 @@ fildes_tx_exec_read(struct fildes_tx* self, int fildes, void* buf,
         return len;
     }
 
-    struct picotm_error error;
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
     /* possibly validate optimistic domain */
     if (ofd_tx_is_optimistic(ofd_tx)

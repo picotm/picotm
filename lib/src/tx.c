@@ -279,7 +279,7 @@ err_update_modules_cc:
 err_log_apply_events:
 err_validate_modules:
     {
-        struct picotm_error err_error;
+        struct picotm_error err_error = PICOTM_ERROR_INITIALIZER;
         unlock_modules(self->module, self->nmodules, &err_error);
     }
 err_lock_modules:
@@ -326,7 +326,7 @@ err:
 bool
 tx_is_valid(struct tx* self)
 {
-    struct picotm_error error;
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
     int res = validate_modules(self->module, self->nmodules,
                                tx_is_irrevocable(self), &error);
     if (res < 0) {
