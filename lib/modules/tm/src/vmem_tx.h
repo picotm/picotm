@@ -32,9 +32,6 @@ struct tm_vmem_tx {
     /* page-allocator fields */
     struct tm_page_list active_pages;
     struct tm_page_list alloced_pages;
-
-    /* true if static structure has been initialized, false otherwise */
-    bool is_initialized;
 };
 
 /**
