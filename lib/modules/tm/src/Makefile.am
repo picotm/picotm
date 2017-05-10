@@ -9,7 +9,6 @@ libpicotm_tm_la_SOURCES = frame.c \
                           framemap.c \
                           framemap.h \
                           tm.c \
-                          tm.h \
                           vmem.c \
                           vmem.h \
                           vmem_tx.c \

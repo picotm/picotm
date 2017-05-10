@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "tm.h"
 #include <errno.h>
 #include <pthread.h>
 #include <stdlib.h>
@@ -10,114 +9,6 @@
 #include "picotm/picotm-tm.h"
 #include "vmem.h"
 #include "vmem_tx.h"
-
-struct tm_module {
-    struct tm_vmem_tx tx;
-
-    /* True if module structure has been initialized, false otherwise */
-    bool is_initialized;
-};
-
-static int
-lock_cb(void* data, struct picotm_error* error)
-{
-    int res = picotm_tm_lock();
-    if (res < 0) {
-        if (res == -EBUSY) {
-            picotm_error_set_conflicting(error, NULL);
-        } else {
-            picotm_error_set_errno(error, -res);
-        }
-        return -1;
-    }
-    return 0;
-}
-
-static int
-unlock_cb(void* data, struct picotm_error* error)
-{
-    int res = picotm_tm_unlock();
-    if (res < 0) {
-        if (res == -EBUSY) {
-            picotm_error_set_conflicting(error, NULL);
-        } else {
-            picotm_error_set_errno(error, -res);
-        }
-        return -1;
-    }
-    return 0;
-}
-
-static int
-validate_cb(void* data, int eotx, struct picotm_error* error)
-{
-    int res = picotm_tm_validate(!!eotx);
-    if (res < 0) {
-        if (res == -EBUSY) {
-            picotm_error_set_conflicting(error, NULL);
-        } else {
-            picotm_error_set_errno(error, -res);
-        }
-        return -1;
-    }
-    return 0;
-}
-
-static int
-apply_event_cb(const struct event* event, size_t nevents, void* data,
-               struct picotm_error* error)
-{
-    int res = picotm_tm_apply();
-    if (res < 0) {
-        if (res == -EBUSY) {
-            picotm_error_set_conflicting(error, NULL);
-        } else {
-            picotm_error_set_errno(error, -res);
-        }
-        return -1;
-    }
-    return 0;
-}
-
-static int
-undo_event_cb(const struct event* event, size_t nevents, void* data,
-              struct picotm_error* error)
-{
-    int res = picotm_tm_undo();
-    if (res < 0) {
-        if (res == -EBUSY) {
-            picotm_error_set_conflicting(error, NULL);
-        } else {
-            picotm_error_set_errno(error, -res);
-        }
-        return -1;
-    }
-    return 0;
-}
-
-static int
-finish_cb(void* data, struct picotm_error* error)
-{
-    int res = picotm_tm_finish();
-    if (res < 0) {
-        if (res == -EBUSY) {
-            picotm_error_set_conflicting(error, NULL);
-        } else {
-            picotm_error_set_errno(error, -res);
-        }
-        return -1;
-    }
-    return 0;
-}
-
-static void
-uninit_cb(void* data)
-{
-    struct tm_module* module = data;
-
-    picotm_tm_release();
-    module->is_initialized = false;
-}
 
 /*
  * Global data
@@ -174,10 +65,164 @@ err_tm_vmem_init:
 };
 
 /*
+ * Module interface
+ */
+
+struct tm_module {
+    struct tm_vmem_tx tx;
+
+    /* True if module structure has been initialized, false otherwise */
+    bool is_initialized;
+};
+
+static int
+lock(struct tm_module* module, struct picotm_error* error)
+{
+    int res = tm_vmem_tx_lock(&module->tx);
+    if (res < 0) {
+        if (res == -EBUSY) {
+            picotm_error_set_conflicting(error, NULL);
+        } else {
+            picotm_error_set_errno(error, -res);
+        }
+        return -1;
+    }
+    return 0;
+}
+
+static int
+unlock(struct tm_module* module, struct picotm_error* error)
+{
+    int res = tm_vmem_tx_unlock(&module->tx);
+    if (res < 0) {
+        if (res == -EBUSY) {
+            picotm_error_set_conflicting(error, NULL);
+        } else {
+            picotm_error_set_errno(error, -res);
+        }
+        return -1;
+    }
+    return 0;
+}
+
+static int
+validate(struct tm_module* module, bool eotx, struct picotm_error* error)
+{
+    int res = tm_vmem_tx_validate(&module->tx, eotx);
+    if (res < 0) {
+        if (res == -EBUSY) {
+            picotm_error_set_conflicting(error, NULL);
+        } else {
+            picotm_error_set_errno(error, -res);
+        }
+        return -1;
+    }
+    return 0;
+}
+
+static int
+apply(struct tm_module* module, const struct event* event, size_t nevents,
+      struct picotm_error* error)
+{
+    int res = tm_vmem_tx_apply(&module->tx);
+    if (res < 0) {
+        if (res == -EBUSY) {
+            picotm_error_set_conflicting(error, NULL);
+        } else {
+            picotm_error_set_errno(error, -res);
+        }
+        return -1;
+    }
+    return 0;
+}
+
+static int
+undo(struct tm_module* module, const struct event* event, size_t nevents,
+     struct picotm_error* error)
+{
+    int res = tm_vmem_tx_undo(&module->tx);
+    if (res < 0) {
+        if (res == -EBUSY) {
+            picotm_error_set_conflicting(error, NULL);
+        } else {
+            picotm_error_set_errno(error, -res);
+        }
+        return -1;
+    }
+    return 0;
+}
+
+static int
+finish(struct tm_module* module, struct picotm_error* error)
+{
+    int res = tm_vmem_tx_finish(&module->tx);
+    if (res < 0) {
+        if (res == -EBUSY) {
+            picotm_error_set_conflicting(error, NULL);
+        } else {
+            picotm_error_set_errno(error, -res);
+        }
+        return -1;
+    }
+    return 0;
+}
+
+static void
+uninit(struct tm_module* module)
+{
+    tm_vmem_tx_release(&module->tx);
+    module->is_initialized = false;
+}
+
+/*
  * Thread-local data
  */
 
-struct tm_vmem_tx*
+static int
+lock_cb(void* data, struct picotm_error* error)
+{
+    return lock(data, error);
+}
+
+static int
+unlock_cb(void* data, struct picotm_error* error)
+{
+    return unlock(data, error);
+}
+
+static int
+validate_cb(void* data, int eotx, struct picotm_error* error)
+{
+    return validate(data, !!eotx, error);
+}
+
+static int
+apply_event_cb(const struct event* event, size_t nevents, void* data,
+               struct picotm_error* error)
+{
+    return apply(data, event, nevents, error);
+}
+
+static int
+undo_event_cb(const struct event* event, size_t nevents, void* data,
+              struct picotm_error* error)
+{
+    return undo(data, event, nevents, error);
+}
+
+static int
+finish_cb(void* data, struct picotm_error* error)
+{
+    return finish(data, error);
+}
+
+static void
+uninit_cb(void* data)
+{
+    uninit(data);
+}
+
+static struct tm_vmem_tx*
 get_vmem_tx(void)
 {
     static __thread struct tm_module t_module;
@@ -210,112 +255,6 @@ get_vmem_tx(void)
     t_module.is_initialized = true;
 
     return &t_module.tx;
-}
-
-/*
- * Module interface
- */
-
-int
-picotm_tm_lock()
-{
-    struct tm_vmem_tx* vmem_tx = get_vmem_tx();
-    if (!vmem_tx) {
-        /* TODO: hard error */
-        return -EAGAIN;
-    }
-    int res = tm_vmem_tx_lock(vmem_tx);
-    if (res < 0) {
-        return res;
-    }
-    return 0;
-}
-
-int
-picotm_tm_unlock()
-{
-    struct tm_vmem_tx* vmem_tx = get_vmem_tx();
-    if (!vmem_tx) {
-        /* TODO: hard error */
-        return -EAGAIN;
-    }
-    int res = tm_vmem_tx_unlock(vmem_tx);
-    if (res < 0) {
-        return res;
-    }
-    return 0;
-}
-
-int
-picotm_tm_validate(bool eotx)
-{
-    struct tm_vmem_tx* vmem_tx = get_vmem_tx();
-    if (!vmem_tx) {
-        /* TODO: hard error */
-        return -EAGAIN;
-    }
-    int res = tm_vmem_tx_validate(vmem_tx, eotx);
-    if (res < 0) {
-        return res;
-    }
-    return 0;
-}
-
-int
-picotm_tm_apply()
-{
-    struct tm_vmem_tx* vmem_tx = get_vmem_tx();
-    if (!vmem_tx) {
-        /* TODO: hard error */
-        return -EAGAIN;
-    }
-    int res = tm_vmem_tx_apply(vmem_tx);
-    if (res < 0) {
-        return res;
-    }
-    return 0;
-}
-
-int
-picotm_tm_undo()
-{
-    struct tm_vmem_tx* vmem_tx = get_vmem_tx();
-    if (!vmem_tx) {
-        /* TODO: hard error */
-        return -EAGAIN;
-    }
-    int res = tm_vmem_tx_undo(vmem_tx);
-    if (res < 0) {
-        return res;
-    }
-    return 0;
-}
-
-int
-picotm_tm_finish()
-{
-    struct tm_vmem_tx* vmem_tx = get_vmem_tx();
-    if (!vmem_tx) {
-        /* TODO: hard error */
-        return -EAGAIN;
-    }
-    int res = tm_vmem_tx_finish(vmem_tx);
-    if (res < 0) {
-        return res;
-    }
-    return 0;
-}
-
-int
-picotm_tm_release()
-{
-    struct tm_vmem_tx* vmem_tx = get_vmem_tx();
-    if (!vmem_tx) {
-        /* TODO: hard error */
-        return -EAGAIN;
-    }
-    tm_vmem_tx_release(vmem_tx);
-    return 0;
 }
 
 /*
