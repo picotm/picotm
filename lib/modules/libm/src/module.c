@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "picotm/picotm-libc.h"
+#include <assert.h>
 #include <picotm/picotm-module.h>
 #include <stdlib.h>
 #include "fpu_tx.h"
@@ -77,12 +78,13 @@ get_fpu_tx(bool initialize, struct picotm_error* error)
                                       uninit_cb,
                                       &t_module);
     if (res < 0) {
+        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
         return NULL;
     }
     unsigned long module = res;
 
-    res = fpu_tx_init(&t_module.tx, module, error);
-    if (res < 0) {
+    fpu_tx_init(&t_module.tx, module, error);
+    if (picotm_error_is_set(error)) {
         return NULL;
     }
 
@@ -92,14 +94,15 @@ get_fpu_tx(bool initialize, struct picotm_error* error)
 }
 
 static struct fpu_tx*
-get_non_null_fpu_tx(bool initialize)
+get_non_null_fpu_tx(void)
 {
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    struct fpu_tx* fpu_tx = get_fpu_tx(initialize, &error);
-    if (!fpu_tx) {
-        /* abort here as there's no legal way that fpu_tx could be NULL */
-        abort();
+    struct fpu_tx* fpu_tx = get_fpu_tx(true, &error);
+    if (picotm_error_is_set(&error)) {
+        picotm_recover_from_error(&error);
     }
+    /* assert() here as there's no legal way that fpu_tx could be NULL */
+    assert(fpu_tx);
     return fpu_tx;
 }
 
@@ -115,7 +118,7 @@ enum {
 void
 fpu_module_save_fenv()
 {
-    struct fpu_tx* fpu_tx = get_non_null_fpu_tx(true);
+    struct fpu_tx* fpu_tx = get_non_null_fpu_tx();
 
     /* We have to save the floating-point enviroment
      * only once per transaction. */
@@ -125,12 +128,12 @@ fpu_module_save_fenv()
 
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    int res = fpu_tx_save_fenv(fpu_tx, &error);
-    if (res < 0) {
+    fpu_tx_save_fenv(fpu_tx, &error);
+    if (picotm_error_is_set(&error)) {
         picotm_recover_from_error(&error);
     }
 
-    res = picotm_inject_event(fpu_tx->module, SAVE_FENV, 0);
+    int res = picotm_inject_event(fpu_tx->module, SAVE_FENV, 0);
     if (res < 0) {
         picotm_recover_from_errno(0);
     }
@@ -139,7 +142,7 @@ fpu_module_save_fenv()
 void
 fpu_module_save_fexcept()
 {
-    struct fpu_tx* fpu_tx = get_non_null_fpu_tx(true);
+    struct fpu_tx* fpu_tx = get_non_null_fpu_tx();
 
     /* We have to save the floating-point status
      * flags only once per transaction. */
@@ -149,12 +152,12 @@ fpu_module_save_fexcept()
 
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    int res  = fpu_tx_save_fexcept(fpu_tx, &error);
-    if (res < 0) {
+    fpu_tx_save_fexcept(fpu_tx, &error);
+    if (picotm_error_is_set(&error)) {
         picotm_recover_from_error(&error);
     }
 
-    res = picotm_inject_event(fpu_tx->module, SAVE_FEXCEPT, 0);
+    int res = picotm_inject_event(fpu_tx->module, SAVE_FEXCEPT, 0);
     if (res < 0) {
         picotm_recover_from_errno(0);
     }
