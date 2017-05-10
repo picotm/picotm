@@ -130,7 +130,8 @@ fildes_tx_get_validation_mode(const struct fildes_tx* self)
 }
 
 static int*
-get_ifd(const struct fd_tx* fd_tx, size_t fd_txlen, size_t* ifdlen)
+get_ifd(const struct fd_tx* fd_tx, size_t fd_txlen, size_t* ifdlen,
+        struct picotm_error* error)
 {
     int* ifd = NULL;
     *ifdlen = 0;
@@ -142,6 +143,7 @@ get_ifd(const struct fd_tx* fd_tx, size_t fd_txlen, size_t* ifdlen)
             void* tmp = picotm_tabresize(ifd, *ifdlen, (*ifdlen) + 1,
                                           sizeof(ifd[0]));
             if (!tmp) {
+                picotm_error_set_error_code(error, PICOTM_OUT_OF_MEMORY);
                 free(ifd);
                 return NULL;
             }
@@ -158,7 +160,7 @@ get_ifd(const struct fd_tx* fd_tx, size_t fd_txlen, size_t* ifdlen)
 
 static int*
 get_iofd(const struct fd_tx* fd_tx, const int* ifd, size_t ifdlen,
-         size_t* iofdlen)
+         size_t* iofdlen, struct picotm_error* error)
 {
     int* iofd = NULL;
     *iofdlen = 0;
@@ -169,6 +171,7 @@ get_iofd(const struct fd_tx* fd_tx, const int* ifd, size_t ifdlen,
         void* tmp = picotm_tabresize(iofd, *iofdlen, (*iofdlen) + 1,
                                      sizeof(iofd[0]));
         if (!tmp) {
+            picotm_error_set_error_code(error, PICOTM_OUT_OF_MEMORY);
             free(iofd);
             return NULL;
         }
@@ -2360,10 +2363,9 @@ fildes_tx_lock(struct fildes_tx* self, struct picotm_error* error)
 
     /* Lock fds */
 
-    self->ifd = get_ifd(self->fd_tx, self->fd_tx_max_fildes, &len);
+    self->ifd = get_ifd(self->fd_tx, self->fd_tx_max_fildes, &len, error);
 
     if (!self->ifd) {
-        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
         return -1;
     }
 
@@ -2379,7 +2381,11 @@ fildes_tx_lock(struct fildes_tx* self, struct picotm_error* error)
 
     /* Lock ofds */
 
-    self->iofd = get_iofd(self->fd_tx, self->ifd, self->ifdlen, &len);
+    self->iofd = get_iofd(self->fd_tx, self->ifd, self->ifdlen, &len, error);
+
+    if (!self->iofd) {
+        return -1;
+    }
 
     const int* iofd = self->iofd;
 
