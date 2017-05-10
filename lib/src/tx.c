@@ -222,9 +222,9 @@ finish_modules(struct module* module, unsigned long nmodules,
     int res = tabwalk_2(module, nmodules, sizeof(*module), log_finish_cb,
                         error);
     if (res < 0) {
-        return false;
+        return -1;
     }
-    return true;
+    return 0;
 }
 
 int
