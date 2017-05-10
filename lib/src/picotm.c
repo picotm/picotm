@@ -132,6 +132,10 @@ __picotm_begin(enum __picotm_mode mode)
         return false;
     }
 
+    /* We (re-)start a transaction. Clear the old error state. */
+    struct picotm_error* error = get_non_null_error();
+    memset(error, 0, sizeof(*error));
+
     struct tx* tx = get_tx(true);
     if (!tx) {
         return false;
