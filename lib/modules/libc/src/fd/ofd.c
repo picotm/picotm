@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <limits.h>
+#include <picotm/picotm-error.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -374,7 +375,8 @@ ofd_ts_get_region_versions(struct ofd *ofd, size_t nbyte, off_t offset, struct c
 }
 
 int
-ofd_ts_validate_state(struct ofd *ofd, count_type ver)
+ofd_ts_validate_state(struct ofd *ofd, count_type ver,
+                      struct picotm_error* error)
 {
     assert(ofd);
     assert(ofd_get_ccmode_nolock(ofd) == PICOTM_LIBC_CC_MODE_TS);
@@ -386,6 +388,7 @@ ofd_ts_validate_state(struct ofd *ofd, count_type ver)
     if (ver == ofdver) {
         res = 0;
     } else if (ver < ofdver) {
+        picotm_error_set_conflicting(error, NULL);
         res = ERR_CONFLICT;
     } else {
         abort();
@@ -418,7 +421,8 @@ ofd_ts_inc_state_version(struct ofd *ofd)
 }
 
 int
-ofd_ts_inc_region_versions(struct ofd *ofd, size_t nbyte, off_t offset, struct cmapss *cmapss)
+ofd_ts_inc_region_versions(struct ofd *ofd, size_t nbyte, off_t offset,
+                           struct cmapss *cmapss, struct picotm_error* error)
 {
     int res;
 
@@ -431,6 +435,9 @@ ofd_ts_inc_region_versions(struct ofd *ofd, size_t nbyte, off_t offset, struct c
                                     reccount(nbyte),
                                     recoffset(offset),
                                    &ofd->data.regular.cmap);
+            if (res < 0) {
+                picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
+            }
             break;
         case PICOTM_LIBC_FILE_TYPE_OTHER:
         case PICOTM_LIBC_FILE_TYPE_FIFO:

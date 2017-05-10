@@ -150,14 +150,14 @@ validate_ts(struct ofd_tx* self, struct picotm_error* error)
     /* validate version of file descriptor */
     if (self->modedata.ts.ver != (count_type)-1) {
 	    int err =
-	        ofd_ts_validate_state(ofdtab+self->ofd, self->modedata.ts.ver);
+	        ofd_ts_validate_state(ofdtab+self->ofd, self->modedata.ts.ver,
+                                  error);
 
         if (err) {
             abort();
         }
 
         if (err < 0) {
-            picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
             return err;
         }
     }
@@ -268,9 +268,9 @@ update_cc_ts(struct ofd_tx* self, struct picotm_error* error)
             err = ofd_ts_inc_region_versions(ofd,
                                              ioop->nbyte,
                                              ioop->off,
-                                            &self->modedata.ts.cmapss);
+                                            &self->modedata.ts.cmapss, error);
             if (err < 0) {
-                picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
+                return err;
             }
         }
     }
@@ -740,7 +740,9 @@ ofd_tx_ts_validate_state(struct ofd_tx* self)
         return 0;
     }
 
-    return ofd_ts_validate_state(ofdtab+self->ofd, self->modedata.ts.ver);
+    struct picotm_error error;
+    return ofd_ts_validate_state(ofdtab+self->ofd, self->modedata.ts.ver,
+                                 &error);
 }
 
 int

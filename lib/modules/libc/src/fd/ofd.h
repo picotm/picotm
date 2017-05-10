@@ -17,6 +17,7 @@
 #define OFD_FL_LAST_BIT (2)
 
 struct cmapss;
+struct picotm_error;
 struct rwlocktab;
 struct rwstatemap;
 
@@ -116,7 +117,8 @@ ofd_ts_get_region_versions(struct ofd *ofd, size_t nbyte, off_t offset, struct c
 
 /** \brief Validates the open file descriptor's version. */
 int
-ofd_ts_validate_state(struct ofd *ofd, count_type ver);
+ofd_ts_validate_state(struct ofd *ofd, count_type ver,
+                      struct picotm_error* error);
 
 /** \brief Validates the region versions of the underlying file buffer. */
 int
@@ -128,7 +130,8 @@ ofd_ts_inc_state_version(struct ofd *ofd);
 
 /** \brief Increments the regions' versions of the underlying file buffer. */
 int
-ofd_ts_inc_region_versions(struct ofd *ofd, size_t nbyte, off_t off, struct cmapss *cmapss);
+ofd_ts_inc_region_versions(struct ofd *ofd, size_t nbyte, off_t off,
+                           struct cmapss *cmapss, struct picotm_error* error);
 
 int
 ofd_ts_lock_region(struct ofd *ofd, size_t nbyte, off_t offset, struct cmapss *cmapss);
