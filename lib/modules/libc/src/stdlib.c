@@ -37,12 +37,7 @@ calloc_tx(size_t nmemb, size_t size)
     size_t alloc_size = nmemb * size;
 
     void* mem;
-
-    int res = posix_memalign_tm(&mem, 2 * sizeof(void*), alloc_size);
-    if (res) {
-        errno = res;
-        return NULL;
-    }
+    allocator_module_posix_memalign(&mem, 2 * sizeof(void*), alloc_size);
 
     return memset(mem, 0, alloc_size);
 }
@@ -73,12 +68,7 @@ malloc_tx(size_t size)
     error_module_save_errno();
 
     void* mem;
-
-    int res = posix_memalign_tm(&mem, 2 * sizeof(void*), size);
-    if (res) {
-        errno = res;
-        return NULL;
-    }
+    allocator_module_posix_memalign(&mem, 2 * sizeof(void*), size);
 
     return mem;
 }
@@ -130,14 +120,7 @@ realloc_tx(void* ptr, size_t size)
     void* mem = NULL;
 
     if (size) {
-        int err;
-        do {
-            err = allocator_module_posix_memalign(&mem, 2 * sizeof(void*),
-                                                  size);
-            if (err) {
-                picotm_recover_from_errno(err);
-            }
-        } while (err);
+        allocator_module_posix_memalign(&mem, 2 * sizeof(void*), size);
     }
 
     if (ptr && mem) {

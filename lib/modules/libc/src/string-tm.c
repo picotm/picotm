@@ -137,14 +137,7 @@ strdup_tm(const char* s)
     size_t len = strlen(s) + sizeof(*s);
 
     void* mem;
-    int err;
-
-    do {
-        err = allocator_module_posix_memalign(&mem, 2 * sizeof(void*), len);
-        if (err) {
-            picotm_recover_from_errno(err);
-        }
-    } while (err);
+    allocator_module_posix_memalign(&mem, 2 * sizeof(void*), len);
 
     return memcpy(mem, s, len);
 }
@@ -218,14 +211,7 @@ strndup_tm(const char* s, size_t n)
     }
 
     void* mem;
-    int err;
-
-    do {
-        err = allocator_module_posix_memalign(&mem, 2 * sizeof(void*), len);
-        if (err) {
-            picotm_recover_from_errno(errno);
-        }
-    } while (err);
+    allocator_module_posix_memalign(&mem, 2 * sizeof(void*), len);
 
     char* s2 = memcpy(mem, s, len);
     if (n < len) {

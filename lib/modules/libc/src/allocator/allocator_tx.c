@@ -23,7 +23,7 @@ rnd2wb(size_t size)
     return (size + mask) & ~mask;
 }
 
-int
+void
 allocator_tx_init(struct allocator_tx* self, unsigned long module)
 {
     self->module = module;
@@ -31,8 +31,6 @@ allocator_tx_init(struct allocator_tx* self, unsigned long module)
     self->ptrtab = NULL;
     self->ptrtablen = 0;
     self->ptrtabsiz = 0;
-
-    return 0;
 }
 
 void
@@ -42,7 +40,8 @@ allocator_tx_uninit(struct allocator_tx* self)
 }
 
 static int
-append_cmd(struct allocator_tx* self, enum allocator_tx_cmd cmd, void* ptr)
+append_cmd(struct allocator_tx* self, enum allocator_tx_cmd cmd, void* ptr,
+           struct picotm_error* error)
 {
     if (__builtin_expect(self->ptrtablen >= self->ptrtabsiz, 0)) {
         void* tmp = picotm_tabresize(self->ptrtab,
@@ -50,6 +49,7 @@ append_cmd(struct allocator_tx* self, enum allocator_tx_cmd cmd, void* ptr)
                                      self->ptrtabsiz + 1,
                                      sizeof(self->ptrtab[0]));
         if (!tmp) {
+            picotm_error_set_error_code(error, PICOTM_OUT_OF_MEMORY);
             return -1;
         }
         self->ptrtab = tmp;
@@ -63,6 +63,7 @@ append_cmd(struct allocator_tx* self, enum allocator_tx_cmd cmd, void* ptr)
 
     int res = picotm_inject_event(self->module, cmd, self->ptrtablen);
     if (res < 0) {
+        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
         return -1;
     }
 
@@ -73,111 +74,99 @@ append_cmd(struct allocator_tx* self, enum allocator_tx_cmd cmd, void* ptr)
  * free()
  */
 
-int
-allocator_tx_exec_free(struct allocator_tx* self, void *mem)
+void
+allocator_tx_exec_free(struct allocator_tx* self, void *mem,
+                       struct picotm_error* error)
 {
-    int res = append_cmd(self, CMD_FREE, mem);
-    if (res < 0) {
-        return res;
-    }
-    return 0;
+    append_cmd(self, CMD_FREE, mem, error);
 }
 
-static int
+static void
 apply_free(struct allocator_tx* self, unsigned int cookie,
            struct picotm_error* error)
 {
     free(self->ptrtab[cookie]);
-
-    return 0;
 }
 
-static int
+static void
 undo_free(struct allocator_tx* self, unsigned int cookie,
           struct picotm_error* error)
-{
-    return 0;
-}
+{ }
 
 /*
  * posix_memalign()
  */
 
-int
+void
 allocator_tx_exec_posix_memalign(struct allocator_tx* self, void** memptr,
-                                 size_t alignment, size_t size)
+                                 size_t alignment, size_t size,
+                                 struct picotm_error* error)
 {
     void* mem;
 
     int err = posix_memalign(&mem, alignment, rnd2wb(size));
     if (err) {
-        return -err;
+        picotm_error_set_errno(error, err);
+        return;
     }
 
-    int res = append_cmd(self, CMD_POSIX_MEMALIGN, mem);
-    if (res < 0) {
+    append_cmd(self, CMD_POSIX_MEMALIGN, mem, error);
+    if (picotm_error_is_set(error)) {
         goto err_append_cmd;
     }
 
     *memptr = mem;
 
-    return 0;
+    return;
 
 err_append_cmd:
     free(mem);
-    return res;
 }
 
-static int
+static void
 apply_posix_memalign(struct allocator_tx* self, unsigned int cookie,
                      struct picotm_error* error)
-{
-    return 0;
-}
+{ }
 
-static int
+static void
 undo_posix_memalign(struct allocator_tx* self, unsigned int cookie,
                     struct picotm_error* error)
 {
     free(self->ptrtab[cookie]);
-
-    return 0;
 }
 
 /*
  * Module interface
  */
 
-int
+void
 allocator_tx_apply_event(struct allocator_tx* self, const struct event* event,
                          size_t nevents, struct picotm_error* error)
 {
-    static int (* const apply[LAST_CMD])(struct allocator_tx*,
-                                         unsigned int,
-                                         struct picotm_error*) = {
+    static void (* const apply[LAST_CMD])(struct allocator_tx*,
+                                          unsigned int,
+                                          struct picotm_error*) = {
         apply_free,
         apply_posix_memalign
     };
 
     while (nevents) {
-        int res = apply[event->call](self, event->cookie, error);
-        if (res < 0) {
-            return -1;
+        apply[event->call](self, event->cookie, error);
+        if (picotm_error_is_set(error)) {
+            return;
         }
         --nevents;
         ++event;
     }
-
-    return 0;
 }
 
-int
+void
 allocator_tx_undo_event(struct allocator_tx* self, const struct event* event,
                         size_t nevents, struct picotm_error* error)
 {
-    static int (* const undo[LAST_CMD])(struct allocator_tx*,
-                                        unsigned int,
-                                        struct picotm_error*) = {
+    static void (* const undo[LAST_CMD])(struct allocator_tx*,
+                                         unsigned int,
+                                         struct picotm_error*) = {
         undo_free,
         undo_posix_memalign
     };
@@ -186,20 +175,16 @@ allocator_tx_undo_event(struct allocator_tx* self, const struct event* event,
 
     while (nevents) {
         --event;
-        int res = undo[event->call](self, event->cookie, error);
-        if (res < 0) {
-            return -1;
+        undo[event->call](self, event->cookie, error);
+        if (picotm_error_is_set(error)) {
+            return;
         }
         --nevents;
     }
-
-    return 0;
 }
 
-int
-allocator_tx_finish(struct allocator_tx* self, struct picotm_error* error)
+void
+allocator_tx_finish(struct allocator_tx* self)
 {
     self->ptrtablen = 0;
-
-    return 0;
 }

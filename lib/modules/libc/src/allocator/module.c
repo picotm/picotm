@@ -19,7 +19,11 @@ apply_event_cb(const struct event* event, size_t nevents, void* data,
 {
     struct allocator_module* module = data;
 
-    return allocator_tx_apply_event(&module->tx, event, nevents, error);
+    allocator_tx_apply_event(&module->tx, event, nevents, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+    return 0;
 }
 
 static int
@@ -28,7 +32,11 @@ undo_event_cb(const struct event* event, size_t nevents, void* data,
 {
     struct allocator_module* module = data;
 
-    return allocator_tx_undo_event(&module->tx, event, nevents, error);
+    allocator_tx_undo_event(&module->tx, event, nevents, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+    return 0;
 }
 
 static int
@@ -36,7 +44,8 @@ finish_cb(void* data, struct picotm_error* error)
 {
     struct allocator_module* module = data;
 
-    return allocator_tx_finish(&module->tx, error);
+    allocator_tx_finish(&module->tx);
+    return 0;
 }
 
 static void
@@ -49,7 +58,7 @@ uninit_cb(void* data)
 }
 
 static struct allocator_tx*
-get_allocator_tx(void)
+get_allocator_tx(struct picotm_error* error)
 {
     static __thread struct allocator_module t_module;
 
@@ -68,34 +77,56 @@ get_allocator_tx(void)
                                       uninit_cb,
                                       &t_module);
     if (res < 0) {
+        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
         return NULL;
     }
     unsigned long module = res;
 
-    res = allocator_tx_init(&t_module.tx, module);
-    if (res < 0) {
-        return NULL;
-    }
+    allocator_tx_init(&t_module.tx, module);
 
     t_module.is_initialized = true;
 
     return &t_module.tx;
 }
 
-int
-allocator_module_free(void* mem, size_t usiz)
+static struct allocator_tx*
+get_non_null_allocator_tx(void)
 {
-    struct allocator_tx* data = get_allocator_tx();
-    assert(data);
-
-    return allocator_tx_exec_free(data, mem);
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+    struct allocator_tx* allocator_tx = get_allocator_tx(&error);
+    if (picotm_error_is_set(&error)) {
+        picotm_recover_from_error(&error);
+    }
+    /* assert() here as there's no legal way that allocator_tx could be NULL */
+    assert(allocator_tx);
+    return allocator_tx;
 }
 
-int
+/*
+ * Public interface
+ */
+
+void
+allocator_module_free(void* mem, size_t usiz)
+{
+    struct allocator_tx* data = get_non_null_allocator_tx();
+
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+    allocator_tx_exec_free(data, mem, &error);
+    if (picotm_error_is_set(&error)) {
+        picotm_recover_from_error(&error);
+    }
+}
+
+void
 allocator_module_posix_memalign(void** memptr, size_t alignment, size_t size)
 {
-    struct allocator_tx* data = get_allocator_tx();
+    struct allocator_tx* data = get_non_null_allocator_tx();
     assert(data);
 
-    return allocator_tx_exec_posix_memalign(data, memptr, alignment, size);
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+    allocator_tx_exec_posix_memalign(data, memptr, alignment, size, &error);
+    if (picotm_error_is_set(&error)) {
+        picotm_recover_from_error(&error);
+    }
 }

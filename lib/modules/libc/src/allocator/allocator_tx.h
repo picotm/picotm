@@ -28,26 +28,28 @@ struct allocator_tx {
     size_t ptrtabsiz;
 };
 
-int
+void
 allocator_tx_init(struct allocator_tx* self, unsigned long module);
 
 void
 allocator_tx_uninit(struct allocator_tx* self);
 
-int
+void
 allocator_tx_exec_posix_memalign(struct allocator_tx* self, void** memptr,
-                                 size_t alignment, size_t size);
+                                 size_t alignment, size_t size,
+                                 struct picotm_error* error);
 
-int
-allocator_tx_exec_free(struct allocator_tx* self, void* ptr);
+void
+allocator_tx_exec_free(struct allocator_tx* self, void* ptr,
+                       struct picotm_error* error);
 
-int
+void
 allocator_tx_apply_event(struct allocator_tx* self, const struct event* event,
                          size_t nevents, struct picotm_error* error);
 
-int
+void
 allocator_tx_undo_event(struct allocator_tx* self, const struct event* event,
                         size_t nevents, struct picotm_error* error);
 
-int
-allocator_tx_finish(struct allocator_tx* self, struct picotm_error* error);
+void
+allocator_tx_finish(struct allocator_tx* self);
