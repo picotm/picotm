@@ -59,16 +59,8 @@ PICOTM_EXPORT
 int
 posix_memalign_tm(void** memptr, size_t alignment, size_t size)
 {
-    int err;
-
-    do {
-        err = allocator_module_posix_memalign(memptr, alignment, size);
-        if (err) {
-            picotm_recover_from_errno(err);
-        }
-    } while (err);
-
-    return err;
+    allocator_module_posix_memalign(memptr, alignment, size);
+    return 0;
 }
 
 PICOTM_EXPORT
@@ -90,14 +82,7 @@ realloc_tm(void* ptr, size_t size)
     void* mem = NULL;
 
     if (size) {
-        int err;
-        do {
-            err = allocator_module_posix_memalign(&mem, 2 * sizeof(void*),
-                                                  size);
-            if (err) {
-                picotm_recover_from_errno(err);
-            }
-        } while (err);
+        allocator_module_posix_memalign(&mem, 2 * sizeof(void*), size);
     }
 
     if (ptr && mem) {

@@ -14,10 +14,10 @@
  * \endcond
  */
 
-int
+void
 allocator_module_free(void* mem, size_t usiz);
 
-int
+void
 allocator_module_posix_memalign(void** memptr, size_t alignment, size_t size);
 
 /**
