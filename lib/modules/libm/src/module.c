@@ -94,7 +94,7 @@ get_fpu_tx(bool initialize, struct picotm_error* error)
 static struct fpu_tx*
 get_non_null_fpu_tx(bool initialize)
 {
-    struct picotm_error error;
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
     struct fpu_tx* fpu_tx = get_fpu_tx(initialize, &error);
     if (!fpu_tx) {
         /* abort here as there's no legal way that fpu_tx could be NULL */
@@ -123,7 +123,7 @@ fpu_module_save_fenv()
         return;
     }
 
-    struct picotm_error error;
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
     int res = fpu_tx_save_fenv(fpu_tx, &error);
     if (res < 0) {
@@ -147,7 +147,7 @@ fpu_module_save_fexcept()
         return;
     }
 
-    struct picotm_error error;
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
     int res  = fpu_tx_save_fexcept(fpu_tx, &error);
     if (res < 0) {

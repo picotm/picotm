@@ -740,7 +740,7 @@ ofd_tx_ts_validate_state(struct ofd_tx* self)
         return 0;
     }
 
-    struct picotm_error error;
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
     return ofd_ts_validate_state(ofdtab+self->ofd, self->modedata.ts.ver,
                                  &error);
 }
