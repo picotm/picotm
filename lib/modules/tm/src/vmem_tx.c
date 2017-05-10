@@ -171,8 +171,6 @@ tm_vmem_tx_init(struct tm_vmem_tx* vmem_tx, struct tm_vmem* vmem,
     SLIST_INIT(&vmem_tx->active_pages);
     SLIST_INIT(&vmem_tx->alloced_pages);
 
-    vmem_tx->is_initialized = true;
-
     return 0;
 }
 

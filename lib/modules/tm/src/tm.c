@@ -11,6 +11,13 @@
 #include "vmem.h"
 #include "vmem_tx.h"
 
+struct tm_module {
+    struct tm_vmem_tx tx;
+
+    /* True if module structure has been initialized, false otherwise */
+    bool is_initialized;
+};
+
 static int
 lock_cb(void* data, struct picotm_error* error)
 {
@@ -106,7 +113,10 @@ finish_cb(void* data, struct picotm_error* error)
 static void
 uninit_cb(void* data)
 {
+    struct tm_module* module = data;
+
     picotm_tm_release();
+    module->is_initialized = false;
 }
 
 /*
@@ -170,18 +180,18 @@ err_tm_vmem_init:
 struct tm_vmem_tx*
 get_vmem_tx(void)
 {
-    static __thread struct tm_vmem_tx t_vmem_tx;
+    static __thread struct tm_module t_module;
 
-    if (t_vmem_tx.is_initialized) {
-        return &t_vmem_tx;
+    if (t_module.is_initialized) {
+        return &t_module.tx;
     }
 
     long res = picotm_register_module(lock_cb, unlock_cb, validate_cb,
-                                     apply_event_cb, undo_event_cb,
-                                     NULL, NULL,
-                                     finish_cb,
-                                     uninit_cb,
-                                     NULL);
+                                      apply_event_cb, undo_event_cb,
+                                      NULL, NULL,
+                                      finish_cb,
+                                      uninit_cb,
+                                      &t_module);
     if (res < 0) {
         return NULL;
     }
@@ -192,12 +202,14 @@ get_vmem_tx(void)
         return NULL;
     }
 
-    res = tm_vmem_tx_init(&t_vmem_tx, vmem, module);
+    res = tm_vmem_tx_init(&t_module.tx, vmem, module);
     if (res < 0) {
         return NULL;
     }
 
-    return &t_vmem_tx;
+    t_module.is_initialized = true;
+
+    return &t_module.tx;
 }
 
 /*
