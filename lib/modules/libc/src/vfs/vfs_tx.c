@@ -14,7 +14,6 @@
 #include <picotm/picotm-lib-tab.h>
 #include <picotm/picotm-module.h>
 #include <unistd.h>
-#include "errcode.h"
 #include "fd/fd.h"
 #include "fd/fdtab.h"
 
@@ -24,7 +23,7 @@ enum vfs_tx_cmd {
     LAST_CMD
 };
 
-int
+void
 vfs_tx_init(struct vfs_tx* self, unsigned long module)
 {
     assert(self);
@@ -36,8 +35,6 @@ vfs_tx_init(struct vfs_tx* self, unsigned long module)
 
     self->inicwd = -1;
     self->newcwd = -1;
-
-    return 0;
 }
 
 void
@@ -49,60 +46,79 @@ vfs_tx_uninit(struct vfs_tx* self)
 }
 
 int
-vfs_tx_get_cwd(struct vfs_tx* self)
+vfs_tx_get_cwd(struct vfs_tx* self, struct picotm_error* error)
 {
-    int fildes;
-
     assert(self);
 
     if (self->newcwd >= 0) {
-        fildes = self->newcwd;
-    } else if (self->inicwd >= 0) {
-        fildes = self->inicwd;
-    } else {
-        char* cwd = get_current_dir_name();
-
-        fildes = open(cwd, O_RDONLY);
-
-        free(cwd);
-
-        if (fildes < 0) {
-            return -1;
-        }
-
-        self->inicwd = fildes;
+        return self->newcwd;
     }
 
+    if (self->inicwd >= 0) {
+        return self->inicwd;
+    }
+
+    char* cwd = get_current_dir_name();
+
+    int fildes = TEMP_FAILURE_RETRY(open(cwd, O_RDONLY));
+    if (fildes < 0) {
+        picotm_error_set_errno(error, errno);
+        goto err_open;
+    }
+
+    self->inicwd = fildes;
+
+    free(cwd);
+
     return fildes;
+
+err_open:
+    free(cwd);
+    return -1;
 }
 
 char*
-vfs_tx_get_cwd_path(struct vfs_tx* self)
+vfs_tx_get_cwd_path(struct vfs_tx* self, struct picotm_error* error)
 {
     assert(self);
 
-    int fildes = vfs_tx_get_cwd(self);
+    int fildes = vfs_tx_get_cwd(self, error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
 
     char path[64];
     snprintf(path, sizeof(path), "/proc/self/fd/%d", fildes);
 
-    return canonicalize_file_name(path);
+    char* canonpath = canonicalize_file_name(path);
+    if (!canonpath) {
+        picotm_error_set_errno(error, errno);
+        return NULL;
+    }
+
+    return canonpath;
 }
 
 char*
-vfs_tx_absolute_path(struct vfs_tx* self, const char* path)
+vfs_tx_absolute_path(struct vfs_tx* self, const char* path,
+                     struct picotm_error* error)
 {
     assert(self);
     assert(path);
 
     if (path[0] == '/') {
-        return strdup(path);
+        char* abspath = strdup(path);
+        if (!abspath) {
+            picotm_error_set_errno(error, errno);
+            return NULL;
+        }
+        return abspath;
     }
 
     /* Construct absolute pathname */
 
-    char* cwd = vfs_tx_get_cwd_path(self);
-    if (!cwd) {
+    char* cwd = vfs_tx_get_cwd_path(self, error);
+    if (picotm_error_is_set(error)) {
         return NULL;
     }
 
@@ -111,6 +127,7 @@ vfs_tx_absolute_path(struct vfs_tx* self, const char* path)
 
     char* abspath = malloc(pathlen + cwdlen + 2 * sizeof(*abspath));
     if (!abspath) {
+        picotm_error_set_errno(error, errno);
         goto err_malloc;
     }
 
@@ -129,32 +146,40 @@ err_malloc:
 }
 
 char*
-vfs_tx_canonical_path(struct vfs_tx* self, const char *path)
+vfs_tx_canonical_path(struct vfs_tx* self, const char *path,
+                      struct picotm_error* error)
 {
-    char* abspath = vfs_tx_absolute_path(self, path);
-    if (!abspath) {
+    char* abspath = vfs_tx_absolute_path(self, path, error);
+    if (picotm_error_is_set(error)) {
         return NULL;
     }
 
-    char* canonpath = canonicalize_file_name(path);
+    char* canonpath = canonicalize_file_name(abspath);
+    if (!canonpath) {
+        picotm_error_set_errno(error, errno);
+        goto err_canonicalize_filename;
+    }
 
     free(abspath);
 
     return canonpath;
+
+err_canonicalize_filename:
+    free(abspath);
+    return NULL;
 }
 
-static int
-append_cmd(struct vfs_tx* self, enum vfs_tx_cmd cmd, int cookie)
+static void
+append_cmd(struct vfs_tx* self, enum vfs_tx_cmd cmd, int cookie,
+           struct picotm_error* error)
 {
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
     void* tmp = picotm_tabresize(self->eventtab,
                                  self->eventtablen,
                                  self->eventtablen + 1,
                                  sizeof(self->eventtab[0]),
-                                 &error);
-    if (picotm_error_is_set(&error)) {
-        return -1;
+                                 error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
     self->eventtab = tmp;
 
@@ -162,12 +187,12 @@ append_cmd(struct vfs_tx* self, enum vfs_tx_cmd cmd, int cookie)
 
     eventtab->cookie = cookie;
 
-    picotm_append_event(self->module, cmd, self->eventtablen, &error);
-    if (picotm_error_is_set(&error)) {
-        return -1;
+    picotm_append_event(self->module, cmd, self->eventtablen, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 
-    return (int)self->eventtablen++;
+    ++self->eventtablen;
 }
 
 /*
@@ -175,7 +200,8 @@ append_cmd(struct vfs_tx* self, enum vfs_tx_cmd cmd, int cookie)
  */
 
 int
-vfs_tx_exec_fchdir(struct vfs_tx* self, int fildes)
+vfs_tx_exec_fchdir(struct vfs_tx* self, int fildes,
+                   struct picotm_error* error)
 {
     assert(self);
 
@@ -183,28 +209,30 @@ vfs_tx_exec_fchdir(struct vfs_tx* self, int fildes)
 
     struct fd* fd = fdtab + fildes;
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-    fd_ref(fd, fildes, 0, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+    fd_ref(fd, fildes, 0, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Check file descriptor */
 
     struct stat buf;
+    int res = fstat(fildes, &buf);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        goto err_fstab;
+    }
 
-    if ((fstat(fildes, &buf) < 0) || (!S_ISDIR(buf.st_mode))) {
-        fd_unref(fd, fildes);
-        return ERR_SYSTEM;
+    if (!S_ISDIR(buf.st_mode)) {
+        picotm_error_set_errno(error, ENOTDIR);
+        goto err_s_isdir;
     }
 
     if (self->newcwd < 0) {
         /* Inject event */
-        if (append_cmd(self, CMD_FCHDIR, -1) < 0) {
-            return -1;
+        append_cmd(self, CMD_FCHDIR, -1, error);
+        if (picotm_error_is_set(error)) {
+            goto err_append_cmd;
         }
     } else {
         /* Replace old CWD with new CWD */
@@ -215,9 +243,15 @@ vfs_tx_exec_fchdir(struct vfs_tx* self, int fildes)
     self->newcwd = fildes;
 
     return 0;
+
+err_append_cmd:
+err_s_isdir:
+err_fstab:
+    fd_unref(fd, fildes);
+    return -1;
 }
 
-void
+static void
 apply_fchdir(struct vfs_tx* self, int cookie, struct picotm_error* error)
 {
     assert(self);
@@ -229,7 +263,7 @@ apply_fchdir(struct vfs_tx* self, int cookie, struct picotm_error* error)
     }
 }
 
-void
+static void
 undo_fchdir(struct vfs_tx* self, int cookie, struct picotm_error* error)
 { }
 
@@ -238,15 +272,16 @@ undo_fchdir(struct vfs_tx* self, int cookie, struct picotm_error* error)
  */
 
 int
-vfs_tx_exec_mkstemp(struct vfs_tx* self, char* pathname)
+vfs_tx_exec_mkstemp(struct vfs_tx* self, char* pathname,
+                    struct picotm_error* error)
 {
     assert(self);
     assert(pathname);
 
     /* Construct absolute pathname */
 
-    char* abspath = vfs_tx_absolute_path(self, pathname);
-    if (!abspath) {
+    char* abspath = vfs_tx_absolute_path(self, pathname, error);
+    if (picotm_error_is_set(error)) {
         return -1;
     }
 
@@ -254,6 +289,7 @@ vfs_tx_exec_mkstemp(struct vfs_tx* self, char* pathname)
 
     int res = mkstemp(abspath);
     if (res < 0) {
+        picotm_error_set_errno(error, errno);
         goto err_mkstemp;
     }
     int fildes = res;
@@ -261,8 +297,8 @@ vfs_tx_exec_mkstemp(struct vfs_tx* self, char* pathname)
     /* Copy trailing filled XXXXXX back to pathname */
     memcpy(pathname + strlen(pathname) - 6, abspath + strlen(abspath) - 6, 6);
 
-    res = append_cmd(self, CMD_MKSTEMP, fildes);
-    if (res < 0) {
+    append_cmd(self, CMD_MKSTEMP, fildes, error);
+    if (picotm_error_is_set(error)) {
         goto err_append_cmd;
     }
 
@@ -291,7 +327,11 @@ static void
 undo_mkstemp(struct vfs_tx* self, int cookie, struct picotm_error* error)
 {
     char path[64];
-    snprintf(path, sizeof(path), "/proc/self/fd/%d", cookie);
+    int res = snprintf(path, sizeof(path), "/proc/self/fd/%d", cookie);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return;
+    }
 
     char* canonpath = canonicalize_file_name(path);
 
@@ -314,7 +354,7 @@ undo_mkstemp(struct vfs_tx* self, int cookie, struct picotm_error* error)
         perror("canonicalize_file_name");
     }
 
-    int res = TEMP_FAILURE_RETRY(close(cookie));
+    res = TEMP_FAILURE_RETRY(close(cookie));
     if (res < 0) {
         picotm_error_set_errno(error, errno);
         return;
@@ -393,7 +433,11 @@ void
 vfs_tx_finish(struct vfs_tx* self, struct picotm_error* error)
 {
     if (self->inicwd >= 0) {
-        TEMP_FAILURE_RETRY(close(self->inicwd));
+        int res = TEMP_FAILURE_RETRY(close(self->inicwd));
+        if (res < 0) {
+            picotm_error_set_errno(error, errno);
+            return;
+        }
         self->inicwd = -1;
     }
 
