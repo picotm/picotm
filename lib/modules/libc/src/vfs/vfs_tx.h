@@ -39,37 +39,41 @@ struct vfs_tx {
     int newcwd;
 };
 
-int
+void
 vfs_tx_init(struct vfs_tx* self, unsigned long module);
 
 void
 vfs_tx_uninit(struct vfs_tx* self);
 
 int
-vfs_tx_get_cwd(struct vfs_tx* self);
+vfs_tx_get_cwd(struct vfs_tx* self, struct picotm_error* error);
 
 char*
-vfs_tx_get_cwd_path(struct vfs_tx* self);
+vfs_tx_get_cwd_path(struct vfs_tx* self, struct picotm_error* error);
 
 char*
-vfs_tx_absolute_path(struct vfs_tx* self, const char* path);
+vfs_tx_absolute_path(struct vfs_tx* self, const char* path,
+                     struct picotm_error* error);
 
 char*
-vfs_tx_canonical_path(struct vfs_tx* self, const char* path);
+vfs_tx_canonical_path(struct vfs_tx* self, const char* path,
+                      struct picotm_error* error);
 
 /*
  * fchdir()
  */
 
 int
-vfs_tx_exec_fchdir(struct vfs_tx* self, int fildes);
+vfs_tx_exec_fchdir(struct vfs_tx* self, int fildes,
+                   struct picotm_error* error);
 
 /*
  * mkstemp()
  */
 
 int
-vfs_tx_exec_mkstemp(struct vfs_tx* self, char* pathname);
+vfs_tx_exec_mkstemp(struct vfs_tx* self, char* pathname,
+                    struct picotm_error* error);
 
 /*
  * Module interface

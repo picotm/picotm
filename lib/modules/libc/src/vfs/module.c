@@ -110,11 +110,7 @@ get_vfs_tx(bool initialize, struct picotm_error* error)
         return NULL;
     }
 
-    int res = vfs_tx_init(&t_module.tx, module);
-    if (res < 0) {
-        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
-        return NULL;
-    }
+    vfs_tx_init(&t_module.tx, module);
 
     t_module.is_initialized = true;
 
@@ -149,32 +145,31 @@ vfs_module_chmod(const char* path, mode_t mode)
 {
     struct vfs_tx* vfs_tx = get_non_null_vfs_tx();
 
-    return fchmodat(vfs_tx_get_cwd(vfs_tx), path, mode, 0);
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+    int cwd = vfs_tx_get_cwd(vfs_tx, &error);
+    if (picotm_error_is_set(&error)) {
+        picotm_recover_from_error(&error);
+    }
+
+    return fchmodat(cwd, path, mode, 0);
 }
 
 int
 vfs_module_fchdir(int fildes)
 {
-    int res;
-
     struct vfs_tx* vfs_tx = get_non_null_vfs_tx();
 
     do {
-        res = vfs_tx_exec_fchdir(vfs_tx, fildes);
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-        switch (res) {
-            case ERR_CONFLICT:
-                picotm_restart();
-                break;
-            case ERR_NOUNDO:
-                picotm_irrevocable();
-                break;
-            default:
-                break;
+        int res = vfs_tx_exec_fchdir(vfs_tx, fildes, &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res == ERR_NOUNDO);
+        picotm_recover_from_error(&error);
 
-    return res;
+    } while (true);
 }
 
 int
@@ -235,8 +230,9 @@ vfs_module_getcwd(char* buf, size_t size)
 
     /* return transaction-local working directory */
 
-    char* cwd = vfs_tx_get_cwd_path(vfs_tx);
-    if (!cwd) {
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+    char* cwd = vfs_tx_get_cwd_path(vfs_tx, &error);
+    if (picotm_error_is_set(&error)) {
         return NULL;
     }
 
@@ -262,7 +258,13 @@ vfs_module_getcwd_fildes()
 {
     struct vfs_tx* vfs_tx = get_non_null_vfs_tx();
 
-    return vfs_tx_get_cwd(vfs_tx);
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+    int cwd = vfs_tx_get_cwd(vfs_tx, &error);
+    if (picotm_error_is_set(&error)) {
+        picotm_recover_from_error(&error);
+        return -1;
+    }
+    return cwd;
 }
 
 int
@@ -270,7 +272,12 @@ vfs_module_link(const char* path1, const char* path2)
 {
     struct vfs_tx* vfs_tx = get_non_null_vfs_tx();
 
-    int cwd = vfs_tx_get_cwd(vfs_tx);
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+    int cwd = vfs_tx_get_cwd(vfs_tx, &error);
+    if (picotm_error_is_set(&error)) {
+        picotm_recover_from_error(&error);
+        return -1;
+    }
 
     return linkat(cwd, path1, cwd, path2, AT_SYMLINK_FOLLOW);
 }
@@ -280,7 +287,14 @@ vfs_module_lstat(const char* path, struct stat* buf)
 {
     struct vfs_tx* vfs_tx = get_non_null_vfs_tx();
 
-    return fstatat(vfs_tx_get_cwd(vfs_tx), path, buf, AT_SYMLINK_NOFOLLOW);
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+    int cwd = vfs_tx_get_cwd(vfs_tx, &error);
+    if (picotm_error_is_set(&error)) {
+        picotm_recover_from_error(&error);
+        return -1;
+    }
+
+    return fstatat(cwd, path, buf, AT_SYMLINK_NOFOLLOW);
 }
 
 int
@@ -288,7 +302,14 @@ vfs_module_mkdir(const char* path, mode_t mode)
 {
     struct vfs_tx* vfs_tx = get_non_null_vfs_tx();
 
-    return mkdirat(vfs_tx_get_cwd(vfs_tx), path, mode);
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+    int cwd = vfs_tx_get_cwd(vfs_tx, &error);
+    if (picotm_error_is_set(&error)) {
+        picotm_recover_from_error(&error);
+        return -1;
+    }
+
+    return mkdirat(cwd, path, mode);
 }
 
 int
@@ -296,7 +317,14 @@ vfs_module_mkfifo(const char* path, mode_t mode)
 {
     struct vfs_tx* vfs_tx = get_non_null_vfs_tx();
 
-    return mkfifoat(vfs_tx_get_cwd(vfs_tx), path, mode);
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+    int cwd = vfs_tx_get_cwd(vfs_tx, &error);
+    if (picotm_error_is_set(&error)) {
+        picotm_recover_from_error(&error);
+        return -1;
+    }
+
+    return mkfifoat(cwd, path, mode);
 }
 
 int
@@ -304,32 +332,32 @@ vfs_module_mknod(const char* path, mode_t mode, dev_t dev)
 {
     struct vfs_tx* vfs_tx = get_non_null_vfs_tx();
 
-    return mknodat(vfs_tx_get_cwd(vfs_tx), path, mode, dev);
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+    int cwd = vfs_tx_get_cwd(vfs_tx, &error);
+    if (picotm_error_is_set(&error)) {
+        picotm_recover_from_error(&error);
+        return -1;
+    }
+
+    return mknodat(cwd, path, mode, dev);
 }
 
 int
 vfs_module_mkstemp(char* template)
 {
-    int res;
-
     struct vfs_tx* vfs_tx = get_non_null_vfs_tx();
 
     do {
-        res = vfs_tx_exec_mkstemp(vfs_tx, template);
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-        switch (res) {
-            case ERR_CONFLICT:
-                picotm_restart();
-                break;
-            case ERR_NOUNDO:
-                picotm_irrevocable();
-                break;
-            default:
-                break;
+        int fildes = vfs_tx_exec_mkstemp(vfs_tx, template, &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return fildes;
         }
-    } while (res == ERR_NOUNDO);
+        picotm_recover_from_error(&error);
 
-    return res;
+    } while (true);
 }
 
 int
@@ -337,7 +365,14 @@ vfs_module_stat(const char* path, struct stat* buf)
 {
     struct vfs_tx* vfs_tx = get_non_null_vfs_tx();
 
-    return fstatat(vfs_tx_get_cwd(vfs_tx), path, buf, 0);
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+    int cwd = vfs_tx_get_cwd(vfs_tx, &error);
+    if (picotm_error_is_set(&error)) {
+        picotm_recover_from_error(&error);
+        return -1;
+    }
+
+    return fstatat(cwd, path, buf, 0);
 }
 
 int
@@ -345,5 +380,12 @@ vfs_module_unlink(const char* path)
 {
     struct vfs_tx* vfs_tx = get_non_null_vfs_tx();
 
-    return unlinkat(vfs_tx_get_cwd(vfs_tx), path, 0);
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+    int cwd = vfs_tx_get_cwd(vfs_tx, &error);
+    if (picotm_error_is_set(&error)) {
+        picotm_recover_from_error(&error);
+        return -1;
+    }
+
+    return unlinkat(cwd, path, 0);
 }
