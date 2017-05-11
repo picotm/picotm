@@ -91,36 +91,36 @@ tm_vmem_tx_privatize_c(struct tm_vmem_tx* vmem_tx, uintptr_t addr, int c,
 /**
  * Acquires exclusive access to the frames of this transaction.
  */
-int
+void
 tm_vmem_tx_lock(struct tm_vmem_tx* vmem_tx, struct picotm_error* error);
 
 /**
  * Releases exclusive access.
  */
-int
+void
 tm_vmem_tx_unlock(struct tm_vmem_tx* vmem_tx, struct picotm_error* error);
 
 /**
  * Validates consistency of the transactions state.
  */
-int
+void
 tm_vmem_tx_validate(struct tm_vmem_tx* vmem_tx, bool eotx,
                     struct picotm_error* error);
 
 /**
  * Applies all transaction-local changes to main memory.
  */
-int
+void
 tm_vmem_tx_apply(struct tm_vmem_tx* vmem_tx, struct picotm_error* error);
 
 /**
  * Reverts all transaction-local changes.
  */
-int
+void
 tm_vmem_tx_undo(struct tm_vmem_tx* vmem_tx, struct picotm_error* error);
 
 /**
  * Cleans up a transcation's resources.
  */
-int
+void
 tm_vmem_tx_finish(struct tm_vmem_tx* vmem_tx, struct picotm_error* error);
