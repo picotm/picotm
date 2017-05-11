@@ -75,42 +75,42 @@ struct tm_module {
     bool is_initialized;
 };
 
-static int
+static void
 lock(struct tm_module* module, struct picotm_error* error)
 {
-    return tm_vmem_tx_lock(&module->tx, error);
+    tm_vmem_tx_lock(&module->tx, error);
 }
 
-static int
+static void
 unlock(struct tm_module* module, struct picotm_error* error)
 {
-    return tm_vmem_tx_unlock(&module->tx, error);
+    tm_vmem_tx_unlock(&module->tx, error);
 }
 
-static int
+static void
 validate(struct tm_module* module, bool eotx, struct picotm_error* error)
 {
-    return tm_vmem_tx_validate(&module->tx, eotx, error);
+    tm_vmem_tx_validate(&module->tx, eotx, error);
 }
 
-static int
+static void
 apply(struct tm_module* module, const struct event* event, size_t nevents,
       struct picotm_error* error)
 {
-    return tm_vmem_tx_apply(&module->tx, error);
+    tm_vmem_tx_apply(&module->tx, error);
 }
 
-static int
+static void
 undo(struct tm_module* module, const struct event* event, size_t nevents,
      struct picotm_error* error)
 {
-    return tm_vmem_tx_undo(&module->tx, error);
+    tm_vmem_tx_undo(&module->tx, error);
 }
 
-static int
+static void
 finish(struct tm_module* module, struct picotm_error* error)
 {
-    return tm_vmem_tx_finish(&module->tx, error);
+    tm_vmem_tx_finish(&module->tx, error);
 }
 
 static void
@@ -127,39 +127,63 @@ uninit(struct tm_module* module)
 static int
 lock_cb(void* data, struct picotm_error* error)
 {
-    return lock(data, error);
+    lock(data, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+    return 0;
 }
 
 static int
 unlock_cb(void* data, struct picotm_error* error)
 {
-    return unlock(data, error);
+    unlock(data, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+    return 0;
 }
 
 static int
 validate_cb(void* data, int eotx, struct picotm_error* error)
 {
-    return validate(data, !!eotx, error);
+    validate(data, !!eotx, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+    return 0;
 }
 
 static int
 apply_event_cb(const struct event* event, size_t nevents, void* data,
                struct picotm_error* error)
 {
-    return apply(data, event, nevents, error);
+    apply(data, event, nevents, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+    return 0;
 }
 
 static int
 undo_event_cb(const struct event* event, size_t nevents, void* data,
               struct picotm_error* error)
 {
-    return undo(data, event, nevents, error);
+    undo(data, event, nevents, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+    return 0;
 }
 
 static int
 finish_cb(void* data, struct picotm_error* error)
 {
-    return finish(data, error);
+    finish(data, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+    return 0;
 }
 
 static void
