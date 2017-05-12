@@ -8,6 +8,8 @@
 #include <stdint.h>
 #include "framemap.h"
 
+struct picotm_error;
+
 /**
  * \cond impl || tm_impl
  * \ingroup tm_impl
@@ -23,17 +25,19 @@ struct tm_vmem {
     struct tm_frame_map frame_map;
 };
 
-int
+void
 tm_vmem_init(struct tm_vmem* vmem);
 
 void
 tm_vmem_uninit(struct tm_vmem* vmem);
 
 struct tm_frame*
-tm_vmem_acquire_frame_by_block(struct tm_vmem* vmem, size_t block_index);
+tm_vmem_acquire_frame_by_block(struct tm_vmem* vmem, size_t block_index,
+                               struct picotm_error* error);
 
 struct tm_frame*
-tm_vmem_acquire_frame_by_address(struct tm_vmem* vmem, uintptr_t addr);
+tm_vmem_acquire_frame_by_address(struct tm_vmem* vmem, uintptr_t addr,
+                                 struct picotm_error* error);
 
 void
 tm_vmem_release_frame(struct tm_vmem* vmem, struct tm_frame* frame);

@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "module.h"
+#include <assert.h>
 #include <errno.h>
 #include <pthread.h>
 #include <stdlib.h>
@@ -14,17 +15,18 @@
  * Global data
  */
 
-static struct tm_vmem* get_vmem(void);
+static struct tm_vmem* get_vmem(struct picotm_error* error);
 
 static void
 vmem_atexit_cb(void)
 {
-    struct tm_vmem* vmem = get_vmem();
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+    struct tm_vmem* vmem = get_vmem(&error);
     tm_vmem_uninit(vmem);
 }
 
 static struct tm_vmem*
-get_vmem()
+get_vmem(struct picotm_error* error)
 {
     static bool           g_vmem_is_initialized;
     static struct tm_vmem g_vmem;
@@ -37,6 +39,7 @@ get_vmem()
 
     int res = pthread_mutex_lock(&lock);
     if (res) {
+        picotm_error_set_errno(error, res);
         return NULL;
     }
 
@@ -46,22 +49,19 @@ get_vmem()
         goto out;
     }
 
-    res = tm_vmem_init(&g_vmem);
-    if (res < 0) {
-        goto err_tm_vmem_init;
-    }
+    tm_vmem_init(&g_vmem);
 
     atexit(vmem_atexit_cb); /* ignore errors */
 
     __atomic_store_n(&g_vmem_is_initialized, true, __ATOMIC_RELEASE);
 
 out:
-    pthread_mutex_unlock(&lock);
+    res = pthread_mutex_unlock(&lock);
+    if (res) {
+        picotm_error_set_errno(error, res);
+        return NULL;
+    }
     return &g_vmem;
-
-err_tm_vmem_init:
-    pthread_mutex_unlock(&lock);
-    return NULL;
 };
 
 /*
@@ -193,7 +193,7 @@ uninit_cb(void* data)
 }
 
 static struct tm_vmem_tx*
-get_vmem_tx(void)
+get_vmem_tx(struct picotm_error* error)
 {
     static __thread struct tm_module t_module;
 
@@ -208,23 +208,33 @@ get_vmem_tx(void)
                                       uninit_cb,
                                       &t_module);
     if (res < 0) {
+        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
         return NULL;
     }
     unsigned long module = res;
 
-    struct tm_vmem* vmem = get_vmem();
-    if (!vmem) {
+    struct tm_vmem* vmem = get_vmem(error);
+    if (picotm_error_is_set(error)) {
         return NULL;
     }
 
-    res = tm_vmem_tx_init(&t_module.tx, vmem, module);
-    if (res < 0) {
-        return NULL;
-    }
+    tm_vmem_tx_init(&t_module.tx, vmem, module);
 
     t_module.is_initialized = true;
 
     return &t_module.tx;
+}
+
+static struct tm_vmem_tx*
+get_non_null_vmem_tx(void)
+{
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+    struct tm_vmem_tx* vmem_tx = get_vmem_tx(&error);
+    if (picotm_error_is_set(&error)) {
+        picotm_recover_from_error(&error);
+    }
+    assert(vmem_tx);
+    return vmem_tx;
 }
 
 /*
@@ -241,58 +251,74 @@ enum {
 void
 tm_module_load(uintptr_t addr, void* buf, size_t siz)
 {
-    struct tm_vmem_tx* vmem_tx = get_vmem_tx();
-    if (!vmem_tx) {
-        picotm_recover_from_errno(ENOMEM);
+    struct tm_vmem_tx* vmem_tx = get_non_null_vmem_tx();
+
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+    bool is_conflicting = false;
+
+    do {
+        tm_vmem_tx_ld(vmem_tx, addr, buf, siz, &error);
+
+        is_conflicting = picotm_error_is_conflicting(&error);
+        if (is_conflicting) {
+            picotm_recover_from_error(&error);
+            picotm_error_clear(&error);
+        }
+    } while (is_conflicting);
+
+    if (picotm_error_is_set(&error)) {
+        picotm_recover_from_error(&error);
     }
-    int res;
-    while ((res = tm_vmem_tx_ld(vmem_tx, addr, buf, siz)) == -EBUSY) {
-        picotm_resolve_conflict(NULL);
-    }
+
+    int res = picotm_inject_event(vmem_tx->module, TM_LOAD, 0);
     if (res < 0) {
-        picotm_recover_from_errno(-res);
-    }
-    res = picotm_inject_event(vmem_tx->module, TM_LOAD, 0);
-    if (res < 0) {
-        picotm_recover_from_errno(0);
+        picotm_recover_from_error_code(PICOTM_GENERAL_ERROR);
     }
 }
 
 void
 tm_module_store(uintptr_t addr, const void* buf, size_t siz)
 {
-    struct tm_vmem_tx* vmem_tx = get_vmem_tx();
-    if (!vmem_tx) {
-        picotm_recover_from_errno(ENOMEM);
-    }
-    int res;
-    while ((res = tm_vmem_tx_st(vmem_tx, addr, buf, siz)) == -EBUSY) {
-        picotm_resolve_conflict(NULL);
-    }
+    struct tm_vmem_tx* vmem_tx = get_non_null_vmem_tx();
+
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+    bool is_conflicting = false;
+
+    do {
+        tm_vmem_tx_st(vmem_tx, addr, buf, siz, &error);
+
+        is_conflicting = picotm_error_is_conflicting(&error);
+        if (is_conflicting) {
+            picotm_recover_from_error(&error);
+            picotm_error_clear(&error);
+        }
+    } while (is_conflicting);
+
+    int res = picotm_inject_event(vmem_tx->module, TM_STORE, 0);
     if (res < 0) {
-        picotm_recover_from_errno(-res);
-    }
-    res = picotm_inject_event(vmem_tx->module, TM_STORE, 0);
-    if (res < 0) {
-        picotm_recover_from_errno(0);
+        picotm_recover_from_error_code(PICOTM_GENERAL_ERROR);
     }
 }
 
 void
 tm_module_loadstore(uintptr_t laddr, uintptr_t saddr, size_t siz)
 {
-    struct tm_vmem_tx* vmem_tx = get_vmem_tx();
-    if (!vmem_tx) {
-        picotm_recover_from_errno(ENOMEM);
-    }
-    int res;
-    while ((res = tm_vmem_tx_ldst(vmem_tx, laddr, saddr, siz)) == -EBUSY) {
-        picotm_resolve_conflict(NULL);
-    }
-    if (res < 0) {
-        picotm_recover_from_errno(-res);
-    }
-    res = picotm_inject_event(vmem_tx->module, TM_LOADSTORE, 0);
+    struct tm_vmem_tx* vmem_tx = get_non_null_vmem_tx();
+
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+    bool is_conflicting = false;
+
+    do {
+        tm_vmem_tx_ldst(vmem_tx, laddr, saddr, siz, &error);
+
+        is_conflicting = picotm_error_is_conflicting(&error);
+        if (is_conflicting) {
+            picotm_recover_from_error(&error);
+            picotm_error_clear(&error);
+        }
+    } while (is_conflicting);
+
+    int res = picotm_inject_event(vmem_tx->module, TM_LOADSTORE, 0);
     if (res < 0) {
         picotm_recover_from_errno(0);
     }
@@ -301,18 +327,22 @@ tm_module_loadstore(uintptr_t laddr, uintptr_t saddr, size_t siz)
 void
 tm_module_privatize(uintptr_t addr, size_t siz, unsigned long flags)
 {
-    struct tm_vmem_tx* vmem_tx = get_vmem_tx();
-    if (!vmem_tx) {
-        picotm_recover_from_errno(ENOMEM);
-    }
-    int res;
-    while ((res = tm_vmem_tx_privatize(vmem_tx, addr, siz, flags)) == -EBUSY) {
-        picotm_resolve_conflict(NULL);
-    }
-    if (res < 0) {
-        picotm_recover_from_errno(res);
-    }
-    res = picotm_inject_event(vmem_tx->module, TM_PRIVATIZE, 0);
+    struct tm_vmem_tx* vmem_tx = get_non_null_vmem_tx();
+
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+    bool is_conflicting = false;
+
+    do {
+        tm_vmem_tx_privatize(vmem_tx, addr, siz, flags, &error);
+
+        is_conflicting = picotm_error_is_conflicting(&error);
+        if (is_conflicting) {
+            picotm_recover_from_error(&error);
+            picotm_error_clear(&error);
+        }
+    } while (is_conflicting);
+
+    int res = picotm_inject_event(vmem_tx->module, TM_PRIVATIZE, 0);
     if (res < 0) {
         picotm_recover_from_errno(0);
     }
@@ -321,18 +351,22 @@ tm_module_privatize(uintptr_t addr, size_t siz, unsigned long flags)
 void
 tm_module_privatize_c(uintptr_t addr, int c, unsigned long flags)
 {
-    struct tm_vmem_tx* vmem_tx = get_vmem_tx();
-    if (!vmem_tx) {
-        picotm_recover_from_errno(ENOMEM);
-    }
-    int res;
-    while ((res = tm_vmem_tx_privatize_c(vmem_tx, addr, c, flags)) == -EBUSY) {
-        picotm_resolve_conflict(NULL);
-    }
-    if (res < 0) {
-        picotm_recover_from_errno(-res);
-    }
-    res = picotm_inject_event(vmem_tx->module, TM_PRIVATIZE, 0);
+    struct tm_vmem_tx* vmem_tx = get_non_null_vmem_tx();
+
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+    bool is_conflicting = false;
+
+    do {
+        tm_vmem_tx_privatize_c(vmem_tx, addr, c, flags, &error);
+
+        is_conflicting = picotm_error_is_conflicting(&error);
+        if (is_conflicting) {
+            picotm_recover_from_error(&error);
+            picotm_error_clear(&error);
+        }
+    } while (is_conflicting);
+
+    int res = picotm_inject_event(vmem_tx->module, TM_PRIVATIZE, 0);
     if (res < 0) {
         picotm_recover_from_errno(0);
     }

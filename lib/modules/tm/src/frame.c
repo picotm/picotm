@@ -4,6 +4,7 @@
 
 #include "frame.h"
 #include <errno.h>
+#include <picotm/picotm-error.h>
 #include <stdbool.h>
 #include "block.h"
 
@@ -38,12 +39,14 @@ tm_frame_flags(const struct tm_frame* frame)
     return frame->flags & ~TM_BLOCK_MASK;
 }
 
-int
-tm_frame_try_lock(struct tm_frame* frame, const void* owner)
+void
+tm_frame_try_lock(struct tm_frame* frame, const void* owner,
+                  struct picotm_error* error)
 {
     /* test-and-test-and-set */
     if (frame->owner) {
-        return -EBUSY;
+        picotm_error_set_conflicting(error, NULL);
+        return;
     }
 
     uintptr_t expected = 0;
@@ -52,9 +55,9 @@ tm_frame_try_lock(struct tm_frame* frame, const void* owner)
                                             __ATOMIC_SEQ_CST,
                                             __ATOMIC_ACQUIRE);
     if (!succ) {
-        return -EBUSY;
+        picotm_error_set_conflicting(error, NULL);
+        return;
     }
-    return 0;
 }
 
 void

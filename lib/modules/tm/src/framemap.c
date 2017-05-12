@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "framemap.h"
+#include <picotm/picotm-error.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -47,12 +48,10 @@ tm_frame_tld_init(struct tm_frame_tld* self)
  * Frame map
  */
 
-int
+void
 tm_frame_map_init(struct tm_frame_map* self)
 {
     tm_frame_tld_init(&self->tld);
-
-    return 0;
 }
 
 static bool
@@ -158,7 +157,7 @@ next_tld_index(uintptr_t addr, size_t* shiftbits)
 }
 
 static struct tm_frame_dir*
-load_dir(uintptr_t* entry)
+load_dir(uintptr_t* entry, struct picotm_error* error)
 {
     struct tm_frame_dir* dir =
         (struct tm_frame_dir*)__atomic_load_n(entry, __ATOMIC_ACQUIRE);
@@ -168,6 +167,7 @@ load_dir(uintptr_t* entry)
 
     dir = malloc(sizeof(*dir));
     if (!dir) {
+        picotm_error_set_error_code(error, PICOTM_OUT_OF_MEMORY);
         return NULL;
     }
     tm_frame_dir_init(dir);
@@ -189,7 +189,7 @@ load_dir(uintptr_t* entry)
 }
 
 static struct tm_frame_tbl*
-load_tbl(uintptr_t* entry, uintptr_t addr)
+load_tbl(uintptr_t* entry, uintptr_t addr, struct picotm_error* error)
 {
     struct tm_frame_tbl* tbl =
         (struct tm_frame_tbl*)__atomic_load_n(entry, __ATOMIC_ACQUIRE);
@@ -199,6 +199,7 @@ load_tbl(uintptr_t* entry, uintptr_t addr)
 
     tbl = malloc(sizeof(*tbl));
     if (!tbl) {
+        picotm_error_set_error_code(error, PICOTM_OUT_OF_MEMORY);
         return NULL;
     }
     tm_frame_tbl_init(tbl, first_block_index(addr));
@@ -220,7 +221,8 @@ load_tbl(uintptr_t* entry, uintptr_t addr)
 }
 
 struct tm_frame*
-tm_frame_map_lookup(struct tm_frame_map* self, uintptr_t addr)
+tm_frame_map_lookup(struct tm_frame_map* self, uintptr_t addr,
+                    struct picotm_error* error)
 {
     size_t shiftbits = initial_shiftbits();
 
@@ -231,8 +233,8 @@ tm_frame_map_lookup(struct tm_frame_map* self, uintptr_t addr)
     /* Look up frame table from directory hierarchy */
 
     while (!reached_tbl(shiftbits)) {
-        struct tm_frame_dir* dir = load_dir(entry);
-        if (!dir) {
+        struct tm_frame_dir* dir = load_dir(entry, error);
+        if (picotm_error_is_set(error)) {
             return NULL;
         }
         entry = dir->entry + next_dir_index(addr, &shiftbits);
@@ -240,8 +242,8 @@ tm_frame_map_lookup(struct tm_frame_map* self, uintptr_t addr)
 
     /* Look up frame from frame table */
 
-    struct tm_frame_tbl* tbl = load_tbl(entry, addr);
-    if (!tbl) {
+    struct tm_frame_tbl* tbl = load_tbl(entry, addr, error);
+    if (picotm_error_is_set(error)) {
         return NULL;
     }
     return tbl->frame + tbl_index(addr, shiftbits);
