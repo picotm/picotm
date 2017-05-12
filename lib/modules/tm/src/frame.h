@@ -7,6 +7,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
+struct picotm_error;
+
 /**
  * \cond impl || tm_impl
  * \ingroup tm_impl
@@ -38,8 +40,9 @@ tm_frame_buffer(const struct tm_frame* frame);
 unsigned long
 tm_frame_flags(const struct tm_frame* frame);
 
-int
-tm_frame_try_lock(struct tm_frame* frame, const void* owner);
+void
+tm_frame_try_lock(struct tm_frame* frame, const void* owner,
+                  struct picotm_error* error);
 
 void
 tm_frame_unlock(struct tm_frame* frame);

@@ -45,8 +45,9 @@ struct tm_vmem_tx {
 /**
  * Initializes a memory transaction.
  */
-int tm_vmem_tx_init(struct tm_vmem_tx* vmem_tx, struct tm_vmem* vmem,
-                    unsigned long module);
+void
+tm_vmem_tx_init(struct tm_vmem_tx* vmem_tx, struct tm_vmem* vmem,
+                unsigned long module);
 
 /**
  * Releases all memory and resources allocated by the transaction. The
@@ -58,35 +59,37 @@ void tm_vmem_tx_release(struct tm_vmem_tx* vmem_tx);
 /**
  * Executes a load operation.
  */
-int tm_vmem_tx_ld(struct tm_vmem_tx* vmem_tx, uintptr_t addr,
-                  void* buf, size_t siz);
+void
+tm_vmem_tx_ld(struct tm_vmem_tx* vmem_tx, uintptr_t addr, void* buf,
+              size_t siz, struct picotm_error* error);
 
 /**
  * Executes a store operation.
  */
-int tm_vmem_tx_st(struct tm_vmem_tx* vmem_tx, uintptr_t addr,
-                  const void* buf, size_t siz);
+void
+tm_vmem_tx_st(struct tm_vmem_tx* vmem_tx, uintptr_t addr, const void* buf,
+              size_t siz, struct picotm_error* error);
 
 /**
  * Executes a load-store operation.
  */
-int
+void
 tm_vmem_tx_ldst(struct tm_vmem_tx* vmem_tx, uintptr_t laddr, uintptr_t saddr,
-                size_t siz);
+                size_t siz, struct picotm_error* error);
 
 /**
  * Privatizes a region of memory.
  */
-int
+void
 tm_vmem_tx_privatize(struct tm_vmem_tx* vmem_tx, uintptr_t addr, size_t siz,
-                     unsigned long flags);
+                     unsigned long flags, struct picotm_error* error);
 
 /**
  * Privatizes a region of memory.
  */
-int
+void
 tm_vmem_tx_privatize_c(struct tm_vmem_tx* vmem_tx, uintptr_t addr, int c,
-                       unsigned long flags);
+                       unsigned long flags, struct picotm_error* error);
 
 /**
  * Acquires exclusive access to the frames of this transaction.

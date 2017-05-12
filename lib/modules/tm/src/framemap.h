@@ -16,6 +16,8 @@
  * \endcond
  */
 
+struct picotm_error;
+
 /*
  * Frame table
  */
@@ -61,11 +63,12 @@ struct tm_frame_map {
     struct tm_frame_tld tld;
 };
 
-int
+void
 tm_frame_map_init(struct tm_frame_map* self);
 
 void
 tm_frame_map_uninit(struct tm_frame_map* self);
 
 struct tm_frame*
-tm_frame_map_lookup(struct tm_frame_map* self, uintptr_t addr);
+tm_frame_map_lookup(struct tm_frame_map* self, uintptr_t addr,
+                    struct picotm_error* error);
