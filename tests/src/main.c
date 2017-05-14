@@ -15,100 +15,7 @@
 #include "tm_test.h"
 #include "vfs_test.h"
 
-/* Note:
- *
- * This program needs a directory ./testdir with the files
- *
- *   testfile.bin      (1 MiB, random)
- *   testfile-100.bin  (100 MiB, random)
- *   testfile2.bin     (1 MiB, all zeros)
- *   testfile2-100.bin (100MiB, all zeros)
- *
- * Possible segfault on sedell17:
- *
- *   ./tlctest -o6 -c60000 -btime -n1 -v1 -I100 -N -t15
- *
- * Bug is not reproducible on sedell05.
- */
-
 static const struct test_func test[] = {
-#if 0
-    /* Test 0 */
-    {"malloc_test_1", tanger_stm_malloc_test_1, NULL, NULL},
-    {"malloc_test_2", tanger_stm_malloc_test_2, NULL, NULL},
-    {"malloc_test_3", tanger_stm_malloc_test_3, NULL, NULL},
-    {"malloc_test_4", tanger_stm_malloc_test_4, NULL, NULL},
-    {"malloc_test_5", tanger_stm_malloc_test_5, NULL, NULL},
-    {"malloc_test_6", tanger_stm_malloc_test_6, NULL, NULL},
-    {"malloc_test_7", tanger_stm_malloc_test_7, NULL, NULL},
-    {"malloc_test_8", tanger_stm_malloc_test_8, NULL, NULL},
-    /* Test 8 */
-    {"fdio_test_1", tanger_stm_fdio_test_1, NULL, NULL},
-    {"fdio_test_2", tanger_stm_fdio_test_2, NULL, NULL},
-    {"fdio_test_3", tanger_stm_fdio_test_3, NULL, NULL},
-    {"fdio_test_4", tanger_stm_fdio_test_4, NULL, NULL},
-    {"fdio_test_5", tanger_stm_fdio_test_5, NULL, NULL},
-    {"fdio_test_6", tanger_stm_fdio_test_6, NULL, NULL},
-    {"fdio_test_7", tanger_stm_fdio_test_7, NULL, NULL},
-    {"fdio_test_8", tanger_stm_fdio_test_8, NULL, NULL},
-    {"fdio_test_9", tanger_stm_fdio_test_9, NULL, NULL},
-    {"fdio_test_10", tanger_stm_fdio_test_10, NULL, NULL},
-    {"fdio_test_11", tanger_stm_fdio_test_11, NULL, NULL},
-    {"fdio_test_12", tanger_stm_fdio_test_12, NULL, NULL},
-    {"fdio_test_13", tanger_stm_fdio_test_13, NULL, NULL},
-    {"fdio_test_14", tanger_stm_fdio_test_14, NULL, NULL},
-    {"fdio_test_15", tanger_stm_fdio_test_15, NULL, NULL},
-    {"fdio_test_16", tanger_stm_fdio_test_16, NULL, NULL},
-    {"fdio_test_17", tanger_stm_fdio_test_17, NULL, NULL},
-    {"fdio_test_18", tanger_stm_fdio_test_18, NULL, NULL},
-    {"fdio_test_19", tanger_stm_fdio_test_19, NULL, NULL},
-    {"fdio_test_20", tanger_stm_fdio_test_20, tanger_stm_fdio_test_20_pre, tanger_stm_fdio_test_20_post},
-    {"fdio_test_21", tanger_stm_fdio_test_21, tanger_stm_fdio_test_21_pre, tanger_stm_fdio_test_21_post},
-    {"fdio_test_22", tanger_stm_fdio_test_22, tanger_stm_fdio_test_22_pre, tanger_stm_fdio_test_22_post},
-    {"fdio_test_23", tanger_stm_fdio_test_23, tanger_stm_fdio_test_23_pre, tanger_stm_fdio_test_23_post},
-    {"fdio_test_24", tanger_stm_fdio_test_24, tanger_stm_fdio_test_24_pre, tanger_stm_fdio_test_24_post},
-    {"fdio_test_25", tanger_stm_fdio_test_25, tanger_stm_fdio_test_25_pre, tanger_stm_fdio_test_25_post},
-    {"fdio_test_26", tanger_stm_fdio_test_26, tanger_stm_fdio_test_26_pre, tanger_stm_fdio_test_26_post},
-    {"fdio_test_27", tanger_stm_fdio_test_27, tanger_stm_fdio_test_27_pre, tanger_stm_fdio_test_27_post},
-    {"fdio_test_28", tanger_stm_fdio_test_28, tanger_stm_fdio_test_28_pre, tanger_stm_fdio_test_28_post},
-    {"fdio_test_29", tanger_stm_fdio_test_29, tanger_stm_fdio_test_29_pre, tanger_stm_fdio_test_29_post},
-    {"fdio_test_30", tanger_stm_fdio_test_30, tanger_stm_fdio_test_30_pre, tanger_stm_fdio_test_30_post},
-    {"fdio_test_31", tanger_stm_fdio_test_31, tanger_stm_fdio_test_31_pre, tanger_stm_fdio_test_31_post},
-    {"fdio_test_32", tanger_stm_fdio_test_32, tanger_stm_fdio_test_32_pre, tanger_stm_fdio_test_32_post},
-    {"fdio_test_33", tanger_stm_fdio_test_33, tanger_stm_fdio_test_33_pre, tanger_stm_fdio_test_33_post},
-    {"fdio_test_34", tanger_stm_fdio_test_34, tanger_stm_fdio_test_34_pre, tanger_stm_fdio_test_34_post},
-    {"fdio_test_35", tanger_stm_fdio_test_35, tanger_stm_fdio_test_35_pre, tanger_stm_fdio_test_35_post},
-    {"fdio_test_36", tanger_stm_fdio_test_36, tanger_stm_fdio_test_36_pre, tanger_stm_fdio_test_36_post},
-    {"fdio_test_37", tanger_stm_fdio_test_37, tanger_stm_fdio_test_37_pre, tanger_stm_fdio_test_37_post},
-    {"fdio_test_38", tanger_stm_fdio_test_38, tanger_stm_fdio_test_38_pre, tanger_stm_fdio_test_38_post},
-    {"fdio_test_39", tanger_stm_fdio_test_39, tanger_stm_fdio_test_39_pre, tanger_stm_fdio_test_39_post},
-    {"fdio_test_40", tanger_stm_fdio_test_40, tanger_stm_fdio_test_40_pre, tanger_stm_fdio_test_40_post},
-    {"fdio_test_41", tanger_stm_fdio_test_41, tanger_stm_fdio_test_41_pre, tanger_stm_fdio_test_41_post},
-    {"fdio_test_42", tanger_stm_fdio_test_42, tanger_stm_fdio_test_42_pre, tanger_stm_fdio_test_42_post},
-    {"fdio_test_43", tanger_stm_fdio_test_43, tanger_stm_fdio_test_43_pre, tanger_stm_fdio_test_43_post},
-    {"fdio_test_44", tanger_stm_fdio_test_44, tanger_stm_fdio_test_44_pre, tanger_stm_fdio_test_44_post},
-    {"fdio_test_45", tanger_stm_fdio_test_45, tanger_stm_fdio_test_45_pre, tanger_stm_fdio_test_45_post},
-    {"fdio_test_46", tanger_stm_fdio_test_46, tanger_stm_fdio_test_46_pre, tanger_stm_fdio_test_46_post},
-    {"fdio_test_47", tanger_stm_fdio_test_47, tanger_stm_fdio_test_47_pre, tanger_stm_fdio_test_47_post},
-    {"fdio_test_48", tanger_stm_fdio_test_48, tanger_stm_fdio_test_48_pre, tanger_stm_fdio_test_48_post},
-    {"fdio_test_49", tanger_stm_fdio_test_49, tanger_stm_fdio_test_49_pre, tanger_stm_fdio_test_49_post},
-    {"fdio_test_52", tanger_stm_fdio_test_50, tanger_stm_fdio_test_50_pre, tanger_stm_fdio_test_50_post},
-    {"fdio_test_51", tanger_stm_fdio_test_51, tanger_stm_fdio_test_51_pre, tanger_stm_fdio_test_51_post},
-    {"fdio_test_52", tanger_stm_fdio_test_52, tanger_stm_fdio_test_52_pre, tanger_stm_fdio_test_52_post},
-    /* Test 60 */
-    {"fs_test_1", tanger_stm_fs_test_1, NULL, NULL},
-    /* Test 61 */
-    {"socket_test_1", tanger_stm_socket_test_1, NULL, NULL},
-    {"socket_test_2", tanger_stm_socket_test_2, NULL, NULL},
-    {"socket_test_3", tanger_stm_socket_test_3, NULL, NULL},
-    {"socket_test_4", tanger_stm_socket_test_4, NULL, NULL},
-    /* Test 65 */
-    {"error_test_1", tanger_stm_error_test_1, NULL, NULL},
-    {"error_test_2", tanger_stm_error_test_2, NULL, NULL},
-    {"error_test_3", tanger_stm_error_test_3, NULL, NULL},
-    /* Test 68 */
-    {"malloc_test_9", tanger_stm_malloc_test_9, NULL, NULL}
-#else
     /* Test 0 */
     {"malloc_test_1", malloc_test_1, NULL, NULL},
     {"malloc_test_2", malloc_test_2, NULL, NULL},
@@ -177,7 +84,6 @@ static const struct test_func test[] = {
     {"malloc_test_9", malloc_test_9, malloc_test_9_pre, NULL},
     /* Test 62 */
     {"tm_test_1", tm_test_1, tm_test_1_pre, tm_test_1_post}
-#endif
 };
 
 static enum boundary_type g_btype = BOUND_CYCLES;
