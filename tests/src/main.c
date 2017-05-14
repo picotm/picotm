@@ -242,7 +242,7 @@ opt_verbose(const char *optarg)
 static int
 opt_help(const char *optarg)
 {
-    printf("Usage: tlctest [options]\n"
+    printf("Usage: picotm-test [options]\n"
            "Options:\n"
            "  -V                            About this program\n"
            "  -h                            This help\n"
@@ -270,7 +270,7 @@ opt_help(const char *optarg)
 static int
 opt_version(const char *optarg)
 {
-    printf("Taglibc test application\n");
+    printf("picotm test application\n");
     printf("This software is licensed under the Mozilla Public License, v. 2.0.\n");
 
     return 1;
@@ -299,7 +299,7 @@ parse_opts(int argc, char *argv[])
         ['v'] = opt_verbose};
 
     if (argc < 2) {
-        printf("enter `tlctest -h` for a list of command-line options\n");
+        printf("enter `picotm-test -h` for a list of command-line options\n");
         return 1;
     }
 
