@@ -12,6 +12,10 @@ void _exit_tx(int status);
 
 PICOTM_NOTHROW
 int
+chdir_tx(const char* path);
+
+PICOTM_NOTHROW
+int
 close_tx(int fildes);
 
 PICOTM_NOTHROW
@@ -20,7 +24,23 @@ dup_tx(int fildes);
 
 PICOTM_NOTHROW
 int
+dup2_tx(int fildes, int fildes2);
+
+PICOTM_NOTHROW
+int
+fchdir_tx(int fildes);
+
+PICOTM_NOTHROW
+int
 fsync_tx(int fildes);
+
+PICOTM_NOTHROW
+char*
+getcwd_tx(char* buf, size_t size);
+
+PICOTM_NOTHROW
+int
+link_tx(const char* path1, const char* path2);
 
 PICOTM_NOTHROW
 off_t
