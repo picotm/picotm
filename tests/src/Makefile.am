@@ -15,4 +15,6 @@ tlctest_SOURCES = fdio_test.c \
                   testhlp.c \
                   testhlp.h \
                   tm_test.c \
-                  tm_test.h
+                  tm_test.h \
+                  vfs_test.c \
+                  vfs_test.h
