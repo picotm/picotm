@@ -12,7 +12,6 @@
 #include "fdio_test.h"
 #include "fs_test.h"
 #include "malloc_test.h"
-#include "socket_test.h"
 #include "test.h"
 #include "tm_test.h"
 
