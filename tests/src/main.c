@@ -10,10 +10,10 @@
 #include <picotm/picotm-libc.h>
 #include <unistd.h>
 #include "fdio_test.h"
-#include "fs_test.h"
 #include "malloc_test.h"
 #include "test.h"
 #include "tm_test.h"
+#include "vfs_test.h"
 
 /* Note:
  *
@@ -172,8 +172,10 @@ static const struct test_func test[] = {
     {"fdio_test_51", fdio_test_51, fdio_test_51_pre, fdio_test_51_post},
     {"fdio_test_52", fdio_test_52, fdio_test_52_pre, fdio_test_52_post},
     /* Test 60 */
+    {"vfs_test_1", vfs_test_1, vfs_test_1_pre, vfs_test_1_post},
+    /* Test 61 */
     {"malloc_test_9", malloc_test_9, malloc_test_9_pre, NULL},
-    /* Test 9 */
+    /* Test 62 */
     {"tm_test_1", tm_test_1, tm_test_1_pre, tm_test_1_post}
 #endif
 };
