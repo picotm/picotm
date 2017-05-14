@@ -27,7 +27,7 @@ do
 
   	    for threads in `seq $ncores`
 	      do
-	          ./tlctest $OPT -I$iterations -o$test -t$threads >> ${fullpath}.$$
+	          ./picotm-test $OPT -I$iterations -o$test -t$threads >> ${fullpath}.$$
   	    done
 
   	    mv ${fullpath}.$$ ${fullpath}
@@ -52,7 +52,7 @@ do
 
             for threads in `seq $ncores`
             do
-                ./tlctest $OPT -I$iterations -R$ccmode -o$test -t$threads >> ${fullpath}.$$
+                ./picotm-test $OPT -I$iterations -R$ccmode -o$test -t$threads >> ${fullpath}.$$
             done
 
             mv ${fullpath}.$$ ${fullpath}
@@ -72,7 +72,7 @@ do
 
         for threads in `seq $ncores`
         do
-            ./tlctest $OPT -I$iterations -R$ccmode -o$test -t$threads >> ${fullpath}.$$
+            ./picotm-test $OPT -I$iterations -R$ccmode -o$test -t$threads >> ${fullpath}.$$
         done
 
         mv ${fullpath}.$$ ${fullpath}
