@@ -129,7 +129,7 @@ PICOTM_NOTHROW
 enum picotm_error_status
 picotm_error_status();
 
-PICOTM_EXPORT
+PICOTM_NOTHROW
 /**
  * Returns the current error's recoverable status.
  *
@@ -141,7 +141,7 @@ PICOTM_EXPORT
 bool
 picotm_error_is_non_recoverable(void);
 
-PICOTM_EXPORT
+PICOTM_NOTHROW
 /**
  * Returns the current picotm error code.
  *
@@ -153,7 +153,7 @@ PICOTM_EXPORT
 enum picotm_error_code
 picotm_error_as_error_code(void);
 
-PICOTM_EXPORT
+PICOTM_NOTHROW
 /**
  * Returns the current picotm errno code.
  *
