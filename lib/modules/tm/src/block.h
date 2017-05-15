@@ -7,6 +7,13 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/**
+ * \cond impl || tm_impl
+ * \ingroup tm_impl
+ * \file
+ * \endcond
+ */
+
 /* TODO: The block size should be independent from the properties of
  * malloc. This requires a clean-up in the page-handling algorithm.
  *
