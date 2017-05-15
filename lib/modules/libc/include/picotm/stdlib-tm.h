@@ -7,6 +7,8 @@
 #include <picotm/compiler.h>
 #include <stdlib.h>
 
+PICOTM_BEGIN_DECLS
+
 PICOTM_NOTHROW
 /**
  * Executes free() within a transaction.
@@ -53,3 +55,5 @@ PICOTM_NOTHROW
  */
 int
 rand_r_tm(unsigned int* seed);
+
+PICOTM_END_DECLS

@@ -7,6 +7,8 @@
 #include <fcntl.h>
 #include <picotm/compiler.h>
 
+PICOTM_BEGIN_DECLS
+
 PICOTM_NOTHROW
 int
 creat_tx(const char* path, mode_t mode);
@@ -18,3 +20,5 @@ fcntl_tx(int fildes, int cmd, ...);
 PICOTM_NOTHROW
 int
 open_tx(const char* path, int oflag, ...);
+
+PICOTM_END_DECLS

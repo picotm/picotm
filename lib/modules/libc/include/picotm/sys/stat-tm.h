@@ -7,6 +7,8 @@
 #include <picotm/compiler.h>
 #include <sys/stat.h>
 
+PICOTM_BEGIN_DECLS
+
 PICOTM_NOTHROW
 int
 chmod_tm(const char* path, mode_t mode);
@@ -36,3 +38,5 @@ mknod_tm(const char* path, mode_t mode, dev_t dev);
 PICOTM_NOTHROW
 int
 stat_tm(const char* path, struct stat* buf);
+
+PICOTM_END_DECLS

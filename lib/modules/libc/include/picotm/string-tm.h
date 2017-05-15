@@ -7,6 +7,8 @@
 #include <picotm/compiler.h>
 #include <string.h>
 
+PICOTM_BEGIN_DECLS
+
 /*
  * Memory functions
  */
@@ -218,3 +220,5 @@ PICOTM_NOTHROW
 char*
 strtok_r_tm(char* restrict str, const char* restrict delim,
             char** restrict saveptr);
+
+PICOTM_END_DECLS
