@@ -9,6 +9,13 @@
 #include <stdint.h>
 #include <sys/queue.h>
 
+/**
+ * \cond impl || tm_impl
+ * \ingroup tm_impl
+ * \file
+ * \endcond
+ */
+
 struct picotm_error;
 struct tm_page;
 struct tm_vmem;

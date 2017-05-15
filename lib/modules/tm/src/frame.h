@@ -8,6 +8,13 @@
 #include <stddef.h>
 
 /**
+ * \cond impl || tm_impl
+ * \ingroup tm_impl
+ * \file
+ * \endcond
+ */
+
+/**
  * |struct tm_frame| represents a single contiguous block
  * of main memory.
  */

@@ -11,6 +11,7 @@ libpicotm_tm_la_SOURCES = frame.c \
                           module.c \
                           module.h \
                           tm.c \
+                          tm.h \
                           vmem.c \
                           vmem.h \
                           vmem_tx.c \

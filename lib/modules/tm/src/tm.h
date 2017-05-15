@@ -12,6 +12,7 @@
  */
 
 /**
- * Computes the number of elements in a C array
+ * \cond impl || tm_impl
+ * \defgroup tm_impl Transactional Memory Implementation
+ * \endcond
  */
-#define arraylen(_array)    (sizeof(_array) / sizeof((_array)[0]))

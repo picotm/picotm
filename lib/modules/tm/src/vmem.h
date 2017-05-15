@@ -9,6 +9,13 @@
 #include "framemap.h"
 
 /**
+ * \cond impl || tm_impl
+ * \ingroup tm_impl
+ * \file
+ * \endcond
+ */
+
+/**
  * |struct tm_vmem| represents main memory; the resource that
  * the TM module maintains.
  */

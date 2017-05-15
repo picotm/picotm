@@ -9,6 +9,13 @@
 #include "block.h"
 #include "frame.h"
 
+/**
+ * \cond impl || tm_impl
+ * \ingroup tm_impl
+ * \file
+ * \endcond
+ */
+
 /*
  * Frame table
  */

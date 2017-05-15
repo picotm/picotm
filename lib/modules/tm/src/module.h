@@ -7,6 +7,13 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/**
+ * \cond impl || tm_impl
+ * \ingroup tm_impl
+ * \file
+ * \endcond
+ */
+
 void
 tm_module_load(uintptr_t addr, void* buf, size_t siz);
 
