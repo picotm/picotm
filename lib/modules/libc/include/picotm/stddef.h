@@ -7,6 +7,8 @@
 #include <stddef.h>
 #include <picotm/picotm-tm.h>
 
+PICOTM_BEGIN_DECLS
+
 PICOTM_TM_LOAD_TX(ptrdiff_t, ptrdiff_t);
 PICOTM_TM_LOAD_TX(size_t, size_t);
 PICOTM_TM_LOAD_TX(wchar_t, wchar_t);
@@ -14,3 +16,5 @@ PICOTM_TM_LOAD_TX(wchar_t, wchar_t);
 PICOTM_TM_STORE_TX(ptrdiff_t, ptrdiff_t);
 PICOTM_TM_STORE_TX(size_t, size_t);
 PICOTM_TM_STORE_TX(wchar_t, wchar_t);
+
+PICOTM_END_DECLS

@@ -7,6 +7,8 @@
 #include <picotm/compiler.h>
 #include <sys/socket.h>
 
+PICOTM_BEGIN_DECLS
+
 PICOTM_NOTHROW
 int
 accept_tm(int socket, struct sockaddr* address, socklen_t* address_len);
@@ -26,3 +28,5 @@ send_tm(int socket, const void* buffer, size_t length, int flags);
 PICOTM_NOTHROW
 ssize_t
 recv_tm(int socket, void* buffer, size_t length, int flags);
+
+PICOTM_END_DECLS

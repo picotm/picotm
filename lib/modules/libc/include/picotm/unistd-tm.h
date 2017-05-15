@@ -7,6 +7,8 @@
 #include <picotm/compiler.h>
 #include <unistd.h>
 
+PICOTM_BEGIN_DECLS
+
 PICOTM_NOTHROW
 int
 chdir_tm(const char* path);
@@ -42,3 +44,5 @@ unlink_tm(const char* path);
 PICOTM_NOTHROW
 ssize_t
 write_tm(int fildes, const void* buf, size_t nbyte);
+
+PICOTM_END_DECLS

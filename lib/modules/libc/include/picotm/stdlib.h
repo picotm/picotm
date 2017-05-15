@@ -8,6 +8,8 @@
 #include <picotm/picotm-tm.h>
 #include <stdlib.h>
 
+PICOTM_BEGIN_DECLS
+
 PICOTM_TM_LOAD_TX(div_t, div_t);
 PICOTM_TM_LOAD_TX(ldiv_t, ldiv_t);
 PICOTM_TM_LOAD_TX(lldiv_t, lldiv_t);
@@ -87,3 +89,5 @@ PICOTM_NOTHROW
  */
 int
 rand_r_tx(unsigned int* seed);
+
+PICOTM_END_DECLS

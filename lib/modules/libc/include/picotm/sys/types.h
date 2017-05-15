@@ -7,6 +7,8 @@
 #include <picotm/picotm-tm.h>
 #include <sys/types.h>
 
+PICOTM_BEGIN_DECLS
+
 PICOTM_TM_LOAD_TX(blkcnt_t, blkcnt_t);
 PICOTM_TM_LOAD_TX(blksize_t, blksize_t);
 PICOTM_TM_LOAD_TX(clock_t, clock_t);
@@ -49,3 +51,5 @@ PICOTM_TM_STORE_TX(ssize_t, ssize_t);
 PICOTM_TM_STORE_TX(suseconds_t, suseconds_t);
 PICOTM_TM_STORE_TX(time_t, time_t);
 PICOTM_TM_STORE_TX(uid_t, uid_t);
+
+PICOTM_END_DECLS

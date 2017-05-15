@@ -7,6 +7,8 @@
 #include <picotm/compiler.h>
 #include <unistd.h>
 
+PICOTM_BEGIN_DECLS
+
 PICOTM_NOTHROW PICOTM_NORETURN
 void _exit_tx(int status);
 
@@ -83,3 +85,5 @@ unlink_tx(const char* path);
 PICOTM_NOTHROW
 ssize_t
 write_tx(int fildes, const void* buf, size_t nbyte);
+
+PICOTM_END_DECLS
