@@ -7,6 +7,13 @@
 #include <fenv.h>
 #include <stdbool.h>
 
+/**
+ * \cond impl || libm_impl
+ * \ingroup libm_impl
+ * \file
+ * \endcond
+ */
+
 struct picotm_error;
 
 /**
