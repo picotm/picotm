@@ -5,6 +5,13 @@
 #pragma once
 
 /**
+ * \cond impl || libm_impl
+ * \ingroup libm_impl
+ * \file
+ * \endcond
+ */
+
+/**
  * Wraps math functions in error-handling helpers.
  */
 #define MATHERR(type_, res_, func_ , except_)   \

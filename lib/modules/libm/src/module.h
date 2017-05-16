@@ -4,8 +4,21 @@
 
 #pragma once
 
+/**
+ * \cond impl || libm_impl
+ * \ingroup libm_impl
+ * \file
+ * \endcond
+ */
+
 void
 fpu_module_save_fenv(void);
 
 void
 fpu_module_save_fexcept(void);
+
+/**
+ * \cond impl || libm_impl
+ * \defgroup libm_impl libm Implementation
+ * \endcond
+ */

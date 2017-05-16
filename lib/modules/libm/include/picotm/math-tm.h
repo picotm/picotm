@@ -9,86 +9,93 @@
 
 PICOTM_BEGIN_DECLS
 
+/**
+ * \ingroup group_libm
+ * \file
+ *
+ * \brief Transactional wrappers for interfaces of <math.h>.
+ */
+
 PICOTM_NOTHROW
 /**
- * Executes frexp() within a transaction.
+ * Variant of frexp_tx() that operates on transactional memory.
  */
 double
 frexp_tm(double num, int* exp);
 
 PICOTM_NOTHROW
 /**
- * Executes frexpf() within a transaction.
+ * Variant of frexpf_tx() that operates on transactional memory.
  */
 float
 frexpf_tm(float num, int* exp);
 
 PICOTM_NOTHROW
 /**
- * Executes frexpl() within a transaction.
+ * Variant of frexpl_tx() that operates on transactional memory.
  */
 long double
 frexpl_tm(long double num, int* exp);
 
 PICOTM_NOTHROW
 /**
- * Executes modf() within a transaction.
+ * Variant of modf_tx() that operates on transactional memory.
  */
 double
 modf_tm(double x, double* iptr);
 
 PICOTM_NOTHROW
 /**
- * Executes modff() within a transaction.
+ * Variant of modff_tx() that operates on transactional memory.
  */
 float
 modff_tm(float x, float* iptr);
 
 PICOTM_NOTHROW
 /**
- * Executes modfl() within a transaction.
+ * Variant of modfl_tx() that operates on transactional memory.
  */
 long double
 modfl_tm(long double x, long double* iptr);
 
 PICOTM_NOTHROW
 /**
- * Executes nan() within a transaction.
+ * Variant of nan_tx() that operates on transactional memory.
  */
 double
 nan_tm(const char* tagp);
 
 PICOTM_NOTHROW
 /**
- * Executes nanf() within a transaction.
+ * Variant of nanf_tx() that operates on transactional memory.
  */
 float
 nanf_tm(const char* tagp);
 
 PICOTM_NOTHROW
 /**
- * Executes nanl() within a transaction.
+ * Variant of nanl_tx() that operates on transactional memory.
  */
 long double
 nanl_tm(const char* tagp);
 
 PICOTM_NOTHROW
 /**
- * Executes remquo() within a transaction.
+ * Variant of remquo_tx() that operates on transactional memory.
  */
 double
 remquo_tm(double x, double y, int* quo);
 
 PICOTM_NOTHROW
 /**
- * Executes remquof() within a transaction.
+ * Variant of remquof_tx() that operates on transactional memory.
  */
 float
 remquof_tm(float x, float y, int* quo);
 
 PICOTM_NOTHROW
 /**
- * Executes remquol() within a transaction.
+ * Variant of remquol_tx() that operates on transactional memory.
  */
 long double
 remquol_tm(long double x, long double y, int* quo);
