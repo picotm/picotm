@@ -7,6 +7,14 @@
 #include "counter.h"
 #include "picotm/picotm-libc.h"
 
+/**
+ * \cond impl || libc_impl || libc_impl_fd
+ * \ingroup libc_impl
+ * \ingroup libc_impl_fd
+ * \file
+ * \endcond
+ */
+
 #define FDTX_FL_LOCALSTATE 1L /** \brief Signals local state changes */
 
 struct fcntlop;

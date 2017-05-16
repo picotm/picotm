@@ -6,6 +6,14 @@
 
 #include <sys/types.h>
 
+/**
+ * \cond impl || libc_impl || libc_impl_vfs
+ * \ingroup libc_impl
+ * \ingroup libc_impl_vfs
+ * \file
+ * \endcond
+ */
+
 struct stat;
 
 int
@@ -52,3 +60,9 @@ vfs_module_stat(const char* path, struct stat* buf);
 
 int
 vfs_module_unlink(const char* path);
+
+/**
+ * \cond impl || libc_impl || libc_impl_vfs
+ * \defgroup libc_impl_vfs libc File-System Support
+ * \endcond
+ */

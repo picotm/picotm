@@ -6,9 +6,20 @@
 
 #include <stddef.h>
 
+/**
+ * \cond impl || libc_impl || libc_impl_allocator
+ * \ingroup libc_impl
+ * \ingroup libc_impl_allocator
+ * \file
+ * \endcond
+ */
+
 struct event;
 struct picotm_error;
 
+/**
+ * A transaction on the memory allocation.
+ */
 struct allocator_tx {
     unsigned long module;
 

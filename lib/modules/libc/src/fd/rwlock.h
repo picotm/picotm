@@ -8,6 +8,14 @@
 #include <pthread.h>
 #include "errcode.h"
 
+/**
+ * \cond impl || libc_impl || libc_impl_fd
+ * \ingroup libc_impl
+ * \ingroup libc_impl_fd
+ * \file
+ * \endcond
+ */
+
 enum rwstate {
     RW_NOLOCK = 0,
     RW_RDLOCK = 0x1,

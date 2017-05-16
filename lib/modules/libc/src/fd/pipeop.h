@@ -5,6 +5,14 @@
 #ifndef PIPEOP_H
 #define PIPEOP_H
 
+/**
+ * \cond impl || libc_impl || libc_impl_fd
+ * \ingroup libc_impl
+ * \ingroup libc_impl_fd
+ * \file
+ * \endcond
+ */
+
 struct pipeop
 {
     int pipefd[2];

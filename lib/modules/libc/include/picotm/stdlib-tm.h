@@ -9,35 +9,44 @@
 
 PICOTM_BEGIN_DECLS
 
+/**
+ * \ingroup group_libc
+ * \file
+ *
+ * \brief Transactional wrappers for interfaces of <stdlib.h>.
+ */
+
 PICOTM_NOTHROW
 /**
- * Executes free() within a transaction.
+ * Variant of free_tx() that operates on transactional memory.
  */
-void free_tm(void* ptr);
+void
+free_tm(void* ptr);
 
 PICOTM_EXPORT
 /**
- * Executes mkdtemp() within a transaction.
+ * Variant of mkdtemp_tx() that operates on transactional memory.
  */
 char*
 mkdtemp_tm(char* template);
 
 PICOTM_EXPORT
 /**
- * Executes mkstemp() within a transaction.
+ * Variant of mkstemp_tx() that operates on transactional memory.
  */
 int
 mkstemp_tm(char* template);
 
 PICOTM_NOTHROW
 /**
- * Executes posix_memalign() within a transaction.
+ * Variant of posix_memalign_tx() that operates on transactional memory.
  */
-int posix_memalign_tm(void** memptr, size_t alignment, size_t size);
+int
+posix_memalign_tm(void** memptr, size_t alignment, size_t size);
 
 PICOTM_NOTHROW
 /**
- * Executes qsort() within a transaction.
+ * Variant of qsort_tx() that operates on transactional memory.
  */
 void
 qsort_tm(void* base, size_t nel, size_t width,
@@ -45,13 +54,14 @@ qsort_tm(void* base, size_t nel, size_t width,
 
 PICOTM_NOTHROW
 /**
- * Executes realloc() within a transaction.
+ * Variant of realloc_tx() that operates on transactional memory.
  */
-void* realloc_tm(void* ptr, size_t size);
+void*
+realloc_tm(void* ptr, size_t size);
 
 PICOTM_NOTHROW
 /**
- * Executes rand_r() within a transaction.
+ * Variant of rand_r_tx() that operates on transactional memory.
  */
 int
 rand_r_tm(unsigned int* seed);

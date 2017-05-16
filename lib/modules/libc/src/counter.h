@@ -9,6 +9,13 @@
 #include "types.h"
 
 /**
+ * \cond impl || libc_impl
+ * \ingroup libc_impl
+ * \file
+ * \endcond
+ */
+
+/**
  * \brief Counter with locking
  */
 struct counter

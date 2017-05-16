@@ -7,6 +7,14 @@
 
 #include "ofd.h"
 
+/**
+ * \cond impl || libc_impl || libc_impl_fd
+ * \ingroup libc_impl
+ * \ingroup libc_impl_fd
+ * \file
+ * \endcond
+ */
+
 extern struct ofd ofdtab[MAXNUMFD];
 
 void

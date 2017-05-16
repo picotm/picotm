@@ -7,6 +7,14 @@
 #include <stdbool.h>
 #include "picotm/picotm-libc.h"
 
+/**
+ * \cond impl || libc_impl || libc_impl_error
+ * \ingroup libc_impl
+ * \ingroup libc_impl_error
+ * \file
+ * \endcond
+ */
+
 struct picotm_error;
 
 /**

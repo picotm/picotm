@@ -10,6 +10,13 @@
 
 PICOTM_BEGIN_DECLS
 
+/**
+ * \ingroup group_libc
+ * \file
+ *
+ * \brief Transactional wrappers for interfaces of <stdlib.h>.
+ */
+
 PICOTM_TM_LOAD_TX(div_t, div_t);
 PICOTM_TM_LOAD_TX(ldiv_t, ldiv_t);
 PICOTM_TM_LOAD_TX(lldiv_t, lldiv_t);
@@ -22,56 +29,114 @@ PICOTM_TM_STORE_TX(lldiv_t, lldiv_t);
 /*PICOTM_TM_STORE_TX(size_t, size_t);*/ /* defined in stddef.h */
 /*PICOTM_TM_LOAD_TX(_t, wchar_t);*/ /* defined in stddef.h */
 
-PICOTM_NOTHROW PICOTM_NORETURN
-void _Exit_tx(int status);
+PICOTM_NOTHROW
+PICOTM_NORETURN
+/**
+ * A transaction-safe implementation of [_Exit()][posix::_Exit].
+ *
+ * \bug Calling _Exit() simply terminates the process. It probably should not
+ *      be available in a transaction.
+ *
+ * [posix::_Exit]:
+ *  http://pubs.opengroup.org/onlinepubs/9699919799/functions/_Exit.html
+ */
+void
+_Exit_tx(int status);
 
-PICOTM_NOTHROW PICOTM_NORETURN
-void abort_tx(void);
+PICOTM_NOTHROW
+PICOTM_NORETURN
+/**
+ * A transaction-safe implementation of [abort()][posix::abort].
+ *
+ * \bug Calling abort() simply terminates the process. It probably should not
+ *      be available in a transaction.
+ *
+ * [posix::abort]:
+ *  http://pubs.opengroup.org/onlinepubs/9699919799/functions/abort.html
+ */
+void
+abort_tx(void);
 
 PICOTM_NOTHROW
 /**
- * Executes calloc() within a transaction.
+ * A transaction-safe implementation of [calloc()][posix::calloc].
+ *
+ * [posix::calloc]:
+ *  http://pubs.opengroup.org/onlinepubs/9699919799/functions/calloc.html
  */
-void* calloc_tx(size_t nmemb, size_t size);
+void*
+calloc_tx(size_t nmemb, size_t size);
 
-PICOTM_NOTHROW PICOTM_NORETURN
-void exit_tx(int status);
+PICOTM_NOTHROW
+PICOTM_NORETURN
+/**
+ * A transaction-safe implementation of [exit()][posix::exit].
+ *
+ * \bug Calling exit() simply terminates the process. It probably should not
+ *      be available in a transaction.
+ *
+ * [posix::exit]:
+ *  http://pubs.opengroup.org/onlinepubs/9699919799/functions/exit.html
+ */
+void
+exit_tx(int status);
 
 PICOTM_NOTHROW
 /**
- * Executes free() within a transaction.
+ * A transaction-safe implementation of [free()][posix::free].
+ *
+ * [posix::free]:
+ *  http://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html
  */
-void free_tx(void* ptr);
+void
+free_tx(void* ptr);
 
 PICOTM_NOTHROW
 /**
- * Executes malloc() within a transaction.
+ * A transaction-safe implementation of [malloc()][posix::malloc].
+ *
+ * [posix::malloc]:
+ *  http://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html
  */
-void* malloc_tx(size_t size);
+void*
+malloc_tx(size_t size);
 
 PICOTM_EXPORT
 /**
- * Executes mkdtemp() within a transaction.
+ * A transaction-safe implementation of [mkdtemp()][posix::mkdtemp].
+ *
+ * [posix::mkdtemp]:
+ *  http://pubs.opengroup.org/onlinepubs/9699919799/functions/mkdtemp.html
  */
 char*
 mkdtemp_tx(char* template);
 
 PICOTM_EXPORT
 /**
- * Executes mkstemp() within a transaction.
+ * A transaction-safe implementation of [mkstemp()][posix::mkstemp].
+ *
+ * [posix::mkstemp]:
+ *  http://pubs.opengroup.org/onlinepubs/9699919799/functions/mkstemp.html
  */
 int
 mkstemp_tx(char* template);
 
 PICOTM_NOTHROW
 /**
- * Executes posix_memalign() within a transaction.
+ * A transaction-safe implementation of [posix_memalign()][posix::posix_memalign].
+ *
+ * [posix::posix_memalign]:
+ *  http://pubs.opengroup.org/onlinepubs/9699919799/functions/posix_memalign.html
  */
-int posix_memalign_tx(void** memptr, size_t alignment, size_t size);
+int
+posix_memalign_tx(void** memptr, size_t alignment, size_t size);
 
 PICOTM_NOTHROW
 /**
- * Executes qsort() within a transaction.
+ * A transaction-safe implementation of [qsort()][posix::qsort].
+ *
+ * [posix::qsort]:
+ *  http://pubs.opengroup.org/onlinepubs/9699919799/functions/qsort.html
  */
 void
 qsort_tx(void* base, size_t nel, size_t width,
@@ -79,13 +144,20 @@ qsort_tx(void* base, size_t nel, size_t width,
 
 PICOTM_NOTHROW
 /**
- * Executes realloc() within a transaction.
+ * A transaction-safe implementation of [realloc()][posix::realloc].
+ *
+ * [posix::realloc]:
+ *  http://pubs.opengroup.org/onlinepubs/9699919799/functions/realloc.html
  */
-void* realloc_tx(void* ptr, size_t size);
+void*
+realloc_tx(void* ptr, size_t size);
 
 PICOTM_NOTHROW
 /**
- * Executes rand_r() within a transaction.
+ * A transaction-safe implementation of [rand_r()][posix::rand_r].
+ *
+ * [posix::rand_r]:
+ *  http://pubs.opengroup.org/onlinepubs/9699919799/functions/rand_r.html
  */
 int
 rand_r_tx(unsigned int* seed);

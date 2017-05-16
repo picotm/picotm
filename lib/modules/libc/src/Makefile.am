@@ -78,6 +78,7 @@ libpicotm_c_la_SOURCES = allocator/allocator_tx.c \
                          fd/seekoptab.c \
                          fd/seekoptab.h \
                          libc.c \
+                         libc.h \
                          mutex.c \
                          mutex.h \
                          sched.c \

@@ -9,9 +9,19 @@
 
 PICOTM_BEGIN_DECLS
 
+/**
+ * \ingroup group_libc
+ * \file
+ *
+ * \brief Transactional wrappers for interfaces of <sched.h>.
+ */
+
 PICOTM_NOTHROW
 /**
- * Executes sched_yield() within a transaction.
+ * A transaction-safe implementation of [sched_yield()][posix::sched_yield].
+ *
+ * [posix::sched_yield]:
+ *  http://pubs.opengroup.org/onlinepubs/9699919799/functions/sched_yield.html
  */
 int
 sched_yield_tx(void);

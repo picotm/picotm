@@ -5,6 +5,13 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+/**
+ * \cond impl || libc_impl
+ * \ingroup libc_impl
+ * \file
+ * \endcond
+ */
+
 /** \brief Counter type */
 typedef long long count_type;
 

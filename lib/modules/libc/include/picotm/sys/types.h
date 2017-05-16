@@ -9,6 +9,13 @@
 
 PICOTM_BEGIN_DECLS
 
+/**
+ * \ingroup group_libc
+ * \file
+ *
+ * \brief Transactional wrappers for interfaces of <sys/types.h>.
+ */
+
 PICOTM_TM_LOAD_TX(blkcnt_t, blkcnt_t);
 PICOTM_TM_LOAD_TX(blksize_t, blksize_t);
 PICOTM_TM_LOAD_TX(clock_t, clock_t);

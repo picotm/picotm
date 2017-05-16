@@ -5,6 +5,13 @@
 #ifndef SPINLOCK_H
 #define SPINLOCK_H
 
+/**
+ * \cond impl || libc_impl
+ * \ingroup libc_impl
+ * \file
+ * \endcond
+ */
+
 int
 spinlock_init(pthread_spinlock_t *lock, int pshared);
 

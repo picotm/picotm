@@ -6,8 +6,22 @@
 
 #include <stddef.h>
 
+/**
+ * \cond impl || libc_impl || libc_impl_allocator
+ * \ingroup libc_impl
+ * \ingroup libc_impl_allocator
+ * \file
+ * \endcond
+ */
+
 int
 allocator_module_free(void* mem, size_t usiz);
 
 int
 allocator_module_posix_memalign(void** memptr, size_t alignment, size_t size);
+
+/**
+ * \cond impl || libc_impl || libc_impl_allocator
+ * \defgroup libc_impl_allocator libc Allocator
+ * \endcond
+ */

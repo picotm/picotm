@@ -5,6 +5,14 @@
 #ifndef RANGE_H
 #define RANGE_H
 
+/**
+ * \cond impl || libc_impl || libc_impl_fd
+ * \ingroup libc_impl
+ * \ingroup libc_impl_fd
+ * \file
+ * \endcond
+ */
+
 int
 clamp(int min, int n, int max);
 
