@@ -6,6 +6,13 @@
 
 #include <pthread.h>
 
+/**
+ * \cond impl || lib_impl
+ * \ingroup lib_impl
+ * \file
+ * \endcond
+ */
+
 struct tx;
 
 struct tx_shared {

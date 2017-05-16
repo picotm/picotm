@@ -4,5 +4,18 @@
 
 #pragma once
 
+/**
+ * \cond impl || lib_impl
+ * \ingroup lib_impl
+ * \file
+ * \endcond
+ */
+
 #include <picotm/picotm.h>
 #include <picotm/picotm-module.h>
+
+/**
+ * \cond impl || lib_impl
+ * \defgroup lib_impl picotm Implementation
+ * \endcond
+ */

@@ -7,6 +7,13 @@
 #include <stddef.h>
 
 /**
+ * \cond impl || lib_impl
+ * \ingroup lib_impl
+ * \file
+ * \endcond
+ */
+
+/**
  * Allocate or resize table.
  */
 void*

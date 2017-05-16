@@ -7,6 +7,13 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+/**
+ * \cond impl || lib_impl
+ * \ingroup lib_impl
+ * \file
+ * \endcond
+ */
+
 struct event;
 struct picotm_error;
 

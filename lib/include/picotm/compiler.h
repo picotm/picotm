@@ -4,6 +4,13 @@
 
 #pragma once
 
+/**
+ * \ingroup group_modules
+ * \file
+ *
+ * \brief Contains macros for dealing with compiler extensions.
+ */
+
 #if defined HAVE_SYS_CDEFS_H && HAVE_SYS_CDEFS_H
 #include <sys/cdefs.h>
 #endif

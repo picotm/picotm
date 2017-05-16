@@ -5,6 +5,13 @@
 #pragma once
 
 /**
+ * \cond impl || lib_impl
+ * \ingroup lib_impl
+ * \file
+ * \endcond
+ */
+
+/**
  * Computes the number of elements in a C array
  */
 #define arraylen(_array)    (sizeof(_array) / sizeof((_array)[0]))
