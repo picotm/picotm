@@ -4,6 +4,14 @@
 
 #pragma once
 
+/**
+ * \cond impl || libc_impl || libc_impl_fd
+ * \ingroup libc_impl
+ * \ingroup libc_impl_fd
+ * \file
+ * \endcond
+ */
+
 struct fd_event {
     int fildes;
     int cookie;

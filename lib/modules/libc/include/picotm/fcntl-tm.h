@@ -9,15 +9,31 @@
 
 PICOTM_BEGIN_DECLS
 
+/**
+ * \ingroup group_libc
+ * \file
+ *
+ * \brief Transactional wrappers for interfaces of <fcntl.h>.
+ */
+
 PICOTM_NOTHROW
+/**
+ * Variant of creat_tx() that operates on transactional memory.
+ */
 int
 creat_tm(const char* path, mode_t mode);
 
 PICOTM_NOTHROW
+/**
+ * Variant of fcntl_tx() that operates on transactional memory.
+ */
 int
 fcntl_tm(int fildes, int cmd, ...);
 
 PICOTM_NOTHROW
+/**
+ * Variant of open_tx() that operates on transactional memory.
+ */
 int
 open_tm(const char* path, int oflag, ...);
 

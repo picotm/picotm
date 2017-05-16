@@ -8,6 +8,14 @@
 #include <pthread.h>
 #include <stddef.h>
 
+/**
+ * \cond impl || libc_impl || libc_impl_fd
+ * \ingroup libc_impl
+ * \ingroup libc_impl_fd
+ * \file
+ * \endcond
+ */
+
 enum {
     PGTREE_ENTRY_NBITS = 9,
     PGTREE_ENTRY_MASK  = 0x1ff,

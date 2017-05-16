@@ -6,6 +6,14 @@
 
 #include <stddef.h>
 
+/**
+ * \cond impl || libc_impl || libc_impl_vfs
+ * \ingroup libc_impl
+ * \ingroup libc_impl_vfs
+ * \file
+ * \endcond
+ */
+
 struct event;
 struct picotm_error;
 
@@ -13,6 +21,9 @@ struct vfs_tx_event {
     int cookie;
 };
 
+/**
+ * A file-system transaction.
+ */
 struct vfs_tx {
     unsigned long module;
 

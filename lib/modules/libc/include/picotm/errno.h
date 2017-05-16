@@ -9,6 +9,13 @@
 
 PICOTM_BEGIN_DECLS
 
+/**
+ * \ingroup group_libc
+ * \file
+ *
+ * \brief Transactional wrappers for interfaces of <errno.h>.
+ */
+
 PICOTM_NOTHROW
 /**
  * Returns the address of 'errno'.
@@ -18,7 +25,10 @@ int*
 __errno_location_tx(void);
 
 /**
- * A transaction-safe implementation of 'errno'.
+ * A transaction-safe implementation of [errno][posix::errno].
+ *
+ * [posix::errno]:
+ *  http://pubs.opengroup.org/onlinepubs/9699919799/functions/errno.html
  */
 #define errno_tx    (*(__errno_location_tx()))
 

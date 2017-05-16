@@ -7,6 +7,14 @@
 #include <sys/socket.h>
 #include "fcntlop.h"
 
+/**
+ * \cond impl || libc_impl || libc_impl_fd
+ * \ingroup libc_impl
+ * \ingroup libc_impl_fd
+ * \file
+ * \endcond
+ */
+
 int
 fd_module_accept(int socket,
                  struct sockaddr* address,
@@ -80,3 +88,9 @@ fd_module_sync(void);
 
 ssize_t
 fd_module_write(int fildes, const void* buf, size_t nbyte);
+
+/**
+ * \cond impl || libc_impl || libc_impl_fd
+ * \defgroup libc_impl_fd libc File-Descriptor I/O
+ * \endcond
+ */

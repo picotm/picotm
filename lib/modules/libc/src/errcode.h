@@ -4,6 +4,13 @@
 
 #pragma once
 
+/**
+ * \cond impl || libc_impl
+ * \ingroup libc_impl
+ * \file
+ * \endcond
+ */
+
 enum error_code {
     ERR_SYSTEM = -1,
     ERR_CONFLICT = -2,

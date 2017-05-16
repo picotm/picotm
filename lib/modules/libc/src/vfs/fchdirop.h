@@ -5,6 +5,14 @@
 #ifndef FCHDIROP_H
 #define FCHDIROP_H
 
+/**
+ * \cond impl || libc_impl || libc_impl_vfs
+ * \ingroup libc_impl
+ * \ingroup libc_impl_vfs
+ * \file
+ * \endcond
+ */
+
 struct fchdirop
 {
     int oldcwd;

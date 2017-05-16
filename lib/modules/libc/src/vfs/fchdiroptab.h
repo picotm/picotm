@@ -7,6 +7,14 @@
 
 #include <stddef.h>
 
+/**
+ * \cond impl || libc_impl || libc_impl_vfs
+ * \ingroup libc_impl
+ * \ingroup libc_impl_vfs
+ * \file
+ * \endcond
+ */
+
 struct fchdirop;
 
 unsigned long

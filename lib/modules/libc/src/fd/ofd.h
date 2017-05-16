@@ -12,6 +12,14 @@
 #include "rwlock.h"
 #include "rwlockmap.h"
 
+/**
+ * \cond impl || libc_impl || libc_impl_fd
+ * \ingroup libc_impl
+ * \ingroup libc_impl_fd
+ * \file
+ * \endcond
+ */
+
 #define OFD_FL_UNLINK   (1<<0)
 #define OFD_FL_WANTNEW  (1<<2)
 #define OFD_FL_LAST_BIT (2)

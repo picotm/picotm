@@ -10,6 +10,14 @@
 #include "ofd_tx.h"
 #include "fd_event.h"
 
+/**
+ * \cond impl || libc_impl || libc_impl_fd
+ * \ingroup libc_impl
+ * \ingroup libc_impl_fd
+ * \file
+ * \endcond
+ */
+
 struct pipeop;
 struct openop;
 

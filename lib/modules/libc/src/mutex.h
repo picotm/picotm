@@ -5,6 +5,13 @@
 #ifndef MUTEX_H
 #define MUTEX_H
 
+/**
+ * \cond impl || libc_impl
+ * \ingroup libc_impl
+ * \file
+ * \endcond
+ */
+
 int
 mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr);
 

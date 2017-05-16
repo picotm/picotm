@@ -9,213 +9,212 @@
 
 PICOTM_BEGIN_DECLS
 
-/*
- * Memory functions
+/**
+ * \ingroup group_libc
+ * \file
+ *
+ * \brief Transactional wrappers for interfaces of <string.h>.
  */
 
 PICOTM_NOTHROW
 /**
- * Executes memccpy() within a transaction.
+ * Variant of memccpy_tx() that operates on transactional memory.
  */
 void*
 memccpy_tm(void* restrict dest, const void* restrict src, int c, size_t n);
 
 PICOTM_NOTHROW
 /**
- * Executes memchr() within a transaction.
+ * Variant of memcchr_tx() that operates on transactional memory.
  */
 void*
 memchr_tm(const void* s, int c, size_t n);
 
 PICOTM_NOTHROW
 /**
- * Executes memcmp() within a transaction.
+ * Variant of memcmp_tx() that operates on transactional memory.
  */
 int
 memcmp_tm(const void* s1, const void* s2, size_t n);
 
 PICOTM_NOTHROW
 /**
- * Executes memcpy() within a transaction.
+ * Variant of memcpy_tx() that operates on transactional memory.
  */
 void*
 memcpy_tm(void* restrict dest, const void* restrict src, size_t n);
 
 PICOTM_NOTHROW
 /**
- * Executes memmove() within a transaction.
+ * Variant of memmove_tx() that operates on transactional memory.
  */
 void*
 memmove_tm(void* dest, const void* src, size_t n);
 
 PICOTM_NOTHROW
 /**
- * Executes memset() within a transaction.
+ * Variant of memset_tx() that operates on transactional memory.
  */
 void*
 memset_tm(void* s, int c, size_t n);
 
 PICOTM_NOTHROW
 /**
- * Executes memrchr() within a transaction.
+ * Variant of memrchr_tx() that operates on transactional memory.
  */
 void*
 memrchr_tm(const void* s, int c, size_t n);
 
 PICOTM_NOTHROW
 /**
- * Executes rawmemchr() within a transaction.
+ * Variant of rawmemchr_tx() that operates on transactional memory.
  */
 void*
 rawmemchr_tm(const void* s, int c);
 
-/*
- * String functions
- */
-
 PICOTM_NOTHROW
 /**
- * Provides a transaction-safe variant of stpcpy().
+ * Variant of stpcpy_tx() that operates on transactional memory.
  */
 char*
 stpcpy_tm(char* restrict dest, const char* restrict src);
 
 PICOTM_NOTHROW
 /**
- * Provides a transaction-safe variant of stpncpy().
+ * Variant of stpncpy_tx() that operates on transactional memory.
  */
 char*
 stpncpy_tm(char* restrict dest, const char* restrict src, size_t n);
 
 PICOTM_NOTHROW
 /**
- * Provides a transaction-safe variant of strcat().
+ * Variant of strcat_tx() that operates on transactional memory.
  */
 char*
 strcat_tm(char* restrict dest, const char* restrict src);
 
 PICOTM_NOTHROW
 /**
- * Provides a transaction-safe variant of strchr().
+ * Variant of strchr_tx() that operates on transactional memory.
  */
 char*
 strchr_tm(const char* s, int c);
 
 PICOTM_NOTHROW
 /**
- * Provides a transaction-safe variant of strcmp().
+ * Variant of strcmp_tx() that operates on transactional memory.
  */
 int
 strcmp_tm(const char* s1, const char* s2);
 
 PICOTM_NOTHROW
 /**
- * Provides a transaction-safe variant of strcoll_l().
+ * Variant of strcoll_l_tx() that operates on transactional memory.
  */
 int
 strcoll_l_tm(const char* s1, const char* s2, locale_t locale);
 
 PICOTM_NOTHROW
 /**
- * Provides a transaction-safe variant of strcpy().
+ * Variant of strcpy_tx() that operates on transactional memory.
  */
 char*
 strcpy_tm(char* restrict dest, const char* restrict src);
 
 PICOTM_NOTHROW
 /**
- * Provides a transaction-safe variant of strcspn().
+ * Variant of strcspn_tx() that operates on transactional memory.
  */
 size_t
 strcspn_tm(const char* s, const char* reject);
 
 PICOTM_NOTHROW
 /**
- * Provides a transaction-safe variant of strdup().
+ * Variant of strdup_tx() that operates on transactional memory.
  */
 char*
 strdup_tm(const char* s);
 
 PICOTM_NOTHROW
 /**
- * Provides a transaction-safe variant of strerror_r().
+ * Variant of strerror_r_tx() that operates on transactional memory.
  */
 int
 strerror_r_tm(int errnum, char* buf, size_t buflen);
 
 PICOTM_NOTHROW
 /**
- * Provides a transaction-safe variant of strlen().
+ * Variant of strlen_tx() that operates on transactional memory.
  */
 size_t
 strlen_tm(const char* s);
 
 PICOTM_NOTHROW
 /**
- * Provides a transaction-safe variant of strncat().
+ * Variant of strncat_tx() that operates on transactional memory.
  */
 char*
 strncat_tm(char* restrict dest, const char* restrict src, size_t n);
 
 PICOTM_NOTHROW
 /**
- * Provides a transaction-safe variant of strncmp().
+ * Variant of strncmp_tx() that operates on transactional memory.
  */
 int
 strncmp_tm(const char* s1, const char* s2, size_t n);
 
 PICOTM_NOTHROW
 /**
- * Provides a transaction-safe variant of strncpy().
+ * Variant of strncpy_tx() that operates on transactional memory.
  */
 char*
 strncpy_tm(char* restrict dest, const char* restrict src, size_t n);
 
 PICOTM_NOTHROW
 /**
- * Provides a transaction-safe variant of strndup().
+ * Variant of strndup_tx() that operates on transactional memory.
  */
 char*
 strndup_tm(const char* s, size_t n);
 
 PICOTM_NOTHROW
 /**
- * Provides a transaction-safe variant of strnlen().
+ * Variant of strnlen_tx() that operates on transactional memory.
  */
 size_t
 strnlen_tm(const char* s, size_t maxlen);
 
 PICOTM_NOTHROW
 /**
- * Provides a transaction-safe variant of strpbrk().
+ * Variant of strpbrk_tx() that operates on transactional memory.
  */
 char*
 strpbrk_tm(const char* s, const char* accept);
 
 PICOTM_NOTHROW
 /**
- * Provides a transaction-safe variant of strrchr().
+ * Variant of strrchr_tx() that operates on transactional memory.
  */
 char*
 strrchr_tm(const char* s, int c);
 
 PICOTM_NOTHROW
 /**
- * Provides a transaction-safe variant of strspn().
+ * Variant of strspn_tx() that operates on transactional memory.
  */
 size_t
 strspn_tm(const char* s, const char* accept);
 
 PICOTM_NOTHROW
 /**
- * Provides a transaction-safe variant of strstr().
+ * Variant of strstr_tx() that operates on transactional memory.
  */
 char*
 strstr_tm(const char* haystack, const char* needle);
 
 PICOTM_NOTHROW
 /**
- * Provides a transaction-safe variant of strtok_r().
+ * Variant of strtok_r_tx() that operates on transactional memory.
  */
 char*
 strtok_r_tm(char* restrict str, const char* restrict delim,

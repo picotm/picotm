@@ -8,6 +8,14 @@
 #include <sys/types.h>
 #include "pgtreess.h"
 
+/**
+ * \cond impl || libc_impl || libc_impl_fd
+ * \ingroup libc_impl
+ * \ingroup libc_impl_fd
+ * \file
+ * \endcond
+ */
+
 struct cmap;
 
 struct cmapss
