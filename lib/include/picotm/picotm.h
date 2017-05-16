@@ -11,37 +11,51 @@
 PICOTM_BEGIN_DECLS
 
 /**
- * Marks non-transactional variables in a function.
+ * \ingroup group_lib
+ * \file
+ *
+ * \brief Main header file for picotm.
+ *
+ * This is the main header file for picotm. It contains the entry points
+ * for starting, committing and ending a transaction; for restarting, and
+ * for error handling.
+ */
+
+/**
+ * Marks a non-transactional variable in a function.
  *
  * When restarting a transaction, picotm uses non-local goto, based on
  * the `sigjmp()` and `longjmp()` functions provided by the C Standard
  * Library. These functions save and restore the thread's instruction
- * and stack pointer, but don't save any variables. This can lead to
- * program errors, if a variable is held in a register that changes its
+ * and stack pointer, but don't save any variables. This can result in
+ * program errors if a variable is held in a register that changes its
  * value between invocations of `sigjmp()` and `longjmp()`. The call
  * to `longjmp()` will not restore the variable's original value.
  *
  * To avoid this problem, mark local, non-transactional variables with
- * `picotm_safe` as shown below.
- * ```
- *      picotm_safe int var = 0;
+ * ::picotm_safe as shown below.
  *
- *      picotm_begin
- *          ...
- *      picotm_commit
- *      picotm_end
- * ```
+ * ~~~{.c}
+ *  picotm_safe int var = 0;
  *
- * Even with `picotm_save`, you still have to privatize the variable when
+ *  picotm_begin
+ *
+ *      [...]
+ *
+ *  picotm_commit
+ *
+ *  picotm_end
+ * ~~~
+ *
+ * Even with ::picotm_safe, you still have to privatize the variable when
  * using it within the transaction.
  *
- * With gcc, the command-line option '-Wclobbered' will enable a warning
- * about this problem.
+ * With gcc, the command-line option '-Wclobbered' enables a warning about
+ * this problem.
  */
 #define picotm_safe volatile
 
-/**
- * The transaction start mode.
+/* The transaction start mode.
  * \warning This is an internal interface. Don't use it in application code.
  */
 enum __picotm_mode {
@@ -51,8 +65,7 @@ enum __picotm_mode {
     PICOTM_MODE_RECOVERY
 };
 
-/**
- * Internal transaction structure; touch this to mess up badly.
+/* Internal transaction structure; touch this to mess up badly.
  * \warning This is an internal interface. Don't use it in application code.
  */
 struct __picotm_tx {
@@ -60,16 +73,14 @@ struct __picotm_tx {
 };
 
 PICOTM_NOTHROW
-/**
- * Returns the internal transaction structure.
+/* Returns the internal transaction structure.
  * \warning This is an internal interface. Don't use it in application code.
  */
 struct __picotm_tx*
 __picotm_get_tx(void);
 
 PICOTM_NOTHROW
-/**
- * Begins or restarts a transaction, or handles an error.
+/* Begins or restarts a transaction, or handles an error.
  * \warning This is an internal interface. Don't use it in application code.
  */
 _Bool
@@ -77,13 +88,18 @@ __picotm_begin(enum __picotm_mode mode);
 
 /**
  * Starts a new transaction.
+ *
+ * Invoking ::picotm_begin starts a new transaction. Any code between
+ * this macro and ::picotm_commit is considered part of the transaction's
+ * execution phase. If the transaction aborts, it will restart from where
+ * the ::picotm_begin had been invoked.
  */
 #define picotm_begin                                                        \
     if (__picotm_begin((enum __picotm_mode)setjmp(__picotm_get_tx()->env))) \
     {
 
 PICOTM_NOTHROW
-/**
+/*
  * Commits the current transaction.
  * \warning This is an internal interface. Don't use it in application code.
  */
@@ -92,6 +108,14 @@ __picotm_commit(void);
 
 /**
  * Commits the current transaction.
+ *
+ * This macro commits the currently running transaction. Picotm will validate
+ * the consistency of all of the transaction's resources and, if successful,
+ * apply all outstanding operations. If validation fails, the transaction will
+ * be restarted from ::picotm_begin.
+ *
+ * \attention Calling this macro is only valid *after* ::picotm_begin and
+ *            *before* ::picotm_end.
  */
 #define picotm_commit       \
         __picotm_commit();  \
@@ -121,8 +145,8 @@ PICOTM_NOTHROW
 /**
  * Returns the current error status.
  *
- * \warning This function is only valid during the transaction's recovery
- *          phase.
+ * \attention This function is only valid during the transaction's recovery
+ *            phase.
  *
  * \returns The current error status.
  */
@@ -133,8 +157,8 @@ PICOTM_NOTHROW
 /**
  * Returns the current error's recoverable status.
  *
- * \warning This function is only valid during the transaction's recovery
- *          phase.
+ * \attention This function is only valid during the transaction's recovery
+ *            phase.
  *
  * \returns The current error status.
  */
@@ -145,8 +169,8 @@ PICOTM_NOTHROW
 /**
  * Returns the current picotm error code.
  *
- * \warning This function is only valid during the transaction's recovery
- *          phase, and if `picotm_error_status()` is PICOTM_ERROR_CODE.
+ * \attention This function is only valid during the transaction's recovery
+ *            phase, and if ::picotm_error_status() is ::PICOTM_ERROR_CODE.
  *
  * \returns The current picotm error code.
  */
@@ -157,8 +181,8 @@ PICOTM_NOTHROW
 /**
  * Returns the current picotm errno code.
  *
- * \warning This function is only valid during the transaction's recovery
- *          phase, and if `picotm_error_status()` is PICOTM_ERRNO.
+ * \attention This function is only valid during the transaction's recovery
+ *            phase, and if ::picotm_error_status() is ::PICOTM_ERRNO.
  *
  * \returns The current picotm errno code.
  */
@@ -166,3 +190,128 @@ int
 picotm_error_as_errno(void);
 
 PICOTM_END_DECLS
+
+/**
+ * \defgroup group_lib The picotm Programming Interface
+ *
+ * \brief This section provides information for users of picotm. It explains
+ *        the concept of transactions and how to run a transaction with
+ *        picotm.
+ *
+ * # Properties of a Transaction {#lib_properties_of_a_transaction}
+ *
+ * The transaction concept is a powerful metaphor for implementing concurrent
+ * and fault-tolerant software. A transaction system provides two services
+ * to it's users. These are
+ *
+ *  -   concurrency control (i.e., thread-safe access to shared resources), and
+ *  -   error handling.
+ *
+ * # Writing Transactions       {#lib_writing_transactions}
+ *
+ * Each transactions contains at least the statements
+ *
+ *  1.  ::picotm_begin,
+ *  2.  ::picotm_commit, and
+ *  3.  ::picotm_end
+ *
+ * in this exact order. In the source code, this looks like this
+ *
+ * ~~~{.c}
+ * void
+ * func()
+ * {
+ *      // non-transactional code
+ *
+ *      int x = 0;
+ *
+ *      picotm_begin
+ *          // transactional code
+ *      picotm_commit
+ *      picotm_end
+ *
+ *      // more non-transactional code
+ * }
+ *
+ * ~~~
+ *
+ * Transactional operations are invoked between ::picotm_begin and
+ * ::picotm_commit. This is called the transaction's *execution phase.*
+ * Operations listed in the execution phase are subject to speculative
+ * execution. This means that an operation might be executed, but it's
+ * effects are not be permanent until the transaction commits.
+ *
+ * The transaction performs a commit when the user invokes ::picotm_commit.
+ * This is called the *commit phase.* It is completely implemented by
+ * picotm. No intervention by the user is required.
+ *
+ * Upon entering the commit phase, picotm validates the consistency of
+ * all resources that the transaction uses. If validation succeeds, the
+ * transaction's effects are applied to become permanent. The program then
+ * continuous with the next operation after ::picotm_end.
+ * If validation fails, the transaction's effects are reverted and the
+ * transaction restarts from ::picotm_begin. The roll-back is transparent
+ * to the program.
+ *
+ * If an operation fails, picotm provides error handling for it's operations.
+ * Error handling consists of
+ *
+ *  -   error detection, and
+ *  -   error recovery.
+ *
+ * Error detection is completely implemented by picotm an it's module. When
+ * picotm invokes an operation it tests for reported errors. No intervention
+ * by the user is required.
+ *
+ * Error recovery is partially provided by picotm. For picotm, it is possible
+ * to recover from some errors. For example, if a write operation to a file
+ * temporarily fails, picotm can retry.
+ *
+ * Some errors require special program logic to recover. For example, if the
+ * program runs out of memory, it might free up memory by invoking a garbage
+ * collector. This cannot generally be implemented by picotm, as it depends
+ * on program-specific constraints. This is called the *recovery phase.*
+ *
+ * Error-recovery code is located between ::picotm_commit and ::picotm_end.
+ * If picotm detects an error that is cannot recover from, it rolls back the
+ * transaction's effects and jumps to the first instruction *after*
+ * ::picotm_commit. The program now has the chance of performing error
+ * recovery and, if successful, restart the transaction by calling
+ * picotm_restart().
+ */
+
+/**
+ * \mainpage The picotm System-Level Transaction Manager
+ *
+ * Picotm is a system-level transaction manager. It provides transactional
+ * semantics for low-level and operating-system functionality. It’s flexible
+ * and extensible to cover exactly your requirements. **Error handling** and
+ * **thread isolation** are provided by picotm, all you have to implement is
+ * the application logic.
+ *
+ * Picotm is implemented in plain C and is well-suited for implementing
+ * applications and firmware that is secure, reliable and thread-safe; yet
+ * easy to develop. This makes picotm well-suited for **multi-threaded**
+ * and **fault-tolerant** software.
+ *
+ * Picotm is Open Source under the terms of the
+ * [Mozilla Public License, v.2.0][mpl_2_0]; viable for free and proprietary
+ * software.
+ *
+ * ## Table of Contents
+ *
+ *  -# \ref group_lib \n
+ *      \copybrief group_lib
+ *  -# \ref group_modules \n
+ *      \copybrief group_modules
+ *  -# \ref group_tm \n
+ *      \copybrief group_tm
+ *  -# \ref group_libc \n
+ *      \copybrief group_libc
+ *  -# \ref group_libm \n
+ *      \copybrief group_libm
+ *  -# \ref group_libpthread \n
+ *      \copybrief group_libpthread
+ *
+ * [mpl_2_0]:   http://mozilla.org/MPL/2.0/
+ */

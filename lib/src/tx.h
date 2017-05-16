@@ -9,6 +9,13 @@
 #include "module.h"
 #include "picotm/picotm.h"
 
+/**
+ * \cond impl || lib_impl
+ * \ingroup lib_impl
+ * \file
+ * \endcond
+ */
+
 #define MAX_NMODULES    (256)
 
 struct tx_shared;

@@ -4,6 +4,14 @@
 
 #pragma once
 
+/**
+ * \ingroup group_lib
+ * \ingroup group_modules
+ * \file
+ *
+ * \brief Contains struct picotm_error and helper functions.
+ */
+
 #include <stdbool.h>
 #include "compiler.h"
 
