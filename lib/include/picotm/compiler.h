@@ -25,7 +25,7 @@
 #ifdef __END_DECLS
     #define PICOTM_END_DECLS    __END_DECLS
 #else
-    #define PICOTM_BEGIN_DECLS  }
+    #define PICOTM_END_DECLS    }
 #endif
 
 /**
