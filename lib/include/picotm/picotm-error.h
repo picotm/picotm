@@ -40,6 +40,8 @@ enum picotm_error_code {
 enum picotm_error_status {
     /** Conflict among transactions detected. */
     PICOTM_CONFLICTING = 1,
+    /** Transaction requires irrevocability to continue. */
+    PICOTM_REVOCABLE,
     /** Error detected. Encoded as `enum picotm_error_code`. */
     PICOTM_ERROR_CODE,
     /** Error detected. Encoded as errno code. */
@@ -104,6 +106,19 @@ picotm_error_set_conflicting(struct picotm_error* error,
 
 PICOTM_NOTHROW
 /**
+ * Sets an error of type PICOTM_REVOCABLE.
+ *
+ * \param error The error to set.
+ */
+inline void
+picotm_error_set_revocable(struct picotm_error* error)
+{
+    error->status = PICOTM_REVOCABLE;
+    error->is_non_recoverable = false;
+}
+
+PICOTM_NOTHROW
+/**
  * Sets an error of type PICOTM_ERROR_CODE.
  *
  * \param error         The error to set.
@@ -158,6 +173,20 @@ inline bool
 picotm_error_is_conflicting(const struct picotm_error* error)
 {
     return error->status == PICOTM_CONFLICTING;
+}
+
+PICOTM_NOTHROW
+/**
+ * Tests if an error has been set to REVOCABLE status.
+ *
+ * \param error The error to set.
+ * \returns     True if an error has been set to REVOCABLE, or false
+ *              otherwise.
+ */
+inline bool
+picotm_error_is_revocable(const struct picotm_error* error)
+{
+    return error->status == PICOTM_REVOCABLE;
 }
 
 PICOTM_NOTHROW

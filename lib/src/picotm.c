@@ -160,6 +160,10 @@ restart_tx(struct tx* tx, enum __picotm_mode mode)
         case PICOTM_CONFLICTING:
             /* Should be avoided, but no problem per se. */
             break;
+        case PICOTM_REVOCABLE:
+            /* This should not happen. */
+            mode = PICOTM_MODE_IRREVOCABLE;
+            break;
         case PICOTM_ERROR_CODE:
         case PICOTM_ERRNO:
             /* If we were restarting before, we're now recovering. */
@@ -185,6 +189,9 @@ __picotm_commit()
         switch (error->status) {
         case PICOTM_CONFLICTING:
             restart_tx(tx, PICOTM_MODE_RETRY);
+            break;
+        case PICOTM_REVOCABLE:
+            restart_tx(tx, PICOTM_MODE_IRREVOCABLE);
             break;
         case PICOTM_ERROR_CODE:
         case PICOTM_ERRNO:
@@ -330,6 +337,9 @@ picotm_recover_from_error(const struct picotm_error* error)
     switch (error->status) {
     case PICOTM_CONFLICTING:
         restart_tx(get_non_null_tx(), PICOTM_MODE_RETRY);
+        break;
+    case PICOTM_REVOCABLE:
+        restart_tx(get_non_null_tx(), PICOTM_MODE_IRREVOCABLE);
         break;
     case PICOTM_ERROR_CODE:
         restart_tx(get_non_null_tx(), PICOTM_MODE_RECOVERY);
