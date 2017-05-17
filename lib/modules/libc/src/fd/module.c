@@ -5,6 +5,7 @@
 #include "module.h"
 #include <assert.h>
 #include <picotm/picotm.h>
+#include <stdlib.h>
 #include "errcode.h"
 #include "fildes_tx.h"
 
@@ -18,7 +19,20 @@ lock_cb(void* data, struct picotm_error* error)
 {
     struct fd_module* module = data;
 
-    return fildes_tx_lock(&module->tx, error);
+    int res = fildes_tx_lock(&module->tx, error);
+    if (res < 0) {
+        if (res == ERR_SYSTEM) {
+            picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
+            return -1;
+        } else if (res == ERR_CONFLICT) {
+            picotm_error_set_conflicting(error, NULL);
+            return -1;
+        } else {
+            /* Unsupported error code. */
+            abort();
+        }
+    }
+    return 0;
 }
 
 static int
@@ -36,7 +50,20 @@ validate_cb(void* data, int noundo, struct picotm_error* error)
 {
     struct fd_module* module = data;
 
-    return fildes_tx_validate(&module->tx, noundo, error);
+    int res = fildes_tx_validate(&module->tx, noundo, error);
+    if (res < 0) {
+        if (res == ERR_SYSTEM) {
+            picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
+            return -1;
+        } else if (res == ERR_CONFLICT) {
+            picotm_error_set_conflicting(error, NULL);
+            return -1;
+        } else {
+            /* Unsupported error code. */
+            abort();
+        }
+    }
+    return 0;
 }
 
 static int
@@ -45,7 +72,20 @@ apply_event_cb(const struct event* event, size_t n, void* data,
 {
     struct fd_module* module = data;
 
-    return fildes_tx_apply_event(&module->tx, event, n, error);
+    int res = fildes_tx_apply_event(&module->tx, event, n, error);
+    if (res < 0) {
+        if (res == ERR_SYSTEM) {
+            picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
+            return -1;
+        } else if (res == ERR_CONFLICT) {
+            picotm_error_set_conflicting(error, NULL);
+            return -1;
+        } else {
+            /* Unsupported error code. */
+            abort();
+        }
+    }
+    return 0;
 }
 
 static int
@@ -54,7 +94,20 @@ undo_event_cb(const struct event* event, size_t n, void *data,
 {
     struct fd_module* module = data;
 
-    return fildes_tx_undo_event(&module->tx, event, n, error);
+    int res = fildes_tx_undo_event(&module->tx, event, n, error);
+    if (res < 0) {
+        if (res == ERR_SYSTEM) {
+            picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
+            return -1;
+        } else if (res == ERR_CONFLICT) {
+            picotm_error_set_conflicting(error, NULL);
+            return -1;
+        } else {
+            /* Unsupported error code. */
+            abort();
+        }
+    }
+    return 0;
 }
 
 static int
@@ -62,7 +115,20 @@ update_cc_cb(void* data, int noundo, struct picotm_error* error)
 {
     struct fd_module* module = data;
 
-    return fildes_tx_update_cc(&module->tx, noundo, error);
+    int res = fildes_tx_update_cc(&module->tx, noundo, error);
+    if (res < 0) {
+        if (res == ERR_SYSTEM) {
+            picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
+            return -1;
+        } else if (res == ERR_CONFLICT) {
+            picotm_error_set_conflicting(error, NULL);
+            return -1;
+        } else {
+            /* Unsupported error code. */
+            abort();
+        }
+    }
+    return 0;
 }
 
 static int
@@ -70,7 +136,20 @@ clear_cc_cb(void* data, int noundo, struct picotm_error* error)
 {
     struct fd_module* module = data;
 
-    return fildes_tx_clear_cc(&module->tx, noundo, error);
+    int res = fildes_tx_clear_cc(&module->tx, noundo, error);
+    if (res < 0) {
+        if (res == ERR_SYSTEM) {
+            picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
+            return -1;
+        } else if (res == ERR_CONFLICT) {
+            picotm_error_set_conflicting(error, NULL);
+            return -1;
+        } else {
+            /* Unsupported error code. */
+            abort();
+        }
+    }
+    return 0;
 }
 
 static int
