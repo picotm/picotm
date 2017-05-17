@@ -6,6 +6,8 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <picotm/picotm-lib-tab.h>
+#include <picotm/picotm-module.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -196,6 +198,27 @@ append_cmd(struct vfs_tx* self, enum vfs_tx_cmd cmd, int cookie,
 }
 
 /*
+ * chmod()
+ */
+
+int
+vfs_tx_exec_chmod(struct vfs_tx* self, const char* path, mode_t mode,
+                  struct picotm_error* error)
+{
+    int cwd = vfs_tx_get_cwd(self, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+
+    int res = fchmodat(cwd, path, mode, 0);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return -1;
+    }
+    return res;
+}
+
+/*
  * fchdir()
  */
 
@@ -268,6 +291,207 @@ undo_fchdir(struct vfs_tx* self, int cookie, struct picotm_error* error)
 { }
 
 /*
+ * fchmod()
+ */
+
+int
+vfs_tx_exec_fchmod(struct vfs_tx* self, int fildes, mode_t mode,
+                   struct picotm_error* error)
+{
+    /* reference file descriptor while working on it */
+
+    struct fd* fd = fdtab + fildes;
+
+    fd_ref(fd, fildes, 0, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+
+    int res = fchmod(fildes, mode);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        goto err_fchmod;
+    }
+
+    fd_unref(fd, fildes);
+
+    return res;
+
+err_fchmod:
+    fd_unref(fd, fildes);
+    return -1;
+}
+
+/*
+ * fstat()
+ */
+
+int
+vfs_tx_exec_fstat(struct vfs_tx* self, int fildes, struct stat* buf,
+                  struct picotm_error* error)
+{
+    /* reference file descriptor while working on it */
+
+    struct fd* fd = fdtab + fildes;
+
+    fd_ref(fd, fildes, 0, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+
+    int res = fstat(fildes, buf);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        goto err_fstat;
+    }
+
+    fd_unref(fd, fildes);
+
+    return res;
+
+err_fstat:
+    fd_unref(fd, fildes);
+    return -1;
+}
+
+/*
+ * getcwd()
+ */
+
+char*
+vfs_tx_exec_getcwd(struct vfs_tx* self, char* buf, size_t size,
+                   struct picotm_error* error)
+{
+    /* return transaction-local working directory */
+
+    char* cwd = vfs_tx_get_cwd_path(self, error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+
+    size_t len = strlen(cwd) + sizeof(*cwd);
+
+    if (!(size >= len)) {
+        picotm_error_set_errno(error, ERANGE);
+        goto err_size_ge_len;
+    }
+
+    memcpy(buf, cwd, len);
+    free(cwd);
+
+    return buf;
+
+err_size_ge_len:
+    free(cwd);
+    return NULL;
+}
+
+/*
+ * link()
+ */
+
+int
+vfs_tx_exec_link(struct vfs_tx* self, const char* path1, const char* path2,
+                 struct picotm_error* error)
+{
+    int cwd = vfs_tx_get_cwd(self, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+
+    int res = linkat(cwd, path1, cwd, path2, AT_SYMLINK_FOLLOW);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return -1;
+    }
+    return res;
+}
+
+/*
+ * lstat()
+ */
+
+int
+vfs_tx_exec_lstat(struct vfs_tx* self, const char* path, struct stat* buf,
+                  struct picotm_error* error)
+{
+    int cwd = vfs_tx_get_cwd(self, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+
+    int res = fstatat(cwd, path, buf, AT_SYMLINK_NOFOLLOW);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return -1;
+    }
+    return res;
+}
+
+/*
+ * mkdir()
+ */
+
+int
+vfs_tx_exec_mkdir(struct vfs_tx* self, const char* path, mode_t mode,
+                  struct picotm_error* error)
+{
+    int cwd = vfs_tx_get_cwd(self, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+
+    int res = mkdirat(cwd, path, mode);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return -1;
+    }
+    return res;
+}
+
+/*
+ * mkfifo()
+ */
+
+int
+vfs_tx_exec_mkfifo(struct vfs_tx* self, const char* path, mode_t mode,
+                   struct picotm_error* error)
+{
+    int cwd = vfs_tx_get_cwd(self, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+
+    int res = mkfifoat(cwd, path, mode);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return -1;
+    }
+    return res;
+}
+
+/*
+ * mknod()
+ */
+
+int
+vfs_tx_exec_mknod(struct vfs_tx* self, const char* path, mode_t mode,
+                  dev_t dev, struct picotm_error* error)
+{
+    int cwd = vfs_tx_get_cwd(self, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+
+    int res = mknodat(cwd, path, mode, dev);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return -1;
+    }
+    return res;
+}
+
+/*
  * mkstemp()
  */
 
@@ -310,7 +534,7 @@ err_append_cmd:
     unlink(abspath);
 err_mkstemp:
     free(abspath);
-    return res;
+    return -1;
 }
 
 static void
@@ -359,6 +583,48 @@ undo_mkstemp(struct vfs_tx* self, int cookie, struct picotm_error* error)
         picotm_error_set_errno(error, errno);
         return;
     }
+}
+
+/*
+ * stat()
+ */
+
+int
+vfs_tx_exec_stat(struct vfs_tx* self, const char* path, struct stat* buf,
+                 struct picotm_error* error)
+{
+    int cwd = vfs_tx_get_cwd(self, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+
+    int res = fstatat(cwd, path, buf, 0);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return -1;
+    }
+    return res;
+}
+
+/*
+ * unlink()
+ */
+
+int
+vfs_tx_exec_unlink(struct vfs_tx* self, const char* path,
+                   struct picotm_error* error)
+{
+    int cwd = vfs_tx_get_cwd(self, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+
+    int res = unlinkat(cwd, path, 0);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return -1;
+    }
+    return res;
 }
 
 /*

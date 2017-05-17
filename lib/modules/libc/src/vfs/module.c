@@ -11,9 +11,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <unistd.h>
-#include "errcode.h"
 #include "fd/fd.h"
 #include "fd/fdtab.h"
 #include "fd/module.h"
@@ -145,13 +143,17 @@ vfs_module_chmod(const char* path, mode_t mode)
 {
     struct vfs_tx* vfs_tx = get_non_null_vfs_tx();
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    int cwd = vfs_tx_get_cwd(vfs_tx, &error);
-    if (picotm_error_is_set(&error)) {
-        picotm_recover_from_error(&error);
-    }
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    return fchmodat(cwd, path, mode, 0);
+        int res = vfs_tx_exec_chmod(vfs_tx, path, mode, &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return res;
+        }
+        picotm_recover_from_error(&error);
+
+    } while (true);
 }
 
 int
@@ -175,47 +177,37 @@ vfs_module_fchdir(int fildes)
 int
 vfs_module_fchmod(int fildes, mode_t mode)
 {
-    /* reference file descriptor while working on it */
+    struct vfs_tx* vfs_tx = get_non_null_vfs_tx();
 
-    struct fd* fd = fdtab + fildes;
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        int res = vfs_tx_exec_fchmod(vfs_tx, fildes, mode, &error);
 
-    fd_ref(fd, fildes, 0, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
-    }
+        if (!picotm_error_is_set(&error)) {
+            return res;
+        }
+        picotm_recover_from_error(&error);
 
-    int res = fchmod(fildes, mode);
-
-    fd_unref(fd, fildes);
-
-    return res;
+    } while (true);
 }
 
 int
 vfs_module_fstat(int fildes, struct stat* buf)
 {
-    /* reference file descriptor while working on it */
+    struct vfs_tx* vfs_tx = get_non_null_vfs_tx();
 
-    struct fd* fd = fdtab + fildes;
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        int res = vfs_tx_exec_fstat(vfs_tx, fildes, buf, &error);
 
-    fd_ref(fd, fildes, 0, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
-    }
+        if (!picotm_error_is_set(&error)) {
+            return res;
+        }
+        picotm_recover_from_error(&error);
 
-    int res = fstat(fildes, buf);
-
-    fd_unref(fd, fildes);
-
-    return res;
+    } while (true);
 }
 
 char*
@@ -223,34 +215,17 @@ vfs_module_getcwd(char* buf, size_t size)
 {
     struct vfs_tx* vfs_tx = get_non_null_vfs_tx();
 
-    if (!size) {
-        errno = EINVAL;
-        return NULL;
-    }
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    /* return transaction-local working directory */
+        char* cwd = vfs_tx_exec_getcwd(vfs_tx, buf, size, &error);
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    char* cwd = vfs_tx_get_cwd_path(vfs_tx, &error);
-    if (picotm_error_is_set(&error)) {
-        return NULL;
-    }
+        if (!picotm_error_is_set(&error)) {
+            return cwd;
+        }
+        picotm_recover_from_error(&error);
 
-    size_t len = strlen(cwd) + sizeof(*cwd);
-
-    if (!(size >= len)) {
-        errno = ERANGE;
-        goto err_size_ge_len;
-    }
-
-    memcpy(buf, cwd, len);
-    free(cwd);
-
-    return buf;
-
-err_size_ge_len:
-    free(cwd);
-    return NULL;
+    } while (true);
 }
 
 int
@@ -258,13 +233,17 @@ vfs_module_getcwd_fildes()
 {
     struct vfs_tx* vfs_tx = get_non_null_vfs_tx();
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    int cwd = vfs_tx_get_cwd(vfs_tx, &error);
-    if (picotm_error_is_set(&error)) {
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+        int fildes = vfs_tx_get_cwd(vfs_tx, &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return fildes;
+        }
         picotm_recover_from_error(&error);
-        return -1;
-    }
-    return cwd;
+
+    } while (true);
 }
 
 int
@@ -272,14 +251,17 @@ vfs_module_link(const char* path1, const char* path2)
 {
     struct vfs_tx* vfs_tx = get_non_null_vfs_tx();
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    int cwd = vfs_tx_get_cwd(vfs_tx, &error);
-    if (picotm_error_is_set(&error)) {
-        picotm_recover_from_error(&error);
-        return -1;
-    }
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    return linkat(cwd, path1, cwd, path2, AT_SYMLINK_FOLLOW);
+        int res = vfs_tx_exec_link(vfs_tx, path1, path2, &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return res;
+        }
+        picotm_recover_from_error(&error);
+
+    } while (true);
 }
 
 int
@@ -287,14 +269,17 @@ vfs_module_lstat(const char* path, struct stat* buf)
 {
     struct vfs_tx* vfs_tx = get_non_null_vfs_tx();
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    int cwd = vfs_tx_get_cwd(vfs_tx, &error);
-    if (picotm_error_is_set(&error)) {
-        picotm_recover_from_error(&error);
-        return -1;
-    }
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    return fstatat(cwd, path, buf, AT_SYMLINK_NOFOLLOW);
+        int res = vfs_tx_exec_lstat(vfs_tx, path, buf, &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return res;
+        }
+        picotm_recover_from_error(&error);
+
+    } while (true);
 }
 
 int
@@ -302,14 +287,17 @@ vfs_module_mkdir(const char* path, mode_t mode)
 {
     struct vfs_tx* vfs_tx = get_non_null_vfs_tx();
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    int cwd = vfs_tx_get_cwd(vfs_tx, &error);
-    if (picotm_error_is_set(&error)) {
-        picotm_recover_from_error(&error);
-        return -1;
-    }
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    return mkdirat(cwd, path, mode);
+        int res = vfs_tx_exec_mkdir(vfs_tx, path, mode, &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return res;
+        }
+        picotm_recover_from_error(&error);
+
+    } while (true);
 }
 
 int
@@ -317,14 +305,17 @@ vfs_module_mkfifo(const char* path, mode_t mode)
 {
     struct vfs_tx* vfs_tx = get_non_null_vfs_tx();
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    int cwd = vfs_tx_get_cwd(vfs_tx, &error);
-    if (picotm_error_is_set(&error)) {
-        picotm_recover_from_error(&error);
-        return -1;
-    }
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    return mkfifoat(cwd, path, mode);
+        int res = vfs_tx_exec_mkfifo(vfs_tx, path, mode, &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return res;
+        }
+        picotm_recover_from_error(&error);
+
+    } while (true);
 }
 
 int
@@ -332,14 +323,17 @@ vfs_module_mknod(const char* path, mode_t mode, dev_t dev)
 {
     struct vfs_tx* vfs_tx = get_non_null_vfs_tx();
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    int cwd = vfs_tx_get_cwd(vfs_tx, &error);
-    if (picotm_error_is_set(&error)) {
-        picotm_recover_from_error(&error);
-        return -1;
-    }
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    return mknodat(cwd, path, mode, dev);
+        int res = vfs_tx_exec_mknod(vfs_tx, path, mode, dev, &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return res;
+        }
+        picotm_recover_from_error(&error);
+
+    } while (true);
 }
 
 int
@@ -365,14 +359,17 @@ vfs_module_stat(const char* path, struct stat* buf)
 {
     struct vfs_tx* vfs_tx = get_non_null_vfs_tx();
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    int cwd = vfs_tx_get_cwd(vfs_tx, &error);
-    if (picotm_error_is_set(&error)) {
-        picotm_recover_from_error(&error);
-        return -1;
-    }
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    return fstatat(cwd, path, buf, 0);
+        int fildes = vfs_tx_exec_stat(vfs_tx, path, buf, &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return fildes;
+        }
+        picotm_recover_from_error(&error);
+
+    } while (true);
 }
 
 int
@@ -380,12 +377,15 @@ vfs_module_unlink(const char* path)
 {
     struct vfs_tx* vfs_tx = get_non_null_vfs_tx();
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    int cwd = vfs_tx_get_cwd(vfs_tx, &error);
-    if (picotm_error_is_set(&error)) {
-        picotm_recover_from_error(&error);
-        return -1;
-    }
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    return unlinkat(cwd, path, 0);
+        int fildes = vfs_tx_exec_unlink(vfs_tx, path, &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return fildes;
+        }
+        picotm_recover_from_error(&error);
+
+    } while (true);
 }
