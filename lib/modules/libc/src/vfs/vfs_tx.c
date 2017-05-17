@@ -208,7 +208,7 @@ vfs_tx_exec_fchdir(struct vfs_tx* self, int fildes)
     return 0;
 }
 
-int
+void
 apply_fchdir(struct vfs_tx* self, int cookie, struct picotm_error* error)
 {
     assert(self);
@@ -216,19 +216,13 @@ apply_fchdir(struct vfs_tx* self, int cookie, struct picotm_error* error)
     int res = TEMP_FAILURE_RETRY(fchdir(self->newcwd));
     if (res < 0) {
         picotm_error_set_errno(error, errno);
-        return ERR_SYSTEM;
+        return;
     }
-
-    return 0;
 }
 
-int
+void
 undo_fchdir(struct vfs_tx* self, int cookie, struct picotm_error* error)
-{
-    assert(self);
-
-    return 0;
-}
+{ }
 
 /*
  * mkstemp()
@@ -274,11 +268,9 @@ err_mkstemp:
     return res;
 }
 
-static int
+static void
 apply_mkstemp(struct vfs_tx* self, int cookie, struct picotm_error* error)
-{
-    return 0;
-}
+{ }
 
 /* Remove temporary file in a quite reliable, but Linux-only, way. This is
  * only possible because it is certain that the transaction created that file
@@ -286,7 +278,7 @@ apply_mkstemp(struct vfs_tx* self, int cookie, struct picotm_error* error)
  * replace the file at 'canonpath' while the process is between stat and
  * unlink.
  */
-static int
+static void
 undo_mkstemp(struct vfs_tx* self, int cookie, struct picotm_error* error)
 {
     char path[64];
@@ -316,39 +308,33 @@ undo_mkstemp(struct vfs_tx* self, int cookie, struct picotm_error* error)
     int res = TEMP_FAILURE_RETRY(close(cookie));
     if (res < 0) {
         picotm_error_set_errno(error, errno);
-        return ERR_SYSTEM;
+        return;
     }
-
-    return 0;
 }
 
 /*
  * Module interfaces
  */
 
-int
+void
 vfs_tx_lock(struct vfs_tx* self, struct picotm_error* error)
-{
-    return 0;
-}
+{ }
 
 void
 vfs_tx_unlock(struct vfs_tx* self)
 { }
 
-int
+void
 vfs_tx_validate(struct vfs_tx* self, struct picotm_error* error)
-{
-    return 0;
-}
+{ }
 
-int
+void
 vfs_tx_apply_event(struct vfs_tx* self, const struct event* event, size_t n,
                    struct picotm_error* error)
 {
-    static int (* const apply_func[LAST_CMD])(struct vfs_tx*,
-                                              int,
-                                              struct picotm_error*) = {
+    static void (* const apply_func[LAST_CMD])(struct vfs_tx*,
+                                               int,
+                                               struct picotm_error*) = {
         apply_fchdir,
         apply_mkstemp
     };
@@ -357,24 +343,22 @@ vfs_tx_apply_event(struct vfs_tx* self, const struct event* event, size_t n,
     assert(event->call < sizeof(apply_func)/sizeof(apply_func[0]));
 
     while (n) {
-        int res = apply_func[event->call](self, event->cookie, error);
-        if (res < 0) {
-            return res;
+        apply_func[event->call](self, event->cookie, error);
+        if (picotm_error_is_set(error)) {
+            return;
         }
         --n;
         ++event;
     }
-
-    return 0;
 }
 
-int
+void
 vfs_tx_undo_event(struct vfs_tx* self, const struct event* event, size_t n,
                   struct picotm_error* error)
 {
-    static int (* const undo_func[LAST_CMD])(struct vfs_tx*,
-                                             int,
-                                             struct picotm_error*) = {
+    static void (* const undo_func[LAST_CMD])(struct vfs_tx*,
+                                              int,
+                                              struct picotm_error*) = {
         undo_fchdir,
         undo_mkstemp
     };
@@ -386,17 +370,15 @@ vfs_tx_undo_event(struct vfs_tx* self, const struct event* event, size_t n,
 
     while (n) {
         --event;
-        int res = undo_func[event->call](self, event->cookie, error);
-        if (res < 0) {
-            return res;
+        undo_func[event->call](self, event->cookie, error);
+        if (picotm_error_is_set(error)) {
+            return;
         }
         --n;
     }
-
-    return 0;
 }
 
-int
+void
 vfs_tx_finish(struct vfs_tx* self, struct picotm_error* error)
 {
     if (self->inicwd >= 0) {
@@ -409,6 +391,4 @@ vfs_tx_finish(struct vfs_tx* self, struct picotm_error* error)
         fd_unref(fd, self->newcwd);
         self->newcwd = -1;
     }
-
-    return 0;
 }
