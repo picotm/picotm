@@ -162,7 +162,7 @@ uninit_cb(void* data)
 }
 
 static struct fildes_tx*
-get_fildes_tx(void)
+get_fildes_tx(struct picotm_error* error)
 {
     static __thread struct fd_module t_module;
 
@@ -170,22 +170,22 @@ get_fildes_tx(void)
         return &t_module.tx;
     }
 
-    long res = picotm_register_module(lock_cb,
-                                      unlock_cb,
-                                      is_valid_cb,
-                                      apply_event_cb,
-                                      undo_event_cb,
-                                      update_cc_cb,
-                                      clear_cc_cb,
-                                      finish_cb,
-                                      uninit_cb,
-                                      &t_module);
-    if (res < 0) {
+    unsigned long module = picotm_register_module(lock_cb,
+                                                  unlock_cb,
+                                                  is_valid_cb,
+                                                  apply_event_cb,
+                                                  undo_event_cb,
+                                                  update_cc_cb,
+                                                  clear_cc_cb,
+                                                  finish_cb,
+                                                  uninit_cb,
+                                                  &t_module,
+                                                  error);
+    if (picotm_error_is_set(error)) {
         return NULL;
     }
-    unsigned long module = res;
 
-    res = fildes_tx_init(&t_module.tx, module);
+    int res = fildes_tx_init(&t_module.tx, module);
     if (res < 0) {
         return NULL;
     }
@@ -198,7 +198,8 @@ get_fildes_tx(void)
 static struct fildes_tx*
 get_non_null_fildes_tx(void)
 {
-    struct fildes_tx* fildes_tx = get_fildes_tx();
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+    struct fildes_tx* fildes_tx = get_fildes_tx(&error);
     assert(fildes_tx);
 
     return fildes_tx;

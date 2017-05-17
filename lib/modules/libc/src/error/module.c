@@ -71,17 +71,16 @@ get_error_tx(bool initialize, struct picotm_error* error)
         return NULL;
     }
 
-    long res = picotm_register_module(NULL, NULL, NULL,
-                                      NULL, undo_events_cb,
-                                      NULL, NULL,
-                                      finish_cb,
-                                      uninit_cb,
-                                      &t_module);
-    if (res < 0) {
-        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
+    unsigned long module = picotm_register_module(NULL, NULL, NULL,
+                                                  NULL, undo_events_cb,
+                                                  NULL, NULL,
+                                                  finish_cb,
+                                                  uninit_cb,
+                                                  &t_module,
+                                                  error);
+    if (picotm_error_is_set(error)) {
         return NULL;
     }
-    unsigned long module = res;
 
     error_tx_init(&t_module.tx, module);
 

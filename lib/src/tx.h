@@ -46,7 +46,7 @@ tx_release(struct tx* self);
 bool
 tx_is_irrevocable(const struct tx* self);
 
-long
+unsigned long
 tx_register_module(struct tx* self,
                    void (*lock)(void*, struct picotm_error*),
                    void (*unlock)(void*, struct picotm_error*),
@@ -57,7 +57,8 @@ tx_register_module(struct tx* self,
                    void (*clearcc)(void*, int, struct picotm_error*),
                    void (*finish)(void*, struct picotm_error*),
                    void (*uninit)(void*),
-                   void* data);
+                   void* data,
+                   struct picotm_error* error);
 
 int
 tx_inject_event(struct tx* self, unsigned long module, unsigned long op,

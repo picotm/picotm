@@ -266,7 +266,7 @@ picotm_error_as_errno()
  */
 
 PICOTM_EXPORT
-long
+unsigned long
 picotm_register_module(picotm_module_lock_function lock,
                        picotm_module_unlock_function unlock,
                        picotm_module_is_valid_function is_valid,
@@ -276,11 +276,12 @@ picotm_register_module(picotm_module_lock_function lock,
                        picotm_module_clear_cc_function clear_cc,
                        picotm_module_finish_function finish,
                        picotm_module_uninit_function uninit,
-                       void* data)
+                       void* data,
+                       struct picotm_error* error)
 {
     return tx_register_module(get_non_null_tx(), lock, unlock, is_valid,
                               apply_events, undo_events, update_cc, clear_cc,
-                              finish, uninit, data);
+                              finish, uninit, data, error);
 }
 
 PICOTM_EXPORT
