@@ -9,11 +9,11 @@ language: c
 before_install:
 
 install:
-    - sudo apt-get install -y autoconf-archive
+    - sudo apt-get install -y autoconf-archive doxygen graphviz
 
 before_script:
     - cd lib
     - tools/bootstrap.sh
 
 script:
-    - ./configure && make
+    - ./configure && make && make html
