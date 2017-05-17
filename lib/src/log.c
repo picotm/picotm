@@ -24,9 +24,9 @@ log_uninit(struct log* self)
     free(self->eventtab);
 }
 
-int
-log_inject_event(struct log* self, unsigned long module, unsigned long call,
-                 uintptr_t cookie)
+void
+log_append_event(struct log* self, unsigned long module, unsigned long call,
+                 uintptr_t cookie, struct picotm_error* error)
 {
     if (self->eventtablen >= self->eventtabsiz) {
 
@@ -36,7 +36,8 @@ log_inject_event(struct log* self, unsigned long module, unsigned long call,
                               self->eventtabsiz, eventtabsiz,
                               sizeof(self->eventtab[0]));
         if (!tmp) {
-            return -1;
+            picotm_error_set_error_code(error, PICOTM_OUT_OF_MEMORY);
+            return;
         }
         self->eventtab = tmp;
         self->eventtabsiz = eventtabsiz;
@@ -48,7 +49,7 @@ log_inject_event(struct log* self, unsigned long module, unsigned long call,
     event->module = module;
     event->call = call;
 
-    return self->eventtablen++;
+    ++self->eventtablen;
 }
 
 int

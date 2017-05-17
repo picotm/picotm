@@ -76,15 +76,11 @@ tx_register_module(struct tx* self,
     return module;
 }
 
-int
-tx_inject_event(struct tx* self, unsigned long module, unsigned long op,
-                uintptr_t cookie)
+void
+tx_append_event(struct tx* self, unsigned long module, unsigned long op,
+                uintptr_t cookie, struct picotm_error* error)
 {
-    int res = log_inject_event(&self->log, module, op, cookie);
-    if (res < 0) {
-        return res;
-    }
-    return 0;
+    log_append_event(&self->log, module, op, cookie, error);
 }
 
 

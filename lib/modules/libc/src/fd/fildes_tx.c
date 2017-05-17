@@ -245,8 +245,9 @@ append_cmd(struct fildes_tx* self, enum fildes_tx_cmd cmd, int fildes,
     event->fildes = fildes;
     event->cookie = cookie;
 
-    int res = picotm_inject_event(self->module, cmd, self->eventtablen);
-    if (res < 0) {
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+    picotm_append_event(self->module, cmd, self->eventtablen, &error);
+    if (picotm_error_is_set(&error)) {
         return -1;
     }
 

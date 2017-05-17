@@ -251,9 +251,9 @@ tm_module_load(uintptr_t addr, void* buf, size_t siz)
         picotm_recover_from_error(&error);
     }
 
-    int res = picotm_inject_event(vmem_tx->module, TM_LOAD, 0);
-    if (res < 0) {
-        picotm_recover_from_error_code(PICOTM_GENERAL_ERROR);
+    picotm_append_event(vmem_tx->module, TM_LOAD, 0, &error);
+    if (picotm_error_is_set(&error)) {
+        picotm_recover_from_error(&error);
     }
 }
 
@@ -275,9 +275,9 @@ tm_module_store(uintptr_t addr, const void* buf, size_t siz)
         }
     } while (is_conflicting);
 
-    int res = picotm_inject_event(vmem_tx->module, TM_STORE, 0);
-    if (res < 0) {
-        picotm_recover_from_error_code(PICOTM_GENERAL_ERROR);
+    picotm_append_event(vmem_tx->module, TM_STORE, 0, &error);
+    if (picotm_error_is_set(&error)) {
+        picotm_recover_from_error(&error);
     }
 }
 
@@ -299,9 +299,9 @@ tm_module_loadstore(uintptr_t laddr, uintptr_t saddr, size_t siz)
         }
     } while (is_conflicting);
 
-    int res = picotm_inject_event(vmem_tx->module, TM_LOADSTORE, 0);
-    if (res < 0) {
-        picotm_recover_from_errno(0);
+    picotm_append_event(vmem_tx->module, TM_LOADSTORE, 0, &error);
+    if (picotm_error_is_set(&error)) {
+        picotm_recover_from_error(&error);
     }
 }
 
@@ -323,9 +323,9 @@ tm_module_privatize(uintptr_t addr, size_t siz, unsigned long flags)
         }
     } while (is_conflicting);
 
-    int res = picotm_inject_event(vmem_tx->module, TM_PRIVATIZE, 0);
-    if (res < 0) {
-        picotm_recover_from_errno(0);
+    picotm_append_event(vmem_tx->module, TM_PRIVATIZE, 0, &error);
+    if (picotm_error_is_set(&error)) {
+        picotm_recover_from_error(&error);
     }
 }
 
@@ -347,8 +347,8 @@ tm_module_privatize_c(uintptr_t addr, int c, unsigned long flags)
         }
     } while (is_conflicting);
 
-    int res = picotm_inject_event(vmem_tx->module, TM_PRIVATIZE, 0);
-    if (res < 0) {
-        picotm_recover_from_errno(0);
+    picotm_append_event(vmem_tx->module, TM_PRIVATIZE, 0, &error);
+    if (picotm_error_is_set(&error)) {
+        picotm_recover_from_error(&error);
     }
 }

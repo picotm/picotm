@@ -61,9 +61,8 @@ append_cmd(struct allocator_tx* self, enum allocator_tx_cmd cmd, void* ptr,
 
     *ptrtab = ptr;
 
-    int res = picotm_inject_event(self->module, cmd, self->ptrtablen);
-    if (res < 0) {
-        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
+    picotm_append_event(self->module, cmd, self->ptrtablen, error);
+    if (picotm_error_is_set(error)) {
         return -1;
     }
 

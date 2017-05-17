@@ -153,14 +153,15 @@ picotm_register_module(picotm_module_lock_function lock,
 
 PICOTM_NOTHROW
 /**
- * Injects an event into the transaction's event log.
- * \param   module  The module number
- * \param   op      A module-specific operation.
- * \param   cookie  A module-specific cookie.
- * \returns 0 on success, or a negative value otherwise.
+ * Appends an event to the transaction's event log.
+ * \param       module  The module number
+ * \param       op      A module-specific operation.
+ * \param       cookie  A module-specific cookie.
+ * \param[out]  error   Returns an error.
  */
-int
-picotm_inject_event(unsigned long module, unsigned long op, uintptr_t cookie);
+void
+picotm_append_event(unsigned long module, unsigned long op, uintptr_t cookie,
+                    struct picotm_error* error);
 
 PICOTM_NOTHROW
 /**
