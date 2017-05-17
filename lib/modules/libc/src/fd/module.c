@@ -162,12 +162,14 @@ uninit_cb(void* data)
 }
 
 static struct fildes_tx*
-get_fildes_tx(struct picotm_error* error)
+get_fildes_tx(bool initialize, struct picotm_error* error)
 {
     static __thread struct fd_module t_module;
 
     if (t_module.is_initialized) {
         return &t_module.tx;
+    } else if (!initialize) {
+        return NULL;
     }
 
     unsigned long module = picotm_register_module(lock_cb,
@@ -199,9 +201,11 @@ static struct fildes_tx*
 get_non_null_fildes_tx(void)
 {
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    struct fildes_tx* fildes_tx = get_fildes_tx(&error);
+    struct fildes_tx* fildes_tx = get_fildes_tx(true, &error);
+    if (picotm_error_is_set(&error)) {
+        picotm_recover_from_error(&error);
+    }
     assert(fildes_tx);
-
     return fildes_tx;
 }
 

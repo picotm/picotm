@@ -85,15 +85,16 @@ uninit_cb(void* data)
 }
 
 static struct vfs_tx*
-get_vfs_tx(void)
+get_vfs_tx(bool initialize, struct picotm_error* error)
 {
     static __thread struct vfs_module t_module;
 
     if (t_module.is_initialized) {
         return &t_module.tx;
+    } else if (!initialize) {
+        return NULL;
     }
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
     unsigned long module = picotm_register_module(lock_cb,
                                                   unlock_cb,
                                                   is_valid_cb,
@@ -103,19 +104,32 @@ get_vfs_tx(void)
                                                   finish_cb,
                                                   uninit_cb,
                                                   &t_module,
-                                                  &error);
-    if (picotm_error_is_set(&error)) {
+                                                  error);
+    if (picotm_error_is_set(error)) {
         return NULL;
     }
 
     int res = vfs_tx_init(&t_module.tx, module);
     if (res < 0) {
+        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
         return NULL;
     }
 
     t_module.is_initialized = true;
 
     return &t_module.tx;
+}
+
+static struct vfs_tx*
+get_non_null_vfs_tx(void)
+{
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+    struct vfs_tx* vfs_tx = get_vfs_tx(true, &error);
+    if (picotm_error_is_set(&error)) {
+        picotm_recover_from_error(&error);
+    }
+    assert(vfs_tx);
+    return vfs_tx;
 }
 
 int
@@ -132,8 +146,7 @@ vfs_module_chdir(const char* path)
 int
 vfs_module_chmod(const char* path, mode_t mode)
 {
-    struct vfs_tx* vfs_tx = get_vfs_tx();
-    assert(vfs_tx);
+    struct vfs_tx* vfs_tx = get_non_null_vfs_tx();
 
     return fchmodat(vfs_tx_get_cwd(vfs_tx), path, mode, 0);
 }
@@ -143,8 +156,7 @@ vfs_module_fchdir(int fildes)
 {
     int res;
 
-    struct vfs_tx* vfs_tx = get_vfs_tx();
-    assert(vfs_tx);
+    struct vfs_tx* vfs_tx = get_non_null_vfs_tx();
 
     do {
         res = vfs_tx_exec_fchdir(vfs_tx, fildes);
@@ -205,8 +217,7 @@ vfs_module_fstat(int fildes, struct stat* buf)
 char*
 vfs_module_getcwd(char* buf, size_t size)
 {
-    struct vfs_tx* vfs_tx = get_vfs_tx();
-    assert(vfs_tx);
+    struct vfs_tx* vfs_tx = get_non_null_vfs_tx();
 
     if (!size) {
         errno = EINVAL;
@@ -240,8 +251,7 @@ err_size_ge_len:
 int
 vfs_module_getcwd_fildes()
 {
-    struct vfs_tx* vfs_tx = get_vfs_tx();
-    assert(vfs_tx);
+    struct vfs_tx* vfs_tx = get_non_null_vfs_tx();
 
     return vfs_tx_get_cwd(vfs_tx);
 }
@@ -249,8 +259,7 @@ vfs_module_getcwd_fildes()
 int
 vfs_module_link(const char* path1, const char* path2)
 {
-    struct vfs_tx* vfs_tx = get_vfs_tx();
-    assert(vfs_tx);
+    struct vfs_tx* vfs_tx = get_non_null_vfs_tx();
 
     int cwd = vfs_tx_get_cwd(vfs_tx);
 
@@ -260,8 +269,7 @@ vfs_module_link(const char* path1, const char* path2)
 int
 vfs_module_lstat(const char* path, struct stat* buf)
 {
-    struct vfs_tx* vfs_tx = get_vfs_tx();
-    assert(vfs_tx);
+    struct vfs_tx* vfs_tx = get_non_null_vfs_tx();
 
     return fstatat(vfs_tx_get_cwd(vfs_tx), path, buf, AT_SYMLINK_NOFOLLOW);
 }
@@ -269,8 +277,7 @@ vfs_module_lstat(const char* path, struct stat* buf)
 int
 vfs_module_mkdir(const char* path, mode_t mode)
 {
-    struct vfs_tx* vfs_tx = get_vfs_tx();
-    assert(vfs_tx);
+    struct vfs_tx* vfs_tx = get_non_null_vfs_tx();
 
     return mkdirat(vfs_tx_get_cwd(vfs_tx), path, mode);
 }
@@ -278,8 +285,7 @@ vfs_module_mkdir(const char* path, mode_t mode)
 int
 vfs_module_mkfifo(const char* path, mode_t mode)
 {
-    struct vfs_tx* vfs_tx = get_vfs_tx();
-    assert(vfs_tx);
+    struct vfs_tx* vfs_tx = get_non_null_vfs_tx();
 
     return mkfifoat(vfs_tx_get_cwd(vfs_tx), path, mode);
 }
@@ -287,8 +293,7 @@ vfs_module_mkfifo(const char* path, mode_t mode)
 int
 vfs_module_mknod(const char* path, mode_t mode, dev_t dev)
 {
-    struct vfs_tx* vfs_tx = get_vfs_tx();
-    assert(vfs_tx);
+    struct vfs_tx* vfs_tx = get_non_null_vfs_tx();
 
     return mknodat(vfs_tx_get_cwd(vfs_tx), path, mode, dev);
 }
@@ -298,8 +303,7 @@ vfs_module_mkstemp(char* template)
 {
     int res;
 
-    struct vfs_tx* vfs_tx = get_vfs_tx();
-    assert(vfs_tx);
+    struct vfs_tx* vfs_tx = get_non_null_vfs_tx();
 
     do {
         res = vfs_tx_exec_mkstemp(vfs_tx, template);
@@ -322,8 +326,7 @@ vfs_module_mkstemp(char* template)
 int
 vfs_module_stat(const char* path, struct stat* buf)
 {
-    struct vfs_tx* vfs_tx = get_vfs_tx();
-    assert(vfs_tx);
+    struct vfs_tx* vfs_tx = get_non_null_vfs_tx();
 
     return fstatat(vfs_tx_get_cwd(vfs_tx), path, buf, 0);
 }
@@ -331,8 +334,7 @@ vfs_module_stat(const char* path, struct stat* buf)
 int
 vfs_module_unlink(const char* path)
 {
-    struct vfs_tx* vfs_tx = get_vfs_tx();
-    assert(vfs_tx);
+    struct vfs_tx* vfs_tx = get_non_null_vfs_tx();
 
     return unlinkat(vfs_tx_get_cwd(vfs_tx), path, 0);
 }
