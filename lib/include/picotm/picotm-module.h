@@ -37,31 +37,29 @@ struct event {
  * if a commit.
  * \param       data    The pointer to module-specific data.
  * \param[out]  error   Returns an error from the module.
- * \returns 0 on success, or a negative value otherwise.
  */
-typedef int (*picotm_module_lock_function)(void* data,
-                                           struct picotm_error* error);
+typedef void (*picotm_module_lock_function)(void* data,
+                                            struct picotm_error* error);
 
 /**
  * Invoked by picotm to unlock a module's resources. This is the inverse
  * of picotm_module_lock_function.
  * \param       data    The pointer to module-specific data.
  * \param[out]  error   Returns an error from the module.
- * \returns 0 on success, or a negative value otherwise.
  */
-typedef int (*picotm_module_unlock_function)(void* data,
-                                             struct picotm_error* error);
+typedef void (*picotm_module_unlock_function)(void* data,
+                                              struct picotm_error* error);
 
 /**
  * Invoked by picotm to validate a module's resources.
  * \param       data            The pointer to module-specific data.
  * \param       is_irrevocable  True if the transaction is irrevocable, false otherwise.
  * \param[out]  error           Returns an error from the module.
- * \returns 0 on success, or a negative value otherwise.
+ * \returns True if valid, or flase otherwise.
  */
-typedef int (*picotm_module_validate_function)(void* data,
-                                               int is_irrevocable,
-                                               struct picotm_error* error);
+typedef bool (*picotm_module_is_valid_function)(void* data,
+                                                int is_irrevocable,
+                                                struct picotm_error* error);
 
 /**
  * Invoked by picotm during the commit phase to apply a number of
@@ -70,12 +68,11 @@ typedef int (*picotm_module_validate_function)(void* data,
  * \param       nevents The number of elements in events.
  * \param       data    The pointer to module-specific data.
  * \param[out]  error   Returns an error from the module.
- * \returns 0 on success, or a negative value otherwise.
  */
-typedef int (*picotm_module_apply_events_function)(const struct event* events,
-                                                   size_t nevents,
-                                                   void* data,
-                                                   struct picotm_error* error);
+typedef void (*picotm_module_apply_events_function)(const struct event* events,
+                                                    size_t nevents,
+                                                    void* data,
+                                                    struct picotm_error* error);
 
 /**
  * Invoked by picotm during the roll-back phase to revert a number of
@@ -84,44 +81,40 @@ typedef int (*picotm_module_apply_events_function)(const struct event* events,
  * \param       nevents The number of elements in events.
  * \param       data    The pointer to module-specific data.
  * \param[out]  error   Returns an error from the module.
- * \returns 0 on success, or a negative value otherwise.
  */
-typedef int (*picotm_module_undo_events_function)(const struct event* events,
-                                                  size_t nevents,
-                                                  void* data,
-                                                  struct picotm_error* error);
+typedef void (*picotm_module_undo_events_function)(const struct event* events,
+                                                   size_t nevents,
+                                                   void* data,
+                                                   struct picotm_error* error);
 
 /**
  * Invoked by picotm to update a module's concurrency control during a commit.
  * \param       data            The pointer to module-specific data.
  * \param       is_irrevocable  True if the transaction is irrevocable, false otherwise.
  * \param[out]  error           Returns an error from the module.
- * \returns 0 on success, or a negative value otherwise.
  */
-typedef int (*picotm_module_update_cc_function)(void* data,
-                                                int is_irrevocable,
-                                                struct picotm_error* error);
+typedef void (*picotm_module_update_cc_function)(void* data,
+                                                 int is_irrevocable,
+                                                 struct picotm_error* error);
 
 /**
  * Invoked by picotm to clear a module's concurrency control during an abort.
  * \param       data            The pointer to module-specific data.
  * \param       is_irrevocable  True if the transaction is irrevocable, false otherwise.
  * \param[out]  error           Returns an error from the module.
- * \returns 0 on success, or a negative value otherwise.
  */
-typedef int (*picotm_module_clear_cc_function)(void* data,
-                                               int is_irrevocable,
-                                               struct picotm_error* error);
+typedef void (*picotm_module_clear_cc_function)(void* data,
+                                                int is_irrevocable,
+                                                struct picotm_error* error);
 
 /**
  * Invoked by picotm to clean up a module's resources at the end of a
  * transaction.
  * \param       data    The pointer to module-specific data.
  * \param[out]  error   Returns an error from the module.
- * \returns             0 on success, or a negative value otherwise.
  */
-typedef int (*picotm_module_finish_function)(void* data,
-                                             struct picotm_error* error);
+typedef void (*picotm_module_finish_function)(void* data,
+                                              struct picotm_error* error);
 
 /**
  * Invoked by picotm to clean up a module's resources when the thread exists.
@@ -134,7 +127,7 @@ PICOTM_NOTHROW
  * Registers a new module with the transaction management system.
  * \param   lock            The lock call-back function.
  * \param   unlock          The unlock call-back function.
- * \param   validate        The validate call-back function.
+ * \param   is_valid        The is-valid call-back function.
  * \param   apply_events    The apply-events call-back function.
  * \param   undo_events     The undo-events call-back function.
  * \param   update_cc       The update-CC call-back function.
@@ -147,7 +140,7 @@ PICOTM_NOTHROW
 long
 picotm_register_module(picotm_module_lock_function lock,
                        picotm_module_unlock_function unlock,
-                       picotm_module_validate_function validate,
+                       picotm_module_is_valid_function is_valid,
                        picotm_module_apply_events_function apply_events,
                        picotm_module_undo_events_function undo_events,
                        picotm_module_update_cc_function update_cc,

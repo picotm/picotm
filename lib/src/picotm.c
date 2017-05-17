@@ -267,19 +267,19 @@ picotm_error_as_errno()
 
 PICOTM_EXPORT
 long
-picotm_register_module(int (*lock)(void*, struct picotm_error*),
-                       int (*unlock)(void*, struct picotm_error*),
-                       int (*validate)(void*, int, struct picotm_error*),
-                       int (*apply_event)(const struct event*, size_t, void*, struct picotm_error*),
-                       int (*undo_event)(const struct event*, size_t, void*, struct picotm_error*),
-                       int (*updatecc)(void*, int, struct picotm_error*),
-                       int (*clearcc)(void*, int, struct picotm_error*),
-                       int (*finish)(void*, struct picotm_error*),
-                       void (*uninit)(void*),
+picotm_register_module(picotm_module_lock_function lock,
+                       picotm_module_unlock_function unlock,
+                       picotm_module_is_valid_function is_valid,
+                       picotm_module_apply_events_function apply_events,
+                       picotm_module_undo_events_function undo_events,
+                       picotm_module_update_cc_function update_cc,
+                       picotm_module_clear_cc_function clear_cc,
+                       picotm_module_finish_function finish,
+                       picotm_module_uninit_function uninit,
                        void* data)
 {
-    return tx_register_module(get_non_null_tx(), lock, unlock, validate,
-                              apply_event, undo_event, updatecc, clearcc,
+    return tx_register_module(get_non_null_tx(), lock, unlock, is_valid,
+                              apply_events, undo_events, update_cc, clear_cc,
                               finish, uninit, data);
 }
 

@@ -41,25 +41,17 @@ errno_release(struct error_module* module)
  * Thread-local data
  */
 
-static int
+static void
 undo_events_cb(const struct event* event, size_t nevents, void* data,
                struct picotm_error* error)
 {
     errno_undo_events(event, nevents, data, error);
-    if (picotm_error_is_set(error)) {
-        return -1;
-    }
-    return 0;
 }
 
-static int
+static void
 finish_cb(void* data, struct picotm_error* error)
 {
     errno_finish(data, error);
-    if (picotm_error_is_set(error)) {
-        return -1;
-    }
-    return 0;
 }
 
 static void

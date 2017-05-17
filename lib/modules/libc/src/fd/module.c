@@ -14,7 +14,7 @@ struct fd_module {
     struct fildes_tx tx;
 };
 
-static int
+static void
 lock_cb(void* data, struct picotm_error* error)
 {
     struct fd_module* module = data;
@@ -23,30 +23,27 @@ lock_cb(void* data, struct picotm_error* error)
     if (res < 0) {
         if (res == ERR_SYSTEM) {
             picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
-            return -1;
+            return;
         } else if (res == ERR_CONFLICT) {
             picotm_error_set_conflicting(error, NULL);
-            return -1;
+            return;
         } else {
             /* Unsupported error code. */
             abort();
         }
     }
-    return 0;
 }
 
-static int
+static void
 unlock_cb(void* data, struct picotm_error* error)
 {
     struct fd_module* module = data;
 
     fildes_tx_unlock(&module->tx);
-
-    return 0;
 }
 
-static int
-validate_cb(void* data, int noundo, struct picotm_error* error)
+static bool
+is_valid_cb(void* data, int noundo, struct picotm_error* error)
 {
     struct fd_module* module = data;
 
@@ -54,19 +51,18 @@ validate_cb(void* data, int noundo, struct picotm_error* error)
     if (res < 0) {
         if (res == ERR_SYSTEM) {
             picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
-            return -1;
         } else if (res == ERR_CONFLICT) {
             picotm_error_set_conflicting(error, NULL);
-            return -1;
         } else {
             /* Unsupported error code. */
             abort();
         }
+        return false;
     }
-    return 0;
+    return true;
 }
 
-static int
+static void
 apply_event_cb(const struct event* event, size_t n, void* data,
                struct picotm_error* error)
 {
@@ -76,19 +72,18 @@ apply_event_cb(const struct event* event, size_t n, void* data,
     if (res < 0) {
         if (res == ERR_SYSTEM) {
             picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
-            return -1;
+            return;
         } else if (res == ERR_CONFLICT) {
             picotm_error_set_conflicting(error, NULL);
-            return -1;
+            return;
         } else {
             /* Unsupported error code. */
             abort();
         }
     }
-    return 0;
 }
 
-static int
+static void
 undo_event_cb(const struct event* event, size_t n, void *data,
               struct picotm_error* error)
 {
@@ -98,19 +93,18 @@ undo_event_cb(const struct event* event, size_t n, void *data,
     if (res < 0) {
         if (res == ERR_SYSTEM) {
             picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
-            return -1;
+            return;
         } else if (res == ERR_CONFLICT) {
             picotm_error_set_conflicting(error, NULL);
-            return -1;
+            return;
         } else {
             /* Unsupported error code. */
             abort();
         }
     }
-    return 0;
 }
 
-static int
+static void
 update_cc_cb(void* data, int noundo, struct picotm_error* error)
 {
     struct fd_module* module = data;
@@ -119,19 +113,18 @@ update_cc_cb(void* data, int noundo, struct picotm_error* error)
     if (res < 0) {
         if (res == ERR_SYSTEM) {
             picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
-            return -1;
+            return;
         } else if (res == ERR_CONFLICT) {
             picotm_error_set_conflicting(error, NULL);
-            return -1;
+            return;
         } else {
             /* Unsupported error code. */
             abort();
         }
     }
-    return 0;
 }
 
-static int
+static void
 clear_cc_cb(void* data, int noundo, struct picotm_error* error)
 {
     struct fd_module* module = data;
@@ -140,26 +133,23 @@ clear_cc_cb(void* data, int noundo, struct picotm_error* error)
     if (res < 0) {
         if (res == ERR_SYSTEM) {
             picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
-            return -1;
+            return;
         } else if (res == ERR_CONFLICT) {
             picotm_error_set_conflicting(error, NULL);
-            return -1;
+            return;
         } else {
             /* Unsupported error code. */
             abort();
         }
     }
-    return 0;
 }
 
-static int
+static void
 finish_cb(void* data, struct picotm_error* error)
 {
     struct fd_module* module = data;
 
     fildes_tx_finish(&module->tx);
-
-    return 0;
 }
 
 static void
@@ -182,7 +172,7 @@ get_fildes_tx(void)
 
     long res = picotm_register_module(lock_cb,
                                       unlock_cb,
-                                      validate_cb,
+                                      is_valid_cb,
                                       apply_event_cb,
                                       undo_event_cb,
                                       update_cc_cb,

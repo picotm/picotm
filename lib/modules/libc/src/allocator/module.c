@@ -13,39 +13,30 @@ struct allocator_module {
     struct allocator_tx tx;
 };
 
-static int
+static void
 apply_event_cb(const struct event* event, size_t nevents, void* data,
                struct picotm_error* error)
 {
     struct allocator_module* module = data;
 
     allocator_tx_apply_event(&module->tx, event, nevents, error);
-    if (picotm_error_is_set(error)) {
-        return -1;
-    }
-    return 0;
 }
 
-static int
+static void
 undo_event_cb(const struct event* event, size_t nevents, void* data,
               struct picotm_error* error)
 {
     struct allocator_module* module = data;
 
     allocator_tx_undo_event(&module->tx, event, nevents, error);
-    if (picotm_error_is_set(error)) {
-        return -1;
-    }
-    return 0;
 }
 
-static int
+static void
 finish_cb(void* data, struct picotm_error* error)
 {
     struct allocator_module* module = data;
 
     allocator_tx_finish(&module->tx);
-    return 0;
 }
 
 static void

@@ -76,11 +76,11 @@ fpu_tx_save_fexcept(struct fpu_tx* self, struct picotm_error* error);
 /**
  * Reverts all transaction-local changes.
  */
-int
+void
 fpu_tx_undo(struct fpu_tx* self, struct picotm_error* error);
 
 /**
  * Cleans up a transaction's FPU state.
  */
-int
-fpu_tx_finish(struct fpu_tx* self, struct picotm_error* error);
+void
+fpu_tx_finish(struct fpu_tx* self);

@@ -24,76 +24,55 @@ struct vfs_module {
     struct vfs_tx tx;
 };
 
-static int
+static void
 lock_cb(void* data, struct picotm_error* error)
 {
     struct vfs_module* module = data;
 
     vfs_tx_lock(&module->tx, error);
-    if (picotm_error_is_set(error)) {
-        return -1;
-    }
-    return 0;
 }
 
-static int
+static void
 unlock_cb(void* data, struct picotm_error* error)
 {
     struct vfs_module* module = data;
 
     vfs_tx_unlock(&module->tx);
-
-    return 0;
 }
 
-static int
-validate_cb(void* data, int noundo, struct picotm_error* error)
+static bool
+is_valid_cb(void* data, int noundo, struct picotm_error* error)
 {
     struct vfs_module* module = data;
 
     vfs_tx_validate(&module->tx, error);
-    if (picotm_error_is_set(error)) {
-        return -1;
-    }
-    return 0;
+    return !picotm_error_is_set(error);
 }
 
-static int
+static void
 apply_event_cb(const struct event* event, size_t n, void* data,
                struct picotm_error* error)
 {
     struct vfs_module* module = data;
 
     vfs_tx_apply_event(&module->tx, event, n, error);
-    if (picotm_error_is_set(error)) {
-        return -1;
-    }
-    return 0;
 }
 
-static int
+static void
 undo_event_cb(const struct event* event, size_t n, void* data,
               struct picotm_error* error)
 {
     struct vfs_module* module = data;
 
     vfs_tx_undo_event(&module->tx, event, n, error);
-    if (picotm_error_is_set(error)) {
-        return -1;
-    }
-    return 0;
 }
 
-static int
+static void
 finish_cb(void* data, struct picotm_error* error)
 {
     struct vfs_module* module = data;
 
     vfs_tx_finish(&module->tx, error);
-    if (picotm_error_is_set(error)) {
-        return -1;
-    }
-    return 0;
 }
 
 static void
@@ -116,7 +95,7 @@ get_vfs_tx(void)
 
     long res = picotm_register_module(lock_cb,
                                       unlock_cb,
-                                      validate_cb,
+                                      is_valid_cb,
                                       apply_event_cb,
                                       undo_event_cb,
                                       NULL,

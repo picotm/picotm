@@ -48,14 +48,14 @@ tx_is_irrevocable(const struct tx* self)
 
 long
 tx_register_module(struct tx* self,
-                   int (*lock)(void*, struct picotm_error*),
-                   int (*unlock)(void*, struct picotm_error*),
-                   int (*validate)(void*, int, struct picotm_error*),
-                   int (*apply_event)(const struct event*, size_t, void*, struct picotm_error*),
-                   int (*undo_event)(const struct event*, size_t, void*, struct picotm_error*),
-                   int (*updatecc)(void*, int, struct picotm_error*),
-                   int (*clearcc)(void*, int, struct picotm_error*),
-                   int (*finish)(void*, struct picotm_error*),
+                   void (*lock)(void*, struct picotm_error*),
+                   void (*unlock)(void*, struct picotm_error*),
+                   bool (*is_valid)(void*, int, struct picotm_error*),
+                   void (*apply_events)(const struct event*, size_t, void*, struct picotm_error*),
+                   void (*undo_events)(const struct event*, size_t, void*, struct picotm_error*),
+                   void (*update_cc)(void*, int, struct picotm_error*),
+                   void (*clear_cc)(void*, int, struct picotm_error*),
+                   void (*finish)(void*, struct picotm_error*),
                    void (*uninit)(void*),
                    void* data)
 {
@@ -65,8 +65,8 @@ tx_register_module(struct tx* self,
 
     long module = self->nmodules;
 
-    int res = module_init(self->module + module, lock, unlock, validate,
-                          apply_event, undo_event, updatecc, clearcc,
+    int res = module_init(self->module + module, lock, unlock, is_valid,
+                          apply_events, undo_events, update_cc, clear_cc,
                           finish, uninit, data);
     if (res < 0) {
         return res;
@@ -118,8 +118,8 @@ tx_begin(struct tx* self, enum tx_mode mode)
 static int
 lock_cb(void* module, void* error)
 {
-    int res = module_lock(module, error);
-    return res < 0 ? -1 : 1;
+    module_lock(module, error);
+    return picotm_error_is_set(error) ? -1 : 1;
 }
 
 static int
@@ -136,8 +136,8 @@ lock_modules(struct module* module, unsigned long nmodules,
 static int
 unlock_cb(void* module, void* error)
 {
-    int res = module_unlock(module, error);
-    return res < 0 ? -1 : 1;
+    module_unlock(module, error);
+    return picotm_error_is_set(error) ? -1 : 1;
 }
 
 static int
@@ -154,8 +154,8 @@ unlock_modules(struct module* module, unsigned long nmodules,
 static int
 validate_cb(void* module, void* is_irrevocable, void* error)
 {
-    int res = module_validate(module, *((bool*)is_irrevocable), error);
-    return res < 0 ? -1 : 1;
+    bool is_valid = module_is_valid(module, *((bool*)is_irrevocable), error);
+    return (!is_valid || picotm_error_is_set(error)) ? -1 : 1;
 }
 
 static int
@@ -173,8 +173,8 @@ validate_modules(struct module* module, unsigned long nmodules,
 static int
 update_cc_cb(void* module, void* is_irrevocable, void* error)
 {
-    int res = module_update_cc(module, *((bool*)is_irrevocable), error);
-    return res < 0 ? -1 : 1;
+    module_update_cc(module, *((bool*)is_irrevocable), error);
+    return picotm_error_is_set(error) ? -1 : 1;
 }
 
 static int
@@ -192,8 +192,8 @@ update_modules_cc(struct module* module, unsigned long nmodules,
 static int
 clear_cc_cb(void* module, void* is_irrevocable, void* error)
 {
-    int res = module_clear_cc(module, *((bool*)is_irrevocable), error);
-    return res < 0 ? -1 : 1;
+    module_clear_cc(module, *((bool*)is_irrevocable), error);
+    return picotm_error_is_set(error) ? -1 : 1;
 }
 
 static int
@@ -211,8 +211,8 @@ clear_modules_cc(struct module* module, unsigned long nmodules,
 static int
 log_finish_cb(void* module, void* error)
 {
-    int res = module_finish(module, error);
-    return res < 0 ? -1 : 1;
+    module_finish(module, error);
+    return picotm_error_is_set(error) ? -1 : 1;
 }
 
 static int

@@ -124,66 +124,46 @@ uninit(struct tm_module* module)
  * Thread-local data
  */
 
-static int
+static void
 lock_cb(void* data, struct picotm_error* error)
 {
     lock(data, error);
-    if (picotm_error_is_set(error)) {
-        return -1;
-    }
-    return 0;
 }
 
-static int
+static void
 unlock_cb(void* data, struct picotm_error* error)
 {
     unlock(data, error);
-    if (picotm_error_is_set(error)) {
-        return -1;
-    }
-    return 0;
 }
 
-static int
-validate_cb(void* data, int eotx, struct picotm_error* error)
+static bool
+is_valid_cb(void* data, int eotx, struct picotm_error* error)
 {
     validate(data, !!eotx, error);
     if (picotm_error_is_set(error)) {
-        return -1;
+        return false;
     }
-    return 0;
+    return true;
 }
 
-static int
+static void
 apply_event_cb(const struct event* event, size_t nevents, void* data,
                struct picotm_error* error)
 {
     apply(data, event, nevents, error);
-    if (picotm_error_is_set(error)) {
-        return -1;
-    }
-    return 0;
 }
 
-static int
+static void
 undo_event_cb(const struct event* event, size_t nevents, void* data,
               struct picotm_error* error)
 {
     undo(data, event, nevents, error);
-    if (picotm_error_is_set(error)) {
-        return -1;
-    }
-    return 0;
 }
 
-static int
+static void
 finish_cb(void* data, struct picotm_error* error)
 {
     finish(data, error);
-    if (picotm_error_is_set(error)) {
-        return -1;
-    }
-    return 0;
 }
 
 static void
@@ -201,7 +181,7 @@ get_vmem_tx(struct picotm_error* error)
         return &t_module.tx;
     }
 
-    long res = picotm_register_module(lock_cb, unlock_cb, validate_cb,
+    long res = picotm_register_module(lock_cb, unlock_cb, is_valid_cb,
                                       apply_event_cb, undo_event_cb,
                                       NULL, NULL,
                                       finish_cb,
