@@ -29,7 +29,11 @@ lock_cb(void* data, struct picotm_error* error)
 {
     struct vfs_module* module = data;
 
-    return vfs_tx_lock(&module->tx, error);
+    vfs_tx_lock(&module->tx, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+    return 0;
 }
 
 static int
@@ -47,7 +51,11 @@ validate_cb(void* data, int noundo, struct picotm_error* error)
 {
     struct vfs_module* module = data;
 
-    return vfs_tx_validate(&module->tx, error);
+    vfs_tx_validate(&module->tx, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+    return 0;
 }
 
 static int
@@ -56,7 +64,11 @@ apply_event_cb(const struct event* event, size_t n, void* data,
 {
     struct vfs_module* module = data;
 
-    return vfs_tx_apply_event(&module->tx, event, n, error);
+    vfs_tx_apply_event(&module->tx, event, n, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+    return 0;
 }
 
 static int
@@ -65,7 +77,11 @@ undo_event_cb(const struct event* event, size_t n, void* data,
 {
     struct vfs_module* module = data;
 
-    return vfs_tx_undo_event(&module->tx, event, n, error);
+    vfs_tx_undo_event(&module->tx, event, n, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+    return 0;
 }
 
 static int
@@ -74,7 +90,9 @@ finish_cb(void* data, struct picotm_error* error)
     struct vfs_module* module = data;
 
     vfs_tx_finish(&module->tx, error);
-
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
     return 0;
 }
 
