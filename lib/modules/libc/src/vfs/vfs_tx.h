@@ -5,6 +5,7 @@
 #pragma once
 
 #include <stddef.h>
+#include <sys/stat.h>
 
 /**
  * \cond impl || libc_impl || libc_impl_vfs
@@ -60,6 +61,14 @@ vfs_tx_canonical_path(struct vfs_tx* self, const char* path,
                       struct picotm_error* error);
 
 /*
+ * chmod()
+ */
+
+int
+vfs_tx_exec_chmod(struct vfs_tx* self, const char* path, mode_t mode,
+                  struct picotm_error* error);
+
+/*
  * fchdir()
  */
 
@@ -68,12 +77,92 @@ vfs_tx_exec_fchdir(struct vfs_tx* self, int fildes,
                    struct picotm_error* error);
 
 /*
+ * fchmod()
+ */
+
+int
+vfs_tx_exec_fchmod(struct vfs_tx* self, int fildes, mode_t mode,
+                   struct picotm_error* error);
+
+/*
+ * fstat()
+ */
+
+int
+vfs_tx_exec_fstat(struct vfs_tx* self, int fildes, struct stat* buf,
+                  struct picotm_error* error);
+
+/*
+ * getcwd()
+ */
+
+char*
+vfs_tx_exec_getcwd(struct vfs_tx* self, char* buf, size_t size,
+                   struct picotm_error* error);
+
+/*
+ * link()
+ */
+
+int
+vfs_tx_exec_link(struct vfs_tx* self, const char* path1, const char* path2,
+                 struct picotm_error* error);
+
+/*
+ * lstat()
+ */
+
+int
+vfs_tx_exec_lstat(struct vfs_tx* self, const char* path, struct stat* buf,
+                  struct picotm_error* error);
+
+/*
+ * mkdir()
+ */
+
+int
+vfs_tx_exec_mkdir(struct vfs_tx* self, const char* path, mode_t mode,
+                  struct picotm_error* error);
+
+/*
+ * mkfifo()
+ */
+
+int
+vfs_tx_exec_mkfifo(struct vfs_tx* self, const char* path, mode_t mode,
+                   struct picotm_error* error);
+
+/*
+ * mknod()
+ */
+
+int
+vfs_tx_exec_mknod(struct vfs_tx* self, const char* path, mode_t mode,
+                  dev_t dev, struct picotm_error* error);
+
+/*
  * mkstemp()
  */
 
 int
 vfs_tx_exec_mkstemp(struct vfs_tx* self, char* pathname,
                     struct picotm_error* error);
+
+/*
+ * stat()
+ */
+
+int
+vfs_tx_exec_stat(struct vfs_tx* self, const char* path, struct stat* buf,
+                 struct picotm_error* error);
+
+/*
+ * unlink()
+ */
+
+int
+vfs_tx_exec_unlink(struct vfs_tx* self, const char* path,
+                   struct picotm_error* error);
 
 /*
  * Module interface
