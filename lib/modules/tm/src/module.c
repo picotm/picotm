@@ -173,12 +173,14 @@ uninit_cb(void* data)
 }
 
 static struct tm_vmem_tx*
-get_vmem_tx(struct picotm_error* error)
+get_vmem_tx(bool initialize, struct picotm_error* error)
 {
     static __thread struct tm_module t_module;
 
     if (t_module.is_initialized) {
         return &t_module.tx;
+    } else if (!initialize) {
+        return NULL;
     }
 
     unsigned long module = picotm_register_module(lock_cb, unlock_cb,
@@ -210,7 +212,7 @@ static struct tm_vmem_tx*
 get_non_null_vmem_tx(void)
 {
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    struct tm_vmem_tx* vmem_tx = get_vmem_tx(&error);
+    struct tm_vmem_tx* vmem_tx = get_vmem_tx(true, &error);
     if (picotm_error_is_set(&error)) {
         picotm_recover_from_error(&error);
     }
