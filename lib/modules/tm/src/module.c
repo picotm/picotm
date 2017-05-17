@@ -181,17 +181,18 @@ get_vmem_tx(struct picotm_error* error)
         return &t_module.tx;
     }
 
-    long res = picotm_register_module(lock_cb, unlock_cb, is_valid_cb,
-                                      apply_event_cb, undo_event_cb,
-                                      NULL, NULL,
-                                      finish_cb,
-                                      uninit_cb,
-                                      &t_module);
-    if (res < 0) {
-        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
+    unsigned long module = picotm_register_module(lock_cb, unlock_cb,
+                                                  is_valid_cb,
+                                                  apply_event_cb,
+                                                  undo_event_cb,
+                                                  NULL, NULL,
+                                                  finish_cb,
+                                                  uninit_cb,
+                                                  &t_module,
+                                                  error);
+    if (picotm_error_is_set(error)) {
         return NULL;
     }
-    unsigned long module = res;
 
     struct tm_vmem* vmem = get_vmem(error);
     if (picotm_error_is_set(error)) {

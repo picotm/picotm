@@ -30,7 +30,7 @@ struct module {
     void *data;
 };
 
-int
+void
 module_init(struct module* self,
             void (*lock)(void*, struct picotm_error*),
             void (*unlock)(void*, struct picotm_error*),

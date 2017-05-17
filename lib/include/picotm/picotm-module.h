@@ -125,19 +125,20 @@ typedef void (*picotm_module_uninit_function)(void* data);
 PICOTM_NOTHROW
 /**
  * Registers a new module with the transaction management system.
- * \param   lock            The lock call-back function.
- * \param   unlock          The unlock call-back function.
- * \param   is_valid        The is-valid call-back function.
- * \param   apply_events    The apply-events call-back function.
- * \param   undo_events     The undo-events call-back function.
- * \param   update_cc       The update-CC call-back function.
- * \param   clear_cc        The clear-CC call-back function.
- * \param   finish          The finish call-back function.
- * \param   uninit          The uninit call-back function.
- * \param   cbdata          A pointer to module-specific data.
- * \returns A module number on success, or a negative value otherwise.
+ * \param       lock            The lock call-back function.
+ * \param       unlock          The unlock call-back function.
+ * \param       is_valid        The is-valid call-back function.
+ * \param       apply_events    The apply-events call-back function.
+ * \param       undo_events     The undo-events call-back function.
+ * \param       update_cc       The update-CC call-back function.
+ * \param       clear_cc        The clear-CC call-back function.
+ * \param       finish          The finish call-back function.
+ * \param       uninit          The uninit call-back function.
+ * \param       cbdata          A pointer to module-specific data.
+ * \param[out]  error           Returns an error.
+ * \returns A module number on success.
  */
-long
+unsigned long
 picotm_register_module(picotm_module_lock_function lock,
                        picotm_module_unlock_function unlock,
                        picotm_module_is_valid_function is_valid,
@@ -147,7 +148,8 @@ picotm_register_module(picotm_module_lock_function lock,
                        picotm_module_clear_cc_function clear_cc,
                        picotm_module_finish_function finish,
                        picotm_module_uninit_function uninit,
-                       void* cbdata);
+                       void* cbdata,
+                       struct picotm_error* error);
 
 PICOTM_NOTHROW
 /**

@@ -4,7 +4,7 @@
 
 #include "module.h"
 
-int
+void
 module_init(struct module* self,
             void (*lock)(void*, struct picotm_error*),
             void (*unlock)(void*, struct picotm_error*),
@@ -27,8 +27,6 @@ module_init(struct module* self,
     self->finish = finish;
     self->uninit = uninit;
     self->data = data;
-
-    return 0;
 }
 
 void

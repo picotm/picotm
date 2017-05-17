@@ -46,7 +46,7 @@ tx_is_irrevocable(const struct tx* self)
     return self->mode == TX_MODE_IRREVOCABLE;
 }
 
-long
+unsigned long
 tx_register_module(struct tx* self,
                    void (*lock)(void*, struct picotm_error*),
                    void (*unlock)(void*, struct picotm_error*),
@@ -57,20 +57,19 @@ tx_register_module(struct tx* self,
                    void (*clear_cc)(void*, int, struct picotm_error*),
                    void (*finish)(void*, struct picotm_error*),
                    void (*uninit)(void*),
-                   void* data)
+                   void* data,
+                   struct picotm_error* error)
 {
-    if (self->nmodules >= arraylen(self->module)) {
-        return -ENOMEM;
+    unsigned long module = self->nmodules;
+
+    if (module >= arraylen(self->module)) {
+        picotm_error_set_error_code(error, PICOTM_OUT_OF_MEMORY);
+        return 0;
     }
 
-    long module = self->nmodules;
-
-    int res = module_init(self->module + module, lock, unlock, is_valid,
-                          apply_events, undo_events, update_cc, clear_cc,
-                          finish, uninit, data);
-    if (res < 0) {
-        return res;
-    }
+    module_init(self->module + module, lock, unlock, is_valid,
+                apply_events, undo_events, update_cc, clear_cc,
+                finish, uninit, data);
 
     self->nmodules = module + 1;
 
