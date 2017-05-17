@@ -17,17 +17,17 @@ struct fpu_module {
  * Module interface
  */
 
-static int
+static void
 fpu_module_undo_events(const struct event* event, size_t nevents,
                        struct fpu_module* module, struct picotm_error* error)
 {
-    return fpu_tx_undo(&module->tx, error);
+    fpu_tx_undo(&module->tx, error);
 }
 
-static int
+static void
 fpu_module_finish(struct fpu_module* module, struct picotm_error* error)
 {
-    return fpu_tx_finish(&module->tx, error);
+    fpu_tx_finish(&module->tx);
 }
 
 static void
@@ -41,17 +41,17 @@ fpu_module_uninit(struct fpu_module* module)
  * Thread-local data
  */
 
-static int
+static void
 undo_events_cb(const struct event* event, size_t nevents, void* data,
                struct picotm_error* error)
 {
-    return fpu_module_undo_events(event, nevents, data, error);
+    fpu_module_undo_events(event, nevents, data, error);
 }
 
-static int
+static void
 finish_cb(void* data, struct picotm_error* error)
 {
-    return fpu_module_finish(data, error);
+    fpu_module_finish(data, error);
 }
 
 static void

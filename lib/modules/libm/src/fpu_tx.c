@@ -92,14 +92,14 @@ fpu_tx_save_fexcept(struct fpu_tx* self, struct picotm_error* error)
     self->flags |= FPU_TX_FLAG_FEXCEPT_SAVED;
 }
 
-int
+void
 fpu_tx_undo(struct fpu_tx* self, struct picotm_error* error)
 {
     if (self->flags & FPU_TX_FLAG_FENV_SAVED) {
         int res = fesetenv(&self->saved_fenv);
         if (res < 0) {
             picotm_error_set_error_code(error, PICOTM_INVALID_FENV);
-            return -1;
+            return;
         }
     }
 
@@ -107,17 +107,13 @@ fpu_tx_undo(struct fpu_tx* self, struct picotm_error* error)
         int res = fesetexceptflag(&self->saved_fexcept, FE_ALL_EXCEPT);
         if (res < 0) {
             picotm_error_set_error_code(error, PICOTM_INVALID_FENV);
-            return -1;
+            return;
         }
     }
-
-    return 0;
 }
 
-int
-fpu_tx_finish(struct fpu_tx* self, struct picotm_error* error)
+void
+fpu_tx_finish(struct fpu_tx* self)
 {
     self->flags = 0; /* marks errno as 'not saved' */
-
-    return 0;
 }

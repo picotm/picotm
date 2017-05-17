@@ -74,9 +74,8 @@ log_apply_events(struct log* self, const struct module* module, bool noundo,
 
         ptrdiff_t nevents = event2 - event;
 
-        int res = module_apply_events(module + event->module, event, nevents,
-                                      error);
-        if (res < 0) {
+        module_apply_events(module + event->module, event, nevents, error);
+        if (picotm_error_is_set(error)) {
             return -1;
         }
 
@@ -99,9 +98,8 @@ log_undo_events(struct log* self, const struct module* module, bool noundo,
 
     while (event > event_end) {
         --event;
-        int res = module_undo_events(module + event->module, event, 1,
-                                     error);
-        if (res < 0) {
+        module_undo_events(module + event->module, event, 1, error);
+        if (picotm_error_is_set(error)) {
             return -1;
         }
     }
