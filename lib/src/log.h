@@ -47,11 +47,11 @@ void
 log_uninit(struct log* self);
 
 /**
- * Inject an event into log.
+ * Appends an event to the transaction's event log.
  */
-int
-log_inject_event(struct log* self, unsigned long module, unsigned long call,
-                 uintptr_t cookie);
+void
+log_append_event(struct log* self, unsigned long module, unsigned long call,
+                 uintptr_t cookie, struct picotm_error* error);
 
 /**
  * Apply events in the log.

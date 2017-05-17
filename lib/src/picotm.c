@@ -285,14 +285,11 @@ picotm_register_module(picotm_module_lock_function lock,
 }
 
 PICOTM_EXPORT
-int
-picotm_inject_event(unsigned long module, unsigned long op, uintptr_t cookie)
+void
+picotm_append_event(unsigned long module, unsigned long op, uintptr_t cookie,
+                    struct picotm_error* error)
 {
-    int res = tx_inject_event(get_non_null_tx(), module, op, cookie);
-    if (res < 0) {
-        return res;
-    }
-    return 0;
+    tx_append_event(get_non_null_tx(), module, op, cookie, error);
 }
 
 PICOTM_EXPORT
