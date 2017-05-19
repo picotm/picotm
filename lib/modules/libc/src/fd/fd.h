@@ -5,6 +5,7 @@
 #ifndef FD_H
 #define FD_H
 
+#include <stdbool.h>
 #include "counter.h"
 
 /**
@@ -91,6 +92,19 @@ fd_close(struct fd *fd);
 /** \brief Dump file-descriptor state to stderr */
 void
 fd_dump(const struct fd *fd);
+
+/** Validate file descriptor against version. */
+bool
+fd_is_valid(struct fd* fd, count_type version);
+
+/** Set file-descriptor flags. */
+int
+fd_setfd(struct fd* fd, int fildes, int arg, struct picotm_error* error);
+
+/** Get file-descriptor flags. */
+int
+fd_getfd(struct fd* fd, int fildes, struct picotm_error* error);
+
 
 /* fcntl
  */
