@@ -26,7 +26,7 @@ PICOTM_BEGIN_DECLS
 
 struct picotm_tx;
 
-struct event {
+struct picotm_event {
     unsigned long  module;
     unsigned short call;
     uintptr_t      cookie;
@@ -87,10 +87,11 @@ typedef void (*picotm_module_undo_function)(void* data,
  * \param       data    The pointer to module-specific data.
  * \param[out]  error   Returns an error from the module.
  */
-typedef void (*picotm_module_apply_events_function)(const struct event* events,
-                                                    size_t nevents,
-                                                    void* data,
-                                                    struct picotm_error* error);
+typedef void (*picotm_module_apply_events_function)(
+    const struct picotm_event* events,
+    size_t nevents,
+    void* data,
+    struct picotm_error* error);
 
 /**
  * Invoked by picotm during the roll-back phase to revert a number of
@@ -100,10 +101,11 @@ typedef void (*picotm_module_apply_events_function)(const struct event* events,
  * \param       data    The pointer to module-specific data.
  * \param[out]  error   Returns an error from the module.
  */
-typedef void (*picotm_module_undo_events_function)(const struct event* events,
-                                                   size_t nevents,
-                                                   void* data,
-                                                   struct picotm_error* error);
+typedef void (*picotm_module_undo_events_function)(
+    const struct picotm_event* events,
+    size_t nevents,
+    void* data,
+    struct picotm_error* error);
 
 /**
  * Invoked by picotm to update a module's concurrency control during a commit.
@@ -509,7 +511,7 @@ PICOTM_END_DECLS
  *
  * ~~~{.c}
  *  int
- *  apply(const struct event* event, size_t nevents, void* data, picotm_error* error)
+ *  apply(const struct picotm_event* event, size_t nevents, void* data, picotm_error* error)
  *  {
  *      while (nevents) {
  *          if (event->call == CMD_MALLOC) {
@@ -526,7 +528,7 @@ PICOTM_END_DECLS
  *  }
  *
  *  int
- *  undo(const struct event* event, size_t nevents, void* data, picotm_error* error)
+ *  undo(const struct picotm_event* event, size_t nevents, void* data, picotm_error* error)
  *  {
  *      events += nevents;
  *      while (nevents) {

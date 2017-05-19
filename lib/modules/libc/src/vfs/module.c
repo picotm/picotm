@@ -50,7 +50,7 @@ is_valid_cb(void* data, int noundo, struct picotm_error* error)
 }
 
 static void
-apply_event_cb(const struct event* event, size_t n, void* data,
+apply_event_cb(const struct picotm_event* event, size_t n, void* data,
                struct picotm_error* error)
 {
     struct vfs_module* module = data;
@@ -59,7 +59,7 @@ apply_event_cb(const struct event* event, size_t n, void* data,
 }
 
 static void
-undo_event_cb(const struct event* event, size_t n, void* data,
+undo_event_cb(const struct picotm_event* event, size_t n, void* data,
               struct picotm_error* error)
 {
     struct vfs_module* module = data;

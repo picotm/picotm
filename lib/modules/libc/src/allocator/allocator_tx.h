@@ -14,8 +14,8 @@
  * \endcond
  */
 
-struct event;
 struct picotm_error;
+struct picotm_event;
 
 /**
  * A transaction on the memory allocation.
@@ -44,12 +44,14 @@ allocator_tx_exec_free(struct allocator_tx* self, void* ptr,
                        struct picotm_error* error);
 
 void
-allocator_tx_apply_event(struct allocator_tx* self, const struct event* event,
-                         size_t nevents, struct picotm_error* error);
+allocator_tx_apply_event(struct allocator_tx* self,
+                         const struct picotm_event* event, size_t nevents,
+                         struct picotm_error* error);
 
 void
-allocator_tx_undo_event(struct allocator_tx* self, const struct event* event,
-                        size_t nevents, struct picotm_error* error);
+allocator_tx_undo_event(struct allocator_tx* self,
+                        const struct picotm_event* event, size_t nevents,
+                        struct picotm_error* error);
 
 void
 allocator_tx_finish(struct allocator_tx* self);

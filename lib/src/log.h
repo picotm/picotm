@@ -15,9 +15,9 @@
  * \endcond
  */
 
-struct event;
-struct picotm_error;
 struct module;
+struct picotm_error;
+struct picotm_event;
 
 /**
  * \brief The log holds the events of a transaction.
@@ -25,7 +25,7 @@ struct module;
 struct log {
 
     /** Table of transaction's events. */
-    struct event* eventtab;
+    struct picotm_event* eventtab;
 
     /** Number of events in the log. */
     size_t eventtablen;

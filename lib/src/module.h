@@ -14,8 +14,8 @@
  * \endcond
  */
 
-struct event;
 struct picotm_error;
+struct picotm_event;
 
 struct module {
     void (*lock)(void*, struct picotm_error*);
@@ -23,8 +23,10 @@ struct module {
     bool (*is_valid)(void*, int, struct picotm_error*);
     void (*apply)(void*, struct picotm_error*);
     void (*undo)(void*, struct picotm_error*);
-    void (*apply_events)(const struct event*, size_t, void*, struct picotm_error*);
-    void (*undo_events)(const struct event*, size_t, void*, struct picotm_error*);
+    void (*apply_events)(const struct picotm_event*, size_t,
+                         void*, struct picotm_error*);
+    void (*undo_events)(const struct picotm_event*, size_t,
+                        void*, struct picotm_error*);
     void (*update_cc)(void*, int, struct picotm_error*);
     void (*clear_cc)(void*, int, struct picotm_error*);
     void (*finish)(void*, struct picotm_error*);
@@ -39,8 +41,10 @@ module_init(struct module* self,
             bool (*is_valid)(void*, int, struct picotm_error*),
             void (*apply)(void*, struct picotm_error*),
             void (*undo)(void*, struct picotm_error*),
-            void (*apply_events)(const struct event*, size_t, void*, struct picotm_error*),
-            void (*undo_events)(const struct event*, size_t, void*, struct picotm_error*),
+            void (*apply_events)(const struct picotm_event*, size_t,
+                                 void*, struct picotm_error*),
+            void (*undo_events)(const struct picotm_event*, size_t,
+                                void*, struct picotm_error*),
             void (*update_cc)(void*, int, struct picotm_error*),
             void (*clear_cc)(void*, int, struct picotm_error*),
             void (*finish)(void*, struct picotm_error*),
@@ -70,12 +74,14 @@ void
 module_undo(const struct module* self, struct picotm_error* error);
 
 void
-module_apply_events(const struct module* self, const struct event *event,
-                    size_t nevents, struct picotm_error* error);
+module_apply_events(const struct module* self,
+                    const struct picotm_event *event, size_t nevents,
+                    struct picotm_error* error);
 
 void
-module_undo_events(const struct module* self, const struct event *event,
-                   size_t nevents, struct picotm_error* error);
+module_undo_events(const struct module* self,
+                   const struct picotm_event *event, size_t nevents,
+                   struct picotm_error* error);
 
 void
 module_update_cc(const struct module* self, bool noundo,

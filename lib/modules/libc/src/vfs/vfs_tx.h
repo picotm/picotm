@@ -14,8 +14,8 @@
  * \endcond
  */
 
-struct event;
 struct picotm_error;
+struct picotm_event;
 
 struct vfs_tx_event {
     int cookie;
@@ -85,11 +85,13 @@ void
 vfs_tx_validate(struct vfs_tx* self, struct picotm_error* error);
 
 void
-vfs_tx_apply_event(struct vfs_tx* self, const struct event* event, size_t n,
+vfs_tx_apply_event(struct vfs_tx* self,
+                   const struct picotm_event* event, size_t n,
                    struct picotm_error* error);
 
 void
-vfs_tx_undo_event(struct vfs_tx* self, const struct event* event, size_t n,
+vfs_tx_undo_event(struct vfs_tx* self,
+                  const struct picotm_event* event, size_t n,
                   struct picotm_error* error);
 
 void
