@@ -246,6 +246,42 @@ fd_dump(const struct fd *fd)
     return;
 }
 
+bool
+fd_is_valid(struct fd* fd, count_type version)
+{
+    return counter_get(&fd->ver) <= version;
+}
+
+int
+fd_setfd(struct fd* fd, int fildes, int arg, struct picotm_error* error)
+{
+    assert(fd);
+    assert(fd->ofd >= 0);
+    assert(fd->ofd < (ssize_t)(sizeof(ofdtab)/sizeof(ofdtab[0])));
+
+    int res = TEMP_FAILURE_RETRY(fcntl(fildes, F_SETFD, arg));
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return res;
+    }
+    return res;
+}
+
+int
+fd_getfd(struct fd* fd, int fildes, struct picotm_error* error)
+{
+    assert(fd);
+    assert(fd->ofd >= 0);
+    assert(fd->ofd < (ssize_t)(sizeof(ofdtab)/sizeof(ofdtab[0])));
+
+    int res = TEMP_FAILURE_RETRY(fcntl(fildes, F_GETFD));
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return res;
+    }
+    return res;
+}
+
 /* fcntl
  */
 
@@ -259,30 +295,33 @@ fd_fcntl_exec(struct fd *fd, int fildes, int cmd,
     assert(fd->ofd >= 0);
     assert(fd->ofd < (ssize_t)(sizeof(ofdtab)/sizeof(ofdtab[0])));
 
+    if (!fd_is_valid(fd, ver)) {
+        return ERR_CONFLICT;
+    }
+
     int res;
+    struct picotm_error error;
 
-    if (ver < counter_get(&fd->ver)) {
-        res = ERR_CONFLICT;
-    } else {
-
-        switch (cmd) {
-            case F_SETFD:
-                if ( !noundo ) {
-                    return ERR_NOUNDO;
-                }
-                res = TEMP_FAILURE_RETRY(fcntl(fildes, cmd, arg->arg0));
-                break;
-            case F_GETFD:
-                arg->arg0 = TEMP_FAILURE_RETRY(fcntl(fildes, cmd));
-                if (arg->arg0 < 0) {
-                    res = ERR_SYSTEM;
-                }
-                res = 0;
-                break;
-            default:
-                res = ERR_DOMAIN;
-                break;
-        }
+    switch (cmd) {
+        case F_SETFD:
+            if ( !noundo ) {
+                return ERR_NOUNDO;
+            }
+            res = fd_setfd(fd, fildes, arg->arg0, &error);
+            if (picotm_error_is_set(&error)) {
+                res = ERR_SYSTEM;
+            }
+            break;
+        case F_GETFD:
+            res = fd_getfd(fd, fildes, &error);
+            if (picotm_error_is_set(&error)) {
+                res = ERR_SYSTEM;
+            }
+            arg->arg0 = res;
+            break;
+        default:
+            res = ERR_DOMAIN;
+            break;
     }
 
     return res;
@@ -298,9 +337,8 @@ fd_fcntl_apply(struct fd* fd, int fildes, int cmd, union fcntl_arg* arg,
 
     switch (cmd) {
     case F_SETFD: {
-        int res = fcntl(fildes, cmd, arg->arg0);
-        if (res < 0) {
-            picotm_error_set_errno(error, errno);
+        fd_setfd(fd, fildes, arg->arg0, error);
+        if (picotm_error_is_set(error)) {
             return ERR_SYSTEM;
         }
         break;
@@ -324,9 +362,8 @@ fd_fcntl_undo(struct fd* fd, int fildes, int cmd, union fcntl_arg* oldarg,
 
     switch (cmd) {
     case F_SETFD: {
-        int res = fcntl(fildes, cmd, oldarg->arg0);
-        if (res < 0) {
-            picotm_error_set_errno(error, errno);
+        fd_setfd(fd, fildes, oldarg->arg0, error);
+        if (picotm_error_is_set(error)) {
             return ERR_SYSTEM;
         }
         break;
