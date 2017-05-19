@@ -51,6 +51,8 @@ tx_register_module(struct tx* self,
                    void (*lock)(void*, struct picotm_error*),
                    void (*unlock)(void*, struct picotm_error*),
                    bool (*is_valid)(void*, int, struct picotm_error*),
+                   void (*apply)(void*, struct picotm_error*),
+                   void (*undo)(void*, struct picotm_error*),
                    void (*apply_events)(const struct event*, size_t, void*, struct picotm_error*),
                    void (*undo_events)(const struct event*, size_t, void*, struct picotm_error*),
                    void (*update_cc)(void*, int, struct picotm_error*),
@@ -68,7 +70,8 @@ tx_register_module(struct tx* self,
     }
 
     module_init(self->module + module, lock, unlock, is_valid,
-                apply_events, undo_events, update_cc, clear_cc,
+                apply, undo, apply_events, undo_events,
+                update_cc, clear_cc,
                 finish, uninit, data);
 
     self->nmodules = module + 1;
@@ -166,6 +169,44 @@ validate_modules(struct module* module, unsigned long nmodules,
 }
 
 static int
+apply_cb(void* module, void* error)
+{
+    module_apply(module, error);
+    return picotm_error_is_set(error) ? -1 : 1;
+}
+
+static int
+apply_modules(struct module* module, unsigned long nmodules,
+              struct picotm_error* error)
+{
+    int res = tabwalk_2(module, nmodules, sizeof(*module), apply_cb,
+                        error);
+    if (res < 0) {
+        return -1;
+    }
+    return 0;
+}
+
+static int
+undo_cb(void* module, void* error)
+{
+    module_undo(module, error);
+    return picotm_error_is_set(error) ? -1 : 1;
+}
+
+static int
+undo_modules(struct module* module, unsigned long nmodules,
+             struct picotm_error* error)
+{
+    int res = tabwalk_2(module, nmodules, sizeof(*module), undo_cb,
+                        error);
+    if (res < 0) {
+        return -1;
+    }
+    return 0;
+}
+
+static int
 update_cc_cb(void* module, void* is_irrevocable, void* error)
 {
     module_update_cc(module, *((bool*)is_irrevocable), error);
@@ -245,6 +286,11 @@ tx_commit(struct tx* self, struct picotm_error* error)
 
     is_non_recoverable = true;
 
+    res = apply_modules(self->module, self->nmodules, error);
+    if (res < 0) {
+        goto err_apply_modules;
+    }
+
     res = log_apply_events(&self->log, self->module, is_irrevocable, error);
     if (res < 0) {
         goto err_log_apply_events;
@@ -272,6 +318,7 @@ tx_commit(struct tx* self, struct picotm_error* error)
 
 err_update_modules_cc:
 err_log_apply_events:
+err_apply_modules:
 err_validate_modules:
     {
         struct picotm_error err_error = PICOTM_ERROR_INITIALIZER;
@@ -291,8 +338,12 @@ tx_rollback(struct tx* self, struct picotm_error* error)
 {
     bool is_irrevocable = tx_is_irrevocable(self);
 
-    int res = log_undo_events(&self->log, self->module, is_irrevocable,
-                              error);
+    int res = undo_modules(self->module, self->nmodules, error);
+    if (res < 0) {
+        goto err;
+    }
+
+    res = log_undo_events(&self->log, self->module, is_irrevocable, error);
     if (res < 0) {
         goto err;
     }

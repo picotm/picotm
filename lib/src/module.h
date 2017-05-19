@@ -21,6 +21,8 @@ struct module {
     void (*lock)(void*, struct picotm_error*);
     void (*unlock)(void*, struct picotm_error*);
     bool (*is_valid)(void*, int, struct picotm_error*);
+    void (*apply)(void*, struct picotm_error*);
+    void (*undo)(void*, struct picotm_error*);
     void (*apply_events)(const struct event*, size_t, void*, struct picotm_error*);
     void (*undo_events)(const struct event*, size_t, void*, struct picotm_error*);
     void (*update_cc)(void*, int, struct picotm_error*);
@@ -35,6 +37,8 @@ module_init(struct module* self,
             void (*lock)(void*, struct picotm_error*),
             void (*unlock)(void*, struct picotm_error*),
             bool (*is_valid)(void*, int, struct picotm_error*),
+            void (*apply)(void*, struct picotm_error*),
+            void (*undo)(void*, struct picotm_error*),
             void (*apply_events)(const struct event*, size_t, void*, struct picotm_error*),
             void (*undo_events)(const struct event*, size_t, void*, struct picotm_error*),
             void (*update_cc)(void*, int, struct picotm_error*),
@@ -58,6 +62,12 @@ module_unlock(const struct module* self, struct picotm_error* error);
 bool
 module_is_valid(const struct module* self, bool noundo,
                 struct picotm_error* error);
+
+void
+module_apply(const struct module* self, struct picotm_error* error);
+
+void
+module_undo(const struct module* self, struct picotm_error* error);
 
 void
 module_apply_events(const struct module* self, const struct event *event,

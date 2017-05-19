@@ -62,6 +62,24 @@ typedef bool (*picotm_module_is_valid_function)(void* data,
                                                 struct picotm_error* error);
 
 /**
+ * Invoked by picotm during the commit phase to apply changes of a
+ * module.
+ * \param       data    The pointer to module-specific data.
+ * \param[out]  error   Returns an error from the module.
+ */
+typedef void (*picotm_module_apply_function)(void* data,
+                                             struct picotm_error* error);
+
+/**
+ * Invoked by picotm during the roll-back phase to revert changes of a
+ * module.
+ * \param       data    The pointer to module-specific data.
+ * \param[out]  error   Returns an error from the module.
+ */
+typedef void (*picotm_module_undo_function)(void* data,
+                                            struct picotm_error* error);
+
+/**
  * Invoked by picotm during the commit phase to apply a number of
  * consecutive events.
  * \param       events  An array of events.
@@ -128,6 +146,8 @@ PICOTM_NOTHROW
  * \param       lock            The lock call-back function.
  * \param       unlock          The unlock call-back function.
  * \param       is_valid        The is-valid call-back function.
+ * \param       apply           The apply call-back function.
+ * \param       undo            The undo call-back function.
  * \param       apply_events    The apply-events call-back function.
  * \param       undo_events     The undo-events call-back function.
  * \param       update_cc       The update-CC call-back function.
@@ -142,6 +162,8 @@ unsigned long
 picotm_register_module(picotm_module_lock_function lock,
                        picotm_module_unlock_function unlock,
                        picotm_module_is_valid_function is_valid,
+                       picotm_module_apply_function apply,
+                       picotm_module_undo_function undo,
                        picotm_module_apply_events_function apply_events,
                        picotm_module_undo_events_function undo_events,
                        picotm_module_update_cc_function update_cc,
@@ -410,6 +432,8 @@ PICOTM_END_DECLS
  *
  * ~~~{.c}
  *  long res = picotm_register_module(NULL,
+ *                                    NULL,
+ *                                    NULL,
  *                                    NULL,
  *                                    NULL,
  *                                    apply, // See below.

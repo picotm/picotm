@@ -277,6 +277,8 @@ unsigned long
 picotm_register_module(picotm_module_lock_function lock,
                        picotm_module_unlock_function unlock,
                        picotm_module_is_valid_function is_valid,
+                       picotm_module_apply_function apply,
+                       picotm_module_undo_function undo,
                        picotm_module_apply_events_function apply_events,
                        picotm_module_undo_events_function undo_events,
                        picotm_module_update_cc_function update_cc,
@@ -287,7 +289,8 @@ picotm_register_module(picotm_module_lock_function lock,
                        struct picotm_error* error)
 {
     return tx_register_module(get_non_null_tx(), lock, unlock, is_valid,
-                              apply_events, undo_events, update_cc, clear_cc,
+                              apply, undo, apply_events, undo_events,
+                              update_cc, clear_cc,
                               finish, uninit, data, error);
 }
 

@@ -18,8 +18,7 @@ struct error_module {
  */
 
 static void
-errno_undo_events(const struct event* event, size_t nevents,
-                  struct error_module* module, struct picotm_error* error)
+errno_undo(struct error_module* module, struct picotm_error* error)
 {
     error_tx_undo(&module->tx, error);
 }
@@ -42,10 +41,9 @@ errno_release(struct error_module* module)
  */
 
 static void
-undo_events_cb(const struct event* event, size_t nevents, void* data,
-               struct picotm_error* error)
+undo_cb(void* data, struct picotm_error* error)
 {
-    errno_undo_events(event, nevents, data, error);
+    errno_undo(data, error);
 }
 
 static void
@@ -72,7 +70,8 @@ get_error_tx(bool initialize, struct picotm_error* error)
     }
 
     unsigned long module = picotm_register_module(NULL, NULL, NULL,
-                                                  NULL, undo_events_cb,
+                                                  NULL, undo_cb,
+                                                  NULL, NULL,
                                                   NULL, NULL,
                                                   finish_cb,
                                                   uninit_cb,

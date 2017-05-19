@@ -94,15 +94,13 @@ validate(struct tm_module* module, bool eotx, struct picotm_error* error)
 }
 
 static void
-apply(struct tm_module* module, const struct event* event, size_t nevents,
-      struct picotm_error* error)
+apply(struct tm_module* module, struct picotm_error* error)
 {
     tm_vmem_tx_apply(&module->tx, error);
 }
 
 static void
-undo(struct tm_module* module, const struct event* event, size_t nevents,
-     struct picotm_error* error)
+undo(struct tm_module* module, struct picotm_error* error)
 {
     tm_vmem_tx_undo(&module->tx, error);
 }
@@ -147,17 +145,15 @@ is_valid_cb(void* data, int eotx, struct picotm_error* error)
 }
 
 static void
-apply_event_cb(const struct event* event, size_t nevents, void* data,
-               struct picotm_error* error)
+apply_cb(void* data, struct picotm_error* error)
 {
-    apply(data, event, nevents, error);
+    apply(data, error);
 }
 
 static void
-undo_event_cb(const struct event* event, size_t nevents, void* data,
-              struct picotm_error* error)
+undo_cb(void* data, struct picotm_error* error)
 {
-    undo(data, event, nevents, error);
+    undo(data, error);
 }
 
 static void
@@ -185,8 +181,8 @@ get_vmem_tx(bool initialize, struct picotm_error* error)
 
     unsigned long module = picotm_register_module(lock_cb, unlock_cb,
                                                   is_valid_cb,
-                                                  apply_event_cb,
-                                                  undo_event_cb,
+                                                  apply_cb, undo_cb,
+                                                  NULL, NULL,
                                                   NULL, NULL,
                                                   finish_cb,
                                                   uninit_cb,

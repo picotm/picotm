@@ -175,6 +175,7 @@ get_fildes_tx(bool initialize, struct picotm_error* error)
     unsigned long module = picotm_register_module(lock_cb,
                                                   unlock_cb,
                                                   is_valid_cb,
+                                                  NULL, NULL,
                                                   apply_event_cb,
                                                   undo_event_cb,
                                                   update_cc_cb,

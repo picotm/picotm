@@ -8,18 +8,17 @@
 #include <stdlib.h>
 #include "fpu_tx.h"
 
+/*
+ * Module interface
+ */
+
 struct fpu_module {
     struct fpu_tx tx;
     bool          is_initialized;
 };
 
-/*
- * Module interface
- */
-
 static void
-fpu_module_undo_events(const struct event* event, size_t nevents,
-                       struct fpu_module* module, struct picotm_error* error)
+fpu_module_undo(struct fpu_module* module, struct picotm_error* error)
 {
     fpu_tx_undo(&module->tx, error);
 }
@@ -42,10 +41,9 @@ fpu_module_uninit(struct fpu_module* module)
  */
 
 static void
-undo_events_cb(const struct event* event, size_t nevents, void* data,
-               struct picotm_error* error)
+undo_cb(void* data, struct picotm_error* error)
 {
-    fpu_module_undo_events(event, nevents, data, error);
+    fpu_module_undo(data, error);
 }
 
 static void
@@ -72,7 +70,8 @@ get_fpu_tx(bool initialize, struct picotm_error* error)
     }
 
     unsigned long module = picotm_register_module(NULL, NULL, NULL,
-                                                  NULL, undo_events_cb,
+                                                  NULL, undo_cb,
+                                                  NULL, NULL,
                                                   NULL, NULL,
                                                   finish_cb,
                                                   uninit_cb,

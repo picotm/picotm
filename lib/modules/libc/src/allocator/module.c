@@ -60,6 +60,7 @@ get_allocator_tx(bool initialize, struct picotm_error* error)
     }
 
     unsigned long module = picotm_register_module(NULL, NULL, NULL,
+                                                  NULL, NULL,
                                                   apply_event_cb,
                                                   undo_event_cb,
                                                   NULL, NULL,
