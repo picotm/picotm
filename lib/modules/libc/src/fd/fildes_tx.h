@@ -161,12 +161,14 @@ fildes_tx_validate(struct fildes_tx* self, int noundo,
                    struct picotm_error* error);
 
 int
-fildes_tx_apply_event(struct fildes_tx* self, const struct event* event,
-                      size_t nevents, struct picotm_error* error);
+fildes_tx_apply_event(struct fildes_tx* self,
+                      const struct picotm_event* event, size_t nevents,
+                      struct picotm_error* error);
 
 int
-fildes_tx_undo_event(struct fildes_tx* self, const struct event* event,
-                     size_t nevents, struct picotm_error* error);
+fildes_tx_undo_event(struct fildes_tx* self,
+                     const struct picotm_event* event, size_t nevents,
+                     struct picotm_error* error);
 
 int
 fildes_tx_update_cc(struct fildes_tx* self, int noundo,

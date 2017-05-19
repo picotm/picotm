@@ -2461,8 +2461,9 @@ fildes_tx_validate(struct fildes_tx* self, int noundo,
 }
 
 int
-fildes_tx_apply_event(struct fildes_tx* self, const struct event* event,
-                      size_t n, struct picotm_error* error)
+fildes_tx_apply_event(struct fildes_tx* self,
+                      const struct picotm_event* event, size_t n,
+                      struct picotm_error* error)
 {
     static int (* const apply[])(struct fildes_tx*,
                                  const struct fd_event*,
@@ -2517,8 +2518,9 @@ fildes_tx_apply_event(struct fildes_tx* self, const struct event* event,
 }
 
 int
-fildes_tx_undo_event(struct fildes_tx* self, const struct event* event,
-                     size_t n, struct picotm_error* error)
+fildes_tx_undo_event(struct fildes_tx* self,
+                     const struct picotm_event* event, size_t n,
+                     struct picotm_error* error)
 {
     static int (* const undo[])(struct fildes_tx*,
                                 int,

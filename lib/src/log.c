@@ -43,7 +43,7 @@ log_append_event(struct log* self, unsigned long module, unsigned long call,
         self->eventtabsiz = eventtabsiz;
     }
 
-    struct event* event = self->eventtab + self->eventtablen;
+    struct picotm_event* event = self->eventtab + self->eventtablen;
 
     event->cookie = cookie;
     event->module = module;
@@ -58,14 +58,14 @@ log_apply_events(struct log* self, const struct module* module, bool noundo,
 {
     /* Apply events in chronological order */
 
-    const struct event* event = self->eventtab;
-    const struct event* event_end = self->eventtab + self->eventtablen;
+    const struct picotm_event* event = self->eventtab;
+    const struct picotm_event* event_end = self->eventtab + self->eventtablen;
 
     while (event < event_end) {
 
         /* Find consecutive events from same module */
 
-        const struct event* event2 = event + 1;
+        const struct picotm_event* event2 = event + 1;
 
         while ((event2 < event_end) && (event->module == event2->module)) {
             ++event2;
@@ -94,8 +94,8 @@ log_undo_events(struct log* self, const struct module* module, bool noundo,
 {
     /* Undo events in reversed-chronological order */
 
-    const struct event* event = self->eventtab + self->eventtablen;
-    const struct event* event_end = self->eventtab;
+    const struct picotm_event* event = self->eventtab + self->eventtablen;
+    const struct picotm_event* event_end = self->eventtab;
 
     while (event > event_end) {
         --event;
