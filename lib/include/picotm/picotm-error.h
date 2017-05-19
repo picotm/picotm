@@ -13,6 +13,7 @@
  */
 
 #include <stdbool.h>
+#include <stddef.h>
 #include "compiler.h"
 
 PICOTM_BEGIN_DECLS
@@ -58,6 +59,9 @@ struct picotm_error {
     /** True is the error is non-recoverable, or false otherwise. */
     bool is_non_recoverable;
 
+    /** A string with additonal information about the error. */
+    const char* description;
+
     union {
         /** The conflicting transaction for PICOTM_CONFLICTING if known, or NULL otherwise. */
         void*                  conflicting_tx;
@@ -71,7 +75,8 @@ struct picotm_error {
 #define PICOTM_ERROR_INITIALIZER    \
     { \
         .status = 0, \
-        .is_non_recoverable = false \
+        .is_non_recoverable = false, \
+        .description = NULL \
     }
 
 PICOTM_NOTHROW
@@ -85,6 +90,7 @@ picotm_error_clear(struct picotm_error* error)
 {
     error->status = 0;
     error->is_non_recoverable = false;
+    error->description = NULL;
 }
 
 PICOTM_NOTHROW
@@ -92,15 +98,15 @@ PICOTM_NOTHROW
  * Sets an error of type PICOTM_CONFLICTING.
  *
  * \param error             The error to set.
- * \param conflicting_tx    The conflicting transaction if known, or NULL otherwise.
+ * \param conflicting_tx    The conflicting transaction if known, or NULL
  *                          otherwise.
  */
 inline void
-picotm_error_set_conflicting(struct picotm_error* error,
-                             void* conflicting_tx)
+picotm_error_set_conflicting(struct picotm_error* error, void* conflicting_tx)
 {
     error->status = PICOTM_CONFLICTING;
     error->is_non_recoverable = false;
+    error->description = NULL;
     error->value.conflicting_tx = conflicting_tx;
 }
 
@@ -115,6 +121,7 @@ picotm_error_set_revocable(struct picotm_error* error)
 {
     error->status = PICOTM_REVOCABLE;
     error->is_non_recoverable = false;
+    error->description = NULL;
 }
 
 PICOTM_NOTHROW
@@ -122,7 +129,8 @@ PICOTM_NOTHROW
  * Sets an error of type PICOTM_ERROR_CODE.
  *
  * \param error         The error to set.
- * \param error_hint    The picotm error code, if known or PICOTM_GENERAL_ERROR otherwise.
+ * \param error_hint    The picotm error code if known, or
+ *                      PICOTM_GENERAL_ERROR otherwise.
  */
 inline void
 picotm_error_set_error_code(struct picotm_error* error,
@@ -130,6 +138,7 @@ picotm_error_set_error_code(struct picotm_error* error,
 {
     error->status = PICOTM_ERROR_CODE;
     error->is_non_recoverable = false;
+    error->description = NULL;
     error->value.error_hint = error_hint;
 }
 
@@ -145,6 +154,7 @@ picotm_error_set_errno(struct picotm_error* error, int errno_hint)
 {
     error->status = PICOTM_ERRNO;
     error->is_non_recoverable = false;
+    error->description = NULL;
     error->value.errno_hint = errno_hint;
 }
 
@@ -222,6 +232,33 @@ inline void
 picotm_error_mark_as_non_recoverable(struct picotm_error* error)
 {
     error->is_non_recoverable = true;
+}
+
+PICOTM_NOTHROW
+/**
+ * Sets an error's description.
+ *
+ * \param error         The error.
+ * \param description   A descriptive string.
+ */
+inline void
+picotm_error_set_description(struct picotm_error* error,
+                             const char* description)
+{
+    error->description = description;
+}
+
+PICOTM_NOTHROW
+/**
+ * Returns an error's description.
+ *
+ * \param error The error.
+ * \returns     The error description if set, or NULL otherwise.
+ */
+inline const char*
+picotm_error_get_description(const struct picotm_error* error)
+{
+    return error->description;
 }
 
 PICOTM_END_DECLS
