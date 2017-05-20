@@ -105,23 +105,4 @@ fd_setfd(struct fd* fd, int fildes, int arg, struct picotm_error* error);
 int
 fd_getfd(struct fd* fd, int fildes, struct picotm_error* error);
 
-
-/* fcntl
- */
-
-int
-fd_fcntl_exec(struct fd *fd, int fildes, int cmd,
-                                         union fcntl_arg *arg,
-                                         union fcntl_arg *oldarg,
-                                         count_type ver, int noundo);
-
-int
-fd_fcntl_apply(struct fd* fd, int fildes, int cmd, union fcntl_arg* arg,
-               int ccmode, struct picotm_error* error);
-
-int
-fd_fcntl_undo(struct fd* fd, int fildes, int cmd, union fcntl_arg* oldarg,
-              int ccmode, struct picotm_error* error);
-
 #endif
-
