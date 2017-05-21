@@ -75,10 +75,12 @@ enum picotm_libc_file_type {
  * Concurrency-control mode for file-descriptor I/O.
  */
 enum picotm_libc_cc_mode {
-    PICOTM_LIBC_CC_MODE_NOUNDO = 0,  /**< \brief Set CC mode to irrevocablilty */
-    PICOTM_LIBC_CC_MODE_TS,          /**< \brief Set CC mode to optimistic timestamp checking */
-    PICOTM_LIBC_CC_MODE_2PL,         /**< \brief Set CC mode to pessimistic two-phase locking */
-    PICOTM_LIBC_CC_MODE_2PL_EXT      /**< \brief (Inofficial)Set CC mode to pessimistic two-phase locking with socket commit protocol */
+    /** Set CC mode to irrevocablilty */
+    PICOTM_LIBC_CC_MODE_NOUNDO = 0,
+    /** Set CC mode to optimistic timestamp checking */
+    PICOTM_LIBC_CC_MODE_TS,
+    /** Set CC mode to pessimistic two-phase locking */
+    PICOTM_LIBC_CC_MODE_2PL
 };
 
 /**
