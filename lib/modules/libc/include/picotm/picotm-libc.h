@@ -77,8 +77,6 @@ enum picotm_libc_file_type {
 enum picotm_libc_cc_mode {
     /** Set CC mode to irrevocablilty */
     PICOTM_LIBC_CC_MODE_NOUNDO = 0,
-    /** Set CC mode to optimistic timestamp checking */
-    PICOTM_LIBC_CC_MODE_TS,
     /** Set CC mode to pessimistic two-phase locking */
     PICOTM_LIBC_CC_MODE_2PL
 };

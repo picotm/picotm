@@ -183,7 +183,7 @@ opt_off(const char *optarg)
 static int
 opt_regular_ccmode(const char *optarg)
 {
-    static const char * const optstr[] = { "noundo", "ts", "2pl", "2pl-ext" };
+    static const char * const optstr[] = { "noundo", "2pl"};
     size_t i;
 
     for (i = 0; i < sizeof(optstr)/sizeof(optstr[0]); ++i) {

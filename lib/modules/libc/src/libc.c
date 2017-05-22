@@ -36,9 +36,7 @@ picotm_libc_get_error_recovery()
 
 static enum picotm_libc_cc_mode g_file_type_cc_mode[] = {
     PICOTM_LIBC_CC_MODE_NOUNDO,
-    PICOTM_LIBC_CC_MODE_2PL,
-    PICOTM_LIBC_CC_MODE_TS,
-    PICOTM_LIBC_CC_MODE_TS
+    PICOTM_LIBC_CC_MODE_2PL
 };
 
 static enum picotm_libc_validation_mode g_validation_mode;
