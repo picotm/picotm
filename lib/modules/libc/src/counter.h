@@ -6,7 +6,6 @@
 #define COUNTER_H
 
 #include <pthread.h>
-#include "types.h"
 
 /**
  * \cond impl || libc_impl
@@ -14,6 +13,9 @@
  * \file
  * \endcond
  */
+
+/** \brief Counter type */
+typedef long long count_type;
 
 /**
  * \brief Counter with locking
