@@ -5,7 +5,6 @@
 #ifndef OFD_H
 #define OFD_H
 
-#include "cmap.h"
 #include "counter.h"
 #include "ofdid.h"
 #include "picotm/picotm-libc.h"
@@ -24,9 +23,7 @@
 #define OFD_FL_WANTNEW  (1<<2)
 #define OFD_FL_LAST_BIT (2)
 
-struct cmapss;
 struct picotm_error;
-struct rwlocktab;
 struct rwstatemap;
 
 struct ofd
@@ -40,18 +37,13 @@ struct ofd
     enum picotm_libc_file_type type;
 
     enum picotm_libc_cc_mode cc_mode;
-    struct counter ver; /**< \brief Version, incremented on commit, optimistic CC */
     struct rwlock  rwlock; /**< \brief Lock, pessimistic CC */
 
     struct {
         struct {
             /** \brief global file position */
             off_t                offset;
-            /** \brief Version table, optimistic CC */
-            struct cmap          cmap;
-/*            struct counter_table vertab;*/
             /** \brief Lock table, pessimistic CC */
-            /*struct rwlocktab     rwlocktab;*/
             struct rwlockmap     rwlockmap;
         } regular;
     } data;
@@ -110,42 +102,6 @@ ofd_wrlock(struct ofd *ofd);
 
 void
 ofd_unlock(struct ofd *ofd);
-
-/*
- * Optimistic CC
- */
-
-/** \brief Returns the version of the open file description. */
-count_type
-ofd_ts_get_state_version(struct ofd *ofd);
-
-/** \brief Returns the region versions of the underliing file buffer. */
-int
-ofd_ts_get_region_versions(struct ofd *ofd, size_t nbyte, off_t offset, struct cmapss *cmapss);
-
-/** \brief Validates the open file descriptor's version. */
-int
-ofd_ts_validate_state(struct ofd *ofd, count_type ver,
-                      struct picotm_error* error);
-
-/** \brief Validates the region versions of the underlying file buffer. */
-int
-ofd_ts_validate_region(struct ofd *ofd, size_t nbyte, off_t off, struct cmapss *cmapss);
-
-/** \brief Increments the state's version of the underlying file buffer. */
-long long
-ofd_ts_inc_state_version(struct ofd *ofd);
-
-/** \brief Increments the regions' versions of the underlying file buffer. */
-int
-ofd_ts_inc_region_versions(struct ofd *ofd, size_t nbyte, off_t off,
-                           struct cmapss *cmapss, struct picotm_error* error);
-
-int
-ofd_ts_lock_region(struct ofd *ofd, size_t nbyte, off_t offset, struct cmapss *cmapss);
-
-int
-ofd_ts_unlock_region(struct ofd *ofd, size_t nbyte, off_t offset, struct cmapss *cmapss);
 
 /*
  * Pessimistic CC

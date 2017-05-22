@@ -12,7 +12,6 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include "cmapss.h"
 #include "errcode.h"
 #include "rwstatemap.h"
 
@@ -85,14 +84,7 @@ ofd_init(struct ofd *ofd)
     ofd->flags = 0;
     ofd->type = PICOTM_LIBC_FILE_TYPE_OTHER;
 
-    if ((err = counter_init(&ofd->ver)) < 0) {
-        counter_uninit(&ofd->ref);
-        pthread_rwlock_destroy(&ofd->lock);
-        return err;
-    }
-
     if ((err = rwlock_init(&ofd->rwlock)) < 0) {
-        counter_uninit(&ofd->ver);
         counter_uninit(&ofd->ref);
         pthread_rwlock_destroy(&ofd->lock);
         return err;
@@ -104,9 +96,6 @@ ofd_init(struct ofd *ofd)
 
     ofd->data.regular.offset = 0;
 
-    if ((err = cmap_init(&ofd->data.regular.cmap)) < 0) {
-        return err;
-    }
     if ((err = rwlockmap_init(&ofd->data.regular.rwlockmap)) < 0) {
         return err;
     }
@@ -117,13 +106,9 @@ ofd_init(struct ofd *ofd)
 void
 ofd_uninit(struct ofd *ofd)
 {
-    cmap_uninit(&ofd->data.regular.cmap);
-
     rwlockmap_uninit(&ofd->data.regular.rwlockmap);
 
     rwlock_uninit(&ofd->rwlock);
-
-    counter_uninit(&ofd->ver);
 
     counter_uninit(&ofd->ref);
 
@@ -346,163 +331,6 @@ ofd_unref(struct ofd *ofd)
     assert(ofd);
 
     counter_dec(&ofd->ref);
-}
-
-/*
- * Optimistic CC
- */
-
-count_type
-ofd_ts_get_state_version(struct ofd *ofd)
-{
-    assert(ofd);
-    assert(ofd_get_ccmode_nolock(ofd) == PICOTM_LIBC_CC_MODE_TS);
-
-    return counter_get(&ofd->ver);
-}
-
-int
-ofd_ts_get_region_versions(struct ofd *ofd, size_t nbyte, off_t offset, struct cmapss *cmapss)
-{
-    assert(ofd);
-    assert(ofd_get_ccmode_nolock(ofd) == PICOTM_LIBC_CC_MODE_TS);
-    assert(ofd_get_type_nolock(ofd) == PICOTM_LIBC_FILE_TYPE_REGULAR);
-    assert(cmapss);
-
-    return cmapss_get_region(cmapss, reccount(nbyte),
-                                     recoffset(offset),
-                                    &ofd->data.regular.cmap);
-}
-
-int
-ofd_ts_validate_state(struct ofd *ofd, count_type ver,
-                      struct picotm_error* error)
-{
-    assert(ofd);
-    assert(ofd_get_ccmode_nolock(ofd) == PICOTM_LIBC_CC_MODE_TS);
-
-    int res;
-
-    count_type ofdver = counter_get(&ofd->ver);
-
-    if (ver == ofdver) {
-        res = 0;
-    } else if (ver < ofdver) {
-        picotm_error_set_conflicting(error, NULL);
-        res = ERR_CONFLICT;
-    } else {
-        abort();
-    }
-
-    return res;
-}
-
-int
-ofd_ts_validate_region(struct ofd *ofd, size_t nbyte, off_t offset, struct cmapss *cmapss)
-{
-    assert(ofd);
-    assert(ofd_get_ccmode_nolock(ofd) == PICOTM_LIBC_CC_MODE_TS);
-    assert(ofd_get_type_nolock(ofd) == PICOTM_LIBC_FILE_TYPE_REGULAR);
-    assert(cmapss);
-
-    return cmapss_validate_region(cmapss,
-                                  reccount(nbyte),
-                                  recoffset(offset),
-                                 &ofd->data.regular.cmap);
-}
-
-long long
-ofd_ts_inc_state_version(struct ofd *ofd)
-{
-    assert(ofd);
-    assert(ofd_get_ccmode_nolock(ofd) == PICOTM_LIBC_CC_MODE_TS);
-
-    return counter_inc(&ofd->ver);
-}
-
-int
-ofd_ts_inc_region_versions(struct ofd *ofd, size_t nbyte, off_t offset,
-                           struct cmapss *cmapss, struct picotm_error* error)
-{
-    int res;
-
-    assert(ofd);
-    assert(ofd_get_ccmode_nolock(ofd) == PICOTM_LIBC_CC_MODE_TS);
-
-    switch (ofd_get_type_nolock(ofd)) {
-        case PICOTM_LIBC_FILE_TYPE_REGULAR:
-            res = cmapss_inc_region(cmapss,
-                                    reccount(nbyte),
-                                    recoffset(offset),
-                                   &ofd->data.regular.cmap);
-            if (res < 0) {
-                picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
-            }
-            break;
-        case PICOTM_LIBC_FILE_TYPE_OTHER:
-        case PICOTM_LIBC_FILE_TYPE_FIFO:
-        case PICOTM_LIBC_FILE_TYPE_SOCKET:
-            res = 0;
-            break;
-        default:
-            abort();
-    }
-
-    return res;
-}
-
-int
-ofd_ts_lock_region(struct ofd *ofd, size_t nbyte, off_t offset, struct cmapss *cmapss)
-{
-    int res;
-
-    assert(ofd);
-    assert(ofd_get_ccmode_nolock(ofd) == PICOTM_LIBC_CC_MODE_TS);
-
-    switch (ofd_get_type_nolock(ofd)) {
-        case PICOTM_LIBC_FILE_TYPE_REGULAR:
-            res = cmapss_lock_region(cmapss,
-                                     reccount(nbyte),
-                                     recoffset(offset),
-                                    &ofd->data.regular.cmap);
-            break;
-        case PICOTM_LIBC_FILE_TYPE_OTHER:
-        case PICOTM_LIBC_FILE_TYPE_FIFO:
-        case PICOTM_LIBC_FILE_TYPE_SOCKET:
-            res = 0;
-            break;
-        default:
-            abort();
-    }
-
-    return res;
-}
-
-int
-ofd_ts_unlock_region(struct ofd *ofd, size_t nbyte, off_t offset, struct cmapss *cmapss)
-{
-    int res;
-
-    assert(ofd);
-    assert(ofd_get_ccmode_nolock(ofd) == PICOTM_LIBC_CC_MODE_TS);
-
-    switch (ofd_get_type_nolock(ofd)) {
-        case PICOTM_LIBC_FILE_TYPE_REGULAR:
-            res = cmapss_unlock_region(cmapss,
-                                       reccount(nbyte),
-                                       recoffset(offset),
-                                      &ofd->data.regular.cmap);
-            break;
-        case PICOTM_LIBC_FILE_TYPE_OTHER:
-        case PICOTM_LIBC_FILE_TYPE_FIFO:
-        case PICOTM_LIBC_FILE_TYPE_SOCKET:
-            res = 0;
-            break;
-        default:
-            abort();
-    }
-
-    return res;
 }
 
 /*

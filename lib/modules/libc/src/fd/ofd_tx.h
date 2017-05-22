@@ -6,7 +6,6 @@
 
 #include <sys/socket.h>
 #include <sys/types.h>
-#include "cmapss.h"
 #include "counter.h"
 #include "fcntlop.h"
 #include "picotm/picotm-libc.h"
@@ -76,15 +75,6 @@ struct ofd_tx
     off_t size;
 
     struct {
-        struct {
-            /** Last ofd version, modified by ofd_tx */
-            count_type     ver;
-            struct cmapss  cmapss;
-            /** Table of all regions to be locked */
-            struct region* locktab;
-            size_t         locktablen;
-            size_t         locktabsiz;
-        } ts;
         struct {
             /** State of the local ofd lock */
             enum   rwstate    rwstate;
@@ -166,28 +156,6 @@ ofd_tx_pre_commit(struct ofd_tx* self);
  */
 int
 ofd_tx_post_commit(struct ofd_tx* self);
-
-/**
- * Returns true if optimistic CC is in use, false otherwise.
- */
-int
-ofd_tx_is_optimistic(const struct ofd_tx* self);
-
-/*
- * optimistic CC
- */
-
-int
-ofd_tx_ts_get_state_version(struct ofd_tx* self);
-
-int
-ofd_tx_ts_get_region_versions(struct ofd_tx* self, size_t nbyte, off_t offset);
-
-int
-ofd_tx_ts_validate_state(struct ofd_tx* self);
-
-int
-ofd_tx_ts_validate_region(struct ofd_tx* self, size_t nbyte, off_t offset);
 
 /*
  * pessimistic CC

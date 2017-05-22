@@ -21,7 +21,7 @@ fd_tx_init(struct fd_tx* self)
     self->fildes = -1;
     self->ofd = -1;
 	self->flags = 0;
-	self->cc_mode = PICOTM_LIBC_CC_MODE_TS;
+	self->cc_mode = PICOTM_LIBC_CC_MODE_2PL;
 
     self->fcntltab = NULL;
     self->fcntltablen = 0;
