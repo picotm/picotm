@@ -277,13 +277,12 @@ fildes_tx_exec_accept(struct fildes_tx* self, int sockfd,
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    int optcc;
-    err = ofd_tx_ref(ofd_tx, fd_tx->ofd, sockfd, 0, &optcc);
+    err = ofd_tx_ref(ofd_tx, fd_tx->ofd, sockfd, 0);
     if (err) {
         return err;
     }
 
-    fildes_tx_set_optcc(self, optcc);
+    fildes_tx_set_optcc(self, false);
 
     /* Accept connection */
 
@@ -363,13 +362,12 @@ fildes_tx_exec_bind(struct fildes_tx* self, int socket,
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    int optcc;
-    err = ofd_tx_ref(ofd_tx, fd_tx->ofd, socket, 0, &optcc);
+    err = ofd_tx_ref(ofd_tx, fd_tx->ofd, socket, 0);
     if (err) {
         return err;
     }
 
-    fildes_tx_set_optcc(self, optcc);
+    fildes_tx_set_optcc(self, false);
 
     /* Bind */
 
@@ -555,14 +553,12 @@ fildes_tx_exec_connect(struct fildes_tx* self, int sockfd,
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    int optcc;
-    err = ofd_tx_ref(ofd_tx, fd_tx->ofd, sockfd, 0, &optcc);
-
+    err = ofd_tx_ref(ofd_tx, fd_tx->ofd, sockfd, 0);
     if (err) {
         return err;
     }
 
-    fildes_tx_set_optcc(self, optcc);
+    fildes_tx_set_optcc(self, false);
 
     /* Connect */
 
@@ -761,14 +757,12 @@ fildes_tx_exec_fcntl(struct fildes_tx* self, int fildes, int cmd,
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    int optcc;
-    err = ofd_tx_ref(ofd_tx, fd_tx->ofd, fildes, 0, &optcc);
-
+    err = ofd_tx_ref(ofd_tx, fd_tx->ofd, fildes, 0);
     if (err) {
         return err;
     }
 
-    fildes_tx_set_optcc(self, optcc);
+    fildes_tx_set_optcc(self, false);
 
     /* Fcntl */
 
@@ -872,14 +866,12 @@ fildes_tx_exec_fsync(struct fildes_tx* self, int fildes, int isnoundo)
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    int optcc;
-    err = ofd_tx_ref(ofd_tx, fd_tx->ofd, fildes, 0, &optcc);
-
+    err = ofd_tx_ref(ofd_tx, fd_tx->ofd, fildes, 0);
     if (err) {
         return err;
     }
 
-    fildes_tx_set_optcc(self, optcc);
+    fildes_tx_set_optcc(self, false);
 
     /* Fsync */
 
@@ -979,14 +971,12 @@ fildes_tx_exec_listen(struct fildes_tx* self, int sockfd, int backlog,
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    int optcc;
-    err = ofd_tx_ref(ofd_tx, fd_tx->ofd, sockfd, 0, &optcc);
-
+    err = ofd_tx_ref(ofd_tx, fd_tx->ofd, sockfd, 0);
     if (err < 0) {
         return err;
     }
 
-    fildes_tx_set_optcc(self, optcc);
+    fildes_tx_set_optcc(self, false);
 
     /* Connect */
 
@@ -1086,14 +1076,12 @@ fildes_tx_exec_lseek(struct fildes_tx* self, int fildes, off_t offset,
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    int optcc;
-    err = ofd_tx_ref(ofd_tx, fd_tx->ofd, fildes, 0, &optcc);
-
+    err = ofd_tx_ref(ofd_tx, fd_tx->ofd, fildes, 0);
     if (err) {
         return err;
     }
 
-    fildes_tx_set_optcc(self, optcc);
+    fildes_tx_set_optcc(self, false);
 
     /* Seek */
 
@@ -1407,14 +1395,12 @@ fildes_tx_exec_pread(struct fildes_tx* self, int fildes, void* buf,
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    int optcc;
-    err = ofd_tx_ref(ofd_tx, fd_tx->ofd, fildes, 0, &optcc);
-
+    err = ofd_tx_ref(ofd_tx, fd_tx->ofd, fildes, 0);
     if (err) {
         return err;
     }
 
-    fildes_tx_set_optcc(self, optcc);
+    fildes_tx_set_optcc(self, false);
 
     /* pread */
 
@@ -1429,15 +1415,6 @@ fildes_tx_exec_pread(struct fildes_tx* self, int fildes, void* buf,
 
     if (len < 0) {
         return len;
-    }
-
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-    /* possibly validate optimistic domain */
-    if (ofd_tx_is_optimistic(ofd_tx)
-        && (val_mode == PICOTM_LIBC_VALIDATE_DOMAIN)
-        && ((err = ofd_tx_validate(ofd_tx, &error)) < 0)) {
-        return err;
     }
 
     /* inject event */
@@ -1528,14 +1505,12 @@ fildes_tx_exec_pwrite(struct fildes_tx* self, int fildes, const void* buf,
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    int optcc;
-    err = ofd_tx_ref(ofd_tx, fd_tx->ofd, fildes, 0, &optcc);
-
+    err = ofd_tx_ref(ofd_tx, fd_tx->ofd, fildes, 0);
     if (err) {
         return err;
     }
 
-    fildes_tx_set_optcc(self, optcc);
+    fildes_tx_set_optcc(self, false);
 
     /* Pwrite */
 
@@ -1637,14 +1612,12 @@ fildes_tx_exec_read(struct fildes_tx* self, int fildes, void* buf,
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    int optcc;
-    err = ofd_tx_ref(ofd_tx, fd_tx->ofd, fildes, 0, &optcc);
-
+    err = ofd_tx_ref(ofd_tx, fd_tx->ofd, fildes, 0);
     if (err) {
         return err;
     }
 
-    fildes_tx_set_optcc(self, optcc);
+    fildes_tx_set_optcc(self, false);
 
     /* Read */
 
@@ -1659,15 +1632,6 @@ fildes_tx_exec_read(struct fildes_tx* self, int fildes, void* buf,
 
     if (len < 0) {
         return len;
-    }
-
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-    /* possibly validate optimistic domain */
-    if (ofd_tx_is_optimistic(ofd_tx)
-        && (val_mode == PICOTM_LIBC_VALIDATE_DOMAIN)
-        && ((err = ofd_tx_validate(ofd_tx, &error)) < 0)) {
-        return err;
     }
 
     /* Inject event */
@@ -1757,14 +1721,12 @@ fildes_tx_exec_recv(struct fildes_tx* self, int sockfd, void* buffer,
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    int optcc;
-    err = ofd_tx_ref(ofd_tx, fd_tx->ofd, sockfd, 0, &optcc);
-
+    err = ofd_tx_ref(ofd_tx, fd_tx->ofd, sockfd, 0);
     if (err) {
         return err;
     }
 
-    fildes_tx_set_optcc(self, optcc);
+    fildes_tx_set_optcc(self, false);
 
     /* Receive */
 
@@ -1945,14 +1907,12 @@ fildes_tx_exec_send(struct fildes_tx* self, int sockfd, const void* buffer,
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    int optcc;
-    err = ofd_tx_ref(ofd_tx, fd_tx->ofd, sockfd, 0, &optcc);
-
+    err = ofd_tx_ref(ofd_tx, fd_tx->ofd, sockfd, 0);
     if (err) {
         return err;
     }
 
-    fildes_tx_set_optcc(self, optcc);
+    fildes_tx_set_optcc(self, false);
 
     /* Send */
 
@@ -2054,14 +2014,12 @@ fildes_tx_exec_shutdown(struct fildes_tx* self, int sockfd, int how,
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    int optcc;
-    err = ofd_tx_ref(ofd_tx, fd_tx->ofd, sockfd, 0, &optcc);
-
+    err = ofd_tx_ref(ofd_tx, fd_tx->ofd, sockfd, 0);
     if (err < 0) {
         return err;
     }
 
-    fildes_tx_set_optcc(self, optcc);
+    fildes_tx_set_optcc(self, false);
 
     /* Shutdown */
 
@@ -2268,14 +2226,12 @@ fildes_tx_exec_write(struct fildes_tx* self, int fildes, const void* buf,
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    int optcc;
-    err = ofd_tx_ref(ofd_tx, fd_tx->ofd, fildes, 0, &optcc);
-
+    err = ofd_tx_ref(ofd_tx, fd_tx->ofd, fildes, 0);
     if (err) {
         return err;
     }
 
-    fildes_tx_set_optcc(self, optcc);
+    fildes_tx_set_optcc(self, false);
 
     /* Write */
 

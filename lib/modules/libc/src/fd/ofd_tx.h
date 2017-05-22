@@ -122,8 +122,7 @@ ofd_tx_clear_cc(struct ofd_tx* self, struct picotm_error* error);
  * Acquire a reference on the open file description
  */
 enum error_code
-ofd_tx_ref(struct ofd_tx* self, int ofd, int fildes, unsigned long flags,
-           int* optcc);
+ofd_tx_ref(struct ofd_tx* self, int ofd, int fildes, unsigned long flags);
 
 /**
  * Release reference

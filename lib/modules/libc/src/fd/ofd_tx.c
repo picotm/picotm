@@ -247,8 +247,7 @@ ofd_tx_clear_cc(struct ofd_tx* self, struct picotm_error* error)
  */
 
 enum error_code
-ofd_tx_ref(struct ofd_tx* self, int ofdindex, int fildes, unsigned long flags,
-           int* optcc)
+ofd_tx_ref(struct ofd_tx* self, int ofdindex, int fildes, unsigned long flags)
 {
     assert(self);
     assert(ofdindex >= 0);
@@ -287,11 +286,6 @@ ofd_tx_ref(struct ofd_tx* self, int ofdindex, int fildes, unsigned long flags,
 
         self->modedata.tpl.rwstate = RW_NOLOCK;
         self->modedata.tpl.locktablen = 0;
-    }
-
-    if (optcc) {
-        /* Signal optimistic CC */
-        *optcc = (self->cc_mode == PICOTM_LIBC_CC_MODE_TS);
     }
 
     return 0;
