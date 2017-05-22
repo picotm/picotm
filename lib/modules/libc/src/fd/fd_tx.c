@@ -215,17 +215,7 @@ fd_tx_close_exec(struct fd_tx* self, int fildes, int* cookie, int noundo)
     };
 
     assert(self->cc_mode < sizeof(close_exec)/sizeof(close_exec[0]));
-
-    if (noundo) {
-        /* TX irrevokable */
-        self->cc_mode = PICOTM_LIBC_CC_MODE_NOUNDO;
-    } else {
-        /* TX revokable */
-        if ((self->cc_mode == PICOTM_LIBC_CC_MODE_NOUNDO)
-            || !close_exec[self->cc_mode]) {
-            return ERR_NOUNDO;
-        }
-    }
+    assert(close_exec[self->cc_mode]);
 
     return close_exec[self->cc_mode](self, fildes, cookie);
 }
