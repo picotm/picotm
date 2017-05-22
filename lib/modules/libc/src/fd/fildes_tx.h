@@ -24,8 +24,6 @@ struct openop;
 struct fildes_tx {
     unsigned long module;
 
-    bool optcc;
-
     struct ofd_tx ofd_tx[MAXNUMFD];
     struct fd_tx  fd_tx[MAXNUMFD];
 
@@ -54,12 +52,6 @@ fildes_tx_init(struct fildes_tx* self, unsigned long module);
 
 void
 fildes_tx_uninit(struct fildes_tx* self);
-
-void
-fildes_tx_set_optcc(struct fildes_tx* self, int optcc);
-
-int
-fildes_tx_get_optcc(const struct fildes_tx* self);
 
 void
 fildes_tx_set_validation_mode(struct fildes_tx* self,

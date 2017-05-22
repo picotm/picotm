@@ -61,8 +61,6 @@ fildes_tx_init(struct fildes_tx* self, unsigned long module)
 {
     self->module = module;
 
-    self->optcc = false;
-
     self->ofd_tx_max_index = 0;
     self->fd_tx_max_fildes = 0;
 
@@ -102,18 +100,6 @@ fildes_tx_uninit(struct fildes_tx* self)
     openoptab_clear(&self->openoptab, &self->openoptablen);
 
     free(self->eventtab);
-}
-
-void
-fildes_tx_set_optcc(struct fildes_tx* self, int optcc)
-{
-    self->optcc = optcc;
-}
-
-int
-fildes_tx_get_optcc(const struct fildes_tx* self)
-{
-    return self->optcc;
 }
 
 void
@@ -282,8 +268,6 @@ fildes_tx_exec_accept(struct fildes_tx* self, int sockfd,
         return err;
     }
 
-    fildes_tx_set_optcc(self, false);
-
     /* Accept connection */
 
     int connfd = TEMP_FAILURE_RETRY(accept(sockfd, address, address_len));
@@ -366,8 +350,6 @@ fildes_tx_exec_bind(struct fildes_tx* self, int socket,
     if (err) {
         return err;
     }
-
-    fildes_tx_set_optcc(self, false);
 
     /* Bind */
 
@@ -557,8 +539,6 @@ fildes_tx_exec_connect(struct fildes_tx* self, int sockfd,
     if (err) {
         return err;
     }
-
-    fildes_tx_set_optcc(self, false);
 
     /* Connect */
 
@@ -762,8 +742,6 @@ fildes_tx_exec_fcntl(struct fildes_tx* self, int fildes, int cmd,
         return err;
     }
 
-    fildes_tx_set_optcc(self, false);
-
     /* Fcntl */
 
     res = ofd_tx_fcntl_exec(ofd_tx, fildes, cmd, arg, &cookie, isnoundo);
@@ -871,8 +849,6 @@ fildes_tx_exec_fsync(struct fildes_tx* self, int fildes, int isnoundo)
         return err;
     }
 
-    fildes_tx_set_optcc(self, false);
-
     /* Fsync */
 
     int cookie = -1;
@@ -976,8 +952,6 @@ fildes_tx_exec_listen(struct fildes_tx* self, int sockfd, int backlog,
         return err;
     }
 
-    fildes_tx_set_optcc(self, false);
-
     /* Connect */
 
     int cookie = -1;
@@ -1080,8 +1054,6 @@ fildes_tx_exec_lseek(struct fildes_tx* self, int fildes, off_t offset,
     if (err) {
         return err;
     }
-
-    fildes_tx_set_optcc(self, false);
 
     /* Seek */
 
@@ -1400,8 +1372,6 @@ fildes_tx_exec_pread(struct fildes_tx* self, int fildes, void* buf,
         return err;
     }
 
-    fildes_tx_set_optcc(self, false);
-
     /* pread */
 
     enum picotm_libc_validation_mode val_mode =
@@ -1510,8 +1480,6 @@ fildes_tx_exec_pwrite(struct fildes_tx* self, int fildes, const void* buf,
         return err;
     }
 
-    fildes_tx_set_optcc(self, false);
-
     /* Pwrite */
 
     int cookie = -1;
@@ -1616,8 +1584,6 @@ fildes_tx_exec_read(struct fildes_tx* self, int fildes, void* buf,
     if (err) {
         return err;
     }
-
-    fildes_tx_set_optcc(self, false);
 
     /* Read */
 
@@ -1725,8 +1691,6 @@ fildes_tx_exec_recv(struct fildes_tx* self, int sockfd, void* buffer,
     if (err) {
         return err;
     }
-
-    fildes_tx_set_optcc(self, false);
 
     /* Receive */
 
@@ -1912,8 +1876,6 @@ fildes_tx_exec_send(struct fildes_tx* self, int sockfd, const void* buffer,
         return err;
     }
 
-    fildes_tx_set_optcc(self, false);
-
     /* Send */
 
     int cookie = -1;
@@ -2018,8 +1980,6 @@ fildes_tx_exec_shutdown(struct fildes_tx* self, int sockfd, int how,
     if (err < 0) {
         return err;
     }
-
-    fildes_tx_set_optcc(self, false);
 
     /* Shutdown */
 
@@ -2230,8 +2190,6 @@ fildes_tx_exec_write(struct fildes_tx* self, int fildes, const void* buf,
     if (err) {
         return err;
     }
-
-    fildes_tx_set_optcc(self, false);
 
     /* Write */
 

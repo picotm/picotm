@@ -506,13 +506,6 @@ fd_module_pread(int fildes, void* buf, size_t nbyte, off_t off)
         res = fildes_tx_exec_pread(fildes_tx, fildes, buf, nbyte, off,
                                 picotm_is_irrevocable());
 
-        /* possibly validate all optimistic domains */
-        if ((fildes_tx_get_validation_mode(fildes_tx) == PICOTM_LIBC_VALIDATE_FULL)
-            && fildes_tx_get_optcc(fildes_tx)
-            && !picotm_is_valid()) {
-            res = ERR_CONFLICT;
-        }
-
         switch (res) {
             case ERR_CONFLICT:
                 picotm_restart();
@@ -564,13 +557,6 @@ fd_module_read(int fildes, void* buf, size_t nbyte)
     do {
         res = fildes_tx_exec_read(fildes_tx, fildes, buf, nbyte,
                                picotm_is_irrevocable());
-
-        /* possibly validate all optimistic domains */
-        if ((fildes_tx_get_validation_mode(fildes_tx) == PICOTM_LIBC_VALIDATE_FULL)
-            && fildes_tx_get_optcc(fildes_tx)
-            && !picotm_is_valid()) {
-            res = ERR_CONFLICT;
-        }
 
         switch (res) {
             case ERR_CONFLICT:
