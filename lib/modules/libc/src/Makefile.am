@@ -18,10 +18,6 @@ libpicotm_c_la_SOURCES = allocator/allocator_tx.c \
                          error/module.h \
                          fcntl-tm.c \
                          fcntl.c \
-                         fd/cmap.c \
-                         fd/cmap.h \
-                         fd/cmapss.c \
-                         fd/cmapss.h \
                          fd/fcntlop.c \
                          fd/fcntlop.h \
                          fd/fcntloptab.c \
