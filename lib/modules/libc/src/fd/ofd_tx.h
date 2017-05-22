@@ -6,7 +6,6 @@
 
 #include <sys/socket.h>
 #include <sys/types.h>
-#include "counter.h"
 #include "fcntlop.h"
 #include "picotm/picotm-libc.h"
 #include "rwlock.h"
