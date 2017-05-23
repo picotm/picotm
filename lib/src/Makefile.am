@@ -10,7 +10,6 @@ libpicotm_la_SOURCES = log.c \
                        module.h \
                        picotm.c \
                        picotm.h \
-                       ptr.h \
                        table.c \
                        table.h \
                        tx.c \

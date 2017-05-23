@@ -4,9 +4,9 @@
 
 #include "tx.h"
 #include <errno.h>
-#include <picotm/picotm-error.h>
 #include <stdlib.h>
-#include "ptr.h"
+#include "picotm/picotm-error.h"
+#include "picotm/picotm-lib-array.h"
 #include "table.h"
 #include "tx_shared.h"
 
@@ -66,7 +66,7 @@ tx_register_module(struct tx* self,
 {
     unsigned long module = self->nmodules;
 
-    if (module >= arraylen(self->module)) {
+    if (module >= picotm_arraylen(self->module)) {
         picotm_error_set_error_code(error, PICOTM_OUT_OF_MEMORY);
         return 0;
     }
