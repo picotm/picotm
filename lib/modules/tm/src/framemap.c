@@ -7,7 +7,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-#include "ptr.h"
+#include "picotm/picotm-lib-array.h"
 
 /*
  * Frame table
@@ -16,8 +16,8 @@
 static void
 tm_frame_tbl_init(struct tm_frame_tbl* self, size_t first_block_index)
 {
-    struct tm_frame* beg = self->frame;
-    const struct tm_frame* end = self->frame + arraylen(self->frame);
+    struct tm_frame* beg = picotm_arraybeg(self->frame);
+    const struct tm_frame* end = picotm_arrayend(self->frame);
 
     while (beg < end) {
         tm_frame_init(beg++, first_block_index++);
@@ -71,8 +71,8 @@ cleanup_dir(struct tm_frame_dir* dir, size_t shiftbits)
 {
     shiftbits -= TM_FRAME_DIR_SIZE_BITS;
 
-    uintptr_t* beg = dir->entry;
-    const uintptr_t* end = dir->entry + arraylen(dir->entry);
+    uintptr_t* beg = picotm_arraybeg(dir->entry);
+    const uintptr_t* end = picotm_arrayend(dir->entry);
 
     if (reached_tbl(shiftbits)) {
         while (beg < end) {
@@ -97,8 +97,8 @@ cleanup_tld(struct tm_frame_tld* tld, size_t shiftbits)
 {
     shiftbits -= TM_FRAME_TLD_SIZE_BITS;
 
-    uintptr_t* beg = tld->entry;
-    const uintptr_t* end = tld->entry + arraylen(tld->entry);
+    uintptr_t* beg = picotm_arraybeg(tld->entry);
+    const uintptr_t* end = picotm_arrayend(tld->entry);
 
     if (reached_tbl(shiftbits)) {
         while (beg < end) {
