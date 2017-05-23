@@ -5,7 +5,7 @@
 #include "openoptab.h"
 #include <assert.h>
 #include <stdlib.h>
-#include <picotm/picotm-module.h>
+#include <picotm/picotm-lib-tab.h>
 #include "openop.h"
 
 unsigned long

@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ofdtab.h"
-#include <picotm/picotm-module.h>
+#include <picotm/picotm-lib-tab.h>
 #include <stdlib.h>
 #include "errcode.h"
 #include "mutex.h"

@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <picotm/picotm-lib-tab.h>
 #include <picotm/picotm-module.h>
 #include <unistd.h>
 #include "errcode.h"

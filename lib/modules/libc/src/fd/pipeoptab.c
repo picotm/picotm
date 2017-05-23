@@ -4,7 +4,7 @@
 
 #include "pipeoptab.h"
 #include <assert.h>
-#include <picotm/picotm-module.h>
+#include <picotm/picotm-lib-tab.h>
 #include <stdio.h>
 #include "pipeop.h"
 

@@ -4,13 +4,10 @@
 
 #include "iooptab.h"
 #include <assert.h>
-/*
-#include <search.h>
-*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <picotm/picotm-module.h>
+#include <picotm/picotm-lib-tab.h>
 #include "range.h"
 #include "ioop.h"
 
