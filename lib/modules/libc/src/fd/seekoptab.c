@@ -5,7 +5,7 @@
 #include "seekoptab.h"
 #include <assert.h>
 #include <stdio.h>
-#include <picotm/picotm-module.h>
+#include <picotm/picotm-lib-tab.h>
 #include "seekop.h"
 
 unsigned long
