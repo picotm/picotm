@@ -1,4 +1,14 @@
 
+picotm-tests 0.2.0 (2017-05-31)
+------------------
+
+    * Renamed test programm to 'picotm-test'.
+
+    * Restored test case for VFS module.
+
+    * Removed obsolete code.
+
+
 picotm-tests 0.1.0 (2017-04-29)
 ------------------
 

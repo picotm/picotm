@@ -1,4 +1,23 @@
 
+picotm 0.2.0 (2017-05-31)
+------------
+
+    * Improved source code documentation. The documentation is part of
+      the source code and can be extracted using 'make doc'. There's a
+      tutorial for each module and the overall library.
+
+    * Improved error handling. Errors used to be signalled by returning
+      an error code from the failed function. This scheme has been replaced
+      in many places by an additional output parameter of type
+      |struct picotm_error|. The stored value signals an error, which type
+      of error, which error, and maybe an additional error message.
+
+    * Updated module interface. The module interface has been changed to
+      use |struct picotm_error| for signalling errors to picotm. Two new
+      call-back functions apply() and undo() allow for performing module-
+      wide apply and undo during commit or rollback of a transaction.
+
+
 picotm 0.1.0 (2017-04-29)
 ------------
 
