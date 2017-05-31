@@ -263,7 +263,7 @@ sub createBranch
     die("Not on branch '$release_branch'") if $release_type eq 'micro' and not $branch eq $release_branch;
 
     if ($branch eq $master_branch) {
-        `git checkout -b v$new_major.$new_minor` or die;
+        system("git checkout -b v$new_major.$new_minor") == 0 or die;
     }
 }
 
