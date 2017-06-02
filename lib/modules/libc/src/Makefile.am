@@ -78,8 +78,6 @@ libpicotm_c_la_SOURCES = allocator/allocator_tx.c \
                          mutex.c \
                          mutex.h \
                          sched.c \
-                         spinlock.c \
-                         spinlock.h \
                          stdlib-tm.c \
                          stdlib.c \
                          string-tm.c \
