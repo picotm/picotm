@@ -7,14 +7,18 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "spinlock.h"
 
 static void
 counter_lock(struct counter *c)
 {
     assert(c);
 
-    spinlock_lock(&c->lock);
+    int err = pthread_spin_lock(&c->lock);
+    if (err) {
+        errno = err;
+        perror("pthread_spin_lock");
+        abort();
+    }
 }
 
 static void
@@ -22,18 +26,24 @@ counter_unlock(struct counter *c)
 {
     assert(c);
 
-    spinlock_unlock(&c->lock);
+    int err = pthread_spin_unlock(&c->lock);
+    if (err) {
+        errno = err;
+        perror("pthread_spin_unlock");
+        abort();
+    }
 }
 
 int
 counter_init(struct counter *c)
 {
-    int err;
-
     assert(c);
 
-    if ((err = spinlock_init(&c->lock, PTHREAD_PROCESS_PRIVATE)) < 0) {
-        return err;
+    int err = pthread_spin_init(&c->lock, PTHREAD_PROCESS_PRIVATE);
+    if (err) {
+        errno = err;
+        perror("pthread_spin_init");
+        return -1;
     }
 
     c->val = 0;
@@ -46,7 +56,11 @@ counter_uninit(struct counter *c)
 {
     assert(c);
 
-    spinlock_uninit(&c->lock);
+    int err = pthread_spin_destroy(&c->lock);
+    if (err) {
+        errno = err;
+        perror("pthread_spin_destroy");
+    }
 }
 
 void
