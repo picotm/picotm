@@ -5,7 +5,7 @@
 #ifndef OFD_H
 #define OFD_H
 
-#include "counter.h"
+#include <stdatomic.h>
 #include "ofdid.h"
 #include "picotm/picotm-libc.h"
 #include "rwlock.h"
@@ -31,7 +31,7 @@ struct ofd
     pthread_rwlock_t lock;
 
     struct ofdid   id;
-    struct counter ref;
+    atomic_ulong   ref;
 
     unsigned long flags;
     enum picotm_libc_file_type type;
@@ -64,11 +64,11 @@ void
 ofd_clear_id(struct ofd *ofd);
 
 /** \brief References the open file description. */
-count_type
+int
 ofd_ref(struct ofd *ofd, int fildes, unsigned long flags);
 
 /** \brief References the open file description and returns its state. */
-count_type
+int
 ofd_ref_state(struct ofd *ofd, int fildes, unsigned long flags,
               enum picotm_libc_file_type *type,
               enum picotm_libc_cc_mode *ccmode,

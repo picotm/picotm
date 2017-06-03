@@ -76,16 +76,12 @@ ofd_init(struct ofd *ofd)
 
     ofdid_clear(&ofd->id);
 
-    if ((err = counter_init(&ofd->ref)) < 0) {
-        pthread_rwlock_destroy(&ofd->lock);
-        return err;
-    }
+    atomic_init(&ofd->ref, 0);
 
     ofd->flags = 0;
     ofd->type = PICOTM_LIBC_FILE_TYPE_OTHER;
 
     if ((err = rwlock_init(&ofd->rwlock)) < 0) {
-        counter_uninit(&ofd->ref);
         pthread_rwlock_destroy(&ofd->lock);
         return err;
     }
@@ -109,8 +105,6 @@ ofd_uninit(struct ofd *ofd)
     rwlockmap_uninit(&ofd->data.regular.rwlockmap);
 
     rwlock_uninit(&ofd->rwlock);
-
-    counter_uninit(&ofd->ref);
 
     pthread_rwlock_destroy(&ofd->lock);
 }
@@ -283,7 +277,7 @@ ofd_ref_check(struct ofd *ofd, int fildes, unsigned long flags)
     return 0;
 }
 
-count_type
+int
 ofd_ref_state(struct ofd *ofd, int fildes, unsigned long flags,
               enum picotm_libc_file_type *type,
               enum picotm_libc_cc_mode *ccmode,
@@ -297,11 +291,11 @@ ofd_ref_state(struct ofd *ofd, int fildes, unsigned long flags,
 
     ofd_wrlock(ofd);
 
-    int err = ref[!!counter_get(&ofd->ref)](ofd, fildes, flags);
+    int err = ref[!!atomic_load(&ofd->ref)](ofd, fildes, flags);
 
     if (!err) {
 
-        counter_inc(&ofd->ref);
+        atomic_fetch_add(&ofd->ref, 1);
 
         if (type) {
             *type = ofd_get_type_nolock(ofd);
@@ -319,7 +313,7 @@ ofd_ref_state(struct ofd *ofd, int fildes, unsigned long flags,
     return err;
 }
 
-count_type
+int
 ofd_ref(struct ofd *ofd, int fildes, unsigned long flags)
 {
     return ofd_ref_state(ofd, fildes, flags, NULL, NULL, NULL);
@@ -330,7 +324,7 @@ ofd_unref(struct ofd *ofd)
 {
     assert(ofd);
 
-    counter_dec(&ofd->ref);
+    atomic_fetch_sub(&ofd->ref, 1);
 }
 
 /*
