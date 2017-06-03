@@ -8,45 +8,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static void
-counter_lock(struct counter *c)
-{
-    assert(c);
-
-    int err = pthread_spin_lock(&c->lock);
-    if (err) {
-        errno = err;
-        perror("pthread_spin_lock");
-        abort();
-    }
-}
-
-static void
-counter_unlock(struct counter *c)
-{
-    assert(c);
-
-    int err = pthread_spin_unlock(&c->lock);
-    if (err) {
-        errno = err;
-        perror("pthread_spin_unlock");
-        abort();
-    }
-}
-
 int
 counter_init(struct counter *c)
 {
     assert(c);
 
-    int err = pthread_spin_init(&c->lock, PTHREAD_PROCESS_PRIVATE);
-    if (err) {
-        errno = err;
-        perror("pthread_spin_init");
-        return -1;
-    }
-
-    c->val = 0;
+    atomic_init(&c->val, 0) ;
 
     return 0;
 }
@@ -55,12 +22,6 @@ void
 counter_uninit(struct counter *c)
 {
     assert(c);
-
-    int err = pthread_spin_destroy(&c->lock);
-    if (err) {
-        errno = err;
-        perror("pthread_spin_destroy");
-    }
 }
 
 void
@@ -86,9 +47,7 @@ counter_set(struct counter *c, count_type val)
 {
     assert(c);
 
-    counter_lock(c);
-    c->val = val;
-    counter_unlock(c);
+    atomic_store(&c->val, val);
 
     return val;
 }
@@ -98,9 +57,7 @@ counter_get(struct counter *c)
 {
     assert(c);
 
-    counter_lock(c);
-    count_type val = c->val;
-    counter_unlock(c);
+    count_type val = atomic_load(&c->val);
 
     return val;
 }
@@ -110,11 +67,9 @@ counter_add(struct counter *c, count_type val)
 {
     assert(c);
 
-    counter_lock(c);
-    count_type nval = c->val += val;
-    counter_unlock(c);
+    long long old = atomic_fetch_add(&c->val, val);
 
-    return nval;
+    return old + val;
 }
 
 int
@@ -122,11 +77,7 @@ counter_equal_val(struct counter *c, count_type val)
 {
     assert(c);
 
-    counter_lock(c);
-
-    int eq = c->val == val;
-
-    counter_unlock(c);
+    int eq = atomic_load(&c->val) == val;
 
     return eq;
 }
