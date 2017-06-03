@@ -5,7 +5,7 @@
 #ifndef COUNTER_H
 #define COUNTER_H
 
-#include <pthread.h>
+#include <stdatomic.h>
 
 /**
  * \cond impl || libc_impl
@@ -20,10 +20,8 @@ typedef long long count_type;
 /**
  * \brief Counter with locking
  */
-struct counter
-{
-    pthread_spinlock_t lock;
-    count_type         val;
+struct counter {
+    _Atomic count_type val;
 };
 
 int
