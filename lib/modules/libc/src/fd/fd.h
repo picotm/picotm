@@ -6,6 +6,7 @@
 #define FD_H
 
 #include <stdbool.h>
+#include <pthread.h>
 #include "counter.h"
 
 /**
