@@ -8,8 +8,6 @@ libpicotm_c_la_SOURCES = allocator/allocator_tx.c \
                          allocator/allocator_tx.h \
                          allocator/module.c \
                          allocator/module.h \
-                         counter.c \
-                         counter.h \
                          errcode.h \
                          errno.c \
                          error/error_tx.c \
