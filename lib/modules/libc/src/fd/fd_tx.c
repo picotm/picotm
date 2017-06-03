@@ -44,7 +44,7 @@ fd_tx_ref_or_validate(struct fd_tx* self, int fildes, unsigned long flags)
     assert(fildes >= 0);
     assert(fildes < (ssize_t)(sizeof(fdtab)/sizeof(fdtab[0])));
 
-    count_type fdver;
+    unsigned long fdver;
 
     struct fd* fd = fdtab + fildes;
 
@@ -104,7 +104,7 @@ fd_tx_ref(struct fd_tx* self, int fildes, unsigned long flags)
 
     /* aquire reference if possible */
 
-    count_type fdver;
+    unsigned long fdver;
     int ofd;
 
     int err = fd_ref_state(fd, fildes, flags, &ofd, &fdver);

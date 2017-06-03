@@ -25,19 +25,12 @@ fd_init(struct fd *fd)
         return err;
     }
 
-    if ((err = counter_init(&fd->ref)) < 0) {
-        mutex_uninit(&fd->lock);
-        return err;
-    }
+    atomic_init(&fd->ref, 0);
 
     fd->state = FD_ST_UNUSED;
     fd->ofd = -1;
 
-    if ((err = counter_init(&fd->ver)) < 0) {
-        counter_uninit(&fd->ref);
-        mutex_uninit(&fd->lock);
-        return err;
-    }
+    atomic_init(&fd->ver, 0);
 
     return 0;
 }
@@ -45,8 +38,6 @@ fd_init(struct fd *fd)
 void
 fd_uninit(struct fd *fd)
 {
-    counter_uninit(&fd->ver);
-    counter_uninit(&fd->ref);
     mutex_uninit(&fd->lock);
 }
 
@@ -75,13 +66,13 @@ fd_is_open_nl(const struct fd *fd)
 }
 
 int
-fd_validate(struct fd* fd, count_type ver, struct picotm_error* error)
+fd_validate(struct fd* fd, unsigned long ver, struct picotm_error* error)
 {
     assert(fd);
     assert(fd->ofd >= 0);
     assert(fd->ofd < (ssize_t)(sizeof(ofdtab)/sizeof(ofdtab[0])));
 
-    count_type myver = counter_get(&fd->ver);
+    unsigned long myver = atomic_load(&fd->ver);
 
     if (ver < myver) {
         picotm_error_set_conflicting(error, NULL);
@@ -106,7 +97,7 @@ fd_setup_ofd(struct fd *fd, int fildes, unsigned long flags)
 }
 
 int
-fd_ref_state(struct fd *fd, int fildes, unsigned long flags, int *ofd, count_type *version)
+fd_ref_state(struct fd *fd, int fildes, unsigned long flags, int *ofd, unsigned long *version)
 {
     assert(fd);
 
@@ -125,7 +116,7 @@ fd_ref_state(struct fd *fd, int fildes, unsigned long flags, int *ofd, count_typ
 
             if (__builtin_expect(!err, 1)) {
                 fd->state = FD_ST_INUSE;
-                counter_set(&fd->ref, 1); /* Exactly one reference */
+                atomic_store(&fd->ref, 1); /* Exactly one reference */
             }
             break;
         case FD_ST_INUSE:
@@ -133,7 +124,7 @@ fd_ref_state(struct fd *fd, int fildes, unsigned long flags, int *ofd, count_typ
             if (flags&OFD_FL_WANTNEW) {
             	err = ERR_CONFLICT;
             } else {
-                counter_inc(&fd->ref);
+                atomic_fetch_add(&fd->ref, 1);
             }
             break;
         default:
@@ -181,8 +172,9 @@ fd_unref(struct fd *fd, int fildes)
     fd_lock(fd);
 
     switch (fd->state) {
-        case FD_ST_CLOSING:
-            if (!counter_dec(&fd->ref)) {
+        case FD_ST_CLOSING: {
+            unsigned long oldref = atomic_fetch_sub(&fd->ref, 1);
+            if (oldref == 1) {
                 fd_cleanup(fd);
 
 				/* finally close fildes, if we released the last reference */
@@ -191,11 +183,14 @@ fd_unref(struct fd *fd, int fildes)
 				}
             }
             break;
-        case FD_ST_INUSE:
-            if (!counter_dec(&fd->ref)) {
+        }
+        case FD_ST_INUSE: {
+            unsigned long oldref = atomic_fetch_sub(&fd->ref, 1);
+            if (oldref == 1) {
                 fd_cleanup(fd);
             }
             break;
+        }
         case FD_ST_UNUSED:
         default:
             abort(); /* should never happen */
@@ -204,16 +199,16 @@ fd_unref(struct fd *fd, int fildes)
     fd_unlock(fd);
 }
 
-count_type
+unsigned long
 fd_get_version_nl(struct fd *fd)
 {
     assert(fd);
 
-    count_type res;
+    unsigned long res;
 
     switch (fd->state) {
         case FD_ST_INUSE:
-            res = counter_get(&fd->ver);
+            res = atomic_load(&fd->ver);
             break;
         case FD_ST_CLOSING:
         case FD_ST_UNUSED:
@@ -247,9 +242,9 @@ fd_dump(const struct fd *fd)
 }
 
 bool
-fd_is_valid(struct fd* fd, count_type version)
+fd_is_valid(struct fd* fd, unsigned long version)
 {
-    return counter_get(&fd->ver) <= version;
+    return atomic_load(&fd->ver) <= version;
 }
 
 int

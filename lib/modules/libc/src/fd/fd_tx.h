@@ -5,7 +5,6 @@
 #pragma once
 
 #include <stddef.h>
-#include "counter.h"
 #include "picotm/picotm-libc.h"
 
 /**
@@ -36,7 +35,7 @@ struct fd_tx {
     struct fcntlop* fcntltab;
     size_t          fcntltablen;
 
-    count_type fdver; /* Last fd version, modified by fdtx */
+    unsigned long fdver; /* Last fd version, modified by fdtx */
 };
 
 /**

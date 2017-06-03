@@ -5,9 +5,9 @@
 #ifndef FD_H
 #define FD_H
 
+#include <stdatomic.h>
 #include <stdbool.h>
 #include <pthread.h>
-#include "counter.h"
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -34,13 +34,13 @@ struct fd
 {
     pthread_mutex_t lock;
 
-    struct counter ref;
+    atomic_ulong ref;
 
     enum fd_state state;
 
     int ofd;
 
-    struct counter ver;
+    atomic_ulong ver;
 };
 
 /** \brief Init global file-descriptor state*/
@@ -61,14 +61,14 @@ fd_unlock(struct fd *fd);
 
 /** \brief Validates that ver is not smaller than the global version */
 int
-fd_validate(struct fd* fd, count_type ver, struct picotm_error* error);
+fd_validate(struct fd* fd, unsigned long ver, struct picotm_error* error);
 
 /** \brief Aquires a reference on the file dscriptor */
 int
 fd_ref(struct fd *fd, int fildes, unsigned long flags);
 
 int
-fd_ref_state(struct fd *fd, int fildes, unsigned long flags, int *ofd, count_type *version);
+fd_ref_state(struct fd *fd, int fildes, unsigned long flags, int *ofd, unsigned long *version);
 
 /** \brief Releases a reference on the file descriptor */
 void
@@ -79,7 +79,7 @@ int
 fd_is_open_nl(const struct fd *fd);
 
 /** \brief Get file-descriptor version number */
-count_type
+unsigned long
 fd_get_version_nl(struct fd *fd);
 
 /** \brief Get index of file-descriptor's open file description */
@@ -96,7 +96,7 @@ fd_dump(const struct fd *fd);
 
 /** Validate file descriptor against version. */
 bool
-fd_is_valid(struct fd* fd, count_type version);
+fd_is_valid(struct fd* fd, unsigned long version);
 
 /** Set file-descriptor flags. */
 int
