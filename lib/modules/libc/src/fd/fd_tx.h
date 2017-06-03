@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <stddef.h>
 #include "counter.h"
 #include "picotm/picotm-libc.h"
 
