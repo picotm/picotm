@@ -4,6 +4,7 @@
 
 #include "picotm.h"
 #include <errno.h>
+#include <stdatomic.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -19,9 +20,9 @@ static struct tx_shared*
 get_tx_shared(void)
 {
     static struct tx_shared g_tx_shared;
-    static bool             g_tx_shared_is_initialized;
+    static atomic_bool      g_tx_shared_is_initialized;
 
-    if (__atomic_load_n(&g_tx_shared_is_initialized, __ATOMIC_ACQUIRE)) {
+    if (atomic_load_explicit(&g_tx_shared_is_initialized, memory_order_acquire)) {
         return &g_tx_shared;
     }
 
@@ -32,7 +33,7 @@ get_tx_shared(void)
         return NULL;
     }
 
-    if (__atomic_load_n(&g_tx_shared_is_initialized, __ATOMIC_ACQUIRE)) {
+    if (atomic_load_explicit(&g_tx_shared_is_initialized, memory_order_acquire)) {
         /* Another transaction initialized the tx_state structure
          * concurrently; we're done. */
         goto out;
@@ -43,7 +44,7 @@ get_tx_shared(void)
         goto err_tx_shared_init;
     }
 
-    __atomic_store_n(&g_tx_shared_is_initialized, true, __ATOMIC_RELEASE);
+    atomic_store_explicit(&g_tx_shared_is_initialized, true, memory_order_release);
 
 out:
     pthread_mutex_unlock(&lock);
