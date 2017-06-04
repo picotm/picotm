@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <pthread.h>
+#include <stdatomic.h>
 #include <stdlib.h>
 #include <picotm/picotm-module.h>
 #include "vmem.h"
@@ -28,10 +29,10 @@ vmem_atexit_cb(void)
 static struct tm_vmem*
 get_vmem(struct picotm_error* error)
 {
-    static bool           g_vmem_is_initialized;
+    static atomic_bool    g_vmem_is_initialized;
     static struct tm_vmem g_vmem;
 
-    if (__atomic_load_n(&g_vmem_is_initialized, __ATOMIC_ACQUIRE)) {
+    if (atomic_load_explicit(&g_vmem_is_initialized, memory_order_acquire)) {
         return &g_vmem;
     }
 
@@ -43,7 +44,7 @@ get_vmem(struct picotm_error* error)
         return NULL;
     }
 
-    if (__atomic_load_n(&g_vmem_is_initialized, __ATOMIC_ACQUIRE)) {
+    if (atomic_load_explicit(&g_vmem_is_initialized, memory_order_acquire)) {
         /* Another transaction initialized the vmem structure
          * concurrently; we're done. */
         goto out;
@@ -53,7 +54,7 @@ get_vmem(struct picotm_error* error)
 
     atexit(vmem_atexit_cb); /* ignore errors */
 
-    __atomic_store_n(&g_vmem_is_initialized, true, __ATOMIC_RELEASE);
+    atomic_store_explicit(&g_vmem_is_initialized, true, memory_order_release);
 
 out:
     res = pthread_mutex_unlock(&lock);
