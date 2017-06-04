@@ -4,6 +4,7 @@
 
 #include "framemap.h"
 #include <picotm/picotm-error.h>
+#include <stdatomic.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -160,7 +161,7 @@ static struct tm_frame_dir*
 load_dir(uintptr_t* entry, struct picotm_error* error)
 {
     struct tm_frame_dir* dir =
-        (struct tm_frame_dir*)__atomic_load_n(entry, __ATOMIC_ACQUIRE);
+        (struct tm_frame_dir*)atomic_load_explicit(entry, memory_order_acquire);
     if (dir) {
         return dir;
     }
@@ -173,10 +174,12 @@ load_dir(uintptr_t* entry, struct picotm_error* error)
     tm_frame_dir_init(dir);
 
     uintptr_t existing = 0;
-    bool success = __atomic_compare_exchange_n(entry, &existing,
-                                               (uintptr_t)dir, false,
-                                               __ATOMIC_ACQ_REL,
-                                               __ATOMIC_ACQUIRE);
+    bool success =
+        atomic_compare_exchange_strong_explicit(entry,
+                                                &existing,
+                                                (uintptr_t)dir,
+                                                memory_order_acq_rel,
+                                                memory_order_acquire);
     if (!success) {
         /* A concurrent transaction already installed the
          * directory. We free our instance and use the existing
@@ -192,7 +195,8 @@ static struct tm_frame_tbl*
 load_tbl(uintptr_t* entry, uintptr_t addr, struct picotm_error* error)
 {
     struct tm_frame_tbl* tbl =
-        (struct tm_frame_tbl*)__atomic_load_n(entry, __ATOMIC_ACQUIRE);
+        (struct tm_frame_tbl*)atomic_load_explicit(entry,
+                                                   memory_order_acquire);
     if (tbl) {
         return tbl;
     }
@@ -205,10 +209,12 @@ load_tbl(uintptr_t* entry, uintptr_t addr, struct picotm_error* error)
     tm_frame_tbl_init(tbl, first_block_index(addr));
 
     uintptr_t existing = 0;
-    bool success = __atomic_compare_exchange_n(entry, &existing,
-                                               (uintptr_t)tbl, false,
-                                               __ATOMIC_ACQ_REL,
-                                               __ATOMIC_ACQUIRE);
+    bool success =
+        atomic_compare_exchange_strong_explicit(entry,
+                                                &existing,
+                                                (uintptr_t)tbl,
+                                                memory_order_acq_rel,
+                                                memory_order_acquire);
     if (!success) {
         /* A concurrent transaction already installed the
          * table. We free our instance and use the existing

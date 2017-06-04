@@ -5,6 +5,7 @@
 #include "frame.h"
 #include <errno.h>
 #include <picotm/picotm-error.h>
+#include <stdatomic.h>
 #include <stdbool.h>
 #include "block.h"
 
@@ -50,10 +51,11 @@ tm_frame_try_lock(struct tm_frame* frame, const void* owner,
     }
 
     uintptr_t expected = 0;
-    bool succ = __atomic_compare_exchange_n(&frame->owner, &expected,
-                                            (uintptr_t)owner, false,
-                                            __ATOMIC_SEQ_CST,
-                                            __ATOMIC_ACQUIRE);
+    bool succ = atomic_compare_exchange_strong_explicit(&frame->owner,
+                                                        &expected,
+                                                        (uintptr_t)owner,
+                                                        memory_order_seq_cst,
+                                                        memory_order_acquire);
     if (!succ) {
         picotm_error_set_conflicting(error, NULL);
         return;
@@ -65,6 +67,6 @@ tm_frame_unlock(struct tm_frame* frame)
 {
     /* test-and-test-and-set */
     if (frame->owner) {
-        __atomic_store_n(&frame->owner, 0, __ATOMIC_SEQ_CST);
+        atomic_store_explicit(&frame->owner, 0, memory_order_seq_cst);
     }
 }
