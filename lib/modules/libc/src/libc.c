@@ -56,14 +56,14 @@ picotm_libc_get_file_type_cc_mode(enum picotm_libc_file_type file_type)
     return __atomic_load_n(g_file_type_cc_mode + file_type, __ATOMIC_ACQUIRE);
 }
 
-PICOTM_NOTHROW
+PICOTM_EXPORT
 void
 picotm_libc_set_validation_mode(enum picotm_libc_validation_mode val_mode)
 {
     __atomic_store_n(&g_validation_mode, val_mode, __ATOMIC_RELEASE);
 }
 
-PICOTM_NOTHROW
+PICOTM_EXPORT
 enum picotm_libc_validation_mode
 picotm_libc_get_validation_mode()
 {
