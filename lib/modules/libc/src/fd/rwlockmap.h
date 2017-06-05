@@ -5,6 +5,7 @@
 #ifndef RWLOCKMAP_H
 #define RWLOCKMAP_H
 
+#include <stdatomic.h>
 #include "pgtree.h"
 
 /**
@@ -17,7 +18,7 @@
 
 struct rwlockmap_page
 {
-    unsigned long lock[PGTREE_NENTRIES];
+    atomic_ulong lock[PGTREE_NENTRIES];
 };
 
 struct rwlockmap
