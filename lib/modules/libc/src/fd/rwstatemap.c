@@ -84,12 +84,14 @@ rwstatemap_page_unlock_regions(struct rwstatemap_page *statepg,
         unsigned long oldlock, newlock;
 
         do {
-            oldlock = lockpg->lock[pgoffset];
+            oldlock = atomic_load(lockpg->lock + pgoffset);
             assert(oldlock&RWSTATE_COUNTER);
             newlock = (oldlock&RWSTATE_COUNTER) - 1;
-        } while (!__sync_bool_compare_and_swap(lockpg->lock+pgoffset,
-                                               oldlock,
-                                               newlock));
+        } while (!atomic_compare_exchange_strong_explicit(lockpg->lock + pgoffset,
+                                                          &oldlock,
+                                                          newlock,
+                                                          memory_order_acq_rel,
+                                                          memory_order_acquire));
 
         statepg->state[pgoffset] = 0;
     }
@@ -197,9 +199,11 @@ rwstatemap_rdlock(struct rwstatemap *rwstatemap, unsigned long long length,
 
                     newlock = (oldlock&RWSTATE_COUNTER) + 1;
 
-                } while (!__sync_bool_compare_and_swap(lockpg->lock+pgoffset,
-                                                       oldlock,
-                                                       newlock));
+                } while (!atomic_compare_exchange_strong_explicit(lockpg->lock + pgoffset,
+                                                                  &oldlock,
+                                                                  newlock,
+                                                                  memory_order_acq_rel,
+                                                                  memory_order_acquire));
             }
 
             statepg->state[pgoffset] =
@@ -286,10 +290,11 @@ rwstatemap_wrlock(struct rwstatemap *rwstatemap, unsigned long long length,
 
                     newlock = RWSTATE_WRITTEN | ((oldlock&RWSTATE_COUNTER)+1);
 
-                } while (!__sync_bool_compare_and_swap(lockpg->lock+pgoffset,
-                                                       oldlock,
-                                                       newlock));
-
+                } while (!atomic_compare_exchange_strong_explicit(lockpg->lock + pgoffset,
+                                                                  &oldlock,
+                                                                  newlock,
+                                                                  memory_order_acq_rel,
+                                                                  memory_order_acquire));
 
             } else if ( !(statepg->state[pgoffset]&RWSTATE_WRITTEN) ) {
 
@@ -312,9 +317,11 @@ rwstatemap_wrlock(struct rwstatemap *rwstatemap, unsigned long long length,
 
                     newlock = oldlock | RWSTATE_WRITTEN;
 
-                } while (!__sync_bool_compare_and_swap(lockpg->lock+pgoffset,
-                                                       oldlock,
-                                                       newlock));
+                } while (!atomic_compare_exchange_strong_explicit(lockpg->lock + pgoffset,
+                                                                  &oldlock,
+                                                                  newlock,
+                                                                  memory_order_acq_rel,
+                                                                  memory_order_acquire));
             }
 
             statepg->state[pgoffset] = RWSTATE_WRITTEN
@@ -389,9 +396,11 @@ rwstatemap_unlock(struct rwstatemap *rwstatemap, unsigned long long length,
                     do {
                         oldlock = lockpg->lock[pgoffset];
                         newlock = (oldlock&RWSTATE_COUNTER) - 1;
-                    } while (!__sync_bool_compare_and_swap(lockpg->lock+pgoffset,
-                                                           oldlock,
-                                                           newlock));
+                    } while (!atomic_compare_exchange_strong_explicit(lockpg->lock + pgoffset,
+                                                                      &oldlock,
+                                                                      newlock,
+                                                                      memory_order_acq_rel,
+                                                                      memory_order_acquire));
                 } else {
 
                     unsigned long oldlock, newlock;
@@ -402,9 +411,11 @@ rwstatemap_unlock(struct rwstatemap *rwstatemap, unsigned long long length,
                         newlock = (oldlock&RWSTATE_WRITTEN)
                                 | ((oldlock&RWSTATE_COUNTER) - 1);
 
-                    } while (!__sync_bool_compare_and_swap(lockpg->lock+pgoffset,
-                                                           oldlock,
-                                                           newlock));
+                    } while (!atomic_compare_exchange_strong_explicit(lockpg->lock + pgoffset,
+                                                                      &oldlock,
+                                                                      newlock,
+                                                                      memory_order_acq_rel,
+                                                                      memory_order_acquire));
                 }
 
                 statepg->state[pgoffset] = 0;

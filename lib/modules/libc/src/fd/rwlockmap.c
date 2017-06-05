@@ -4,6 +4,7 @@
 
 #include "rwlockmap.h"
 #include <assert.h>
+#include <picotm/picotm-lib-array.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -16,7 +17,13 @@ rwlockmap_page_init(struct rwlockmap_page *pg)
 {
     assert(pg);
 
-    memset(pg->lock, 0, sizeof(pg->lock));
+    atomic_ulong* beg = picotm_arraybeg(pg->lock);
+    atomic_ulong* end = picotm_arrayend(pg->lock);
+
+    while (beg < end) {
+        atomic_init(beg, 0);
+        ++beg;
+    }
 
     return 0;
 }
