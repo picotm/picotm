@@ -4,5 +4,14 @@
 
 #pragma once
 
+/**
+ * Delays a transaction while generating potential conflicts.
+ */
 void
 delay_transaction(unsigned int tid);
+
+/**
+ * Aborts a transaction if a error occured.
+ */
+void
+abort_transaction_on_error(const char* origin);

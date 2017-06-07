@@ -13,6 +13,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include "testhlp.h"
 
 void
 vfs_test_1(unsigned int tid)
@@ -47,23 +48,7 @@ vfs_test_1(unsigned int tid)
 
     picotm_commit
 
-        switch (picotm_error_status()) {
-        case PICOTM_ERROR_CODE:
-            fprintf(stderr, "%s: error code %d\n", __func__,
-                    picotm_error_as_error_code());
-            break;
-        case PICOTM_ERRNO: {
-            int errno_code = picotm_error_as_errno();
-            fprintf(stderr, "%s: errno %d (%s)\n", __func__,
-                    errno_code, strerror(errno_code));
-            break;
-        }
-        default:
-            fprintf(stderr, "%s: invalid error\n", __func__);
-            break;
-        }
-
-        abort();
+        abort_transaction_on_error(__func__);
 
 	picotm_end
 }

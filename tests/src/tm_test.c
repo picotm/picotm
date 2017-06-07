@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <picotm/picotm.h>
 #include <picotm/picotm-tm.h>
+#include "testhlp.h"
 
 static unsigned long g_value;
 
@@ -27,6 +28,9 @@ tm_test_1(unsigned int tid)
         store_ulong_tx(&g_value, value);
 
     picotm_commit
+
+        abort_transaction_on_error(__func__);
+
     picotm_end
 }
 

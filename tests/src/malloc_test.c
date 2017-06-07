@@ -43,6 +43,9 @@ malloc_test_1(unsigned int tid)
         }
 
     picotm_commit
+
+        abort_transaction_on_error(__func__);
+
     picotm_end
 }
 
@@ -87,6 +90,9 @@ malloc_test_2(unsigned int tid)
         }
 
     picotm_commit
+
+        abort_transaction_on_error(__func__);
+
     picotm_end
 }
 
@@ -124,6 +130,9 @@ malloc_test_3(unsigned int tid)
         }
 
     picotm_commit
+
+        abort_transaction_on_error(__func__);
+
     picotm_end
 
     for (char** ptr = buf; ptr < buf + arraylen(buf); ++ptr) {
@@ -162,6 +171,9 @@ malloc_test_4(unsigned int tid)
         free_tm(mem);
 
     picotm_commit
+
+        abort_transaction_on_error(__func__);
+
     picotm_end
 }
 
@@ -210,6 +222,9 @@ malloc_test_5(unsigned int tid)
 	    free_tm(mem);
 
 	picotm_commit
+
+        abort_transaction_on_error(__func__);
+
     picotm_end
 }
 
@@ -255,6 +270,9 @@ malloc_test_6(unsigned int tid)
         store_ptr_tx(&buf, mem);
 
 	picotm_commit
+
+        abort_transaction_on_error(__func__);
+
     picotm_end
 
 	free(buf);
@@ -296,6 +314,9 @@ malloc_test_7(unsigned int tid)
         }
 
     picotm_commit
+
+        abort_transaction_on_error(__func__);
+
     picotm_end
 }
 
@@ -362,5 +383,8 @@ malloc_test_9(unsigned int tid)
         }
 
     picotm_commit
+
+        abort_transaction_on_error(__func__);
+
     picotm_end
 }

@@ -100,6 +100,9 @@ run_loop_iteration(const struct test_func *test,
 }
 
 /* Inner loops
+ *
+ * In inner-loop mode, threads syncronize before and after each
+ * running n iterations of the transaction.
  */
 
 static int
@@ -183,6 +186,9 @@ run_inner_loop(const struct test_func *test, enum boundary_type btype,
 }
 
 /* Outer loops
+ *
+ * In outer-loop mode, threads syncronize before and after each
+ * iteration of the transaction.
  */
 
 static int
