@@ -197,12 +197,14 @@ fd_tx_dump(const struct fd_tx* self)
 static int
 close_exec_noundo(struct fd_tx* self, int fildes, int* cookie)
 {
+    *cookie = 0; /* injects event */
     return 0;
 }
 
 static int
 close_exec_ts(struct fd_tx* self, int fildes, int* cookie)
 {
+    *cookie = 0; /* injects event */
     return 0;
 }
 
