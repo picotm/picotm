@@ -198,6 +198,9 @@ fdio_test_1(unsigned int tid)
         close_tx(fildes);
 
     picotm_commit
+
+        abort_transaction_on_error(__func__);
+
     picotm_end
 }
 
@@ -238,6 +241,9 @@ fdio_test_2(unsigned int tid)
         close_tx(fildes);
 
     picotm_commit
+
+        abort_transaction_on_error(__func__);
+
     picotm_end
 }
 
@@ -278,6 +284,9 @@ fdio_test_3(unsigned int tid)
         close_tx(fildes);
 
     picotm_commit
+
+        abort_transaction_on_error(__func__);
+
     picotm_end
 }
 
@@ -319,6 +328,9 @@ fdio_test_4(unsigned int tid)
         close_tx(fildes);
 
     picotm_commit
+
+        abort_transaction_on_error(__func__);
+
     picotm_end
 }
 
@@ -373,6 +385,9 @@ fdio_test_5(unsigned int tid)
         close_tx(fildes);
 
     picotm_commit
+
+        abort_transaction_on_error(__func__);
+
     picotm_end
 }
 
@@ -422,6 +437,9 @@ fdio_test_6(unsigned int tid)
         close_tx(fildes);
 
     picotm_commit
+
+        abort_transaction_on_error(__func__);
+
     picotm_end
 }
 
@@ -480,6 +498,9 @@ fdio_test_7(unsigned int tid)
         close_tx(fildes);
 
     picotm_commit
+
+        abort_transaction_on_error(__func__);
+
     picotm_end
 }
 
@@ -590,6 +611,9 @@ fdio_test_8(unsigned int tid)
         }
 
     picotm_commit
+
+        abort_transaction_on_error(__func__);
+
     picotm_end
 }
 
@@ -644,6 +668,9 @@ fdio_test_9(unsigned int tid)
         }
 
     picotm_commit
+
+        abort_transaction_on_error(__func__);
+
     picotm_end
 }
 
@@ -683,6 +710,9 @@ fdio_test_10(unsigned int tid)
         pwrite_tx(g_fildes, rbuf, sizeof(rbuf), 6);
 
     picotm_commit
+
+        abort_transaction_on_error(__func__);
+
     picotm_end
 }
 
@@ -729,6 +759,9 @@ fdio_test_11(unsigned int tid)
         write_tx(g_fildes, teststr, strlen_tx(teststr));
 
     picotm_commit
+
+        abort_transaction_on_error(__func__);
+
     picotm_end
 }
 
@@ -781,6 +814,9 @@ fdio_test_12(unsigned int tid)
         write_tx(g_fildes, teststr, strlen_tx(teststr));
 
     picotm_commit
+
+        abort_transaction_on_error(__func__);
+
     picotm_end
 }
 
@@ -825,6 +861,9 @@ fdio_test_13(unsigned int tid)
         }
 
     picotm_commit
+
+        abort_transaction_on_error(__func__);
+
     picotm_end
 }
 
@@ -857,6 +896,9 @@ fdio_test_14(unsigned int tid)
         }
 
     picotm_commit
+
+        abort_transaction_on_error(__func__);
+
     picotm_end
 }
 
@@ -900,6 +942,9 @@ fdio_test_15(unsigned int tid)
         close_tx(fildes2);
 
     picotm_commit
+
+        abort_transaction_on_error(__func__);
+
     picotm_end
 
     if (TEMP_FAILURE_RETRY(close(fildes)) < 0) {
@@ -947,6 +992,9 @@ fdio_test_16(unsigned int tid)
         close_tx(fildes);
 
     picotm_commit
+
+        abort_transaction_on_error(__func__);
+
     picotm_end
 }
 
@@ -1003,6 +1051,9 @@ fdio_test_17(unsigned int tid)
         close_tx(fildes);
 
     picotm_commit
+
+        abort_transaction_on_error(__func__);
+
     picotm_end
 }
 
@@ -1054,6 +1105,9 @@ fdio_test_18(unsigned int tid)
         close_tx(fildes2);
 
     picotm_commit
+
+        abort_transaction_on_error(__func__);
+
     picotm_end
 }
 
@@ -1151,6 +1205,9 @@ fdio_test_19(unsigned int tid)
             store_size_t_tx(&rlen, tx_rlen);
 
         picotm_commit
+
+            abort_transaction_on_error(__func__);
+
         picotm_end
 
     } while (rlen);
@@ -1208,6 +1265,9 @@ fdio_test_20(unsigned int tid)
         pwrite_tx(g_fildes, buf, count, offset);
 
     picotm_commit
+
+        abort_transaction_on_error(__func__);
+
     picotm_end
 }
 
@@ -1249,6 +1309,9 @@ tx_random_rw(int fildes, unsigned int* seed, off_t size,
         }
 
     picotm_commit
+
+        abort_transaction_on_error(__func__);
+
     picotm_end
 }
 
@@ -1594,6 +1657,9 @@ tx_random_read(int fildes, unsigned int* seed, off_t size,
         }
 
     picotm_commit
+
+        abort_transaction_on_error(__func__);
+
     picotm_end
 }
 
@@ -1728,6 +1794,9 @@ tx_random_write(int fildes, unsigned int* seed, off_t size, unsigned long ncycle
         }
 
     picotm_commit
+
+        abort_transaction_on_error(__func__);
+
     picotm_end
 }
 
@@ -1861,6 +1930,9 @@ tx_seq_read(int fildes, unsigned int* seed, off_t size, unsigned long ncycles)
         }
 
     picotm_commit
+
+        abort_transaction_on_error(__func__);
+
     picotm_end
 }
 
@@ -1995,6 +2067,9 @@ tx_seq_write(int fildes, unsigned int* seed, off_t size, unsigned long ncycles)
         }
 
     picotm_commit
+
+        abort_transaction_on_error(__func__);
+
     picotm_end
 }
 
