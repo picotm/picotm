@@ -15,6 +15,8 @@
  * \endcond
  */
 
+struct picotm_error;
+
 struct ofdid
 {
     dev_t  dev;
@@ -28,8 +30,9 @@ void
 ofdid_init(struct ofdid *id, dev_t dev, ino_t ino, mode_t mode, int fl);
 
 /** \brief initialize id from file descriptor */
-int
-ofdid_init_from_fildes(struct ofdid *id, int fildes);
+void
+ofdid_init_from_fildes(struct ofdid *id, int fildes,
+                       struct picotm_error* error);
 
 /** \brief Clear file descriptor */
 void

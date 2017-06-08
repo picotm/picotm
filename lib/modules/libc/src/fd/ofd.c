@@ -200,7 +200,10 @@ ofd_setup_from_fildes(struct ofd *ofd, int fildes)
 
     /* Any setup code goes here */
 
-    if (ofdid_init_from_fildes(&ofd->id, fildes) < 0) {
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+    ofdid_init_from_fildes(&ofd->id, fildes, &error);
+    if (picotm_error_is_set(&error)) {
         return -1;
     }
 

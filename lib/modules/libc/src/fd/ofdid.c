@@ -4,7 +4,9 @@
 
 #include "ofdid.h"
 #include <assert.h>
+#include <errno.h>
 #include <fcntl.h>
+#include <picotm/picotm-error.h>
 #include <stdio.h>
 #include <sys/stat.h>
 
@@ -19,31 +21,32 @@ ofdid_init(struct ofdid *id, dev_t dev, ino_t ino, mode_t mode, int fl)
     id->fl = fl;
 }
 
-int
-ofdid_init_from_fildes(struct ofdid *id, int fildes)
+void
+ofdid_init_from_fildes(struct ofdid* id, int fildes,
+                       struct picotm_error* error)
 {
     assert(id);
     assert(fildes >= 0);
 
     struct stat buf;
 
-    if (fstat(fildes, &buf) < 0) {
-        perror("fstat");
-        return -1;
+    int res = fstat(fildes, &buf);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return;
     }
 
     id->dev  = buf.st_dev;
     id->ino  = buf.st_ino;
     id->mode = buf.st_mode;
 
-    id->fl = fcntl(fildes, F_GETFL);
-
-    if (id->fl < 0) {
-        perror("fcntl_2");
-        return -1;
+    res = fcntl(fildes, F_GETFL);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return;
     }
 
-    return 0;
+    id->fl = res;
 }
 
 void

@@ -140,10 +140,11 @@ ofdtab_search(int fildes)
 {
     struct ofdid id;
 
-    int err = ofdid_init_from_fildes(&id, fildes);
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    if (err) {
-        return err;
+    ofdid_init_from_fildes(&id, fildes, &error);
+    if (picotm_error_is_set(&error)) {
+        return ERR_SYSTEM;
     }
 
     long i = ofdtab_search_by_id(&id, sizeof(ofdtab)/sizeof(ofdtab[0]));
