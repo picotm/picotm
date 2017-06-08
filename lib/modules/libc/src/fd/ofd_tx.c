@@ -260,10 +260,13 @@ ofd_tx_ref(struct ofd_tx* self, int ofdindex, int fildes, unsigned long flags)
 
         struct ofd *ofd = ofdtab+ofdindex;
 
-        int err = ofd_ref_state(ofd, fildes, flags, &type, &cc_mode, &offset);
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-        if (err) {
-            return err;
+        ofd_ref_state(ofd, fildes, flags, &type, &cc_mode, &offset, &error);
+        if (picotm_error_is_conflicting(&error)) {
+            return ERR_CONFLICT;
+        } else if (picotm_error_is_set(&error)) {
+            return ERR_SYSTEM;
         }
 
         /* setup fields */
@@ -430,31 +433,32 @@ int
 ofd_tx_2pl_lock_region(struct ofd_tx* self, size_t nbyte, off_t offset,
                        int write)
 {
-    int err;
-
     assert(self);
 
-    err = ofd_2pl_lock_region(ofdtab+self->ofd,
-                              offset,
-                              nbyte,
-                              write,
-                             &self->modedata.tpl.rwstatemap);
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    if (!err) {
-
-        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-        err = regiontab_append(&self->modedata.tpl.locktab,
-                               &self->modedata.tpl.locktablen,
-                               &self->modedata.tpl.locktabsiz,
-                                nbyte, offset,
-                               &error);
-        if (picotm_error_is_set(&error)) {
-            return -1;
-        }
+    ofd_2pl_lock_region(ofdtab+self->ofd,
+                        offset,
+                        nbyte,
+                        write,
+                        &self->modedata.tpl.rwstatemap,
+                        &error);
+    if (picotm_error_is_conflicting(&error)) {
+        return ERR_CONFLICT;
+    } else if (picotm_error_is_set(&error)) {
+        return ERR_SYSTEM;
     }
 
-    return err;
+    int pos = regiontab_append(&self->modedata.tpl.locktab,
+                               &self->modedata.tpl.locktablen,
+                               &self->modedata.tpl.locktabsiz,
+                               nbyte, offset,
+                               &error);
+    if (picotm_error_is_set(&error)) {
+        return ERR_SYSTEM;
+    }
+
+    return pos;
 }
 
 #include <stdio.h>
@@ -720,14 +724,20 @@ fcntl_exec_2pl(struct ofd_tx* self, int fildes, int cmd,
 
     assert(arg);
 
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
     switch (cmd) {
         case F_GETFD:
         case F_GETFL:
         case F_GETOWN:
 
             /* Read-lock open file description */
-            if ((res = ofd_rdlock_state(ofdtab+self->ofd, &self->modedata.tpl.rwstate)) < 0) {
-                return res;
+            ofd_rdlock_state(ofdtab+self->ofd, &self->modedata.tpl.rwstate,
+                             &error);
+            if (picotm_error_is_conflicting(&error)) {
+                return ERR_CONFLICT;
+            } else if (picotm_error_is_set(&error)) {
+                return ERR_SYSTEM;
             }
 
             arg->arg0 = TEMP_FAILURE_RETRY(fcntl(fildes, cmd));
@@ -738,8 +748,12 @@ fcntl_exec_2pl(struct ofd_tx* self, int fildes, int cmd,
         case F_GETLK:
 
             /* Read-lock open file description */
-            if ((res = ofd_rdlock_state(ofdtab+self->ofd, &self->modedata.tpl.rwstate)) < 0) {
-                return res;
+            ofd_rdlock_state(ofdtab+self->ofd, &self->modedata.tpl.rwstate,
+                             &error);
+            if (picotm_error_is_conflicting(&error)) {
+                return ERR_CONFLICT;
+            } else if (picotm_error_is_set(&error)) {
+                return ERR_SYSTEM;
             }
 
             res = TEMP_FAILURE_RETRY(fcntl(fildes, cmd, arg->arg1));
@@ -1003,12 +1017,14 @@ ofd_tx_listen_undo(struct ofd_tx* self, int sockfd, int cookie,
  */
 
 static off_t
-filesize(int fildes)
+filesize(int fildes, struct picotm_error* error)
 {
     struct stat buf;
 
-    if (fstat(fildes, &buf) < 0) {
-        return ERR_SYSTEM;
+    int res = fstat(fildes, &buf);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return (off_t)-1;
     }
 
     return buf.st_size;
@@ -1025,14 +1041,17 @@ static off_t
 lseek_exec_regular_2pl(struct ofd_tx* self, int fildes, off_t offset,
                        int whence, int* cookie)
 {
-    int err;
-
     struct ofd *ofd = ofdtab+self->ofd;
 
     /* Read-lock open file description */
 
-    if ((err = ofd_rdlock_state(ofd, &self->modedata.tpl.rwstate)) < 0) {
-        return (off_t)err;
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+    ofd_rdlock_state(ofd, &self->modedata.tpl.rwstate, &error);
+    if (picotm_error_is_conflicting(&error)) {
+        return ERR_CONFLICT;
+    } else if (picotm_error_is_set(&error)) {
+        return ERR_SYSTEM;
     }
 
 	/* Fastpath: Read current position */
@@ -1042,8 +1061,11 @@ lseek_exec_regular_2pl(struct ofd_tx* self, int fildes, off_t offset,
 
     /* Write-lock open file description to change position */
 
-    if ((err = ofd_wrlock_state(ofd, &self->modedata.tpl.rwstate)) < 0) {
-        return (off_t)err;
+    ofd_wrlock_state(ofd, &self->modedata.tpl.rwstate, &error);
+    if (picotm_error_is_conflicting(&error)) {
+        return ERR_CONFLICT;
+    } else if (picotm_error_is_set(&error)) {
+        return ERR_SYSTEM;
     }
 
     /* Compute absolute position */
@@ -1059,36 +1081,26 @@ lseek_exec_regular_2pl(struct ofd_tx* self, int fildes, off_t offset,
         case SEEK_CUR:
             pos = self->offset + offset;
             break;
-        case SEEK_END:
-            {
-                const off_t fs = filesize(fildes);
-
-                if (fs == (off_t)ERR_SYSTEM) {
-                    pos = (off_t)ERR_SYSTEM;
-                    break;
-                }
-
-                pos = llmax(self->size, fs)+offset;
+        case SEEK_END: {
+            const off_t fs = filesize(fildes, &error);
+            if (picotm_error_is_set(&error)) {
+                break;
             }
+            pos = llmax(self->size, fs)+offset;
             break;
+        }
         default:
             pos = -1;
             break;
     }
 
-    if (pos < 0) {
-        errno = EINVAL;
-        pos = (off_t)ERR_SYSTEM;
-    }
-
-    if ((pos == (off_t)-2) || (pos == (off_t)-1)) {
-        return pos;
+    if (picotm_error_is_conflicting(&error)) {
+        return ERR_CONFLICT;
+    } else if (picotm_error_is_set(&error)) {
+        return ERR_SYSTEM;
     }
 
     if (cookie) {
-
-        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
         *cookie = seekoptab_append(&self->seektab,
                                    &self->seektablen,
                                     self->offset, offset, whence,
@@ -1617,8 +1629,13 @@ read_exec_regular_2pl(struct ofd_tx* self, int fildes, void* buf,
 
     /* write-lock open file description, because we change the file position */
 
-    if ((err = ofd_wrlock_state(ofd, &self->modedata.tpl.rwstate)) < 0) {
-        return err;
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+    ofd_wrlock_state(ofd, &self->modedata.tpl.rwstate, &error);
+    if (picotm_error_is_conflicting(&error)) {
+        return ERR_CONFLICT;
+    } else if (picotm_error_is_set(&error)) {
+        return ERR_SYSTEM;
     }
 
     /* read-lock region */
@@ -1866,8 +1883,6 @@ static ssize_t
 send_exec_socket_2pl(struct ofd_tx* self, int sockfd, const void* buf,
                      size_t nbyte, int flags, int* cookie)
 {
-    int err;
-
     /* Become irrevocable if any flags are selected */
     if (flags) {
         return ERR_NOUNDO;
@@ -1877,8 +1892,13 @@ send_exec_socket_2pl(struct ofd_tx* self, int sockfd, const void* buf,
 
     /* Write-lock open file description, because we change the file position */
 
-    if ((err = ofd_wrlock_state(ofd, &self->modedata.tpl.rwstate)) < 0) {
-        return err;
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+    ofd_wrlock_state(ofd, &self->modedata.tpl.rwstate, &error);
+    if (picotm_error_is_conflicting(&error)) {
+        return ERR_CONFLICT;
+    } else if (picotm_error_is_set(&error)) {
+        return ERR_SYSTEM;
     }
 
     /* Register write data */
@@ -2129,8 +2149,13 @@ write_exec_regular_2pl(struct ofd_tx* self, int fildes, const void* buf,
 
         /* write-lock open file description, because we change the file position */
 
-        if ((err = ofd_wrlock_state(ofd, &self->modedata.tpl.rwstate)) < 0) {
-            return err;
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+        ofd_wrlock_state(ofd, &self->modedata.tpl.rwstate, &error);
+        if (picotm_error_is_conflicting(&error)) {
+            return ERR_CONFLICT;
+        } else if (picotm_error_is_set(&error)) {
+            return ERR_SYSTEM;
         }
 
         /* write-lock region */
@@ -2157,14 +2182,17 @@ static ssize_t
 write_exec_fifo_2pl(struct ofd_tx* self, int fildes, const void* buf,
                     size_t nbyte, int* cookie)
 {
-    int err;
-
     struct ofd *ofd = ofdtab+self->ofd;
 
     /* Write-lock open file description, because we change the file position */
 
-    if ((err = ofd_wrlock_state(ofd, &self->modedata.tpl.rwstate)) < 0) {
-        return err;
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+    ofd_wrlock_state(ofd, &self->modedata.tpl.rwstate, &error);
+    if (picotm_error_is_conflicting(&error)) {
+        return ERR_CONFLICT;
+    } else if (picotm_error_is_set(&error)) {
+        return ERR_SYSTEM;
     }
 
     /* Register write data */
@@ -2182,14 +2210,17 @@ static ssize_t
 write_exec_socket_2pl(struct ofd_tx* self, int fildes, const void* buf,
                       size_t nbyte, int* cookie)
 {
-    int err;
-
     struct ofd *ofd = ofdtab+self->ofd;
 
     /* Write-lock open file description, because we change the file position */
 
-    if ((err = ofd_wrlock_state(ofd, &self->modedata.tpl.rwstate)) < 0) {
-        return err;
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+    ofd_wrlock_state(ofd, &self->modedata.tpl.rwstate, &error);
+    if (picotm_error_is_conflicting(&error)) {
+        return ERR_CONFLICT;
+    } else if (picotm_error_is_set(&error)) {
+        return ERR_SYSTEM;
     }
 
     /* Register write data */

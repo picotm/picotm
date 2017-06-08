@@ -50,8 +50,8 @@ struct ofd
 };
 
 /** \brief Initializes the open file description. */
-int
-ofd_init(struct ofd *ofd);
+void
+ofd_init(struct ofd *ofd, struct picotm_error* error);
 
 /** \brief Uninitializes the open file description. */
 void
@@ -64,15 +64,17 @@ void
 ofd_clear_id(struct ofd *ofd);
 
 /** \brief References the open file description. */
-int
-ofd_ref(struct ofd *ofd, int fildes, unsigned long flags);
+void
+ofd_ref(struct ofd *ofd, int fildes, unsigned long flags,
+        struct picotm_error* error);
 
 /** \brief References the open file description and returns its state. */
-int
+void
 ofd_ref_state(struct ofd *ofd, int fildes, unsigned long flags,
               enum picotm_libc_file_type *type,
               enum picotm_libc_cc_mode *ccmode,
-              off_t *offset);
+              off_t *offset,
+              struct picotm_error* error);
 
 /** \brief Unreferences the open file description. */
 void
@@ -108,23 +110,26 @@ ofd_unlock(struct ofd *ofd);
  */
 
 /** \brief Locks the open file description for reading. */
-int
-ofd_rdlock_state(struct ofd *ofd, enum rwstate *rwstate);
+void
+ofd_rdlock_state(struct ofd *ofd, enum rwstate *rwstate,
+                 struct picotm_error* error);
 
 /** \brief Locks the open file description for writing. */
-int
-ofd_wrlock_state(struct ofd *ofd, enum rwstate *rwstate);
+void
+ofd_wrlock_state(struct ofd *ofd, enum rwstate *rwstate,
+                 struct picotm_error* error);
 
 /** \brief Unlocks the open file description. */
 void
 ofd_rwunlock_state(struct ofd *ofd, enum rwstate *rwstate);
 
 /** \brief Locks a region of the underlying file buffer. */
-int
+void
 ofd_2pl_lock_region(struct ofd *ofd, off_t off,
                                      size_t nbyte,
                                      int write,
-                                     struct rwstatemap *rwstatemap);
+                                     struct rwstatemap *rwstatemap,
+                                     struct picotm_error* error);
 
 /** \brief Unlocks the underlying file buffer. */
 void
