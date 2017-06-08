@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include "errcode.h"
 #include "ofd.h"
 #include "openop.h"
 #include "openoptab.h"

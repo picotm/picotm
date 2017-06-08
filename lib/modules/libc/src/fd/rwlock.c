@@ -5,23 +5,21 @@
 #include "rwlock.h"
 #include <assert.h>
 #include <errno.h>
+#include <picotm/picotm-error.h>
 
-int
-rwlock_init(struct rwlock *rwlock)
+void
+rwlock_init(struct rwlock* rwlock, struct picotm_error* error)
 {
-    int err;
-
     assert(rwlock);
 
-    if ((err = pthread_spin_init(&rwlock->lock, PTHREAD_PROCESS_PRIVATE))) {
-        errno = err;
-        return ERR_SYSTEM;
+    int err = pthread_spin_init(&rwlock->lock, PTHREAD_PROCESS_PRIVATE);
+    if (err) {
+        picotm_error_set_errno(error, err);
+        return;
     }
 
     rwlock->wr = (pthread_t)0;
     rwlock->n = 0;
-
-    return 0;
 }
 
 void
@@ -34,26 +32,30 @@ rwlock_uninit(struct rwlock *rwlock)
     pthread_spin_destroy(&rwlock->lock);
 }
 
-enum error_code
-rwlock_rdlock(struct rwlock *rwlock, int upgrade)
+bool
+rwlock_rdlock(struct rwlock *rwlock, int upgrade, struct picotm_error* error)
 {
     assert(rwlock);
+
+    bool succ = false;
 
     pthread_spin_lock(&rwlock->lock);
 
     /* writer present */
     if ((rwlock->wr != (pthread_t)0) && (rwlock->wr != pthread_self())) {
-        pthread_spin_unlock(&rwlock->lock);
-        return ERR_CONFLICT;
+        picotm_error_set_conflicting(error, NULL);
+        goto unlock;
     }
 
     if (!upgrade) {
         ++rwlock->n;
     }
 
-    pthread_spin_unlock(&rwlock->lock);
+    succ = true;
 
-    return 0;
+unlock:
+    pthread_spin_unlock(&rwlock->lock);
+    return succ;
 }
 
 void
@@ -67,10 +69,12 @@ rwlock_rdunlock(struct rwlock *rwlock)
     pthread_spin_unlock(&rwlock->lock);
 }
 
-enum error_code
-rwlock_wrlock(struct rwlock *rwlock, int upgrade)
+bool
+rwlock_wrlock(struct rwlock *rwlock, int upgrade, struct picotm_error* error)
 {
     assert(rwlock);
+
+    bool succ = false;
 
     const pthread_t self = pthread_self();
 
@@ -90,18 +94,20 @@ rwlock_wrlock(struct rwlock *rwlock, int upgrade)
             rwlock->wr = self;
         } else {
             /* other readers present */
-            pthread_spin_unlock(&rwlock->lock);
-            return ERR_CONFLICT;
+            picotm_error_set_conflicting(error, NULL);
+            goto unlock;
         }
     } else {
         /* another writer present */
-        pthread_spin_unlock(&rwlock->lock);
-        return ERR_CONFLICT;
+        picotm_error_set_conflicting(error, NULL);
+        goto unlock;
     }
 
-    pthread_spin_unlock(&rwlock->lock);
+    succ = true;
 
-    return 0;
+unlock:
+    pthread_spin_unlock(&rwlock->lock);
+    return succ;
 }
 
 void
@@ -118,18 +124,3 @@ rwlock_wrunlock(struct rwlock *rwlock)
 
     pthread_spin_unlock(&rwlock->lock);
 }
-
-int
-rwlock_init_walk(void *rwlock)
-{
-    return rwlock_init(rwlock) < 0 ? -1 : 1;
-}
-
-int
-rwlock_uninit_walk(void *rwlock)
-{
-    rwlock_uninit(rwlock);
-
-    return 1;
-}
-

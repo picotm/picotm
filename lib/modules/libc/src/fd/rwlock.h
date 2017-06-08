@@ -6,7 +6,7 @@
 #define RWLOCK_H
 
 #include <pthread.h>
-#include "errcode.h"
+#include <stdbool.h>
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -15,6 +15,8 @@
  * \file
  * \endcond
  */
+
+struct picotm_error;
 
 enum rwstate {
     RW_NOLOCK = 0,
@@ -30,29 +32,23 @@ struct rwlock
     unsigned int       n;
 };
 
-int
-rwlock_init(struct rwlock *rwlock);
+void
+rwlock_init(struct rwlock *rwlock, struct picotm_error* error);
 
 void
 rwlock_uninit(struct rwlock *rwlock);
 
-enum error_code
-rwlock_rdlock(struct rwlock *rwlock, int upgrade);
+bool
+rwlock_rdlock(struct rwlock *rwlock, int upgrade, struct picotm_error* error);
 
 void
 rwlock_rdunlock(struct rwlock *rwlock);
 
-enum error_code
-rwlock_wrlock(struct rwlock *rwlock, int upgrade);
+bool
+rwlock_wrlock(struct rwlock *rwlock, int upgrade, struct picotm_error* error);
 
 void
 rwlock_wrunlock(struct rwlock *rwlock);
-
-int
-rwlock_init_walk(void *rwlock);
-
-int
-rwlock_uninit_walk(void *rwlock);
 
 #endif
 
