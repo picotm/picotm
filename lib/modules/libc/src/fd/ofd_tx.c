@@ -362,9 +362,17 @@ ofd_tx_append_to_writeset(struct ofd_tx* self, size_t nbyte, off_t offset,
         return (int)bufoffset;
     }
 
-    return iooptab_append(&self->wrtab,
-                          &self->wrtablen,
-                          &self->wrtabsiz, nbyte, offset, bufoffset);
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+    unsigned long res = iooptab_append(&self->wrtab,
+                                       &self->wrtablen,
+                                       &self->wrtabsiz,
+                                       nbyte, offset, bufoffset,
+                                       &error);
+    if (picotm_error_is_set(&error)) {
+        return -1;
+    }
+    return res;
 }
 
 int
@@ -381,9 +389,17 @@ ofd_tx_append_to_readset(struct ofd_tx* self, size_t nbyte, off_t offset,
         return (int)bufoffset;
     }
 
-    return iooptab_append(&self->rdtab,
-                          &self->rdtablen,
-                          &self->rdtabsiz, nbyte, offset, bufoffset);
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+    unsigned long res = iooptab_append(&self->rdtab,
+                                       &self->rdtablen,
+                                       &self->rdtabsiz,
+                                       nbyte, offset, bufoffset,
+                                       &error);
+    if (picotm_error_is_set(&error)) {
+        return -1;
+    }
+    return res;
 }
 
 /*
