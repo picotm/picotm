@@ -1175,8 +1175,14 @@ fildes_tx_exec_open(struct fildes_tx* self, const char* path, int oflag,
         return err;
     }
 
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
     int cookie = openoptab_append(&self->openoptab,
-                                  &self->openoptablen, DO_UNLINK(mode));
+                                  &self->openoptablen, DO_UNLINK(mode),
+                                  &error);
+    if (picotm_error_is_set(&error)) {
+        return ERR_SYSTEM;
+    }
 
     /* Inject event */
     if ((cookie >= 0) &&
