@@ -95,8 +95,9 @@ ofd_init(struct ofd *ofd)
 
     ofd->data.regular.offset = 0;
 
-    if ((err = rwlockmap_init(&ofd->data.regular.rwlockmap)) < 0) {
-        return err;
+    rwlockmap_init(&ofd->data.regular.rwlockmap, &error);
+    if (picotm_error_is_set(&error)) {
+        return ERR_SYSTEM;
     }
 
     return 0;

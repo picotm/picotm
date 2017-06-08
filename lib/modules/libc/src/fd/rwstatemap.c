@@ -55,7 +55,11 @@ rwstatemap_page_get_global_page(struct rwstatemap_page *statepg,
     assert(statepg);
 
     if (!statepg->lockpg) {
-        statepg->lockpg = rwlockmap_lookup_page(rwlockmap, offset);
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        statepg->lockpg = rwlockmap_lookup_page(rwlockmap, offset, &error);
+        if (picotm_error_is_set(&error)) {
+            return NULL;
+        }
     }
 
     return statepg->lockpg;

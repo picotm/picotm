@@ -16,6 +16,8 @@
  * \endcond
  */
 
+struct picotm_error;
+
 struct rwlockmap_page
 {
     atomic_ulong lock[PGTREE_NENTRIES];
@@ -26,14 +28,15 @@ struct rwlockmap
     struct pgtree super;
 };
 
-int
-rwlockmap_init(struct rwlockmap *rwlockmap);
+void
+rwlockmap_init(struct rwlockmap* rwlockmap, struct picotm_error* error);
 
 void
 rwlockmap_uninit(struct rwlockmap *rwlockmap);
 
-struct rwlockmap_page *
-rwlockmap_lookup_page(struct rwlockmap *rwlockmap, unsigned long long offset);
+struct rwlockmap_page*
+rwlockmap_lookup_page(struct rwlockmap* rwlockmap, unsigned long long offset,
+                      struct picotm_error* error);
 
 #endif
 
