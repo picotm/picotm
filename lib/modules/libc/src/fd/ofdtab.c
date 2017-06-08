@@ -20,9 +20,8 @@ static void ofdtab_init(void) __attribute__ ((constructor));
 static size_t
 ofdtab_ofd_init_walk(void* ofd, struct picotm_error* error)
 {
-    int res = ofd_init(ofd);
-    if (res < 0) {
-        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
+    ofd_init(ofd, error);
+    if (picotm_error_is_set(error)) {
         return 0;
     }
     return 1;
@@ -164,10 +163,13 @@ ofdtab_ref_ofd(int fildes, int flags)
         return ofd;
     }
 
-    int err = ofd_ref(ofdtab+ofd, fildes, flags);
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    if (err < 0) {
-        return err;
+    ofd_ref(ofdtab+ofd, fildes, flags, &error);
+    if (picotm_error_is_conflicting(&error)) {
+        return ERR_CONFLICT;
+    } else if (picotm_error_is_set(&error)) {
+        return ERR_SYSTEM;
     }
 
     return ofd;

@@ -12,7 +12,6 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include "errcode.h"
 #include "rwstatemap.h"
 
 #define bitsof(_x)  (sizeof(_x)*CHAR_BIT)
@@ -52,27 +51,30 @@ reccount(size_t len)
     return 1 + len/RECSIZE;
 }
 
-int
-ofd_init(struct ofd *ofd)
+void
+ofd_init(struct ofd* ofd, struct picotm_error* error)
 {
-    int err;
-    pthread_rwlockattr_t rwlockattr;
-
     assert(ofd);
 
-    if ((err = pthread_rwlockattr_init(&rwlockattr))) {
-        errno = err;
-        return ERR_SYSTEM;
+    pthread_rwlockattr_t rwlockattr;
+    int err = pthread_rwlockattr_init(&rwlockattr);
+    if (err) {
+        picotm_error_set_errno(error, err);
+        return;
     }
 
-    pthread_rwlockattr_setkind_np(&rwlockattr, PTHREAD_RWLOCK_PREFER_WRITER_NP);
-
-    if ((err = pthread_rwlock_init(&ofd->lock, &rwlockattr))) {
-        errno = err;
-        return ERR_SYSTEM;
+    err = pthread_rwlockattr_setkind_np(&rwlockattr,
+                                        PTHREAD_RWLOCK_PREFER_WRITER_NP);
+    if (err) {
+        picotm_error_set_errno(error, err);
+        goto err_pthread_rwlockattr_setkind_np;
     }
 
-    pthread_rwlockattr_destroy(&rwlockattr);
+    err = pthread_rwlock_init(&ofd->lock, &rwlockattr);
+    if (err) {
+        picotm_error_set_errno(error, err);
+        goto err_pthread_rwlock_init;
+    }
 
     ofdid_clear(&ofd->id);
 
@@ -81,12 +83,9 @@ ofd_init(struct ofd *ofd)
     ofd->flags = 0;
     ofd->type = PICOTM_LIBC_FILE_TYPE_OTHER;
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-    rwlock_init(&ofd->rwlock, &error);
-    if (picotm_error_is_set(&error)) {
-        pthread_rwlock_destroy(&ofd->lock);
-        return err;
+    rwlock_init(&ofd->rwlock, error);
+    if (picotm_error_is_set(error)) {
+        goto err_rwlock_init;
     }
 
     ofd->cc_mode = PICOTM_LIBC_CC_MODE_NOUNDO;
@@ -95,12 +94,22 @@ ofd_init(struct ofd *ofd)
 
     ofd->data.regular.offset = 0;
 
-    rwlockmap_init(&ofd->data.regular.rwlockmap, &error);
-    if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+    rwlockmap_init(&ofd->data.regular.rwlockmap, error);
+    if (picotm_error_is_set(error)) {
+        goto err_rwlockmap_init;
     }
 
-    return 0;
+    pthread_rwlockattr_destroy(&rwlockattr);
+
+    return;
+
+err_rwlockmap_init:
+    rwlockmap_uninit(&ofd->data.regular.rwlockmap);
+err_rwlock_init:
+    rwlock_uninit(&ofd->rwlock);
+err_pthread_rwlock_init:
+err_pthread_rwlockattr_setkind_np:
+    pthread_rwlockattr_destroy(&rwlockattr);
 }
 
 void
@@ -193,28 +202,26 @@ ofd_get_offset_nolock(const struct ofd *ofd)
  * Referencing
  */
 
-static int
-ofd_setup_from_fildes(struct ofd *ofd, int fildes)
+static void
+ofd_setup_from_fildes(struct ofd *ofd, int fildes, struct picotm_error* error)
 {
     assert(ofd);
     assert(fildes >= 0);
 
     /* Any setup code goes here */
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-    ofdid_init_from_fildes(&ofd->id, fildes, &error);
-    if (picotm_error_is_set(&error)) {
-        return -1;
+    ofdid_init_from_fildes(&ofd->id, fildes, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 
     /* Set type */
 
 	struct stat buf;
-
-	if (fstat(fildes, &buf) < 0) {
-		perror("fstat");
-		return ERR_SYSTEM;
+    int res = fstat(fildes, &buf);
+	if (res < 0) {
+        picotm_error_set_errno(error, errno);
+		return;
 	}
 
     if (S_ISREG(buf.st_mode)) {
@@ -230,15 +237,15 @@ ofd_setup_from_fildes(struct ofd *ofd, int fildes)
     ofd_set_ccmode(ofd, picotm_libc_get_file_type_cc_mode(ofd_get_type_nolock(ofd)));
 
     switch (ofd_get_type_nolock(ofd)) {
-        case PICOTM_LIBC_FILE_TYPE_REGULAR:
-            {
-                ofd->data.regular.offset = lseek(fildes, 0, SEEK_CUR);
-                if (ofd->data.regular.offset == (off_t)-1) {
-                    perror("lseek");
-                    return ERR_SYSTEM;
-                }
+        case PICOTM_LIBC_FILE_TYPE_REGULAR: {
+            off_t res = lseek(fildes, 0, SEEK_CUR);
+            if (res == (off_t)-1) {
+                picotm_error_set_errno(error, errno);
+                return;
             }
+            ofd->data.regular.offset = res;
             break;
+        }
         case PICOTM_LIBC_FILE_TYPE_FIFO:
         case PICOTM_LIBC_FILE_TYPE_OTHER:
         case PICOTM_LIBC_FILE_TYPE_SOCKET:
@@ -248,82 +255,83 @@ ofd_setup_from_fildes(struct ofd *ofd, int fildes)
     }
 
     ofd->flags = 0;
-
-    return 0;
 }
 
-static int
-ofd_ref_setup(struct ofd *ofd, int fildes, unsigned long flags)
+static void
+ofd_ref_setup(struct ofd *ofd, int fildes, unsigned long flags,
+              struct picotm_error* error)
 {
-    int err;
-
     assert(ofd);
     assert(fildes >= 0);
 
     /* Setup ofd for given file descriptor */
-    if ((err = ofd_setup_from_fildes(ofd, fildes)) < 0) {
-        return err;
+    ofd_setup_from_fildes(ofd, fildes, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 
     /* Set flags */
     ofd->flags = flags & OFD_FL_UNLINK;
-
-    return 0;
 }
 
-static int
-ofd_ref_check(struct ofd *ofd, int fildes, unsigned long flags)
+static void
+ofd_ref_check(struct ofd *ofd, int fildes, unsigned long flags,
+              struct picotm_error* error)
 {
     assert(ofd);
     assert(fildes >= 0);
 
-    if (flags&OFD_FL_WANTNEW) {
-        return ERR_CONFLICT;
+    if (flags & OFD_FL_WANTNEW) {
+        picotm_error_set_conflicting(error, NULL);
+        return;
     }
-
-    return 0;
 }
 
-int
+void
 ofd_ref_state(struct ofd *ofd, int fildes, unsigned long flags,
               enum picotm_libc_file_type *type,
               enum picotm_libc_cc_mode *ccmode,
-              off_t *offset)
+              off_t *offset,
+              struct picotm_error* error)
 {
-    static int (* const ref[])(struct ofd*, int, unsigned long) = {
+    static void (* const ref[])(struct ofd*,
+                                int,
+                                unsigned long,
+                                struct picotm_error*) = {
         ofd_ref_setup,
-        ofd_ref_check};
+        ofd_ref_check
+    };
 
     assert(ofd);
 
     ofd_wrlock(ofd);
 
-    int err = ref[!!atomic_load(&ofd->ref)](ofd, fildes, flags);
-
-    if (!err) {
-
-        atomic_fetch_add(&ofd->ref, 1);
-
-        if (type) {
-            *type = ofd_get_type_nolock(ofd);
-        }
-        if (ccmode) {
-            *ccmode = ofd_get_ccmode_nolock(ofd);
-        }
-        if (offset) {
-            *offset = ofd_get_offset_nolock(ofd);
-        }
+    ref[!!atomic_load(&ofd->ref)](ofd, fildes, flags, error);
+    if (picotm_error_is_set(error)) {
+        goto unlock;
     }
 
-    ofd_unlock(ofd);
+    atomic_fetch_add(&ofd->ref, 1);
 
-    return err;
+    if (type) {
+        *type = ofd_get_type_nolock(ofd);
+    }
+    if (ccmode) {
+        *ccmode = ofd_get_ccmode_nolock(ofd);
+    }
+    if (offset) {
+        *offset = ofd_get_offset_nolock(ofd);
+    }
+
+unlock:
+    ofd_unlock(ofd);
 }
 
-int
-ofd_ref(struct ofd *ofd, int fildes, unsigned long flags)
+void
+ofd_ref(struct ofd *ofd, int fildes, unsigned long flags,
+        struct picotm_error* error)
 {
-    return ofd_ref_state(ofd, fildes, flags, NULL, NULL, NULL);
+    ofd_ref_state(ofd, fildes, flags, NULL, NULL, NULL, error);
 }
 
 void
@@ -338,47 +346,38 @@ ofd_unref(struct ofd *ofd)
  * Pessimistic CC
  */
 
-int
-ofd_rdlock_state(struct ofd *ofd, enum rwstate *rwstate)
+void
+ofd_rdlock_state(struct ofd *ofd, enum rwstate *rwstate,
+                 struct picotm_error* error)
 {
     assert(ofd);
     assert(rwstate);
 
     if (!(*rwstate&RW_RDLOCK) && !(*rwstate&RW_WRLOCK)) {
 
-        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-        bool succ = rwlock_rdlock(&ofd->rwlock, (*rwstate) & RW_WRLOCK,
-                                  &error);
-        if (!succ) {
-            return ERR_CONFLICT;
+        rwlock_rdlock(&ofd->rwlock, (*rwstate) & RW_WRLOCK, error);
+        if (picotm_error_is_set(error)) {
+            return;
         }
         *rwstate = RW_RDLOCK;
     }
-
-
-    return 0;
 }
 
-int
-ofd_wrlock_state(struct ofd *ofd, enum rwstate *rwstate)
+void
+ofd_wrlock_state(struct ofd *ofd, enum rwstate *rwstate,
+                 struct picotm_error* error)
 {
     assert(ofd);
     assert(rwstate);
 
     if (!(*rwstate&RW_WRLOCK)) {
 
-        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-        bool succ = rwlock_wrlock(&ofd->rwlock, (*rwstate) & RW_RDLOCK,
-                                  &error);
-        if (!succ) {
-            return ERR_CONFLICT;
+        rwlock_wrlock(&ofd->rwlock, (*rwstate) & RW_RDLOCK, error);
+        if (picotm_error_is_set(error)) {
+            return;
         }
         *rwstate = RW_WRLOCK;
     }
-
-    return 0;
 }
 
 void
@@ -399,12 +398,13 @@ ofd_rwunlock_state(struct ofd *ofd, enum rwstate *rwstate)
 
 }
 
-int
+void
 ofd_2pl_lock_region(struct ofd *ofd,
                     off_t off,
                     size_t nbyte,
                     int write,
-                    struct rwstatemap *rwstatemap)
+                    struct rwstatemap *rwstatemap,
+                    struct picotm_error* error)
 {
     static bool (* const lock[])(struct rwstatemap*,
                                  unsigned long long,
@@ -412,26 +412,17 @@ ofd_2pl_lock_region(struct ofd *ofd,
                                  struct rwlockmap*,
                                  struct picotm_error*) = {
         rwstatemap_rdlock,
-        rwstatemap_wrlock};
+        rwstatemap_wrlock
+    };
 
     assert(ofd);
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+    lock[!!write](rwstatemap, reccount(nbyte), recoffset(off),
+                  &ofd->data.regular.rwlockmap, error);
 
-    bool succ = lock[!!write](rwstatemap,
-                              reccount(nbyte),
-                              recoffset(off),
-                              &ofd->data.regular.rwlockmap,
-                              &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
-    } else if (!succ) {
-        return ERR_CONFLICT;
+    if (picotm_error_is_set(error)) {
+        return;
     }
-
-    return 0;
 }
 
 void
