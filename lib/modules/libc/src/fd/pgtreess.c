@@ -4,9 +4,10 @@
 
 #include "pgtreess.h"
 #include <assert.h>
+#include <errno.h>
+#include <picotm/picotm-error.h>
 #include <stdlib.h>
 #include <string.h>
-#include "errcode.h"
 #include "pgtree.h"
 
 static long long
@@ -31,14 +32,12 @@ struct pgtreess_dir
     union pgtreess_dir_entry entry[PGTREE_NENTRIES];
 };
 
-static int
+static void
 pgtreess_dir_init(struct pgtreess_dir *ssdir)
 {
     assert(ssdir);
 
     memset(ssdir->entry, 0, sizeof(ssdir->entry));
-
-    return 0;
 }
 
 static void
@@ -50,15 +49,13 @@ pgtreess_dir_uninit(struct pgtreess_dir *ssdir)
 /*
  * version snapshot
  */
-int
+void
 pgtreess_init(struct pgtreess *pgtreess)
 {
     assert(pgtreess);
 
     pgtreess->ndirs = 0;
     pgtreess->entry.any = NULL;
-
-    return 0;
 }
 
 static void
@@ -108,9 +105,10 @@ struct dir_stack
     size_t                   depth;
 };
 
-void *
-pgtreess_lookup_page(struct pgtreess *pgtreess,
-                      unsigned long long offset, void* (*create_page_fn)(void))
+void*
+pgtreess_lookup_page(struct pgtreess *pgtreess, unsigned long long offset,
+                     void* (*create_page_fn)(struct picotm_error*),
+                     struct picotm_error* error)
 {
     assert(pgtreess);
 
@@ -120,12 +118,14 @@ pgtreess_lookup_page(struct pgtreess *pgtreess,
         offset >> (pgtreess->ndirs*PGTREE_ENTRY_NBITS);
 
     while (offset_prefix) {
-        struct pgtreess_dir *ssdir = malloc(sizeof(*ssdir));
-
-        if (!ssdir || (pgtreess_dir_init(ssdir) < 0)) {
-            free(ssdir);
+        struct pgtreess_dir* ssdir = malloc(sizeof(*ssdir));
+        if (!ssdir) {
+            picotm_error_set_errno(error, errno);
             return NULL;
         }
+
+        pgtreess_dir_init(ssdir);
+
         ssdir->entry->any = pgtreess->entry.any;
 
         pgtreess->entry.any = ssdir;
@@ -152,11 +152,12 @@ pgtreess_lookup_page(struct pgtreess *pgtreess,
 
     while (ndirs) {
         entry->dir = malloc(sizeof(*entry->dir));
-
-        if (!entry->dir || (pgtreess_dir_init(entry->dir) < 0)) {
-            free(entry->dir);
+        if (!entry->dir) {
+            picotm_error_set_errno(error, errno);
             return NULL;
         }
+
+        pgtreess_dir_init(entry->dir);
 
         unsigned int i =
             (offset>>(ndirs*PGTREE_ENTRY_NBITS))&PGTREE_ENTRY_MASK;
@@ -168,32 +169,33 @@ pgtreess_lookup_page(struct pgtreess *pgtreess,
     /* lookup page */
 
     if (!entry->any) {
-        entry->any = create_page_fn();
+        entry->any = create_page_fn(error);
+        if (picotm_error_is_set(error)) {
+            return NULL;
+        }
     }
 
     return entry->any;
 }
 
-int
-pgtreess_for_each_page(struct pgtreess *pgtreess,
-                       int (*page_fn)(void*, unsigned long long, void*),
-                       void *data)
+void
+pgtreess_for_each_page(struct pgtreess* pgtreess,
+                       void (*page_fn)(void*, unsigned long long, void*,
+                                       struct picotm_error*),
+                       void* data, struct picotm_error* error)
 {
-    struct dir_stack *stack;
-    size_t depth;
-
     assert(pgtreess);
     assert(page_fn);
 
     /* allocate enough stack to hold n directories plus 1 page */
 
-    stack = malloc((pgtreess->ndirs+1)*sizeof(*stack));
-
+    struct dir_stack* stack = malloc((pgtreess->ndirs+1)*sizeof(*stack));
     if (!stack) {
-        return ERR_SYSTEM;
+        picotm_error_set_errno(error, errno);
+        return;
     }
 
-    depth = 0;
+    size_t depth = 0;
 
     if (pgtreess->entry.any) {
         stack[depth].entry = pgtreess->entry;
@@ -235,19 +237,15 @@ pgtreess_for_each_page(struct pgtreess *pgtreess,
         } else {
             /* page */
 
-            int err = page_fn(top->entry.any, top->offset, data);
-
-            if (err) {
-                return err;
+            page_fn(top->entry.any, top->offset, data, error);
+            if (picotm_error_is_set(error)) {
+                goto cleanup;
             }
 
             --depth;
         }
     }
 
-    /* cleanup */
+cleanup:
     free(stack);
-
-    return 0;
 }
-

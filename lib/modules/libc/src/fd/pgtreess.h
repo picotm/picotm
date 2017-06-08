@@ -15,6 +15,8 @@
  * \endcond
  */
 
+struct picotm_error;
+
 union pgtreess_dir_entry
 {
     struct pgtreess_dir *dir;
@@ -27,20 +29,22 @@ struct pgtreess
     union pgtreess_dir_entry entry;
 };
 
-int
+void
 pgtreess_init(struct pgtreess *pgtreess);
 
 void
 pgtreess_uninit(struct pgtreess *pgtreess, void (*destroy_page_fn)(void*));
 
-void *
-pgtreess_lookup_page(struct pgtreess *pgtreess,
-                     unsigned long long offset, void* (*create_page_fn)(void));
+void*
+pgtreess_lookup_page(struct pgtreess *pgtreess, unsigned long long offset,
+                     void* (*create_page_fn)(struct picotm_error*),
+                     struct picotm_error* error);
 
-int
+void
 pgtreess_for_each_page(struct pgtreess *pgtreess,
-                       int (*page_fn)(void*, unsigned long long, void*),
-                       void *data);
+                       void (*page_fn)(void*, unsigned long long, void*,
+                                       struct picotm_error*),
+                       void* data, struct picotm_error* error);
 
 #endif
 
