@@ -5,14 +5,12 @@
 #include "openop.h"
 #include <assert.h>
 
-int
+void
 openop_init(struct openop *openop, int unlink)
 {
     assert(openop);
 
     openop->unlink = unlink;
-
-    return 0;
 }
 
 #include <stdio.h>

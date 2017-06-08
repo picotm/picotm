@@ -18,7 +18,7 @@ struct openop
     unsigned char unlink;
 };
 
-int
+void
 openop_init(struct openop *openop, int unlink);
 
 void

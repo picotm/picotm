@@ -16,9 +16,11 @@
  */
 
 struct openop;
+struct picotm_error;
 
 unsigned long
-openoptab_append(struct openop **tab, size_t *nelems, int unlink);
+openoptab_append(struct openop **tab, size_t *nelems, int unlink,
+                 struct picotm_error* error);
 
 void
 openoptab_clear(struct openop **tab, size_t *nelems);
