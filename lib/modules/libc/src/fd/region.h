@@ -21,7 +21,7 @@ struct region
     off_t  offset;
 };
 
-int
+void
 region_init(struct region *region, size_t nbyte, off_t offset);
 
 void

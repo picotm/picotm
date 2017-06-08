@@ -5,15 +5,13 @@
 #include "region.h"
 #include <assert.h>
 
-int
+void
 region_init(struct region *region, size_t nbyte, off_t offset)
 {
     assert(region);
 
     region->nbyte = nbyte;
     region->offset = offset;
-
-    return 0;
 }
 
 void

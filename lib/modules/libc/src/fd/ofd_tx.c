@@ -445,10 +445,17 @@ ofd_tx_2pl_lock_region(struct ofd_tx* self, size_t nbyte, off_t offset,
                              &self->modedata.tpl.rwstatemap);
 
     if (!err) {
+
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
         err = regiontab_append(&self->modedata.tpl.locktab,
                                &self->modedata.tpl.locktablen,
                                &self->modedata.tpl.locktabsiz,
-                                nbyte, offset);
+                                nbyte, offset,
+                               &error);
+        if (picotm_error_is_set(&error)) {
+            return -1;
+        }
     }
 
     return err;
