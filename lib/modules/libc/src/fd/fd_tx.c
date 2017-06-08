@@ -339,10 +339,13 @@ fd_tx_fcntl_exec(struct fd_tx* self, int cmd, union fcntl_arg *arg,
     /* register fcntl */
 
     if (cookie) {
-        *cookie = fcntloptab_append(&self->fcntltab,
-                                    &self->fcntltablen, cmd, arg, &oldvalue);
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-        if (*cookie < 0) {
+        *cookie = fcntloptab_append(&self->fcntltab,
+                                    &self->fcntltablen, cmd, arg, &oldvalue,
+                                    &error);
+
+        if (picotm_error_is_set(&error)) {
             abort();
         }
     }

@@ -28,7 +28,7 @@ struct fcntlop
     union fcntl_arg oldvalue;
 };
 
-int
+void
 fcntlop_init(struct fcntlop *fcntlop, int command,
              const union fcntl_arg *value,
              const union fcntl_arg *oldvalue);

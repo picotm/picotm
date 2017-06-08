@@ -11,25 +11,22 @@
 #include "fcntlop.h"
 
 unsigned long
-fcntloptab_append(struct fcntlop **tab, size_t *nelems, int command,
-                                                        const union fcntl_arg *value,
-                                                        const union fcntl_arg *oldvalue)
+fcntloptab_append(struct fcntlop** tab, size_t* nelems, int command,
+                  const union fcntl_arg*value,
+                  const union fcntl_arg* oldvalue,
+                  struct picotm_error* error)
 {
     assert(tab);
     assert(nelems);
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-    void *tmp = picotm_tabresize(*tab, *nelems, (*nelems)+1,
-                                 sizeof((*tab)[0]), &error);
-    if (picotm_error_is_set(&error)) {
-        return -1;
+    void *tmp = picotm_tabresize(*tab, *nelems, *nelems + 1,
+                                 sizeof((*tab)[0]), error);
+    if (picotm_error_is_set(error)) {
+        return (unsigned long)-1;
     }
     *tab = tmp;
 
-    if (fcntlop_init((*tab)+(*nelems), command, value, oldvalue) < 0) {
-        return -1;
-    }
+    fcntlop_init((*tab)+(*nelems), command, value, oldvalue);
 
     return (*nelems)++;
 }

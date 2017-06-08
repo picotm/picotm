@@ -16,13 +16,15 @@
  */
 
 struct fcntlop;
+struct picotm_error;
 
 union fcntl_arg;
 
 unsigned long
-fcntloptab_append(struct fcntlop **tab, size_t *nelems, int command,
-                  const union fcntl_arg *value,
-                  const union fcntl_arg *oldvalue);
+fcntloptab_append(struct fcntlop** tab, size_t* nelems, int command,
+                  const union fcntl_arg* value,
+                  const union fcntl_arg* oldvalue,
+                  struct picotm_error* error);
 
 void
 fcntloptab_clear(struct fcntlop **tab, size_t *nelems);
