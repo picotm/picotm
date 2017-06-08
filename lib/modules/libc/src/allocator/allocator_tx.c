@@ -48,9 +48,9 @@ append_cmd(struct allocator_tx* self, enum allocator_tx_cmd cmd, void* ptr,
         void* tmp = picotm_tabresize(self->ptrtab,
                                      self->ptrtabsiz,
                                      self->ptrtabsiz + 1,
-                                     sizeof(self->ptrtab[0]));
-        if (!tmp) {
-            picotm_error_set_error_code(error, PICOTM_OUT_OF_MEMORY);
+                                     sizeof(self->ptrtab[0]),
+                                     error);
+        if (picotm_error_is_set(error)) {
             return -1;
         }
         self->ptrtab = tmp;

@@ -5,6 +5,7 @@
 #include "seekoptab.h"
 #include <assert.h>
 #include <stdio.h>
+#include <picotm/picotm-error.h>
 #include <picotm/picotm-lib-tab.h>
 #include "seekop.h"
 
@@ -15,9 +16,11 @@ seekoptab_append(struct seekop **tab, size_t *nelems, off_t from,
     assert(tab);
     assert(nelems);
 
-    void *tmp = picotm_tabresize(*tab, *nelems, (*nelems)+1, sizeof((*tab)[0]));
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    if (!tmp) {
+    void *tmp = picotm_tabresize(*tab, *nelems, (*nelems)+1,
+                                 sizeof((*tab)[0]), &error);
+    if (picotm_error_is_set(&error)) {
         return -1;
     }
     *tab = tmp;

@@ -4,6 +4,7 @@
 
 #include "fcntloptab.h"
 #include <assert.h>
+#include <picotm/picotm-error.h>
 #include <picotm/picotm-lib-tab.h>
 #include <stdio.h>
 #include <string.h>
@@ -17,9 +18,11 @@ fcntloptab_append(struct fcntlop **tab, size_t *nelems, int command,
     assert(tab);
     assert(nelems);
 
-    void *tmp = picotm_tabresize(*tab, *nelems, (*nelems)+1, sizeof((*tab)[0]));
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    if (!tmp) {
+    void *tmp = picotm_tabresize(*tab, *nelems, (*nelems)+1,
+                                 sizeof((*tab)[0]), &error);
+    if (picotm_error_is_set(&error)) {
         return -1;
     }
     *tab = tmp;

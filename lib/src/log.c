@@ -34,9 +34,9 @@ log_append_event(struct log* self, unsigned long module, unsigned long call,
 
         void* tmp = tabresize(self->eventtab,
                               self->eventtabsiz, eventtabsiz,
-                              sizeof(self->eventtab[0]));
-        if (!tmp) {
-            picotm_error_set_error_code(error, PICOTM_OUT_OF_MEMORY);
+                              sizeof(self->eventtab[0]),
+                              error);
+        if (picotm_error_is_set(error)) {
             return;
         }
         self->eventtab = tmp;

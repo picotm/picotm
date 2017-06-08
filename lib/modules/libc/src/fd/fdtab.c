@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "fdtab.h"
+#include <picotm/picotm-error.h>
 #include <picotm/picotm-lib-tab.h>
 #include <stdlib.h>
 
@@ -12,19 +13,25 @@ struct fd fdtab[MAXNUMFD];
 
 static void fdtab_init(void) __attribute__((constructor));
 
-static int
-fdtab_fd_init_walk(void *fd)
+static size_t
+fdtab_fd_init_walk(void *fd, struct picotm_error* error)
 {
-    return fd_init(fd) < 0 ? -1 : 1;
+    int res = fd_init(fd);
+    if (res < 0) {
+        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
+        return 0;
+    }
+    return 1;
 }
 
 static void
-fdtab_init()
+fdtab_init(void)
 {
-    int res = picotm_tabwalk_1(fdtab,
-                              sizeof(fdtab)/sizeof(fdtab[0]), sizeof(fdtab[0]),
-                              fdtab_fd_init_walk);
-    if (res < 0) {
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+    picotm_tabwalk_1(fdtab, sizeof(fdtab)/sizeof(fdtab[0]), sizeof(fdtab[0]),
+                     fdtab_fd_init_walk, &error);
+    if (picotm_error_is_set(&error)) {
         abort();
     }
 }
@@ -35,21 +42,21 @@ fdtab_init()
 
 static void fdtab_uninit(void) __attribute__((destructor));
 
-static int
-fdtab_fd_uninit_walk(void *fd)
+static size_t
+fdtab_fd_uninit_walk(void* fd, struct picotm_error* error)
 {
     fd_uninit(fd);
     return 1;
 }
 
 static void
-fdtab_uninit()
+fdtab_uninit(void)
 {
-    int res = picotm_tabwalk_1(fdtab,
-                              sizeof(fdtab)/sizeof(fdtab[0]),
-                              sizeof(fdtab[0]),
-                              fdtab_fd_uninit_walk);
-    if (res < 0) {
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+    picotm_tabwalk_1(fdtab, sizeof(fdtab)/sizeof(fdtab[0]), sizeof(fdtab[0]),
+                     fdtab_fd_uninit_walk, &error);
+    if (picotm_error_is_set(&error)) {
         abort();
     }
 }

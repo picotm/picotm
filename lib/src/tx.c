@@ -115,151 +115,170 @@ tx_begin(struct tx* self, enum tx_mode mode)
     return 0;
 }
 
-static int
-lock_cb(void* module, void* error)
+static size_t
+lock_cb(void* module, struct picotm_error* error)
 {
     module_lock(module, error);
-    return picotm_error_is_set(error) ? -1 : 1;
+    return picotm_error_is_set(error) ? 0 : 1;
 }
 
 static int
 lock_modules(struct module* module, unsigned long nmodules,
              struct picotm_error* error)
 {
-    int res = tabwalk_2(module, nmodules, sizeof(*module), lock_cb, error);
-    if (res < 0) {
+    tabwalk_1(module, nmodules, sizeof(*module), lock_cb, error);
+    if (picotm_error_is_set(error)) {
         return -1;
     }
     return 0;
 }
 
-static int
-unlock_cb(void* module, void* error)
+static size_t
+unlock_cb(void* module, struct picotm_error* error)
 {
     module_unlock(module, error);
-    return picotm_error_is_set(error) ? -1 : 1;
+    return picotm_error_is_set(error) ? 0 : 1;
 }
 
 static int
 unlock_modules(struct module* module, unsigned long nmodules,
                struct picotm_error* error)
 {
-    int res = tabrwalk_2(module, nmodules, sizeof(*module), unlock_cb, error);
-    if (res < 0) {
+    tabrwalk_1(module, nmodules, sizeof(*module), unlock_cb, error);
+    if (picotm_error_is_set(error)) {
         return -1;
     }
     return 0;
 }
 
-static int
-validate_cb(void* module, void* is_irrevocable, void* error)
+static size_t
+validate_cb(void* module, void* is_irrevocable, struct picotm_error* error)
 {
     bool is_valid = module_is_valid(module, *((bool*)is_irrevocable), error);
-    return (!is_valid || picotm_error_is_set(error)) ? -1 : 1;
+    if (picotm_error_is_set(error)) {
+        return 0;
+    }
+    if (!is_valid) {
+        picotm_error_set_conflicting(error, NULL);
+        return 0;
+    }
+    return 1;
 }
 
 static int
 validate_modules(struct module* module, unsigned long nmodules,
                  bool is_irrevocable, struct picotm_error* error)
 {
-    int res = tabwalk_3(module, nmodules, sizeof(*module), validate_cb,
-                        &is_irrevocable, error);
-    if (res < 0) {
+    tabwalk_2(module, nmodules, sizeof(*module), validate_cb, &is_irrevocable,
+              error);
+    if (picotm_error_is_set(error)) {
         return -1;
     }
     return 0;
 }
 
-static int
-apply_cb(void* module, void* error)
+static size_t
+apply_cb(void* module, struct picotm_error* error)
 {
     module_apply(module, error);
-    return picotm_error_is_set(error) ? -1 : 1;
+    if (picotm_error_is_set(error)) {
+        return 0;
+    }
+    return 1;
 }
 
 static int
 apply_modules(struct module* module, unsigned long nmodules,
               struct picotm_error* error)
 {
-    int res = tabwalk_2(module, nmodules, sizeof(*module), apply_cb,
-                        error);
-    if (res < 0) {
+    tabwalk_1(module, nmodules, sizeof(*module), apply_cb, error);
+    if (picotm_error_is_set(error)) {
         return -1;
     }
     return 0;
 }
 
-static int
-undo_cb(void* module, void* error)
+static size_t
+undo_cb(void* module, struct picotm_error* error)
 {
     module_undo(module, error);
-    return picotm_error_is_set(error) ? -1 : 1;
+    if (picotm_error_is_set(error)) {
+        return 0;
+    }
+    return 1;
 }
 
 static int
 undo_modules(struct module* module, unsigned long nmodules,
              struct picotm_error* error)
 {
-    int res = tabwalk_2(module, nmodules, sizeof(*module), undo_cb,
-                        error);
-    if (res < 0) {
+    tabwalk_1(module, nmodules, sizeof(*module), undo_cb, error);
+    if (picotm_error_is_set(error)) {
         return -1;
     }
     return 0;
 }
 
-static int
-update_cc_cb(void* module, void* is_irrevocable, void* error)
+static size_t
+update_cc_cb(void* module, void* is_irrevocable, struct picotm_error* error)
 {
     module_update_cc(module, *((bool*)is_irrevocable), error);
-    return picotm_error_is_set(error) ? -1 : 1;
+    if (picotm_error_is_set(error)) {
+        return 0;
+    }
+    return 1;
 }
 
 static int
 update_modules_cc(struct module* module, unsigned long nmodules,
                   bool is_irrevocable, struct picotm_error* error)
 {
-    int res = tabwalk_3(module, nmodules, sizeof(*module), update_cc_cb,
-                        &is_irrevocable, error);
-    if (res < 0) {
+    tabwalk_2(module, nmodules, sizeof(*module), update_cc_cb,
+              &is_irrevocable, error);
+    if (picotm_error_is_set(error)) {
         return -1;
     }
     return 0;
 }
 
-static int
-clear_cc_cb(void* module, void* is_irrevocable, void* error)
+static size_t
+clear_cc_cb(void* module, void* is_irrevocable, struct picotm_error* error)
 {
     module_clear_cc(module, *((bool*)is_irrevocable), error);
-    return picotm_error_is_set(error) ? -1 : 1;
+    if (picotm_error_is_set(error)) {
+        return 0;
+    }
+    return 1;
 }
 
 static int
 clear_modules_cc(struct module* module, unsigned long nmodules,
                  bool is_irrevocable, struct picotm_error* error)
 {
-    int res = tabwalk_3(module, nmodules, sizeof(*module), clear_cc_cb,
-                        &is_irrevocable, error);
-    if (res < 0) {
+    tabwalk_2(module, nmodules, sizeof(*module), clear_cc_cb, &is_irrevocable,
+              error);
+    if (picotm_error_is_set(error)) {
         return -1;
     }
     return 0;
 }
 
-static int
-log_finish_cb(void* module, void* error)
+static size_t
+log_finish_cb(void* module, struct picotm_error* error)
 {
     module_finish(module, error);
-    return picotm_error_is_set(error) ? -1 : 1;
+    if (picotm_error_is_set(error)) {
+        return 0;
+    }
+    return 1;
 }
 
 static int
 finish_modules(struct module* module, unsigned long nmodules,
                struct picotm_error* error)
 {
-    int res = tabwalk_2(module, nmodules, sizeof(*module), log_finish_cb,
-                        error);
-    if (res < 0) {
+    tabwalk_1(module, nmodules, sizeof(*module), log_finish_cb, error);
+    if (picotm_error_is_set(error)) {
         return -1;
     }
     return 0;

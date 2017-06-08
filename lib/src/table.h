@@ -6,6 +6,8 @@
 
 #include <stddef.h>
 
+struct picotm_error;
+
 /**
  * \cond impl || lib_impl
  * \ingroup lib_impl
@@ -17,7 +19,8 @@
  * Allocate or resize table.
  */
 void*
-tabresize(void* restrict base, size_t nelems, size_t newnelems, size_t siz);
+tabresize(void* restrict base, size_t nelems, size_t newnelems, size_t siz,
+          struct picotm_error* error);
 
 /**
  * Free table memory.
@@ -28,28 +31,33 @@ tabfree(void* restrict base);
 /* Walk over table elements
  */
 
-int
+size_t
 tabwalk_1(void* restrict base, size_t nelems, size_t siz,
-          int (*walk)(void*));
+          size_t (*walk)(void*, struct picotm_error*),
+          struct picotm_error* error);
 
-int
+size_t
 tabwalk_2(void* restrict base, size_t nelems, size_t siz,
-          int (*walk)(void*, void*), void* data);
+          size_t (*walk)(void*, void*, struct picotm_error*), void* data,
+          struct picotm_error* error);
 
-int
+size_t
 tabwalk_3(void* restrict base, size_t nelems, size_t siz,
-          int (*walk)(void*, void*, void*), void* data1, void* data2);
+          size_t (*walk)(void*, void*, void*, struct picotm_error*),
+          void* data1, void* data2,  struct picotm_error* error);
 
 /* Walk over table in reversed order
  */
 
-int
+size_t
 tabrwalk_1(void* restrict base, size_t nelems, size_t siz,
-           int (*walk)(void*));
+           size_t (*walk)(void*, struct picotm_error*),
+           struct picotm_error* error);
 
-int
+size_t
 tabrwalk_2(void* restrict base, size_t nelems, size_t siz,
-           int (*walk)(void*, void*), void* data);
+           size_t (*walk)(void*, void*, struct picotm_error*), void* data,
+           struct picotm_error* error);
 
 /**
  * Filter out duplicate elements.

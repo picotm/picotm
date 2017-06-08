@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <picotm/picotm-error.h>
 #include <picotm/picotm-lib-tab.h>
 #include "range.h"
 #include "ioop.h"
@@ -22,9 +23,12 @@ iooptab_append(struct ioop * restrict * restrict tab, size_t * restrict nelems,
     assert(nelems);
 
     if (__builtin_expect(*nelems >= *siz, 0)) {
-        void *tmp = picotm_tabresize(*tab, *siz, (*siz)+1, sizeof((*tab)[0]));
 
-        if (!tmp) {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+        void *tmp = picotm_tabresize(*tab, *siz, (*siz)+1, sizeof((*tab)[0]),
+                                     &error);
+        if (picotm_error_is_set(&error)) {
             return -1;
         }
         *tab = tmp;
@@ -39,13 +43,23 @@ iooptab_append(struct ioop * restrict * restrict tab, size_t * restrict nelems,
     return (*nelems)++;
 }
 
+static size_t
+ioop_uninit_walk(void *ioop, struct picotm_error* error)
+{
+    ioop_uninit(ioop);
+    return 1;
+}
+
 void
 iooptab_clear(struct ioop * restrict * restrict tab, size_t * restrict nelems)
 {
     assert(tab);
     assert(nelems);
 
-    picotm_tabwalk_1(*tab, *nelems, sizeof((*tab)[0]), ioop_uninit_walk);
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+    picotm_tabwalk_1(*tab, *nelems, sizeof((*tab)[0]), ioop_uninit_walk,
+                     &error);
 
     picotm_tabfree(*tab);
     *tab = NULL;

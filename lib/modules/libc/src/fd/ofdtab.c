@@ -4,6 +4,7 @@
 
 #include "ofdtab.h"
 #include <errno.h>
+#include <picotm/picotm-error.h>
 #include <picotm/picotm-lib-tab.h>
 #include <stdlib.h>
 #include "errcode.h"
@@ -16,20 +17,25 @@ size_t     ofdtab_len = 0;
 
 static void ofdtab_init(void) __attribute__ ((constructor));
 
-static int
-ofdtab_ofd_init_walk(void *ofd)
+static size_t
+ofdtab_ofd_init_walk(void* ofd, struct picotm_error* error)
 {
-    return ofd_init(ofd) < 0 ? -1 : 1;
+    int res = ofd_init(ofd);
+    if (res < 0) {
+        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
+        return 0;
+    }
+    return 1;
 }
 
 static void
 ofdtab_init(void)
 {
-    int res = picotm_tabwalk_1(ofdtab,
-                              sizeof(ofdtab)/sizeof(ofdtab[0]),
-                              sizeof(ofdtab[0]),
-                              ofdtab_ofd_init_walk);
-    if (res < 0) {
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+    picotm_tabwalk_1(ofdtab, sizeof(ofdtab)/sizeof(ofdtab[0]),
+                     sizeof(ofdtab[0]), ofdtab_ofd_init_walk, &error);
+    if (picotm_error_is_set(&error)) {
         abort();
     }
 }
@@ -40,21 +46,21 @@ ofdtab_init(void)
 
 static void ofdtab_uninit(void) __attribute__ ((destructor));
 
-static int
-ofdtab_ofd_uninit_walk(void *ofd)
+static size_t
+ofdtab_ofd_uninit_walk(void* ofd, struct picotm_error* error)
 {
     ofd_uninit(ofd);
-    return 0;
+    return 1;
 }
 
 static void
 ofdtab_uninit(void)
 {
-    int res = picotm_tabwalk_1(ofdtab,
-                              sizeof(ofdtab)/sizeof(ofdtab[0]),
-                              sizeof(ofdtab[0]),
-                              ofdtab_ofd_uninit_walk);
-    if (res < 0) {
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+    picotm_tabwalk_1(ofdtab, sizeof(ofdtab)/sizeof(ofdtab[0]),
+                     sizeof(ofdtab[0]), ofdtab_ofd_uninit_walk, &error);
+    if (picotm_error_is_set(&error)) {
         abort();
     }
 }

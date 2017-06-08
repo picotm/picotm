@@ -327,12 +327,15 @@ append_to_iobuffer(struct ofd_tx* self, size_t nbyte, const void* buf)
 
     if (nbyte && buf) {
 
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
         /* resize */
         void* tmp = picotm_tabresize(self->wrbuf,
                                      self->wrbuflen,
                                      self->wrbuflen+nbyte,
-                                     sizeof(self->wrbuf[0]));
-        if (!tmp) {
+                                     sizeof(self->wrbuf[0]),
+                                     &error);
+        if (picotm_error_is_set(&error)) {
             return (off_t)ERR_SYSTEM;
         }
         self->wrbuf = tmp;

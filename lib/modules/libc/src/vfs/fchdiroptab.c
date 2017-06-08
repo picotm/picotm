@@ -4,6 +4,7 @@
 
 #include "fchdiroptab.h"
 #include <assert.h>
+#include <picotm/picotm-error.h>
 #include <picotm/picotm-lib-tab.h>
 #include <stdio.h>
 #include "fchdirop.h"
@@ -15,9 +16,11 @@ fchdiroptab_append(struct fchdirop **tab, size_t *nelems, int oldcwd,
     assert(tab);
     assert(nelems);
 
-    void *tmp = picotm_tabresize(*tab, *nelems, (*nelems)+1, sizeof((*tab)[0]));
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    if (!tmp) {
+    void *tmp = picotm_tabresize(*tab, *nelems, (*nelems)+1,
+                                 sizeof((*tab)[0]), &error);
+    if (picotm_error_is_set(&error)) {
         return -1;
     }
     *tab = tmp;
