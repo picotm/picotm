@@ -81,7 +81,10 @@ ofd_init(struct ofd *ofd)
     ofd->flags = 0;
     ofd->type = PICOTM_LIBC_FILE_TYPE_OTHER;
 
-    if ((err = rwlock_init(&ofd->rwlock)) < 0) {
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+    rwlock_init(&ofd->rwlock, &error);
+    if (picotm_error_is_set(&error)) {
         pthread_rwlock_destroy(&ofd->lock);
         return err;
     }
@@ -338,10 +341,13 @@ ofd_rdlock_state(struct ofd *ofd, enum rwstate *rwstate)
     assert(rwstate);
 
     if (!(*rwstate&RW_RDLOCK) && !(*rwstate&RW_WRLOCK)) {
-        int err = rwlock_rdlock(&ofd->rwlock, *rwstate&RW_WRLOCK);
 
-        if (err < 0) {
-            return err;
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+        bool succ = rwlock_rdlock(&ofd->rwlock, (*rwstate) & RW_WRLOCK,
+                                  &error);
+        if (!succ) {
+            return ERR_CONFLICT;
         }
         *rwstate = RW_RDLOCK;
     }
@@ -357,10 +363,13 @@ ofd_wrlock_state(struct ofd *ofd, enum rwstate *rwstate)
     assert(rwstate);
 
     if (!(*rwstate&RW_WRLOCK)) {
-        int err = rwlock_wrlock(&ofd->rwlock, *rwstate&RW_RDLOCK);
 
-        if (err < 0) {
-            return err;
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+        bool succ = rwlock_wrlock(&ofd->rwlock, (*rwstate) & RW_RDLOCK,
+                                  &error);
+        if (!succ) {
+            return ERR_CONFLICT;
         }
         *rwstate = RW_WRLOCK;
     }
