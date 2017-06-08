@@ -5,6 +5,7 @@
 #ifndef RWSTATEMAP_H
 #define RWSTATEMAP_H
 
+#include <stdbool.h>
 #include "pgtreess.h"
 
 /**
@@ -22,26 +23,29 @@ struct rwstatemap
     struct pgtreess super;
 };
 
-int
+void
 rwstatemap_init(struct rwstatemap *rwstatemap);
 
 void
 rwstatemap_uninit(struct rwstatemap *rwstatemap);
 
-int
+bool
 rwstatemap_rdlock(struct rwstatemap *rwstatemap, unsigned long long length,
                                                  unsigned long long offset,
-                                                 struct rwlockmap *rwlockmap);
+                                                 struct rwlockmap *rwlockmap,
+                                                 struct picotm_error* error);
 
-int
+bool
 rwstatemap_wrlock(struct rwstatemap *rwstatemap, unsigned long long length,
                                                  unsigned long long offset,
-                                                 struct rwlockmap *rwlockmap);
+                                                 struct rwlockmap *rwlockmap,
+                                                 struct picotm_error* error);
 
-int
+void
 rwstatemap_unlock(struct rwstatemap *rwstatemap, unsigned long long length,
                                                  unsigned long long offset,
-                                                 struct rwlockmap *rwlockmap);
+                                                 struct rwlockmap *rwlockmap,
+                                                 struct picotm_error* error);
 
 /*int
 rwstatemap_unlock_all(struct rwstatemap *rwstatemap,

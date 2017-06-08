@@ -53,8 +53,6 @@ ofd_tx_2pl_release_locks(struct ofd_tx* self)
 int
 ofd_tx_init(struct ofd_tx* self)
 {
-    int err;
-
     assert(self);
 
     self->ofd = -1;
@@ -88,9 +86,7 @@ ofd_tx_init(struct ofd_tx* self)
 
     self->modedata.tpl.rwstate = RW_NOLOCK;
 
-    if ((err = rwstatemap_init(&self->modedata.tpl.rwstatemap)) < 0) {
-        return err;
-    }
+    rwstatemap_init(&self->modedata.tpl.rwstatemap);
 
     self->modedata.tpl.locktab = NULL;
     self->modedata.tpl.locktablen = 0;

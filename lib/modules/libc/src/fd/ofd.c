@@ -406,19 +406,32 @@ ofd_2pl_lock_region(struct ofd *ofd,
                     int write,
                     struct rwstatemap *rwstatemap)
 {
-    static int (* const lock[])(struct rwstatemap*,
-                                unsigned long long,
-                                unsigned long long,
-                                struct rwlockmap*) = {
+    static bool (* const lock[])(struct rwstatemap*,
+                                 unsigned long long,
+                                 unsigned long long,
+                                 struct rwlockmap*,
+                                 struct picotm_error*) = {
         rwstatemap_rdlock,
         rwstatemap_wrlock};
 
     assert(ofd);
 
-    return lock[!!write](rwstatemap,
-                         reccount(nbyte),
-                         recoffset(off),
-                        &ofd->data.regular.rwlockmap);
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+    bool succ = lock[!!write](rwstatemap,
+                              reccount(nbyte),
+                              recoffset(off),
+                              &ofd->data.regular.rwlockmap,
+                              &error);
+    if (picotm_error_is_conflicting(&error)) {
+        return ERR_CONFLICT;
+    } else if (picotm_error_is_set(&error)) {
+        return ERR_SYSTEM;
+    } else if (!succ) {
+        return ERR_CONFLICT;
+    }
+
+    return 0;
 }
 
 void
@@ -428,10 +441,14 @@ ofd_2pl_unlock_region(struct ofd *ofd, off_t off,
 {
     assert(ofd);
 
-    if (rwstatemap_unlock(rwstatemap,
-                          reccount(nbyte),
-                          recoffset(off),
-                         &ofd->data.regular.rwlockmap) < 0) {
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+    rwstatemap_unlock(rwstatemap,
+                      reccount(nbyte),
+                      recoffset(off),
+                      &ofd->data.regular.rwlockmap,
+                      &error);
+    if (picotm_error_is_set(&error)) {
         abort();
     }
 }
