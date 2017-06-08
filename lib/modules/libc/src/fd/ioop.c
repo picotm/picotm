@@ -41,7 +41,7 @@ rangeisect(off_t off0, size_t siz0,
     return 1;
 }
 
-int
+void
 ioop_init(struct ioop *ioop, off_t off, size_t nbyte, size_t bufoff)
 {
     assert(ioop);
@@ -49,8 +49,6 @@ ioop_init(struct ioop *ioop, off_t off, size_t nbyte, size_t bufoff)
     ioop->off = off;
     ioop->nbyte = nbyte;
     ioop->bufoff = bufoff;
-
-    return 0;
 }
 
 void

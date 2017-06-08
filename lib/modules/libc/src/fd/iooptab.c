@@ -4,6 +4,7 @@
 
 #include "iooptab.h"
 #include <assert.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,32 +14,27 @@
 #include "ioop.h"
 
 unsigned long
-iooptab_append(struct ioop * restrict * restrict tab, size_t * restrict nelems,
-                                                      size_t * restrict siz,
-                                                      size_t nbyte,
-                                                      off_t offset,
-                                                      size_t bufoff)
+iooptab_append(struct ioop * restrict * restrict tab,
+               size_t * restrict nelems, size_t * restrict siz,
+               size_t nbyte, off_t offset, size_t bufoff,
+               struct picotm_error* error)
 {
     assert(tab);
     assert(nelems);
 
     if (__builtin_expect(*nelems >= *siz, 0)) {
 
-        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-        void *tmp = picotm_tabresize(*tab, *siz, (*siz)+1, sizeof((*tab)[0]),
-                                     &error);
-        if (picotm_error_is_set(&error)) {
-            return -1;
+        void *tmp = picotm_tabresize(*tab, *siz, *siz + 1, sizeof((*tab)[0]),
+                                     error);
+        if (picotm_error_is_set(error)) {
+            return (unsigned long)-1;
         }
         *tab = tmp;
 
         ++(*siz);
     }
 
-    if (ioop_init((*tab)+(*nelems), offset, nbyte, bufoff) < 0) {
-        return -1;
-    }
+    ioop_init((*tab) + (*nelems), offset, nbyte, bufoff);
 
     return (*nelems)++;
 }
@@ -100,25 +96,24 @@ ioopcmp_compare(const void *lhs, const void *rhs)
     return ioopcmp(lhs, rhs);
 }
 
-int
+void
 iooptab_sort(const struct ioop * restrict tab, size_t nelems,
-                   struct ioop * restrict * restrict sorted)
+                   struct ioop * restrict * restrict sorted,
+                   struct picotm_error* error)
 {
     assert(tab);
     assert(sorted);
 
     void *tmp = realloc(*sorted, nelems*sizeof(**sorted));
-
     if (!tmp) {
-        return -1;
+        picotm_error_set_errno(error, errno);
+        return;
     }
     *sorted = tmp;
 
     memcpy(*sorted, tab, nelems*sizeof(**sorted));
 
     qsort(*sorted, nelems, sizeof(**sorted), ioopcmp_compare);
-
-    return 0;
 }
 
 void

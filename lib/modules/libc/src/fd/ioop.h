@@ -22,7 +22,7 @@ struct ioop
     size_t bufoff;
 };
 
-int
+void
 ioop_init(struct ioop *ioop, off_t offset, size_t nbyte, size_t bufoff);
 
 void
