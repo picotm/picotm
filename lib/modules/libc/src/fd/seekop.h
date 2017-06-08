@@ -22,7 +22,7 @@ struct seekop
     int   whence;
 };
 
-int
+void
 seekop_init(struct seekop *seekop, off_t from, off_t offset, int whence);
 
 void

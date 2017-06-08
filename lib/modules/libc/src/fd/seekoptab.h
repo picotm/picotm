@@ -15,11 +15,13 @@
  * \endcond
  */
 
+struct picotm_error;
 struct seekop;
 
 unsigned long
-seekoptab_append(struct seekop **tab, size_t *nelems, off_t from,
-                                                      off_t offset, int whence);
+seekoptab_append(struct seekop **tab, size_t *nelems,
+                 off_t from, off_t offset, int whence,
+                 struct picotm_error* error);
 
 void
 seekoptab_clear(struct seekop **tab, size_t *nelems);

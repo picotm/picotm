@@ -10,24 +10,21 @@
 #include "seekop.h"
 
 unsigned long
-seekoptab_append(struct seekop **tab, size_t *nelems, off_t from,
-                                                      off_t offset, int whence)
+seekoptab_append(struct seekop **tab, size_t *nelems,
+                 off_t from, off_t offset, int whence,
+                 struct picotm_error* error)
 {
     assert(tab);
     assert(nelems);
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
     void *tmp = picotm_tabresize(*tab, *nelems, (*nelems)+1,
-                                 sizeof((*tab)[0]), &error);
-    if (picotm_error_is_set(&error)) {
-        return -1;
+                                 sizeof((*tab)[0]), error);
+    if (picotm_error_is_set(error)) {
+        return (unsigned long)-1;
     }
     *tab = tmp;
 
-    if (seekop_init((*tab)+(*nelems), from, offset, whence) < 0) {
-        return -1;
-    }
+    seekop_init((*tab)+(*nelems), from, offset, whence);
 
     return (*nelems)++;
 }

@@ -6,7 +6,7 @@
 #include <assert.h>
 #include <stdio.h>
 
-int
+void
 seekop_init(struct seekop *seekop, off_t from, off_t offset, int whence)
 {
     assert(seekop);
@@ -14,8 +14,6 @@ seekop_init(struct seekop *seekop, off_t from, off_t offset, int whence)
     seekop->from = from;
     seekop->offset = offset;
     seekop->whence = whence;
-
-    return 0;
 }
 
 void
