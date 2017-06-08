@@ -8,8 +8,11 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include "picotm/picotm-error.h"
 
-/* Based on http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
+/* Rounds up to the next power of 2.
+ *
+ * Based on http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
  */
 static size_t
 rndpow2(size_t val)
@@ -26,7 +29,8 @@ rndpow2(size_t val)
 }
 
 void*
-tabresize(void* restrict base, size_t nelems, size_t newnelems, size_t siz)
+tabresize(void* restrict base, size_t nelems, size_t newnelems, size_t siz,
+          struct picotm_error* error)
 {
     static bool s_lowmem = false;
 
@@ -53,6 +57,7 @@ do_alloc:
             s_lowmem = true;
             goto do_alloc; /* Try with linear-growth algorithm */
         }
+        picotm_error_set_errno(error, errno);
     }
 
     return mem;
@@ -64,85 +69,128 @@ tabfree(void* restrict base)
     free(base);
 }
 
-int
-tabwalk_1(void* restrict base, size_t nelems, size_t siz, int (*walk)(void*))
+size_t
+tabwalk_1(void* restrict base, size_t nelems, size_t siz,
+          size_t (*walk)(void*, struct picotm_error*),
+          struct picotm_error* error)
 {
+    size_t pos = 0;
+
     unsigned char* beg = base;
     const unsigned char* end = beg + nelems * siz;
 
-    int inc;
+    while (beg < end) {
+        size_t inc = walk(beg, error);
 
-    for (inc = 1; (inc > 0) && (beg < end); beg += inc * siz) {
-        inc = walk(beg);
+        if (picotm_error_is_set(error)) {
+            return pos;
+        }
+
+        beg += inc * siz;
+        pos += inc;
     }
 
-    return inc < 0 ? inc : 0;
+    return pos;
 }
 
-int
+size_t
 tabwalk_2(void* restrict base, size_t nelems, size_t siz,
-          int (*walk)(void*, void*), void* data)
+          size_t (*walk)(void*, void*, struct picotm_error*), void* data,
+          struct picotm_error* error)
 {
+    size_t pos = 0;
+
     unsigned char* beg = base;
     const unsigned char* end = beg + nelems * siz;
 
-    int inc;
+    while (beg < end) {
+        size_t inc = walk(beg, data, error);
 
-    for (inc = 1; (inc > 0) && (beg < end); beg += inc * siz) {
-        inc = walk(beg, data);
+        if (picotm_error_is_set(error)) {
+            return pos;
+        }
+
+        beg += inc * siz;
+        pos += inc;
     }
 
-    return inc < 0 ? inc : 0;
+    return pos;
 }
 
-int
+size_t
 tabwalk_3(void* restrict base, size_t nelems, size_t siz,
-          int (*walk)(void*, void*, void*), void* data1, void* data2)
+          size_t (*walk)(void*, void*, void*, struct picotm_error*),
+          void* data1, void* data2, struct picotm_error* error)
 {
+    size_t pos = 0;
+
     unsigned char* beg = base;
     const unsigned char* end = beg + nelems * siz;
 
-    int inc;
+    while (beg < end) {
+        size_t inc = walk(beg, data1, data2, error);
 
-    for (inc = 1; (inc > 0) && (beg < end); beg += inc * siz) {
-        inc = walk(beg, data1, data2);
+        if (picotm_error_is_set(error)) {
+            return pos;
+        }
+
+        beg += inc * siz;
+        pos += inc;
     }
 
-    return inc < 0 ? inc : 0;
+    return pos;
 }
 
-int
+size_t
 tabrwalk_1(void* restrict base, size_t nelems, size_t siz,
-           int (*walk)(void*))
+           size_t (*walk)(void*, struct picotm_error*),
+           struct picotm_error* error)
 {
+    size_t pos = 0;
+
     const unsigned char* beg = base;
     unsigned char* end = base + nelems * siz;
 
-    int dec;
+    end -= siz;
 
-    for (dec = 1; (dec > 0) && (end > beg);) {
+    while (end >= beg) {
+        size_t dec = walk(end, error);
+
+        if (picotm_error_is_set(error)) {
+            return pos;
+        }
+
         end -= dec * siz;
-        dec = walk(end);
+        pos += dec;
     }
 
-    return dec < 0 ? dec : 0;
+    return pos;
 }
 
-int
+size_t
 tabrwalk_2(void* restrict base, size_t nelems, size_t siz,
-           int (*walk)(void*, void*), void* data)
+           size_t (*walk)(void*, void*, struct picotm_error*), void* data,
+           struct picotm_error* error)
 {
+    size_t pos = 0;
+
     const unsigned char* beg = base;
     unsigned char* end = base + nelems * siz;
 
-    int dec;
+    end -= siz;
 
-    for (dec = 1; (dec > 0) && (end > beg);) {
+    while (end >= beg) {
+        size_t dec = walk(end, data, error);
+
+        if (picotm_error_is_set(error)) {
+            return pos;
+        }
+
         end -= dec * siz;
-        dec = walk(end, data);
+        pos += dec;
     }
 
-    return dec < 0 ? dec : 0;
+    return pos;
 }
 
 size_t

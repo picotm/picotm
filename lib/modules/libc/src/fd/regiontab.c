@@ -4,6 +4,7 @@
 
 #include "regiontab.h"
 #include <assert.h>
+#include <picotm/picotm-error.h>
 #include <picotm/picotm-lib-tab.h>
 #include <stdlib.h>
 #include "region.h"
@@ -18,9 +19,12 @@ regiontab_append(struct region **tab, size_t *nelems,
     assert(nelems);
 
     if (__builtin_expect(*nelems >= *siz, 0)) {
-        void *tmp = picotm_tabresize(*tab, *siz, (*siz)+1, sizeof((*tab)[0]));
 
-        if (!tmp) {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+        void *tmp = picotm_tabresize(*tab, *siz, (*siz)+1, sizeof((*tab)[0]),
+                                     &error);
+        if (picotm_error_is_set(&error)) {
             return -1;
         }
         *tab = tmp;
@@ -35,8 +39,8 @@ regiontab_append(struct region **tab, size_t *nelems,
     return (*nelems)++;
 }
 
-int
-region_uninit_walk(void *region)
+static size_t
+region_uninit_walk(void* region, struct picotm_error* error)
 {
     region_uninit(region);
     return 1;
@@ -48,7 +52,10 @@ regiontab_clear(struct region **tab, size_t *nelems)
     assert(tab);
     assert(nelems);
 
-    picotm_tabwalk_1(*tab, *nelems, sizeof((*tab)[0]), region_uninit_walk);
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+    picotm_tabwalk_1(*tab, *nelems, sizeof((*tab)[0]), region_uninit_walk,
+                     &error);
 
     picotm_tabfree(*tab);
     *tab = NULL;

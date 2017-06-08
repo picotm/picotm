@@ -91,12 +91,3 @@ ioop_dump(const struct ioop *ioop)
                                         (long)ioop->nbyte,
                                         (long)ioop->bufoff);
 }
-
-int
-ioop_uninit_walk(void *ioop)
-{
-    ioop_uninit(ioop);
-
-    return 1;
-}
-

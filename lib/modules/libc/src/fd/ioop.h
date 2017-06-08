@@ -38,8 +38,5 @@ ioop_read(const struct ioop *ioop, void *buf, size_t nbyte, off_t offset, const 
 void
 ioop_dump(const struct ioop *ioop);
 
-int
-ioop_uninit_walk(void *ioop);
-
 #endif
 

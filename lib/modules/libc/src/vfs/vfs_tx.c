@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <picotm/picotm-error.h>
 #include <picotm/picotm-lib-tab.h>
 #include <picotm/picotm-module.h>
 #include <unistd.h>
@@ -145,11 +146,14 @@ vfs_tx_canonical_path(struct vfs_tx* self, const char *path)
 static int
 append_cmd(struct vfs_tx* self, enum vfs_tx_cmd cmd, int cookie)
 {
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
     void* tmp = picotm_tabresize(self->eventtab,
                                  self->eventtablen,
                                  self->eventtablen + 1,
-                                 sizeof(self->eventtab[0]));
-    if (!tmp) {
+                                 sizeof(self->eventtab[0]),
+                                 &error);
+    if (picotm_error_is_set(&error)) {
         return -1;
     }
     self->eventtab = tmp;
@@ -158,7 +162,6 @@ append_cmd(struct vfs_tx* self, enum vfs_tx_cmd cmd, int cookie)
 
     eventtab->cookie = cookie;
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
     picotm_append_event(self->module, cmd, self->eventtablen, &error);
     if (picotm_error_is_set(&error)) {
         return -1;

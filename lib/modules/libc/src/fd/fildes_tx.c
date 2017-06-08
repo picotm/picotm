@@ -128,9 +128,8 @@ get_ifd(const struct fd_tx* fd_tx, size_t fd_txlen, size_t* ifdlen,
 
         if (fd_tx_holds_ref(fd_tx)) {
             void* tmp = picotm_tabresize(ifd, *ifdlen, (*ifdlen) + 1,
-                                          sizeof(ifd[0]));
-            if (!tmp) {
-                picotm_error_set_error_code(error, PICOTM_OUT_OF_MEMORY);
+                                         sizeof(ifd[0]), error);
+            if (picotm_error_is_set(error)) {
                 free(ifd);
                 return NULL;
             }
@@ -156,9 +155,8 @@ get_iofd(const struct fd_tx* fd_tx, const int* ifd, size_t ifdlen,
         --ifdlen;
 
         void* tmp = picotm_tabresize(iofd, *iofdlen, (*iofdlen) + 1,
-                                     sizeof(iofd[0]));
-        if (!tmp) {
-            picotm_error_set_error_code(error, PICOTM_OUT_OF_MEMORY);
+                                     sizeof(iofd[0]), error);
+        if (picotm_error_is_set(error)) {
             free(iofd);
             return NULL;
         }
@@ -213,13 +211,15 @@ static int
 append_cmd(struct fildes_tx* self, enum fildes_tx_cmd cmd, int fildes,
            int cookie)
 {
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
     if (__builtin_expect(self->eventtablen >= self->eventtabsiz, 0)) {
 
         void* tmp = picotm_tabresize(self->eventtab,
                                      self->eventtabsiz,
                                      self->eventtabsiz + 1,
-                                     sizeof(self->eventtab[0]));
-        if (!tmp) {
+                                     sizeof(self->eventtab[0]), &error);
+        if (picotm_error_is_set(&error)) {
             return -1;
         }
         self->eventtab = tmp;
@@ -232,7 +232,6 @@ append_cmd(struct fildes_tx* self, enum fildes_tx_cmd cmd, int fildes,
     event->fildes = fildes;
     event->cookie = cookie;
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
     picotm_append_event(self->module, cmd, self->eventtablen, &error);
     if (picotm_error_is_set(&error)) {
         return -1;
