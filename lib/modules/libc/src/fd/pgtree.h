@@ -23,6 +23,7 @@ enum {
 };
 
 struct pgtree_dir;
+struct picotm_error;
 
 struct pgtree_dir_entry
 {
@@ -44,15 +45,16 @@ struct pgtree
     struct pgtree_dir_entry entry;
 };
 
-int
-pgtree_init(struct pgtree *pgtree);
+void
+pgtree_init(struct pgtree *pgtree, struct picotm_error* error);
 
 void
 pgtree_uninit(struct pgtree *pgtree, void (*pg_destroy_fn)(void*));
 
-void *
-pgtree_lookup_page(struct pgtree *pgtree,
-                   unsigned long long offset, void* (*pg_create_fn)(void));
+void*
+pgtree_lookup_page(struct pgtree *pgtree, unsigned long long offset,
+                   void* (*pg_create_fn)(struct picotm_error*),
+                   struct picotm_error* error);
 
 #endif
 

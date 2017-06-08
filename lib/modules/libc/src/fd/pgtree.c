@@ -5,28 +5,27 @@
 #include "pgtree.h"
 #include <assert.h>
 #include <errno.h>
+#include <picotm/picotm-error.h>
+#include <picotm/picotm-lib-array.h>
 #include <stdlib.h>
-#include "errcode.h"
 
 /*
  * directory entries
  */
 
-static int
-pgtree_dir_entry_init(struct pgtree_dir_entry *entry)
+static void
+pgtree_dir_entry_init(struct pgtree_dir_entry *entry,
+                      struct picotm_error* error)
 {
-    int err;
-
     assert(entry);
 
-    if ( (err = pthread_spin_init(&entry->lock, PTHREAD_PROCESS_PRIVATE)) ) {
-        errno = err;
-        return ERR_SYSTEM;
+    int err = pthread_spin_init(&entry->lock, PTHREAD_PROCESS_PRIVATE);
+    if (err) {
+        picotm_error_set_errno(error, errno);
+        return;
     }
 
     entry->data.dir = NULL;
-
-    return 0;
 }
 
 static void
@@ -39,36 +38,40 @@ pgtree_dir_entry_uninit(struct pgtree_dir_entry *entry)
  * directories
  */
 
-static int
-pgtree_dir_init(struct pgtree_dir *dir)
+static void
+pgtree_dir_init(struct pgtree_dir *dir, struct picotm_error* error)
 {
-    struct pgtree_dir_entry *entry;
-    int err;
-
     assert(dir);
 
-    err = 0;
+    struct pgtree_dir_entry* beg = picotm_arraybeg(dir->entry);
+    struct pgtree_dir_entry* end = picotm_arrayend(dir->entry);
 
-    for (entry = dir->entry;
-         entry < dir->entry+sizeof(dir->entry)/sizeof(dir->entry[0]);
-       ++entry) {
-        err = pgtree_dir_entry_init(entry);
+    while (beg < end) {
+        pgtree_dir_entry_init(beg, error);
+        if (picotm_error_is_set(error)) {
+            goto err_pgtree_dir_entry_init;
+        }
+        ++beg;
     }
 
-    return err;
+    return;
+
+err_pgtree_dir_entry_init:
+    while (beg > picotm_arraybeg(dir->entry)) {
+        --beg;
+        pgtree_dir_entry_uninit(beg);
+    }
 }
 
 static void
 pgtree_dir_uninit(struct pgtree_dir *dir)
 {
-    struct pgtree_dir_entry *entry;
+    struct pgtree_dir_entry* beg = picotm_arraybeg(dir->entry);
+    struct pgtree_dir_entry* end = picotm_arrayend(dir->entry);
 
-    assert(dir);
-
-    for (entry = dir->entry;
-         entry < dir->entry+sizeof(dir->entry)/sizeof(dir->entry[0]);
-       ++entry) {
-        pgtree_dir_entry_uninit(entry);
+    while (beg < end) {
+        pgtree_dir_entry_uninit(beg);
+        ++beg;
     }
 }
 
@@ -105,14 +108,17 @@ pgtree_dir_entry_recursive_cleanup(struct pgtree_dir_entry *entry,
     }
 }
 
-int
-pgtree_init(struct pgtree *pgtree)
+void
+pgtree_init(struct pgtree *pgtree, struct picotm_error* error)
 {
     assert(pgtree);
 
     pgtree->ndirs = 0;
 
-    return pgtree_dir_entry_init(&pgtree->entry);
+    pgtree_dir_entry_init(&pgtree->entry, error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
 }
 
 void
@@ -124,9 +130,10 @@ pgtree_uninit(struct pgtree *pgtree, void (*pg_destroy)(void*))
                                         pgtree->ndirs, pg_destroy);
 }
 
-void *
-pgtree_lookup_page(struct pgtree *pgtree,
-                   unsigned long long offset, void* (*pg_create)(void))
+void*
+pgtree_lookup_page(struct pgtree *pgtree, unsigned long long offset,
+                   void* (*pg_create)(struct picotm_error*),
+                   struct picotm_error* error)
 {
     assert(pgtree);
 
@@ -142,9 +149,15 @@ pgtree_lookup_page(struct pgtree *pgtree,
 
         while (offset_prefix) {
 
-            struct pgtree_dir *dir = malloc(sizeof(*dir));
+            struct pgtree_dir* dir = malloc(sizeof(*dir));
+            if (!dir) {
+                picotm_error_set_errno(error, errno);
+                pthread_spin_unlock(&pgtree->entry.lock);
+                return NULL;
+            }
 
-            if (!dir || (pgtree_dir_init(dir) < 0)) {
+            pgtree_dir_init(dir, error);
+            if (picotm_error_is_set(error)) {
                 free(dir);
                 pthread_spin_unlock(&pgtree->entry.lock);
                 return NULL;
@@ -179,9 +192,16 @@ pgtree_lookup_page(struct pgtree *pgtree,
             /* insert missing directory */
 
             entry->data.dir = malloc(sizeof(*entry->data.dir));
+            if (!entry->data.dir) {
+                picotm_error_set_errno(error, errno);
+                pthread_spin_unlock(&entry->lock);
+                return NULL;
+            }
 
-            if (!entry->data.dir || (pgtree_dir_init(entry->data.dir) < 0)) {
+            pgtree_dir_init(entry->data.dir, error);
+            if (picotm_error_is_set(error)) {
                 free(entry->data.dir);
+                pthread_spin_unlock(&entry->lock);
                 return NULL;
             }
         }
@@ -204,7 +224,8 @@ pgtree_lookup_page(struct pgtree *pgtree,
 
         /* insert missing page */
 
-        if (!entry->data.any && !(entry->data.any = pg_create()) ) {
+        entry->data.any = pg_create(error);
+        if (picotm_error_is_set(error)) {
             return NULL;
         }
     }
@@ -215,4 +236,3 @@ pgtree_lookup_page(struct pgtree *pgtree,
 
     return pg;
 }
-
