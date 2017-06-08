@@ -1299,8 +1299,14 @@ fildes_tx_exec_pipe(struct fildes_tx* self, int pipefd[2])
         return err;
     }
 
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
     int cookie = pipeoptab_append(&self->pipeoptab,
-                                  &self->pipeoptablen, pipefd);
+                                  &self->pipeoptablen, pipefd,
+                                  &error);
+    if (picotm_error_is_set(&error)) {
+        return ERR_SYSTEM;
+    }
 
     /* Inject event */
     if ((cookie >= 0) &&
