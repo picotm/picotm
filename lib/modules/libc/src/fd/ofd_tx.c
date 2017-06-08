@@ -1083,11 +1083,15 @@ lseek_exec_regular_2pl(struct ofd_tx* self, int fildes, off_t offset,
     }
 
     if (cookie) {
+
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
         *cookie = seekoptab_append(&self->seektab,
                                    &self->seektablen,
-                                    self->offset, offset, whence);
+                                    self->offset, offset, whence,
+                                   &error);
 
-        if (*cookie < 0) {
+        if (picotm_error_is_set(&error)) {
             abort();
         }
     }
