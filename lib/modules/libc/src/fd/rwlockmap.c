@@ -14,7 +14,7 @@
  * rwlockmap pages
  */
 
-static int
+static void
 rwlockmap_page_init(struct rwlockmap_page *pg)
 {
     assert(pg);
@@ -26,8 +26,6 @@ rwlockmap_page_init(struct rwlockmap_page *pg)
         atomic_init(beg, 0);
         ++beg;
     }
-
-    return 0;
 }
 
 static void
@@ -49,17 +47,9 @@ rwlockmap_create_page_fn(struct picotm_error* error)
         return NULL;
     }
 
-    int res = rwlockmap_page_init(pg);
-    if (res < 0) {
-        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
-        goto err_rwlockmap_page_init;
-    }
+    rwlockmap_page_init(pg);
 
     return pg;
-
-err_rwlockmap_page_init:
-    free(pg);
-    return NULL;
 }
 
 static void
@@ -69,18 +59,12 @@ rwlockmap_destroy_page_fn(void *pg)
     free(pg);
 }
 
-int
-rwlockmap_init(struct rwlockmap *rwlockmap)
+void
+rwlockmap_init(struct rwlockmap* rwlockmap, struct picotm_error* error)
 {
     assert(rwlockmap);
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-    pgtree_init(&rwlockmap->super, &error);
-    if (picotm_error_is_set(&error)) {
-        return -1;
-    }
-    return 0;
+    pgtree_init(&rwlockmap->super, error);
 }
 
 void
@@ -91,19 +75,12 @@ rwlockmap_uninit(struct rwlockmap *rwlockmap)
     pgtree_uninit(&rwlockmap->super, rwlockmap_destroy_page_fn);
 }
 
-struct rwlockmap_page *
-rwlockmap_lookup_page(struct rwlockmap *rwlockmap, unsigned long long offset)
+struct rwlockmap_page*
+rwlockmap_lookup_page(struct rwlockmap* rwlockmap, unsigned long long offset,
+                      struct picotm_error* error)
 {
     assert(rwlockmap);
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-    struct rwlockmap_page* pg = pgtree_lookup_page(&rwlockmap->super, offset,
-                                                   rwlockmap_create_page_fn,
-                                                   &error);
-    if (picotm_error_is_set(&error)) {
-        return NULL;
-    }
-    return pg;
+    return pgtree_lookup_page(&rwlockmap->super, offset,
+                              rwlockmap_create_page_fn, error);
 }
-
