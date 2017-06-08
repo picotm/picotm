@@ -15,13 +15,15 @@
  * \endcond
  */
 
+struct picotm_error;
 struct region;
 
 unsigned long
 regiontab_append(struct region **tab, size_t *nelems,
                                       size_t *siz,
                                       size_t nbyte,
-                                      off_t offset);
+                                      off_t offset,
+                                      struct picotm_error* error);
 
 void
 regiontab_clear(struct region **tab, size_t *nelems);

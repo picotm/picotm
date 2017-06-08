@@ -13,28 +13,25 @@ unsigned long
 regiontab_append(struct region **tab, size_t *nelems,
                                       size_t *siz,
                                       size_t nbyte,
-                                      off_t offset)
+                                      off_t offset,
+                                      struct picotm_error* error)
 {
     assert(tab);
     assert(nelems);
 
     if (__builtin_expect(*nelems >= *siz, 0)) {
 
-        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
         void *tmp = picotm_tabresize(*tab, *siz, (*siz)+1, sizeof((*tab)[0]),
-                                     &error);
-        if (picotm_error_is_set(&error)) {
-            return -1;
+                                     error);
+        if (picotm_error_is_set(error)) {
+            return (unsigned long)-1;
         }
         *tab = tmp;
 
         ++(*siz);
     }
 
-    if (region_init((*tab)+(*nelems), nbyte, offset) < 0) {
-        return -1;
-    }
+    region_init((*tab)+(*nelems), nbyte, offset);
 
     return (*nelems)++;
 }
