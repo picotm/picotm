@@ -8,7 +8,6 @@
 #include <picotm/picotm-error.h>
 #include <stdlib.h>
 #include <string.h>
-#include "errcode.h"
 #include "pgtree.h"
 #include "range.h"
 #include "rwlockmap.h"
@@ -28,15 +27,13 @@ struct rwstatemap_page
     unsigned long          state[PGTREE_NENTRIES];
 };
 
-static int
+static void
 rwstatemap_page_init(struct rwstatemap_page *statepg)
 {
     assert(statepg);
 
     statepg->lockpg = NULL;
     memset(statepg->state, 0, sizeof(statepg->state));
-
-    return 0;
 }
 
 static void
@@ -47,17 +44,17 @@ rwstatemap_page_uninit(struct rwstatemap_page *statepg)
     return;
 }
 
-static struct rwlockmap_page *
+static struct rwlockmap_page*
 rwstatemap_page_get_global_page(struct rwstatemap_page *statepg,
                                 unsigned long long offset,
-                                struct rwlockmap *rwlockmap)
+                                struct rwlockmap *rwlockmap,
+                                struct picotm_error* error)
 {
     assert(statepg);
 
     if (!statepg->lockpg) {
-        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-        statepg->lockpg = rwlockmap_lookup_page(rwlockmap, offset, &error);
-        if (picotm_error_is_set(&error)) {
+        statepg->lockpg = rwlockmap_lookup_page(rwlockmap, offset, error);
+        if (picotm_error_is_set(error)) {
             return NULL;
         }
     }
@@ -65,20 +62,22 @@ rwstatemap_page_get_global_page(struct rwstatemap_page *statepg,
     return statepg->lockpg;
 }
 
-static int
-rwstatemap_page_unlock_regions(struct rwstatemap_page *statepg,
+static void
+rwstatemap_page_unlock_regions(struct rwstatemap_page* statepg,
                                unsigned long long offset,
-                               struct rwlockmap *rwlockmap)
+                               struct rwlockmap* rwlockmap,
+                               struct picotm_error* error)
 {
-    struct rwlockmap_page *lockpg;
     unsigned long long pgoffset;
 
     assert(statepg);
 
-    lockpg = rwstatemap_page_get_global_page(statepg, offset, rwlockmap);
-
-    if (!lockpg) {
-        return ERR_SYSTEM;
+    struct rwlockmap_page* lockpg = rwstatemap_page_get_global_page(statepg,
+                                                                    offset,
+                                                                    rwlockmap,
+                                                                    error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 
     for (pgoffset = 0; pgoffset < PGTREE_NENTRIES; ++pgoffset) {
@@ -101,22 +100,18 @@ rwstatemap_page_unlock_regions(struct rwstatemap_page *statepg,
 
         statepg->state[pgoffset] = 0;
     }
-
-    return 0;
 }
 
 /*
  * rwstate map
  */
 
-int
-rwstatemap_init(struct rwstatemap *rwstatemap)
+void
+rwstatemap_init(struct rwstatemap* rwstatemap)
 {
     assert(rwstatemap);
 
     pgtreess_init(&rwstatemap->super);
-
-    return 0;
 }
 
 static void
@@ -143,50 +138,40 @@ rwstatemap_create_page_fn(struct picotm_error* error)
         return NULL;
     }
 
-    int res = rwstatemap_page_init(statepg);
-    if (res < 0) {
-        goto err_rwstatemap_page_init;
-    }
+    rwstatemap_page_init(statepg);
 
     return statepg;
-
-err_rwstatemap_page_init:
-    free(statepg);
-    return NULL;
 }
 
-int
-rwstatemap_rdlock(struct rwstatemap *rwstatemap, unsigned long long length,
-                                                 unsigned long long offset,
-                                                 struct rwlockmap *rwlockmap)
+bool
+rwstatemap_rdlock(struct rwstatemap* rwstatemap,
+                  unsigned long long length, unsigned long long offset,
+                  struct rwlockmap* rwlockmap, struct picotm_error* error)
 {
     unsigned long long lockedlength, lockedoffset;
-    int err;
 
     lockedlength = 0;
     lockedoffset = offset;
 
     assert(rwstatemap);
 
-    err = 0;
+    bool succ = false;
 
-    while (length && !err) {
-
-        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+    while (length) {
 
         struct rwstatemap_page *statepg = pgtreess_lookup_page(&rwstatemap->super,
-                                                                offset,
-                                                                rwstatemap_create_page_fn,
-                                                                &error);
-        if (picotm_error_is_set(&error)) {
-            return ERR_SYSTEM;
+                                                               offset,
+                                                               rwstatemap_create_page_fn,
+                                                               error);
+        if (picotm_error_is_set(error)) {
+            goto doreturn;
         }
 
-        struct rwlockmap_page *lockpg =
-            rwstatemap_page_get_global_page(statepg, offset, rwlockmap);
+        struct rwlockmap_page* lockpg =
+            rwstatemap_page_get_global_page(statepg, offset, rwlockmap, error);
 
-        if (!lockpg) {
-            return ERR_SYSTEM;
+        if (picotm_error_is_set(error)) {
+            goto doreturn;
         }
 
         /* compute next slice */
@@ -199,7 +184,7 @@ rwstatemap_rdlock(struct rwstatemap *rwstatemap, unsigned long long length,
 
         /* read-lock records */
 
-        while (diff && !err) {
+        while (diff) {
 
             if ( !(statepg->state[pgoffset]&RWSTATE_COUNTER) ) {
                 /* not yet locked */
@@ -211,7 +196,7 @@ rwstatemap_rdlock(struct rwstatemap *rwstatemap, unsigned long long length,
 
                     if (oldlock&RWSTATE_WRITTEN) {
                         /* concurrent writer present */
-                        err = ERR_CONFLICT;
+                        picotm_error_set_conflicting(error, NULL);
                         goto doreturn;
                     }
 
@@ -234,48 +219,48 @@ rwstatemap_rdlock(struct rwstatemap *rwstatemap, unsigned long long length,
         }
     }
 
-    doreturn:
+    succ = true;
 
-    if (err) {
+doreturn:
+
+    if (!succ) {
         /* unlock all locked records if error occured */
-        rwstatemap_unlock(rwstatemap, lockedlength, lockedoffset, rwlockmap);
+        rwstatemap_unlock(rwstatemap, lockedlength, lockedoffset,
+                          rwlockmap, error);
     }
 
-    return err;
+    return succ;
 }
 
-int
-rwstatemap_wrlock(struct rwstatemap *rwstatemap, unsigned long long length,
-                                                 unsigned long long offset,
-                                                 struct rwlockmap *rwlockmap)
+bool
+rwstatemap_wrlock(struct rwstatemap* rwstatemap,
+                  unsigned long long length, unsigned long long offset,
+                  struct rwlockmap* rwlockmap, struct picotm_error* error)
 {
     unsigned long long lockedlength, lockedoffset;
-    int err;
 
     assert(rwstatemap);
-
-    err = 0;
 
     lockedlength = 0;
     lockedoffset = offset;
 
-    while (length && !err) {
+    bool succ = false;
 
-        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+    while (length) {
 
         struct rwstatemap_page* statepg =
             pgtreess_lookup_page(&rwstatemap->super, offset,
-                                 rwstatemap_create_page_fn,
-                                 &error);
-        if (picotm_error_is_set(&error)) {
-            return ERR_SYSTEM;
+                                 rwstatemap_create_page_fn, error);
+
+        if (picotm_error_is_set(error)) {
+            goto doreturn;
         }
 
-        struct rwlockmap_page *lockpg =
-            rwstatemap_page_get_global_page(statepg, offset, rwlockmap);
+        struct rwlockmap_page* lockpg =
+            rwstatemap_page_get_global_page(statepg, offset, rwlockmap, error);
 
-        if (!lockpg) {
-            return ERR_SYSTEM;
+        if (picotm_error_is_set(error)) {
+            goto doreturn;
         }
 
         /* compute next slice */
@@ -288,7 +273,7 @@ rwstatemap_wrlock(struct rwstatemap *rwstatemap, unsigned long long length,
 
         /* write-lock records */
 
-        while (diff && !err) {
+        while (diff) {
 
             if ( !(statepg->state[pgoffset]&RWSTATE_COUNTER) ) {
                 /* not yet locked */
@@ -300,11 +285,11 @@ rwstatemap_wrlock(struct rwstatemap *rwstatemap, unsigned long long length,
 
                     if (oldlock&RWSTATE_WRITTEN) {
                         /* concurrent writer present */
-                        err = ERR_CONFLICT;
+                        picotm_error_set_conflicting(error, NULL);
                         goto doreturn;
                     } else if ( (oldlock&RWSTATE_COUNTER) > 1) {
                         /* concurrent readers present */
-                        err = ERR_CONFLICT;
+                        picotm_error_set_conflicting(error, NULL);
                         goto doreturn;
                     }
 
@@ -327,11 +312,11 @@ rwstatemap_wrlock(struct rwstatemap *rwstatemap, unsigned long long length,
 
                     if (oldlock&RWSTATE_WRITTEN) {
                         /* concurrent writer present */
-                        err = ERR_CONFLICT;
+                        picotm_error_set_conflicting(error, NULL);
                         goto doreturn;
                     } else if ( (oldlock&RWSTATE_COUNTER) > 1) {
                         /* concurrent readers present */
-                        err = ERR_CONFLICT;
+                        picotm_error_set_conflicting(error, NULL);
                         goto doreturn;
                     }
 
@@ -353,40 +338,41 @@ rwstatemap_wrlock(struct rwstatemap *rwstatemap, unsigned long long length,
         }
     }
 
-    doreturn:
+    succ = true;
 
-    if (err) {
+doreturn:
+
+    if (!succ) {
         /* unlock all locked records if error occured */
-        rwstatemap_unlock(rwstatemap, lockedlength, lockedoffset, rwlockmap);
+        rwstatemap_unlock(rwstatemap, lockedlength, lockedoffset,
+                          rwlockmap, error);
     }
 
-    return err;
+    return succ;
 }
 
-int
+void
 rwstatemap_unlock(struct rwstatemap *rwstatemap, unsigned long long length,
                                                  unsigned long long offset,
-                                                 struct rwlockmap *rwlockmap)
+                                                 struct rwlockmap* rwlockmap,
+                                                 struct picotm_error* error)
 {
     assert(rwstatemap);
 
     while (length) {
 
-        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-        struct rwstatemap_page *statepg
+        struct rwstatemap_page* statepg
             = pgtreess_lookup_page(&rwstatemap->super, offset,
                                    rwstatemap_create_page_fn,
-                                   &error);
-        if (picotm_error_is_set(&error)) {
-            return ERR_SYSTEM;
+                                   error);
+        if (picotm_error_is_set(error)) {
+            return;
         }
 
-        struct rwlockmap_page *lockpg =
-            rwstatemap_page_get_global_page(statepg, offset, rwlockmap);
-
-        if (!lockpg) {
-            return ERR_SYSTEM;
+        struct rwlockmap_page* lockpg =
+            rwstatemap_page_get_global_page(statepg, offset, rwlockmap, error);
+        if (picotm_error_is_set(error)) {
+            return;
         }
 
         /* compute next slice */
@@ -446,8 +432,6 @@ rwstatemap_unlock(struct rwstatemap *rwstatemap, unsigned long long length,
             --diff;
         }
     }
-
-    return 0;
 }
 
 static void
@@ -456,26 +440,16 @@ rwstatemap_for_each_page_unlock_regions(void *statepg,
                                         void *rwlockmap,
                                         struct picotm_error* error)
 {
-    int res = rwstatemap_page_unlock_regions(statepg, offset, rwlockmap);
-    if (res < 0) {
-        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
-        return;
-    }
+    rwstatemap_page_unlock_regions(statepg, offset, rwlockmap, error);
 }
 
-int
-rwstatemap_unlock_all(struct rwstatemap *rwstatemap,
-                      struct rwlockmap *rwlockmap)
+void
+rwstatemap_unlock_all(struct rwstatemap* rwstatemap,
+                      struct rwlockmap* rwlockmap,
+                      struct picotm_error* error)
 {
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
     pgtreess_for_each_page(&rwstatemap->super,
                            rwstatemap_for_each_page_unlock_regions,
                            rwlockmap,
-                           &error);
-    if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
-    }
-    return 0;
+                           error);
 }
-
