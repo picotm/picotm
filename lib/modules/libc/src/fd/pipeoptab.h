@@ -15,10 +15,12 @@
  * \endcond
  */
 
+struct picotm_error;
 struct pipeop;
 
 unsigned long
-pipeoptab_append(struct pipeop **tab, size_t *nelems, int pipefd[2]);
+pipeoptab_append(struct pipeop **tab, size_t *nelems, int pipefd[2],
+                 struct picotm_error* error);
 
 void
 pipeoptab_clear(struct pipeop **tab, size_t *nelems);

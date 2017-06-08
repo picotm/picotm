@@ -7,14 +7,12 @@
 #include <stdio.h>
 #include <string.h>
 
-int
+void
 pipeop_init(struct pipeop *pipeop, int pipefd[2])
 {
     assert(pipeop);
 
     memcpy(pipeop->pipefd, pipefd, sizeof(pipeop->pipefd));
-
-    return 0;
 }
 
 void

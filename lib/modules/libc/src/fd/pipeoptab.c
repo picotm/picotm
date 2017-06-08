@@ -10,23 +10,20 @@
 #include "pipeop.h"
 
 unsigned long
-pipeoptab_append(struct pipeop **tab, size_t *nelems, int pipefd[2])
+pipeoptab_append(struct pipeop **tab, size_t *nelems, int pipefd[2],
+                 struct picotm_error* error)
 {
     assert(tab);
     assert(nelems);
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
     void *tmp = picotm_tabresize(*tab, *nelems, (*nelems)+1,
-                                 sizeof((*tab)[0]), &error);
-    if (picotm_error_is_set(&error)) {
-        return -1;
+                                 sizeof((*tab)[0]), error);
+    if (picotm_error_is_set(error)) {
+        return (unsigned long)-1;
     }
     *tab = tmp;
 
-    if (pipeop_init((*tab)+(*nelems), pipefd) < 0) {
-        return -1;
-    }
+    pipeop_init((*tab)+(*nelems), pipefd);
 
     return (*nelems)++;
 }

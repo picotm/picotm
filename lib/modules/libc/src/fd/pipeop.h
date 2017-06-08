@@ -18,7 +18,7 @@ struct pipeop
     int pipefd[2];
 };
 
-int
+void
 pipeop_init(struct pipeop *pipeop, int pipefd[2]);
 
 void
