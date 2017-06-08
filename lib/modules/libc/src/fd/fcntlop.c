@@ -7,9 +7,10 @@
 #include <stdio.h>
 #include <string.h>
 
-int
-fcntlop_init(struct fcntlop *fcntlop, int command, const union fcntl_arg *value,
-                                                   const union fcntl_arg *oldvalue)
+void
+fcntlop_init(struct fcntlop* fcntlop, int command,
+             const union fcntl_arg* value,
+             const union fcntl_arg* oldvalue)
 {
     assert(fcntlop);
 
@@ -21,8 +22,6 @@ fcntlop_init(struct fcntlop *fcntlop, int command, const union fcntl_arg *value,
     if (oldvalue) {
         memcpy(&fcntlop->oldvalue, oldvalue, sizeof(fcntlop->oldvalue));
     }
-
-    return 0;
 }
 
 void
@@ -32,4 +31,3 @@ fcntlop_dump(struct fcntlop *fcntlop)
                                                            fcntlop->value.arg0,
                                                            fcntlop->oldvalue.arg0);
 }
-
