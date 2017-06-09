@@ -11,7 +11,6 @@
 #include <unistd.h>
 #include "errcode.h"
 #include "fcntlop.h"
-#include "mutex.h"
 #include "ofdtab.h"
 
 int
@@ -19,10 +18,10 @@ fd_init(struct fd *fd)
 {
     assert(fd);
 
-    int err;
-
-    if ((err = mutex_init(&fd->lock, NULL)) < 0) {
-        return err;
+    int err = pthread_mutex_init(&fd->lock, NULL);
+    if (err) {
+        errno = err;
+        return -1;
     }
 
     atomic_init(&fd->ref, 0);
@@ -38,7 +37,11 @@ fd_init(struct fd *fd)
 void
 fd_uninit(struct fd *fd)
 {
-    mutex_uninit(&fd->lock);
+    int err = pthread_mutex_destroy(&fd->lock);
+    if (err) {
+        errno = err;
+        abort();
+    }
 }
 
 void
@@ -46,7 +49,11 @@ fd_lock(struct fd *fd)
 {
     assert(fd);
 
-    mutex_lock(&fd->lock);
+    int err = pthread_mutex_lock(&fd->lock);
+    if (err) {
+        errno = err;
+        abort();
+    }
 }
 
 void
@@ -54,7 +61,11 @@ fd_unlock(struct fd *fd)
 {
     assert(fd);
 
-    mutex_unlock(&fd->lock);
+    int err = pthread_mutex_unlock(&fd->lock);
+    if (err) {
+        errno = err;
+        abort();
+    }
 }
 
 int

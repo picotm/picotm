@@ -3,10 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ofdtab.h"
+#include <errno.h>
 #include <picotm/picotm-lib-tab.h>
 #include <stdlib.h>
 #include "errcode.h"
-#include "mutex.h"
 #include "range.h"
 
 struct ofd ofdtab[MAXNUMFD];
@@ -68,13 +68,19 @@ static pthread_mutex_t ofdtab_mutex = PTHREAD_MUTEX_INITIALIZER;
 void
 ofdtab_lock()
 {
-    mutex_lock(&ofdtab_mutex);
+    int err = pthread_mutex_lock(&ofdtab_mutex);
+    if (err) {
+        abort();
+    }
 }
 
 void
 ofdtab_unlock()
 {
-    mutex_unlock(&ofdtab_mutex);
+    int err = pthread_mutex_unlock(&ofdtab_mutex);
+    if (err) {
+        abort();
+    }
 }
 
 static long
