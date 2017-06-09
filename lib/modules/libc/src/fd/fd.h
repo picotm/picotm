@@ -44,8 +44,8 @@ struct fd
 };
 
 /** \brief Init global file-descriptor state*/
-int
-fd_init(struct fd *fd);
+void
+fd_init(struct fd *fd, struct picotm_error* error);
 
 /** \brief Uninit state */
 void
@@ -60,15 +60,17 @@ void
 fd_unlock(struct fd *fd);
 
 /** \brief Validates that ver is not smaller than the global version */
-int
+void
 fd_validate(struct fd* fd, unsigned long ver, struct picotm_error* error);
 
 /** \brief Aquires a reference on the file dscriptor */
-int
-fd_ref(struct fd *fd, int fildes, unsigned long flags);
+void
+fd_ref(struct fd *fd, int fildes, unsigned long flags,
+       struct picotm_error* error);
 
-int
-fd_ref_state(struct fd *fd, int fildes, unsigned long flags, int *ofd, unsigned long *version);
+void
+fd_ref_state(struct fd *fd, int fildes, unsigned long flags, int *ofd,
+             unsigned long *version, struct picotm_error* error);
 
 /** \brief Releases a reference on the file descriptor */
 void

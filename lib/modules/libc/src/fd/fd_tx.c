@@ -72,11 +72,13 @@ fd_tx_ref_or_validate(struct fd_tx* self, int fildes, unsigned long flags)
         /* Aquire reference if possible */
 
         int ofd;
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-        int err = fd_ref_state(fd, fildes, flags, &ofd, &fdver);
-
-        if (err) {
-            return err;
+        fd_ref_state(fd, fildes, flags, &ofd, &fdver, &error);
+        if (picotm_error_is_conflicting(&error)) {
+            return ERR_CONFLICT;
+        } else if (picotm_error_is_set(&error)) {
+            return ERR_SYSTEM;
         }
 
         self->fildes = fildes;
@@ -106,11 +108,13 @@ fd_tx_ref(struct fd_tx* self, int fildes, unsigned long flags)
 
     unsigned long fdver;
     int ofd;
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    int err = fd_ref_state(fd, fildes, flags, &ofd, &fdver);
-
-    if (err) {
-        return err;
+    fd_ref_state(fd, fildes, flags, &ofd, &fdver, &error);
+    if (picotm_error_is_conflicting(&error)) {
+        return ERR_CONFLICT;
+    } else if (picotm_error_is_set(&error)) {
+        return ERR_SYSTEM;
     }
 
     self->fildes = fildes;
@@ -439,9 +443,11 @@ fd_tx_validate(struct fd_tx* self, struct picotm_error* error)
 	}
 
 	/* validate version of file descriptor */
-    int res = fd_validate(fdtab+self->fildes, self->fdver, error);
-    if (res < 0) {
-        return res;
+    fd_validate(fdtab+self->fildes, self->fdver, error);
+    if (picotm_error_is_conflicting(error)) {
+        return ERR_CONFLICT;
+    } else if (picotm_error_is_set(error)) {
+        return ERR_SYSTEM;
     }
 
     return 0;

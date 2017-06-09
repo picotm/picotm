@@ -183,9 +183,13 @@ vfs_tx_exec_fchdir(struct vfs_tx* self, int fildes)
 
     struct fd* fd = fdtab + fildes;
 
-    int err = fd_ref(fd, fildes, 0);
-    if (err) {
-        return err;
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+    fd_ref(fd, fildes, 0, &error);
+    if (picotm_error_is_conflicting(&error)) {
+        return ERR_CONFLICT;
+    } else if (picotm_error_is_set(&error)) {
+        return ERR_SYSTEM;
     }
 
     /* Check file descriptor */

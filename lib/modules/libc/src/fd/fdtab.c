@@ -16,9 +16,8 @@ static void fdtab_init(void) __attribute__((constructor));
 static size_t
 fdtab_fd_init_walk(void *fd, struct picotm_error* error)
 {
-    int res = fd_init(fd);
-    if (res < 0) {
-        picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
+    fd_init(fd, error);
+    if (picotm_error_is_set(error)) {
         return 0;
     }
     return 1;

@@ -9,19 +9,18 @@
 #include <picotm/picotm-error.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "errcode.h"
 #include "fcntlop.h"
 #include "ofdtab.h"
 
-int
-fd_init(struct fd *fd)
+void
+fd_init(struct fd *fd, struct picotm_error* error)
 {
     assert(fd);
 
     int err = pthread_mutex_init(&fd->lock, NULL);
     if (err) {
-        errno = err;
-        return -1;
+        picotm_error_set_errno(error, err);
+        return;
     }
 
     atomic_init(&fd->ref, 0);
@@ -30,8 +29,6 @@ fd_init(struct fd *fd)
     fd->ofd = -1;
 
     atomic_init(&fd->ver, 0);
-
-    return 0;
 }
 
 void
@@ -39,7 +36,6 @@ fd_uninit(struct fd *fd)
 {
     int err = pthread_mutex_destroy(&fd->lock);
     if (err) {
-        errno = err;
         abort();
     }
 }
@@ -51,7 +47,6 @@ fd_lock(struct fd *fd)
 
     int err = pthread_mutex_lock(&fd->lock);
     if (err) {
-        errno = err;
         abort();
     }
 }
@@ -63,7 +58,6 @@ fd_unlock(struct fd *fd)
 
     int err = pthread_mutex_unlock(&fd->lock);
     if (err) {
-        errno = err;
         abort();
     }
 }
@@ -76,7 +70,7 @@ fd_is_open_nl(const struct fd *fd)
 	return fd->state == FD_ST_INUSE;
 }
 
-int
+void
 fd_validate(struct fd* fd, unsigned long ver, struct picotm_error* error)
 {
     assert(fd);
@@ -87,65 +81,58 @@ fd_validate(struct fd* fd, unsigned long ver, struct picotm_error* error)
 
     if (ver < myver) {
         picotm_error_set_conflicting(error, NULL);
-        return ERR_CONFLICT;
+        return;
     }
-
-    return 0;
 }
 
-static int
-fd_setup_ofd(struct fd *fd, int fildes, unsigned long flags)
+static void
+fd_setup_ofd(struct fd *fd, int fildes, unsigned long flags,
+             struct picotm_error* error)
 {
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-    int ofd = ofdtab_ref_ofd(fildes, flags, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+    int ofd = ofdtab_ref_ofd(fildes, flags, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
-
     fd->ofd = ofd;
-
-    return 0;
 }
 
-int
-fd_ref_state(struct fd *fd, int fildes, unsigned long flags, int *ofd, unsigned long *version)
+void
+fd_ref_state(struct fd *fd, int fildes, unsigned long flags, int *ofd,
+             unsigned long *version, struct picotm_error* error)
 {
     assert(fd);
-
-    int err = 0;
 
     fd_lock(fd);
 
     switch (fd->state) {
         case FD_ST_CLOSING:
             /* fd is about to be closed; abort here */
-            err = ERR_CONFLICT;
+            picotm_error_set_conflicting(error, NULL);
+            goto unlock;
             break;
         case FD_ST_UNUSED:
             /* setup new fd data structure */
-            err = fd_setup_ofd(fd, fildes, flags);
-
-            if (__builtin_expect(!err, 1)) {
-                fd->state = FD_ST_INUSE;
-                atomic_store(&fd->ref, 1); /* Exactly one reference */
+            fd_setup_ofd(fd, fildes, flags, error);
+            if (picotm_error_is_set(error)) {
+                goto unlock;
             }
+
+            fd->state = FD_ST_INUSE;
+            atomic_store(&fd->ref, 1); /* Exactly one reference */
             break;
         case FD_ST_INUSE:
             /* simply return version and increment reference counter */
-            if (flags&OFD_FL_WANTNEW) {
-            	err = ERR_CONFLICT;
-            } else {
-                atomic_fetch_add(&fd->ref, 1);
+            if (flags & OFD_FL_WANTNEW) {
+                picotm_error_set_conflicting(error, NULL);
+                goto unlock;
             }
+            atomic_fetch_add(&fd->ref, 1);
             break;
         default:
             abort();
     }
 
-    if (!err && fd_is_open_nl(fd)) {
+    if (fd_is_open_nl(fd)) {
         if (ofd) {
             *ofd = fd_get_ofd_nl(fd);
         }
@@ -154,15 +141,15 @@ fd_ref_state(struct fd *fd, int fildes, unsigned long flags, int *ofd, unsigned 
         }
     }
 
+unlock:
     fd_unlock(fd);
-
-    return err;
 }
 
-int
-fd_ref(struct fd *fd, int fildes, unsigned long flags)
+void
+fd_ref(struct fd *fd, int fildes, unsigned long flags,
+       struct picotm_error* error)
 {
-    return fd_ref_state(fd, fildes, flags, NULL, NULL);
+    fd_ref_state(fd, fildes, flags, NULL, NULL, error);
 }
 
 static void

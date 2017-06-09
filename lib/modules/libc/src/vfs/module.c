@@ -184,9 +184,13 @@ vfs_module_fchmod(int fildes, mode_t mode)
 
     struct fd* fd = fdtab + fildes;
 
-    int err = fd_ref(fd, fildes, 0);
-    if (err) {
-        return err;
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+    fd_ref(fd, fildes, 0, &error);
+    if (picotm_error_is_conflicting(&error)) {
+        return ERR_CONFLICT;
+    } else if (picotm_error_is_set(&error)) {
+        return ERR_SYSTEM;
     }
 
     int res = fchmod(fildes, mode);
@@ -203,9 +207,13 @@ vfs_module_fstat(int fildes, struct stat* buf)
 
     struct fd* fd = fdtab + fildes;
 
-    int err = fd_ref(fd, fildes, 0);
-    if (err) {
-        return err;
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+    fd_ref(fd, fildes, 0, &error);
+    if (picotm_error_is_conflicting(&error)) {
+        return ERR_CONFLICT;
+    } else if (picotm_error_is_set(&error)) {
+        return ERR_SYSTEM;
     }
 
     int res = fstat(fildes, buf);
