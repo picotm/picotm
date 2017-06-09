@@ -96,10 +96,13 @@ fd_validate(struct fd* fd, unsigned long ver, struct picotm_error* error)
 static int
 fd_setup_ofd(struct fd *fd, int fildes, unsigned long flags)
 {
-    int ofd = ofdtab_ref_ofd(fildes, flags);
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    if (ofd < 0) {
-        return ofd;
+    int ofd = ofdtab_ref_ofd(fildes, flags, &error);
+    if (picotm_error_is_conflicting(&error)) {
+        return ERR_CONFLICT;
+    } else if (picotm_error_is_set(&error)) {
+        return ERR_SYSTEM;
     }
 
     fd->ofd = ofd;
