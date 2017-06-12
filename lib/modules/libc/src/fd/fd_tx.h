@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <stdbool.h>
 #include <stddef.h>
 #include "picotm/picotm-libc.h"
 
@@ -41,7 +42,7 @@ struct fd_tx {
 /**
  * Init transaction-local file-descriptor state
  */
-int
+void
 fd_tx_init(struct fd_tx* self);
 
 /**
@@ -53,26 +54,28 @@ fd_tx_uninit(struct fd_tx* self);
 /**
  * Validate transaction-local state
  */
-int
+void
 fd_tx_validate(struct fd_tx* self, struct picotm_error* error);
 
-int
+void
 fd_tx_update_cc(struct fd_tx* self, struct picotm_error* error);
 
-int
+void
 fd_tx_clear_cc(struct fd_tx* self, struct picotm_error* error);
 
 /**
  * Aquire a reference on file-descriptor state or validate
  */
-enum error_code
-fd_tx_ref_or_validate(struct fd_tx* self, int fildes, unsigned long flags);
+void
+fd_tx_ref_or_validate(struct fd_tx* self, int fildes, unsigned long flags,
+                      struct picotm_error* error);
 
 /**
  * Aquire a reference on file-descriptor state
  */
-enum error_code
-fd_tx_ref(struct fd_tx* self, int fildes, unsigned long flags);
+void
+fd_tx_ref(struct fd_tx* self, int fildes, unsigned long flags,
+          struct picotm_error* error);
 
 /**
  * Release reference
@@ -86,10 +89,10 @@ fd_tx_unref(struct fd_tx* self);
 int
 fd_tx_holds_ref(const struct fd_tx* self);
 
-int
+void
 fd_tx_pre_commit(struct fd_tx* self);
 
-int
+void
 fd_tx_post_commit(struct fd_tx* self);
 
 /**
@@ -109,13 +112,14 @@ fd_tx_dump(const struct fd_tx* self);
  */
 
 int
-fd_tx_close_exec(struct fd_tx* self, int fildes, int* cookie, int noundo);
+fd_tx_close_exec(struct fd_tx* self, int fildes, int* cookie, int noundo,
+                 struct picotm_error* error);
 
-int
+void
 fd_tx_close_apply(struct fd_tx* self, int fildes, int cookie,
                   struct picotm_error* error);
 
-int
+void
 fd_tx_close_undo(struct fd_tx* self, int fildes, int cookie,
                  struct picotm_error* error);
 
@@ -125,10 +129,12 @@ fd_tx_close_undo(struct fd_tx* self, int fildes, int cookie,
 
 int
 fd_tx_fcntl_exec(struct fd_tx* self, int cmd, union fcntl_arg *arg,
-                 int* cookie, int noundo);
+                 int* cookie, int noundo, struct picotm_error* error);
 
-int
-fd_tx_fcntl_apply(struct fd_tx* self, int cookie, struct picotm_error* error);
+void
+fd_tx_fcntl_apply(struct fd_tx* self, int cookie, bool* next_domain,
+                  struct picotm_error* error);
 
-int
-fd_tx_fcntl_undo(struct fd_tx* self, int cookie, struct picotm_error* error);
+void
+fd_tx_fcntl_undo(struct fd_tx* self, int cookie, bool* next_domain,
+                 struct picotm_error* error);
