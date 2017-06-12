@@ -47,7 +47,7 @@ struct fildes_tx {
     size_t iofdlen;
 };
 
-int
+void
 fildes_tx_init(struct fildes_tx* self, unsigned long module);
 
 void
@@ -62,111 +62,122 @@ fildes_tx_get_validation_mode(const struct fildes_tx* self);
 
 int
 fildes_tx_exec_accept(struct fildes_tx* self, int sockfd,
-                      struct sockaddr* address, socklen_t *address_len);
+                      struct sockaddr* address, socklen_t *address_len,
+                      struct picotm_error* error);
 
 int
 fildes_tx_exec_bind(struct fildes_tx* self, int socket,
                     const struct sockaddr* address, socklen_t addresslen,
-                    int isnoundo);
+                    int isnoundo, struct picotm_error* error);
 
 int
-fildes_tx_exec_close(struct fildes_tx* self, int fildes, int isnoundo);
+fildes_tx_exec_close(struct fildes_tx* self, int fildes, int isnoundo,
+                     struct picotm_error* error);
 
 int
 fildes_tx_exec_connect(struct fildes_tx* self, int sockfd,
                        const struct sockaddr* serv_addr, socklen_t addrlen,
-                       int isnoundo);
+                       int isnoundo, struct picotm_error* error);
 
 int
-fildes_tx_exec_dup(struct fildes_tx* self, int fildes, int cloexec);
+fildes_tx_exec_dup(struct fildes_tx* self, int fildes, int cloexec,
+                   struct picotm_error* error);
 
 int
 fildes_tx_exec_fcntl(struct fildes_tx* self, int fildes, int cmd,
-                     union fcntl_arg* arg, int isnoundo);
+                     union fcntl_arg* arg, int isnoundo,
+                     struct picotm_error* error);
 
 int
-fildes_tx_exec_fsync(struct fildes_tx* self, int fildes, int isnoundo);
+fildes_tx_exec_fsync(struct fildes_tx* self, int fildes, int isnoundo,
+                     struct picotm_error* error);
 
 int
 fildes_tx_exec_listen(struct fildes_tx* self, int sockfd, int backlog,
-                      int isnoundo);
+                      int isnoundo, struct picotm_error* error);
 
 off_t
 fildes_tx_exec_lseek(struct fildes_tx* self, int fildes, off_t offset,
-                     int whence, int isnoundo);
+                     int whence, int isnoundo, struct picotm_error* error);
 
 int
 fildes_tx_exec_open(struct fildes_tx* self, const char* path, int oflag,
-                    mode_t mode, int isnoundo);
+                    mode_t mode, int isnoundo, struct picotm_error* error);
 
 int
-fildes_tx_exec_pipe(struct fildes_tx* self, int pipefd[2]);
+fildes_tx_exec_pipe(struct fildes_tx* self, int pipefd[2],
+                    struct picotm_error* error);
 
 ssize_t
 fildes_tx_exec_pread(struct fildes_tx* self, int fildes, void* buf,
-                     size_t nbyte, off_t off, int isnoundo);
+                     size_t nbyte, off_t off, int isnoundo,
+                     struct picotm_error* error);
 
 ssize_t
 fildes_tx_exec_pwrite(struct fildes_tx* self, int fildes, const void* buf,
-                      size_t nbyte, off_t off, int isnoundo);
+                      size_t nbyte, off_t off, int isnoundo,
+                      struct picotm_error* error);
 
 ssize_t
 fildes_tx_exec_read(struct fildes_tx* self, int fildes, void* buf,
-                    size_t nbyte, int isnoundo);
+                    size_t nbyte, int isnoundo, struct picotm_error* error);
 
 ssize_t
 fildes_tx_exec_recv(struct fildes_tx* self, int sockfd, void* buffer,
-                    size_t length, int flags, int isnoundo);
+                    size_t length, int flags, int isnoundo,
+                    struct picotm_error* error);
 
 int
 fildes_tx_exec_select(struct fildes_tx* self, int nfds, fd_set* readfds,
                       fd_set* writefds, fd_set* errorfds,
-                      struct timeval* timeout, int isnoundo);
+                      struct timeval* timeout, int isnoundo,
+                      struct picotm_error* error);
 
 ssize_t
 fildes_tx_exec_send(struct fildes_tx* self, int sockfd, const void* buffer,
-                    size_t length, int flags, int isnoundo);
+                    size_t length, int flags, int isnoundo,
+                    struct picotm_error* error);
 
 int
 fildes_tx_exec_shutdown(struct fildes_tx* self, int sockfd, int how,
-                        int isnoundo);
+                        int isnoundo, struct picotm_error* error);
 
 int
 fildes_tx_exec_socket(struct fildes_tx* self, int domain, int type,
-                      int protocol);
+                      int protocol, struct picotm_error* error);
 
 void
-fildes_tx_exec_sync(struct fildes_tx* self);
+fildes_tx_exec_sync(struct fildes_tx* self, struct picotm_error* error);
 
 ssize_t
 fildes_tx_exec_write(struct fildes_tx* self, int fildes, const void* buf,
-                     size_t nbyte, int isnoundo);
+                     size_t nbyte, int isnoundo, struct picotm_error* error);
 
-int
+void
 fildes_tx_lock(struct fildes_tx* self, struct picotm_error* error);
 
 void
 fildes_tx_unlock(struct fildes_tx* self);
 
-int
+void
 fildes_tx_validate(struct fildes_tx* self, int noundo,
                    struct picotm_error* error);
 
-int
+void
 fildes_tx_apply_event(struct fildes_tx* self,
                       const struct picotm_event* event, size_t nevents,
                       struct picotm_error* error);
 
-int
+void
 fildes_tx_undo_event(struct fildes_tx* self,
                      const struct picotm_event* event, size_t nevents,
                      struct picotm_error* error);
 
-int
+void
 fildes_tx_update_cc(struct fildes_tx* self, int noundo,
                     struct picotm_error* error);
 
-int
+void
 fildes_tx_clear_cc(struct fildes_tx* self, int noundo,
                    struct picotm_error* error);
 

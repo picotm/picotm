@@ -6,7 +6,6 @@
 #include <assert.h>
 #include <picotm/picotm.h>
 #include <stdlib.h>
-#include "errcode.h"
 #include "fildes_tx.h"
 
 struct fd_module {
@@ -19,19 +18,7 @@ lock_cb(void* data, struct picotm_error* error)
 {
     struct fd_module* module = data;
 
-    int res = fildes_tx_lock(&module->tx, error);
-    if (res < 0) {
-        if (res == ERR_SYSTEM) {
-            picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
-            return;
-        } else if (res == ERR_CONFLICT) {
-            picotm_error_set_conflicting(error, NULL);
-            return;
-        } else {
-            /* Unsupported error code. */
-            abort();
-        }
-    }
+    fildes_tx_lock(&module->tx, error);
 }
 
 static void
@@ -47,16 +34,8 @@ is_valid_cb(void* data, int noundo, struct picotm_error* error)
 {
     struct fd_module* module = data;
 
-    int res = fildes_tx_validate(&module->tx, noundo, error);
-    if (res < 0) {
-        if (res == ERR_SYSTEM) {
-            picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
-        } else if (res == ERR_CONFLICT) {
-            picotm_error_set_conflicting(error, NULL);
-        } else {
-            /* Unsupported error code. */
-            abort();
-        }
+    fildes_tx_validate(&module->tx, noundo, error);
+    if (picotm_error_is_set(error)) {
         return false;
     }
     return true;
@@ -68,19 +47,7 @@ apply_event_cb(const struct picotm_event* event, size_t n, void* data,
 {
     struct fd_module* module = data;
 
-    int res = fildes_tx_apply_event(&module->tx, event, n, error);
-    if (res < 0) {
-        if (res == ERR_SYSTEM) {
-            picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
-            return;
-        } else if (res == ERR_CONFLICT) {
-            picotm_error_set_conflicting(error, NULL);
-            return;
-        } else {
-            /* Unsupported error code. */
-            abort();
-        }
-    }
+    fildes_tx_apply_event(&module->tx, event, n, error);
 }
 
 static void
@@ -89,19 +56,7 @@ undo_event_cb(const struct picotm_event* event, size_t n, void *data,
 {
     struct fd_module* module = data;
 
-    int res = fildes_tx_undo_event(&module->tx, event, n, error);
-    if (res < 0) {
-        if (res == ERR_SYSTEM) {
-            picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
-            return;
-        } else if (res == ERR_CONFLICT) {
-            picotm_error_set_conflicting(error, NULL);
-            return;
-        } else {
-            /* Unsupported error code. */
-            abort();
-        }
-    }
+    fildes_tx_undo_event(&module->tx, event, n, error);
 }
 
 static void
@@ -109,19 +64,7 @@ update_cc_cb(void* data, int noundo, struct picotm_error* error)
 {
     struct fd_module* module = data;
 
-    int res = fildes_tx_update_cc(&module->tx, noundo, error);
-    if (res < 0) {
-        if (res == ERR_SYSTEM) {
-            picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
-            return;
-        } else if (res == ERR_CONFLICT) {
-            picotm_error_set_conflicting(error, NULL);
-            return;
-        } else {
-            /* Unsupported error code. */
-            abort();
-        }
-    }
+    fildes_tx_update_cc(&module->tx, noundo, error);
 }
 
 static void
@@ -129,19 +72,7 @@ clear_cc_cb(void* data, int noundo, struct picotm_error* error)
 {
     struct fd_module* module = data;
 
-    int res = fildes_tx_clear_cc(&module->tx, noundo, error);
-    if (res < 0) {
-        if (res == ERR_SYSTEM) {
-            picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
-            return;
-        } else if (res == ERR_CONFLICT) {
-            picotm_error_set_conflicting(error, NULL);
-            return;
-        } else {
-            /* Unsupported error code. */
-            abort();
-        }
-    }
+    fildes_tx_clear_cc(&module->tx, noundo, error);
 }
 
 static void
@@ -188,10 +119,7 @@ get_fildes_tx(bool initialize, struct picotm_error* error)
         return NULL;
     }
 
-    int res = fildes_tx_init(&t_module.tx, module);
-    if (res < 0) {
-        return NULL;
-    }
+    fildes_tx_init(&t_module.tx, module);
 
     t_module.is_initialized = true;
 
@@ -215,51 +143,38 @@ fd_module_accept(int sockfd, struct sockaddr* address, socklen_t* address_len)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
-    int res;
-
     do {
-        res = fildes_tx_exec_accept(fildes_tx, sockfd, address, address_len);
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-        switch (res) {
-            case ERR_CONFLICT:
-                picotm_restart();
-                break;
-            case ERR_NOUNDO:
-                picotm_irrevocable();
-                break;
-            default:
-                break;
+        int res = fildes_tx_exec_accept(fildes_tx, sockfd, address,
+                                        address_len, &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res == ERR_NOUNDO);
+        picotm_recover_from_error(&error);
 
-    return res;
+    } while (true);
 }
 
 int
 fd_module_bind(int sockfd, const struct sockaddr* address,
                 socklen_t address_len)
 {
-    int res;
-
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     do {
-        res = fildes_tx_exec_bind(fildes_tx, sockfd, address, address_len,
-                               picotm_is_irrevocable());
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-        switch (res) {
-            case ERR_CONFLICT:
-                picotm_restart();
-                break;
-            case ERR_NOUNDO:
-                picotm_irrevocable();
-                break;
-            default:
-                break;
+        int res = fildes_tx_exec_bind(fildes_tx, sockfd, address, address_len,
+                                      picotm_is_irrevocable(), &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res == ERR_NOUNDO);
+        picotm_recover_from_error(&error);
 
-    return res;
+    } while (true);
 }
 
 int
@@ -267,76 +182,58 @@ fd_module_close(int fildes)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
-    int res;
-
     do {
-        res = fildes_tx_exec_close(fildes_tx, fildes, picotm_is_irrevocable());
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-        switch (res) {
-            case ERR_CONFLICT:
-                picotm_restart();
-                break;
-            case ERR_NOUNDO:
-                picotm_irrevocable();
-                break;
-            default:
-                break;
+        int res = fildes_tx_exec_close(fildes_tx, fildes,
+                                       picotm_is_irrevocable(),
+                                       &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res == ERR_NOUNDO);
+        picotm_recover_from_error(&error);
 
-    return res;
+    } while (true);
 }
 
 int
 fd_module_connect(int sockfd, const struct sockaddr* serv_addr,
                    socklen_t addr_len)
 {
-    int res;
-
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     do {
-        res = fildes_tx_exec_connect(fildes_tx, sockfd, serv_addr, addr_len,
-                                  picotm_is_irrevocable());
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-        switch (res) {
-            case ERR_CONFLICT:
-                picotm_restart();
-                break;
-            case ERR_NOUNDO:
-                picotm_irrevocable();
-                break;
-            default:
-                break;
+        int res = fildes_tx_exec_connect(fildes_tx, sockfd, serv_addr,
+                                         addr_len, picotm_is_irrevocable(),
+                                         &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res == ERR_NOUNDO);
+        picotm_recover_from_error(&error);
 
-    return res;
+    } while (true);
 }
 
 int
 fd_module_dup_internal(int fildes, int cloexec)
 {
-    int res;
-
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     do {
-        res = fildes_tx_exec_dup(fildes_tx, fildes, cloexec);
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-        switch (res) {
-            case ERR_CONFLICT:
-                picotm_restart();
-                break;
-            case ERR_NOUNDO:
-                picotm_irrevocable();
-                break;
-            default:
-                break;
+        int res = fildes_tx_exec_dup(fildes_tx, fildes, cloexec, &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res == ERR_NOUNDO);
+        picotm_recover_from_error(&error);
 
-    return res;
+    } while (true);
 }
 
 int
@@ -348,361 +245,272 @@ fd_module_dup(int fildes)
 int
 fd_module_fcntl(int fildes, int cmd, union fcntl_arg* arg)
 {
-    int res;
-
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     do {
-        res = fildes_tx_exec_fcntl(fildes_tx, fildes, cmd, arg, picotm_is_irrevocable());
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-        switch (res) {
-            case ERR_CONFLICT:
-                picotm_restart();
-                break;
-            case ERR_NOUNDO:
-                picotm_irrevocable();
-                break;
-            default:
-                break;
+        int res = fildes_tx_exec_fcntl(fildes_tx, fildes, cmd, arg,
+                                       picotm_is_irrevocable(), &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res == ERR_NOUNDO);
+        picotm_recover_from_error(&error);
 
-    return res;
+    } while (true);
 }
 
 int
 fd_module_fsync(int fildes)
 {
-    int res;
-
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     do {
-        res = fildes_tx_exec_fsync(fildes_tx, fildes, picotm_is_irrevocable());
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-        switch (res) {
-            case ERR_CONFLICT:
-                picotm_restart();
-                break;
-            case ERR_NOUNDO:
-                picotm_irrevocable();
-                break;
-            default:
-                break;
+        int res = fildes_tx_exec_fsync(fildes_tx, fildes,
+                                       picotm_is_irrevocable(), &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res == ERR_NOUNDO);
+        picotm_recover_from_error(&error);
 
-    return res;
+    } while (true);
 }
 
 int
 fd_module_listen(int sockfd, int backlog)
 {
-    int res;
-
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     do {
-        res = fildes_tx_exec_listen(fildes_tx, sockfd, backlog, picotm_is_irrevocable());
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-        switch (res) {
-            case ERR_CONFLICT:
-                picotm_restart();
-                break;
-            case ERR_NOUNDO:
-                picotm_irrevocable();
-                break;
-            default:
-                break;
+        int res = fildes_tx_exec_listen(fildes_tx, sockfd, backlog,
+                                        picotm_is_irrevocable(), &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res == ERR_NOUNDO);
+        picotm_recover_from_error(&error);
 
-    return res;
+    } while (true);
 }
 
 off_t
 fd_module_lseek(int fildes, off_t offset, int whence)
 {
-    off_t res;
-
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     do {
-        res = fildes_tx_exec_lseek(fildes_tx, fildes, offset, whence, picotm_is_irrevocable());
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-        switch (res) {
-            case ERR_CONFLICT:
-                picotm_restart();
-                break;
-            case ERR_NOUNDO:
-                picotm_irrevocable();
-                break;
-            default:
-                break;
+        off_t res = fildes_tx_exec_lseek(fildes_tx, fildes, offset, whence,
+                                         picotm_is_irrevocable(), &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res == ERR_NOUNDO);
+        picotm_recover_from_error(&error);
 
-    return res;
+    } while (true);
 }
 
 int
 fd_module_open(const char* path, int oflag, mode_t mode)
 {
-    int res;
-
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     do {
-        res = fildes_tx_exec_open(fildes_tx, path, oflag, mode, picotm_is_irrevocable());
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-        switch (res) {
-            case ERR_CONFLICT:
-                picotm_restart();
-                break;
-            case ERR_NOUNDO:
-                picotm_irrevocable();
-                break;
-            default:
-                break;
+        int res = fildes_tx_exec_open(fildes_tx, path, oflag, mode,
+                                      picotm_is_irrevocable(), &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res == ERR_NOUNDO);
+        picotm_recover_from_error(&error);
 
-    return res;
+    } while (true);
 }
 
 int
 fd_module_pipe(int pipefd[2])
 {
-    int res;
-
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     do {
-        res = fildes_tx_exec_pipe(fildes_tx, pipefd);
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-        switch (res) {
-            case ERR_CONFLICT:
-                picotm_restart();
-                break;
-            case ERR_NOUNDO:
-                picotm_irrevocable();
-                break;
-            default:
-                break;
+        int res = fildes_tx_exec_pipe(fildes_tx, pipefd, &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res == ERR_NOUNDO);
+        picotm_recover_from_error(&error);
 
-    return res;
+    } while (true);
 }
 
 ssize_t
 fd_module_pread(int fildes, void* buf, size_t nbyte, off_t off)
 {
-    ssize_t res;
-
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     do {
-        res = fildes_tx_exec_pread(fildes_tx, fildes, buf, nbyte, off,
-                                picotm_is_irrevocable());
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-        switch (res) {
-            case ERR_CONFLICT:
-                picotm_restart();
-                break;
-            case ERR_NOUNDO:
-                picotm_irrevocable();
-                break;
-            default:
-                break;
+        ssize_t res = fildes_tx_exec_pread(fildes_tx, fildes, buf, nbyte, off,
+                                           picotm_is_irrevocable(), &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res == ERR_NOUNDO);
+        picotm_recover_from_error(&error);
 
-    return res;
+    } while (true);
 }
 
 ssize_t
 fd_module_pwrite(int fildes, const void* buf, size_t nbyte, off_t off)
 {
-    ssize_t res;
-
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     do {
-        res = fildes_tx_exec_pwrite(fildes_tx, fildes, buf, nbyte, off,
-                                 picotm_is_irrevocable());
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-        switch (res) {
-            case ERR_CONFLICT:
-                picotm_restart();
-                break;
-            case ERR_NOUNDO:
-                picotm_irrevocable();
-                break;
-            default:
-                break;
+        ssize_t res = fildes_tx_exec_pwrite(fildes_tx, fildes, buf, nbyte,
+                                            off, picotm_is_irrevocable(),
+                                            &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res == ERR_NOUNDO);
+        picotm_recover_from_error(&error);
 
-    return res;
+    } while (true);
 }
 
 ssize_t
 fd_module_read(int fildes, void* buf, size_t nbyte)
 {
-    ssize_t res;
-
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     do {
-        res = fildes_tx_exec_read(fildes_tx, fildes, buf, nbyte,
-                               picotm_is_irrevocable());
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-        switch (res) {
-            case ERR_CONFLICT:
-                picotm_restart();
-                break;
-            case ERR_NOUNDO:
-                picotm_irrevocable();
-                break;
-            default:
-                break;
+        ssize_t res = fildes_tx_exec_read(fildes_tx, fildes, buf, nbyte,
+                                          picotm_is_irrevocable(), &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res == ERR_NOUNDO);
+        picotm_recover_from_error(&error);
 
-    return res;
+    } while (true);
 }
 
 ssize_t
 fd_module_recv(int sockfd, void* buffer, size_t length, int flags)
 {
-    ssize_t res;
-
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     do {
-        res = fildes_tx_exec_recv(fildes_tx, sockfd, buffer, length, flags,
-                               picotm_is_irrevocable());
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-        switch (res) {
-            case ERR_CONFLICT:
-                picotm_restart();
-                break;
-            case ERR_NOUNDO:
-                picotm_irrevocable();
-                break;
-            default:
-                break;
+        ssize_t res = fildes_tx_exec_recv(fildes_tx, sockfd, buffer, length,
+                                          flags, picotm_is_irrevocable(),
+                                          &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res == ERR_NOUNDO);
+        picotm_recover_from_error(&error);
 
-    return res;
+    } while (true);
 }
 
 int
 fd_module_select(int nfds, fd_set* readfds, fd_set* writefds,
                   fd_set* errorfds, struct timeval* timeout)
 {
-    int res;
-
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     do {
-        res = fildes_tx_exec_select(fildes_tx, nfds, readfds,
-                                              writefds,
-                                              errorfds,
-                                              timeout,
-                                              picotm_is_irrevocable());
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-        switch (res) {
-            case ERR_CONFLICT:
-                picotm_restart();
-                break;
-            case ERR_NOUNDO:
-                picotm_irrevocable();
-                break;
-            default:
-                break;
+        int res = fildes_tx_exec_select(fildes_tx, nfds, readfds,
+                                        writefds, errorfds, timeout,
+                                        picotm_is_irrevocable(), &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res == ERR_NOUNDO);
+        picotm_recover_from_error(&error);
 
-    return res;
+    } while (true);
 }
 
 ssize_t
 fd_module_send(int fildes, const void* buffer, size_t length, int flags)
 {
-    ssize_t res;
-
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     do {
-        res = fildes_tx_exec_send(fildes_tx, fildes, buffer, length, flags,
-                               picotm_is_irrevocable());
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-        switch (res) {
-            case ERR_CONFLICT:
-                picotm_restart();
-                break;
-            case ERR_NOUNDO:
-                picotm_irrevocable();
-                break;
-            default:
-                break;
+        ssize_t res = fildes_tx_exec_send(fildes_tx, fildes, buffer, length,
+                                          flags, picotm_is_irrevocable(),
+                                          &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res == ERR_NOUNDO);
+        picotm_recover_from_error(&error);
 
-    return res;
+    } while (true);
 }
 
 int
 fd_module_shutdown(int sockfd, int how)
 {
-    int res;
-
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     do {
-        res = fildes_tx_exec_shutdown(fildes_tx, sockfd, how, picotm_is_irrevocable());
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-        switch (res) {
-            case ERR_CONFLICT:
-                picotm_restart();
-                break;
-            case ERR_NOUNDO:
-                picotm_irrevocable();
-                break;
-            default:
-                break;
+        int res = fildes_tx_exec_shutdown(fildes_tx, sockfd, how,
+                                          picotm_is_irrevocable(),
+                                          &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res == ERR_NOUNDO);
+        picotm_recover_from_error(&error);
 
-    return res;
+    } while (true);
 }
 
 int
 fd_module_socket(int domain, int type, int protocol)
 {
-    int res;
-
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     do {
-        res = fildes_tx_exec_socket(fildes_tx, domain, type, protocol);
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-        switch (res) {
-            case ERR_CONFLICT:
-                picotm_restart();
-                break;
-            case ERR_NOUNDO:
-                picotm_irrevocable();
-                break;
-            default:
-                break;
+        int res = fildes_tx_exec_socket(fildes_tx, domain, type, protocol,
+                                        &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res == ERR_NOUNDO);
+        picotm_recover_from_error(&error);
 
-    return res;
+    } while (true);
 }
 
 void
@@ -710,31 +518,34 @@ fd_module_sync()
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
-    fildes_tx_exec_sync(fildes_tx);
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+        fildes_tx_exec_sync(fildes_tx, &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return;
+        }
+        picotm_recover_from_error(&error);
+
+    } while (true);
 }
 
 ssize_t
 fd_module_write(int fildes, const void* buf, size_t nbyte)
 {
-    ssize_t res;
-
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
     do {
-        res = fildes_tx_exec_write(fildes_tx, fildes, buf, nbyte,
-                                picotm_is_irrevocable());
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-        switch (res) {
-            case ERR_CONFLICT:
-                picotm_restart();
-                break;
-            case ERR_NOUNDO:
-                picotm_irrevocable();
-                break;
-            default:
-                break;
+        ssize_t res = fildes_tx_exec_write(fildes_tx, fildes, buf, nbyte,
+                                           picotm_is_irrevocable(), &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res == ERR_NOUNDO);
+        picotm_recover_from_error(&error);
 
-    return res;
+    } while (true);
 }

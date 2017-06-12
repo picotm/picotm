@@ -10,7 +10,6 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include "errcode.h"
 #include "ofd.h"
 #include "openop.h"
 #include "openoptab.h"
@@ -58,7 +57,7 @@ compare_int(const void* a, const void* b)
     return intcmp(*(const int*)a, *(const int*)b);
 }
 
-int
+void
 fildes_tx_init(struct fildes_tx* self, unsigned long module)
 {
     self->module = module;
@@ -75,8 +74,6 @@ fildes_tx_init(struct fildes_tx* self, unsigned long module)
 
     self->pipeoptab = NULL;
     self->pipeoptablen = 0;
-
-    return 0;
 }
 
 void
@@ -205,17 +202,15 @@ get_ofd_tx(struct fildes_tx* self, int index)
 
 static int
 append_cmd(struct fildes_tx* self, enum fildes_tx_cmd cmd, int fildes,
-           int cookie)
+           int cookie, struct picotm_error* error)
 {
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
     if (__builtin_expect(self->eventtablen >= self->eventtabsiz, 0)) {
 
         void* tmp = picotm_tabresize(self->eventtab,
                                      self->eventtabsiz,
                                      self->eventtabsiz + 1,
-                                     sizeof(self->eventtab[0]), &error);
-        if (picotm_error_is_set(&error)) {
+                                     sizeof(self->eventtab[0]), error);
+        if (picotm_error_is_set(error)) {
             return -1;
         }
         self->eventtab = tmp;
@@ -228,8 +223,8 @@ append_cmd(struct fildes_tx* self, enum fildes_tx_cmd cmd, int fildes,
     event->fildes = fildes;
     event->cookie = cookie;
 
-    picotm_append_event(self->module, cmd, self->eventtablen, &error);
-    if (picotm_error_is_set(&error)) {
+    picotm_append_event(self->module, cmd, self->eventtablen, error);
+    if (picotm_error_is_set(error)) {
         return -1;
     }
 
@@ -242,20 +237,17 @@ append_cmd(struct fildes_tx* self, enum fildes_tx_cmd cmd, int fildes,
 
 int
 fildes_tx_exec_accept(struct fildes_tx* self, int sockfd,
-                      struct sockaddr* address, socklen_t* address_len)
+                      struct sockaddr* address, socklen_t* address_len,
+                      struct picotm_error* error)
 {
     /* Update/create fd_tx */
 
     struct fd_tx* fd_tx = get_fd_tx(self, sockfd);
     assert(fd_tx);
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-    fd_tx_ref_or_validate(fd_tx, sockfd, 0, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+    fd_tx_ref_or_validate(fd_tx, sockfd, 0, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Update/create ofd_tx */
@@ -263,31 +255,31 @@ fildes_tx_exec_accept(struct fildes_tx* self, int sockfd,
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    ofd_tx_ref(ofd_tx, fd_tx->ofd, sockfd, 0, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+    ofd_tx_ref(ofd_tx, fd_tx->ofd, sockfd, 0, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Accept connection */
 
     int connfd = TEMP_FAILURE_RETRY(accept(sockfd, address, address_len));
     if (connfd < 0) {
-        return ERR_SYSTEM;
+        picotm_error_set_errno(error, errno);
+        return -1;
     }
 
     fd_tx = self->fd_tx + connfd;
 
     /* Reference fd_tx */
 
-    fd_tx_ref(fd_tx, connfd, 0, &error);
-    if (picotm_error_is_set(&error)) {
+    fd_tx_ref(fd_tx, connfd, 0, error);
+    if (picotm_error_is_set(error)) {
         goto err_fd_tx_ref;
     }
 
     /* Inject event */
-    if (append_cmd(self, CMD_ACCEPT, connfd, -1) < 0) {
+    append_cmd(self, CMD_ACCEPT, connfd, -1, error);
+    if (picotm_error_is_set(error)) {
         return -1;
     }
 
@@ -300,17 +292,15 @@ err_fd_tx_ref:
     return -1;
 }
 
-static int
+static void
 apply_accept(struct fildes_tx* self, const struct fd_event* event, size_t n,
              struct picotm_error* error)
 {
     assert(self);
     assert(event || !n);
-
-    return 0;
 }
 
-static int
+static void
 undo_accept(struct fildes_tx* self, int fildes, int cookie,
             struct picotm_error* error)
 {
@@ -324,8 +314,6 @@ undo_accept(struct fildes_tx* self, int fildes, int cookie,
 
     /* Mark file descriptor to be closed */
     fd_tx_signal_close(fd_tx);
-
-    return 0;
 }
 
 /*
@@ -335,20 +323,16 @@ undo_accept(struct fildes_tx* self, int fildes, int cookie,
 int
 fildes_tx_exec_bind(struct fildes_tx* self, int socket,
                     const struct sockaddr* address, socklen_t addresslen,
-                    int isnoundo)
+                    int isnoundo, struct picotm_error* error)
 {
     /* Update/create fd_tx */
 
     struct fd_tx* fd_tx = get_fd_tx(self, socket);
     assert(fd_tx);
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-    fd_tx_ref_or_validate(fd_tx, socket, 0, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+    fd_tx_ref_or_validate(fd_tx, socket, 0, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Update/create ofd_tx */
@@ -356,11 +340,9 @@ fildes_tx_exec_bind(struct fildes_tx* self, int socket,
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    ofd_tx_ref(ofd_tx, fd_tx->ofd, socket, 0, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+    ofd_tx_ref(ofd_tx, fd_tx->ofd, socket, 0, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Bind */
@@ -369,25 +351,23 @@ fildes_tx_exec_bind(struct fildes_tx* self, int socket,
 
     int res = ofd_tx_bind_exec(ofd_tx,
                                socket, address, addresslen,
-                               &cookie, isnoundo, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_revocable(&error)) {
-        return ERR_NOUNDO;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+                               &cookie, isnoundo, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Inject event */
-    if ((cookie >= 0)
-        && (append_cmd(self, CMD_BIND, socket, cookie) < 0)) {
-        return -1;
+    if (cookie >= 0) {
+        append_cmd(self, CMD_BIND, socket, cookie, error);
+        if (picotm_error_is_set(error)) {
+            return -1;
+        }
     }
 
     return res;
 }
 
-static int
+static void
 apply_bind(struct fildes_tx* self, const struct fd_event* event, size_t n,
            struct picotm_error* error)
 {
@@ -413,16 +393,14 @@ apply_bind(struct fildes_tx* self, const struct fd_event* event, size_t n,
 
         ofd_tx_bind_apply(ofd_tx, event->fildes, event, m, error);
         if (picotm_error_is_set(error)) {
-            return -1;
+            return;
         }
         n -= m;
         event += m;
     }
-
-    return 0;
 }
 
-static int
+static void
 undo_bind(struct fildes_tx* self, int fildes, int cookie,
           struct picotm_error* error)
 {
@@ -442,10 +420,8 @@ undo_bind(struct fildes_tx* self, int fildes, int cookie,
 
     ofd_tx_bind_undo(ofd_tx, ev->fildes, ev->cookie, error);
     if (picotm_error_is_set(error)) {
-        return -1;
+        return;
     }
-
-    return 0;
 }
 
 /*
@@ -453,45 +429,40 @@ undo_bind(struct fildes_tx* self, int fildes, int cookie,
  */
 
 int
-fildes_tx_exec_close(struct fildes_tx* self, int fildes, int isnoundo)
+fildes_tx_exec_close(struct fildes_tx* self, int fildes, int isnoundo,
+                     struct picotm_error* error)
 {
     /* Update/create fd_tx */
 
     struct fd_tx* fd_tx = get_fd_tx(self, fildes);
     assert(fd_tx);
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-    fd_tx_ref_or_validate(fd_tx, fildes, 0, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+    fd_tx_ref_or_validate(fd_tx, fildes, 0, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Close */
 
     int cookie = -1;
 
-    int res = fd_tx_close_exec(fd_tx, fildes, &cookie, isnoundo, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_revocable(&error)) {
-        return ERR_NOUNDO;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+    int res = fd_tx_close_exec(fd_tx, fildes, &cookie, isnoundo, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Inject event */
-    if ((cookie >= 0)
-         && (append_cmd(self, CMD_CLOSE, fildes, -1) < 0)) {
-        return -1;
+    if (cookie >= 0) {
+        append_cmd(self, CMD_CLOSE, fildes, cookie, error);
+        if (picotm_error_is_set(error)) {
+            return -1;
+        }
     }
 
     return res;
 }
 
-static int
+static void
 apply_close(struct fildes_tx* self, const struct fd_event* event, size_t n,
             struct picotm_error* error)
 {
@@ -508,17 +479,15 @@ apply_close(struct fildes_tx* self, const struct fd_event* event, size_t n,
 
         fd_tx_close_apply(fd_tx, event->fildes, event->cookie, error);
         if (picotm_error_is_set(error)) {
-            return -1;
+            return;
         }
 
         --n;
         ++event;
     }
-
-    return 0;
 }
 
-static int
+static void
 undo_close(struct fildes_tx* self, int fildes, int cookie,
            struct picotm_error* error)
 {
@@ -531,10 +500,8 @@ undo_close(struct fildes_tx* self, int fildes, int cookie,
 
     fd_tx_close_undo(fd_tx, fildes, cookie, error);
     if (picotm_error_is_set(error)) {
-        return -1;
+        return;
     }
-
-    return 0;
 }
 
 /*
@@ -544,20 +511,16 @@ undo_close(struct fildes_tx* self, int fildes, int cookie,
 int
 fildes_tx_exec_connect(struct fildes_tx* self, int sockfd,
                        const struct sockaddr* serv_addr, socklen_t addrlen,
-                       int isnoundo)
+                       int isnoundo, struct picotm_error* error)
 {
     /* Update/create fd_tx */
 
     struct fd_tx* fd_tx = get_fd_tx(self, sockfd);
     assert(fd_tx);
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-    fd_tx_ref_or_validate(fd_tx, sockfd, 0, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+    fd_tx_ref_or_validate(fd_tx, sockfd, 0, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Update/create ofd_tx */
@@ -565,11 +528,9 @@ fildes_tx_exec_connect(struct fildes_tx* self, int sockfd,
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    ofd_tx_ref(ofd_tx, fd_tx->ofd, sockfd, 0, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+    ofd_tx_ref(ofd_tx, fd_tx->ofd, sockfd, 0, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Connect */
@@ -578,25 +539,23 @@ fildes_tx_exec_connect(struct fildes_tx* self, int sockfd,
 
     int res = ofd_tx_connect_exec(ofd_tx,
                                   sockfd, serv_addr, addrlen,
-                                  &cookie, isnoundo, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_revocable(&error)) {
-        return ERR_NOUNDO;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+                                  &cookie, isnoundo, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Inject event */
-    if ((cookie >= 0) &&
-        (append_cmd(self, CMD_CONNECT, sockfd, cookie) < 0)) {
-        return -1;
+    if (cookie >= 0) {
+        append_cmd(self, CMD_CONNECT, sockfd, cookie, error);
+        if (picotm_error_is_set(error)) {
+            return -1;
+        }
     }
 
     return res;
 }
 
-static int
+static void
 apply_connect(struct fildes_tx* self, const struct fd_event* event, size_t n,
               struct picotm_error* error)
 {
@@ -622,17 +581,15 @@ apply_connect(struct fildes_tx* self, const struct fd_event* event, size_t n,
 
         ofd_tx_connect_apply(ofd_tx, event->fildes, event, m, error);
         if (picotm_error_is_set(error)) {
-            return -1;
+            return;
         }
 
         n -= m;
         event += m;
     }
-
-    return 0;
 }
 
-static int
+static void
 undo_connect(struct fildes_tx* self, int fildes, int cookie,
              struct picotm_error* error)
 {
@@ -648,9 +605,8 @@ undo_connect(struct fildes_tx* self, int fildes, int cookie,
 
     ofd_tx_connect_undo(ofd_tx, fildes, cookie, error);
     if (picotm_error_is_set(error)) {
-        return -1;
+        return;
     }
-    return 0;
 }
 
 /*
@@ -658,7 +614,8 @@ undo_connect(struct fildes_tx* self, int fildes, int cookie,
  */
 
 int
-fildes_tx_exec_dup(struct fildes_tx* self, int fildes, int cloexec)
+fildes_tx_exec_dup(struct fildes_tx* self, int fildes, int cloexec,
+                   struct picotm_error* error)
 {
     assert(self);
 
@@ -667,13 +624,9 @@ fildes_tx_exec_dup(struct fildes_tx* self, int fildes, int cloexec)
     struct fd_tx* fd_tx = get_fd_tx(self, fildes);
     assert(fd_tx);
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-    fd_tx_ref_or_validate(fd_tx, fildes, 0, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+    fd_tx_ref_or_validate(fd_tx, fildes, 0, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Duplicate fildes */
@@ -682,7 +635,8 @@ fildes_tx_exec_dup(struct fildes_tx* self, int fildes, int cloexec)
 
     int res = TEMP_FAILURE_RETRY(fcntl(fildes, dupcmd[!!cloexec], 0));
     if (res < 0) {
-        return ERR_SYSTEM;
+        picotm_error_set_errno(error, errno);
+        return -1;
     }
     int fildes2 = res;
 
@@ -691,41 +645,36 @@ fildes_tx_exec_dup(struct fildes_tx* self, int fildes, int cloexec)
 
     /* Reference fd_tx for fildes2 */
 
-    fd_tx_ref(fd_tx2, fildes2, 0, &error);
+    fd_tx_ref(fd_tx2, fildes2, 0, error);
 
-    if (picotm_error_is_set(&error)) {
+    if (picotm_error_is_set(error)) {
         if (TEMP_FAILURE_RETRY(close(fildes2)) < 0) {
             perror("close");
         }
-        if (picotm_error_is_conflicting(&error)) {
-            return ERR_CONFLICT;
-        } else  {
-            return ERR_SYSTEM;
-        }
+        return -1;
     }
 
     /* Inject event */
-    if (append_cmd(self, CMD_DUP, fildes2, -1) < 0) {
+    append_cmd(self, CMD_DUP, fildes2, -1, error);
+    if (picotm_error_is_set(error)) {
         if (TEMP_FAILURE_RETRY(close(fildes2)) < 0) {
             perror("close");
         }
-        return ERR_SYSTEM;
+        return -1;
     }
 
     return fildes2;
 }
 
-static int
+static void
 apply_dup(struct fildes_tx* self, const struct fd_event* event, size_t n,
           struct picotm_error* error)
 {
     assert(self);
     assert(event || !n);
-
-    return 0;
 }
 
-static int
+static void
 undo_dup(struct fildes_tx* self, int fildes, int cookie,
          struct picotm_error* error)
 {
@@ -739,8 +688,6 @@ undo_dup(struct fildes_tx* self, int fildes, int cookie,
     /* Mark file descriptor to be closed. This works, because dup() occured
        inside transaction. So no other transaction should have access to it. */
     fd_tx_signal_close(fd_tx);
-
-    return 0;
 }
 
 /*
@@ -749,7 +696,8 @@ undo_dup(struct fildes_tx* self, int fildes, int cookie,
 
 int
 fildes_tx_exec_fcntl(struct fildes_tx* self, int fildes, int cmd,
-                     union fcntl_arg* arg, int isnoundo)
+                     union fcntl_arg* arg, int isnoundo,
+                     struct picotm_error* error)
 {
     assert(self);
 
@@ -758,13 +706,9 @@ fildes_tx_exec_fcntl(struct fildes_tx* self, int fildes, int cmd,
     struct fd_tx* fd_tx = get_fd_tx(self, fildes);
     assert(fd_tx);
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-    fd_tx_ref_or_validate(fd_tx, fildes, 0, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+    fd_tx_ref_or_validate(fd_tx, fildes, 0, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     int cookie = -1;
@@ -776,11 +720,9 @@ fildes_tx_exec_fcntl(struct fildes_tx* self, int fildes, int cmd,
         case F_SETFD: {
             /* Fcntl */
 
-            res = fd_tx_fcntl_exec(fd_tx, cmd, arg, &cookie, isnoundo, &error);
-            if (picotm_error_is_conflicting(&error)) {
-                return ERR_CONFLICT;
-            } else if (picotm_error_is_set(&error)) {
-                return ERR_SYSTEM;
+            res = fd_tx_fcntl_exec(fd_tx, cmd, arg, &cookie, isnoundo, error);
+            if (picotm_error_is_set(error)) {
+                return -1;
             }
             break;
         }
@@ -790,23 +732,17 @@ fildes_tx_exec_fcntl(struct fildes_tx* self, int fildes, int cmd,
             struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
             assert(ofd_tx);
 
-            ofd_tx_ref(ofd_tx, fd_tx->ofd, fildes, 0, &error);
-            if (picotm_error_is_conflicting(&error)) {
-                return ERR_CONFLICT;
-            } else if (picotm_error_is_set(&error)) {
-                return ERR_SYSTEM;
+            ofd_tx_ref(ofd_tx, fd_tx->ofd, fildes, 0, error);
+            if (picotm_error_is_set(error)) {
+                return -1;
             }
 
             /* Fcntl */
 
             res = ofd_tx_fcntl_exec(ofd_tx, fildes, cmd, arg, &cookie,
-                                    isnoundo, &error);
-            if (picotm_error_is_conflicting(&error)) {
-                return ERR_CONFLICT;
-            } else if (picotm_error_is_revocable(&error)) {
-                return ERR_NOUNDO;
-            } else if (picotm_error_is_set(&error)) {
-                return ERR_SYSTEM;
+                                    isnoundo, error);
+            if (picotm_error_is_set(error)) {
+                return -1;
             }
             break;
         }
@@ -814,15 +750,17 @@ fildes_tx_exec_fcntl(struct fildes_tx* self, int fildes, int cmd,
     }
 
     /* Inject event */
-    if ((cookie >= 0) &&
-        (append_cmd(self, CMD_FCNTL, fildes, cookie) < 0)) {
-        return -1;
+    if (cookie >= 0) {
+        append_cmd(self, CMD_FCNTL, fildes, cookie, error);
+        if (picotm_error_is_set(error)) {
+            return -1;
+        }
     }
 
     return res;
 }
 
-static int
+static void
 apply_fcntl(struct fildes_tx* self, const struct fd_event* event, size_t n,
             struct picotm_error* error)
 {
@@ -849,22 +787,16 @@ apply_fcntl(struct fildes_tx* self, const struct fd_event* event, size_t n,
             ofd_tx_fcntl_apply(ofd_tx, event->fildes, event, 1, error);
         }
 
-        if (picotm_error_is_conflicting(error)) {
-            return ERR_CONFLICT;
-        } else if (picotm_error_is_revocable(error)) {
-            return ERR_NOUNDO;
-        } else if (picotm_error_is_set(error)) {
-            return ERR_SYSTEM;
+        if (picotm_error_is_set(error)) {
+            return;
         }
 
         --n;
         ++event;
     }
-
-    return 0;
 }
 
-static int
+static void
 undo_fcntl(struct fildes_tx* self, int fildes, int cookie,
            struct picotm_error* error)
 {
@@ -887,15 +819,9 @@ undo_fcntl(struct fildes_tx* self, int fildes, int cookie,
         ofd_tx_fcntl_undo(ofd_tx, fildes, cookie, error);
     }
 
-    if (picotm_error_is_conflicting(error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_revocable(error)) {
-        return ERR_NOUNDO;
-    } else if (picotm_error_is_set(error)) {
-        return ERR_SYSTEM;
+    if (picotm_error_is_set(error)) {
+        return;
     }
-
-    return 0;
 }
 
 /*
@@ -903,7 +829,8 @@ undo_fcntl(struct fildes_tx* self, int fildes, int cookie,
  */
 
 int
-fildes_tx_exec_fsync(struct fildes_tx* self, int fildes, int isnoundo)
+fildes_tx_exec_fsync(struct fildes_tx* self, int fildes, int isnoundo,
+                     struct picotm_error* error)
 {
     assert(self);
 
@@ -912,13 +839,9 @@ fildes_tx_exec_fsync(struct fildes_tx* self, int fildes, int isnoundo)
     struct fd_tx* fd_tx = get_fd_tx(self, fildes);
     assert(fd_tx);
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-    fd_tx_ref_or_validate(fd_tx, fildes, 0, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+    fd_tx_ref_or_validate(fd_tx, fildes, 0, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Update/create ofd_tx */
@@ -926,36 +849,32 @@ fildes_tx_exec_fsync(struct fildes_tx* self, int fildes, int isnoundo)
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    ofd_tx_ref(ofd_tx, fd_tx->ofd, fildes, 0, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+    ofd_tx_ref(ofd_tx, fd_tx->ofd, fildes, 0, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Fsync */
 
     int cookie = -1;
 
-    int res = ofd_tx_fsync_exec(ofd_tx, fildes, isnoundo, &cookie, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_revocable(&error)) {
-        return ERR_NOUNDO;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+    int res = ofd_tx_fsync_exec(ofd_tx, fildes, isnoundo, &cookie, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Inject event */
-    if ((cookie >= 0) &&
-        (append_cmd(self, CMD_FSYNC, fildes, fildes) < 0)) {
-        return -1;
+    if (cookie >= 0) {
+        append_cmd(self, CMD_FSYNC, fildes, cookie, error);
+        if (picotm_error_is_set(error)) {
+            return -1;
+        }
     }
 
     return res;
 }
 
-static int
+static void
 apply_fsync(struct fildes_tx* self, const struct fd_event* event, size_t n,
             struct picotm_error* error)
 {
@@ -981,17 +900,15 @@ apply_fsync(struct fildes_tx* self, const struct fd_event* event, size_t n,
 
         ofd_tx_fsync_apply(ofd_tx, event->fildes, event, m, error);
         if (picotm_error_is_set(error)) {
-            return -1;
+            return;
         }
 
         n -= m;
         event += m;
     }
-
-    return 0;
 }
 
-static int
+static void
 undo_fsync(struct fildes_tx* self, int fildes, int cookie,
            struct picotm_error* error)
 {
@@ -1007,9 +924,8 @@ undo_fsync(struct fildes_tx* self, int fildes, int cookie,
 
     ofd_tx_fsync_undo(ofd_tx, fildes, cookie, error);
     if (picotm_error_is_set(error)) {
-        return -1;
+        return;
     }
-    return 0;
 }
 
 /*
@@ -1018,7 +934,7 @@ undo_fsync(struct fildes_tx* self, int fildes, int cookie,
 
 int
 fildes_tx_exec_listen(struct fildes_tx* self, int sockfd, int backlog,
-                      int isnoundo)
+                      int isnoundo, struct picotm_error* error)
 {
     assert(self);
 
@@ -1027,13 +943,9 @@ fildes_tx_exec_listen(struct fildes_tx* self, int sockfd, int backlog,
     struct fd_tx* fd_tx = get_fd_tx(self, sockfd);
     assert(fd_tx);
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-    fd_tx_ref_or_validate(fd_tx, sockfd, 0, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+    fd_tx_ref_or_validate(fd_tx, sockfd, 0, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Update/create ofd_tx */
@@ -1041,11 +953,9 @@ fildes_tx_exec_listen(struct fildes_tx* self, int sockfd, int backlog,
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    ofd_tx_ref(ofd_tx, fd_tx->ofd, sockfd, 0, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+    ofd_tx_ref(ofd_tx, fd_tx->ofd, sockfd, 0, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Connect */
@@ -1053,25 +963,23 @@ fildes_tx_exec_listen(struct fildes_tx* self, int sockfd, int backlog,
     int cookie = -1;
 
     int res = ofd_tx_listen_exec(ofd_tx, sockfd, backlog, &cookie, isnoundo,
-                                 &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_revocable(&error)) {
-        return ERR_NOUNDO;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+                                 error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Inject event */
-    if ((cookie >= 0) &&
-        (append_cmd(self, CMD_LISTEN, sockfd, cookie) < 0)) {
-        return -1;
+    if (cookie >= 0) {
+        append_cmd(self, CMD_LISTEN, sockfd, cookie, error);
+        if (picotm_error_is_set(error)) {
+            return -1;
+        }
     }
 
     return res;
 }
 
-int
+static void
 apply_listen(struct fildes_tx* self, const struct fd_event* event, size_t n,
              struct picotm_error* error)
 {
@@ -1097,17 +1005,15 @@ apply_listen(struct fildes_tx* self, const struct fd_event* event, size_t n,
 
         ofd_tx_listen_apply(ofd_tx, event->fildes, event, m, error);
         if (picotm_error_is_set(error)) {
-            return -1;
+            return;
         }
 
         n -= m;
         event += m;
     }
-
-    return 0;
 }
 
-int
+static void
 undo_listen(struct fildes_tx* self, int fildes, int cookie,
             struct picotm_error* error)
 {
@@ -1123,9 +1029,8 @@ undo_listen(struct fildes_tx* self, int fildes, int cookie,
 
     ofd_tx_listen_undo(ofd_tx, fildes, cookie, error);
     if (picotm_error_is_set(error)) {
-        return -1;
+        return;
     }
-    return 0;
 }
 
 /*
@@ -1134,7 +1039,7 @@ undo_listen(struct fildes_tx* self, int fildes, int cookie,
 
 off_t
 fildes_tx_exec_lseek(struct fildes_tx* self, int fildes, off_t offset,
-                     int whence, int isnoundo)
+                     int whence, int isnoundo, struct picotm_error* error)
 {
     assert(self);
 
@@ -1143,13 +1048,9 @@ fildes_tx_exec_lseek(struct fildes_tx* self, int fildes, off_t offset,
     struct fd_tx* fd_tx = get_fd_tx(self, fildes);
     assert(fd_tx);
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-    fd_tx_ref_or_validate(fd_tx, fildes, 0, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+    fd_tx_ref_or_validate(fd_tx, fildes, 0, error);
+    if (picotm_error_is_set(error)) {
+        return (off_t)-1;
     }
 
     /* Update/create ofd_tx */
@@ -1157,11 +1058,9 @@ fildes_tx_exec_lseek(struct fildes_tx* self, int fildes, off_t offset,
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    ofd_tx_ref(ofd_tx, fd_tx->ofd, fildes, 0, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+    ofd_tx_ref(ofd_tx, fd_tx->ofd, fildes, 0, error);
+    if (picotm_error_is_set(error)) {
+        return (off_t)-1;
     }
 
     /* Seek */
@@ -1170,25 +1069,23 @@ fildes_tx_exec_lseek(struct fildes_tx* self, int fildes, off_t offset,
 
     off_t pos = ofd_tx_lseek_exec(ofd_tx,
                                   fildes, offset, whence,
-                                  &cookie, isnoundo, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_revocable(&error)) {
-        return ERR_NOUNDO;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+                                  &cookie, isnoundo, error);
+    if (picotm_error_is_set(error)) {
+        return (off_t)-1;
     }
 
     /* Inject event */
-    if ((cookie >= 0) &&
-        (append_cmd(self, CMD_LSEEK, fildes, cookie) < 0)) {
-        return -1;
+    if (cookie >= 0) {
+        append_cmd(self, CMD_LSEEK, fildes, cookie, error);
+        if (picotm_error_is_set(error)) {
+            return (off_t)-1;
+        }
     }
 
     return pos;
 }
 
-int
+static void
 apply_lseek(struct fildes_tx* self, const struct fd_event* event, size_t n,
             struct picotm_error* error)
 {
@@ -1214,17 +1111,15 @@ apply_lseek(struct fildes_tx* self, const struct fd_event* event, size_t n,
 
         ofd_tx_lseek_apply(ofd_tx, event->fildes, event, m, error);
         if (picotm_error_is_set(error)) {
-            return -1;
+            return;
         }
 
         n -= m;
         event += m;
     }
-
-    return 0;
 }
 
-int
+static void
 undo_lseek(struct fildes_tx* self, int fildes, int cookie,
            struct picotm_error* error)
 {
@@ -1240,9 +1135,8 @@ undo_lseek(struct fildes_tx* self, int fildes, int cookie,
 
     ofd_tx_lseek_undo(ofd_tx, fildes, cookie, error);
     if (picotm_error_is_set(error)) {
-        return -1;
+        return;
     }
-    return 0;
 }
 
 /*
@@ -1254,12 +1148,13 @@ undo_lseek(struct fildes_tx* self, int fildes, int cookie,
 
 int
 fildes_tx_exec_open(struct fildes_tx* self, const char* path, int oflag,
-                    mode_t mode, int isnoundo)
+                    mode_t mode, int isnoundo, struct picotm_error* error)
 {
     /* O_TRUNC needs irrevocability */
 
     if ((mode&O_TRUNC) && !isnoundo) {
-        return ERR_NOUNDO;
+        picotm_error_set_revocable(error);
+        return -1;
     }
 
     /* Open file */
@@ -1268,7 +1163,8 @@ fildes_tx_exec_open(struct fildes_tx* self, const char* path, int oflag,
         openat(vfs_module_getcwd_fildes(), path, oflag, mode));
 
     if (fildes < 0) {
-        return ERR_SYSTEM;
+        picotm_error_set_errno(error, errno);
+        return -1;
     }
 
     /* FIXME: Distinguish between open calls. Ofd only knows one file
@@ -1282,50 +1178,46 @@ fildes_tx_exec_open(struct fildes_tx* self, const char* path, int oflag,
     struct fd_tx* fd_tx = get_fd_tx(self, fildes);
     assert(fd_tx);
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-    fd_tx_ref(fd_tx, fildes, OFD_FL_WANTNEW, &error);
-    if (picotm_error_is_set(&error)) {
+    fd_tx_ref(fd_tx, fildes, OFD_FL_WANTNEW, error);
+    if (picotm_error_is_set(error)) {
         if (TEMP_FAILURE_RETRY(close(fildes)) < 0) {
             perror("close");
         }
-        if (picotm_error_is_conflicting(&error)) {
-            return ERR_CONFLICT;
-        } else {
-            return ERR_SYSTEM;
+        if (picotm_error_is_set(error)) {
+            return -1;
         }
     }
 
     int cookie = openoptab_append(&self->openoptab,
                                   &self->openoptablen, DO_UNLINK(mode),
-                                  &error);
-    if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+                                  error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Inject event */
-    if ((cookie >= 0) &&
-        (append_cmd(self, CMD_OPEN, fildes, cookie) < 0)) {
-        if (TEMP_FAILURE_RETRY(close(fildes)) < 0) {
-            perror("close");
+    if (cookie >= 0) {
+        append_cmd(self, CMD_OPEN, fildes, cookie, error);
+        if (picotm_error_is_set(error)) {
+            if (TEMP_FAILURE_RETRY(close(fildes)) < 0) {
+                perror("close");
+            }
+            return -1;
         }
-        return ERR_SYSTEM;
     }
 
     return fildes;
 }
 
-static int
+static void
 apply_open(struct fildes_tx* self, const struct fd_event* event, size_t n,
            struct picotm_error* error)
 {
     assert(self);
     assert(event || !n);
-
-    return 0;
 }
 
-static int
+static void
 undo_open(struct fildes_tx* self, int fildes, int cookie,
           struct picotm_error* error)
 {
@@ -1367,8 +1259,6 @@ undo_open(struct fildes_tx* self, int fildes, int cookie,
 
     /* Mark file descriptor to be closed */
     fd_tx_signal_close(fd_tx);
-
-    return 0;
 }
 
 /*
@@ -1376,14 +1266,17 @@ undo_open(struct fildes_tx* self, int fildes, int cookie,
  */
 
 int
-fildes_tx_exec_pipe(struct fildes_tx* self, int pipefd[2])
+fildes_tx_exec_pipe(struct fildes_tx* self, int pipefd[2],
+                    struct picotm_error* error)
 {
     assert(self);
 
     /* Create pipe */
 
-    if (TEMP_FAILURE_RETRY(pipe(pipefd)) < 0) {
-        return ERR_SYSTEM;
+    int res = TEMP_FAILURE_RETRY(pipe(pipefd));
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return -1;
     }
 
     /* Update/create fd_tx */
@@ -1391,77 +1284,66 @@ fildes_tx_exec_pipe(struct fildes_tx* self, int pipefd[2])
     struct fd_tx* fd_tx = get_fd_tx(self, pipefd[0]);
     assert(fd_tx);
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+    fd_tx_ref(fd_tx, pipefd[0], 0, error);
 
-    fd_tx_ref(fd_tx, pipefd[0], 0, &error);
-
-    if (picotm_error_is_set(&error)) {
+    if (picotm_error_is_set(error)) {
         if (TEMP_FAILURE_RETRY(close(pipefd[0])) < 0) {
             perror("close");
         }
         if (TEMP_FAILURE_RETRY(close(pipefd[1])) < 0) {
             perror("close");
         }
-        if (picotm_error_is_conflicting(&error)) {
-            return ERR_CONFLICT;
-        } else {
-            return ERR_SYSTEM;
-        }
+        return -1;
     }
 
     fd_tx = get_fd_tx(self, pipefd[1]);
     assert(fd_tx);
 
-    fd_tx_ref(fd_tx, pipefd[1], 0, &error);
+    fd_tx_ref(fd_tx, pipefd[1], 0, error);
 
-    if (picotm_error_is_set(&error)) {
+    if (picotm_error_is_set(error)) {
         if (TEMP_FAILURE_RETRY(close(pipefd[0])) < 0) {
             perror("close");
         }
         if (TEMP_FAILURE_RETRY(close(pipefd[1])) < 0) {
             perror("close");
         }
-        if (picotm_error_is_conflicting(&error)) {
-            return ERR_CONFLICT;
-        } else {
-            return ERR_SYSTEM;
-        }
+        return -1;
     }
-
 
     int cookie = pipeoptab_append(&self->pipeoptab,
                                   &self->pipeoptablen, pipefd,
-                                  &error);
-    if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+                                  error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Inject event */
-    if ((cookie >= 0) &&
-        (append_cmd(self, CMD_PIPE, 0, cookie) < 0)) {
-        if (TEMP_FAILURE_RETRY(close(pipefd[0])) < 0) {
-            perror("close");
+    if (cookie >= 0) {
+        append_cmd(self, CMD_PIPE, 0, cookie, error);
+        if (picotm_error_is_set(error)) {
+            if (TEMP_FAILURE_RETRY(close(pipefd[0])) < 0) {
+                perror("close");
+            }
+            if (TEMP_FAILURE_RETRY(close(pipefd[1])) < 0) {
+                perror("close");
+            }
+            return -1;
         }
-        if (TEMP_FAILURE_RETRY(close(pipefd[1])) < 0) {
-            perror("close");
-        }
-        return ERR_SYSTEM;
     }
 
     return 0;
 }
 
-static int
+static void
 apply_pipe(struct fildes_tx* self, const struct fd_event* event, size_t n,
            struct picotm_error* error)
 {
     assert(self);
     assert(event || !n);
-
-    return 0;
 }
 
-static int
+static void
 undo_pipe(struct fildes_tx* self, int fildes, int cookie,
           struct picotm_error* error)
 {
@@ -1471,14 +1353,12 @@ undo_pipe(struct fildes_tx* self, int fildes, int cookie,
 
     if (TEMP_FAILURE_RETRY(close(pipeop->pipefd[0])) < 0) {
         picotm_error_set_errno(error, errno);
-        return ERR_SYSTEM;
+        return;
     }
     if (TEMP_FAILURE_RETRY(close(pipeop->pipefd[1])) < 0) {
         picotm_error_set_errno(error, errno);
-        return ERR_SYSTEM;
+        return;
     }
-
-    return 0;
 }
 
 /*
@@ -1487,7 +1367,8 @@ undo_pipe(struct fildes_tx* self, int fildes, int cookie,
 
 ssize_t
 fildes_tx_exec_pread(struct fildes_tx* self, int fildes, void* buf,
-                     size_t nbyte, off_t off, int isnoundo)
+                     size_t nbyte, off_t off, int isnoundo,
+                     struct picotm_error* error)
 {
     assert(self);
 
@@ -1496,13 +1377,9 @@ fildes_tx_exec_pread(struct fildes_tx* self, int fildes, void* buf,
     struct fd_tx* fd_tx = get_fd_tx(self, fildes);
     assert(fd_tx);
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-    fd_tx_ref_or_validate(fd_tx, fildes, 0, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+    fd_tx_ref_or_validate(fd_tx, fildes, 0, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* update/create ofd_tx */
@@ -1510,11 +1387,9 @@ fildes_tx_exec_pread(struct fildes_tx* self, int fildes, void* buf,
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    ofd_tx_ref(ofd_tx, fd_tx->ofd, fildes, 0, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+    ofd_tx_ref(ofd_tx, fd_tx->ofd, fildes, 0, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* pread */
@@ -1526,27 +1401,23 @@ fildes_tx_exec_pread(struct fildes_tx* self, int fildes, void* buf,
 
     ssize_t len = ofd_tx_pread_exec(ofd_tx,
                                     fildes, buf, nbyte, off,
-                                    &cookie, isnoundo, val_mode, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_revocable(&error)) {
-        return ERR_NOUNDO;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+                                    &cookie, isnoundo, val_mode, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
-    enum error_code err;
-
     /* inject event */
-    if ((cookie >= 0) &&
-        ((err = append_cmd(self, CMD_PREAD, fildes, cookie)) < 0)) {
-        return err;
+    if (cookie >= 0) {
+        append_cmd(self, CMD_PREAD, fildes, cookie, error);
+        if (picotm_error_is_set(error)) {
+            return -1;
+        }
     }
 
     return len;
 }
 
-static int
+static void
 apply_pread(struct fildes_tx* self, const struct fd_event* event, size_t n,
             struct picotm_error* error)
 {
@@ -1572,17 +1443,15 @@ apply_pread(struct fildes_tx* self, const struct fd_event* event, size_t n,
 
         ofd_tx_pread_apply(ofd_tx, event->fildes, event, m, error);
         if (picotm_error_is_set(error)) {
-            return -1;
+            return;
         }
 
         n -= m;
         event += m;
     }
-
-    return 0;
 }
 
-static int
+static void
 undo_pread(struct fildes_tx* self, int fildes, int cookie,
            struct picotm_error* error)
 {
@@ -1598,9 +1467,8 @@ undo_pread(struct fildes_tx* self, int fildes, int cookie,
 
     ofd_tx_pread_undo(ofd_tx, fildes, cookie, error);
     if (picotm_error_is_set(error)) {
-        return -1;
+        return;
     }
-    return 0;
 }
 
 /*
@@ -1609,7 +1477,8 @@ undo_pread(struct fildes_tx* self, int fildes, int cookie,
 
 ssize_t
 fildes_tx_exec_pwrite(struct fildes_tx* self, int fildes, const void* buf,
-                      size_t nbyte, off_t off, int isnoundo)
+                      size_t nbyte, off_t off, int isnoundo,
+                      struct picotm_error* error)
 {
     assert(self);
 
@@ -1618,13 +1487,9 @@ fildes_tx_exec_pwrite(struct fildes_tx* self, int fildes, const void* buf,
     struct fd_tx* fd_tx = get_fd_tx(self, fildes);
     assert(fd_tx);
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-    fd_tx_ref_or_validate(fd_tx, fildes, 0, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+    fd_tx_ref_or_validate(fd_tx, fildes, 0, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Update/create ofd_tx */
@@ -1632,11 +1497,9 @@ fildes_tx_exec_pwrite(struct fildes_tx* self, int fildes, const void* buf,
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    ofd_tx_ref(ofd_tx, fd_tx->ofd, fildes, 0, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+    ofd_tx_ref(ofd_tx, fd_tx->ofd, fildes, 0, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Pwrite */
@@ -1645,25 +1508,23 @@ fildes_tx_exec_pwrite(struct fildes_tx* self, int fildes, const void* buf,
 
     ssize_t len = ofd_tx_pwrite_exec(self->ofd_tx + fd_tx->ofd,
                                      fildes, buf, nbyte, off,
-                                     &cookie, isnoundo, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_revocable(&error)) {
-        return ERR_NOUNDO;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+                                     &cookie, isnoundo, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Inject event */
-    if ((cookie >= 0) &&
-        (append_cmd(self, CMD_PWRITE, fildes, cookie) < 0)) {
-        return -1;
+    if (cookie >= 0) {
+        append_cmd(self, CMD_PWRITE, fildes, cookie, error);
+        if (picotm_error_is_set(error)) {
+            return -1;
+        }
     }
 
     return len;
 }
 
-static int
+static void
 apply_pwrite(struct fildes_tx* self, const struct fd_event* event, size_t n,
              struct picotm_error* error)
 {
@@ -1689,17 +1550,15 @@ apply_pwrite(struct fildes_tx* self, const struct fd_event* event, size_t n,
 
         ofd_tx_pwrite_apply(ofd_tx, event->fildes, event, m, error);
         if (picotm_error_is_set(error)) {
-            return -1;
+            return;
         }
 
         n -= m;
         event += m;
     }
-
-    return 0;
 }
 
-static int
+static void
 undo_pwrite(struct fildes_tx* self, int fildes, int cookie,
             struct picotm_error* error)
 {
@@ -1715,9 +1574,8 @@ undo_pwrite(struct fildes_tx* self, int fildes, int cookie,
 
     ofd_tx_pwrite_undo(ofd_tx, fildes, cookie, error);
     if (picotm_error_is_set(error)) {
-        return -1;
+        return;
     }
-    return 0;
 }
 
 /*
@@ -1726,7 +1584,7 @@ undo_pwrite(struct fildes_tx* self, int fildes, int cookie,
 
 ssize_t
 fildes_tx_exec_read(struct fildes_tx* self, int fildes, void* buf,
-                    size_t nbyte, int isnoundo)
+                    size_t nbyte, int isnoundo, struct picotm_error* error)
 {
     assert(self);
 
@@ -1735,13 +1593,9 @@ fildes_tx_exec_read(struct fildes_tx* self, int fildes, void* buf,
     struct fd_tx* fd_tx = get_fd_tx(self, fildes);
     assert(fd_tx);
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-    fd_tx_ref_or_validate(fd_tx, fildes, 0, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+    fd_tx_ref_or_validate(fd_tx, fildes, 0, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Update/create ofd_tx */
@@ -1749,11 +1603,9 @@ fildes_tx_exec_read(struct fildes_tx* self, int fildes, void* buf,
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    ofd_tx_ref(ofd_tx, fd_tx->ofd, fildes, 0, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+    ofd_tx_ref(ofd_tx, fd_tx->ofd, fildes, 0, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Read */
@@ -1766,25 +1618,23 @@ fildes_tx_exec_read(struct fildes_tx* self, int fildes, void* buf,
     ssize_t len = ofd_tx_read_exec(ofd_tx,
                                    fildes, buf, nbyte,
                                    &cookie, isnoundo, val_mode,
-                                   &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_revocable(&error)) {
-        return ERR_NOUNDO;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+                                   error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Inject event */
-    if ((cookie >= 0) &&
-        (append_cmd(self, CMD_READ, fildes, cookie) < 0)) {
-        return -1;
+    if (cookie >= 0) {
+        append_cmd(self, CMD_READ, fildes, cookie, error);
+        if (picotm_error_is_set(error)) {
+            return -1;
+        }
     }
 
     return len;
 }
 
-static int
+static void
 apply_read(struct fildes_tx* self, const struct fd_event* event, size_t n,
            struct picotm_error* error)
 {
@@ -1810,17 +1660,15 @@ apply_read(struct fildes_tx* self, const struct fd_event* event, size_t n,
 
         ofd_tx_read_apply(ofd_tx, event->fildes, event, m, error);
         if (picotm_error_is_set(error)) {
-            return -1;
+            return;
         }
 
         n -= m;
         event += m;
     }
-
-    return 0;
 }
 
-static int
+static void
 undo_read(struct fildes_tx* self, int fildes, int cookie,
           struct picotm_error* error)
 {
@@ -1836,9 +1684,8 @@ undo_read(struct fildes_tx* self, int fildes, int cookie,
 
     ofd_tx_read_undo(ofd_tx, fildes, cookie, error);
     if (picotm_error_is_set(error)) {
-        return -1;
+        return;
     }
-    return 0;
 }
 
 /*
@@ -1847,7 +1694,8 @@ undo_read(struct fildes_tx* self, int fildes, int cookie,
 
 ssize_t
 fildes_tx_exec_recv(struct fildes_tx* self, int sockfd, void* buffer,
-                    size_t length, int flags, int isnoundo)
+                    size_t length, int flags, int isnoundo,
+                    struct picotm_error* error)
 {
     assert(self);
 
@@ -1856,13 +1704,9 @@ fildes_tx_exec_recv(struct fildes_tx* self, int sockfd, void* buffer,
     struct fd_tx* fd_tx = get_fd_tx(self, sockfd);
     assert(fd_tx);
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-    fd_tx_ref_or_validate(fd_tx, sockfd, 0, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+    fd_tx_ref_or_validate(fd_tx, sockfd, 0, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Update/create ofd_tx */
@@ -1870,11 +1714,9 @@ fildes_tx_exec_recv(struct fildes_tx* self, int sockfd, void* buffer,
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    ofd_tx_ref(ofd_tx, fd_tx->ofd, sockfd, 0, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+    ofd_tx_ref(ofd_tx, fd_tx->ofd, sockfd, 0, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Receive */
@@ -1883,25 +1725,23 @@ fildes_tx_exec_recv(struct fildes_tx* self, int sockfd, void* buffer,
 
     ssize_t len = ofd_tx_recv_exec(ofd_tx,
                                    sockfd, buffer, length, flags,
-                                   &cookie, isnoundo, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_revocable(&error)) {
-        return ERR_NOUNDO;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+                                   &cookie, isnoundo, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Inject event */
-    if ((cookie >= 0) &&
-        (append_cmd(self, CMD_RECV, sockfd, cookie) < 0)) {
-        return -1;
+    if (cookie >= 0) {
+        append_cmd(self, CMD_RECV, sockfd, cookie, error);
+        if (picotm_error_is_set(error)) {
+            return -1;
+        }
     }
 
     return len;
 }
 
-static int
+static void
 apply_recv(struct fildes_tx* self, const struct fd_event* event, size_t n,
            struct picotm_error* error)
 {
@@ -1927,17 +1767,15 @@ apply_recv(struct fildes_tx* self, const struct fd_event* event, size_t n,
 
         ofd_tx_recv_apply(ofd_tx, event->fildes, event, m, error);
         if (picotm_error_is_set(error)) {
-            return -1;
+            return;
         }
 
         n -= m;
         event += m;
     }
-
-    return 0;
 }
 
-static int
+static void
 undo_recv(struct fildes_tx* self, int fildes, int cookie,
           struct picotm_error* error)
 {
@@ -1953,9 +1791,8 @@ undo_recv(struct fildes_tx* self, int fildes, int cookie,
 
     ofd_tx_recv_undo(ofd_tx, fildes, cookie, error);
     if (picotm_error_is_set(error)) {
-        return -1;
+        return;
     }
-    return 0;
 }
 
 /*
@@ -1991,36 +1828,29 @@ ref_fdset(struct fildes_tx* self, int nfds, const fd_set* fdset,
 int
 fildes_tx_exec_select(struct fildes_tx* self, int nfds, fd_set* readfds,
                       fd_set* writefds, fd_set* errorfds,
-                      struct timeval* timeout, int isnoundo)
+                      struct timeval* timeout, int isnoundo,
+                      struct picotm_error* error)
 {
     assert(self);
-
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
     /* Ref all selected file descriptors */
 
     if (readfds) {
-        ref_fdset(self, nfds, readfds, &error);
-        if (picotm_error_is_conflicting(&error)) {
-            return ERR_CONFLICT;
-        } else if (picotm_error_is_set(&error)) {
-            return ERR_SYSTEM;
+        ref_fdset(self, nfds, readfds, error);
+        if (picotm_error_is_set(error)) {
+            return -1;
         }
     }
     if (writefds) {
-        ref_fdset(self, nfds, writefds, &error);
-        if (picotm_error_is_conflicting(&error)) {
-            return ERR_CONFLICT;
-        } else if (picotm_error_is_set(&error)) {
-            return ERR_SYSTEM;
+        ref_fdset(self, nfds, writefds, error);
+        if (picotm_error_is_set(error)) {
+            return -1;
         }
     }
     if (errorfds) {
-        ref_fdset(self, nfds, errorfds, &error);
-        if (picotm_error_is_conflicting(&error)) {
-            return ERR_CONFLICT;
-        } else if (picotm_error_is_set(&error)) {
-            return ERR_SYSTEM;
+        ref_fdset(self, nfds, errorfds, error);
+        if (picotm_error_is_set(error)) {
+            return -1;
         }
     }
 
@@ -2031,13 +1861,19 @@ fildes_tx_exec_select(struct fildes_tx* self, int nfds, fd_set* readfds,
         /* Arbitrarily choosen default timeout of 5 sec */
         struct timeval def_timeout = {5, 0};
 
-        res = select(nfds, readfds, writefds, errorfds, &def_timeout);
-
-        if (!res) {
-            return ERR_CONFLICT;
+        res = TEMP_FAILURE_RETRY(select(nfds, readfds, writefds, errorfds,
+                                        &def_timeout));
+        if (res < 0) {
+            picotm_error_set_errno(error, errno);
+            return -1;
         }
     } else {
-        res = select(nfds, readfds, writefds, errorfds, timeout);
+        res = TEMP_FAILURE_RETRY(select(nfds, readfds, writefds, errorfds,
+                                        timeout));
+        if (res < 0) {
+            picotm_error_set_errno(error, errno);
+            return -1;
+        }
     }
 
     return res;
@@ -2049,7 +1885,8 @@ fildes_tx_exec_select(struct fildes_tx* self, int nfds, fd_set* readfds,
 
 ssize_t
 fildes_tx_exec_send(struct fildes_tx* self, int sockfd, const void* buffer,
-                    size_t length, int flags, int isnoundo)
+                    size_t length, int flags, int isnoundo,
+                    struct picotm_error* error)
 {
     assert(self);
 
@@ -2058,13 +1895,9 @@ fildes_tx_exec_send(struct fildes_tx* self, int sockfd, const void* buffer,
     struct fd_tx* fd_tx = get_fd_tx(self, sockfd);
     assert(fd_tx);
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-    fd_tx_ref_or_validate(fd_tx, sockfd, 0, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+    fd_tx_ref_or_validate(fd_tx, sockfd, 0, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Update/create ofd_tx */
@@ -2072,11 +1905,9 @@ fildes_tx_exec_send(struct fildes_tx* self, int sockfd, const void* buffer,
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    ofd_tx_ref(ofd_tx, fd_tx->ofd, sockfd, 0, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+    ofd_tx_ref(ofd_tx, fd_tx->ofd, sockfd, 0, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Send */
@@ -2085,25 +1916,23 @@ fildes_tx_exec_send(struct fildes_tx* self, int sockfd, const void* buffer,
 
     ssize_t len = ofd_tx_send_exec(ofd_tx,
                                    sockfd, buffer, length, flags,
-                                   &cookie, isnoundo, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_revocable(&error)) {
-        return ERR_NOUNDO;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+                                   &cookie, isnoundo, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Inject event */
-    if ((cookie >= 0) &&
-        (append_cmd(self, CMD_SEND, sockfd, cookie) < 0)) {
-        return -1;
+    if (cookie >= 0) {
+        append_cmd(self, CMD_SEND, sockfd, cookie, error);
+        if (picotm_error_is_set(error)) {
+            return -1;
+        }
     }
 
     return len;
 }
 
-static int
+static void
 apply_send(struct fildes_tx* self, const struct fd_event* event, size_t n,
            struct picotm_error* error)
 {
@@ -2129,17 +1958,15 @@ apply_send(struct fildes_tx* self, const struct fd_event* event, size_t n,
 
         ofd_tx_send_apply(ofd_tx, event->fildes, event, m, error);
         if (picotm_error_is_set(error)) {
-            return -1;
+            return;
         }
 
         n -= m;
         event += m;
     }
-
-    return 0;
 }
 
-static int
+static void
 undo_send(struct fildes_tx* self, int fildes, int cookie,
           struct picotm_error* error)
 {
@@ -2155,9 +1982,8 @@ undo_send(struct fildes_tx* self, int fildes, int cookie,
 
     ofd_tx_send_undo(ofd_tx, fildes, cookie, error);
     if (picotm_error_is_set(error)) {
-        return -1;
+        return;
     }
-    return 0;
 }
 
 /*
@@ -2166,7 +1992,7 @@ undo_send(struct fildes_tx* self, int fildes, int cookie,
 
 int
 fildes_tx_exec_shutdown(struct fildes_tx* self, int sockfd, int how,
-                        int isnoundo)
+                        int isnoundo, struct picotm_error* error)
 {
     assert(self);
 
@@ -2175,13 +2001,9 @@ fildes_tx_exec_shutdown(struct fildes_tx* self, int sockfd, int how,
     struct fd_tx* fd_tx = get_fd_tx(self, sockfd);
     assert(fd_tx);
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-    fd_tx_ref_or_validate(fd_tx, sockfd, 0, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+    fd_tx_ref_or_validate(fd_tx, sockfd, 0, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Update/create ofd_tx */
@@ -2189,11 +2011,9 @@ fildes_tx_exec_shutdown(struct fildes_tx* self, int sockfd, int how,
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    ofd_tx_ref(ofd_tx, fd_tx->ofd, sockfd, 0, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+    ofd_tx_ref(ofd_tx, fd_tx->ofd, sockfd, 0, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Shutdown */
@@ -2201,25 +2021,23 @@ fildes_tx_exec_shutdown(struct fildes_tx* self, int sockfd, int how,
     int cookie = -1;
 
     int len = ofd_tx_shutdown_exec(ofd_tx, sockfd, how, &cookie, isnoundo,
-                                   &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_revocable(&error)) {
-        return ERR_NOUNDO;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+                                   error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Inject event */
-    if ((cookie >= 0) &&
-        (append_cmd(self, CMD_SHUTDOWN, sockfd, sockfd) < 0)) {
-        return -1;
+    if (cookie >= 0) {
+        append_cmd(self, CMD_SHUTDOWN, sockfd, cookie, error);
+        if (picotm_error_is_set(error)) {
+            return -1;
+        }
     }
 
     return len;
 }
 
-static int
+static void
 apply_shutdown(struct fildes_tx* self, const struct fd_event* event, size_t n,
                struct picotm_error* error)
 {
@@ -2245,17 +2063,15 @@ apply_shutdown(struct fildes_tx* self, const struct fd_event* event, size_t n,
 
         ofd_tx_shutdown_apply(ofd_tx, event->fildes, event, m, error);
         if (picotm_error_is_set(error)) {
-            return -1;
+            return;
         }
 
         n -= m;
         event += m;
     }
-
-    return 0;
 }
 
-static int
+static void
 undo_shutdown(struct fildes_tx* self, int fildes, int cookie,
               struct picotm_error* error)
 {
@@ -2271,9 +2087,8 @@ undo_shutdown(struct fildes_tx* self, int fildes, int cookie,
 
     ofd_tx_shutdown_undo(ofd_tx, fildes, cookie, error);
     if (picotm_error_is_set(error)) {
-        return -1;
+        return;
     }
-    return 0;
 }
 
 /*
@@ -2282,15 +2097,15 @@ undo_shutdown(struct fildes_tx* self, int fildes, int cookie,
 
 int
 fildes_tx_exec_socket(struct fildes_tx* self, int domain, int type,
-                      int protocol)
+                      int protocol, struct picotm_error* error)
 {
     assert(self);
 
     /* Create socket */
 
     int sockfd = TEMP_FAILURE_RETRY(socket(domain, type, protocol));
-
     if (sockfd < 0) {
+        picotm_error_set_errno(error, errno);
         return -1;
     }
 
@@ -2299,23 +2114,18 @@ fildes_tx_exec_socket(struct fildes_tx* self, int domain, int type,
     struct fd_tx* fd_tx = get_fd_tx(self, sockfd);
     assert(fd_tx);
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+    fd_tx_ref(fd_tx, sockfd, 0, error);
 
-    fd_tx_ref(fd_tx, sockfd, 0, &error);
-
-    if (picotm_error_is_set(&error)) {
+    if (picotm_error_is_set(error)) {
         if (TEMP_FAILURE_RETRY(close(sockfd)) < 0) {
             perror("close");
         }
-        if (picotm_error_is_conflicting(&error)) {
-            return ERR_CONFLICT;
-        } else {
-            return ERR_SYSTEM;
-        }
+        return -1;
     }
 
     /* Inject event */
-    if (append_cmd(self, CMD_SOCKET, sockfd, -1) < 0) {
+    append_cmd(self, CMD_SOCKET, sockfd, -1, error);
+    if (picotm_error_is_set(error)) {
         if (TEMP_FAILURE_RETRY(close(sockfd)) < 0) {
             perror("close");
         }
@@ -2325,17 +2135,15 @@ fildes_tx_exec_socket(struct fildes_tx* self, int domain, int type,
     return sockfd;
 }
 
-static int
+static void
 apply_socket(struct fildes_tx* self, const struct fd_event* event, size_t n,
              struct picotm_error* error)
 {
     assert(self);
     assert(event || !n);
-
-    return 0;
 }
 
-static int
+static void
 undo_socket(struct fildes_tx* self, int fildes, int cookie,
             struct picotm_error* error)
 {
@@ -2350,8 +2158,6 @@ undo_socket(struct fildes_tx* self, int fildes, int cookie,
      * inside the transaction. So no other transaction should have access to
      * it. */
     fd_tx_signal_close(fd_tx);
-
-    return 0;
 }
 
 /*
@@ -2359,7 +2165,7 @@ undo_socket(struct fildes_tx* self, int fildes, int cookie,
  */
 
 void
-fildes_tx_exec_sync(struct fildes_tx* self)
+fildes_tx_exec_sync(struct fildes_tx* self, struct picotm_error* error)
 {
     assert(self);
 
@@ -2367,10 +2173,13 @@ fildes_tx_exec_sync(struct fildes_tx* self)
     sync();
 
     /* Inject event */
-    append_cmd(self, CMD_SYNC, -1, -1);
+    append_cmd(self, CMD_SYNC, -1, -1, error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
 }
 
-static int
+static void
 apply_sync(struct fildes_tx* self, const struct fd_event* event, size_t n,
            struct picotm_error* error)
 {
@@ -2378,16 +2187,12 @@ apply_sync(struct fildes_tx* self, const struct fd_event* event, size_t n,
     assert(event || !n);
 
     sync();
-
-    return 0;
 }
 
-static int
+static void
 undo_sync(struct fildes_tx* self, int fildes, int cookie,
           struct picotm_error* error)
-{
-    return 0;
-}
+{ }
 
 /*
  * write()
@@ -2395,7 +2200,7 @@ undo_sync(struct fildes_tx* self, int fildes, int cookie,
 
 ssize_t
 fildes_tx_exec_write(struct fildes_tx* self, int fildes, const void* buf,
-                     size_t nbyte, int isnoundo)
+                     size_t nbyte, int isnoundo, struct picotm_error* error)
 {
     assert(self);
 
@@ -2404,13 +2209,9 @@ fildes_tx_exec_write(struct fildes_tx* self, int fildes, const void* buf,
     struct fd_tx* fd_tx = get_fd_tx(self, fildes);
     assert(fd_tx);
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-    fd_tx_ref_or_validate(fd_tx, fildes, 0, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+    fd_tx_ref_or_validate(fd_tx, fildes, 0, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Update/create ofd_tx */
@@ -2418,11 +2219,9 @@ fildes_tx_exec_write(struct fildes_tx* self, int fildes, const void* buf,
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    ofd_tx_ref(ofd_tx, fd_tx->ofd, fildes, 0, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+    ofd_tx_ref(ofd_tx, fd_tx->ofd, fildes, 0, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Write */
@@ -2433,25 +2232,23 @@ fildes_tx_exec_write(struct fildes_tx* self, int fildes, const void* buf,
     len = ofd_tx_write_exec(ofd_tx,
                             fildes,
                             buf, nbyte, &cookie,
-                            isnoundo, &error);
-    if (picotm_error_is_conflicting(&error)) {
-        return ERR_CONFLICT;
-    } else if (picotm_error_is_revocable(&error)) {
-        return ERR_NOUNDO;
-    } else if (picotm_error_is_set(&error)) {
-        return ERR_SYSTEM;
+                            isnoundo, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
     /* Inject event */
-    if ((cookie >= 0) &&
-        (append_cmd(self, CMD_WRITE, fildes, cookie) < 0)) {
-        return -1;
+    if (cookie >= 0) {
+        append_cmd(self, CMD_WRITE, fildes, cookie, error);
+        if (picotm_error_is_set(error)) {
+            return -1;
+        }
     }
 
     return len;
 }
 
-static int
+static void
 apply_write(struct fildes_tx* self, const struct fd_event* event, size_t n,
             struct picotm_error* error)
 {
@@ -2477,17 +2274,15 @@ apply_write(struct fildes_tx* self, const struct fd_event* event, size_t n,
 
         ofd_tx_write_apply(ofd_tx, event->fildes, event, m, error);
         if (picotm_error_is_set(error)) {
-            return -1;
+            return;
         }
 
         n -= m;
         event += m;
     }
-
-    return 0;
 }
 
-static int
+static void
 undo_write(struct fildes_tx* self, int fildes, int cookie,
            struct picotm_error* error)
 {
@@ -2503,16 +2298,15 @@ undo_write(struct fildes_tx* self, int fildes, int cookie,
 
     ofd_tx_write_undo(ofd_tx, fildes, cookie, error);
     if (picotm_error_is_set(error)) {
-        return -1;
+        return;
     }
-    return 0;
 }
 
 /*
  * Module interface
  */
 
-int
+void
 fildes_tx_lock(struct fildes_tx* self, struct picotm_error* error)
 {
     size_t len;
@@ -2520,9 +2314,8 @@ fildes_tx_lock(struct fildes_tx* self, struct picotm_error* error)
     /* Lock fds */
 
     self->ifd = get_ifd(self->fd_tx, self->fd_tx_max_fildes, &len, error);
-
-    if (!self->ifd) {
-        return -1;
+    if (picotm_error_is_set(error)) {
+        return;
     }
 
     const int* ifd = self->ifd;
@@ -2538,9 +2331,8 @@ fildes_tx_lock(struct fildes_tx* self, struct picotm_error* error)
     /* Lock ofds */
 
     self->iofd = get_iofd(self->fd_tx, self->ifd, self->ifdlen, &len, error);
-
-    if (!self->iofd) {
-        return -1;
+    if (picotm_error_is_set(error)) {
+        return;
     }
 
     const int* iofd = self->iofd;
@@ -2552,8 +2344,6 @@ fildes_tx_lock(struct fildes_tx* self, struct picotm_error* error)
         ++iofd;
         ++self->iofdlen;
     }
-
-    return 0;
 }
 
 void
@@ -2584,7 +2374,7 @@ fildes_tx_unlock(struct fildes_tx* self)
     self->ifdlen = 0;
 }
 
-int
+void
 fildes_tx_validate(struct fildes_tx* self, int noundo,
                    struct picotm_error* error)
 {
@@ -2594,10 +2384,8 @@ fildes_tx_validate(struct fildes_tx* self, int noundo,
 
     while (fd_tx < self->fd_tx+self->fd_tx_max_fildes) {
         fd_tx_validate(fd_tx, error);
-        if (picotm_error_is_conflicting(error)) {
-            return ERR_CONFLICT;
-        } else if (picotm_error_is_set(error)) {
-            return ERR_SYSTEM;
+        if (picotm_error_is_set(error)) {
+            return;
         }
         ++fd_tx;
     }
@@ -2608,26 +2396,22 @@ fildes_tx_validate(struct fildes_tx* self, int noundo,
 
     while (ofd_tx < self->ofd_tx+self->ofd_tx_max_index) {
         ofd_tx_validate(ofd_tx, error);
-        if (picotm_error_is_conflicting(error)) {
-            return ERR_CONFLICT;
-        } else if (picotm_error_is_set(error)) {
-            return ERR_SYSTEM;
+        if (picotm_error_is_set(error)) {
+            return;
         }
         ++ofd_tx;
     }
-
-    return 0;
 }
 
-int
+void
 fildes_tx_apply_event(struct fildes_tx* self,
                       const struct picotm_event* event, size_t n,
                       struct picotm_error* error)
 {
-    static int (* const apply[])(struct fildes_tx*,
-                                 const struct fd_event*,
-                                 size_t,
-                                 struct picotm_error*) = {
+    static void (* const apply[])(struct fildes_tx*,
+                                  const struct fd_event*,
+                                  size_t,
+                                  struct picotm_error*) = {
         apply_close,
         apply_open,
         apply_pread,
@@ -2663,28 +2447,25 @@ fildes_tx_apply_event(struct fildes_tx* self,
             ++m;
         }
 
-        int res = apply[event->call](self, self->eventtab+event->cookie, m,
-                                     error);
-        if (res < 0) {
-            return -1;
+        apply[event->call](self, self->eventtab+event->cookie, m, error);
+        if (picotm_error_is_set(error)) {
+            return;
         }
 
         n -= m;
         event += m;
     }
-
-    return 0;
 }
 
-int
+void
 fildes_tx_undo_event(struct fildes_tx* self,
                      const struct picotm_event* event, size_t n,
                      struct picotm_error* error)
 {
-    static int (* const undo[])(struct fildes_tx*,
-                                int,
-                                int,
-                                struct picotm_error*) = {
+    static void (* const undo[])(struct fildes_tx*,
+                                 int,
+                                 int,
+                                 struct picotm_error*) = {
         undo_close,
         undo_open,
         undo_pread,
@@ -2712,21 +2493,19 @@ fildes_tx_undo_event(struct fildes_tx* self,
 
     while (n) {
         --event;
-        int res = undo[event->call](self,
-                                    self->eventtab[event->cookie].fildes,
-                                    self->eventtab[event->cookie].cookie,
-                                    error);
-        if (res < 0) {
-            return -1;
+        undo[event->call](self,
+                          self->eventtab[event->cookie].fildes,
+                          self->eventtab[event->cookie].cookie,
+                          error);
+        if (picotm_error_is_set(error)) {
+            return;
         }
 
         --n;
     }
-
-    return 0;
 }
 
-int
+void
 fildes_tx_update_cc(struct fildes_tx* self, int noundo,
                     struct picotm_error* error)
 {
@@ -2738,10 +2517,8 @@ fildes_tx_update_cc(struct fildes_tx* self, int noundo,
 
         if (fd_tx_holds_ref(fd_tx)) {
             fd_tx_update_cc(fd_tx, error);
-            if (picotm_error_is_conflicting(error)) {
-                return ERR_CONFLICT;
-            } else if (picotm_error_is_set(error)) {
-                return ERR_SYSTEM;
+            if (picotm_error_is_set(error)) {
+                return;
             }
         }
         ++fd_tx;
@@ -2755,19 +2532,15 @@ fildes_tx_update_cc(struct fildes_tx* self, int noundo,
 
         if (ofd_tx_holds_ref(ofd_tx)) {
             ofd_tx_update_cc(ofd_tx, error);
-            if (picotm_error_is_conflicting(error)) {
-                return ERR_CONFLICT;
-            } else if (picotm_error_is_set(error)) {
-                return ERR_SYSTEM;
+            if (picotm_error_is_set(error)) {
+                return;
             }
         }
         ++ofd_tx;
     }
-
-    return 0;
 }
 
-int
+void
 fildes_tx_clear_cc(struct fildes_tx* self, int noundo,
                    struct picotm_error* error)
 {
@@ -2779,10 +2552,8 @@ fildes_tx_clear_cc(struct fildes_tx* self, int noundo,
 
         if (fd_tx_holds_ref(fd_tx)) {
             fd_tx_clear_cc(fd_tx, error);
-            if (picotm_error_is_conflicting(error)) {
-                return ERR_CONFLICT;
-            } else if (picotm_error_is_set(error)) {
-                return ERR_SYSTEM;
+            if (picotm_error_is_set(error)) {
+                return;
             }
         }
         ++fd_tx;
@@ -2796,16 +2567,12 @@ fildes_tx_clear_cc(struct fildes_tx* self, int noundo,
 
         if (ofd_tx_holds_ref(ofd_tx)) {
             ofd_tx_clear_cc(ofd_tx, error);
-            if (picotm_error_is_conflicting(error)) {
-                return ERR_CONFLICT;
-            } else if (picotm_error_is_set(error)) {
-                return ERR_SYSTEM;
+            if (picotm_error_is_set(error)) {
+                return;
             }
         }
         ++ofd_tx;
     }
-
-    return 0;
 }
 
 void
