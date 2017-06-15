@@ -91,14 +91,20 @@ get_error_tx(bool initialize, struct picotm_error* error)
 static struct error_tx*
 get_non_null_error_tx(void)
 {
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    struct error_tx* error_tx = get_error_tx(true, &error);
-    if (picotm_error_is_set(&error)) {
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+        struct error_tx* error_tx = get_error_tx(true, &error);
+
+        if (!picotm_error_is_set(&error)) {
+            /* assert here as there's no legal way that error_tx
+             * could be NULL */
+            assert(error_tx);
+            return error_tx;
+        }
+
         picotm_recover_from_error(&error);
-    }
-    /* assert here as there's no legal way that error_tx could be NULL */
-    assert(error_tx);
-    return error_tx;
+    } while (true);
 }
 
 /*
