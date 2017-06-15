@@ -105,10 +105,6 @@ get_non_null_error_tx(void)
  * Public interface
  */
 
-enum {
-    SAVE_ERRNO = 0
-};
-
 void
 error_module_save_errno()
 {
@@ -120,12 +116,6 @@ error_module_save_errno()
     }
 
     error_tx_save_errno(error_tx);
-
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    picotm_append_event(error_tx->module, SAVE_ERRNO, 0, &error);
-    if (picotm_error_is_set(&error)) {
-        picotm_recover_from_error(&error);
-    }
 }
 
 void
