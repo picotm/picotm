@@ -129,13 +129,18 @@ get_fildes_tx(bool initialize, struct picotm_error* error)
 static struct fildes_tx*
 get_non_null_fildes_tx(void)
 {
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    struct fildes_tx* fildes_tx = get_fildes_tx(true, &error);
-    if (picotm_error_is_set(&error)) {
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+        struct fildes_tx* fildes_tx = get_fildes_tx(true, &error);
+
+        if (!picotm_error_is_set(&error)) {
+            assert(fildes_tx);
+            return fildes_tx;
+        }
         picotm_recover_from_error(&error);
-    }
-    assert(fildes_tx);
-    return fildes_tx;
+
+    } while (true);
 }
 
 int
