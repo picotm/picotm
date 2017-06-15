@@ -94,14 +94,20 @@ get_fpu_tx(bool initialize, struct picotm_error* error)
 static struct fpu_tx*
 get_non_null_fpu_tx(void)
 {
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    struct fpu_tx* fpu_tx = get_fpu_tx(true, &error);
-    if (picotm_error_is_set(&error)) {
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+        struct fpu_tx* fpu_tx = get_fpu_tx(true, &error);
+
+        if (!picotm_error_is_set(&error)) {
+            /* assert() here as there's no legal way that fpu_tx
+             * could be NULL */
+            assert(fpu_tx);
+            return fpu_tx;
+        }
         picotm_recover_from_error(&error);
-    }
-    /* assert() here as there's no legal way that fpu_tx could be NULL */
-    assert(fpu_tx);
-    return fpu_tx;
+
+    } while (true);
 }
 
 /*
@@ -119,12 +125,17 @@ fpu_module_save_fenv()
         return;
     }
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    fpu_tx_save_fenv(fpu_tx, &error);
-    if (picotm_error_is_set(&error)) {
+        fpu_tx_save_fenv(fpu_tx, &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return;
+        }
         picotm_recover_from_error(&error);
-    }
+
+    } while (true);
 }
 
 void
@@ -138,10 +149,14 @@ fpu_module_save_fexcept()
         return;
     }
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    fpu_tx_save_fexcept(fpu_tx, &error);
-    if (picotm_error_is_set(&error)) {
+        fpu_tx_save_fexcept(fpu_tx, &error);
+        if (picotm_error_is_set(&error)) {
+            return;
+        }
         picotm_recover_from_error(&error);
-    }
+
+    } while (true);
 }
