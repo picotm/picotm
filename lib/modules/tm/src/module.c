@@ -208,13 +208,18 @@ get_vmem_tx(bool initialize, struct picotm_error* error)
 static struct tm_vmem_tx*
 get_non_null_vmem_tx(void)
 {
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    struct tm_vmem_tx* vmem_tx = get_vmem_tx(true, &error);
-    if (picotm_error_is_set(&error)) {
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+        struct tm_vmem_tx* vmem_tx = get_vmem_tx(true, &error);
+
+        if (!picotm_error_is_set(&error)) {
+            assert(vmem_tx);
+            return vmem_tx;
+        }
         picotm_recover_from_error(&error);
-    }
-    assert(vmem_tx);
-    return vmem_tx;
+
+    } while (true);
 }
 
 /*
@@ -226,22 +231,17 @@ tm_module_load(uintptr_t addr, void* buf, size_t siz)
 {
     struct tm_vmem_tx* vmem_tx = get_non_null_vmem_tx();
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    bool is_conflicting = false;
-
     do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
         tm_vmem_tx_ld(vmem_tx, addr, buf, siz, &error);
 
-        is_conflicting = picotm_error_is_conflicting(&error);
-        if (is_conflicting) {
-            picotm_recover_from_error(&error);
-            picotm_error_clear(&error);
+        if (!picotm_error_is_set(&error)) {
+            return;
         }
-    } while (is_conflicting);
-
-    if (picotm_error_is_set(&error)) {
         picotm_recover_from_error(&error);
-    }
+
+    } while (true);
 }
 
 void
@@ -249,18 +249,17 @@ tm_module_store(uintptr_t addr, const void* buf, size_t siz)
 {
     struct tm_vmem_tx* vmem_tx = get_non_null_vmem_tx();
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    bool is_conflicting = false;
-
     do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
         tm_vmem_tx_st(vmem_tx, addr, buf, siz, &error);
 
-        is_conflicting = picotm_error_is_conflicting(&error);
-        if (is_conflicting) {
-            picotm_recover_from_error(&error);
-            picotm_error_clear(&error);
+        if (!picotm_error_is_set(&error)) {
+            return;
         }
-    } while (is_conflicting);
+        picotm_recover_from_error(&error);
+
+    } while (true);
 }
 
 void
@@ -268,18 +267,17 @@ tm_module_loadstore(uintptr_t laddr, uintptr_t saddr, size_t siz)
 {
     struct tm_vmem_tx* vmem_tx = get_non_null_vmem_tx();
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    bool is_conflicting = false;
-
     do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
         tm_vmem_tx_ldst(vmem_tx, laddr, saddr, siz, &error);
 
-        is_conflicting = picotm_error_is_conflicting(&error);
-        if (is_conflicting) {
-            picotm_recover_from_error(&error);
-            picotm_error_clear(&error);
+        if (!picotm_error_is_set(&error)) {
+            return;
         }
-    } while (is_conflicting);
+        picotm_recover_from_error(&error);
+
+    } while (true);
 }
 
 void
@@ -287,18 +285,17 @@ tm_module_privatize(uintptr_t addr, size_t siz, unsigned long flags)
 {
     struct tm_vmem_tx* vmem_tx = get_non_null_vmem_tx();
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    bool is_conflicting = false;
-
     do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
         tm_vmem_tx_privatize(vmem_tx, addr, siz, flags, &error);
 
-        is_conflicting = picotm_error_is_conflicting(&error);
-        if (is_conflicting) {
-            picotm_recover_from_error(&error);
-            picotm_error_clear(&error);
+        if (!picotm_error_is_set(&error)) {
+            return;
         }
-    } while (is_conflicting);
+        picotm_recover_from_error(&error);
+
+    } while (true);
 }
 
 void
@@ -306,16 +303,15 @@ tm_module_privatize_c(uintptr_t addr, int c, unsigned long flags)
 {
     struct tm_vmem_tx* vmem_tx = get_non_null_vmem_tx();
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    bool is_conflicting = false;
-
     do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
         tm_vmem_tx_privatize_c(vmem_tx, addr, c, flags, &error);
 
-        is_conflicting = picotm_error_is_conflicting(&error);
-        if (is_conflicting) {
-            picotm_recover_from_error(&error);
-            picotm_error_clear(&error);
+        if (!picotm_error_is_set(&error)) {
+            return;
         }
-    } while (is_conflicting);
+        picotm_recover_from_error(&error);
+
+    } while (true);
 }
