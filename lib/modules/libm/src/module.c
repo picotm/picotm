@@ -108,11 +108,6 @@ get_non_null_fpu_tx(void)
  * Public interface
  */
 
-enum {
-    SAVE_FENV = 0,
-    SAVE_FEXCEPT
-};
-
 void
 fpu_module_save_fenv()
 {
@@ -127,11 +122,6 @@ fpu_module_save_fenv()
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
     fpu_tx_save_fenv(fpu_tx, &error);
-    if (picotm_error_is_set(&error)) {
-        picotm_recover_from_error(&error);
-    }
-
-    picotm_append_event(fpu_tx->module, SAVE_FENV, 0, &error);
     if (picotm_error_is_set(&error)) {
         picotm_recover_from_error(&error);
     }
@@ -151,11 +141,6 @@ fpu_module_save_fexcept()
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
     fpu_tx_save_fexcept(fpu_tx, &error);
-    if (picotm_error_is_set(&error)) {
-        picotm_recover_from_error(&error);
-    }
-
-    picotm_append_event(fpu_tx->module, SAVE_FEXCEPT, 0, &error);
     if (picotm_error_is_set(&error)) {
         picotm_recover_from_error(&error);
     }
