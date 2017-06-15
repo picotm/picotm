@@ -118,13 +118,18 @@ get_vfs_tx(bool initialize, struct picotm_error* error)
 static struct vfs_tx*
 get_non_null_vfs_tx(void)
 {
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    struct vfs_tx* vfs_tx = get_vfs_tx(true, &error);
-    if (picotm_error_is_set(&error)) {
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+        struct vfs_tx* vfs_tx = get_vfs_tx(true, &error);
+
+        if (!picotm_error_is_set(&error)) {
+            assert(vfs_tx);
+            return vfs_tx;
+        }
         picotm_recover_from_error(&error);
-    }
-    assert(vfs_tx);
-    return vfs_tx;
+
+    } while (true);
 }
 
 int
