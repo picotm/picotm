@@ -82,14 +82,19 @@ get_allocator_tx(bool initialize, struct picotm_error* error)
 static struct allocator_tx*
 get_non_null_allocator_tx(void)
 {
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    struct allocator_tx* allocator_tx = get_allocator_tx(true, &error);
-    if (picotm_error_is_set(&error)) {
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+        struct allocator_tx* allocator_tx = get_allocator_tx(true, &error);
+        if (!picotm_error_is_set(&error)) {
+            /* assert() here as there's no legal way that allocator_tx
+             * could be NULL */
+            assert(allocator_tx);
+            return allocator_tx;
+        }
+
         picotm_recover_from_error(&error);
-    }
-    /* assert() here as there's no legal way that allocator_tx could be NULL */
-    assert(allocator_tx);
-    return allocator_tx;
+    } while (true);
 }
 
 /*
@@ -101,11 +106,17 @@ allocator_module_free(void* mem, size_t usiz)
 {
     struct allocator_tx* data = get_non_null_allocator_tx();
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    allocator_tx_exec_free(data, mem, &error);
-    if (picotm_error_is_set(&error)) {
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+        allocator_tx_exec_free(data, mem, &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return;
+        }
         picotm_recover_from_error(&error);
-    }
+
+    } while (true);
 }
 
 void
@@ -114,9 +125,15 @@ allocator_module_posix_memalign(void** memptr, size_t alignment, size_t size)
     struct allocator_tx* data = get_non_null_allocator_tx();
     assert(data);
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    allocator_tx_exec_posix_memalign(data, memptr, alignment, size, &error);
-    if (picotm_error_is_set(&error)) {
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+        allocator_tx_exec_posix_memalign(data, memptr, alignment, size, &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return;
+        }
         picotm_recover_from_error(&error);
-    }
+
+    } while (true);
 }
