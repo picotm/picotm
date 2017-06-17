@@ -293,11 +293,11 @@ err_fd_tx_ref:
 }
 
 static void
-apply_accept(struct fildes_tx* self, const struct fd_event* event, size_t n,
+apply_accept(struct fildes_tx* self, const struct fd_event* event,
              struct picotm_error* error)
 {
     assert(self);
-    assert(event || !n);
+    assert(event);
 }
 
 static void
@@ -368,35 +368,23 @@ fildes_tx_exec_bind(struct fildes_tx* self, int socket,
 }
 
 static void
-apply_bind(struct fildes_tx* self, const struct fd_event* event, size_t n,
+apply_bind(struct fildes_tx* self, const struct fd_event* event,
            struct picotm_error* error)
 {
     assert(self);
-    assert(event || !n);
+    assert(event);
+    assert(event->fildes >= 0);
+    assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
-    while (n) {
+    const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
+    assert(fd_tx);
 
-        assert(event->fildes >= 0);
-        assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
+    struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
+    assert(ofd_tx);
 
-        const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
-        assert(fd_tx);
-
-        struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
-        assert(ofd_tx);
-
-        size_t m = 1;
-
-        while ((m < n) && (event[m].fildes == event->fildes)) {
-            ++m;
-        }
-
-        ofd_tx_bind_apply(ofd_tx, event->fildes, event, m, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-        n -= m;
-        event += m;
+    ofd_tx_bind_apply(ofd_tx, event->fildes, event, 1, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 }
 
@@ -463,27 +451,20 @@ fildes_tx_exec_close(struct fildes_tx* self, int fildes, int isnoundo,
 }
 
 static void
-apply_close(struct fildes_tx* self, const struct fd_event* event, size_t n,
+apply_close(struct fildes_tx* self, const struct fd_event* event,
             struct picotm_error* error)
 {
     assert(self);
-    assert(event || !n);
+    assert(event);
+    assert(event->fildes >= 0);
+    assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
-    while (n) {
+    struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
+    assert(fd_tx);
 
-        assert(event->fildes >= 0);
-        assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
-
-        struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
-        assert(fd_tx);
-
-        fd_tx_close_apply(fd_tx, event->fildes, event->cookie, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-
-        --n;
-        ++event;
+    fd_tx_close_apply(fd_tx, event->fildes, event->cookie, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 }
 
@@ -556,36 +537,23 @@ fildes_tx_exec_connect(struct fildes_tx* self, int sockfd,
 }
 
 static void
-apply_connect(struct fildes_tx* self, const struct fd_event* event, size_t n,
+apply_connect(struct fildes_tx* self, const struct fd_event* event,
               struct picotm_error* error)
 {
     assert(self);
-    assert(event || !n);
+    assert(event);
+    assert(event->fildes >= 0);
+    assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
-    while (n) {
+    const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
+    assert(fd_tx);
 
-        assert(event->fildes >= 0);
-        assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
+    struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
+    assert(ofd_tx);
 
-        const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
-        assert(fd_tx);
-
-        struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
-        assert(ofd_tx);
-
-        size_t m = 1;
-
-        while ((m < n) && (event[m].fildes == event->fildes)) {
-            ++m;
-        }
-
-        ofd_tx_connect_apply(ofd_tx, event->fildes, event, m, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-
-        n -= m;
-        event += m;
+    ofd_tx_connect_apply(ofd_tx, event->fildes, event, 1, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 }
 
@@ -667,11 +635,11 @@ fildes_tx_exec_dup(struct fildes_tx* self, int fildes, int cloexec,
 }
 
 static void
-apply_dup(struct fildes_tx* self, const struct fd_event* event, size_t n,
+apply_dup(struct fildes_tx* self, const struct fd_event* event,
           struct picotm_error* error)
 {
     assert(self);
-    assert(event || !n);
+    assert(event);
 }
 
 static void
@@ -761,38 +729,31 @@ fildes_tx_exec_fcntl(struct fildes_tx* self, int fildes, int cmd,
 }
 
 static void
-apply_fcntl(struct fildes_tx* self, const struct fd_event* event, size_t n,
+apply_fcntl(struct fildes_tx* self, const struct fd_event* event,
             struct picotm_error* error)
 {
     assert(self);
-    assert(event || !n);
+    assert(event);
+    assert(event->fildes >= 0);
+    assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
-    while (n) {
+    struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
+    assert(fd_tx);
 
-        assert(event->fildes >= 0);
-        assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
+    bool next_domain = false;
 
-        struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
-        assert(fd_tx);
+    fd_tx_fcntl_apply(fd_tx, event->cookie, &next_domain, error);
 
-        bool next_domain = false;
+    if (next_domain)  {
 
-        fd_tx_fcntl_apply(fd_tx, event->cookie, &next_domain, error);
+        struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
+        assert(ofd_tx);
 
-        if (next_domain)  {
+        ofd_tx_fcntl_apply(ofd_tx, event->fildes, event, 1, error);
+    }
 
-            struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
-            assert(ofd_tx);
-
-            ofd_tx_fcntl_apply(ofd_tx, event->fildes, event, 1, error);
-        }
-
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-
-        --n;
-        ++event;
+    if (picotm_error_is_set(error)) {
+        return;
     }
 }
 
@@ -875,36 +836,23 @@ fildes_tx_exec_fsync(struct fildes_tx* self, int fildes, int isnoundo,
 }
 
 static void
-apply_fsync(struct fildes_tx* self, const struct fd_event* event, size_t n,
+apply_fsync(struct fildes_tx* self, const struct fd_event* event,
             struct picotm_error* error)
 {
     assert(self);
-    assert(event || !n);
+    assert(event);
+    assert(event->fildes >= 0);
+    assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
-    while (n) {
+    const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
+    assert(fd_tx);
 
-        assert(event->fildes >= 0);
-        assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
+    struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
+    assert(ofd_tx);
 
-        const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
-        assert(fd_tx);
-
-        struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
-        assert(ofd_tx);
-
-        size_t m = 1;
-
-        while ((m < n) && (event[m].fildes == event->fildes)) {
-            ++m;
-        }
-
-        ofd_tx_fsync_apply(ofd_tx, event->fildes, event, m, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-
-        n -= m;
-        event += m;
+    ofd_tx_fsync_apply(ofd_tx, event->fildes, event, 1, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 }
 
@@ -980,36 +928,23 @@ fildes_tx_exec_listen(struct fildes_tx* self, int sockfd, int backlog,
 }
 
 static void
-apply_listen(struct fildes_tx* self, const struct fd_event* event, size_t n,
+apply_listen(struct fildes_tx* self, const struct fd_event* event,
              struct picotm_error* error)
 {
     assert(self);
-    assert(event || !n);
+    assert(event);
+    assert(event->fildes >= 0);
+    assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
-    while (n) {
+    const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
+    assert(fd_tx);
 
-        assert(event->fildes >= 0);
-        assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
+    struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
+    assert(ofd_tx);
 
-        const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
-        assert(fd_tx);
-
-        struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
-        assert(ofd_tx);
-
-        size_t m = 1;
-
-        while ((m < n) && (event[m].fildes == event->fildes)) {
-            ++m;
-        }
-
-        ofd_tx_listen_apply(ofd_tx, event->fildes, event, m, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-
-        n -= m;
-        event += m;
+    ofd_tx_listen_apply(ofd_tx, event->fildes, event, 1, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 }
 
@@ -1086,36 +1021,23 @@ fildes_tx_exec_lseek(struct fildes_tx* self, int fildes, off_t offset,
 }
 
 static void
-apply_lseek(struct fildes_tx* self, const struct fd_event* event, size_t n,
+apply_lseek(struct fildes_tx* self, const struct fd_event* event,
             struct picotm_error* error)
 {
     assert(self);
-    assert(event || !n);
+    assert(event);
+    assert(event->fildes >= 0);
+    assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
-    while (n) {
+    const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
+    assert(fd_tx);
 
-        assert(event->fildes >= 0);
-        assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
+    struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
+    assert(ofd_tx);
 
-        const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
-        assert(fd_tx);
-
-        struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
-        assert(ofd_tx);
-
-        size_t m = 1;
-
-        while ((m < n) && (event[m].fildes == event->fildes)) {
-            ++m;
-        }
-
-        ofd_tx_lseek_apply(ofd_tx, event->fildes, event, m, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-
-        n -= m;
-        event += m;
+    ofd_tx_lseek_apply(ofd_tx, event->fildes, event, 1, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 }
 
@@ -1210,11 +1132,11 @@ fildes_tx_exec_open(struct fildes_tx* self, const char* path, int oflag,
 }
 
 static void
-apply_open(struct fildes_tx* self, const struct fd_event* event, size_t n,
+apply_open(struct fildes_tx* self, const struct fd_event* event,
            struct picotm_error* error)
 {
     assert(self);
-    assert(event || !n);
+    assert(event);
 }
 
 static void
@@ -1336,11 +1258,11 @@ fildes_tx_exec_pipe(struct fildes_tx* self, int pipefd[2],
 }
 
 static void
-apply_pipe(struct fildes_tx* self, const struct fd_event* event, size_t n,
+apply_pipe(struct fildes_tx* self, const struct fd_event* event,
            struct picotm_error* error)
 {
     assert(self);
-    assert(event || !n);
+    assert(event);
 }
 
 static void
@@ -1418,36 +1340,23 @@ fildes_tx_exec_pread(struct fildes_tx* self, int fildes, void* buf,
 }
 
 static void
-apply_pread(struct fildes_tx* self, const struct fd_event* event, size_t n,
+apply_pread(struct fildes_tx* self, const struct fd_event* event,
             struct picotm_error* error)
 {
     assert(self);
-    assert(event || !n);
+    assert(event);
+    assert(event->fildes >= 0);
+    assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
-    while (n) {
+    const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
+    assert(fd_tx);
 
-        assert(event->fildes >= 0);
-        assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
+    struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
+    assert(ofd_tx);
 
-        const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
-        assert(fd_tx);
-
-        struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
-        assert(ofd_tx);
-
-        size_t m = 1;
-
-        while ((m < n) && (event[m].fildes == event->fildes)) {
-            ++m;
-        }
-
-        ofd_tx_pread_apply(ofd_tx, event->fildes, event, m, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-
-        n -= m;
-        event += m;
+    ofd_tx_pread_apply(ofd_tx, event->fildes, event, 1, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 }
 
@@ -1525,36 +1434,23 @@ fildes_tx_exec_pwrite(struct fildes_tx* self, int fildes, const void* buf,
 }
 
 static void
-apply_pwrite(struct fildes_tx* self, const struct fd_event* event, size_t n,
+apply_pwrite(struct fildes_tx* self, const struct fd_event* event,
              struct picotm_error* error)
 {
     assert(self);
-    assert(event || !n);
+    assert(event);
+    assert(event->fildes >= 0);
+    assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
-    while (n) {
+    const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
+    assert(fd_tx);
 
-        assert(event->fildes >= 0);
-        assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
+    struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
+    assert(ofd_tx);
 
-        const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
-        assert(fd_tx);
-
-        struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
-        assert(ofd_tx);
-
-        size_t m = 1;
-
-        while ((m < n) && (event[m].fildes == event->fildes)) {
-            ++m;
-        }
-
-        ofd_tx_pwrite_apply(ofd_tx, event->fildes, event, m, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-
-        n -= m;
-        event += m;
+    ofd_tx_pwrite_apply(ofd_tx, event->fildes, event, 1, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 }
 
@@ -1635,36 +1531,23 @@ fildes_tx_exec_read(struct fildes_tx* self, int fildes, void* buf,
 }
 
 static void
-apply_read(struct fildes_tx* self, const struct fd_event* event, size_t n,
+apply_read(struct fildes_tx* self, const struct fd_event* event,
            struct picotm_error* error)
 {
     assert(self);
-    assert(event || !n);
+    assert(event);
+    assert(event->fildes >= 0);
+    assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
-    while (n) {
+    const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
+    assert(fd_tx);
 
-        assert(event->fildes >= 0);
-        assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
+    struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
+    assert(ofd_tx);
 
-        const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
-        assert(fd_tx);
-
-        struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
-        assert(ofd_tx);
-
-        size_t m = 1;
-
-        while ((m < n) && (event[m].fildes == event->fildes)) {
-            ++m;
-        }
-
-        ofd_tx_read_apply(ofd_tx, event->fildes, event, m, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-
-        n -= m;
-        event += m;
+    ofd_tx_read_apply(ofd_tx, event->fildes, event, 1, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 }
 
@@ -1742,36 +1625,23 @@ fildes_tx_exec_recv(struct fildes_tx* self, int sockfd, void* buffer,
 }
 
 static void
-apply_recv(struct fildes_tx* self, const struct fd_event* event, size_t n,
+apply_recv(struct fildes_tx* self, const struct fd_event* event,
            struct picotm_error* error)
 {
     assert(self);
-    assert(event || !n);
+    assert(event);
+    assert(event->fildes >= 0);
+    assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
-    while (n) {
+    const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
+    assert(fd_tx);
 
-        assert(event->fildes >= 0);
-        assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
+    struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
+    assert(ofd_tx);
 
-        const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
-        assert(fd_tx);
-
-        struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
-        assert(ofd_tx);
-
-        size_t m = 1;
-
-        while ((m < n) && (event[m].fildes == event->fildes)) {
-            ++m;
-        }
-
-        ofd_tx_recv_apply(ofd_tx, event->fildes, event, m, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-
-        n -= m;
-        event += m;
+    ofd_tx_recv_apply(ofd_tx, event->fildes, event, 1, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 }
 
@@ -1933,36 +1803,23 @@ fildes_tx_exec_send(struct fildes_tx* self, int sockfd, const void* buffer,
 }
 
 static void
-apply_send(struct fildes_tx* self, const struct fd_event* event, size_t n,
+apply_send(struct fildes_tx* self, const struct fd_event* event,
            struct picotm_error* error)
 {
     assert(self);
-    assert(event && !n);
+    assert(event);
+    assert(event->fildes >= 0);
+    assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
-    while (n) {
+    const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
+    assert(fd_tx);
 
-        assert(event->fildes >= 0);
-        assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
+    struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
+    assert(ofd_tx);
 
-        const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
-        assert(fd_tx);
-
-        struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
-        assert(ofd_tx);
-
-        size_t m = 1;
-
-        while ((m < n) && (event[m].fildes == event->fildes)) {
-            ++m;
-        }
-
-        ofd_tx_send_apply(ofd_tx, event->fildes, event, m, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-
-        n -= m;
-        event += m;
+    ofd_tx_send_apply(ofd_tx, event->fildes, event, 1, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 }
 
@@ -2038,36 +1895,23 @@ fildes_tx_exec_shutdown(struct fildes_tx* self, int sockfd, int how,
 }
 
 static void
-apply_shutdown(struct fildes_tx* self, const struct fd_event* event, size_t n,
+apply_shutdown(struct fildes_tx* self, const struct fd_event* event,
                struct picotm_error* error)
 {
     assert(self);
-    assert(event || !n);
+    assert(event);
+    assert(event->fildes >= 0);
+    assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
-    while (n) {
+    const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
+    assert(fd_tx);
 
-        assert(event->fildes >= 0);
-        assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
+    struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
+    assert(ofd_tx);
 
-        const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
-        assert(fd_tx);
-
-        struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
-        assert(ofd_tx);
-
-        size_t m = 1;
-
-        while ((m < n) && (event[m].fildes == event->fildes)) {
-            ++m;
-        }
-
-        ofd_tx_shutdown_apply(ofd_tx, event->fildes, event, m, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-
-        n -= m;
-        event += m;
+    ofd_tx_shutdown_apply(ofd_tx, event->fildes, event, 1, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 }
 
@@ -2136,11 +1980,11 @@ fildes_tx_exec_socket(struct fildes_tx* self, int domain, int type,
 }
 
 static void
-apply_socket(struct fildes_tx* self, const struct fd_event* event, size_t n,
+apply_socket(struct fildes_tx* self, const struct fd_event* event,
              struct picotm_error* error)
 {
     assert(self);
-    assert(event || !n);
+    assert(event);
 }
 
 static void
@@ -2180,11 +2024,11 @@ fildes_tx_exec_sync(struct fildes_tx* self, struct picotm_error* error)
 }
 
 static void
-apply_sync(struct fildes_tx* self, const struct fd_event* event, size_t n,
+apply_sync(struct fildes_tx* self, const struct fd_event* event,
            struct picotm_error* error)
 {
     assert(self);
-    assert(event || !n);
+    assert(event);
 
     sync();
 }
@@ -2249,36 +2093,23 @@ fildes_tx_exec_write(struct fildes_tx* self, int fildes, const void* buf,
 }
 
 static void
-apply_write(struct fildes_tx* self, const struct fd_event* event, size_t n,
+apply_write(struct fildes_tx* self, const struct fd_event* event,
             struct picotm_error* error)
 {
     assert(self);
-    assert(event || !n);
+    assert(event);
+    assert(event->fildes >= 0);
+    assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
 
-    while (n) {
+    const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
+    assert(fd_tx);
 
-        assert(event->fildes >= 0);
-        assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
+    struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
+    assert(ofd_tx);
 
-        const struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
-        assert(fd_tx);
-
-        struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
-        assert(ofd_tx);
-
-        size_t m = 1;
-
-        while ((m < n) && (event[m].fildes == event->fildes)) {
-            ++m;
-        }
-
-        ofd_tx_write_apply(ofd_tx, event->fildes, event, m, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-
-        n -= m;
-        event += m;
+    ofd_tx_write_apply(ofd_tx, event->fildes, event, 1, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 }
 
@@ -2410,7 +2241,6 @@ fildes_tx_apply_event(struct fildes_tx* self,
 {
     static void (* const apply[])(struct fildes_tx*,
                                   const struct fd_event*,
-                                  size_t,
                                   struct picotm_error*) = {
         apply_close,
         apply_open,
@@ -2435,7 +2265,7 @@ fildes_tx_apply_event(struct fildes_tx* self,
         apply_bind
     };
 
-    apply[event->call](self, self->eventtab + event->cookie, 1, error);
+    apply[event->call](self, self->eventtab + event->cookie, error);
     if (picotm_error_is_set(error)) {
         return;
     }
