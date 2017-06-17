@@ -165,12 +165,12 @@ fildes_tx_validate(struct fildes_tx* self, int noundo,
 
 void
 fildes_tx_apply_event(struct fildes_tx* self,
-                      const struct picotm_event* event, size_t nevents,
+                      const struct picotm_event* event,
                       struct picotm_error* error);
 
 void
 fildes_tx_undo_event(struct fildes_tx* self,
-                     const struct picotm_event* event, size_t nevents,
+                     const struct picotm_event* event,
                      struct picotm_error* error);
 
 void
