@@ -496,19 +496,18 @@ ofd_tx_bind_exec(struct ofd_tx* self, int sockfd, const struct sockaddr* addr,
 
 static void
 bind_apply_noundo(struct ofd_tx* self, int sockfd,
-                  const struct fd_event* event, size_t n,
+                  const struct fd_event* event,
                   struct picotm_error* error)
 { }
 
 void
 ofd_tx_bind_apply(struct ofd_tx* self, int sockfd,
-                  const struct fd_event* event, size_t n,
+                  const struct fd_event* event,
                   struct picotm_error* error)
 {
     static void (* const bind_apply[][2])(struct ofd_tx*,
                                           int,
                                           const struct fd_event*,
-                                          size_t,
                                           struct picotm_error*) = {
         {bind_apply_noundo, NULL},
         {bind_apply_noundo, NULL},
@@ -519,7 +518,7 @@ ofd_tx_bind_apply(struct ofd_tx* self, int sockfd,
     assert(self->type < sizeof(bind_apply)/sizeof(bind_apply[0]));
     assert(bind_apply[self->type]);
 
-    bind_apply[self->type][self->cc_mode](self, sockfd, event, n, error);
+    bind_apply[self->type][self->cc_mode](self, sockfd, event, error);
 }
 
 void
@@ -599,19 +598,18 @@ ofd_tx_connect_exec(struct ofd_tx* self, int sockfd,
 
 static void
 connect_apply_noundo(struct ofd_tx* self, int sockfd,
-                     const struct fd_event* event, size_t n,
+                     const struct fd_event* event,
                      struct picotm_error* error)
 { }
 
 void
 ofd_tx_connect_apply(struct ofd_tx* self, int sockfd,
-                     const struct fd_event* event, size_t n,
+                     const struct fd_event* event,
                      struct picotm_error* error)
 {
     static void (* const connect_apply[][2])(struct ofd_tx*,
                                              int,
                                              const struct fd_event*,
-                                             size_t,
                                              struct picotm_error*) = {
         {connect_apply_noundo, NULL},
         {connect_apply_noundo, NULL},
@@ -622,7 +620,7 @@ ofd_tx_connect_apply(struct ofd_tx* self, int sockfd,
     assert(self->type < sizeof(connect_apply)/sizeof(connect_apply[0]));
     assert(connect_apply[self->type]);
 
-    connect_apply[self->type][self->cc_mode](self, sockfd, event, n, error);
+    connect_apply[self->type][self->cc_mode](self, sockfd, event, error);
 }
 
 void
@@ -786,7 +784,7 @@ ofd_tx_fcntl_exec(struct ofd_tx* self, int fildes, int cmd,
 
 void
 ofd_tx_fcntl_apply(struct ofd_tx* self, int fildes,
-                   const struct fd_event* event, size_t n,
+                   const struct fd_event* event,
                    struct picotm_error* error)
 { }
 
@@ -863,7 +861,7 @@ fsync_apply_regular_2pl(int fildes, struct picotm_error* error)
 
 void
 ofd_tx_fsync_apply(struct ofd_tx* self, int fildes,
-                   const struct fd_event* event, size_t n,
+                   const struct fd_event* event,
                    struct picotm_error* error)
 {
     static void (* const fsync_apply[][2])(int, struct picotm_error*) = {
@@ -956,7 +954,7 @@ listen_apply_noundo(struct picotm_error* error)
 
 void
 ofd_tx_listen_apply(struct ofd_tx* self, int sockfd,
-                    const struct fd_event* event, size_t n,
+                    const struct fd_event* event,
                     struct picotm_error* error)
 {
     static void (* const listen_apply[][2])(struct picotm_error*) = {
@@ -1129,42 +1127,36 @@ ofd_tx_lseek_exec(struct ofd_tx* self, int fildes,  off_t offset, int whence,
 
 static void
 lseek_apply_noundo(struct ofd_tx* self, int fildes,
-                   const struct fd_event* event, size_t n,
+                   const struct fd_event* event,
                    struct picotm_error* error)
 { }
 
 static void
 lseek_apply_regular(struct ofd_tx* self, int fildes,
-                    const struct fd_event* event, size_t n,
+                    const struct fd_event* event,
                     struct picotm_error* error)
 {
-    while (n) {
-        const off_t pos = lseek(fildes, self->seektab[event->cookie].offset,
-                                        self->seektab[event->cookie].whence);
+    const off_t pos = lseek(fildes, self->seektab[event->cookie].offset,
+                                    self->seektab[event->cookie].whence);
 
-        if (pos == (off_t)-1) {
-            picotm_error_set_errno(error, errno);
-            return;
-        }
-
-        struct ofd *ofd = ofdtab+self->ofd;
-
-        ofd->data.regular.offset = pos;
-
-        --n;
-        ++event;
+    if (pos == (off_t)-1) {
+        picotm_error_set_errno(error, errno);
+        return;
     }
+
+    struct ofd *ofd = ofdtab+self->ofd;
+
+    ofd->data.regular.offset = pos;
 }
 
 void
 ofd_tx_lseek_apply(struct ofd_tx* self, int fildes,
-                   const struct fd_event* event, size_t n,
+                   const struct fd_event* event,
                    struct picotm_error* error)
 {
     static void (* const lseek_apply[][2])(struct ofd_tx*,
                                            int,
                                            const struct fd_event*,
-                                           size_t,
                                            struct picotm_error*) = {
         {lseek_apply_noundo, NULL},
         {lseek_apply_noundo, lseek_apply_regular},
@@ -1175,7 +1167,7 @@ ofd_tx_lseek_apply(struct ofd_tx* self, int fildes,
     assert(self->type < sizeof(lseek_apply)/sizeof(lseek_apply[0]));
     assert(lseek_apply[self->type][self->cc_mode]);
 
-    lseek_apply[self->type][self->cc_mode](self, fildes, event, n, error);
+    lseek_apply[self->type][self->cc_mode](self, fildes, event, error);
 }
 
 static void
@@ -1349,7 +1341,7 @@ pread_apply_any(struct picotm_error* error)
 
 void
 ofd_tx_pread_apply(struct ofd_tx* self, int fildes,
-                   const struct fd_event* event, size_t n,
+                   const struct fd_event* event,
                    struct picotm_error* error)
 {
     static void (* const pread_apply[][2])(struct picotm_error*) = {
@@ -1362,12 +1354,9 @@ ofd_tx_pread_apply(struct ofd_tx* self, int fildes,
     assert(self->type < sizeof(pread_apply)/sizeof(pread_apply[0]));
     assert(pread_apply[self->type]);
 
-    while (n) {
-        pread_apply[self->type][self->cc_mode](error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-        --n;
+    pread_apply[self->type][self->cc_mode](error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 }
 
@@ -1509,60 +1498,40 @@ ofd_tx_pwrite_exec(struct ofd_tx* self, int fildes, const void* buf,
 
 static void
 pwrite_apply_noundo(struct ofd_tx* self, int fildes,
-                    const struct fd_event* event, size_t n,
+                    const struct fd_event* event,
                     struct picotm_error* error)
 { }
 
 static void
 pwrite_apply_regular(struct ofd_tx* self, int fildes,
-                     const struct fd_event* event, size_t n,
+                     const struct fd_event* event,
                      struct picotm_error* error)
 {
     assert(self);
     assert(fildes >= 0);
-    assert(event || !n);
+    assert(event);
 
-    while (n) {
+    off_t  off = self->wrtab[event->cookie].off;
+    size_t nbyte = self->wrtab[event->cookie].nbyte;
+    off_t  bufoff = self->wrtab[event->cookie].bufoff;
 
-        /* Combine writes to adjacent locations */
-
-        off_t  off = self->wrtab[event->cookie].off;
-        size_t nbyte = self->wrtab[event->cookie].nbyte;
-        off_t  bufoff = self->wrtab[event->cookie].bufoff;
-
-        size_t m = 1;
-
-        while ((m < n)
-                && (self->wrtab[event[m].cookie].off == (off_t)(off+nbyte))
-                && (self->wrtab[event[m].cookie].bufoff == bufoff+nbyte)) {
-
-            nbyte += self->wrtab[event[m].cookie].nbyte;
-
-            ++m;
-        }
-
-        ssize_t res = TEMP_FAILURE_RETRY(pwrite(fildes,
-                                                self->wrbuf + bufoff,
-                                                nbyte, off));
-        if (res < 0) {
-            picotm_error_set_errno(error, errno);
-            return;
-        }
-
-        n -= m;
-        event += m;
+    ssize_t res = TEMP_FAILURE_RETRY(pwrite(fildes,
+                                            self->wrbuf + bufoff,
+                                            nbyte, off));
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return;
     }
 }
 
 void
 ofd_tx_pwrite_apply(struct ofd_tx* self, int fildes,
-                    const struct fd_event* event, size_t n,
+                    const struct fd_event* event,
                     struct picotm_error* error)
 {
     static void (* const pwrite_apply[][2])(struct ofd_tx*,
                                             int,
                                             const struct fd_event*,
-                                            size_t,
                                             struct picotm_error*) = {
         {pwrite_apply_noundo, NULL},
         {pwrite_apply_noundo, pwrite_apply_regular},
@@ -1573,7 +1542,7 @@ ofd_tx_pwrite_apply(struct ofd_tx* self, int fildes,
     assert(self->type < sizeof(pwrite_apply)/sizeof(pwrite_apply[0]));
     assert(pwrite_apply[self->type]);
 
-    pwrite_apply[self->type][self->cc_mode](self, fildes, event, n, error);
+    pwrite_apply[self->type][self->cc_mode](self, fildes, event, error);
 }
 
 static void
@@ -1702,39 +1671,32 @@ ofd_tx_read_exec(struct ofd_tx* self, int fildes, void* buf, size_t nbyte,
 
 static void
 read_apply_noundo(struct ofd_tx* self, int fildes,
-                  const struct fd_event* event, size_t n,
+                  const struct fd_event* event,
                   struct picotm_error* error)
 { }
 
 static void
 read_apply_regular(struct ofd_tx* self, int fildes,
-                   const struct fd_event* event, size_t n,
+                   const struct fd_event* event,
                    struct picotm_error* error)
 {
-    while (n) {
-        ofdtab[self->ofd].data.regular.offset += self->rdtab[event->cookie].nbyte;
+    ofdtab[self->ofd].data.regular.offset += self->rdtab[event->cookie].nbyte;
 
-        off_t res = lseek(fildes, ofdtab[self->ofd].data.regular.offset,
-                          SEEK_SET);
-        if (res == (off_t)-1) {
-            picotm_error_set_errno(error, errno);
-            return;
-        }
-
-        --n;
-        ++event;
+    off_t res = lseek(fildes, ofdtab[self->ofd].data.regular.offset, SEEK_SET);
+    if (res == (off_t)-1) {
+        picotm_error_set_errno(error, errno);
+        return;
     }
 }
 
 void
 ofd_tx_read_apply(struct ofd_tx* self, int fildes,
-                  const struct fd_event* event, size_t n,
+                  const struct fd_event* event,
                   struct picotm_error* error)
 {
     static void (* const read_apply[][2])(struct ofd_tx*,
                                           int,
                                           const struct fd_event*,
-                                          size_t,
                                           struct picotm_error*) = {
         {read_apply_noundo, NULL},
         {read_apply_noundo, read_apply_regular},
@@ -1745,7 +1707,7 @@ ofd_tx_read_apply(struct ofd_tx* self, int fildes,
     assert(self->type < sizeof(read_apply)/sizeof(read_apply[0]));
     assert(read_apply[self->type]);
 
-    read_apply[self->type][self->cc_mode](self, fildes, event, n, error);
+    read_apply[self->type][self->cc_mode](self, fildes, event, error);
 }
 
 static void
@@ -1829,7 +1791,7 @@ recv_apply_noundo(struct picotm_error* error)
 
 void
 ofd_tx_recv_apply(struct ofd_tx* self, int sockfd,
-                  const struct fd_event* event, size_t n,
+                  const struct fd_event* event,
                   struct picotm_error* error)
 {
     static void (* const recv_apply[][2])(struct picotm_error*) = {
@@ -1978,7 +1940,7 @@ send_apply_socket_2pl(struct ofd_tx* self, int sockfd, int cookie,
 
 void
 ofd_tx_send_apply(struct ofd_tx* self, int sockfd,
-                  const struct fd_event* event, size_t n,
+                  const struct fd_event* event,
                   struct picotm_error* error)
 {
     static void (* const send_apply[][2])(struct ofd_tx*,
@@ -1994,15 +1956,11 @@ ofd_tx_send_apply(struct ofd_tx* self, int sockfd,
     assert(self->type < sizeof(send_apply)/sizeof(send_apply[0]));
     assert(send_apply[self->type][self->cc_mode]);
 
-    while (n) {
-        send_apply[self->type][self->cc_mode](self, sockfd,
-                                              event->cookie,
-                                              error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-        --n;
-        ++event;
+    send_apply[self->type][self->cc_mode](self, sockfd,
+                                          event->cookie,
+                                          error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 }
 
@@ -2079,19 +2037,18 @@ ofd_tx_shutdown_exec(struct ofd_tx* self, int sockfd, int how, int* cookie,
 
 static void
 shutdown_apply_noundo(struct ofd_tx* self, int sockfd,
-                      const struct fd_event* event, size_t n,
+                      const struct fd_event* event,
                       struct picotm_error* error)
 { }
 
 void
 ofd_tx_shutdown_apply(struct ofd_tx* self, int sockfd,
-                      const struct fd_event* event, size_t n,
+                      const struct fd_event* event,
                       struct picotm_error* error)
 {
     static void (* const shutdown_apply[][2])(struct ofd_tx*,
                                               int,
                                               const struct fd_event*,
-                                              size_t,
                                               struct picotm_error*) = {
         {shutdown_apply_noundo, NULL},
         {shutdown_apply_noundo, NULL},
@@ -2102,7 +2059,7 @@ ofd_tx_shutdown_apply(struct ofd_tx* self, int sockfd,
     assert(self->type < sizeof(shutdown_apply)/sizeof(shutdown_apply[0]));
     assert(shutdown_apply[self->type]);
 
-    shutdown_apply[self->type][self->cc_mode](self, sockfd, event, n, error);
+    shutdown_apply[self->type][self->cc_mode](self, sockfd, event, error);
 }
 
 void
@@ -2279,9 +2236,11 @@ write_apply_regular_2pl(struct ofd_tx* self, int fildes, int cookie,
 
     /* FIXME: Use select() to prevent blocking? */
 
-    const ssize_t len = TEMP_FAILURE_RETRY(pwrite(fildes, self->wrbuf+self->wrtab[cookie].bufoff,
-                                                          self->wrtab[cookie].nbyte,
-                                                          self->wrtab[cookie].off));
+    const ssize_t len =
+        TEMP_FAILURE_RETRY(pwrite(fildes,
+                                  self->wrbuf+self->wrtab[cookie].bufoff,
+                                  self->wrtab[cookie].nbyte,
+                                  self->wrtab[cookie].off));
     if (len < 0) {
         picotm_error_set_errno(error, errno);
         return;
@@ -2291,7 +2250,6 @@ write_apply_regular_2pl(struct ofd_tx* self, int fildes, int cookie,
     ofdtab[self->ofd].data.regular.offset = self->wrtab[cookie].off+len;
 
     off_t res = lseek(fildes, ofdtab[self->ofd].data.regular.offset, SEEK_SET);
-
     if (res == (off_t)-1) {
         picotm_error_set_errno(error, errno);
         return;
@@ -2338,7 +2296,7 @@ write_apply_socket(struct ofd_tx* self, int sockfd, int cookie,
 
 void
 ofd_tx_write_apply(struct ofd_tx* self, int fildes,
-                   const struct fd_event* event, size_t n,
+                   const struct fd_event* event,
                    struct picotm_error* error)
 {
     static void (* const write_apply[][2])(struct ofd_tx*,
@@ -2354,15 +2312,10 @@ ofd_tx_write_apply(struct ofd_tx* self, int fildes,
     assert(self->type < sizeof(write_apply)/sizeof(write_apply[0]));
     assert(write_apply[self->type][self->cc_mode]);
 
-    while (n) {
-        write_apply[self->type][self->cc_mode](self, fildes,
-                                               event->cookie,
-                                               error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-        --n;
-        ++event;
+    write_apply[self->type][self->cc_mode](self, fildes, event->cookie,
+                                           error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 }
 
