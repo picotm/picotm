@@ -42,21 +42,21 @@ is_valid_cb(void* data, int noundo, struct picotm_error* error)
 }
 
 static void
-apply_event_cb(const struct picotm_event* event, size_t n, void* data,
+apply_event_cb(const struct picotm_event* event, void* data,
                struct picotm_error* error)
 {
     struct fd_module* module = data;
 
-    fildes_tx_apply_event(&module->tx, event, n, error);
+    fildes_tx_apply_event(&module->tx, event, 1, error);
 }
 
 static void
-undo_event_cb(const struct picotm_event* event, size_t n, void *data,
+undo_event_cb(const struct picotm_event* event, void *data,
               struct picotm_error* error)
 {
     struct fd_module* module = data;
 
-    fildes_tx_undo_event(&module->tx, event, n, error);
+    fildes_tx_undo_event(&module->tx, event, 1, error);
 }
 
 static void
