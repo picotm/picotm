@@ -58,29 +58,15 @@ log_apply_events(struct log* self, const struct module* module, bool noundo,
 {
     /* Apply events in chronological order */
 
-    const struct picotm_event* event = self->eventtab;
-    const struct picotm_event* event_end = self->eventtab + self->eventtablen;
+    const struct picotm_event* beg = self->eventtab;
+    const struct picotm_event* end = self->eventtab + self->eventtablen;
 
-    while (event < event_end) {
-
-        /* Find consecutive events from same module */
-
-        const struct picotm_event* event2 = event + 1;
-
-        while ((event2 < event_end) && (event->module == event2->module)) {
-            ++event2;
-        }
-
-        /* Apply vector of events from module */
-
-        ptrdiff_t nevents = event2 - event;
-
-        module_apply_events(module + event->module, event, nevents, error);
+    while (beg < end) {
+        module_apply_event(module + beg->module, beg, error);
         if (picotm_error_is_set(error)) {
             return -1;
         }
-
-        event = event2;
+        ++beg;
     }
 
     self->eventtablen = 0;
@@ -94,12 +80,12 @@ log_undo_events(struct log* self, const struct module* module, bool noundo,
 {
     /* Undo events in reversed-chronological order */
 
-    const struct picotm_event* event = self->eventtab + self->eventtablen;
-    const struct picotm_event* event_end = self->eventtab;
+    const struct picotm_event* beg = self->eventtab + self->eventtablen;
+    const struct picotm_event* end = self->eventtab;
 
-    while (event > event_end) {
-        --event;
-        module_undo_events(module + event->module, event, 1, error);
+    while (beg > end) {
+        --beg;
+        module_undo_event(module + beg->module, beg, error);
         if (picotm_error_is_set(error)) {
             return -1;
         }

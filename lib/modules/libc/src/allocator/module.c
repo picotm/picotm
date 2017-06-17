@@ -14,21 +14,21 @@ struct allocator_module {
 };
 
 static void
-apply_event_cb(const struct picotm_event* event, size_t nevents, void* data,
+apply_event_cb(const struct picotm_event* event, void* data,
                struct picotm_error* error)
 {
     struct allocator_module* module = data;
 
-    allocator_tx_apply_event(&module->tx, event, nevents, error);
+    allocator_tx_apply_event(&module->tx, event, 1, error);
 }
 
 static void
-undo_event_cb(const struct picotm_event* event, size_t nevents, void* data,
+undo_event_cb(const struct picotm_event* event, void* data,
               struct picotm_error* error)
 {
     struct allocator_module* module = data;
 
-    allocator_tx_undo_event(&module->tx, event, nevents, error);
+    allocator_tx_undo_event(&module->tx, event, 1, error);
 }
 
 static void

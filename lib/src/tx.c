@@ -53,10 +53,10 @@ tx_register_module(struct tx* self,
                    bool (*is_valid)(void*, int, struct picotm_error*),
                    void (*apply)(void*, struct picotm_error*),
                    void (*undo)(void*, struct picotm_error*),
-                   void (*apply_events)(const struct picotm_event*, size_t,
-                                        void*, struct picotm_error*),
-                   void (*undo_events)(const struct picotm_event*, size_t,
+                   void (*apply_event)(const struct picotm_event*,
                                        void*, struct picotm_error*),
+                   void (*undo_event)(const struct picotm_event*,
+                                      void*, struct picotm_error*),
                    void (*update_cc)(void*, int, struct picotm_error*),
                    void (*clear_cc)(void*, int, struct picotm_error*),
                    void (*finish)(void*, struct picotm_error*),
@@ -72,7 +72,7 @@ tx_register_module(struct tx* self,
     }
 
     module_init(self->module + module, lock, unlock, is_valid,
-                apply, undo, apply_events, undo_events,
+                apply, undo, apply_event, undo_event,
                 update_cc, clear_cc,
                 finish, uninit, data);
 

@@ -80,30 +80,24 @@ typedef void (*picotm_module_undo_function)(void* data,
                                             struct picotm_error* error);
 
 /**
- * Invoked by picotm during the commit phase to apply a number of
- * consecutive events.
- * \param       events  An array of events.
- * \param       nevents The number of elements in events.
+ * Invoked by picotm during the commit phase to apply an event.
+ * \param       event   An event.
  * \param       data    The pointer to module-specific data.
  * \param[out]  error   Returns an error from the module.
  */
-typedef void (*picotm_module_apply_events_function)(
-    const struct picotm_event* events,
-    size_t nevents,
+typedef void (*picotm_module_apply_event_function)(
+    const struct picotm_event* event,
     void* data,
     struct picotm_error* error);
 
 /**
- * Invoked by picotm during the roll-back phase to revert a number of
- * consecutive events.
- * \param       events  An array of events.
- * \param       nevents The number of elements in events.
+ * Invoked by picotm during the roll-back phase to revert an event.
+ * \param       event   An event.
  * \param       data    The pointer to module-specific data.
  * \param[out]  error   Returns an error from the module.
  */
-typedef void (*picotm_module_undo_events_function)(
-    const struct picotm_event* events,
-    size_t nevents,
+typedef void (*picotm_module_undo_event_function)(
+    const struct picotm_event* event,
     void* data,
     struct picotm_error* error);
 
@@ -150,8 +144,8 @@ PICOTM_NOTHROW
  * \param       is_valid        The is-valid call-back function.
  * \param       apply           The apply call-back function.
  * \param       undo            The undo call-back function.
- * \param       apply_events    The apply-events call-back function.
- * \param       undo_events     The undo-events call-back function.
+ * \param       apply_event     The apply-event call-back function.
+ * \param       undo_event      The undo-event call-back function.
  * \param       update_cc       The update-CC call-back function.
  * \param       clear_cc        The clear-CC call-back function.
  * \param       finish          The finish call-back function.
@@ -166,8 +160,8 @@ picotm_register_module(picotm_module_lock_function lock,
                        picotm_module_is_valid_function is_valid,
                        picotm_module_apply_function apply,
                        picotm_module_undo_function undo,
-                       picotm_module_apply_events_function apply_events,
-                       picotm_module_undo_events_function undo_events,
+                       picotm_module_apply_event_function apply_event,
+                       picotm_module_undo_event_function undo_event,
                        picotm_module_update_cc_function update_cc,
                        picotm_module_clear_cc_function clear_cc,
                        picotm_module_finish_function finish,
@@ -312,7 +306,7 @@ PICOTM_END_DECLS
  *
  * # Injecting Events into the Transaction Log.
  *
- * When the user invokes an operation of your module, the module might want
+ * When the user invokes an operation of your module, the module might wants
  * to store an event in the transaction log. This is done by invoking
  * picotm_inject_event(). During the transaction's commit, events in the
  * transaction log are applied in the order they appear in the log. During
@@ -368,36 +362,27 @@ PICOTM_END_DECLS
  *
  * ~~~{.c}
  *  int
- *  apply(const struct picotm_event* event, size_t nevents, void* data, picotm_error* error)
+ *  apply(const struct picotm_event* event, void* data, picotm_error* error)
  *  {
- *      while (nevents) {
- *          if (event->call == CMD_MALLOC) {
- *              // Nothing to do.
- *          }
- *          if (event->call == CMD_FREE) {
- *              // Apply free().
- *              free((void*)event->cookie);
- *          }
- *          ++event;
- *          --nevents;
+ *      if (event->call == CMD_MALLOC) {
+ *          // Nothing to do.
+ *      }
+ *      if (event->call == CMD_FREE) {
+ *          // Apply free().
+ *          free((void*)event->cookie);
  *      }
  *      return 0;
  *  }
  *
  *  int
- *  undo(const struct picotm_event* event, size_t nevents, void* data, picotm_error* error)
+ *  undo(const struct picotm_event* event, void* data, picotm_error* error)
  *  {
- *      events += nevents;
- *      while (nevents) {
- *          --event;
- *          if (event->call == CMD_MALLOC) {
- *              // Revert malloc().
- *              free((void*)event->cookie);
- *          }
- *          if (event->call == CMD_FREE) {
- *              // Nothing to do.
- *          }
- *          --nevents;
+ *      if (event->call == CMD_MALLOC) {
+ *          // Revert malloc().
+ *          free((void*)event->cookie);
+ *      }
+ *      if (event->call == CMD_FREE) {
+ *          // Nothing to do.
  *      }
  *      return 0;
  *  }
@@ -406,5 +391,5 @@ PICOTM_END_DECLS
  * In our example we have registered a module for a transactional allocator.
  * The malloc operation allocates memory, but reverts this allocation during
  * an undo. The free operation doesn't actually free the memory immediately,
- * be creates an event to free the memory during a commit.
+ * but creates an event to free the memory during a commit.
  */
