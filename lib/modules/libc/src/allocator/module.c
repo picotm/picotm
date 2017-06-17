@@ -19,7 +19,7 @@ apply_event_cb(const struct picotm_event* event, void* data,
 {
     struct allocator_module* module = data;
 
-    allocator_tx_apply_event(&module->tx, event, 1, error);
+    allocator_tx_apply_event(&module->tx, event, error);
 }
 
 static void
@@ -28,7 +28,7 @@ undo_event_cb(const struct picotm_event* event, void* data,
 {
     struct allocator_module* module = data;
 
-    allocator_tx_undo_event(&module->tx, event, 1, error);
+    allocator_tx_undo_event(&module->tx, event, error);
 }
 
 static void

@@ -45,12 +45,12 @@ allocator_tx_exec_free(struct allocator_tx* self, void* ptr,
 
 void
 allocator_tx_apply_event(struct allocator_tx* self,
-                         const struct picotm_event* event, size_t nevents,
+                         const struct picotm_event* event,
                          struct picotm_error* error);
 
 void
 allocator_tx_undo_event(struct allocator_tx* self,
-                        const struct picotm_event* event, size_t nevents,
+                        const struct picotm_event* event,
                         struct picotm_error* error);
 
 void

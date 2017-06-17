@@ -141,7 +141,7 @@ undo_posix_memalign(struct allocator_tx* self, unsigned int cookie,
 
 void
 allocator_tx_apply_event(struct allocator_tx* self,
-                         const struct picotm_event* event, size_t nevents,
+                         const struct picotm_event* event,
                          struct picotm_error* error)
 {
     static void (* const apply[LAST_CMD])(struct allocator_tx*,
@@ -151,19 +151,15 @@ allocator_tx_apply_event(struct allocator_tx* self,
         apply_posix_memalign
     };
 
-    while (nevents) {
-        apply[event->call](self, event->cookie, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-        --nevents;
-        ++event;
+    apply[event->call](self, event->cookie, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 }
 
 void
 allocator_tx_undo_event(struct allocator_tx* self,
-                        const struct picotm_event* event, size_t nevents,
+                        const struct picotm_event* event,
                         struct picotm_error* error)
 {
     static void (* const undo[LAST_CMD])(struct allocator_tx*,
@@ -173,15 +169,9 @@ allocator_tx_undo_event(struct allocator_tx* self,
         undo_posix_memalign
     };
 
-    event += nevents;
-
-    while (nevents) {
-        --event;
-        undo[event->call](self, event->cookie, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-        --nevents;
+    undo[event->call](self, event->cookie, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 }
 
