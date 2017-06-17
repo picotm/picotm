@@ -2405,7 +2405,7 @@ fildes_tx_validate(struct fildes_tx* self, int noundo,
 
 void
 fildes_tx_apply_event(struct fildes_tx* self,
-                      const struct picotm_event* event, size_t n,
+                      const struct picotm_event* event,
                       struct picotm_error* error)
 {
     static void (* const apply[])(struct fildes_tx*,
@@ -2435,31 +2435,15 @@ fildes_tx_apply_event(struct fildes_tx* self,
         apply_bind
     };
 
-    while (n) {
-
-        // Merge a sequence of adjacent calls to the same action
-
-        size_t m = 1;
-
-        while ((m < n)
-                && (event[m].call   == event->call)
-                && (event[m].cookie == event->cookie+m)) {
-            ++m;
-        }
-
-        apply[event->call](self, self->eventtab+event->cookie, m, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-
-        n -= m;
-        event += m;
+    apply[event->call](self, self->eventtab + event->cookie, 1, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 }
 
 void
 fildes_tx_undo_event(struct fildes_tx* self,
-                     const struct picotm_event* event, size_t n,
+                     const struct picotm_event* event,
                      struct picotm_error* error)
 {
     static void (* const undo[])(struct fildes_tx*,
@@ -2489,19 +2473,12 @@ fildes_tx_undo_event(struct fildes_tx* self,
         undo_bind
     };
 
-    event += n;
-
-    while (n) {
-        --event;
-        undo[event->call](self,
-                          self->eventtab[event->cookie].fildes,
-                          self->eventtab[event->cookie].cookie,
-                          error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-
-        --n;
+    undo[event->call](self,
+                      self->eventtab[event->cookie].fildes,
+                      self->eventtab[event->cookie].cookie,
+                      error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 }
 
