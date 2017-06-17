@@ -382,7 +382,7 @@ apply_bind(struct fildes_tx* self, const struct fd_event* event,
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    ofd_tx_bind_apply(ofd_tx, event->fildes, event, 1, error);
+    ofd_tx_bind_apply(ofd_tx, event->fildes, event, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -551,7 +551,7 @@ apply_connect(struct fildes_tx* self, const struct fd_event* event,
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    ofd_tx_connect_apply(ofd_tx, event->fildes, event, 1, error);
+    ofd_tx_connect_apply(ofd_tx, event->fildes, event, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -749,7 +749,7 @@ apply_fcntl(struct fildes_tx* self, const struct fd_event* event,
         struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
         assert(ofd_tx);
 
-        ofd_tx_fcntl_apply(ofd_tx, event->fildes, event, 1, error);
+        ofd_tx_fcntl_apply(ofd_tx, event->fildes, event, error);
     }
 
     if (picotm_error_is_set(error)) {
@@ -850,7 +850,7 @@ apply_fsync(struct fildes_tx* self, const struct fd_event* event,
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    ofd_tx_fsync_apply(ofd_tx, event->fildes, event, 1, error);
+    ofd_tx_fsync_apply(ofd_tx, event->fildes, event, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -942,7 +942,7 @@ apply_listen(struct fildes_tx* self, const struct fd_event* event,
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    ofd_tx_listen_apply(ofd_tx, event->fildes, event, 1, error);
+    ofd_tx_listen_apply(ofd_tx, event->fildes, event, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -1035,7 +1035,7 @@ apply_lseek(struct fildes_tx* self, const struct fd_event* event,
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    ofd_tx_lseek_apply(ofd_tx, event->fildes, event, 1, error);
+    ofd_tx_lseek_apply(ofd_tx, event->fildes, event, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -1354,7 +1354,7 @@ apply_pread(struct fildes_tx* self, const struct fd_event* event,
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    ofd_tx_pread_apply(ofd_tx, event->fildes, event, 1, error);
+    ofd_tx_pread_apply(ofd_tx, event->fildes, event, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -1448,7 +1448,7 @@ apply_pwrite(struct fildes_tx* self, const struct fd_event* event,
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    ofd_tx_pwrite_apply(ofd_tx, event->fildes, event, 1, error);
+    ofd_tx_pwrite_apply(ofd_tx, event->fildes, event, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -1545,7 +1545,7 @@ apply_read(struct fildes_tx* self, const struct fd_event* event,
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    ofd_tx_read_apply(ofd_tx, event->fildes, event, 1, error);
+    ofd_tx_read_apply(ofd_tx, event->fildes, event, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -1639,7 +1639,7 @@ apply_recv(struct fildes_tx* self, const struct fd_event* event,
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    ofd_tx_recv_apply(ofd_tx, event->fildes, event, 1, error);
+    ofd_tx_recv_apply(ofd_tx, event->fildes, event, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -1817,7 +1817,7 @@ apply_send(struct fildes_tx* self, const struct fd_event* event,
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    ofd_tx_send_apply(ofd_tx, event->fildes, event, 1, error);
+    ofd_tx_send_apply(ofd_tx, event->fildes, event, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -1909,7 +1909,7 @@ apply_shutdown(struct fildes_tx* self, const struct fd_event* event,
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    ofd_tx_shutdown_apply(ofd_tx, event->fildes, event, 1, error);
+    ofd_tx_shutdown_apply(ofd_tx, event->fildes, event, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -2107,7 +2107,7 @@ apply_write(struct fildes_tx* self, const struct fd_event* event,
     struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
     assert(ofd_tx);
 
-    ofd_tx_write_apply(ofd_tx, event->fildes, event, 1, error);
+    ofd_tx_write_apply(ofd_tx, event->fildes, event, error);
     if (picotm_error_is_set(error)) {
         return;
     }

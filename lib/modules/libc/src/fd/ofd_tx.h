@@ -181,7 +181,7 @@ ofd_tx_bind_exec(struct ofd_tx* self, int sockfd, const struct sockaddr *addr,
 
 void
 ofd_tx_bind_apply(struct ofd_tx* self, int sockfd,
-                  const struct fd_event* event, size_t n,
+                  const struct fd_event* event,
                   struct picotm_error* error);
 
 void
@@ -199,7 +199,7 @@ ofd_tx_connect_exec(struct ofd_tx* self, int sockfd,
 
 void
 ofd_tx_connect_apply(struct ofd_tx* self, int sockfd,
-                     const struct fd_event* event, size_t n,
+                     const struct fd_event* event,
                      struct picotm_error* error);
 
 void
@@ -217,7 +217,7 @@ ofd_tx_fcntl_exec(struct ofd_tx* self, int fildes, int cmd,
 
 void
 ofd_tx_fcntl_apply(struct ofd_tx* self, int fildes,
-                   const struct fd_event* event, size_t n,
+                   const struct fd_event* event,
                    struct picotm_error* error);
 
 void
@@ -234,7 +234,7 @@ ofd_tx_fsync_exec(struct ofd_tx* self, int fildes, int noundo, int* cookie,
 
 void
 ofd_tx_fsync_apply(struct ofd_tx* self, int fildes,
-                   const struct fd_event* event, size_t n,
+                   const struct fd_event* event,
                    struct picotm_error* error);
 
 void
@@ -251,7 +251,7 @@ ofd_tx_listen_exec(struct ofd_tx* self, int sockfd, int backlog, int* cookie,
 
 void
 ofd_tx_listen_apply(struct ofd_tx* self, int sockfd,
-                    const struct fd_event* event, size_t n,
+                    const struct fd_event* event,
                     struct picotm_error* error);
 
 void
@@ -268,7 +268,7 @@ ofd_tx_lseek_exec(struct ofd_tx* self, int fildes, off_t offset, int whence,
 
 void
 ofd_tx_lseek_apply(struct ofd_tx* self, int fildes,
-                   const struct fd_event* event, size_t n,
+                   const struct fd_event* event,
                    struct picotm_error* error);
 
 void
@@ -287,7 +287,7 @@ ofd_tx_pread_exec(struct ofd_tx* self, int fildes, void* buf, size_t nbyte,
 
 void
 ofd_tx_pread_apply(struct ofd_tx* self, int fildes,
-                   const struct fd_event* event, size_t n,
+                   const struct fd_event* event,
                    struct picotm_error* error);
 
 void
@@ -305,7 +305,7 @@ ofd_tx_pwrite_exec(struct ofd_tx* self, int fildes, const void* buf,
 
 void
 ofd_tx_pwrite_apply(struct ofd_tx* self, int fildes,
-                    const struct fd_event* event, size_t n,
+                    const struct fd_event* event,
                     struct picotm_error* error);
 
 void
@@ -324,7 +324,7 @@ ofd_tx_read_exec(struct ofd_tx* self, int fildes, void *buf, size_t nbyte,
 
 void
 ofd_tx_read_apply(struct ofd_tx* self, int fildes,
-                  const struct fd_event* event, size_t n,
+                  const struct fd_event* event,
                   struct picotm_error* error);
 
 void
@@ -342,7 +342,7 @@ ofd_tx_recv_exec(struct ofd_tx* self, int sockfd, void* buffer, size_t length,
 
 void
 ofd_tx_recv_apply(struct ofd_tx* self, int sockfd,
-                  const struct fd_event* event, size_t n,
+                  const struct fd_event* event,
                   struct picotm_error* error);
 
 void
@@ -360,7 +360,7 @@ ofd_tx_send_exec(struct ofd_tx* self, int sockfd, const void* buffer,
 
 void
 ofd_tx_send_apply(struct ofd_tx* self, int fildes,
-                  const struct fd_event* event, size_t n,
+                  const struct fd_event* event,
                   struct picotm_error* error);
 
 void
@@ -377,7 +377,7 @@ ofd_tx_shutdown_exec(struct ofd_tx* self, int sockfd, int how, int* cookie,
 
 void
 ofd_tx_shutdown_apply(struct ofd_tx* self, int fildes,
-                      const struct fd_event* event, size_t n,
+                      const struct fd_event* event,
                       struct picotm_error* error);
 
 void
@@ -395,7 +395,7 @@ ofd_tx_write_exec(struct ofd_tx* self, int fildes, const void* buf,
 
 void
 ofd_tx_write_apply(struct ofd_tx* self, int fildes,
-                   const struct fd_event* event, size_t n,
+                   const struct fd_event* event,
                    struct picotm_error* error);
 
 void
