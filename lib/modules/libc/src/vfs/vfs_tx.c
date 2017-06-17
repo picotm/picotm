@@ -645,7 +645,7 @@ vfs_tx_validate(struct vfs_tx* self, struct picotm_error* error)
 
 void
 vfs_tx_apply_event(struct vfs_tx* self,
-                   const struct picotm_event* event, size_t n,
+                   const struct picotm_event* event,
                    struct picotm_error* error)
 {
     static void (* const apply_func[LAST_CMD])(struct vfs_tx*,
@@ -655,22 +655,18 @@ vfs_tx_apply_event(struct vfs_tx* self,
         apply_mkstemp
     };
 
-    assert(event || !n);
+    assert(event);
     assert(event->call < sizeof(apply_func)/sizeof(apply_func[0]));
 
-    while (n) {
-        apply_func[event->call](self, event->cookie, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-        --n;
-        ++event;
+    apply_func[event->call](self, event->cookie, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 }
 
 void
 vfs_tx_undo_event(struct vfs_tx* self,
-                  const struct picotm_event* event, size_t n,
+                  const struct picotm_event* event,
                   struct picotm_error* error)
 {
     static void (* const undo_func[LAST_CMD])(struct vfs_tx*,
@@ -680,18 +676,12 @@ vfs_tx_undo_event(struct vfs_tx* self,
         undo_mkstemp
     };
 
-    assert(event || !n);
+    assert(event);
     assert(event->call < sizeof(undo_func)/sizeof(undo_func[0]));
 
-    event += n;
-
-    while (n) {
-        --event;
-        undo_func[event->call](self, event->cookie, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-        --n;
+    undo_func[event->call](self, event->cookie, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 }
 
