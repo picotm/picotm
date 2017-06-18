@@ -30,8 +30,8 @@ ofdid_init(struct ofdid *id, dev_t dev, ino_t ino, mode_t mode, int fl)
 {
     assert(id);
 
-    id->dev = dev;
-    id->ino = ino;
+    file_id_init(&id->fbuf_id, dev, ino);
+
     id->mode = mode;
     id->fl = fl;
 }
@@ -51,17 +51,14 @@ ofdid_init_from_fildes(struct ofdid* id, int fildes,
         return;
     }
 
-    id->dev  = buf.st_dev;
-    id->ino  = buf.st_ino;
-    id->mode = buf.st_mode;
-
     res = fcntl(fildes, F_GETFL);
     if (res < 0) {
         picotm_error_set_errno(error, errno);
         return;
     }
+    int fl = res;
 
-    id->fl = res;
+    ofdid_init(id, buf.st_dev, buf.st_ino, buf.st_mode, fl);
 }
 
 void
@@ -75,8 +72,7 @@ ofdid_is_empty(const struct ofdid *id)
 {
     assert(id);
 
-    return (id->dev  == (dev_t)-1) &&
-           (id->ino  == (ino_t)-1) &&
+    return file_id_is_empty(&id->fbuf_id) &&
            (id->mode == (mode_t)0) &&
            (id->fl   == 0);
 }
@@ -84,20 +80,10 @@ ofdid_is_empty(const struct ofdid *id)
 int
 ofdidcmp(const struct ofdid *id1, const struct ofdid *id2)
 {
-    const long long ddev = id1->dev-id2->dev;
+    int diff_fbuf_id = file_id_cmp(&id1->fbuf_id, &id2->fbuf_id);
 
-    if (ddev < 0) {
-        return -1;
-    } else if (ddev > 0) {
-        return 1;
-    }
-
-    const long long dino = id1->ino-id2->ino;
-
-    if (dino < 0) {
-        return -1;
-    } else if (dino > 0) {
-        return 1;
+    if (diff_fbuf_id) {
+        return diff_fbuf_id;
     }
 
     const long dmode = id1->mode-id2->mode;
@@ -129,6 +115,9 @@ ofdid_print(const struct ofdid *id)
 {
     assert(id);
 
-    fprintf(stderr, "ofdid={%d %d %d %d}\n", (int)id->dev, (int)id->ino, (int)id->mode, (int)id->fl);
+    fprintf(stderr, "ofdid={%d %d %d %d}\n", (int)id->fbuf_id.dev,
+                                             (int)id->fbuf_id.ino,
+                                             (int)id->mode,
+                                             (int)id->fl);
 }
 

@@ -20,7 +20,7 @@
 #ifndef OFDID_H
 #define OFDID_H
 
-#include <sys/types.h>
+#include "fileid.h"
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -32,10 +32,9 @@
 
 struct picotm_error;
 
-struct ofdid
-{
-    dev_t  dev;
-    ino_t  ino;
+struct ofdid {
+    struct file_id fbuf_id;
+
     mode_t mode;
     int    fl;
 };
