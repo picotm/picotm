@@ -11,8 +11,7 @@
 #include "fcntlop.h"
 #include "fcntloptab.h"
 #include "fd.h"
-#include "ofd.h"
-#include "ofdtab.h"
+#include "ofd_tx.h"
 
 void
 fd_tx_init(struct fd_tx* self)
@@ -20,7 +19,7 @@ fd_tx_init(struct fd_tx* self)
     assert(self);
 
     self->fd = NULL;
-    self->ofd = -1;
+    self->ofd_tx = NULL;
 	self->flags = 0;
 	self->cc_mode = PICOTM_LIBC_CC_MODE_2PL;
 
@@ -37,8 +36,8 @@ fd_tx_uninit(struct fd_tx* self)
 }
 
 void
-fd_tx_ref(struct fd_tx* self, struct fd* fd, int ofd, unsigned long flags,
-          struct picotm_error* error)
+fd_tx_ref(struct fd_tx* self, struct fd* fd, struct ofd_tx* ofd_tx,
+          unsigned long flags, struct picotm_error* error)
 {
     assert(self);
     assert(fd);
@@ -57,7 +56,7 @@ fd_tx_ref(struct fd_tx* self, struct fd* fd, int ofd, unsigned long flags,
     fd_unlock(fd);
 
     self->fd = fd;
-    self->ofd = ofd;
+    self->ofd_tx = ofd_tx;
     self->fdver = fdver;
     self->flags = flags & FD_FL_WANTNEW ? FDTX_FL_LOCALSTATE : 0;
 }
@@ -72,7 +71,6 @@ fd_tx_unref(struct fd_tx* self)
     }
 
     fd_unref(self->fd);
-    ofd_unref(ofdtab+self->ofd);
 
     self->flags = 0;
     self->fd = NULL;

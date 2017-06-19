@@ -19,6 +19,7 @@
 #define FDTX_FL_LOCALSTATE 1L /** \brief Signals local state changes */
 
 struct fcntlop;
+struct ofd_tx;
 struct picotm_error;
 
 union fcntl_arg;
@@ -30,7 +31,7 @@ struct fd_tx {
 
     struct fd* fd;
 
-    int ofd;
+    struct ofd_tx* ofd_tx;
     enum picotm_libc_cc_mode cc_mode;
 
 	unsigned long flags;
@@ -69,8 +70,8 @@ fd_tx_clear_cc(struct fd_tx* self, struct picotm_error* error);
  * Aquire a reference on file-descriptor state
  */
 void
-fd_tx_ref(struct fd_tx* self, struct fd* fd, int ofd, unsigned long flags,
-          struct picotm_error* error);
+fd_tx_ref(struct fd_tx* self, struct fd* fd, struct ofd_tx* ofd_tx,
+          unsigned long flags, struct picotm_error* error);
 
 /**
  * Release reference
