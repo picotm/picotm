@@ -21,7 +21,8 @@ struct picotm_error;
 
 union fcntl_arg;
 
-#define FD_FL_LAST_BIT  (OFD_FL_LAST_BIT+1)
+#define FD_FL_WANTNEW  (1<<2)
+#define FD_FL_LAST_BIT (2)
 
 enum fd_state
 {
@@ -38,8 +39,6 @@ struct fd
 
     int fildes;
     enum fd_state state;
-
-    int ofd;
 
     atomic_ulong ver;
 };
@@ -70,7 +69,7 @@ fd_ref(struct fd *fd, int fildes, unsigned long flags,
        struct picotm_error* error);
 
 void
-fd_ref_state(struct fd *fd, int fildes, unsigned long flags, int *ofd,
+fd_ref_state(struct fd *fd, int fildes, unsigned long flags,
              unsigned long *version, struct picotm_error* error);
 
 /** \brief Releases a reference on the file descriptor */
@@ -84,10 +83,6 @@ fd_is_open_nl(const struct fd *fd);
 /** \brief Get file-descriptor version number */
 unsigned long
 fd_get_version_nl(struct fd *fd);
-
-/** \brief Get index of file-descriptor's open file description */
-int
-fd_get_ofd_nl(struct fd *fd);
 
 /** \brief Set file descriptor to state close */
 void

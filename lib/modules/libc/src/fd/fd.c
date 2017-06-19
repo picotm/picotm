@@ -10,7 +10,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "fcntlop.h"
-#include "ofdtab.h"
 
 void
 fd_init(struct fd *fd, struct picotm_error* error)
@@ -27,7 +26,6 @@ fd_init(struct fd *fd, struct picotm_error* error)
 
     fd->fildes = -1;
     fd->state = FD_ST_UNUSED;
-    fd->ofd = -1;
 
     atomic_init(&fd->ver, 0);
 }
@@ -75,8 +73,6 @@ void
 fd_validate(struct fd* fd, unsigned long ver, struct picotm_error* error)
 {
     assert(fd);
-    assert(fd->ofd >= 0);
-    assert(fd->ofd < (ssize_t)(sizeof(ofdtab)/sizeof(ofdtab[0])));
 
     unsigned long myver = atomic_load(&fd->ver);
 
@@ -86,19 +82,8 @@ fd_validate(struct fd* fd, unsigned long ver, struct picotm_error* error)
     }
 }
 
-static void
-fd_setup_ofd(struct fd *fd, int fildes, unsigned long flags,
-             struct picotm_error* error)
-{
-    int ofd = ofdtab_ref_ofd(fildes, flags, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
-    fd->ofd = ofd;
-}
-
 void
-fd_ref_state(struct fd *fd, int fildes, unsigned long flags, int *ofd,
+fd_ref_state(struct fd *fd, int fildes, unsigned long flags,
              unsigned long *version, struct picotm_error* error)
 {
     assert(fd);
@@ -113,18 +98,13 @@ fd_ref_state(struct fd *fd, int fildes, unsigned long flags, int *ofd,
             break;
         case FD_ST_UNUSED:
             /* setup new fd data structure */
-            fd_setup_ofd(fd, fildes, flags, error);
-            if (picotm_error_is_set(error)) {
-                goto unlock;
-            }
-
             fd->fildes = fildes;
             fd->state = FD_ST_INUSE;
             atomic_store(&fd->ref, 1); /* Exactly one reference */
             break;
         case FD_ST_INUSE:
             /* simply return version and increment reference counter */
-            if (flags & OFD_FL_WANTNEW) {
+            if (flags & FD_FL_WANTNEW) {
                 picotm_error_set_conflicting(error, NULL);
                 goto unlock;
             }
@@ -135,9 +115,6 @@ fd_ref_state(struct fd *fd, int fildes, unsigned long flags, int *ofd,
     }
 
     if (fd_is_open_nl(fd)) {
-        if (ofd) {
-            *ofd = fd_get_ofd_nl(fd);
-        }
         if (version) {
             *version = fd_get_version_nl(fd);
         }
@@ -151,7 +128,7 @@ void
 fd_ref(struct fd *fd, int fildes, unsigned long flags,
        struct picotm_error* error)
 {
-    fd_ref_state(fd, fildes, flags, NULL, NULL, error);
+    fd_ref_state(fd, fildes, flags, NULL, error);
 }
 
 static void
@@ -159,19 +136,14 @@ fd_cleanup(struct fd *fd)
 {
     assert(fd);
 
-    ofd_unref(ofdtab+fd->ofd);
-
     fd->fildes = -1;
     fd->state = FD_ST_UNUSED;
-    fd->ofd = -1;
 }
 
 void
 fd_unref(struct fd *fd)
 {
     assert(fd);
-    assert(fd->ofd >= 0);
-    assert(fd->ofd < (ssize_t)(sizeof(ofdtab)/sizeof(ofdtab[0])));
 
     fd_lock(fd);
 
@@ -224,14 +196,6 @@ fd_get_version_nl(struct fd *fd)
     return res;
 }
 
-int
-fd_get_ofd_nl(struct fd *fd)
-{
-    assert(fd);
-
-    return fd->ofd;
-}
-
 void
 fd_close(struct fd *fd)
 {
@@ -250,8 +214,6 @@ int
 fd_setfd(struct fd* fd, int arg, struct picotm_error* error)
 {
     assert(fd);
-    assert(fd->ofd >= 0);
-    assert(fd->ofd < (ssize_t)(sizeof(ofdtab)/sizeof(ofdtab[0])));
 
     int res = TEMP_FAILURE_RETRY(fcntl(fd->fildes, F_SETFD, arg));
     if (res < 0) {
@@ -265,8 +227,6 @@ int
 fd_getfd(struct fd* fd, struct picotm_error* error)
 {
     assert(fd);
-    assert(fd->ofd >= 0);
-    assert(fd->ofd < (ssize_t)(sizeof(ofdtab)/sizeof(ofdtab[0])));
 
     int res = TEMP_FAILURE_RETRY(fcntl(fd->fildes, F_GETFD));
     if (res < 0) {
