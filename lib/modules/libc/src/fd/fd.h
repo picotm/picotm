@@ -36,6 +36,7 @@ struct fd
 
     atomic_ulong ref;
 
+    int fildes;
     enum fd_state state;
 
     int ofd;
@@ -74,7 +75,7 @@ fd_ref_state(struct fd *fd, int fildes, unsigned long flags, int *ofd,
 
 /** \brief Releases a reference on the file descriptor */
 void
-fd_unref(struct fd *fd, int fildes);
+fd_unref(struct fd *fd);
 
 /** \brief Return non-zero value if file-descriptor is open */
 int
@@ -98,10 +99,10 @@ fd_dump(const struct fd *fd);
 
 /** Set file-descriptor flags. */
 int
-fd_setfd(struct fd* fd, int fildes, int arg, struct picotm_error* error);
+fd_setfd(struct fd* fd, int arg, struct picotm_error* error);
 
 /** Get file-descriptor flags. */
 int
-fd_getfd(struct fd* fd, int fildes, struct picotm_error* error);
+fd_getfd(struct fd* fd, struct picotm_error* error);
 
 #endif
