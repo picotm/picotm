@@ -208,7 +208,12 @@ get_fd_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
         return fd_tx;
     }
 
-    fd_tx_ref(fd_tx, fildes, flags, error);
+    fd_ref(fdtab + fildes, fildes, flags, error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+
+    fd_tx_ref(fd_tx, fdtab + fildes, flags, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }

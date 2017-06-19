@@ -29,6 +29,7 @@ union fcntl_arg;
 struct fd_tx {
 
     struct fd* fd;
+
     int ofd;
     enum picotm_libc_cc_mode cc_mode;
 
@@ -68,7 +69,7 @@ fd_tx_clear_cc(struct fd_tx* self, struct picotm_error* error);
  * Aquire a reference on file-descriptor state
  */
 void
-fd_tx_ref(struct fd_tx* self, int fildes, unsigned long flags,
+fd_tx_ref(struct fd_tx* self, struct fd* fd, unsigned long flags,
           struct picotm_error* error);
 
 /**
