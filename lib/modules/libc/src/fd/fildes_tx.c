@@ -187,6 +187,20 @@ get_fd_tx(struct fildes_tx* self, int fildes)
     return self->fd_tx + fildes;
 }
 
+struct fd_tx*
+get_fd_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
+                   struct picotm_error* error)
+{
+    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+
+    fd_tx_ref_or_validate(fd_tx, fildes, flags, error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+
+    return fd_tx;
+}
+
 static struct ofd_tx*
 get_ofd_tx(struct fildes_tx* self, int index)
 {
@@ -262,10 +276,7 @@ fildes_tx_exec_accept(struct fildes_tx* self, int sockfd,
 {
     /* Update/create fd_tx */
 
-    struct fd_tx* fd_tx = get_fd_tx(self, sockfd);
-    assert(fd_tx);
-
-    fd_tx_ref_or_validate(fd_tx, sockfd, 0, error);
+    struct fd_tx* fd_tx = get_fd_tx_with_ref(self, sockfd, 0, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -345,10 +356,7 @@ fildes_tx_exec_bind(struct fildes_tx* self, int socket,
 {
     /* Update/create fd_tx */
 
-    struct fd_tx* fd_tx = get_fd_tx(self, socket);
-    assert(fd_tx);
-
-    fd_tx_ref_or_validate(fd_tx, socket, 0, error);
+    struct fd_tx* fd_tx = get_fd_tx_with_ref(self, socket, 0, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -439,10 +447,7 @@ fildes_tx_exec_close(struct fildes_tx* self, int fildes, int isnoundo,
 {
     /* Update/create fd_tx */
 
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
-    assert(fd_tx);
-
-    fd_tx_ref_or_validate(fd_tx, fildes, 0, error);
+    struct fd_tx* fd_tx = get_fd_tx_with_ref(self, fildes, 0, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -513,10 +518,7 @@ fildes_tx_exec_connect(struct fildes_tx* self, int sockfd,
 {
     /* Update/create fd_tx */
 
-    struct fd_tx* fd_tx = get_fd_tx(self, sockfd);
-    assert(fd_tx);
-
-    fd_tx_ref_or_validate(fd_tx, sockfd, 0, error);
+    struct fd_tx* fd_tx = get_fd_tx_with_ref(self, sockfd, 0, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -605,10 +607,7 @@ fildes_tx_exec_dup(struct fildes_tx* self, int fildes, int cloexec,
 
     /* Reference/validate fd_tx for fildes */
 
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
-    assert(fd_tx);
-
-    fd_tx_ref_or_validate(fd_tx, fildes, 0, error);
+    get_fd_tx_with_ref(self, fildes, 0, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -687,10 +686,7 @@ fildes_tx_exec_fcntl(struct fildes_tx* self, int fildes, int cmd,
 
     /* Update/create fd_tx */
 
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
-    assert(fd_tx);
-
-    fd_tx_ref_or_validate(fd_tx, fildes, 0, error);
+    struct fd_tx* fd_tx = get_fd_tx_with_ref(self, fildes, 0, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -812,10 +808,7 @@ fildes_tx_exec_fsync(struct fildes_tx* self, int fildes, int isnoundo,
 
     /* Update/create fd_tx */
 
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
-    assert(fd_tx);
-
-    fd_tx_ref_or_validate(fd_tx, fildes, 0, error);
+    struct fd_tx* fd_tx = get_fd_tx_with_ref(self, fildes, 0, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -902,10 +895,7 @@ fildes_tx_exec_listen(struct fildes_tx* self, int sockfd, int backlog,
 
     /* Update/create fd_tx */
 
-    struct fd_tx* fd_tx = get_fd_tx(self, sockfd);
-    assert(fd_tx);
-
-    fd_tx_ref_or_validate(fd_tx, sockfd, 0, error);
+    struct fd_tx* fd_tx = get_fd_tx_with_ref(self, sockfd, 0, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -993,10 +983,7 @@ fildes_tx_exec_lseek(struct fildes_tx* self, int fildes, off_t offset,
 
     /* Update/create fd_tx */
 
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
-    assert(fd_tx);
-
-    fd_tx_ref_or_validate(fd_tx, fildes, 0, error);
+    struct fd_tx* fd_tx = get_fd_tx_with_ref(self, fildes, 0, error);
     if (picotm_error_is_set(error)) {
         return (off_t)-1;
     }
@@ -1308,10 +1295,7 @@ fildes_tx_exec_pread(struct fildes_tx* self, int fildes, void* buf,
 
     /* update/create fd_tx */
 
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
-    assert(fd_tx);
-
-    fd_tx_ref_or_validate(fd_tx, fildes, 0, error);
+    struct fd_tx* fd_tx = get_fd_tx_with_ref(self, fildes, 0, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -1404,10 +1388,7 @@ fildes_tx_exec_pwrite(struct fildes_tx* self, int fildes, const void* buf,
 
     /* Update/create fd_tx */
 
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
-    assert(fd_tx);
-
-    fd_tx_ref_or_validate(fd_tx, fildes, 0, error);
+    struct fd_tx* fd_tx = get_fd_tx_with_ref(self, fildes, 0, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -1496,10 +1477,7 @@ fildes_tx_exec_read(struct fildes_tx* self, int fildes, void* buf,
 
     /* Update/create fd_tx */
 
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
-    assert(fd_tx);
-
-    fd_tx_ref_or_validate(fd_tx, fildes, 0, error);
+    struct fd_tx* fd_tx = get_fd_tx_with_ref(self, fildes, 0, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -1593,10 +1571,7 @@ fildes_tx_exec_recv(struct fildes_tx* self, int sockfd, void* buffer,
 
     /* Update/create fd_tx */
 
-    struct fd_tx* fd_tx = get_fd_tx(self, sockfd);
-    assert(fd_tx);
-
-    fd_tx_ref_or_validate(fd_tx, sockfd, 0, error);
+    struct fd_tx* fd_tx = get_fd_tx_with_ref(self, sockfd, 0, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -1691,11 +1666,7 @@ ref_fdset(struct fildes_tx* self, int nfds, const fd_set* fdset,
 
             /* Update/create fd_tx */
 
-            struct fd_tx* fd_tx = get_fd_tx(self, fildes);
-            assert(fd_tx);
-
-            fd_tx_ref_or_validate(fd_tx, fildes, 0, error);
-
+            get_fd_tx_with_ref(self, fildes, 0, error);
             if (picotm_error_is_set(error)) {
                 return;
             }
@@ -1770,10 +1741,7 @@ fildes_tx_exec_send(struct fildes_tx* self, int sockfd, const void* buffer,
 
     /* Update/create fd_tx */
 
-    struct fd_tx* fd_tx = get_fd_tx(self, sockfd);
-    assert(fd_tx);
-
-    fd_tx_ref_or_validate(fd_tx, sockfd, 0, error);
+    struct fd_tx* fd_tx = get_fd_tx_with_ref(self, sockfd, 0, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -1862,10 +1830,7 @@ fildes_tx_exec_shutdown(struct fildes_tx* self, int sockfd, int how,
 
     /* Update/create fd_tx */
 
-    struct fd_tx* fd_tx = get_fd_tx(self, sockfd);
-    assert(fd_tx);
-
-    fd_tx_ref_or_validate(fd_tx, sockfd, 0, error);
+    struct fd_tx* fd_tx = get_fd_tx_with_ref(self, sockfd, 0, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -2056,10 +2021,7 @@ fildes_tx_exec_write(struct fildes_tx* self, int fildes, const void* buf,
 
     /* Update/create fd_tx */
 
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
-    assert(fd_tx);
-
-    fd_tx_ref_or_validate(fd_tx, fildes, 0, error);
+    struct fd_tx* fd_tx = get_fd_tx_with_ref(self, fildes, 0, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
