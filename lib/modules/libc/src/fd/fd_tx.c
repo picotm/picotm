@@ -37,20 +37,13 @@ fd_tx_uninit(struct fd_tx* self)
 }
 
 void
-fd_tx_ref(struct fd_tx* self, struct fd* fd, unsigned long flags,
+fd_tx_ref(struct fd_tx* self, struct fd* fd, int ofd, unsigned long flags,
           struct picotm_error* error)
 {
     assert(self);
     assert(fd);
 
     if (fd_tx_holds_ref(self)) {
-        return;
-    }
-
-    int fildes = fd->fildes;
-
-    int ofd = ofdtab_ref_ofd(fildes, flags, error);
-    if (picotm_error_is_set(error)) {
         return;
     }
 

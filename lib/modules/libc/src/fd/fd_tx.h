@@ -69,7 +69,7 @@ fd_tx_clear_cc(struct fd_tx* self, struct picotm_error* error);
  * Aquire a reference on file-descriptor state
  */
 void
-fd_tx_ref(struct fd_tx* self, struct fd* fd, unsigned long flags,
+fd_tx_ref(struct fd_tx* self, struct fd* fd, int ofd, unsigned long flags,
           struct picotm_error* error);
 
 /**
