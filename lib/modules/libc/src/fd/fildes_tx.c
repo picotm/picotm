@@ -312,13 +312,11 @@ fildes_tx_exec_accept(struct fildes_tx* self, int sockfd,
         return -1;
     }
 
-    fd_tx = self->fd_tx + connfd;
-
     /* Reference fd_tx */
 
-    fd_tx_ref(fd_tx, connfd, 0, error);
+    fd_tx = get_fd_tx_with_ref(self, connfd, 0, error);
     if (picotm_error_is_set(error)) {
-        goto err_fd_tx_ref;
+        goto err_get_fd_tx_with_ref;
     }
 
     /* Inject event */
@@ -329,7 +327,7 @@ fildes_tx_exec_accept(struct fildes_tx* self, int sockfd,
 
     return connfd;
 
-err_fd_tx_ref:
+err_get_fd_tx_with_ref:
     if (TEMP_FAILURE_RETRY(close(connfd)) < 0) {
         perror("close");
     }
@@ -638,13 +636,9 @@ fildes_tx_exec_dup(struct fildes_tx* self, int fildes, int cloexec,
     }
     int fildes2 = res;
 
-    struct fd_tx* fd_tx2 = get_fd_tx(self, fildes2);
-    assert(fd_tx2);
-
     /* Reference fd_tx for fildes2 */
 
-    fd_tx_ref(fd_tx2, fildes2, 0, error);
-
+    get_fd_tx_with_ref(self, fildes2, 0, error);
     if (picotm_error_is_set(error)) {
         if (TEMP_FAILURE_RETRY(close(fildes2)) < 0) {
             perror("close");
@@ -1111,10 +1105,7 @@ fildes_tx_exec_open(struct fildes_tx* self, const char* path, int oflag,
 
     /* Update/create fd_tx */
 
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
-    assert(fd_tx);
-
-    fd_tx_ref(fd_tx, fildes, OFD_FL_WANTNEW, error);
+    get_fd_tx_with_ref(self, fildes, FD_FL_WANTNEW, error);
     if (picotm_error_is_set(error)) {
         if (TEMP_FAILURE_RETRY(close(fildes)) < 0) {
             perror("close");
@@ -1217,11 +1208,7 @@ fildes_tx_exec_pipe(struct fildes_tx* self, int pipefd[2],
 
     /* Update/create fd_tx */
 
-    struct fd_tx* fd_tx = get_fd_tx(self, pipefd[0]);
-    assert(fd_tx);
-
-    fd_tx_ref(fd_tx, pipefd[0], 0, error);
-
+    get_fd_tx_with_ref(self, pipefd[0], 0, error);
     if (picotm_error_is_set(error)) {
         if (TEMP_FAILURE_RETRY(close(pipefd[0])) < 0) {
             perror("close");
@@ -1232,11 +1219,7 @@ fildes_tx_exec_pipe(struct fildes_tx* self, int pipefd[2],
         return -1;
     }
 
-    fd_tx = get_fd_tx(self, pipefd[1]);
-    assert(fd_tx);
-
-    fd_tx_ref(fd_tx, pipefd[1], 0, error);
-
+    get_fd_tx_with_ref(self, pipefd[1], 0, error);
     if (picotm_error_is_set(error)) {
         if (TEMP_FAILURE_RETRY(close(pipefd[0])) < 0) {
             perror("close");
@@ -1941,11 +1924,7 @@ fildes_tx_exec_socket(struct fildes_tx* self, int domain, int type,
 
     /* Update/create fd_tx */
 
-    struct fd_tx* fd_tx = get_fd_tx(self, sockfd);
-    assert(fd_tx);
-
-    fd_tx_ref(fd_tx, sockfd, 0, error);
-
+    get_fd_tx_with_ref(self, sockfd, 0, error);
     if (picotm_error_is_set(error)) {
         if (TEMP_FAILURE_RETRY(close(sockfd)) < 0) {
             perror("close");
