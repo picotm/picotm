@@ -53,20 +53,13 @@ fd_tx_ref_or_validate(struct fd_tx* self, int fildes, unsigned long flags,
 
         fd_lock(fd);
 
-        if (fd_is_open_nl(fd)) {
-            fdver = fd_get_version_nl(fd);
-        } else {
+        fd_validate(fd, self->fdver, error);
+        if (picotm_error_is_set(error)) {
             fd_unlock(fd);
-            picotm_error_set_conflicting(error, NULL);
             return;
         }
 
         fd_unlock(fd);
-
-        if (fdver > self->fdver) {
-            picotm_error_set_conflicting(error, NULL);
-            return;
-        }
 
     } else {
 
@@ -265,10 +258,11 @@ fd_tx_fcntl_exec(struct fd_tx* self, int cmd, union fcntl_arg *arg,
 
     struct fd* fd = fdtab + self->fildes;
 
-    fd_lock(fdtab+self->fildes);
+    fd_lock(fd);
 
-    if (!fd_is_valid(fd, self->fdver)) {
-        picotm_error_set_conflicting(error, NULL);
+    fd_validate(fd, self->fdver, error);
+    if (picotm_error_is_set(error)) {
+        fd_unlock(fd);
         return -1;
     }
 

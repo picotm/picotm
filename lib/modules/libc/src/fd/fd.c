@@ -242,12 +242,6 @@ fd_dump(const struct fd *fd)
     return;
 }
 
-bool
-fd_is_valid(struct fd* fd, unsigned long version)
-{
-    return atomic_load(&fd->ver) <= version;
-}
-
 int
 fd_setfd(struct fd* fd, int fildes, int arg, struct picotm_error* error)
 {
