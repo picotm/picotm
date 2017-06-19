@@ -27,7 +27,8 @@ union fcntl_arg;
  * Holds transaction-local reads and writes for a file descriptor
  */
 struct fd_tx {
-    int fildes;
+
+    struct fd* fd;
     int ofd;
     enum picotm_libc_cc_mode cc_mode;
 
@@ -84,9 +85,9 @@ void
 fd_tx_unref(struct fd_tx* self);
 
 /**
- * Returns non-zero if transaction holds a reference on file descriptor
+ * Returns true if transaction holds a reference on file descriptor
  */
-int
+bool
 fd_tx_holds_ref(const struct fd_tx* self);
 
 void

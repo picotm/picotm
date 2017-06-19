@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include "fdtab.h"
 #include "ofd.h"
 #include "ofdtab.h"
 #include "openop.h"
@@ -134,7 +135,7 @@ get_ifd(const struct fd_tx* fd_tx, size_t fd_txlen, size_t* ifdlen,
             }
             ifd = tmp;
 
-            ifd[(*ifdlen)++] = fd_tx->fildes;
+            ifd[(*ifdlen)++] = fd_tx->fd - fdtab;
         }
 
         ++fd_tx;
