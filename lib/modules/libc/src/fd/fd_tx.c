@@ -37,53 +37,6 @@ fd_tx_uninit(struct fd_tx* self)
 }
 
 void
-fd_tx_ref_or_validate(struct fd_tx* self, int fildes, unsigned long flags,
-                      struct picotm_error* error)
-{
-    assert(self);
-    assert(fildes >= 0);
-    assert(fildes < (ssize_t)(sizeof(fdtab)/sizeof(fdtab[0])));
-
-    unsigned long fdver;
-
-    struct fd* fd = fdtab + fildes;
-
-    if (fd_tx_holds_ref(self)) {
-
-        /* Validate reference or return error if fd has been closed */
-
-        fd_lock(fd);
-
-        fd_validate(fd, self->fdver, error);
-        if (picotm_error_is_set(error)) {
-            fd_unlock(fd);
-            return;
-        }
-
-        fd_unlock(fd);
-
-    } else {
-
-        /* Aquire reference if possible */
-
-        int ofd = ofdtab_ref_ofd(fildes, flags, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-
-        fd_ref_state(fd, fildes, flags, &fdver, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-
-        self->fd = fd;
-        self->ofd = ofd;
-        self->fdver = fdver;
-    	self->flags = flags & FD_FL_WANTNEW ? FDTX_FL_LOCALSTATE : 0;
-    }
-}
-
-void
 fd_tx_ref(struct fd_tx* self, int fildes, unsigned long flags,
           struct picotm_error* error)
 {

@@ -173,7 +173,7 @@ get_iofd(const struct fd_tx* fd_tx, const int* ifd, size_t ifdlen,
     return iofd;
 }
 
-struct fd_tx*
+static struct fd_tx*
 get_fd_tx(struct fildes_tx* self, int fildes)
 {
     for (struct fd_tx* fd_tx = self->fd_tx + self->fd_tx_max_fildes;
@@ -188,13 +188,27 @@ get_fd_tx(struct fildes_tx* self, int fildes)
     return self->fd_tx + fildes;
 }
 
-struct fd_tx*
+static struct fd_tx*
 get_fd_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
                    struct picotm_error* error)
 {
     struct fd_tx* fd_tx = get_fd_tx(self, fildes);
 
-    fd_tx_ref_or_validate(fd_tx, fildes, flags, error);
+    if (fd_tx_holds_ref(fd_tx)) {
+
+        /* Validate reference or return error if fd has been closed */
+        fd_tx_lock(fd_tx);
+        fd_tx_validate(fd_tx, error);
+        if (picotm_error_is_set(error)) {
+            fd_tx_unlock(fd_tx);
+            return NULL;
+        }
+        fd_tx_unlock(fd_tx);
+
+        return fd_tx;
+    }
+
+    fd_tx_ref(fd_tx, fildes, flags, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
