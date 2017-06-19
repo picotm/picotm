@@ -20,11 +20,12 @@
  */
 
 struct fcntlop;
+struct fd_event;
 struct ioop;
+struct ofd;
 struct picotm_error;
 struct seekop;
 struct sockaddr;
-struct fd_event;
 
 enum {
     /** Signals local changes to state */
@@ -40,7 +41,7 @@ enum {
  */
 struct ofd_tx
 {
-    int ofd;
+    struct ofd* ofd;
 
     unsigned long flags;
 
@@ -121,8 +122,8 @@ ofd_tx_clear_cc(struct ofd_tx* self, struct picotm_error* error);
  * Acquire a reference on the open file description
  */
 void
-ofd_tx_ref(struct ofd_tx* self, int ofd, int fildes, unsigned long flags,
-           struct picotm_error* error);
+ofd_tx_ref(struct ofd_tx* self, struct ofd* ofd, int fildes,
+           unsigned long flags, struct picotm_error* error);
 
 /**
  * Release reference
@@ -131,9 +132,9 @@ void
 ofd_tx_unref(struct ofd_tx* self);
 
 /**
- * Returns non-zero if transactions hold a reference
+ * Returns true if transactions hold a reference
  */
-int
+bool
 ofd_tx_holds_ref(struct ofd_tx* self);
 
 int

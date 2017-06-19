@@ -15,7 +15,7 @@
 #include "fcntloptab.h"
 #include "ioop.h"
 #include "iooptab.h"
-#include "ofdtab.h"
+#include "ofd.h"
 #include "range.h"
 #include "region.h"
 #include "regiontab.h"
@@ -26,21 +26,15 @@
 static void
 ofd_tx_2pl_release_locks(struct ofd_tx* self)
 {
-    struct ofd *ofd;
-    struct region *region;
-    const struct region *regionend;
-
     assert(self);
-
-    ofd = ofdtab+self->ofd;
 
     /* release all locks */
 
-    region = self->modedata.tpl.locktab;
-    regionend = region+self->modedata.tpl.locktablen;
+    struct region* region = self->modedata.tpl.locktab;
+    const struct region* regionend = region+self->modedata.tpl.locktablen;
 
     while (region < regionend) {
-        ofd_2pl_unlock_region(ofd,
+        ofd_2pl_unlock_region(self->ofd,
                               region->offset,
                               region->nbyte,
                               &self->modedata.tpl.rwstatemap);
@@ -53,7 +47,7 @@ ofd_tx_init(struct ofd_tx* self)
 {
     assert(self);
 
-    self->ofd = -1;
+    self->ofd = NULL;
 
     self->flags = 0;
 
@@ -167,8 +161,6 @@ update_cc_2pl(struct ofd_tx* self, struct picotm_error* error)
     assert(self);
     assert(self->cc_mode == PICOTM_LIBC_CC_MODE_2PL);
 
-    struct ofd *ofd = ofdtab+self->ofd;
-
     /* release record locks */
 
     if (self->type == PICOTM_LIBC_FILE_TYPE_REGULAR) {
@@ -177,7 +169,7 @@ update_cc_2pl(struct ofd_tx* self, struct picotm_error* error)
 
     /* release ofd lock */
 
-    ofd_rwunlock_state(ofd, &self->modedata.tpl.rwstate);
+    ofd_rwunlock_state(self->ofd, &self->modedata.tpl.rwstate);
 }
 
 void
@@ -210,8 +202,6 @@ clear_cc_2pl(struct ofd_tx* self, struct picotm_error* error)
     assert(self);
     assert(self->cc_mode == PICOTM_LIBC_CC_MODE_2PL);
 
-    struct ofd *ofd = ofdtab+self->ofd;
-
     /* release record locks */
 
     if (self->type == PICOTM_LIBC_FILE_TYPE_REGULAR) {
@@ -220,7 +210,7 @@ clear_cc_2pl(struct ofd_tx* self, struct picotm_error* error)
 
     /* release ofd lock */
 
-    ofd_rwunlock_state(ofd, &self->modedata.tpl.rwstate);
+    ofd_rwunlock_state(self->ofd, &self->modedata.tpl.rwstate);
 }
 
 void
@@ -241,46 +231,43 @@ ofd_tx_clear_cc(struct ofd_tx* self, struct picotm_error* error)
  */
 
 void
-ofd_tx_ref(struct ofd_tx* self, int ofdindex, int fildes, unsigned long flags,
-           struct picotm_error* error)
+ofd_tx_ref(struct ofd_tx* self, struct ofd* ofd, int fildes,
+           unsigned long flags, struct picotm_error* error)
 {
     assert(self);
-    assert(ofdindex >= 0);
-    assert(ofdindex < (ssize_t)(sizeof(ofdtab)/sizeof(ofdtab[0])));
+    assert(ofd);
 
-    if (!ofd_tx_holds_ref(self)) {
-
-        /* get reference and status */
-
-        off_t offset;
-        enum picotm_libc_file_type type;
-        enum picotm_libc_cc_mode cc_mode;
-
-        struct ofd *ofd = ofdtab+ofdindex;
-
-        ofd_ref_state(ofd, fildes, flags, &type, &cc_mode, &offset, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-
-        /* setup fields */
-
-        self->ofd = ofdindex;
-        self->type = type;
-        self->cc_mode = cc_mode;
-        self->offset = offset;
-        self->size = 0;
-        self->flags = 0;
-
-        self->fcntltablen = 0;
-        self->seektablen = 0;
-        self->rdtablen = 0;
-        self->wrtablen = 0;
-        self->wrbuflen = 0;
-
-        self->modedata.tpl.rwstate = RW_NOLOCK;
-        self->modedata.tpl.locktablen = 0;
+    if (ofd_tx_holds_ref(self)) {
+        return;
     }
+
+    /* get reference and status */
+
+    off_t offset;
+    enum picotm_libc_file_type type;
+    enum picotm_libc_cc_mode cc_mode;
+    ofd_ref_state(ofd, fildes, flags, &type, &cc_mode, &offset, error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
+
+    /* setup fields */
+
+    self->ofd = ofd;
+    self->type = type;
+    self->cc_mode = cc_mode;
+    self->offset = offset;
+    self->size = 0;
+    self->flags = 0;
+
+    self->fcntltablen = 0;
+    self->seektablen = 0;
+    self->rdtablen = 0;
+    self->wrtablen = 0;
+    self->wrbuflen = 0;
+
+    self->modedata.tpl.rwstate = RW_NOLOCK;
+    self->modedata.tpl.locktablen = 0;
 }
 
 void
@@ -292,19 +279,16 @@ ofd_tx_unref(struct ofd_tx* self)
         return;
     }
 
-    struct ofd *ofd = ofdtab+self->ofd;
-    ofd_unref(ofd);
-
-    self->ofd = -1;
+    ofd_unref(self->ofd);
+    self->ofd = NULL;
 }
 
-int
+bool
 ofd_tx_holds_ref(struct ofd_tx* self)
 {
     assert(self);
 
-    return (self->ofd >= 0) &&
-           (self->ofd < (ssize_t)(sizeof(ofdtab)/sizeof(ofdtab[0])));
+    return !!self->ofd;
 }
 
 static off_t
@@ -392,7 +376,7 @@ ofd_tx_2pl_lock_region(struct ofd_tx* self, size_t nbyte, off_t offset,
 {
     assert(self);
 
-    ofd_2pl_lock_region(ofdtab+self->ofd,
+    ofd_2pl_lock_region(self->ofd,
                         offset,
                         nbyte,
                         write,
@@ -419,8 +403,8 @@ ofd_tx_2pl_lock_region(struct ofd_tx* self, size_t nbyte, off_t offset,
 void
 ofd_tx_dump(const struct ofd_tx* self)
 {
-    fprintf(stderr, "%p: %d %p %zu %p %zu %p %zu %ld\n", (void*)self,
-                                                                self->ofd,
+    fprintf(stderr, "%p: %p %p %zu %p %zu %p %zu %ld\n", (void*)self,
+                                                         (void*)self->ofd,
                                                          (void*)self->seektab,
                                                                 self->seektablen,
                                                          (void*)self->wrtab,
@@ -693,8 +677,7 @@ fcntl_exec_2pl(struct ofd_tx* self, int fildes, int cmd,
         case F_GETOWN: {
 
             /* Read-lock open file description */
-            ofd_rdlock_state(ofdtab+self->ofd, &self->modedata.tpl.rwstate,
-                             error);
+            ofd_rdlock_state(self->ofd, &self->modedata.tpl.rwstate, error);
             if (picotm_error_is_set(error)) {
                 return -1;
             }
@@ -710,8 +693,7 @@ fcntl_exec_2pl(struct ofd_tx* self, int fildes, int cmd,
         case F_GETLK: {
 
             /* Read-lock open file description */
-            ofd_rdlock_state(ofdtab+self->ofd, &self->modedata.tpl.rwstate,
-                             error);
+            ofd_rdlock_state(self->ofd, &self->modedata.tpl.rwstate, error);
             if (picotm_error_is_set(error)) {
                 return -1;
             }
@@ -1016,11 +998,9 @@ static off_t
 lseek_exec_regular_2pl(struct ofd_tx* self, int fildes, off_t offset,
                        int whence, int* cookie, struct picotm_error* error)
 {
-    struct ofd *ofd = ofdtab+self->ofd;
-
     /* Read-lock open file description */
 
-    ofd_rdlock_state(ofd, &self->modedata.tpl.rwstate, error);
+    ofd_rdlock_state(self->ofd, &self->modedata.tpl.rwstate, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -1032,7 +1012,7 @@ lseek_exec_regular_2pl(struct ofd_tx* self, int fildes, off_t offset,
 
     /* Write-lock open file description to change position */
 
-    ofd_wrlock_state(ofd, &self->modedata.tpl.rwstate, error);
+    ofd_wrlock_state(self->ofd, &self->modedata.tpl.rwstate, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -1136,9 +1116,7 @@ lseek_apply_regular(struct ofd_tx* self, int fildes,
         return;
     }
 
-    struct ofd *ofd = ofdtab+self->ofd;
-
-    ofd->data.regular.offset = pos;
+    self->ofd->data.regular.offset = pos;
 }
 
 void
@@ -1584,11 +1562,9 @@ read_exec_regular_2pl(struct ofd_tx* self, int fildes, void* buf,
 {
     assert(self);
 
-    struct ofd *ofd = ofdtab+self->ofd;
-
     /* write-lock open file description, because we change the file position */
 
-    ofd_wrlock_state(ofd, &self->modedata.tpl.rwstate, error);
+    ofd_wrlock_state(self->ofd, &self->modedata.tpl.rwstate, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -1672,9 +1648,9 @@ read_apply_regular(struct ofd_tx* self, int fildes,
                    const struct fd_event* event,
                    struct picotm_error* error)
 {
-    ofdtab[self->ofd].data.regular.offset += self->rdtab[event->cookie].nbyte;
+    self->ofd->data.regular.offset += self->rdtab[event->cookie].nbyte;
 
-    off_t res = lseek(fildes, ofdtab[self->ofd].data.regular.offset, SEEK_SET);
+    off_t res = lseek(fildes, self->ofd->data.regular.offset, SEEK_SET);
     if (res == (off_t)-1) {
         picotm_error_set_errno(error, errno);
         return;
@@ -1847,11 +1823,9 @@ send_exec_socket_2pl(struct ofd_tx* self, int sockfd, const void* buf,
         return -1;
     }
 
-    struct ofd *ofd = ofdtab+self->ofd;
-
     /* Write-lock open file description, because we change the file position */
 
-    ofd_wrlock_state(ofd, &self->modedata.tpl.rwstate, error);
+    ofd_wrlock_state(self->ofd, &self->modedata.tpl.rwstate, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -2098,11 +2072,9 @@ write_exec_regular_2pl(struct ofd_tx* self, int fildes, const void* buf,
 
     if (__builtin_expect(!!cookie, 1)) {
 
-        struct ofd *ofd = ofdtab+self->ofd;
-
         /* write-lock open file description, because we change the file position */
 
-        ofd_wrlock_state(ofd, &self->modedata.tpl.rwstate, error);
+        ofd_wrlock_state(self->ofd, &self->modedata.tpl.rwstate, error);
         if (picotm_error_is_set(error)) {
             return -1;
         }
@@ -2132,11 +2104,9 @@ static ssize_t
 write_exec_fifo_2pl(struct ofd_tx* self, int fildes, const void* buf,
                     size_t nbyte, int* cookie, struct picotm_error* error)
 {
-    struct ofd *ofd = ofdtab+self->ofd;
-
     /* Write-lock open file description, because we change the file position */
 
-    ofd_wrlock_state(ofd, &self->modedata.tpl.rwstate, error);
+    ofd_wrlock_state(self->ofd, &self->modedata.tpl.rwstate, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -2157,11 +2127,9 @@ static ssize_t
 write_exec_socket_2pl(struct ofd_tx* self, int fildes, const void* buf,
                       size_t nbyte, int* cookie, struct picotm_error* error)
 {
-    struct ofd *ofd = ofdtab+self->ofd;
-
     /* Write-lock open file description, because we change the file position */
 
-    ofd_wrlock_state(ofd, &self->modedata.tpl.rwstate, error);
+    ofd_wrlock_state(self->ofd, &self->modedata.tpl.rwstate, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -2239,9 +2207,9 @@ write_apply_regular_2pl(struct ofd_tx* self, int fildes, int cookie,
     }
 
     /* Update file position */
-    ofdtab[self->ofd].data.regular.offset = self->wrtab[cookie].off+len;
+    self->ofd->data.regular.offset = self->wrtab[cookie].off+len;
 
-    off_t res = lseek(fildes, ofdtab[self->ofd].data.regular.offset, SEEK_SET);
+    off_t res = lseek(fildes, self->ofd->data.regular.offset, SEEK_SET);
     if (res == (off_t)-1) {
         picotm_error_set_errno(error, errno);
         return;
