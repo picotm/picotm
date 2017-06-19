@@ -110,6 +110,18 @@ ofd_tx_uninit(struct ofd_tx* self)
  * Validation
  */
 
+void
+ofd_tx_lock(struct ofd_tx* self)
+{
+    assert(self);
+}
+
+void
+ofd_tx_unlock(struct ofd_tx* self)
+{
+    assert(self);
+}
+
 static void
 validate_noundo(struct ofd_tx* self, struct picotm_error* error)
 { }
@@ -368,26 +380,6 @@ ofd_tx_append_to_readset(struct ofd_tx* self, size_t nbyte, off_t offset,
         return -1;
     }
     return res;
-}
-
-/*
- * prepare commit
- */
-
-void
-ofd_tx_pre_commit(struct ofd_tx* self)
-{
-    assert(self);
-}
-
-/*
- * cleanup commit
- */
-
-void
-ofd_tx_post_commit(struct ofd_tx* self)
-{
-    assert(self);
 }
 
 /*

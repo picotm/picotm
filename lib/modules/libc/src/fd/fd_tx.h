@@ -90,10 +90,10 @@ int
 fd_tx_holds_ref(const struct fd_tx* self);
 
 void
-fd_tx_pre_commit(struct fd_tx* self);
+fd_tx_lock(struct fd_tx* self);
 
 void
-fd_tx_post_commit(struct fd_tx* self);
+fd_tx_unlock(struct fd_tx* self);
 
 /**
  * Set file descriptor to CLOSING
