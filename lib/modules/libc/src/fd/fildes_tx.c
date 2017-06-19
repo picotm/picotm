@@ -187,7 +187,7 @@ get_fd_tx(struct fildes_tx* self, int fildes)
     return self->fd_tx + fildes;
 }
 
-struct ofd_tx*
+static struct ofd_tx*
 get_ofd_tx(struct fildes_tx* self, int index)
 {
     for (struct ofd_tx* ofd_tx = self->ofd_tx + self->ofd_tx_max_index;
@@ -199,6 +199,25 @@ get_ofd_tx(struct fildes_tx* self, int index)
     self->ofd_tx_max_index = lmax(index + 1, self->ofd_tx_max_index);
 
     return self->ofd_tx + index;
+}
+
+static struct ofd_tx*
+get_ofd_tx_with_ref(struct fildes_tx* self, int index, struct ofd* ofd,
+                    int fildes, unsigned long flags,
+                    struct picotm_error* error)
+{
+    struct ofd_tx* ofd_tx = get_ofd_tx(self, index);
+
+    if (ofd_tx_holds_ref(ofd_tx)) {
+        return ofd_tx;
+    }
+
+    ofd_tx_ref(ofd_tx, ofd, fildes, flags, error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+
+    return ofd_tx;
 }
 
 static int
@@ -253,10 +272,8 @@ fildes_tx_exec_accept(struct fildes_tx* self, int sockfd,
 
     /* Update/create ofd_tx */
 
-    struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
-    assert(ofd_tx);
-
-    ofd_tx_ref(ofd_tx, ofdtab + fd_tx->ofd, sockfd, 0, error);
+    get_ofd_tx_with_ref(self, fd_tx->ofd, ofdtab + fd_tx->ofd, sockfd, 0,
+                        error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -338,10 +355,9 @@ fildes_tx_exec_bind(struct fildes_tx* self, int socket,
 
     /* Update/create ofd_tx */
 
-    struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
-    assert(ofd_tx);
-
-    ofd_tx_ref(ofd_tx, ofdtab + fd_tx->ofd, socket, 0, error);
+    struct ofd_tx* ofd_tx = get_ofd_tx_with_ref(self, fd_tx->ofd,
+                                                ofdtab + fd_tx->ofd,
+                                                socket, 0, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -507,10 +523,9 @@ fildes_tx_exec_connect(struct fildes_tx* self, int sockfd,
 
     /* Update/create ofd_tx */
 
-    struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
-    assert(ofd_tx);
-
-    ofd_tx_ref(ofd_tx, ofdtab + fd_tx->ofd, sockfd, 0, error);
+    struct ofd_tx* ofd_tx = get_ofd_tx_with_ref(self, fd_tx->ofd,
+                                                ofdtab + fd_tx->ofd,
+                                                sockfd, 0, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -698,10 +713,9 @@ fildes_tx_exec_fcntl(struct fildes_tx* self, int fildes, int cmd,
         default: {
             /* Update/create ofd_tx */
 
-            struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
-            assert(ofd_tx);
-
-            ofd_tx_ref(ofd_tx, ofdtab + fd_tx->ofd, fildes, 0, error);
+            struct ofd_tx* ofd_tx = get_ofd_tx_with_ref(self, fd_tx->ofd,
+                                                        ofdtab + fd_tx->ofd,
+                                                        fildes, 0, error);
             if (picotm_error_is_set(error)) {
                 return -1;
             }
@@ -808,10 +822,9 @@ fildes_tx_exec_fsync(struct fildes_tx* self, int fildes, int isnoundo,
 
     /* Update/create ofd_tx */
 
-    struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
-    assert(ofd_tx);
-
-    ofd_tx_ref(ofd_tx, ofdtab + fd_tx->ofd, fildes, 0, error);
+    struct ofd_tx* ofd_tx = get_ofd_tx_with_ref(self, fd_tx->ofd,
+                                                ofdtab + fd_tx->ofd,
+                                                fildes, 0, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -899,10 +912,9 @@ fildes_tx_exec_listen(struct fildes_tx* self, int sockfd, int backlog,
 
     /* Update/create ofd_tx */
 
-    struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
-    assert(ofd_tx);
-
-    ofd_tx_ref(ofd_tx, ofdtab + fd_tx->ofd, sockfd, 0, error);
+    struct ofd_tx* ofd_tx = get_ofd_tx_with_ref(self, fd_tx->ofd,
+                                                ofdtab + fd_tx->ofd,
+                                                sockfd, 0, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -991,10 +1003,9 @@ fildes_tx_exec_lseek(struct fildes_tx* self, int fildes, off_t offset,
 
     /* Update/create ofd_tx */
 
-    struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
-    assert(ofd_tx);
-
-    ofd_tx_ref(ofd_tx, ofdtab + fd_tx->ofd, fildes, 0, error);
+    struct ofd_tx* ofd_tx = get_ofd_tx_with_ref(self, fd_tx->ofd,
+                                                ofdtab + fd_tx->ofd,
+                                                fildes, 0, error);
     if (picotm_error_is_set(error)) {
         return (off_t)-1;
     }
@@ -1307,10 +1318,9 @@ fildes_tx_exec_pread(struct fildes_tx* self, int fildes, void* buf,
 
     /* update/create ofd_tx */
 
-    struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
-    assert(ofd_tx);
-
-    ofd_tx_ref(ofd_tx, ofdtab + fd_tx->ofd, fildes, 0, error);
+    struct ofd_tx* ofd_tx = get_ofd_tx_with_ref(self, fd_tx->ofd,
+                                                ofdtab + fd_tx->ofd,
+                                                fildes, 0, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -1404,10 +1414,9 @@ fildes_tx_exec_pwrite(struct fildes_tx* self, int fildes, const void* buf,
 
     /* Update/create ofd_tx */
 
-    struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
-    assert(ofd_tx);
-
-    ofd_tx_ref(ofd_tx, ofdtab + fd_tx->ofd, fildes, 0, error);
+    struct ofd_tx* ofd_tx = get_ofd_tx_with_ref(self, fd_tx->ofd,
+                                                ofdtab + fd_tx->ofd,
+                                                fildes, 0, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -1416,7 +1425,7 @@ fildes_tx_exec_pwrite(struct fildes_tx* self, int fildes, const void* buf,
 
     int cookie = -1;
 
-    ssize_t len = ofd_tx_pwrite_exec(self->ofd_tx + fd_tx->ofd,
+    ssize_t len = ofd_tx_pwrite_exec(ofd_tx,
                                      fildes, buf, nbyte, off,
                                      &cookie, isnoundo, error);
     if (picotm_error_is_set(error)) {
@@ -1497,10 +1506,9 @@ fildes_tx_exec_read(struct fildes_tx* self, int fildes, void* buf,
 
     /* Update/create ofd_tx */
 
-    struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
-    assert(ofd_tx);
-
-    ofd_tx_ref(ofd_tx, ofdtab + fd_tx->ofd, fildes, 0, error);
+    struct ofd_tx* ofd_tx = get_ofd_tx_with_ref(self, fd_tx->ofd,
+                                                ofdtab + fd_tx->ofd,
+                                                fildes, 0, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -1595,10 +1603,9 @@ fildes_tx_exec_recv(struct fildes_tx* self, int sockfd, void* buffer,
 
     /* Update/create ofd_tx */
 
-    struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
-    assert(ofd_tx);
-
-    ofd_tx_ref(ofd_tx, ofdtab + fd_tx->ofd, sockfd, 0, error);
+    struct ofd_tx* ofd_tx = get_ofd_tx_with_ref(self, fd_tx->ofd,
+                                                ofdtab + fd_tx->ofd,
+                                                sockfd, 0, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -1773,10 +1780,9 @@ fildes_tx_exec_send(struct fildes_tx* self, int sockfd, const void* buffer,
 
     /* Update/create ofd_tx */
 
-    struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
-    assert(ofd_tx);
-
-    ofd_tx_ref(ofd_tx, ofdtab + fd_tx->ofd, sockfd, 0, error);
+    struct ofd_tx* ofd_tx = get_ofd_tx_with_ref(self, fd_tx->ofd,
+                                                ofdtab + fd_tx->ofd,
+                                                sockfd, 0, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -1866,10 +1872,9 @@ fildes_tx_exec_shutdown(struct fildes_tx* self, int sockfd, int how,
 
     /* Update/create ofd_tx */
 
-    struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
-    assert(ofd_tx);
-
-    ofd_tx_ref(ofd_tx, ofdtab + fd_tx->ofd, sockfd, 0, error);
+    struct ofd_tx* ofd_tx = get_ofd_tx_with_ref(self, fd_tx->ofd,
+                                                ofdtab + fd_tx->ofd,
+                                                sockfd, 0, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -2061,10 +2066,9 @@ fildes_tx_exec_write(struct fildes_tx* self, int fildes, const void* buf,
 
     /* Update/create ofd_tx */
 
-    struct ofd_tx* ofd_tx = get_ofd_tx(self, fd_tx->ofd);
-    assert(ofd_tx);
-
-    ofd_tx_ref(ofd_tx, ofdtab + fd_tx->ofd, fildes, 0, error);
+    struct ofd_tx* ofd_tx = get_ofd_tx_with_ref(self, fd_tx->ofd,
+                                                ofdtab + fd_tx->ofd,
+                                                fildes, 0, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
