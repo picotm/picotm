@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include "fcntlop.h"
 #include "fcntloptab.h"
-#include "fdtab.h"
+#include "fd.h"
 #include "ofd.h"
 #include "ofdtab.h"
 
@@ -37,18 +37,17 @@ fd_tx_uninit(struct fd_tx* self)
 }
 
 void
-fd_tx_ref(struct fd_tx* self, int fildes, unsigned long flags,
+fd_tx_ref(struct fd_tx* self, struct fd* fd, unsigned long flags,
           struct picotm_error* error)
 {
     assert(self);
-    assert(fildes >= 0);
-    assert(fildes < (ssize_t)(sizeof(fdtab)/sizeof(fdtab[0])));
+    assert(fd);
 
     if (fd_tx_holds_ref(self)) {
         return;
     }
 
-    struct fd* fd = fdtab + fildes;
+    int fildes = fd->fildes;
 
     int ofd = ofdtab_ref_ofd(fildes, flags, error);
     if (picotm_error_is_set(error)) {
@@ -57,12 +56,9 @@ fd_tx_ref(struct fd_tx* self, int fildes, unsigned long flags,
 
     /* aquire reference if possible */
 
-    unsigned long fdver;
-
-    fd_ref_state(fd, fildes, flags, &fdver, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
+    fd_lock(fd);
+    unsigned long fdver = fd_get_version_nl(fd);
+    fd_unlock(fd);
 
     self->fd = fd;
     self->ofd = ofd;
@@ -153,15 +149,14 @@ static void
 close_apply_noundo(struct fd_tx* self, int fildes, int cookie,
                    struct picotm_error* error)
 {
-    fd_close(fdtab + fildes);
+    fd_close(self->fd);
 }
 
 static void
 close_apply_ts(struct fd_tx* self, int fildes, int cookie,
                struct picotm_error* error)
 {
-    /* Global data structure 'fdtab' is locked during apply */
-    fd_close(fdtab + fildes);
+    fd_close(self->fd);
 }
 
 void
