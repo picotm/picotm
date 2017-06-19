@@ -12,6 +12,7 @@
 #include "fcntloptab.h"
 #include "fdtab.h"
 #include "ofd.h"
+#include "ofdtab.h"
 
 void
 fd_tx_init(struct fd_tx* self)
@@ -65,8 +66,12 @@ fd_tx_ref_or_validate(struct fd_tx* self, int fildes, unsigned long flags,
 
         /* Aquire reference if possible */
 
-        int ofd;
-        fd_ref_state(fd, fildes, flags, &ofd, &fdver, error);
+        int ofd = ofdtab_ref_ofd(fildes, flags, error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
+
+        fd_ref_state(fd, fildes, flags, &fdver, error);
         if (picotm_error_is_set(error)) {
             return;
         }
@@ -74,7 +79,7 @@ fd_tx_ref_or_validate(struct fd_tx* self, int fildes, unsigned long flags,
         self->fildes = fildes;
         self->ofd = ofd;
         self->fdver = fdver;
-    	self->flags = flags&OFD_FL_WANTNEW ? FDTX_FL_LOCALSTATE : 0;
+    	self->flags = flags & FD_FL_WANTNEW ? FDTX_FL_LOCALSTATE : 0;
     }
 }
 
@@ -92,12 +97,16 @@ fd_tx_ref(struct fd_tx* self, int fildes, unsigned long flags,
 
     struct fd* fd = fdtab + fildes;
 
+    int ofd = ofdtab_ref_ofd(fildes, flags, error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
+
     /* aquire reference if possible */
 
     unsigned long fdver;
-    int ofd;
 
-    fd_ref_state(fd, fildes, flags, &ofd, &fdver, error);
+    fd_ref_state(fd, fildes, flags, &fdver, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -105,7 +114,7 @@ fd_tx_ref(struct fd_tx* self, int fildes, unsigned long flags,
     self->fildes = fildes;
     self->ofd = ofd;
     self->fdver = fdver;
-    self->flags = flags&OFD_FL_WANTNEW ? FDTX_FL_LOCALSTATE : 0;
+    self->flags = flags & FD_FL_WANTNEW ? FDTX_FL_LOCALSTATE : 0;
 }
 
 void
@@ -118,6 +127,7 @@ fd_tx_unref(struct fd_tx* self)
     }
 
     fd_unref(fdtab+self->fildes);
+    ofd_unref(ofdtab+self->ofd);
 
     self->flags = 0;
     self->fildes = -1;
