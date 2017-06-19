@@ -140,30 +140,6 @@ fd_tx_holds_ref(const struct fd_tx* self)
 }
 
 void
-fd_tx_pre_commit(struct fd_tx* self)
-{
-    assert(self);
-
-    /* file descriptor has local changes */
-
-    if (self->flags&FDTX_FL_LOCALSTATE) {
-        fd_lock(fdtab+self->fildes);
-    }
-}
-
-void
-fd_tx_post_commit(struct fd_tx* self)
-{
-    assert(self);
-
-    /* unlock file descriptor at the end of commit */
-
-    if (self->flags&FDTX_FL_LOCALSTATE) {
-        fd_unlock(fdtab+self->fildes);
-    }
-}
-
-void
 fd_tx_signal_close(struct fd_tx* self)
 {
     assert(self);
@@ -409,6 +385,30 @@ fd_tx_fcntl_undo(struct fd_tx* self, int cookie, bool* next_domain,
 /*
  * Module interface
  */
+
+void
+fd_tx_lock(struct fd_tx* self)
+{
+    assert(self);
+
+    /* unlock file descriptor at the end of commit */
+
+    if (self->flags&FDTX_FL_LOCALSTATE) {
+        fd_lock(fdtab+self->fildes);
+    }
+}
+
+void
+fd_tx_unlock(struct fd_tx* self)
+{
+    assert(self);
+
+    /* file descriptor has local changes */
+
+    if (self->flags&FDTX_FL_LOCALSTATE) {
+        fd_unlock(fdtab+self->fildes);
+    }
+}
 
 void
 fd_tx_validate(struct fd_tx* self, struct picotm_error* error)

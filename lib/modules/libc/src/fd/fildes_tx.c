@@ -2154,7 +2154,7 @@ fildes_tx_lock(struct fildes_tx* self, struct picotm_error* error)
     self->ifdlen = 0;
 
     while (ifd < self->ifd+len) {
-        fd_tx_pre_commit(self->fd_tx+(*ifd));
+        fd_tx_lock(self->fd_tx+(*ifd));
         ++ifd;
         ++self->ifdlen;
     }
@@ -2171,7 +2171,7 @@ fildes_tx_lock(struct fildes_tx* self, struct picotm_error* error)
     self->iofdlen = 0;
 
     while (iofd < self->iofd+len) {
-        ofd_tx_pre_commit(self->ofd_tx + (*iofd));
+        ofd_tx_lock(self->ofd_tx + (*iofd));
         ++iofd;
         ++self->iofdlen;
     }
@@ -2186,7 +2186,7 @@ fildes_tx_unlock(struct fildes_tx* self)
 
     while (iofd && (self->iofd < iofd)) {
         --iofd;
-        ofd_tx_post_commit(self->ofd_tx + (*iofd));
+        ofd_tx_unlock(self->ofd_tx + (*iofd));
     }
 
     free(self->iofd);
@@ -2198,7 +2198,7 @@ fildes_tx_unlock(struct fildes_tx* self)
 
     while (ifd && (self->ifd < ifd)) {
         --ifd;
-        fd_tx_post_commit(self->fd_tx+(*ifd));
+        fd_tx_unlock(self->fd_tx+(*ifd));
     }
 
     free(self->ifd);

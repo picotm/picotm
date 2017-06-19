@@ -148,13 +148,13 @@ ofd_tx_append_to_readset(struct ofd_tx* self, size_t nbyte, off_t offset,
  * Prepares the open file description for commit
  */
 void
-ofd_tx_pre_commit(struct ofd_tx* self);
+ofd_tx_lock(struct ofd_tx* self);
 
 /**
  * Finishes commit for open file description
  */
 void
-ofd_tx_post_commit(struct ofd_tx* self);
+ofd_tx_unlock(struct ofd_tx* self);
 
 /*
  * pessimistic CC
