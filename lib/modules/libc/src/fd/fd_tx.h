@@ -65,13 +65,6 @@ void
 fd_tx_clear_cc(struct fd_tx* self, struct picotm_error* error);
 
 /**
- * Aquire a reference on file-descriptor state or validate
- */
-void
-fd_tx_ref_or_validate(struct fd_tx* self, int fildes, unsigned long flags,
-                      struct picotm_error* error);
-
-/**
  * Aquire a reference on file-descriptor state
  */
 void
