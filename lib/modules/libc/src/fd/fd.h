@@ -96,10 +96,6 @@ fd_close(struct fd *fd);
 void
 fd_dump(const struct fd *fd);
 
-/** Validate file descriptor against version. */
-bool
-fd_is_valid(struct fd* fd, unsigned long version);
-
 /** Set file-descriptor flags. */
 int
 fd_setfd(struct fd* fd, int fildes, int arg, struct picotm_error* error);
