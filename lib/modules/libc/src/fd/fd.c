@@ -25,6 +25,7 @@ fd_init(struct fd *fd, struct picotm_error* error)
 
     atomic_init(&fd->ref, 0);
 
+    fd->fildes = -1;
     fd->state = FD_ST_UNUSED;
     fd->ofd = -1;
 
@@ -117,6 +118,7 @@ fd_ref_state(struct fd *fd, int fildes, unsigned long flags, int *ofd,
                 goto unlock;
             }
 
+            fd->fildes = fildes;
             fd->state = FD_ST_INUSE;
             atomic_store(&fd->ref, 1); /* Exactly one reference */
             break;
@@ -159,12 +161,13 @@ fd_cleanup(struct fd *fd)
 
     ofd_unref(ofdtab+fd->ofd);
 
+    fd->fildes = -1;
     fd->state = FD_ST_UNUSED;
     fd->ofd = -1;
 }
 
 void
-fd_unref(struct fd *fd, int fildes)
+fd_unref(struct fd *fd)
 {
     assert(fd);
     assert(fd->ofd >= 0);
@@ -176,12 +179,13 @@ fd_unref(struct fd *fd, int fildes)
         case FD_ST_CLOSING: {
             unsigned long oldref = atomic_fetch_sub(&fd->ref, 1);
             if (oldref == 1) {
-                fd_cleanup(fd);
-
-				/* finally close fildes, if we released the last reference */
-				if (TEMP_FAILURE_RETRY(close(fildes)) < 0) {
+                /* finally close fildes, if we released the last reference */
+                int res = TEMP_FAILURE_RETRY(close(fd->fildes));
+                if (res < 0) {
                     abort(); /* FIXME: Raise error flag */
-				}
+                }
+
+                fd_cleanup(fd);
             }
             break;
         }
@@ -243,13 +247,13 @@ fd_dump(const struct fd *fd)
 }
 
 int
-fd_setfd(struct fd* fd, int fildes, int arg, struct picotm_error* error)
+fd_setfd(struct fd* fd, int arg, struct picotm_error* error)
 {
     assert(fd);
     assert(fd->ofd >= 0);
     assert(fd->ofd < (ssize_t)(sizeof(ofdtab)/sizeof(ofdtab[0])));
 
-    int res = TEMP_FAILURE_RETRY(fcntl(fildes, F_SETFD, arg));
+    int res = TEMP_FAILURE_RETRY(fcntl(fd->fildes, F_SETFD, arg));
     if (res < 0) {
         picotm_error_set_errno(error, errno);
         return res;
@@ -258,13 +262,13 @@ fd_setfd(struct fd* fd, int fildes, int arg, struct picotm_error* error)
 }
 
 int
-fd_getfd(struct fd* fd, int fildes, struct picotm_error* error)
+fd_getfd(struct fd* fd, struct picotm_error* error)
 {
     assert(fd);
     assert(fd->ofd >= 0);
     assert(fd->ofd < (ssize_t)(sizeof(ofdtab)/sizeof(ofdtab[0])));
 
-    int res = TEMP_FAILURE_RETRY(fcntl(fildes, F_GETFD));
+    int res = TEMP_FAILURE_RETRY(fcntl(fd->fildes, F_GETFD));
     if (res < 0) {
         picotm_error_set_errno(error, errno);
         return res;

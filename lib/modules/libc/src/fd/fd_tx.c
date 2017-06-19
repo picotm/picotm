@@ -117,7 +117,7 @@ fd_tx_unref(struct fd_tx* self)
         return;
     }
 
-    fd_unref(fdtab+self->fildes, self->fildes);
+    fd_unref(fdtab+self->fildes);
 
     self->flags = 0;
     self->fildes = -1;
@@ -274,13 +274,13 @@ fd_tx_fcntl_exec(struct fd_tx* self, int cmd, union fcntl_arg *arg,
                 picotm_error_set_revocable(error);
                 return -1;
             }
-            res = fd_setfd(fd, self->fildes, arg->arg0, error);
+            res = fd_setfd(fd, arg->arg0, error);
             if (picotm_error_is_set(error)) {
                 return -1;
             }
             break;
         case F_GETFD:
-            res = fd_getfd(fd, self->fildes, error);
+            res = fd_getfd(fd, error);
             if (picotm_error_is_set(error)) {
                 return -1;
             }
@@ -326,7 +326,7 @@ fd_tx_fcntl_apply(struct fd_tx* self, int cookie, bool* next_domain,
 
     switch (self->fcntltab[cookie].command) {
         case F_SETFD: {
-            fd_setfd(fd, self->fildes, self->fcntltab[cookie].value.arg0, error);
+            fd_setfd(fd, self->fcntltab[cookie].value.arg0, error);
             if (picotm_error_is_set(error)) {
                 return;
             }
@@ -357,7 +357,6 @@ fd_tx_fcntl_undo(struct fd_tx* self, int cookie, bool* next_domain,
     switch (self->fcntltab[cookie].command) {
         case F_SETFD: {
             fd_setfd(fd,
-                     self->fildes,
                      self->fcntltab[cookie].oldvalue.arg0,
                      error);
             if (picotm_error_is_set(error)) {
