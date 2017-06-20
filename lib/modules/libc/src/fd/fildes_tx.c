@@ -213,12 +213,14 @@ get_fd_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
         return NULL;
     }
 
-    int ofd = ofdtab_ref_ofd(fildes, flags, error);
+    struct ofd* ofd = ofdtab_ref_fildes(fildes,
+                                        !!(flags & OFD_FL_WANTNEW),
+                                        !!(flags & OFD_FL_UNLINK), error);
     if (picotm_error_is_set(error)) {
-        goto err_ofdtab_ref_ofd;
+        goto err_ofdtab_ref_fildes;
     }
 
-    fd_tx_ref(fd_tx, fd, ofd, flags, error);
+    fd_tx_ref(fd_tx, fd, ofdtab_index(ofd), flags, error);
     if (picotm_error_is_set(error)) {
         goto err_fd_tx_ref;
     }
@@ -228,8 +230,8 @@ get_fd_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
     return fd_tx;
 
 err_fd_tx_ref:
-    ofd_unref(ofdtab + ofd);
-err_ofdtab_ref_ofd:
+    ofd_unref(ofd);
+err_ofdtab_ref_fildes:
     fd_unref(fd);
     return NULL;
 }

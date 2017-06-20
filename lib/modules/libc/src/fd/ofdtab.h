@@ -25,8 +25,9 @@ ofdtab_lock(void);
 void
 ofdtab_unlock(void);
 
-long
-ofdtab_ref_ofd(int fildes, int flags, struct picotm_error* error);
+struct ofd*
+ofdtab_ref_fildes(int fildes, bool want_new, bool unlink_file,
+                  struct picotm_error* error);
 
 size_t
 ofdtab_index(struct ofd *ofd);
