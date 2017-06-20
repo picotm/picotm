@@ -85,13 +85,8 @@ PICOTM_NOTHROW
  *
  * \param error The error to clear.
  */
-inline void
-picotm_error_clear(struct picotm_error* error)
-{
-    error->status = 0;
-    error->is_non_recoverable = false;
-    error->description = NULL;
-}
+void
+picotm_error_clear(struct picotm_error* error);
 
 PICOTM_NOTHROW
 /**
@@ -101,14 +96,8 @@ PICOTM_NOTHROW
  * \param conflicting_tx    The conflicting transaction if known, or NULL
  *                          otherwise.
  */
-inline void
-picotm_error_set_conflicting(struct picotm_error* error, void* conflicting_tx)
-{
-    error->status = PICOTM_CONFLICTING;
-    error->is_non_recoverable = false;
-    error->description = NULL;
-    error->value.conflicting_tx = conflicting_tx;
-}
+void
+picotm_error_set_conflicting(struct picotm_error* error, void* conflicting_tx);
 
 PICOTM_NOTHROW
 /**
@@ -116,13 +105,8 @@ PICOTM_NOTHROW
  *
  * \param error The error to set.
  */
-inline void
-picotm_error_set_revocable(struct picotm_error* error)
-{
-    error->status = PICOTM_REVOCABLE;
-    error->is_non_recoverable = false;
-    error->description = NULL;
-}
+void
+picotm_error_set_revocable(struct picotm_error* error);
 
 PICOTM_NOTHROW
 /**
@@ -132,15 +116,9 @@ PICOTM_NOTHROW
  * \param error_hint    The picotm error code if known, or
  *                      PICOTM_GENERAL_ERROR otherwise.
  */
-inline void
+void
 picotm_error_set_error_code(struct picotm_error* error,
-                            enum picotm_error_code error_hint)
-{
-    error->status = PICOTM_ERROR_CODE;
-    error->is_non_recoverable = false;
-    error->description = NULL;
-    error->value.error_hint = error_hint;
-}
+                            enum picotm_error_code error_hint);
 
 PICOTM_NOTHROW
 /**
@@ -149,23 +127,16 @@ PICOTM_NOTHROW
  * \param error         The error to set.
  * \param errno_hint    The errno code if known, or 0 otherwise.
  */
-inline void
-picotm_error_set_errno(struct picotm_error* error, int errno_hint)
-{
-    error->status = PICOTM_ERRNO;
-    error->is_non_recoverable = false;
-    error->description = NULL;
-    error->value.errno_hint = errno_hint;
-}
+void
+picotm_error_set_errno(struct picotm_error* error, int errno_hint);
 
-PICOTM_NOTHROW
 /**
  * Tests if an error has been set.
  *
  * \param error The error to set.
  * \returns     True if an error has been set, or false otherwise.
  */
-inline bool
+static inline bool
 picotm_error_is_set(const struct picotm_error* error)
 {
     return !!error->status;
@@ -179,11 +150,8 @@ PICOTM_NOTHROW
  * \returns     True if an error has been set to CONFLICTING, or false
  *              otherwise.
  */
-inline bool
-picotm_error_is_conflicting(const struct picotm_error* error)
-{
-    return error->status == PICOTM_CONFLICTING;
-}
+bool
+picotm_error_is_conflicting(const struct picotm_error* error);
 
 PICOTM_NOTHROW
 /**
@@ -193,11 +161,8 @@ PICOTM_NOTHROW
  * \returns     True if an error has been set to REVOCABLE, or false
  *              otherwise.
  */
-inline bool
-picotm_error_is_revocable(const struct picotm_error* error)
-{
-    return error->status == PICOTM_REVOCABLE;
-}
+bool
+picotm_error_is_revocable(const struct picotm_error* error);
 
 PICOTM_NOTHROW
 /**
@@ -207,11 +172,8 @@ PICOTM_NOTHROW
  * \returns     True if an error has been set to an error status, or false
  *              otherwise.
  */
-inline bool
-picotm_error_is_error(const struct picotm_error* error)
-{
-    return picotm_error_is_set(error) && !picotm_error_is_conflicting(error);
-}
+bool
+picotm_error_is_error(const struct picotm_error* error);
 
 PICOTM_NOTHROW
 /**
@@ -228,11 +190,8 @@ PICOTM_NOTHROW
  *
  * \param error The error to mark as non-recoverable.
  */
-inline void
-picotm_error_mark_as_non_recoverable(struct picotm_error* error)
-{
-    error->is_non_recoverable = true;
-}
+void
+picotm_error_mark_as_non_recoverable(struct picotm_error* error);
 
 PICOTM_NOTHROW
 /**
@@ -241,12 +200,9 @@ PICOTM_NOTHROW
  * \param error         The error.
  * \param description   A descriptive string.
  */
-inline void
+void
 picotm_error_set_description(struct picotm_error* error,
-                             const char* description)
-{
-    error->description = description;
-}
+                             const char* description);
 
 PICOTM_NOTHROW
 /**
@@ -255,10 +211,7 @@ PICOTM_NOTHROW
  * \param error The error.
  * \returns     The error description if set, or NULL otherwise.
  */
-inline const char*
-picotm_error_get_description(const struct picotm_error* error)
-{
-    return error->description;
-}
+const char*
+picotm_error_get_description(const struct picotm_error* error);
 
 PICOTM_END_DECLS
