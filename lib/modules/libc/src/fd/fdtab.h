@@ -20,5 +20,8 @@ extern struct fd fdtab[MAXNUMFD];
 /*int
 fdtab_init(void);*/
 
+struct fd*
+fdtab_ref_fildes(int fildes, bool want_new, struct picotm_error* error);
+
 #endif
 

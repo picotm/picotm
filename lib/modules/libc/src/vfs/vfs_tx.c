@@ -230,9 +230,7 @@ vfs_tx_exec_fchdir(struct vfs_tx* self, int fildes,
 
     /* Reference new directory's file descriptor */
 
-    struct fd* fd = fdtab + fildes;
-
-    fd_ref(fd, fildes, 0, error);
+    struct fd* fd = fdtab_ref_fildes(fildes, false, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -300,9 +298,7 @@ vfs_tx_exec_fchmod(struct vfs_tx* self, int fildes, mode_t mode,
 {
     /* reference file descriptor while working on it */
 
-    struct fd* fd = fdtab + fildes;
-
-    fd_ref(fd, fildes, 0, error);
+    struct fd* fd = fdtab_ref_fildes(fildes, false, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -332,9 +328,7 @@ vfs_tx_exec_fstat(struct vfs_tx* self, int fildes, struct stat* buf,
 {
     /* reference file descriptor while working on it */
 
-    struct fd* fd = fdtab + fildes;
-
-    fd_ref(fd, fildes, 0, error);
+    struct fd* fd = fdtab_ref_fildes(fildes, false, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
