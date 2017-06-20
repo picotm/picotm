@@ -5,6 +5,7 @@
 #ifndef FD_H
 #define FD_H
 
+#include <picotm/picotm-lib-ref.h>
 #include <stdatomic.h>
 #include <stdbool.h>
 #include <pthread.h>
@@ -33,9 +34,9 @@ enum fd_state
 
 struct fd
 {
-    pthread_mutex_t lock;
+    struct picotm_shared_ref16 ref;
 
-    atomic_ulong ref;
+    pthread_mutex_t lock;
 
     int fildes;
     enum fd_state state;
@@ -65,12 +66,16 @@ fd_validate(struct fd* fd, unsigned long ver, struct picotm_error* error);
 
 /** \brief Aquires a reference on the file dscriptor */
 void
-fd_ref(struct fd *fd, int fildes, unsigned long flags,
-       struct picotm_error* error);
+fd_ref(struct fd *fd, struct picotm_error* error);
+
+/** \brief Aquires a reference on the file descriptor */
+void
+fd_ref_or_set_up(struct fd *fd, int fildes, bool want_new,
+                 struct picotm_error* error);
 
 void
-fd_ref_state(struct fd *fd, int fildes, unsigned long flags,
-             unsigned long *version, struct picotm_error* error);
+fd_ref_state(struct fd *fd, unsigned long *version,
+             struct picotm_error* error);
 
 /** \brief Releases a reference on the file descriptor */
 void

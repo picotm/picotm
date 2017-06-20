@@ -69,13 +69,7 @@ fdtab_ref_fildes(int fildes, bool want_new, struct picotm_error* error)
 {
     struct fd* fd = fdtab + fildes;
 
-    unsigned long flags = 0;
-
-    if (want_new) {
-        flags |= FD_FL_WANTNEW;
-    }
-
-    fd_ref(fd, fildes, flags, error);
+    fd_ref_or_set_up(fd, fildes, want_new, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }

@@ -22,7 +22,7 @@ fd_init(struct fd *fd, struct picotm_error* error)
         return;
     }
 
-    atomic_init(&fd->ref, 0);
+    picotm_ref_init(&fd->ref, 0);
 
     fd->fildes = -1;
     fd->state = FD_ST_UNUSED;
@@ -82,48 +82,41 @@ fd_validate(struct fd* fd, unsigned long ver, struct picotm_error* error)
     }
 }
 
-void
-fd_ref(struct fd *fd, int fildes, unsigned long flags,
-       struct picotm_error* error)
+static bool
+incr_ref_count(struct fd *fd, struct picotm_error* error)
 {
-    fd_lock(fd);
+    bool first_ref;
 
     switch (fd->state) {
+        case FD_ST_UNUSED:
+            /* fall through */
+        case FD_ST_INUSE:
+            first_ref = picotm_ref_up(&fd->ref);
+            break;
         case FD_ST_CLOSING:
             /* fd is about to be closed; abort here */
             picotm_error_set_conflicting(error, NULL);
-            goto unlock;
-            break;
-        case FD_ST_UNUSED:
-            /* setup new fd data structure */
-            fd->fildes = fildes;
-            fd->state = FD_ST_INUSE;
-            atomic_store(&fd->ref, 1); /* Exactly one reference */
-            break;
-        case FD_ST_INUSE:
-            /* simply return version and increment reference counter */
-            if (flags & FD_FL_WANTNEW) {
-                picotm_error_set_conflicting(error, NULL);
-                goto unlock;
-            }
-            atomic_fetch_add(&fd->ref, 1);
-            break;
+            return false;
         default:
             abort();
     }
 
-unlock:
-    fd_unlock(fd);
-
+    return first_ref;
 }
 
 void
-fd_ref_state(struct fd *fd, int fildes, unsigned long flags,
-             unsigned long *version, struct picotm_error* error)
+fd_ref(struct fd *fd, struct picotm_error* error)
+{
+    incr_ref_count(fd, error);
+}
+
+void
+fd_ref_state(struct fd *fd, unsigned long *version,
+             struct picotm_error* error)
 {
     assert(fd);
 
-    fd_ref(fd, fildes, flags, error);
+    fd_ref(fd, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -137,6 +130,41 @@ fd_ref_state(struct fd *fd, int fildes, unsigned long flags,
     }
 
     fd_unlock(fd);
+}
+
+void
+fd_ref_or_set_up(struct fd *fd, int fildes, bool want_new,
+                 struct picotm_error* error)
+{
+    fd_lock(fd);
+
+    bool first_ref = incr_ref_count(fd, error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
+
+    if (!first_ref && !want_new) {
+        /* we got a set-up instance; signal success */
+        goto unlock;
+    }
+
+    if (!first_ref && want_new) {
+        picotm_error_set_conflicting(error, NULL);
+        goto err_want_new;
+    }
+
+    /* set up instance */
+    fd->fildes = fildes;
+    fd->state = FD_ST_INUSE;
+
+unlock:
+    fd_unlock(fd);
+
+    return;
+
+err_want_new:
+    fd_unlock(fd);
+    fd_unref(fd);
 }
 
 static void
@@ -155,32 +183,32 @@ fd_unref(struct fd *fd)
 
     fd_lock(fd);
 
-    switch (fd->state) {
-        case FD_ST_CLOSING: {
-            unsigned long oldref = atomic_fetch_sub(&fd->ref, 1);
-            if (oldref == 1) {
-                /* finally close fildes, if we released the last reference */
-                int res = TEMP_FAILURE_RETRY(close(fd->fildes));
-                if (res < 0) {
-                    abort(); /* FIXME: Raise error flag */
-                }
+    bool final_ref = picotm_ref_down(&fd->ref);
+    if (!final_ref) {
+        goto unlock;
+    }
 
-                fd_cleanup(fd);
-            }
-            break;
-        }
-        case FD_ST_INUSE: {
-            unsigned long oldref = atomic_fetch_sub(&fd->ref, 1);
-            if (oldref == 1) {
-                fd_cleanup(fd);
-            }
-            break;
-        }
+    switch (fd->state) {
         case FD_ST_UNUSED:
+        case FD_ST_INUSE: {
+            fd_cleanup(fd);
+            break;
+        }
+        case FD_ST_CLOSING: {
+            /* close fildes if we released the final reference */
+            int res = TEMP_FAILURE_RETRY(close(fd->fildes));
+            if (res < 0) {
+                abort(); /* FIXME: Raise error flag */
+            }
+
+            fd_cleanup(fd);
+            break;
+        }
         default:
             abort(); /* should never happen */
     }
 
+unlock:
     fd_unlock(fd);
 }
 
