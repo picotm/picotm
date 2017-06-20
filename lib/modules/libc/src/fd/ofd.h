@@ -5,6 +5,7 @@
 #ifndef OFD_H
 #define OFD_H
 
+#include <picotm/picotm-lib-ref.h>
 #include <stdatomic.h>
 #include "ofdid.h"
 #include "picotm/picotm-libc.h"
@@ -28,10 +29,11 @@ struct rwstatemap;
 
 struct ofd
 {
+    struct picotm_shared_ref16 ref;
+
     pthread_rwlock_t lock;
 
     struct ofdid   id;
-    atomic_ulong   ref;
 
     unsigned long flags;
     enum picotm_libc_file_type type;
@@ -65,16 +67,19 @@ ofd_clear_id(struct ofd *ofd);
 
 /** \brief References the open file description. */
 void
-ofd_ref(struct ofd *ofd, int fildes, unsigned long flags,
-        struct picotm_error* error);
+ofd_ref_or_set_up(struct ofd* ofd, int fildes, bool want_new,
+                  bool unlink_file, struct picotm_error* error);
+
+/** \brief References the open file description. */
+void
+ofd_ref(struct ofd* ofd);
 
 /** \brief References the open file description and returns its state. */
 void
-ofd_ref_state(struct ofd *ofd, int fildes, unsigned long flags,
-              enum picotm_libc_file_type *type,
-              enum picotm_libc_cc_mode *ccmode,
-              off_t *offset,
-              struct picotm_error* error);
+ofd_ref_state(struct ofd* ofd,
+              enum picotm_libc_file_type* type,
+              enum picotm_libc_cc_mode* ccmode,
+              off_t* offset);
 
 /** \brief Unreferences the open file description. */
 void

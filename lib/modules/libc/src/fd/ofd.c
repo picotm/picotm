@@ -78,7 +78,7 @@ ofd_init(struct ofd* ofd, struct picotm_error* error)
 
     ofdid_clear(&ofd->id);
 
-    atomic_init(&ofd->ref, 0);
+    picotm_ref_init(&ofd->ref, 0);
 
     ofd->flags = 0;
     ofd->type = PICOTM_LIBC_FILE_TYPE_OTHER;
@@ -257,73 +257,63 @@ ofd_setup_from_fildes(struct ofd *ofd, int fildes, struct picotm_error* error)
     ofd->flags = 0;
 }
 
-static void
-ofd_ref_setup(struct ofd *ofd, int fildes, unsigned long flags,
-              struct picotm_error* error)
+void
+ofd_ref_or_set_up(struct ofd* ofd, int fildes, bool want_new,
+                  bool unlink_file, struct picotm_error* error)
 {
     assert(ofd);
     assert(fildes >= 0);
 
     ofd_wrlock(ofd);
 
+    bool first_ref = picotm_ref_up(&ofd->ref);
+
+    if (!first_ref && !want_new) {
+        /* we got a set-up instance; signal success */
+        goto unlock;
+    }
+
+    if (!first_ref && want_new) {
+        picotm_error_set_conflicting(error, NULL);
+        goto err_want_new;
+    }
+
     /* Setup ofd for given file descriptor */
     ofd_setup_from_fildes(ofd, fildes, error);
     if (picotm_error_is_set(error)) {
-        return;
+        goto err_ofd_setup_from_fildes;
     }
 
     /* Set flags */
-    ofd->flags = flags & OFD_FL_UNLINK;
+    ofd->flags = 0;
+    if (unlink_file) {
+        ofd->flags |= OFD_FL_UNLINK;
+    }
 
+unlock:
     ofd_unlock(ofd);
-}
 
-static void
-ofd_ref_check(struct ofd *ofd, int fildes, unsigned long flags,
-              struct picotm_error* error)
-{
-    assert(ofd);
-    assert(fildes >= 0);
+    return;
 
-    if (flags & OFD_FL_WANTNEW) {
-        picotm_error_set_conflicting(error, NULL);
-        return;
-    }
+err_ofd_setup_from_fildes:
+err_want_new:
+    ofd_unlock(ofd);
+    ofd_unref(ofd);
 }
 
 void
-ofd_ref(struct ofd *ofd, int fildes, unsigned long flags,
-        struct picotm_error* error)
+ofd_ref(struct ofd *ofd)
 {
-    static void (* const ref[])(struct ofd*,
-                                int,
-                                unsigned long,
-                                struct picotm_error*) = {
-        ofd_ref_setup,
-        ofd_ref_check
-    };
-
-    assert(ofd);
-
-    ref[!!atomic_load(&ofd->ref)](ofd, fildes, flags, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
-
-    atomic_fetch_add(&ofd->ref, 1);
+    picotm_ref_up(&ofd->ref);
 }
 
 void
-ofd_ref_state(struct ofd *ofd, int fildes, unsigned long flags,
-              enum picotm_libc_file_type *type,
-              enum picotm_libc_cc_mode *ccmode,
-              off_t *offset,
-              struct picotm_error* error)
+ofd_ref_state(struct ofd* ofd,
+              enum picotm_libc_file_type* type,
+              enum picotm_libc_cc_mode* ccmode,
+              off_t* offset)
 {
-    ofd_ref(ofd, fildes, flags, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
+    ofd_ref(ofd);
 
     ofd_rdlock(ofd);
 
@@ -345,7 +335,9 @@ ofd_unref(struct ofd *ofd)
 {
     assert(ofd);
 
-    atomic_fetch_sub(&ofd->ref, 1);
+    picotm_ref_down(&ofd->ref);
+
+    /* FIXME: Do we have to clean up? */
 }
 
 /*

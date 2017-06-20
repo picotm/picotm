@@ -246,7 +246,7 @@ ofd_tx_ref(struct ofd_tx* self, struct ofd* ofd, int fildes,
     off_t offset;
     enum picotm_libc_file_type type;
     enum picotm_libc_cc_mode cc_mode;
-    ofd_ref_state(ofd, fildes, flags, &type, &cc_mode, &offset, error);
+    ofd_ref_state(ofd, &type, &cc_mode, &offset);
     if (picotm_error_is_set(error)) {
         return;
     }

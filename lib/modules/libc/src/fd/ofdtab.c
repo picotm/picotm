@@ -165,16 +165,7 @@ ofdtab_ref_fildes(int fildes, bool want_new, bool unlink_file,
         return NULL;
     }
 
-    unsigned long flags = 0;
-
-    if (want_new) {
-        flags |= OFD_FL_WANTNEW;
-    }
-    if (unlink_file) {
-        flags |= OFD_FL_UNLINK;
-    }
-
-    ofd_ref(ofd, fildes, flags, error);
+    ofd_ref_or_set_up(ofd, fildes, want_new, unlink_file, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
