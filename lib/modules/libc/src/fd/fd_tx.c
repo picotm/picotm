@@ -47,6 +47,11 @@ fd_tx_ref(struct fd_tx* self, struct fd* fd, int ofd, unsigned long flags,
         return;
     }
 
+    fd_ref(fd, error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
+
     fd_lock(fd);
     unsigned long fdver = fd_get_version_nl(fd);
     fd_unlock(fd);

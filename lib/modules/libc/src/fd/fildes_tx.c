@@ -223,6 +223,8 @@ get_fd_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
         goto err_fd_tx_ref;
     }
 
+    fd_unref(fd);
+
     return fd_tx;
 
 err_fd_tx_ref:
