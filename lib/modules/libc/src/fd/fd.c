@@ -83,11 +83,9 @@ fd_validate(struct fd* fd, unsigned long ver, struct picotm_error* error)
 }
 
 void
-fd_ref_state(struct fd *fd, int fildes, unsigned long flags,
-             unsigned long *version, struct picotm_error* error)
+fd_ref(struct fd *fd, int fildes, unsigned long flags,
+       struct picotm_error* error)
 {
-    assert(fd);
-
     fd_lock(fd);
 
     switch (fd->state) {
@@ -114,21 +112,31 @@ fd_ref_state(struct fd *fd, int fildes, unsigned long flags,
             abort();
     }
 
+unlock:
+    fd_unlock(fd);
+
+}
+
+void
+fd_ref_state(struct fd *fd, int fildes, unsigned long flags,
+             unsigned long *version, struct picotm_error* error)
+{
+    assert(fd);
+
+    fd_ref(fd, fildes, flags, error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
+
+    fd_lock(fd);
+
     if (fd_is_open_nl(fd)) {
         if (version) {
             *version = fd_get_version_nl(fd);
         }
     }
 
-unlock:
     fd_unlock(fd);
-}
-
-void
-fd_ref(struct fd *fd, int fildes, unsigned long flags,
-       struct picotm_error* error)
-{
-    fd_ref_state(fd, fildes, flags, NULL, error);
 }
 
 static void
