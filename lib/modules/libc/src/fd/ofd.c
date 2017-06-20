@@ -264,6 +264,8 @@ ofd_ref_setup(struct ofd *ofd, int fildes, unsigned long flags,
     assert(ofd);
     assert(fildes >= 0);
 
+    ofd_wrlock(ofd);
+
     /* Setup ofd for given file descriptor */
     ofd_setup_from_fildes(ofd, fildes, error);
     if (picotm_error_is_set(error)) {
@@ -272,6 +274,8 @@ ofd_ref_setup(struct ofd *ofd, int fildes, unsigned long flags,
 
     /* Set flags */
     ofd->flags = flags & OFD_FL_UNLINK;
+
+    ofd_unlock(ofd);
 }
 
 static void
@@ -288,11 +292,8 @@ ofd_ref_check(struct ofd *ofd, int fildes, unsigned long flags,
 }
 
 void
-ofd_ref_state(struct ofd *ofd, int fildes, unsigned long flags,
-              enum picotm_libc_file_type *type,
-              enum picotm_libc_cc_mode *ccmode,
-              off_t *offset,
-              struct picotm_error* error)
+ofd_ref(struct ofd *ofd, int fildes, unsigned long flags,
+        struct picotm_error* error)
 {
     static void (* const ref[])(struct ofd*,
                                 int,
@@ -304,14 +305,27 @@ ofd_ref_state(struct ofd *ofd, int fildes, unsigned long flags,
 
     assert(ofd);
 
-    ofd_wrlock(ofd);
-
     ref[!!atomic_load(&ofd->ref)](ofd, fildes, flags, error);
     if (picotm_error_is_set(error)) {
-        goto unlock;
+        return;
     }
 
     atomic_fetch_add(&ofd->ref, 1);
+}
+
+void
+ofd_ref_state(struct ofd *ofd, int fildes, unsigned long flags,
+              enum picotm_libc_file_type *type,
+              enum picotm_libc_cc_mode *ccmode,
+              off_t *offset,
+              struct picotm_error* error)
+{
+    ofd_ref(ofd, fildes, flags, error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
+
+    ofd_rdlock(ofd);
 
     if (type) {
         *type = ofd_get_type_nolock(ofd);
@@ -323,15 +337,7 @@ ofd_ref_state(struct ofd *ofd, int fildes, unsigned long flags,
         *offset = ofd_get_offset_nolock(ofd);
     }
 
-unlock:
     ofd_unlock(ofd);
-}
-
-void
-ofd_ref(struct ofd *ofd, int fildes, unsigned long flags,
-        struct picotm_error* error)
-{
-    ofd_ref_state(ofd, fildes, flags, NULL, NULL, NULL, error);
 }
 
 void
