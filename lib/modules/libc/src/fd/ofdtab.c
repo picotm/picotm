@@ -136,37 +136,47 @@ ofdtab_search_by_id(const struct ofdid *id, size_t len,
     return i;
 }
 
-static long
+static struct ofd*
 ofdtab_search(int fildes, struct picotm_error* error)
 {
     struct ofdid id;
     ofdid_init_from_fildes(&id, fildes, error);
     if (picotm_error_is_set(error)) {
-        return -1;
+        return NULL;
     }
 
     long i = ofdtab_search_by_id(&id, sizeof(ofdtab)/sizeof(ofdtab[0]), error);
     if (picotm_error_is_set(error)) {
-        return -1;
+        return NULL;
     }
 
     /* Update maximum index */
     ofdtab_len = lmax(i+1, ofdtab_len);
 
-    return i;
+    return ofdtab + i;
 }
 
-long
-ofdtab_ref_ofd(int fildes, int flags, struct picotm_error* error)
+struct ofd*
+ofdtab_ref_fildes(int fildes, bool want_new, bool unlink_file,
+                  struct picotm_error* error)
 {
-    int ofd = ofdtab_search(fildes, error);
+    struct ofd* ofd = ofdtab_search(fildes, error);
     if (picotm_error_is_set(error)) {
-        return -1;
+        return NULL;
     }
 
-    ofd_ref(ofdtab+ofd, fildes, flags, error);
+    unsigned long flags = 0;
+
+    if (want_new) {
+        flags |= OFD_FL_WANTNEW;
+    }
+    if (unlink_file) {
+        flags |= OFD_FL_UNLINK;
+    }
+
+    ofd_ref(ofd, fildes, flags, error);
     if (picotm_error_is_set(error)) {
-        return -1;
+        return NULL;
     }
 
     return ofd;
