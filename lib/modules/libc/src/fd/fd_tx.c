@@ -47,8 +47,6 @@ fd_tx_ref(struct fd_tx* self, struct fd* fd, int ofd, unsigned long flags,
         return;
     }
 
-    /* aquire reference if possible */
-
     fd_lock(fd);
     unsigned long fdver = fd_get_version_nl(fd);
     fd_unlock(fd);
@@ -209,8 +207,7 @@ fd_tx_fcntl_exec(struct fd_tx* self, int cmd, union fcntl_arg *arg,
 
     fd_validate(self->fd, self->fdver, error);
     if (picotm_error_is_set(error)) {
-        fd_unlock(self->fd);
-        return -1;
+        goto err_fd_validate;
     }
 
     int res = -1;
@@ -219,17 +216,17 @@ fd_tx_fcntl_exec(struct fd_tx* self, int cmd, union fcntl_arg *arg,
         case F_SETFD:
             if ( !noundo ) {
                 picotm_error_set_revocable(error);
-                return -1;
+                break;
             }
             res = fd_setfd(self->fd, arg->arg0, error);
             if (picotm_error_is_set(error)) {
-                return -1;
+                break;
             }
             break;
         case F_GETFD:
             res = fd_getfd(self->fd, error);
             if (picotm_error_is_set(error)) {
-                return -1;
+                break;
             }
             arg->arg0 = res;
             break;
@@ -238,10 +235,8 @@ fd_tx_fcntl_exec(struct fd_tx* self, int cmd, union fcntl_arg *arg,
             break;
     }
 
-    fd_unlock(self->fd);
-
     if (picotm_error_is_set(error)) {
-        return -1;
+        goto err_cmd;
     }
 
     /* register fcntl */
@@ -257,7 +252,14 @@ fd_tx_fcntl_exec(struct fd_tx* self, int cmd, union fcntl_arg *arg,
 
 	self->flags |= FDTX_FL_LOCALSTATE;
 
+    fd_unlock(self->fd);
+
     return res;
+
+err_cmd:
+err_fd_validate:
+    fd_unlock(self->fd);
+    return -1;
 }
 
 void
