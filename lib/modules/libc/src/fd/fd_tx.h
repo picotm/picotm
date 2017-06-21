@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <picotm/picotm-lib-ref.h>
+#include <stdatomic.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include "picotm/picotm-libc.h"
@@ -28,6 +30,8 @@ union fcntl_arg;
  * Holds transaction-local reads and writes for a file descriptor
  */
 struct fd_tx {
+
+    struct picotm_ref16 ref;
 
     struct fd* fd;
 
@@ -70,8 +74,14 @@ fd_tx_clear_cc(struct fd_tx* self, struct picotm_error* error);
  * Aquire a reference on file-descriptor state
  */
 void
-fd_tx_ref(struct fd_tx* self, struct fd* fd, struct ofd_tx* ofd_tx,
-          unsigned long flags, struct picotm_error* error);
+fd_tx_ref_or_set_up(struct fd_tx* self, struct fd* fd, struct ofd_tx* ofd_tx,
+                    unsigned long flags, struct picotm_error* error);
+
+/**
+ * Aquire a reference
+ */
+void
+fd_tx_ref(struct fd_tx* self);
 
 /**
  * Release reference
