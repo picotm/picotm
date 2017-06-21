@@ -242,6 +242,10 @@ get_fd_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
 {
     struct fd_tx* fd_tx = get_fd_tx(self, fildes);
 
+    /* In |struct fildes_tx| we hold at most one reference to the
+     * transaction state of each file descriptor. This reference
+     * is released in fildes_tx_finish().
+     */
     if (fd_tx_holds_ref(fd_tx)) {
 
         /* Validate reference or return error if fd has been closed */
@@ -266,7 +270,7 @@ get_fd_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
         goto err_get_ofd_tx_with_ref;
     }
 
-    fd_tx_ref(fd_tx, fd, ofd_tx, flags, error);
+    fd_tx_ref_or_set_up(fd_tx, fd, ofd_tx, flags, error);
     if (picotm_error_is_set(error)) {
         goto err_fd_tx_ref;
     }
@@ -2187,6 +2191,8 @@ fildes_tx_finish(struct fildes_tx* self)
     for (struct fd_tx* fd_tx = self->fd_tx;
                        fd_tx < self->fd_tx + self->fd_tx_max_fildes;
                      ++fd_tx) {
-        fd_tx_unref(fd_tx);
+        if (fd_tx_holds_ref(fd_tx)) {
+            fd_tx_unref(fd_tx);
+        }
     }
 }

@@ -18,6 +18,8 @@ fd_tx_init(struct fd_tx* self)
 {
     assert(self);
 
+    picotm_ref_init(&self->ref, 0);
+
     self->fd = NULL;
     self->ofd_tx = NULL;
 	self->flags = 0;
@@ -36,19 +38,20 @@ fd_tx_uninit(struct fd_tx* self)
 }
 
 void
-fd_tx_ref(struct fd_tx* self, struct fd* fd, struct ofd_tx* ofd_tx,
-          unsigned long flags, struct picotm_error* error)
+fd_tx_ref_or_set_up(struct fd_tx* self, struct fd* fd, struct ofd_tx* ofd_tx,
+                    unsigned long flags, struct picotm_error* error)
 {
     assert(self);
     assert(fd);
 
-    if (fd_tx_holds_ref(self)) {
+    bool first_ref = picotm_ref_up(&self->ref);
+    if (!first_ref) {
         return;
     }
 
     fd_ref(fd, error);
     if (picotm_error_is_set(error)) {
-        return;
+        goto err_fd_ref;
     }
 
     fd_lock(fd);
@@ -59,6 +62,17 @@ fd_tx_ref(struct fd_tx* self, struct fd* fd, struct ofd_tx* ofd_tx,
     self->ofd_tx = ofd_tx;
     self->fdver = fdver;
     self->flags = flags & FD_FL_WANTNEW ? FDTX_FL_LOCALSTATE : 0;
+
+    return;
+
+err_fd_ref:
+    picotm_ref_down(&self->ref);
+}
+
+void
+fd_tx_ref(struct fd_tx* self)
+{
+    picotm_ref_up(&self->ref);
 }
 
 void
@@ -66,7 +80,8 @@ fd_tx_unref(struct fd_tx* self)
 {
     assert(self);
 
-    if (!fd_tx_holds_ref(self)) {
+    bool final_ref = picotm_ref_down(&self->ref);
+    if (!final_ref) {
         return;
     }
 
@@ -81,7 +96,7 @@ fd_tx_holds_ref(const struct fd_tx* self)
 {
     assert(self);
 
-    return self->fd;
+    return picotm_ref_count(&self->ref) > 0;
 }
 
 void
