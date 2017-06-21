@@ -5,6 +5,7 @@
 nobase_include_HEADERS = picotm/compiler.h \
                          picotm/picotm-error.h \
                          picotm/picotm-lib-array.h \
+                         picotm/picotm-lib-ref.h \
                          picotm/picotm-lib-tab.h \
                          picotm/picotm-module.h \
                          picotm/picotm.h
