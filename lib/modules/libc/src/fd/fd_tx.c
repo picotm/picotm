@@ -54,6 +54,8 @@ fd_tx_ref_or_set_up(struct fd_tx* self, struct fd* fd, struct ofd_tx* ofd_tx,
         goto err_fd_ref;
     }
 
+    ofd_tx_ref(ofd_tx);
+
     fd_lock(fd);
     unsigned long fdver = fd_get_version_nl(fd);
     fd_unlock(fd);
@@ -85,6 +87,7 @@ fd_tx_unref(struct fd_tx* self)
         return;
     }
 
+    ofd_tx_unref(self->ofd_tx);
     fd_unref(self->fd);
 
     self->flags = 0;

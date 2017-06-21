@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <picotm/picotm-lib-ref.h>
+#include <stdatomic.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include "fcntlop.h"
@@ -41,6 +43,8 @@ enum {
  */
 struct ofd_tx
 {
+    struct picotm_ref16 ref;
+
     struct ofd* ofd;
 
     unsigned long flags;
@@ -122,8 +126,14 @@ ofd_tx_clear_cc(struct ofd_tx* self, struct picotm_error* error);
  * Acquire a reference on the open file description
  */
 void
-ofd_tx_ref(struct ofd_tx* self, struct ofd* ofd, int fildes,
-           unsigned long flags, struct picotm_error* error);
+ofd_tx_ref_or_set_up(struct ofd_tx* self, struct ofd* ofd, int fildes,
+                     unsigned long flags, struct picotm_error* error);
+
+/**
+ * Acquire a reference on the open file description
+ */
+void
+ofd_tx_ref(struct ofd_tx* self);
 
 /**
  * Release reference
