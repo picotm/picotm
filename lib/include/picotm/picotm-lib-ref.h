@@ -123,10 +123,10 @@ __picotm_shared_ref16_count(const struct picotm_shared_ref16* self)
  * \param   self    A reference counter
  * \param   count   The initial reference count
  */
-#define picotm_ref_init(_ref, _count) _Generic(_ref,            \
+#define picotm_ref_init(self, count) _Generic(self,             \
     struct picotm_ref16*:           __picotm_ref16_init,        \
     struct picotm_shared_ref16*:    __picotm_shared_ref16_init) \
-    (_ref, _count)
+    (self, count)
 
 /**
  * Increments a reference counter.
@@ -134,10 +134,10 @@ __picotm_shared_ref16_count(const struct picotm_shared_ref16* self)
  * \param   self    A reference counter
  * \returns True is this is the first reference, false otherwise.
  */
-#define picotm_ref_up(_ref) _Generic(_ref,                      \
+#define picotm_ref_up(self) _Generic(self,                      \
     struct picotm_ref16*:           __picotm_ref16_up,          \
     struct picotm_shared_ref16*:    __picotm_shared_ref16_up)   \
-    (_ref)
+    (self)
 
 /**
  * Decrements a reference counter.
@@ -145,22 +145,22 @@ __picotm_shared_ref16_count(const struct picotm_shared_ref16* self)
  * \param   self    A reference counter
  * \returns True is this is the final reference, false otherwise.
  */
-#define picotm_ref_down(_ref) _Generic(_ref,                    \
+#define picotm_ref_down(self) _Generic(self,                    \
     struct picotm_ref16*:           __picotm_ref16_down,        \
     struct picotm_shared_ref16*:    __picotm_shared_ref16_down) \
-    (_ref)
+    (self)
 
 /**
  * Reads a reference counter's value.
  *
- * \param   self    A reference counter
+ * \param   self     reference counter
  * \returns The current value of the reference counter.
  */
-#define picotm_ref_count(_ref) _Generic(_ref,                           \
+#define picotm_ref_count(self) _Generic(self,                           \
     const struct picotm_ref16*:         __picotm_ref16_count,           \
           struct picotm_ref16*:         __picotm_ref16_count,           \
     const struct picotm_shared_ref16*:  __picotm_shared_ref16_count,    \
           struct picotm_shared_ref16*:  __picotm_shared_ref16_count)    \
-    (_ref)
+    (self)
 
 PICOTM_END_DECLS
