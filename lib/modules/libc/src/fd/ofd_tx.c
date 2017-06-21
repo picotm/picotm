@@ -47,6 +47,8 @@ ofd_tx_init(struct ofd_tx* self)
 {
     assert(self);
 
+    picotm_ref_init(&self->ref, 0);
+
     self->ofd = NULL;
 
     self->flags = 0;
@@ -231,13 +233,14 @@ ofd_tx_clear_cc(struct ofd_tx* self, struct picotm_error* error)
  */
 
 void
-ofd_tx_ref(struct ofd_tx* self, struct ofd* ofd, int fildes,
-           unsigned long flags, struct picotm_error* error)
+ofd_tx_ref_or_set_up(struct ofd_tx* self, struct ofd* ofd, int fildes,
+                     unsigned long flags, struct picotm_error* error)
 {
     assert(self);
     assert(ofd);
 
-    if (ofd_tx_holds_ref(self)) {
+    bool first_ref = picotm_ref_up(&self->ref);
+    if (!first_ref) {
         return;
     }
 
@@ -248,7 +251,7 @@ ofd_tx_ref(struct ofd_tx* self, struct ofd* ofd, int fildes,
     enum picotm_libc_cc_mode cc_mode;
     ofd_ref_state(ofd, &type, &cc_mode, &offset);
     if (picotm_error_is_set(error)) {
-        return;
+        goto err_ofd_ref_state;
     }
 
     /* setup fields */
@@ -268,6 +271,17 @@ ofd_tx_ref(struct ofd_tx* self, struct ofd* ofd, int fildes,
 
     self->modedata.tpl.rwstate = RW_NOLOCK;
     self->modedata.tpl.locktablen = 0;
+
+    return;
+
+err_ofd_ref_state:
+    picotm_ref_down(&self->ref);
+}
+
+void
+ofd_tx_ref(struct ofd_tx* self)
+{
+    picotm_ref_up(&self->ref);
 }
 
 void
@@ -275,7 +289,8 @@ ofd_tx_unref(struct ofd_tx* self)
 {
     assert(self);
 
-    if (!ofd_tx_holds_ref(self)) {
+    bool final_ref = picotm_ref_down(&self->ref);
+    if (!final_ref) {
         return;
     }
 
@@ -288,7 +303,7 @@ ofd_tx_holds_ref(struct ofd_tx* self)
 {
     assert(self);
 
-    return !!self->ofd;
+    return picotm_ref_count(&self->ref) > 0;
 }
 
 static off_t

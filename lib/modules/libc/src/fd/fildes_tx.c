@@ -201,11 +201,15 @@ get_ofd_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
 
     struct ofd_tx* ofd_tx = get_ofd_tx(self, ofdtab_index(ofd));
 
+    /* In |struct fildes_tx| we hold at most one reference to the
+     * transaction state of each open file description. This reference
+     * is released in fildes_tx_finish().
+     */
     if (ofd_tx_holds_ref(ofd_tx)) {
         goto unref;
     }
 
-    ofd_tx_ref(ofd_tx, ofd, fildes, flags, error);
+    ofd_tx_ref_or_set_up(ofd_tx, ofd, fildes, flags, error);
     if (picotm_error_is_set(error)) {
         goto err_ofd_tx_ref;
     }
@@ -219,7 +223,6 @@ err_ofd_tx_ref:
     ofd_unref(ofd);
     return NULL;
 }
-
 
 static struct fd_tx*
 get_fd_tx(struct fildes_tx* self, int fildes)
@@ -2183,7 +2186,9 @@ fildes_tx_finish(struct fildes_tx* self)
     for (struct ofd_tx* ofd_tx = self->ofd_tx;
                         ofd_tx < self->ofd_tx + self->ofd_tx_max_index;
                       ++ofd_tx) {
-        ofd_tx_unref(ofd_tx);
+        if (ofd_tx_holds_ref(ofd_tx)) {
+            ofd_tx_unref(ofd_tx);
+        }
     }
 
     /* Unref fd_txs */
