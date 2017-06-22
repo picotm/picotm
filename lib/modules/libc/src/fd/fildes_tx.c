@@ -103,34 +103,6 @@ fildes_tx_get_validation_mode(const struct fildes_tx* self)
     return picotm_libc_get_validation_mode();
 }
 
-static int*
-get_ifd(const struct fd_tx* fd_tx, size_t fd_txlen, size_t* ifdlen,
-        struct picotm_error* error)
-{
-    int* ifd = NULL;
-    *ifdlen = 0;
-
-    while (fd_txlen) {
-        --fd_txlen;
-
-        if (fd_tx_holds_ref(fd_tx)) {
-            void* tmp = picotm_tabresize(ifd, *ifdlen, (*ifdlen) + 1,
-                                         sizeof(ifd[0]), error);
-            if (picotm_error_is_set(error)) {
-                free(ifd);
-                return NULL;
-            }
-            ifd = tmp;
-
-            ifd[(*ifdlen)++] = fd_tx->fd - fdtab;
-        }
-
-        ++fd_tx;
-    }
-
-    return ifd;
-}
-
 static struct ofd_tx*
 get_ofd_tx(struct fildes_tx* self, int index)
 {
@@ -237,6 +209,8 @@ get_fd_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
     if (picotm_error_is_set(error)) {
         goto err_fd_tx_ref;
     }
+
+    SLIST_INSERT_HEAD(&self->fd_tx_active_list, fd_tx, active_list);
 
     fd_unref(fd);
 
@@ -1896,23 +1870,11 @@ undo_write(struct fildes_tx* self, int fildes, int cookie,
 void
 fildes_tx_lock(struct fildes_tx* self, struct picotm_error* error)
 {
-    size_t len;
-
     /* Lock fds */
 
-    self->ifd = get_ifd(self->fd_tx, self->fd_tx_max_fildes, &len, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
-
-    const int* ifd = self->ifd;
-
-    self->ifdlen = 0;
-
-    while (ifd < self->ifd+len) {
-        fd_tx_lock(self->fd_tx+(*ifd));
-        ++ifd;
-        ++self->ifdlen;
+    struct fd_tx* fd_tx;
+    SLIST_FOREACH(fd_tx, &self->fd_tx_active_list, active_list) {
+        fd_tx_lock(fd_tx);
     }
 
     /* Lock ofds */
@@ -1935,15 +1897,10 @@ fildes_tx_unlock(struct fildes_tx* self)
 
     /* Unlock fds */
 
-    const int* ifd = self->ifd+self->ifdlen;
-
-    while (ifd && (self->ifd < ifd)) {
-        --ifd;
-        fd_tx_unlock(self->fd_tx+(*ifd));
+    struct fd_tx* fd_tx;
+    SLIST_FOREACH(fd_tx, &self->fd_tx_active_list, active_list) {
+        fd_tx_unlock(fd_tx);
     }
-
-    free(self->ifd);
-    self->ifdlen = 0;
 }
 
 void
@@ -1952,14 +1909,12 @@ fildes_tx_validate(struct fildes_tx* self, int noundo,
 {
     /* Validate fd_txs */
 
-    struct fd_tx* fd_tx = self->fd_tx;
-
-    while (fd_tx < self->fd_tx+self->fd_tx_max_fildes) {
+    struct fd_tx* fd_tx;
+    SLIST_FOREACH(fd_tx, &self->fd_tx_active_list, active_list) {
         fd_tx_validate(fd_tx, error);
         if (picotm_error_is_set(error)) {
             return;
         }
-        ++fd_tx;
     }
 
     /* Validate ofd_txs */
@@ -2057,20 +2012,16 @@ fildes_tx_update_cc(struct fildes_tx* self, int noundo,
 {
     /* Update fd_txs */
 
-    struct fd_tx* fd_tx = self->fd_tx;
-
-    while (fd_tx < self->fd_tx+self->fd_tx_max_fildes) {
-
-        if (fd_tx_holds_ref(fd_tx)) {
-            fd_tx_update_cc(fd_tx, error);
-            if (picotm_error_is_set(error)) {
-                return;
-            }
+    struct fd_tx* fd_tx;
+    SLIST_FOREACH(fd_tx, &self->fd_tx_active_list, active_list) {
+        fd_tx_update_cc(fd_tx, error);
+        if (picotm_error_is_set(error)) {
+            return;
         }
-        ++fd_tx;
     }
 
     /* Update ofd_txs */
+
     struct ofd_tx* ofd_tx;
     SLIST_FOREACH(ofd_tx, &self->ofd_tx_active_list, active_list) {
         ofd_tx_update_cc(ofd_tx, error);
@@ -2086,17 +2037,12 @@ fildes_tx_clear_cc(struct fildes_tx* self, int noundo,
 {
     /* Clear fd_txs' CC */
 
-    struct fd_tx* fd_tx = self->fd_tx;
-
-    while (fd_tx < self->fd_tx+self->fd_tx_max_fildes) {
-
-        if (fd_tx_holds_ref(fd_tx)) {
-            fd_tx_clear_cc(fd_tx, error);
-            if (picotm_error_is_set(error)) {
-                return;
-            }
+    struct fd_tx* fd_tx;
+    SLIST_FOREACH(fd_tx, &self->fd_tx_active_list, active_list) {
+        fd_tx_clear_cc(fd_tx, error);
+        if (picotm_error_is_set(error)) {
+            return;
         }
-        ++fd_tx;
     }
 
     /* Clear ofd_txs' CC */
@@ -2125,11 +2071,11 @@ fildes_tx_finish(struct fildes_tx* self)
 
     /* Unref fd_txs */
 
-    for (struct fd_tx* fd_tx = self->fd_tx;
-                       fd_tx < self->fd_tx + self->fd_tx_max_fildes;
-                     ++fd_tx) {
-        if (fd_tx_holds_ref(fd_tx)) {
-            fd_tx_unref(fd_tx);
-        }
+    while (!SLIST_EMPTY(&self->fd_tx_active_list)) {
+
+        struct fd_tx* fd_tx = SLIST_FIRST(&self->fd_tx_active_list);
+        SLIST_REMOVE_HEAD(&self->fd_tx_active_list, active_list);
+
+        fd_tx_unref(fd_tx);
     }
 }

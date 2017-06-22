@@ -8,6 +8,7 @@
 #include <picotm/picotm-error.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "fcntlop.h"
 #include "fcntloptab.h"
 #include "fd.h"
@@ -19,6 +20,8 @@ fd_tx_init(struct fd_tx* self)
     assert(self);
 
     picotm_ref_init(&self->ref, 0);
+
+    memset(&self->active_list, 0, sizeof(self->active_list));
 
     self->fd = NULL;
     self->ofd_tx = NULL;
