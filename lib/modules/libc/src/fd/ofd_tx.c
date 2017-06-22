@@ -49,6 +49,8 @@ ofd_tx_init(struct ofd_tx* self)
 
     picotm_ref_init(&self->ref, 0);
 
+    memset(&self->active_list, 0, sizeof(self->active_list));
+
     self->ofd = NULL;
 
     self->flags = 0;
