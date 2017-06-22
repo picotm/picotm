@@ -44,21 +44,6 @@ enum fildes_tx_cmd {
     CMD_BIND
 };
 
-static int
-intcmp(int a, int b)
-{
-    return (a > b) - (a < b);
-}
-
-static int
-compare_int(const void* a, const void* b)
-{
-    assert(a);
-    assert(b);
-
-    return intcmp(*(const int*)a, *(const int*)b);
-}
-
 void
 fildes_tx_init(struct fildes_tx* self, unsigned long module)
 {
@@ -76,6 +61,8 @@ fildes_tx_init(struct fildes_tx* self, unsigned long module)
 
     self->pipeoptab = NULL;
     self->pipeoptablen = 0;
+
+    SLIST_INIT(&self->ofd_tx_active_list);
 }
 
 void
@@ -144,35 +131,6 @@ get_ifd(const struct fd_tx* fd_tx, size_t fd_txlen, size_t* ifdlen,
     return ifd;
 }
 
-static int*
-get_iofd(const struct fd_tx* fd_tx, const int* ifd, size_t ifdlen,
-         size_t* iofdlen, struct picotm_error* error)
-{
-    int* iofd = NULL;
-    *iofdlen = 0;
-
-    while (ifdlen) {
-        --ifdlen;
-
-        void* tmp = picotm_tabresize(iofd, *iofdlen, (*iofdlen) + 1,
-                                     sizeof(iofd[0]), error);
-        if (picotm_error_is_set(error)) {
-            free(iofd);
-            return NULL;
-        }
-        iofd = tmp;
-
-        iofd[(*iofdlen)++] = ofdtab_index(fd_tx[*ifd].ofd_tx->ofd);
-        ++ifd;
-    }
-
-    qsort(iofd,* iofdlen, sizeof(iofd[0]), compare_int);
-
-    *iofdlen = picotm_tabuniq(iofd, *iofdlen, sizeof(*iofd), compare_int);
-
-    return iofd;
-}
-
 static struct ofd_tx*
 get_ofd_tx(struct fildes_tx* self, int index)
 {
@@ -213,6 +171,8 @@ get_ofd_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
     if (picotm_error_is_set(error)) {
         goto err_ofd_tx_ref;
     }
+
+    SLIST_INSERT_HEAD(&self->ofd_tx_active_list, ofd_tx, active_list);
 
 unref:
     ofd_unref(ofd);
@@ -1957,19 +1917,9 @@ fildes_tx_lock(struct fildes_tx* self, struct picotm_error* error)
 
     /* Lock ofds */
 
-    self->iofd = get_iofd(self->fd_tx, self->ifd, self->ifdlen, &len, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
-
-    const int* iofd = self->iofd;
-
-    self->iofdlen = 0;
-
-    while (iofd < self->iofd+len) {
-        ofd_tx_lock(self->ofd_tx + (*iofd));
-        ++iofd;
-        ++self->iofdlen;
+    struct ofd_tx* ofd_tx;
+    SLIST_FOREACH(ofd_tx, &self->ofd_tx_active_list, active_list) {
+        ofd_tx_lock(ofd_tx);
     }
 }
 
@@ -1978,15 +1928,10 @@ fildes_tx_unlock(struct fildes_tx* self)
 {
     /* Unlock ofds */
 
-    const int* iofd = self->iofd+self->iofdlen;
-
-    while (iofd && (self->iofd < iofd)) {
-        --iofd;
-        ofd_tx_unlock(self->ofd_tx + (*iofd));
+    struct ofd_tx* ofd_tx;
+    SLIST_FOREACH(ofd_tx, &self->ofd_tx_active_list, active_list) {
+        ofd_tx_unlock(ofd_tx);
     }
-
-    free(self->iofd);
-    self->iofdlen = 0;
 
     /* Unlock fds */
 
@@ -2019,14 +1964,12 @@ fildes_tx_validate(struct fildes_tx* self, int noundo,
 
     /* Validate ofd_txs */
 
-    struct ofd_tx* ofd_tx = self->ofd_tx;
-
-    while (ofd_tx < self->ofd_tx+self->ofd_tx_max_index) {
+    struct ofd_tx* ofd_tx;
+    SLIST_FOREACH(ofd_tx, &self->ofd_tx_active_list, active_list) {
         ofd_tx_validate(ofd_tx, error);
         if (picotm_error_is_set(error)) {
             return;
         }
-        ++ofd_tx;
     }
 }
 
@@ -2128,18 +2071,12 @@ fildes_tx_update_cc(struct fildes_tx* self, int noundo,
     }
 
     /* Update ofd_txs */
-
-    struct ofd_tx* ofd_tx = self->ofd_tx;
-
-    while (ofd_tx < self->ofd_tx+self->ofd_tx_max_index) {
-
-        if (ofd_tx_holds_ref(ofd_tx)) {
-            ofd_tx_update_cc(ofd_tx, error);
-            if (picotm_error_is_set(error)) {
-                return;
-            }
+    struct ofd_tx* ofd_tx;
+    SLIST_FOREACH(ofd_tx, &self->ofd_tx_active_list, active_list) {
+        ofd_tx_update_cc(ofd_tx, error);
+        if (picotm_error_is_set(error)) {
+            return;
         }
-        ++ofd_tx;
     }
 }
 
@@ -2164,17 +2101,12 @@ fildes_tx_clear_cc(struct fildes_tx* self, int noundo,
 
     /* Clear ofd_txs' CC */
 
-    struct ofd_tx* ofd_tx = self->ofd_tx;
-
-    while (ofd_tx < self->ofd_tx+self->ofd_tx_max_index) {
-
-        if (ofd_tx_holds_ref(ofd_tx)) {
-            ofd_tx_clear_cc(ofd_tx, error);
-            if (picotm_error_is_set(error)) {
-                return;
-            }
+    struct ofd_tx* ofd_tx;
+    SLIST_FOREACH(ofd_tx, &self->ofd_tx_active_list, active_list) {
+        ofd_tx_clear_cc(ofd_tx, error);
+        if (picotm_error_is_set(error)) {
+            return;
         }
-        ++ofd_tx;
     }
 }
 
@@ -2183,12 +2115,12 @@ fildes_tx_finish(struct fildes_tx* self)
 {
     /* Unref ofd_txs */
 
-    for (struct ofd_tx* ofd_tx = self->ofd_tx;
-                        ofd_tx < self->ofd_tx + self->ofd_tx_max_index;
-                      ++ofd_tx) {
-        if (ofd_tx_holds_ref(ofd_tx)) {
-            ofd_tx_unref(ofd_tx);
-        }
+    while (!SLIST_EMPTY(&self->ofd_tx_active_list)) {
+
+        struct ofd_tx* ofd_tx = SLIST_FIRST(&self->ofd_tx_active_list);
+        SLIST_REMOVE_HEAD(&self->ofd_tx_active_list, active_list);
+
+        ofd_tx_unref(ofd_tx);
     }
 
     /* Unref fd_txs */

@@ -6,6 +6,7 @@
 
 #include <picotm/picotm-lib-ref.h>
 #include <stdatomic.h>
+#include <sys/queue.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include "fcntlop.h"
@@ -44,6 +45,8 @@ enum {
 struct ofd_tx
 {
     struct picotm_ref16 ref;
+
+    SLIST_ENTRY(ofd_tx) active_list;
 
     struct ofd* ofd;
 

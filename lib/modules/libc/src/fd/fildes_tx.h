@@ -6,6 +6,7 @@
 
 #include <picotm/picotm-module.h>
 #include <stdbool.h>
+#include <sys/queue.h>
 #include "fd_tx.h"
 #include "ofd_tx.h"
 #include "fd_event.h"
@@ -20,6 +21,8 @@
 
 struct pipeop;
 struct openop;
+
+SLIST_HEAD(ofd_tx_slist, ofd_tx);
 
 struct fildes_tx {
     unsigned long module;
@@ -43,8 +46,9 @@ struct fildes_tx {
     /* Locked fds and ofds during commit */
     int*   ifd;
     size_t ifdlen;
-    int*   iofd;
-    size_t iofdlen;
+
+    /** Active instances of |struct ofd_tx| */
+    struct ofd_tx_slist ofd_tx_active_list;
 };
 
 void
