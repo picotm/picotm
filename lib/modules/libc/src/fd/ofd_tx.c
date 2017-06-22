@@ -188,7 +188,7 @@ update_cc_2pl(struct ofd_tx* self, struct picotm_error* error)
 
     /* release ofd lock */
 
-    ofd_rwunlock_state(self->ofd, &self->modedata.tpl.rwstate);
+    ofd_unlock_state(self->ofd, &self->modedata.tpl.rwstate);
 }
 
 void
@@ -229,7 +229,7 @@ clear_cc_2pl(struct ofd_tx* self, struct picotm_error* error)
 
     /* release ofd lock */
 
-    ofd_rwunlock_state(self->ofd, &self->modedata.tpl.rwstate);
+    ofd_unlock_state(self->ofd, &self->modedata.tpl.rwstate);
 }
 
 void

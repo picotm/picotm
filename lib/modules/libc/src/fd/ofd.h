@@ -17,8 +17,7 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef OFD_H
-#define OFD_H
+#pragma once
 
 #include <picotm/picotm-lib-ref.h>
 #include <picotm/picotm-lib-rwlock.h>
@@ -43,8 +42,8 @@ struct picotm_error;
 struct picotm_rwstate;
 struct rwcountermap;
 
-struct ofd
-{
+struct ofd {
+
     struct picotm_shared_ref16 ref;
 
     pthread_rwlock_t lock;
@@ -55,13 +54,13 @@ struct ofd
     enum picotm_libc_file_type type;
 
     enum picotm_libc_cc_mode cc_mode;
-    struct picotm_rwlock  rwlock; /**< \brief Lock, pessimistic CC */
+    struct picotm_rwlock  rwlock; /**< \brief Lock */
 
     struct {
         struct {
             /** \brief global file position */
             off_t                offset;
-            /** \brief Lock table, pessimistic CC */
+            /** \brief Lock table */
             struct rwlockmap     rwlockmap;
         } regular;
     } data;
@@ -69,30 +68,30 @@ struct ofd
 
 /** \brief Initializes the open file description. */
 void
-ofd_init(struct ofd *ofd, struct picotm_error* error);
+ofd_init(struct ofd* self, struct picotm_error* error);
 
 /** \brief Uninitializes the open file description. */
 void
-ofd_uninit(struct ofd *ofd);
+ofd_uninit(struct ofd* self);
 
 void
-ofd_set_id(struct ofd *ofd, const struct ofdid *id);
+ofd_set_id(struct ofd* self, const struct ofdid* id);
 
 void
-ofd_clear_id(struct ofd *ofd);
+ofd_clear_id(struct ofd* self);
 
 /** \brief References the open file description. */
 void
-ofd_ref_or_set_up(struct ofd* ofd, int fildes, bool want_new,
+ofd_ref_or_set_up(struct ofd* self, int fildes, bool want_new,
                   bool unlink_file, struct picotm_error* error);
 
 /** \brief References the open file description. */
 void
-ofd_ref(struct ofd* ofd);
+ofd_ref(struct ofd* self);
 
 /** \brief References the open file description and returns its state. */
 void
-ofd_ref_state(struct ofd* ofd,
+ofd_ref_state(struct ofd* self,
               enum picotm_libc_file_type* type,
               enum picotm_libc_cc_mode* ccmode,
               off_t* offset);
@@ -100,19 +99,19 @@ ofd_ref_state(struct ofd* ofd,
 /**
  * \brief Compares the ofd's id to an id and acquires a reference if both
  *        id's are equal.
- * \param   ofd An ofd structure.
- * \param   id  The id to compare to.
+ * \param   self    An ofd structure.
+ * \param   id      The id to compare to.
  * \returns A value less than, equal to, or greater than if the ofd's id is
  *          less than, equal to, or greater than the given id.
  */
 int
-ofd_cmp_and_ref(struct ofd* ofd, const struct ofdid* id);
+ofd_cmp_and_ref(struct ofd* self, const struct ofdid* id);
 
 /**
  * \brief Compares the ofd's id to an id and acquires a reference if both
  *        id's are equal. The ofd structure is aet up from the provided
  *        file descriptor.
- * \param       ofd         An ofd structure.
+ * \param       self        An ofd structure.
  * \param       id          The id to compare to.
  * \param       fildes      A file descriptor refereing to the open file description.
  * \param       want_new    True to request a new instance.
@@ -122,70 +121,60 @@ ofd_cmp_and_ref(struct ofd* ofd, const struct ofdid* id);
  *          less than, equal to, or greater than the given id.
  */
 int
-ofd_cmp_and_ref_or_set_up(struct ofd* ofd, const struct ofdid* id,
+ofd_cmp_and_ref_or_set_up(struct ofd* self, const struct ofdid* id,
                           int fildes, bool want_new, bool unlink_file,
                           struct picotm_error* error);
 
 /** \brief Unreferences the open file description. */
 void
-ofd_unref(struct ofd *ofd);
+ofd_unref(struct ofd* self);
 
 /** \brief Returns the current CC mode of the open file description. */
 enum picotm_libc_cc_mode
-ofd_get_ccmode_nolock(const struct ofd *ofd);
+ofd_get_ccmode_nolock(const struct ofd* self);
 
 /** \brief Returns the type of the open file description. */
 enum picotm_libc_file_type
-ofd_get_type_nolock(const struct ofd *ofd);
+ofd_get_type_nolock(const struct ofd* self);
 
 /** \brief Returns the file offset of the open file description. */
 off_t
-ofd_get_offset_nolock(const struct ofd *ofd);
+ofd_get_offset_nolock(const struct ofd* self);
 
 /** \brief Write the open file description to stderr. */
 void
-ofd_dump(const struct ofd *ofd);
+ofd_dump(const struct ofd* self);
 
 void
-ofd_rdlock(struct ofd *ofd);
+ofd_rdlock(struct ofd* self);
 
 void
-ofd_wrlock(struct ofd *ofd);
+ofd_wrlock(struct ofd* self);
 
 void
-ofd_unlock(struct ofd *ofd);
-
-/*
- * Pessimistic CC
- */
+ofd_unlock(struct ofd* self);
 
 /** \brief Locks the open file description for reading. */
 void
-ofd_rdlock_state(struct ofd *ofd, struct picotm_rwstate* rwstate,
+ofd_rdlock_state(struct ofd* self, struct picotm_rwstate* rwstate,
                  struct picotm_error* error);
 
 /** \brief Locks the open file description for writing. */
 void
-ofd_wrlock_state(struct ofd *ofd, struct picotm_rwstate* rwstate,
+ofd_wrlock_state(struct ofd* self, struct picotm_rwstate* rwstate,
                  struct picotm_error* error);
 
 /** \brief Unlocks the open file description. */
 void
-ofd_rwunlock_state(struct ofd *ofd, struct picotm_rwstate* rwstate);
+ofd_unlock_state(struct ofd* self, struct picotm_rwstate* rwstate);
 
 /** \brief Locks a region of the underlying file buffer. */
 void
-ofd_2pl_lock_region(struct ofd *ofd, off_t off,
-                                     size_t nbyte,
-                                     int write,
-                                     struct rwcountermap *rwcountermap,
-                                     struct picotm_error* error);
+ofd_2pl_lock_region(struct ofd* self, off_t off, size_t nbyte, bool write,
+                    struct rwcountermap *rwcountermap,
+                    struct picotm_error* error);
 
 /** \brief Unlocks the underlying file buffer. */
 void
-ofd_2pl_unlock_region(struct ofd *ofd, off_t off,
-                                       size_t nbyte,
-                                       struct rwcountermap *rwcountermap);
-
-#endif
-
+ofd_2pl_unlock_region(struct ofd* self, off_t off, size_t nbyte,
+                      struct rwcountermap *rwcountermap);
