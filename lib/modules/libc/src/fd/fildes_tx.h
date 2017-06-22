@@ -22,6 +22,7 @@
 struct pipeop;
 struct openop;
 
+SLIST_HEAD(fd_tx_slist, fd_tx);
 SLIST_HEAD(ofd_tx_slist, ofd_tx);
 
 struct fildes_tx {
@@ -43,9 +44,8 @@ struct fildes_tx {
     struct pipeop* pipeoptab;
     size_t         pipeoptablen;
 
-    /* Locked fds and ofds during commit */
-    int*   ifd;
-    size_t ifdlen;
+    /** Active instances of |struct fd_tx| */
+    struct fd_tx_slist  fd_tx_active_list;
 
     /** Active instances of |struct ofd_tx| */
     struct ofd_tx_slist ofd_tx_active_list;

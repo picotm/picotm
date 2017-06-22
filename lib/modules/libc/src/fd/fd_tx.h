@@ -8,6 +8,7 @@
 #include <stdatomic.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <sys/queue.h>
 #include "picotm/picotm-libc.h"
 
 /**
@@ -32,6 +33,8 @@ union fcntl_arg;
 struct fd_tx {
 
     struct picotm_ref16 ref;
+
+    SLIST_ENTRY(fd_tx) active_list;
 
     struct fd* fd;
 
