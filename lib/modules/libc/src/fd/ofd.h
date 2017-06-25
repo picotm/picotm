@@ -21,10 +21,10 @@
 #define OFD_H
 
 #include <picotm/picotm-lib-ref.h>
+#include <picotm/picotm-lib-rwlock.h>
 #include <stdatomic.h>
 #include "ofdid.h"
 #include "picotm/picotm-libc.h"
-#include "rwlock.h"
 #include "rwlockmap.h"
 #include "rwstate.h"
 
@@ -55,7 +55,7 @@ struct ofd
     enum picotm_libc_file_type type;
 
     enum picotm_libc_cc_mode cc_mode;
-    struct rwlock  rwlock; /**< \brief Lock, pessimistic CC */
+    struct picotm_rwlock  rwlock; /**< \brief Lock, pessimistic CC */
 
     struct {
         struct {
