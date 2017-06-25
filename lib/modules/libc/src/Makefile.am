@@ -78,6 +78,7 @@ libpicotm_c_la_SOURCES = allocator/allocator_tx.c \
                          fd/rwlock.h \
                          fd/rwlockmap.c \
                          fd/rwlockmap.h \
+                         fd/rwstate.h \
                          fd/rwstatemap.c \
                          fd/rwstatemap.h \
                          fd/seekop.c \
