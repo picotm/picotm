@@ -17,46 +17,16 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef RWLOCK_H
-#define RWLOCK_H
-
-#include <pthread.h>
-#include <stdbool.h>
+#pragma once
 
 /**
- * \cond impl || libc_impl || libc_impl_fd
- * \ingroup libc_impl
- * \ingroup libc_impl_fd
- * \file
- * \endcond
+ * Signals a lock's state wrt. a transaction
  */
-
-struct picotm_error;
-
-struct rwlock
-{
-    volatile pthread_spinlock_t lock;
-    pthread_t          wr;
-    unsigned int       n;
+enum rwstate {
+    /** The tranasction has not acquired the lock. */
+    RW_NOLOCK = 0,
+    /** The tranasction has not acquired a read lock. */
+    RW_RDLOCK = 0x1,
+    /** The tranasction has not acquired a write lock. */
+    RW_WRLOCK = 0x2
 };
-
-void
-rwlock_init(struct rwlock *rwlock, struct picotm_error* error);
-
-void
-rwlock_uninit(struct rwlock *rwlock);
-
-bool
-rwlock_rdlock(struct rwlock *rwlock, int upgrade, struct picotm_error* error);
-
-void
-rwlock_rdunlock(struct rwlock *rwlock);
-
-bool
-rwlock_wrlock(struct rwlock *rwlock, int upgrade, struct picotm_error* error);
-
-void
-rwlock_wrunlock(struct rwlock *rwlock);
-
-#endif
-

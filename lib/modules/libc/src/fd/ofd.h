@@ -26,6 +26,7 @@
 #include "picotm/picotm-libc.h"
 #include "rwlock.h"
 #include "rwlockmap.h"
+#include "rwstate.h"
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
