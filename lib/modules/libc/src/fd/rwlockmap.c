@@ -34,11 +34,11 @@ rwlockmap_page_init(struct rwlockmap_page *pg)
 {
     assert(pg);
 
-    atomic_ulong* beg = picotm_arraybeg(pg->lock);
-    atomic_ulong* end = picotm_arrayend(pg->lock);
+    struct picotm_rwlock* beg = picotm_arraybeg(pg->lock);
+    const struct picotm_rwlock* end = picotm_arrayend(pg->lock);
 
     while (beg < end) {
-        atomic_init(beg, 0);
+        picotm_rwlock_init(beg);
         ++beg;
     }
 }

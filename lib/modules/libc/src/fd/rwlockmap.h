@@ -20,7 +20,7 @@
 #ifndef RWLOCKMAP_H
 #define RWLOCKMAP_H
 
-#include <stdatomic.h>
+#include <picotm/picotm-lib-rwlock.h>
 #include "pgtree.h"
 
 /**
@@ -35,7 +35,7 @@ struct picotm_error;
 
 struct rwlockmap_page
 {
-    atomic_ulong lock[PGTREE_NENTRIES];
+    struct picotm_rwlock lock[PGTREE_NENTRIES];
 };
 
 struct rwlockmap

@@ -101,18 +101,7 @@ rwstatemap_page_unlock_regions(struct rwstatemap_page* statepg,
             continue;
         }
 
-        unsigned long oldlock, newlock;
-
-        do {
-            oldlock = atomic_load(lockpg->lock + pgoffset);
-            assert(oldlock&RWSTATE_COUNTER);
-            newlock = (oldlock&RWSTATE_COUNTER) - 1;
-        } while (!atomic_compare_exchange_strong_explicit(lockpg->lock + pgoffset,
-                                                          &oldlock,
-                                                          newlock,
-                                                          memory_order_acq_rel,
-                                                          memory_order_acquire));
-
+        picotm_rwlock_unlock(lockpg->lock + pgoffset);
         statepg->state[pgoffset] = 0;
     }
 }
@@ -202,26 +191,13 @@ rwstatemap_rdlock(struct rwstatemap* rwstatemap,
         while (diff) {
 
             if ( !(statepg->state[pgoffset]&RWSTATE_COUNTER) ) {
-                /* not yet locked */
 
-                unsigned long oldlock, newlock;
+                /* not yet read-locked */
 
-                do {
-                    oldlock = lockpg->lock[pgoffset];
-
-                    if (oldlock&RWSTATE_WRITTEN) {
-                        /* concurrent writer present */
-                        picotm_error_set_conflicting(error, NULL);
-                        goto doreturn;
-                    }
-
-                    newlock = (oldlock&RWSTATE_COUNTER) + 1;
-
-                } while (!atomic_compare_exchange_strong_explicit(lockpg->lock + pgoffset,
-                                                                  &oldlock,
-                                                                  newlock,
-                                                                  memory_order_acq_rel,
-                                                                  memory_order_acquire));
+                picotm_rwlock_try_rdlock(lockpg->lock + pgoffset, error);
+                if (picotm_error_is_set(error)) {
+                    goto doreturn;
+                }
             }
 
             statepg->state[pgoffset] =
@@ -290,58 +266,16 @@ rwstatemap_wrlock(struct rwstatemap* rwstatemap,
 
         while (diff) {
 
-            if ( !(statepg->state[pgoffset]&RWSTATE_COUNTER) ) {
-                /* not yet locked */
+            if ( !(statepg->state[pgoffset] & RWSTATE_WRITTEN) ) {
 
-                unsigned long oldlock, newlock;
+                /* not yet write-locked */
 
-                do {
-                    oldlock = lockpg->lock[pgoffset];
+                bool upgrade = !!(statepg->state[pgoffset] & RWSTATE_COUNTER);
 
-                    if (oldlock&RWSTATE_WRITTEN) {
-                        /* concurrent writer present */
-                        picotm_error_set_conflicting(error, NULL);
-                        goto doreturn;
-                    } else if ( (oldlock&RWSTATE_COUNTER) > 1) {
-                        /* concurrent readers present */
-                        picotm_error_set_conflicting(error, NULL);
-                        goto doreturn;
-                    }
-
-                    newlock = RWSTATE_WRITTEN | ((oldlock&RWSTATE_COUNTER)+1);
-
-                } while (!atomic_compare_exchange_strong_explicit(lockpg->lock + pgoffset,
-                                                                  &oldlock,
-                                                                  newlock,
-                                                                  memory_order_acq_rel,
-                                                                  memory_order_acquire));
-
-            } else if ( !(statepg->state[pgoffset]&RWSTATE_WRITTEN) ) {
-
-                unsigned long oldlock, newlock;
-
-                do {
-                    oldlock = lockpg->lock[pgoffset];
-
-                    /* only read-locked */
-
-                    if (oldlock&RWSTATE_WRITTEN) {
-                        /* concurrent writer present */
-                        picotm_error_set_conflicting(error, NULL);
-                        goto doreturn;
-                    } else if ( (oldlock&RWSTATE_COUNTER) > 1) {
-                        /* concurrent readers present */
-                        picotm_error_set_conflicting(error, NULL);
-                        goto doreturn;
-                    }
-
-                    newlock = oldlock | RWSTATE_WRITTEN;
-
-                } while (!atomic_compare_exchange_strong_explicit(lockpg->lock + pgoffset,
-                                                                  &oldlock,
-                                                                  newlock,
-                                                                  memory_order_acq_rel,
-                                                                  memory_order_acquire));
+                picotm_rwlock_try_wrlock(lockpg->lock + pgoffset, upgrade, error);
+                if (picotm_error_is_set(error)) {
+                    goto doreturn;
+                }
             }
 
             statepg->state[pgoffset] = RWSTATE_WRITTEN
@@ -411,35 +345,7 @@ rwstatemap_unlock(struct rwstatemap *rwstatemap, unsigned long long length,
             if ( !(statepg->state[pgoffset]&RWSTATE_COUNTER) ) {
                 /* last lock of this transaction */
 
-                if (statepg->state[pgoffset]&RWSTATE_WRITTEN) {
-
-                    unsigned long oldlock, newlock;
-
-                    do {
-                        oldlock = lockpg->lock[pgoffset];
-                        newlock = (oldlock&RWSTATE_COUNTER) - 1;
-                    } while (!atomic_compare_exchange_strong_explicit(lockpg->lock + pgoffset,
-                                                                      &oldlock,
-                                                                      newlock,
-                                                                      memory_order_acq_rel,
-                                                                      memory_order_acquire));
-                } else {
-
-                    unsigned long oldlock, newlock;
-
-                    do {
-                        oldlock = lockpg->lock[pgoffset];
-
-                        newlock = (oldlock&RWSTATE_WRITTEN)
-                                | ((oldlock&RWSTATE_COUNTER) - 1);
-
-                    } while (!atomic_compare_exchange_strong_explicit(lockpg->lock + pgoffset,
-                                                                      &oldlock,
-                                                                      newlock,
-                                                                      memory_order_acq_rel,
-                                                                      memory_order_acquire));
-                }
-
+                picotm_rwlock_unlock(lockpg->lock + pgoffset);
                 statepg->state[pgoffset] = 0;
             }
 
