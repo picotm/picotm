@@ -19,8 +19,9 @@
 
 #pragma once
 
-#include <stdint.h>
+#include <stdatomic.h>
 #include <stddef.h>
+#include <stdint.h>
 
 struct picotm_error;
 
@@ -36,7 +37,7 @@ struct picotm_error;
  * of main memory.
  */
 struct tm_frame {
-    uintptr_t owner; /* address of owning vmem_tx, or 0 */
+    atomic_uintptr_t owner; /* address of owning vmem_tx, or 0 */
     uintptr_t flags; /* address + flags */
 };
 
