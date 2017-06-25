@@ -22,6 +22,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <picotm/picotm-error.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -108,7 +109,7 @@ ofd_init(struct ofd* ofd, struct picotm_error* error)
 
     ofd->data.regular.offset = 0;
 
-    rwlockmap_init(&ofd->data.regular.rwlockmap, error);
+    rwlockmap_init(&ofd->data.regular.rwlockmap, RECBITS, error);
     if (picotm_error_is_set(error)) {
         goto err_rwlockmap_init;
     }
