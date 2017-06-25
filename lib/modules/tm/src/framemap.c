@@ -87,8 +87,8 @@ cleanup_dir(struct tm_frame_dir* dir, size_t shiftbits)
 {
     shiftbits -= TM_FRAME_DIR_SIZE_BITS;
 
-    uintptr_t* beg = picotm_arraybeg(dir->entry);
-    const uintptr_t* end = picotm_arrayend(dir->entry);
+    atomic_uintptr_t* beg = picotm_arraybeg(dir->entry);
+    const atomic_uintptr_t* end = picotm_arrayend(dir->entry);
 
     if (reached_tbl(shiftbits)) {
         while (beg < end) {
@@ -113,8 +113,8 @@ cleanup_tld(struct tm_frame_tld* tld, size_t shiftbits)
 {
     shiftbits -= TM_FRAME_TLD_SIZE_BITS;
 
-    uintptr_t* beg = picotm_arraybeg(tld->entry);
-    const uintptr_t* end = picotm_arrayend(tld->entry);
+    atomic_uintptr_t* beg = picotm_arraybeg(tld->entry);
+    const atomic_uintptr_t* end = picotm_arrayend(tld->entry);
 
     if (reached_tbl(shiftbits)) {
         while (beg < end) {
@@ -173,7 +173,7 @@ next_tld_index(uintptr_t addr, size_t* shiftbits)
 }
 
 static struct tm_frame_dir*
-load_dir(uintptr_t* entry, struct picotm_error* error)
+load_dir(atomic_uintptr_t* entry, struct picotm_error* error)
 {
     struct tm_frame_dir* dir =
         (struct tm_frame_dir*)atomic_load_explicit(entry, memory_order_acquire);
@@ -207,7 +207,7 @@ load_dir(uintptr_t* entry, struct picotm_error* error)
 }
 
 static struct tm_frame_tbl*
-load_tbl(uintptr_t* entry, uintptr_t addr, struct picotm_error* error)
+load_tbl(atomic_uintptr_t* entry, uintptr_t addr, struct picotm_error* error)
 {
     struct tm_frame_tbl* tbl =
         (struct tm_frame_tbl*)atomic_load_explicit(entry,
@@ -249,7 +249,7 @@ tm_frame_map_lookup(struct tm_frame_map* self, uintptr_t addr,
 
     /* Look up frame directory from top-level directory */
 
-    uintptr_t* entry = self->tld.entry + next_tld_index(addr, &shiftbits);
+    atomic_uintptr_t* entry = self->tld.entry + next_tld_index(addr, &shiftbits);
 
     /* Look up frame table from directory hierarchy */
 
