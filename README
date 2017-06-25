@@ -40,6 +40,6 @@ About this Repository
 License
 =======
 
-  Picotm is distributed under the terms of the Mozilla Public License, v. 2.0.
-  It's suitable for using picotm in free and proprietary software. You'll find
-  the license text in the file LICENSE or at http://mozilla.org/MPL/2.0/.
+  Picotm is distributed under the terms of the MIT License. It's suitable
+  for using picotm in free and proprietary software. You can find the full
+  license text in the file COPYING or at http://opensource.org/licenses/MIT.
