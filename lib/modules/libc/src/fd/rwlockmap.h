@@ -21,7 +21,7 @@
 #define RWLOCKMAP_H
 
 #include <picotm/picotm-lib-rwlock.h>
-#include "pgtree.h"
+#include <picotm/picotm-lib-shared-treemap.h>
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -33,18 +33,25 @@
 
 struct picotm_error;
 
+enum {
+    RWLOCKMAP_PAGE_NBITS    = 9,
+    RWLOCKMAP_PAGE_NENTRIES = 1ul << RWLOCKMAP_PAGE_NBITS,
+    RWLOCKMAP_PAGE_MASK     = RWLOCKMAP_PAGE_NENTRIES - 1
+};
+
 struct rwlockmap_page
 {
-    struct picotm_rwlock lock[PGTREE_NENTRIES];
+    struct picotm_rwlock lock[RWLOCKMAP_PAGE_NENTRIES];
 };
 
 struct rwlockmap
 {
-    struct pgtree super;
+    struct picotm_shared_treemap pagemap;
 };
 
 void
-rwlockmap_init(struct rwlockmap* rwlockmap, struct picotm_error* error);
+rwlockmap_init(struct rwlockmap* rwlockmap, unsigned long record_bits,
+               struct picotm_error* error);
 
 void
 rwlockmap_uninit(struct rwlockmap *rwlockmap);

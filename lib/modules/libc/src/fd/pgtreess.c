@@ -23,7 +23,13 @@
 #include <picotm/picotm-error.h>
 #include <stdlib.h>
 #include <string.h>
-#include "pgtree.h"
+#include "rwlockmap.h"
+
+enum {
+    PGTREESS_LVL_NBITS    = RWLOCKMAP_PAGE_NBITS,
+    PGTREESS_LVL_NENTRIES = 1ul << PGTREESS_LVL_NBITS,
+    PGTREESS_LVL_MASK     = PGTREESS_LVL_NENTRIES - 1
+};
 
 static long long
 raisell(long long base, long long exp)
@@ -44,7 +50,7 @@ raisell(long long base, long long exp)
 
 struct pgtreess_dir
 {
-    union pgtreess_dir_entry entry[PGTREE_NENTRIES];
+    union pgtreess_dir_entry entry[PGTREESS_LVL_NENTRIES];
 };
 
 static void
@@ -130,7 +136,7 @@ pgtreess_lookup_page(struct pgtreess *pgtreess, unsigned long long offset,
     /* insert root directories */
 
     unsigned long long offset_prefix =
-        offset >> (pgtreess->ndirs*PGTREE_ENTRY_NBITS);
+        offset >> (pgtreess->ndirs * PGTREESS_LVL_NBITS);
 
     while (offset_prefix) {
         struct pgtreess_dir* ssdir = malloc(sizeof(*ssdir));
@@ -146,7 +152,8 @@ pgtreess_lookup_page(struct pgtreess *pgtreess, unsigned long long offset,
         pgtreess->entry.any = ssdir;
         ++pgtreess->ndirs;
 
-        offset_prefix = offset >> (pgtreess->ndirs*PGTREE_ENTRY_NBITS);
+        offset_prefix =
+            offset >> (pgtreess->ndirs * PGTREESS_LVL_NBITS);
     }
 
     /* walk through tree */
@@ -157,7 +164,7 @@ pgtreess_lookup_page(struct pgtreess *pgtreess, unsigned long long offset,
     while (ndirs && entry->dir) {
 
         unsigned int i =
-            (offset>>(ndirs*PGTREE_ENTRY_NBITS)) & PGTREE_ENTRY_MASK;
+            (offset >> (ndirs * PGTREESS_LVL_NBITS)) & PGTREESS_LVL_MASK;
 
         entry = entry->dir->entry+i;
         --ndirs;
@@ -175,7 +182,8 @@ pgtreess_lookup_page(struct pgtreess *pgtreess, unsigned long long offset,
         pgtreess_dir_init(entry->dir);
 
         unsigned int i =
-            (offset>>(ndirs*PGTREE_ENTRY_NBITS))&PGTREE_ENTRY_MASK;
+            (offset >> (ndirs * PGTREESS_LVL_NBITS)) &
+                PGTREESS_LVL_MASK;
 
         entry = entry->dir->entry+i;
         --ndirs;
@@ -229,15 +237,15 @@ pgtreess_for_each_page(struct pgtreess* pgtreess,
         if (top->depth < pgtreess->ndirs) {
             /* directory */
 
-            while ((top->i < PGTREE_NENTRIES) && !top->entry.dir->entry[top->i].any) {
+            while ((top->i < PGTREESS_LVL_NENTRIES) && !top->entry.dir->entry[top->i].any) {
                 ++top->i;
             }
 
-            if (top->i < PGTREE_NENTRIES) {
+            if (top->i < PGTREESS_LVL_NENTRIES) {
 
                 /* max number of page elements below this directory */
                 long long pwr =
-                    raisell(PGTREE_NENTRIES, pgtreess->ndirs-top->depth);
+                    raisell(PGTREESS_LVL_NENTRIES, pgtreess->ndirs-top->depth);
 
                 stack[depth].entry = top->entry.dir->entry[top->i];
                 stack[depth].i = 0;

@@ -23,7 +23,6 @@
 #include <picotm/picotm-error.h>
 #include <stdlib.h>
 #include <string.h>
-#include "pgtree.h"
 #include "range.h"
 #include "rwlockmap.h"
 
@@ -39,7 +38,7 @@ enum {
 struct rwstatemap_page
 {
     struct rwlockmap_page *lockpg;
-    unsigned long          state[PGTREE_NENTRIES];
+    unsigned long          state[RWLOCKMAP_PAGE_NENTRIES];
 };
 
 static void
@@ -95,7 +94,7 @@ rwstatemap_page_unlock_regions(struct rwstatemap_page* statepg,
         return;
     }
 
-    for (pgoffset = 0; pgoffset < PGTREE_NENTRIES; ++pgoffset) {
+    for (pgoffset = 0; pgoffset < RWLOCKMAP_PAGE_NENTRIES; ++pgoffset) {
 
         if (!(statepg->state[pgoffset]&RWSTATE_COUNTER)) {
             continue;
@@ -180,8 +179,9 @@ rwstatemap_rdlock(struct rwstatemap* rwstatemap,
 
         /* compute next slice */
 
-        unsigned long long pgoffset = offset%PGTREE_NENTRIES;
-        unsigned long long diff = llmin(length, PGTREE_NENTRIES-pgoffset);
+        unsigned long long pgoffset = offset % RWLOCKMAP_PAGE_NENTRIES;
+        unsigned long long diff = llmin(length,
+                                        RWLOCKMAP_PAGE_NENTRIES - pgoffset);
 
         length -= diff;
         offset += diff;
@@ -256,8 +256,9 @@ rwstatemap_wrlock(struct rwstatemap* rwstatemap,
 
         /* compute next slice */
 
-        unsigned long long pgoffset = offset%PGTREE_NENTRIES;
-        unsigned long long diff = llmin(length, PGTREE_NENTRIES-pgoffset);
+        unsigned long long pgoffset = offset % RWLOCKMAP_PAGE_NENTRIES;
+        unsigned long long diff = llmin(length,
+                                        RWLOCKMAP_PAGE_NENTRIES - pgoffset);
 
         length -= diff;
         offset += diff;
@@ -326,8 +327,9 @@ rwstatemap_unlock(struct rwstatemap *rwstatemap, unsigned long long length,
 
         /* compute next slice */
 
-        unsigned long long pgoffset = offset%PGTREE_NENTRIES;
-        unsigned long long diff = llmin(length, PGTREE_NENTRIES-pgoffset);
+        unsigned long long pgoffset = offset % RWLOCKMAP_PAGE_NENTRIES;
+        unsigned long long diff = llmin(length,
+                                        RWLOCKMAP_PAGE_NENTRIES - pgoffset);
 
         length -= diff;
         offset += diff;

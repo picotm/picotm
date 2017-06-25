@@ -21,6 +21,7 @@
 #include <errno.h>
 #include <picotm/picotm-error.h>
 #include <picotm/picotm-lib-tab.h>
+#include <pthread.h>
 #include <stdlib.h>
 #include "range.h"
 

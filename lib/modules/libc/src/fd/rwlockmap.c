@@ -20,6 +20,7 @@
 #include "rwlockmap.h"
 #include <assert.h>
 #include <errno.h>
+#include <limits.h>
 #include <picotm/picotm-error.h>
 #include <picotm/picotm-lib-array.h>
 #include <stdlib.h>
@@ -53,33 +54,46 @@ rwlockmap_page_uninit(struct rwlockmap_page *pg)
  * rwlockmap
  */
 
-static void*
-rwlockmap_create_page_fn(struct picotm_error* error)
+static uintptr_t
+rwlockmap_create_page_fn(unsigned long long key,
+                         struct picotm_shared_treemap* treemap,
+                         struct picotm_error* error)
 {
     struct rwlockmap_page* pg = malloc(sizeof(*pg));
     if (!pg) {
         picotm_error_set_errno(error, errno);
-        return NULL;
+        return 0;
     }
 
     rwlockmap_page_init(pg);
 
-    return pg;
+    return (uintptr_t)pg;
 }
 
 static void
-rwlockmap_destroy_page_fn(void *pg)
+rwlockmap_destroy_page_fn(uintptr_t value,
+                          struct picotm_shared_treemap* treemap)
 {
+    struct rwlockmap_page* pg = (struct rwlockmap_page*)value;
     rwlockmap_page_uninit(pg);
     free(pg);
 }
 
 void
-rwlockmap_init(struct rwlockmap* rwlockmap, struct picotm_error* error)
+rwlockmap_init(struct rwlockmap* rwlockmap, unsigned long record_bits,
+               struct picotm_error* error)
 {
     assert(rwlockmap);
 
-    pgtree_init(&rwlockmap->super, error);
+    /* The number of bits in an offset that are handled by the
+     * treemap. The lowest bits in each offset index into the record
+     * and page. The higher bits index into the treemap directories.
+     */
+    unsigned long offset_bits =
+        (sizeof(off_t) * CHAR_BIT) - (RWLOCKMAP_PAGE_NBITS + record_bits);
+
+    picotm_shared_treemap_init(&rwlockmap->pagemap, offset_bits,
+                               RWLOCKMAP_PAGE_NBITS);
 }
 
 void
@@ -87,7 +101,8 @@ rwlockmap_uninit(struct rwlockmap *rwlockmap)
 {
     assert(rwlockmap);
 
-    pgtree_uninit(&rwlockmap->super, rwlockmap_destroy_page_fn);
+    picotm_shared_treemap_uninit(&rwlockmap->pagemap,
+                                 rwlockmap_destroy_page_fn);
 }
 
 struct rwlockmap_page*
@@ -96,6 +111,11 @@ rwlockmap_lookup_page(struct rwlockmap* rwlockmap, unsigned long long offset,
 {
     assert(rwlockmap);
 
-    return pgtree_lookup_page(&rwlockmap->super, offset,
-                              rwlockmap_create_page_fn, error);
+    uintptr_t value = picotm_shared_treemap_find_value(
+        &rwlockmap->pagemap, offset, rwlockmap_create_page_fn,
+        rwlockmap_destroy_page_fn, error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+    return (struct rwlockmap_page*)value;
 }
