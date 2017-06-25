@@ -129,7 +129,12 @@ __picotm_shared_ref16_down(struct picotm_shared_ref16* self)
 static inline uint16_t
 __picotm_shared_ref16_count(const struct picotm_shared_ref16* self)
 {
+#if __clang
     return atomic_load_explicit(&self->count, memory_order_acquire);
+#else
+    return atomic_load_explicit((atomic_uint_fast16_t*)&self->count,
+                                memory_order_acquire);
+#endif
 }
 
 /**
