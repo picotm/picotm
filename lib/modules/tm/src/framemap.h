@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <stdatomic.h>
 #include <limits.h>
 #include <stdint.h>
 #include "block.h"
@@ -54,7 +55,7 @@ struct tm_frame_tbl {
 #define TM_FRAME_DIR_SIZE_MASK  (TM_FRAME_DIR_SIZE - 1)
 
 struct tm_frame_dir {
-    uintptr_t entry[TM_FRAME_DIR_SIZE];
+    atomic_uintptr_t entry[TM_FRAME_DIR_SIZE];
 };
 
 /*
@@ -67,7 +68,7 @@ struct tm_frame_dir {
 #define TM_FRAME_TLD_SIZE_MASK  (TM_FRAME_TLD_SIZE - 1)
 
 struct tm_frame_tld {
-    uintptr_t entry[TM_FRAME_TLD_SIZE];
+    atomic_uintptr_t entry[TM_FRAME_TLD_SIZE];
 };
 
 /*
