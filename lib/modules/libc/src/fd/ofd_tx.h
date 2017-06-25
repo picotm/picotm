@@ -26,7 +26,6 @@
 #include <sys/types.h>
 #include "fcntlop.h"
 #include "picotm/picotm-libc.h"
-#include "rwlock.h"
 #include "rwstate.h"
 #include "rwstatemap.h"
 

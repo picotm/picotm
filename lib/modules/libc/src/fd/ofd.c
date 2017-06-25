@@ -98,10 +98,7 @@ ofd_init(struct ofd* ofd, struct picotm_error* error)
     ofd->flags = 0;
     ofd->type = PICOTM_LIBC_FILE_TYPE_OTHER;
 
-    rwlock_init(&ofd->rwlock, error);
-    if (picotm_error_is_set(error)) {
-        goto err_rwlock_init;
-    }
+    picotm_rwlock_init(&ofd->rwlock);
 
     ofd->cc_mode = PICOTM_LIBC_CC_MODE_NOUNDO;
 
@@ -120,8 +117,7 @@ ofd_init(struct ofd* ofd, struct picotm_error* error)
 
 err_rwlockmap_init:
     rwlockmap_uninit(&ofd->data.regular.rwlockmap);
-err_rwlock_init:
-    rwlock_uninit(&ofd->rwlock);
+    picotm_rwlock_uninit(&ofd->rwlock);
 err_pthread_rwlock_init:
 err_pthread_rwlockattr_setkind_np:
     pthread_rwlockattr_destroy(&rwlockattr);
@@ -132,7 +128,7 @@ ofd_uninit(struct ofd *ofd)
 {
     rwlockmap_uninit(&ofd->data.regular.rwlockmap);
 
-    rwlock_uninit(&ofd->rwlock);
+    picotm_rwlock_uninit(&ofd->rwlock);
 
     pthread_rwlock_destroy(&ofd->lock);
 }
@@ -368,7 +364,7 @@ ofd_rdlock_state(struct ofd *ofd, enum rwstate *rwstate,
 
     if (!(*rwstate&RW_RDLOCK) && !(*rwstate&RW_WRLOCK)) {
 
-        rwlock_rdlock(&ofd->rwlock, (*rwstate) & RW_WRLOCK, error);
+        picotm_rwlock_try_rdlock(&ofd->rwlock, error);
         if (picotm_error_is_set(error)) {
             return;
         }
@@ -385,7 +381,7 @@ ofd_wrlock_state(struct ofd *ofd, enum rwstate *rwstate,
 
     if (!(*rwstate&RW_WRLOCK)) {
 
-        rwlock_wrlock(&ofd->rwlock, (*rwstate) & RW_RDLOCK, error);
+        picotm_rwlock_try_wrlock(&ofd->rwlock, (*rwstate) & RW_RDLOCK, error);
         if (picotm_error_is_set(error)) {
             return;
         }
@@ -399,16 +395,10 @@ ofd_rwunlock_state(struct ofd *ofd, enum rwstate *rwstate)
     assert(ofd);
     assert(rwstate);
 
-    if (*rwstate&RW_RDLOCK) {
-        rwlock_rdunlock(&ofd->rwlock);
-        *rwstate &= ~RW_RDLOCK;
+    if (*rwstate & (RW_RDLOCK | RW_WRLOCK)) {
+        picotm_rwlock_unlock(&ofd->rwlock);
+        *rwstate &= ~(RW_RDLOCK | RW_WRLOCK);
     }
-
-    if (*rwstate&RW_WRLOCK) {
-        rwlock_wrunlock(&ofd->rwlock);
-        *rwstate &= ~RW_WRLOCK;
-    }
-
 }
 
 void
