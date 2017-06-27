@@ -25,6 +25,7 @@ libpicotm_la_SOURCES = log.c \
                        picotm.c \
                        picotm.h \
                        picotm-error.c \
+                       picotm-lib-rwlock.c \
                        picotm-lib-tab.c \
                        table.c \
                        table.h \
