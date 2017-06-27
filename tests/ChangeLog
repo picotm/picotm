@@ -1,4 +1,12 @@
 
+picotm-tests 0.3.0 (2017-06-27)
+------------------
+
+    * Abort with message on test errors.
+
+    * Fixed the name of fdio test case #50.
+
+
 picotm-tests 0.2.0 (2017-05-31)
 ------------------
 

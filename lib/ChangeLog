@@ -1,4 +1,26 @@
 
+picotm 0.3.0 (2017-06-27)
+------------
+
+    * Relicensed source code under MIT license. The new license will
+      simplify inclusion of picotm into other software.
+
+    * All transactional interfaces now report errors to the picotm
+      framework. No error codes are returned to the execution phase on
+      failure.
+
+    * Fixed bug where closing a file descriptor did not work reliably.
+
+    * Added module library with code for table and arrays. The table
+      helpers were available before, the array helper have been added
+      from module-internal helper code. All modules have been converted
+      to the new helpers.
+
+    * Switched to C11 atomic operations.
+
+    * Internal cleanups.
+
+
 picotm 0.2.0 (2017-05-31)
 ------------
 
