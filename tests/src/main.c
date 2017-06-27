@@ -90,7 +90,7 @@ static const struct test_func test[] = {
     {"fdio_test_47", fdio_test_47, fdio_test_47_pre, fdio_test_47_post},
     {"fdio_test_48", fdio_test_48, fdio_test_48_pre, fdio_test_48_post},
     {"fdio_test_49", fdio_test_49, fdio_test_49_pre, fdio_test_49_post},
-    {"fdio_test_52", fdio_test_50, fdio_test_50_pre, fdio_test_50_post},
+    {"fdio_test_50", fdio_test_50, fdio_test_50_pre, fdio_test_50_post},
     {"fdio_test_51", fdio_test_51, fdio_test_51_pre, fdio_test_51_post},
     {"fdio_test_52", fdio_test_52, fdio_test_52_pre, fdio_test_52_post},
     /* Test 60 */
