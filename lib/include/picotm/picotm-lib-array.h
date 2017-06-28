@@ -39,9 +39,16 @@ PICOTM_BEGIN_DECLS
 #define picotm_arraybeg(_array) (_array)
 
 /**
+ * Returns the address of the element at the specified index in a
+ * static C array.
+ */
+#define picotm_arrayat(_array, _i)  (picotm_arraybeg(_array) + (_i))
+
+/**
  * Returns the address after a static C array.
  */
-#define picotm_arrayend(_array) ((_array) + (picotm_arraylen(_array)))
+#define picotm_arrayend(_array) \
+    picotm_arrayat(_array, picotm_arraylen(_array))
 
 /**
  * Returns the address of the first element in a static C array.
