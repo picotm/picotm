@@ -67,7 +67,7 @@ dnl Picotm compile-time variables
 dnl
 
 AC_DEFINE([MAXNUMFD], [1024])
-AC_DEFINE([RECSIZE],  [32])
+AC_DEFINE([RECBITS],  [5])
 
 
 dnl

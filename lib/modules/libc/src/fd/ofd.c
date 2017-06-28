@@ -29,6 +29,8 @@
 #include <unistd.h>
 #include "rwstatemap.h"
 
+#define RECSIZE (1ul << RECBITS)
+
 #define bitsof(_x)  (sizeof(_x)*CHAR_BIT)
 
 static const unsigned long flag_bits = OFD_FL_LAST_BIT+4;
