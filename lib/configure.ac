@@ -57,6 +57,8 @@ dnl
 dnl System headers and libraries
 dnl
 
+AC_HEADER_ASSERT
+
 AC_CHECK_HEADERS([sys/cdefs.h])
 
 
