@@ -18,6 +18,9 @@
  */
 
 #include "picotm/picotm-lib-treemap.h"
+#if defined HAVE_ALLOCA && HAVE_ALLOCA
+#include <alloca.h>
+#endif
 #include <assert.h>
 #include <errno.h>
 #include <limits.h>
@@ -376,6 +379,12 @@ walk_values(struct dir_stack* stack, unsigned long depth,
     }
 }
 
+static size_t
+sizeof_dir_stack(unsigned long treemap_depth)
+{
+    return (treemap_depth + 1) * sizeof(struct dir_stack);
+}
+
 PICOTM_EXPORT
 void
 picotm_treemap_for_each_value(struct picotm_treemap* self, void* data,
@@ -387,11 +396,15 @@ picotm_treemap_for_each_value(struct picotm_treemap* self, void* data,
 
     /* allocate enough stack to hold n directories plus 1 value */
 
-    struct dir_stack* stack = malloc((self->depth + 1) * sizeof(*stack));
+#if defined HAVE_ALLOCA && HAVE_ALLOCA
+    struct dir_stack* stack = alloca(sizeof_dir_stack(self->depth));
+#else
+    struct dir_stack* stack = malloc(sizeof_dir_stack(self->depth));
     if (!stack) {
         picotm_error_set_errno(error, errno);
         return;
     }
+#endif
 
     size_t depth = 0; /* stack depth; *not* tree depth! */
 
@@ -414,6 +427,8 @@ picotm_treemap_for_each_value(struct picotm_treemap* self, void* data,
     return;
 
 err_walk_values:
+#if !(defined HAVE_ALLOCA && HAVE_ALLOCA)
     free(stack);
+#endif
     return;
 }
