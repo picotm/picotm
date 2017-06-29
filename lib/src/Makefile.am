@@ -28,6 +28,7 @@ libpicotm_la_SOURCES = log.c \
                        picotm-lib-rwlock.c \
                        picotm-lib-shared-treemap.c \
                        picotm-lib-tab.c \
+                       picotm-lib-treemap.c \
                        table.c \
                        table.h \
                        tx.c \
