@@ -150,6 +150,12 @@ rwstatemap_create_page_fn(unsigned long long offset,
     return (uintptr_t)statepg;
 }
 
+static unsigned long long
+key_bits(unsigned long long offset, unsigned long page_nbits)
+{
+    return offset >> page_nbits;
+}
+
 bool
 rwstatemap_rdlock(struct rwstatemap* rwstatemap,
                   unsigned long long length, unsigned long long offset,
@@ -167,7 +173,7 @@ rwstatemap_rdlock(struct rwstatemap* rwstatemap,
     while (length) {
 
         uintptr_t value = picotm_treemap_find_value(&rwstatemap->super,
-                                                    offset,
+                                                    key_bits(offset, RWLOCKMAP_PAGE_NBITS),
                                                     rwstatemap_create_page_fn,
                                                     error);
         if (picotm_error_is_set(error)) {
@@ -245,7 +251,7 @@ rwstatemap_wrlock(struct rwstatemap* rwstatemap,
     while (length) {
 
         uintptr_t value = picotm_treemap_find_value(&rwstatemap->super,
-                                                    offset,
+                                                    key_bits(offset, RWLOCKMAP_PAGE_NBITS),
                                                     rwstatemap_create_page_fn,
                                                     error);
         if (picotm_error_is_set(error)) {
@@ -318,7 +324,7 @@ rwstatemap_unlock(struct rwstatemap *rwstatemap, unsigned long long length,
     while (length) {
 
         uintptr_t value = picotm_treemap_find_value(&rwstatemap->super,
-                                                    offset,
+                                                    key_bits(offset, RWLOCKMAP_PAGE_NBITS),
                                                     rwstatemap_create_page_fn,
                                                     error);
         if (picotm_error_is_set(error)) {

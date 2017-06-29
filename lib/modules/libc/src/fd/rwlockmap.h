@@ -50,8 +50,7 @@ struct rwlockmap
 };
 
 void
-rwlockmap_init(struct rwlockmap* rwlockmap, unsigned long record_bits,
-               struct picotm_error* error);
+rwlockmap_init(struct rwlockmap* rwlockmap, struct picotm_error* error);
 
 void
 rwlockmap_uninit(struct rwlockmap *rwlockmap);
