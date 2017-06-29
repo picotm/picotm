@@ -109,18 +109,12 @@ ofd_init(struct ofd* ofd, struct picotm_error* error)
 
     ofd->data.regular.offset = 0;
 
-    rwlockmap_init(&ofd->data.regular.rwlockmap, error);
-    if (picotm_error_is_set(error)) {
-        goto err_rwlockmap_init;
-    }
+    rwlockmap_init(&ofd->data.regular.rwlockmap);
 
     pthread_rwlockattr_destroy(&rwlockattr);
 
     return;
 
-err_rwlockmap_init:
-    rwlockmap_uninit(&ofd->data.regular.rwlockmap);
-    picotm_rwlock_uninit(&ofd->rwlock);
 err_pthread_rwlock_init:
 err_pthread_rwlockattr_setkind_np:
     pthread_rwlockattr_destroy(&rwlockattr);

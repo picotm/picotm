@@ -17,8 +17,7 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef RWLOCKMAP_H
-#define RWLOCKMAP_H
+#pragma once
 
 #include <picotm/picotm-lib-rwlock.h>
 #include <picotm/picotm-lib-shared-treemap.h>
@@ -39,25 +38,20 @@ enum {
     RWLOCKMAP_PAGE_MASK     = RWLOCKMAP_PAGE_NENTRIES - 1
 };
 
-struct rwlockmap_page
-{
+struct rwlockmap_page {
     struct picotm_rwlock lock[RWLOCKMAP_PAGE_NENTRIES];
 };
 
-struct rwlockmap
-{
+struct rwlockmap {
     struct picotm_shared_treemap pagemap;
 };
 
 void
-rwlockmap_init(struct rwlockmap* rwlockmap, struct picotm_error* error);
+rwlockmap_init(struct rwlockmap* self);
 
 void
-rwlockmap_uninit(struct rwlockmap *rwlockmap);
+rwlockmap_uninit(struct rwlockmap* self);
 
 struct rwlockmap_page*
-rwlockmap_lookup_page(struct rwlockmap* rwlockmap, unsigned long long offset,
-                      struct picotm_error* error);
-
-#endif
-
+rwlockmap_find_page(struct rwlockmap* self, unsigned long long record_offset,
+                    struct picotm_error* error);
