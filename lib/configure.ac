@@ -61,6 +61,8 @@ AC_HEADER_ASSERT
 
 AC_CHECK_HEADERS([sys/cdefs.h])
 
+AC_FUNC_ALLOCA
+
 
 dnl
 dnl Picotm compile-time variables
