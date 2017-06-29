@@ -60,8 +60,6 @@ libpicotm_c_la_SOURCES = allocator/allocator_tx.c \
                          fd/openop.h \
                          fd/openoptab.c \
                          fd/openoptab.h \
-                         fd/pgtreess.c \
-                         fd/pgtreess.h \
                          fd/pipeop.c \
                          fd/pipeop.h \
                          fd/pipeoptab.c \
