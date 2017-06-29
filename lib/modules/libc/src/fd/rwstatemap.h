@@ -17,8 +17,7 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef RWSTATEMAP_H
-#define RWSTATEMAP_H
+#pragma once
 
 #include <picotm/picotm-lib-treemap.h>
 #include <stdbool.h>
@@ -33,38 +32,30 @@
 
 struct rwlockmap;
 
-struct rwstatemap
-{
+struct rwstatemap {
     struct picotm_treemap super;
 };
 
 void
-rwstatemap_init(struct rwstatemap *rwstatemap);
+rwstatemap_init(struct rwstatemap* self);
 
 void
-rwstatemap_uninit(struct rwstatemap *rwstatemap);
+rwstatemap_uninit(struct rwstatemap* self);
 
 bool
-rwstatemap_rdlock(struct rwstatemap *rwstatemap, unsigned long long length,
-                                                 unsigned long long offset,
-                                                 struct rwlockmap *rwlockmap,
-                                                 struct picotm_error* error);
+rwstatemap_rdlock(struct rwstatemap* self, unsigned long long record_length,
+                                           unsigned long long record_offset,
+                                           struct rwlockmap* rwlockmap,
+                                           struct picotm_error* error);
 
 bool
-rwstatemap_wrlock(struct rwstatemap *rwstatemap, unsigned long long length,
-                                                 unsigned long long offset,
-                                                 struct rwlockmap *rwlockmap,
-                                                 struct picotm_error* error);
+rwstatemap_wrlock(struct rwstatemap* self, unsigned long long record_length,
+                                           unsigned long long record_offset,
+                                           struct rwlockmap* rwlockmap,
+                                           struct picotm_error* error);
 
 void
-rwstatemap_unlock(struct rwstatemap *rwstatemap, unsigned long long length,
-                                                 unsigned long long offset,
-                                                 struct rwlockmap *rwlockmap,
-                                                 struct picotm_error* error);
-
-/*int
-rwstatemap_unlock_all(struct rwstatemap *rwstatemap,
-                      struct rwlockmap *rwlockmap);*/
-
-#endif
-
+rwstatemap_unlock(struct rwstatemap* self, unsigned long long record_length,
+                                           unsigned long long record_offset,
+                                           struct rwlockmap *rwlockmap,
+                                           struct picotm_error* error);
