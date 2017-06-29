@@ -114,12 +114,14 @@ rwstatemap_init(struct rwstatemap* rwstatemap)
 {
     assert(rwstatemap);
 
-    pgtreess_init(&rwstatemap->super);
+    picotm_treemap_init(&rwstatemap->super, RWLOCKMAP_PAGE_NBITS);
 }
 
 static void
-rwstatemap_destroy_page_fn(void *statepg)
+rwstatemap_destroy_page_fn(uintptr_t value, struct picotm_treemap* treemap)
 {
+    struct rwstatemap_page* statepg = (struct rwstatemap_page*)value;
+
     rwstatemap_page_uninit(statepg);
     free(statepg);
 }
@@ -129,21 +131,23 @@ rwstatemap_uninit(struct rwstatemap *rwstatemap)
 {
     assert(rwstatemap);
 
-    pgtreess_uninit(&rwstatemap->super, rwstatemap_destroy_page_fn);
+    picotm_treemap_uninit(&rwstatemap->super, rwstatemap_destroy_page_fn);
 }
 
-static void*
-rwstatemap_create_page_fn(struct picotm_error* error)
+static uintptr_t
+rwstatemap_create_page_fn(unsigned long long offset,
+                          struct picotm_treemap* treemap,
+                          struct picotm_error* error)
 {
     struct rwstatemap_page* statepg = malloc(sizeof(*statepg));
     if (!statepg) {
         picotm_error_set_errno(error, errno);
-        return NULL;
+        return 0;
     }
 
     rwstatemap_page_init(statepg);
 
-    return statepg;
+    return (uintptr_t)statepg;
 }
 
 bool
@@ -162,13 +166,14 @@ rwstatemap_rdlock(struct rwstatemap* rwstatemap,
 
     while (length) {
 
-        struct rwstatemap_page *statepg = pgtreess_lookup_page(&rwstatemap->super,
-                                                               offset,
-                                                               rwstatemap_create_page_fn,
-                                                               error);
+        uintptr_t value = picotm_treemap_find_value(&rwstatemap->super,
+                                                    offset,
+                                                    rwstatemap_create_page_fn,
+                                                    error);
         if (picotm_error_is_set(error)) {
             goto doreturn;
         }
+        struct rwstatemap_page* statepg = (struct rwstatemap_page*)value;
 
         struct rwlockmap_page* lockpg =
             rwstatemap_page_get_global_page(statepg, offset, rwlockmap, error);
@@ -239,13 +244,14 @@ rwstatemap_wrlock(struct rwstatemap* rwstatemap,
 
     while (length) {
 
-        struct rwstatemap_page* statepg =
-            pgtreess_lookup_page(&rwstatemap->super, offset,
-                                 rwstatemap_create_page_fn, error);
-
+        uintptr_t value = picotm_treemap_find_value(&rwstatemap->super,
+                                                    offset,
+                                                    rwstatemap_create_page_fn,
+                                                    error);
         if (picotm_error_is_set(error)) {
             goto doreturn;
         }
+        struct rwstatemap_page* statepg = (struct rwstatemap_page*)value;
 
         struct rwlockmap_page* lockpg =
             rwstatemap_page_get_global_page(statepg, offset, rwlockmap, error);
@@ -311,13 +317,14 @@ rwstatemap_unlock(struct rwstatemap *rwstatemap, unsigned long long length,
 
     while (length) {
 
-        struct rwstatemap_page* statepg
-            = pgtreess_lookup_page(&rwstatemap->super, offset,
-                                   rwstatemap_create_page_fn,
-                                   error);
+        uintptr_t value = picotm_treemap_find_value(&rwstatemap->super,
+                                                    offset,
+                                                    rwstatemap_create_page_fn,
+                                                    error);
         if (picotm_error_is_set(error)) {
             return;
         }
+        struct rwstatemap_page* statepg = (struct rwstatemap_page*)value;
 
         struct rwlockmap_page* lockpg =
             rwstatemap_page_get_global_page(statepg, offset, rwlockmap, error);
@@ -358,11 +365,14 @@ rwstatemap_unlock(struct rwstatemap *rwstatemap, unsigned long long length,
 }
 
 static void
-rwstatemap_for_each_page_unlock_regions(void *statepg,
+rwstatemap_for_each_page_unlock_regions(uintptr_t value,
                                         unsigned long long offset,
-                                        void *rwlockmap,
+                                        struct picotm_treemap* treemap,
+                                        void* rwlockmap,
                                         struct picotm_error* error)
 {
+    struct rwstatemap_page* statepg = (struct rwstatemap_page*)value;
+
     rwstatemap_page_unlock_regions(statepg, offset, rwlockmap, error);
 }
 
@@ -371,8 +381,8 @@ rwstatemap_unlock_all(struct rwstatemap* rwstatemap,
                       struct rwlockmap* rwlockmap,
                       struct picotm_error* error)
 {
-    pgtreess_for_each_page(&rwstatemap->super,
-                           rwstatemap_for_each_page_unlock_regions,
-                           rwlockmap,
-                           error);
+    picotm_treemap_for_each_value(&rwstatemap->super,
+                                  rwlockmap,
+                                  rwstatemap_for_each_page_unlock_regions,
+                                  error);
 }

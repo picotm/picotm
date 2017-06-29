@@ -20,8 +20,8 @@
 #ifndef RWSTATEMAP_H
 #define RWSTATEMAP_H
 
+#include <picotm/picotm-lib-treemap.h>
 #include <stdbool.h>
-#include "pgtreess.h"
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -35,7 +35,7 @@ struct rwlockmap;
 
 struct rwstatemap
 {
-    struct pgtreess super;
+    struct picotm_treemap super;
 };
 
 void
