@@ -155,6 +155,57 @@ key_bits(unsigned long long offset, unsigned long page_nbits)
     return offset >> page_nbits;
 }
 
+void
+rwstatemap_for_each_record_in_range(struct rwstatemap* self,
+                                    unsigned long long record_length,
+                                    unsigned long long record_offset,
+                                    struct rwlockmap* rwlockmap,
+                                    void (*call_record)(unsigned long*,
+                                                        const unsigned long*,
+                                                        struct picotm_rwlock*,
+                                                        struct picotm_error*),
+                                    struct picotm_error* error)
+{
+    assert(self);
+
+    while (record_length) {
+
+        uintptr_t value = picotm_treemap_find_value(&self->super,
+                                                    key_bits(record_offset, RWLOCKMAP_PAGE_NBITS),
+                                                    rwstatemap_create_page_fn,
+                                                    error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
+        struct rwstatemap_page* statepg = (struct rwstatemap_page*)value;
+
+        struct rwlockmap_page* lockpg =
+            rwstatemap_page_get_global_page(statepg, record_offset, rwlockmap, error);
+
+        if (picotm_error_is_set(error)) {
+            return;
+        }
+
+        /* compute next slice */
+
+        unsigned long long pgoffset = record_offset % RWLOCKMAP_PAGE_NENTRIES;
+        unsigned long long diff = llmin(record_length,
+                                        RWLOCKMAP_PAGE_NENTRIES - pgoffset);
+
+        record_length -= diff;
+        record_offset += diff;
+
+        /* execute call-back */
+
+        call_record(statepg->state + pgoffset,
+                    statepg->state + pgoffset + diff,
+                    lockpg->lock + pgoffset, error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
+    }
+}
+
 static void
 rdlock_records(unsigned long* state_beg, const unsigned long* state_end,
                struct picotm_rwlock* lock_beg, struct picotm_error* error)
@@ -174,6 +225,20 @@ rdlock_records(unsigned long* state_beg, const unsigned long* state_end,
         *state_beg = ((*state_beg) & RWSTATE_WRITTEN) |
                     (((*state_beg) & RWSTATE_COUNTER) + 1);
     }
+}
+
+bool
+rwstatemap_rdlock(struct rwstatemap* self,
+                  unsigned long long record_length,
+                  unsigned long long record_offset,
+                  struct rwlockmap* rwlockmap, struct picotm_error* error)
+{
+    rwstatemap_for_each_record_in_range(self, record_length, record_offset,
+                                        rwlockmap, rdlock_records, error);
+    if (picotm_error_is_set(error)) {
+        return false;
+    }
+    return true;
 }
 
 static void
@@ -198,6 +263,20 @@ wrlock_records(unsigned long* state_beg, const unsigned long* state_end,
     }
 }
 
+bool
+rwstatemap_wrlock(struct rwstatemap* self,
+                  unsigned long long record_length,
+                  unsigned long long record_offset,
+                  struct rwlockmap* rwlockmap, struct picotm_error* error)
+{
+    rwstatemap_for_each_record_in_range(self, record_length, record_offset,
+                                        rwlockmap, wrlock_records, error);
+    if (picotm_error_is_set(error)) {
+        return false;
+    }
+    return true;
+}
+
 static void
 unlock_records(unsigned long* state_beg, const unsigned long* state_end,
                struct picotm_rwlock* lock_beg, struct picotm_error* error)
@@ -219,154 +298,16 @@ unlock_records(unsigned long* state_beg, const unsigned long* state_end,
     }
 }
 
-bool
-rwstatemap_rdlock(struct rwstatemap* self,
-                  unsigned long long record_length,
-                  unsigned long long record_offset,
-                  struct rwlockmap* rwlockmap, struct picotm_error* error)
-{
-    assert(self);
-
-    bool succ = false;
-
-    while (record_length) {
-
-        uintptr_t value = picotm_treemap_find_value(&self->super,
-                                                    key_bits(record_offset, RWLOCKMAP_PAGE_NBITS),
-                                                    rwstatemap_create_page_fn,
-                                                    error);
-        if (picotm_error_is_set(error)) {
-            goto doreturn;
-        }
-        struct rwstatemap_page* statepg = (struct rwstatemap_page*)value;
-
-        struct rwlockmap_page* lockpg =
-            rwstatemap_page_get_global_page(statepg, record_offset, rwlockmap, error);
-
-        if (picotm_error_is_set(error)) {
-            goto doreturn;
-        }
-
-        /* compute next slice */
-
-        unsigned long long pgoffset = record_offset % RWLOCKMAP_PAGE_NENTRIES;
-        unsigned long long diff = llmin(record_length,
-                                        RWLOCKMAP_PAGE_NENTRIES - pgoffset);
-
-        record_length -= diff;
-        record_offset += diff;
-
-        /* read-lock records */
-
-        rdlock_records(statepg->state + pgoffset,
-                       statepg->state + pgoffset + diff,
-                       lockpg->lock + pgoffset, error);
-        if (picotm_error_is_set(error)) {
-            goto doreturn;
-        }
-    }
-
-    succ = true;
-
-doreturn:
-    return succ;
-}
-
-bool
-rwstatemap_wrlock(struct rwstatemap* self,
-                  unsigned long long record_length,
-                  unsigned long long record_offset,
-                  struct rwlockmap* rwlockmap, struct picotm_error* error)
-{
-    assert(self);
-
-    bool succ = false;
-
-    while (record_length) {
-
-        uintptr_t value = picotm_treemap_find_value(&self->super,
-                                                    key_bits(record_offset, RWLOCKMAP_PAGE_NBITS),
-                                                    rwstatemap_create_page_fn,
-                                                    error);
-        if (picotm_error_is_set(error)) {
-            goto doreturn;
-        }
-        struct rwstatemap_page* statepg = (struct rwstatemap_page*)value;
-
-        struct rwlockmap_page* lockpg =
-            rwstatemap_page_get_global_page(statepg, record_offset, rwlockmap, error);
-
-        if (picotm_error_is_set(error)) {
-            goto doreturn;
-        }
-
-        /* compute next slice */
-
-        unsigned long long pgoffset = record_offset % RWLOCKMAP_PAGE_NENTRIES;
-        unsigned long long diff = llmin(record_length,
-                                        RWLOCKMAP_PAGE_NENTRIES - pgoffset);
-
-        record_length -= diff;
-        record_offset += diff;
-
-        /* write-lock records */
-
-        wrlock_records(statepg->state + pgoffset,
-                       statepg->state + pgoffset + diff,
-                       lockpg->lock + pgoffset, error);
-        if (picotm_error_is_set(error)) {
-            goto doreturn;
-        }
-    }
-
-    succ = true;
-
-doreturn:
-    return succ;
-}
-
 void
 rwstatemap_unlock(struct rwstatemap* self, unsigned long long record_length,
                                            unsigned long long record_offset,
                                            struct rwlockmap* rwlockmap,
                                            struct picotm_error* error)
 {
-    assert(self);
-
-    while (record_length) {
-
-        uintptr_t value = picotm_treemap_find_value(&self->super,
-                                                    key_bits(record_offset, RWLOCKMAP_PAGE_NBITS),
-                                                    rwstatemap_create_page_fn,
-                                                    error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-        struct rwstatemap_page* statepg = (struct rwstatemap_page*)value;
-
-        struct rwlockmap_page* lockpg =
-            rwstatemap_page_get_global_page(statepg, record_offset, rwlockmap, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-
-        /* compute next slice */
-
-        unsigned long long pgoffset = record_offset % RWLOCKMAP_PAGE_NENTRIES;
-        unsigned long long diff = llmin(record_length,
-                                        RWLOCKMAP_PAGE_NENTRIES - pgoffset);
-
-        record_length -= diff;
-        record_offset += diff;
-
-        /* unlock records */
-
-        unlock_records(statepg->state + pgoffset,
-                       statepg->state + pgoffset + diff,
-                       lockpg->lock + pgoffset, error);
-        if (picotm_error_is_set(error)) {
-            break;
-        }
+    rwstatemap_for_each_record_in_range(self, record_length, record_offset,
+                                        rwlockmap, unlock_records, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 }
 
