@@ -155,6 +155,70 @@ key_bits(unsigned long long offset, unsigned long page_nbits)
     return offset >> page_nbits;
 }
 
+static void
+rdlock_records(unsigned long* state_beg, const unsigned long* state_end,
+               struct picotm_rwlock* lock_beg, struct picotm_error* error)
+{
+    for (; state_beg < state_end; ++state_beg, ++lock_beg) {
+
+        if ( !((*state_beg) & RWSTATE_COUNTER) ) {
+
+            /* not yet read-locked */
+
+            picotm_rwlock_try_rdlock(lock_beg, error);
+            if (picotm_error_is_set(error)) {
+                return;
+            }
+        }
+
+        *state_beg = ((*state_beg) & RWSTATE_WRITTEN) |
+                    (((*state_beg) & RWSTATE_COUNTER) + 1);
+    }
+}
+
+static void
+wrlock_records(unsigned long* state_beg, const unsigned long* state_end,
+               struct picotm_rwlock* lock_beg, struct picotm_error* error)
+{
+    for (; state_beg < state_end; ++state_beg, ++lock_beg) {
+
+        if ( !((*state_beg) & RWSTATE_WRITTEN) ) {
+
+            /* not yet write-locked */
+
+            bool upgrade = !!((*state_beg) & RWSTATE_COUNTER);
+
+            picotm_rwlock_try_wrlock(lock_beg, upgrade, error);
+            if (picotm_error_is_set(error)) {
+                return;
+            }
+        }
+
+        *state_beg = RWSTATE_WRITTEN | (((*state_beg) & RWSTATE_COUNTER) + 1);
+    }
+}
+
+static void
+unlock_records(unsigned long* state_beg, const unsigned long* state_end,
+               struct picotm_rwlock* lock_beg, struct picotm_error* error)
+{
+    for (; state_beg < state_end; ++state_beg, ++lock_beg) {
+
+        assert((*state_beg) & RWSTATE_COUNTER);
+
+        *state_beg = ((*state_beg) & RWSTATE_WRITTEN) |
+                    (((*state_beg) & RWSTATE_COUNTER) - 1);
+
+        if ( !((*state_beg) & RWSTATE_COUNTER) ) {
+
+            /* last lock of this transaction */
+
+            picotm_rwlock_unlock(lock_beg);
+            *state_beg = 0;
+        }
+    }
+}
+
 bool
 rwstatemap_rdlock(struct rwstatemap* self,
                   unsigned long long record_length,
@@ -194,24 +258,11 @@ rwstatemap_rdlock(struct rwstatemap* self,
 
         /* read-lock records */
 
-        while (diff) {
-
-            if ( !(statepg->state[pgoffset]&RWSTATE_COUNTER) ) {
-
-                /* not yet read-locked */
-
-                picotm_rwlock_try_rdlock(lockpg->lock + pgoffset, error);
-                if (picotm_error_is_set(error)) {
-                    goto doreturn;
-                }
-            }
-
-            statepg->state[pgoffset] =
-                (statepg->state[pgoffset]&RWSTATE_WRITTEN) |
-               ((statepg->state[pgoffset]&RWSTATE_COUNTER) + 1);
-
-            ++pgoffset;
-            --diff;
+        rdlock_records(statepg->state + pgoffset,
+                       statepg->state + pgoffset + diff,
+                       lockpg->lock + pgoffset, error);
+        if (picotm_error_is_set(error)) {
+            goto doreturn;
         }
     }
 
@@ -260,25 +311,11 @@ rwstatemap_wrlock(struct rwstatemap* self,
 
         /* write-lock records */
 
-        while (diff) {
-
-            if ( !(statepg->state[pgoffset] & RWSTATE_WRITTEN) ) {
-
-                /* not yet write-locked */
-
-                bool upgrade = !!(statepg->state[pgoffset] & RWSTATE_COUNTER);
-
-                picotm_rwlock_try_wrlock(lockpg->lock + pgoffset, upgrade, error);
-                if (picotm_error_is_set(error)) {
-                    goto doreturn;
-                }
-            }
-
-            statepg->state[pgoffset] = RWSTATE_WRITTEN
-                | ((statepg->state[pgoffset]&RWSTATE_COUNTER) + 1);
-
-            ++pgoffset;
-            --diff;
+        wrlock_records(statepg->state + pgoffset,
+                       statepg->state + pgoffset + diff,
+                       lockpg->lock + pgoffset, error);
+        if (picotm_error_is_set(error)) {
+            goto doreturn;
         }
     }
 
@@ -324,23 +361,11 @@ rwstatemap_unlock(struct rwstatemap* self, unsigned long long record_length,
 
         /* unlock records */
 
-        while (diff) {
-
-            assert(statepg->state[pgoffset]&RWSTATE_COUNTER);
-
-            statepg->state[pgoffset] =
-                (statepg->state[pgoffset]&RWSTATE_WRITTEN) |
-               ((statepg->state[pgoffset]&RWSTATE_COUNTER) - 1);
-
-            if ( !(statepg->state[pgoffset]&RWSTATE_COUNTER) ) {
-                /* last lock of this transaction */
-
-                picotm_rwlock_unlock(lockpg->lock + pgoffset);
-                statepg->state[pgoffset] = 0;
-            }
-
-            ++pgoffset;
-            --diff;
+        unlock_records(statepg->state + pgoffset,
+                       statepg->state + pgoffset + diff,
+                       lockpg->lock + pgoffset, error);
+        if (picotm_error_is_set(error)) {
+            break;
         }
     }
 }
