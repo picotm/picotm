@@ -161,11 +161,6 @@ rwstatemap_rdlock(struct rwstatemap* self,
                   unsigned long long record_offset,
                   struct rwlockmap* rwlockmap, struct picotm_error* error)
 {
-    unsigned long long lockedlength, lockedoffset;
-
-    lockedlength = 0;
-    lockedoffset = record_offset;
-
     assert(self);
 
     bool succ = false;
@@ -215,7 +210,6 @@ rwstatemap_rdlock(struct rwstatemap* self,
                 (statepg->state[pgoffset]&RWSTATE_WRITTEN) |
                ((statepg->state[pgoffset]&RWSTATE_COUNTER) + 1);
 
-            ++lockedlength;
             ++pgoffset;
             --diff;
         }
@@ -224,13 +218,6 @@ rwstatemap_rdlock(struct rwstatemap* self,
     succ = true;
 
 doreturn:
-
-    if (!succ) {
-        /* unlock all locked records if error occured */
-        rwstatemap_unlock(self, lockedlength, lockedoffset,
-                          rwlockmap, error);
-    }
-
     return succ;
 }
 
@@ -240,12 +227,7 @@ rwstatemap_wrlock(struct rwstatemap* self,
                   unsigned long long record_offset,
                   struct rwlockmap* rwlockmap, struct picotm_error* error)
 {
-    unsigned long long lockedlength, lockedoffset;
-
     assert(self);
-
-    lockedlength = 0;
-    lockedoffset = record_offset;
 
     bool succ = false;
 
@@ -295,7 +277,6 @@ rwstatemap_wrlock(struct rwstatemap* self,
             statepg->state[pgoffset] = RWSTATE_WRITTEN
                 | ((statepg->state[pgoffset]&RWSTATE_COUNTER) + 1);
 
-            ++lockedlength;
             ++pgoffset;
             --diff;
         }
@@ -304,13 +285,6 @@ rwstatemap_wrlock(struct rwstatemap* self,
     succ = true;
 
 doreturn:
-
-    if (!succ) {
-        /* unlock all locked records if error occured */
-        rwstatemap_unlock(self, lockedlength, lockedoffset,
-                          rwlockmap, error);
-    }
-
     return succ;
 }
 
