@@ -155,13 +155,30 @@ key_bits(unsigned long long offset, unsigned long page_nbits)
     return offset >> page_nbits;
 }
 
+static unsigned long*
+call_records(unsigned long* state_beg, const unsigned long* state_end,
+             struct picotm_rwlock* lock_beg,
+             void (*call_record)(unsigned long*, struct picotm_rwlock*,
+                                 struct picotm_error*),
+             struct picotm_error* error)
+{
+    for (; state_beg < state_end; ++state_beg, ++lock_beg) {
+
+        call_record(state_beg, lock_beg, error);
+        if (picotm_error_is_set(error)) {
+            return state_beg;
+        }
+    }
+
+    return state_beg;
+}
+
 void
 rwstatemap_for_each_record_in_range(struct rwstatemap* self,
                                     unsigned long long record_length,
                                     unsigned long long record_offset,
                                     struct rwlockmap* rwlockmap,
                                     void (*call_record)(unsigned long*,
-                                                        const unsigned long*,
                                                         struct picotm_rwlock*,
                                                         struct picotm_error*),
                                     struct picotm_error* error)
@@ -197,9 +214,9 @@ rwstatemap_for_each_record_in_range(struct rwstatemap* self,
 
         /* execute call-back */
 
-        call_record(statepg->state + pgoffset,
-                    statepg->state + pgoffset + diff,
-                    lockpg->lock + pgoffset, error);
+        call_records(statepg->state + pgoffset,
+                     statepg->state + pgoffset + diff,
+                     lockpg->lock + pgoffset, call_record, error);
         if (picotm_error_is_set(error)) {
             return;
         }
@@ -207,24 +224,20 @@ rwstatemap_for_each_record_in_range(struct rwstatemap* self,
 }
 
 static void
-rdlock_records(unsigned long* state_beg, const unsigned long* state_end,
-               struct picotm_rwlock* lock_beg, struct picotm_error* error)
+rdlock_record(unsigned long* state, struct picotm_rwlock* lock,
+              struct picotm_error* error)
 {
-    for (; state_beg < state_end; ++state_beg, ++lock_beg) {
+    if ( !((*state) & RWSTATE_COUNTER) ) {
 
-        if ( !((*state_beg) & RWSTATE_COUNTER) ) {
+        /* not yet read-locked */
 
-            /* not yet read-locked */
-
-            picotm_rwlock_try_rdlock(lock_beg, error);
-            if (picotm_error_is_set(error)) {
-                return;
-            }
+        picotm_rwlock_try_rdlock(lock, error);
+        if (picotm_error_is_set(error)) {
+            return;
         }
-
-        *state_beg = ((*state_beg) & RWSTATE_WRITTEN) |
-                    (((*state_beg) & RWSTATE_COUNTER) + 1);
     }
+
+    *state = ((*state) & RWSTATE_WRITTEN) | (((*state) & RWSTATE_COUNTER) + 1);
 }
 
 bool
@@ -234,7 +247,7 @@ rwstatemap_rdlock(struct rwstatemap* self,
                   struct rwlockmap* rwlockmap, struct picotm_error* error)
 {
     rwstatemap_for_each_record_in_range(self, record_length, record_offset,
-                                        rwlockmap, rdlock_records, error);
+                                        rwlockmap, rdlock_record, error);
     if (picotm_error_is_set(error)) {
         return false;
     }
@@ -242,25 +255,22 @@ rwstatemap_rdlock(struct rwstatemap* self,
 }
 
 static void
-wrlock_records(unsigned long* state_beg, const unsigned long* state_end,
-               struct picotm_rwlock* lock_beg, struct picotm_error* error)
+wrlock_record(unsigned long* state, struct picotm_rwlock* lock,
+              struct picotm_error* error)
 {
-    for (; state_beg < state_end; ++state_beg, ++lock_beg) {
+    if ( !((*state) & RWSTATE_WRITTEN) ) {
 
-        if ( !((*state_beg) & RWSTATE_WRITTEN) ) {
+        /* not yet write-locked */
 
-            /* not yet write-locked */
+        bool upgrade = !!((*state) & RWSTATE_COUNTER);
 
-            bool upgrade = !!((*state_beg) & RWSTATE_COUNTER);
-
-            picotm_rwlock_try_wrlock(lock_beg, upgrade, error);
-            if (picotm_error_is_set(error)) {
-                return;
-            }
+        picotm_rwlock_try_wrlock(lock, upgrade, error);
+        if (picotm_error_is_set(error)) {
+            return;
         }
-
-        *state_beg = RWSTATE_WRITTEN | (((*state_beg) & RWSTATE_COUNTER) + 1);
     }
+
+    *state = RWSTATE_WRITTEN | (((*state) & RWSTATE_COUNTER) + 1);
 }
 
 bool
@@ -270,7 +280,7 @@ rwstatemap_wrlock(struct rwstatemap* self,
                   struct rwlockmap* rwlockmap, struct picotm_error* error)
 {
     rwstatemap_for_each_record_in_range(self, record_length, record_offset,
-                                        rwlockmap, wrlock_records, error);
+                                        rwlockmap, wrlock_record, error);
     if (picotm_error_is_set(error)) {
         return false;
     }
@@ -278,23 +288,18 @@ rwstatemap_wrlock(struct rwstatemap* self,
 }
 
 static void
-unlock_records(unsigned long* state_beg, const unsigned long* state_end,
-               struct picotm_rwlock* lock_beg, struct picotm_error* error)
+unlock_record(unsigned long* state, struct picotm_rwlock* lock,
+               struct picotm_error* error)
 {
-    for (; state_beg < state_end; ++state_beg, ++lock_beg) {
+    assert((*state) & RWSTATE_COUNTER);
 
-        assert((*state_beg) & RWSTATE_COUNTER);
+    *state = ((*state) & RWSTATE_WRITTEN) | (((*state) & RWSTATE_COUNTER) - 1);
 
-        *state_beg = ((*state_beg) & RWSTATE_WRITTEN) |
-                    (((*state_beg) & RWSTATE_COUNTER) - 1);
+    if ( !((*state) & RWSTATE_COUNTER) ) {
 
-        if ( !((*state_beg) & RWSTATE_COUNTER) ) {
-
-            /* last lock of this transaction */
-
-            picotm_rwlock_unlock(lock_beg);
-            *state_beg = 0;
-        }
+        /* last lock of this transaction; unlock */
+        picotm_rwlock_unlock(lock);
+        *state = 0;
     }
 }
 
@@ -305,7 +310,7 @@ rwstatemap_unlock(struct rwstatemap* self, unsigned long long record_length,
                                            struct picotm_error* error)
 {
     rwstatemap_for_each_record_in_range(self, record_length, record_offset,
-                                        rwlockmap, unlock_records, error);
+                                        rwlockmap, unlock_record, error);
     if (picotm_error_is_set(error)) {
         return;
     }
