@@ -75,6 +75,60 @@ rwstatemap_page_get_global_page(struct rwstatemap_page* self,
     return self->lockpg;
 }
 
+static unsigned long*
+call_records(unsigned long* state_beg, const unsigned long* state_end,
+             struct picotm_rwlock* lock_beg,
+             void (*call_record)(unsigned long*, struct picotm_rwlock*,
+                                 struct picotm_error*),
+             struct picotm_error* error)
+{
+    for (; state_beg < state_end; ++state_beg, ++lock_beg) {
+
+        call_record(state_beg, lock_beg, error);
+        if (picotm_error_is_set(error)) {
+            return state_beg;
+        }
+    }
+
+    return state_beg;
+}
+
+static unsigned long long
+rwstatemap_page_for_each_record_in_range(struct rwstatemap_page* self,
+                                         unsigned long long record_length,
+                                         unsigned long long record_offset,
+                                         struct rwlockmap* rwlockmap,
+                                         void (*call_record)(unsigned long*,
+                                                             struct picotm_rwlock*,
+                                                             struct picotm_error*),
+                                         struct picotm_error* error)
+{
+    struct rwlockmap_page* lockpg =
+        rwstatemap_page_get_global_page(self, record_offset,
+                                        rwlockmap, error);
+    if (picotm_error_is_set(error)) {
+        return 0;
+    }
+
+    /* compute record range within page */
+
+    unsigned long long offset = record_offset % RWLOCKMAP_PAGE_NENTRIES;
+    unsigned long long length = llmin(record_length,
+                                      RWLOCKMAP_PAGE_NENTRIES - offset);
+
+    /* execute call-back */
+
+    const unsigned long* end = call_records(self->state + offset,
+                                            self->state + offset + length,
+                                            lockpg->lock + offset,
+                                            call_record, error);
+    if (picotm_error_is_set(error)) {
+        return end - (self->state + offset);
+    }
+
+    return end - (self->state + offset);
+}
+
 static void
 rwstatemap_page_unlock_regions(struct rwstatemap_page* self,
                                unsigned long long offset,
@@ -155,24 +209,6 @@ key_bits(unsigned long long offset, unsigned long page_nbits)
     return offset >> page_nbits;
 }
 
-static unsigned long*
-call_records(unsigned long* state_beg, const unsigned long* state_end,
-             struct picotm_rwlock* lock_beg,
-             void (*call_record)(unsigned long*, struct picotm_rwlock*,
-                                 struct picotm_error*),
-             struct picotm_error* error)
-{
-    for (; state_beg < state_end; ++state_beg, ++lock_beg) {
-
-        call_record(state_beg, lock_beg, error);
-        if (picotm_error_is_set(error)) {
-            return state_beg;
-        }
-    }
-
-    return state_beg;
-}
-
 void
 rwstatemap_for_each_record_in_range(struct rwstatemap* self,
                                     unsigned long long record_length,
@@ -196,30 +232,19 @@ rwstatemap_for_each_record_in_range(struct rwstatemap* self,
         }
         struct rwstatemap_page* statepg = (struct rwstatemap_page*)value;
 
-        struct rwlockmap_page* lockpg =
-            rwstatemap_page_get_global_page(statepg, record_offset, rwlockmap, error);
-
+        unsigned long long diff =
+            rwstatemap_page_for_each_record_in_range(statepg,
+                                                     record_length,
+                                                     record_offset,
+                                                     rwlockmap,
+                                                     call_record,
+                                                     error);
         if (picotm_error_is_set(error)) {
             return;
         }
-
-        /* compute next slice */
-
-        unsigned long long pgoffset = record_offset % RWLOCKMAP_PAGE_NENTRIES;
-        unsigned long long diff = llmin(record_length,
-                                        RWLOCKMAP_PAGE_NENTRIES - pgoffset);
 
         record_length -= diff;
         record_offset += diff;
-
-        /* execute call-back */
-
-        call_records(statepg->state + pgoffset,
-                     statepg->state + pgoffset + diff,
-                     lockpg->lock + pgoffset, call_record, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
     }
 }
 
