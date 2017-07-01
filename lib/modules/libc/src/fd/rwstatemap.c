@@ -21,6 +21,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <picotm/picotm-error.h>
+#include <picotm/picotm-lib-ptr.h>
 #include <stdlib.h>
 #include <string.h>
 #include "range.h"
@@ -127,35 +128,6 @@ rwstatemap_page_for_each_record_in_range(struct rwstatemap_page* self,
     }
 
     return end - (self->state + offset);
-}
-
-static void
-rwstatemap_page_unlock_regions(struct rwstatemap_page* self,
-                               unsigned long long offset,
-                               struct rwlockmap* rwlockmap,
-                               struct picotm_error* error)
-{
-    unsigned long long pgoffset;
-
-    assert(self);
-
-    struct rwlockmap_page* lockpg = rwstatemap_page_get_global_page(self,
-                                                                    offset,
-                                                                    rwlockmap,
-                                                                    error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
-
-    for (pgoffset = 0; pgoffset < RWLOCKMAP_PAGE_NENTRIES; ++pgoffset) {
-
-        if (!(self->state[pgoffset] & RWSTATE_COUNTER)) {
-            continue;
-        }
-
-        picotm_rwlock_unlock(lockpg->lock + pgoffset);
-        self->state[pgoffset] = 0;
-    }
 }
 
 /*
@@ -348,9 +320,15 @@ rwstatemap_for_each_page_unlock_regions(uintptr_t value,
                                         void* rwlockmap,
                                         struct picotm_error* error)
 {
-    struct rwstatemap_page* statepg = (struct rwstatemap_page*)value;
+    struct rwstatemap* statemap =
+        picotm_containerof(treemap, struct rwstatemap, super);
 
-    rwstatemap_page_unlock_regions(statepg, offset, rwlockmap, error);
+    rwstatemap_for_each_record_in_range(statemap, RWLOCKMAP_PAGE_NENTRIES,
+                                        offset, rwlockmap, unlock_record,
+                                        error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
 }
 
 void
