@@ -19,6 +19,7 @@
 nobase_include_HEADERS = picotm/compiler.h \
                          picotm/picotm-error.h \
                          picotm/picotm-lib-array.h \
+                         picotm/picotm-lib-ptr.h \
                          picotm/picotm-lib-ref.h \
                          picotm/picotm-lib-rwlock.h \
                          picotm/picotm-lib-shared-treemap.h \
