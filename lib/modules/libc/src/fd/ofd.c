@@ -28,7 +28,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include "rwstatemap.h"
+#include "rwcountermap.h"
 
 #define RECSIZE (1ul << RECBITS)
 
@@ -403,21 +403,21 @@ ofd_2pl_lock_region(struct ofd *ofd,
                     off_t off,
                     size_t nbyte,
                     int write,
-                    struct rwstatemap *rwstatemap,
+                    struct rwcountermap* rwcountermap,
                     struct picotm_error* error)
 {
-    static void (* const lock[])(struct rwstatemap*,
+    static void (* const lock[])(struct rwcountermap*,
                                  unsigned long long,
                                  unsigned long long,
                                  struct rwlockmap*,
                                  struct picotm_error*) = {
-        rwstatemap_rdlock,
-        rwstatemap_wrlock
+        rwcountermap_rdlock,
+        rwcountermap_wrlock
     };
 
     assert(ofd);
 
-    lock[!!write](rwstatemap, reccount(nbyte), recoffset(off),
+    lock[!!write](rwcountermap, reccount(nbyte), recoffset(off),
                   &ofd->data.regular.rwlockmap, error);
 
     if (picotm_error_is_set(error)) {
@@ -428,17 +428,17 @@ ofd_2pl_lock_region(struct ofd *ofd,
 void
 ofd_2pl_unlock_region(struct ofd *ofd, off_t off,
                                        size_t nbyte,
-                                       struct rwstatemap *rwstatemap)
+                                       struct rwcountermap* rwcountermap)
 {
     assert(ofd);
 
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    rwstatemap_unlock(rwstatemap,
-                      reccount(nbyte),
-                      recoffset(off),
-                      &ofd->data.regular.rwlockmap,
-                      &error);
+    rwcountermap_unlock(rwcountermap,
+                        reccount(nbyte),
+                        recoffset(off),
+                        &ofd->data.regular.rwlockmap,
+                        &error);
     if (picotm_error_is_set(&error)) {
         abort();
     }

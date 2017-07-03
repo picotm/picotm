@@ -52,7 +52,7 @@ ofd_tx_2pl_release_locks(struct ofd_tx* self)
         ofd_2pl_unlock_region(self->ofd,
                               region->offset,
                               region->nbyte,
-                              &self->modedata.tpl.rwstatemap);
+                              &self->modedata.tpl.rwcountermap);
         ++region;
     }
 }
@@ -97,7 +97,7 @@ ofd_tx_init(struct ofd_tx* self)
 
     self->modedata.tpl.rwstate = RW_NOLOCK;
 
-    rwstatemap_init(&self->modedata.tpl.rwstatemap);
+    rwcountermap_init(&self->modedata.tpl.rwcountermap);
 
     self->modedata.tpl.locktab = NULL;
     self->modedata.tpl.locktablen = 0;
@@ -110,7 +110,7 @@ ofd_tx_uninit(struct ofd_tx* self)
     assert(self);
 
     free(self->modedata.tpl.locktab);
-    rwstatemap_uninit(&self->modedata.tpl.rwstatemap);
+    rwcountermap_uninit(&self->modedata.tpl.rwcountermap);
 
     fcntloptab_clear(&self->fcntltab, &self->fcntltablen);
     seekoptab_clear(&self->seektab, &self->seektablen);
@@ -412,7 +412,7 @@ ofd_tx_2pl_lock_region(struct ofd_tx* self, size_t nbyte, off_t offset,
                         offset,
                         nbyte,
                         write,
-                        &self->modedata.tpl.rwstatemap,
+                        &self->modedata.tpl.rwcountermap,
                         error);
     if (picotm_error_is_set(error)) {
         return -1;

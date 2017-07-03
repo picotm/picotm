@@ -26,8 +26,8 @@
 #include <sys/types.h>
 #include "fcntlop.h"
 #include "picotm/picotm-libc.h"
+#include "rwcountermap.h"
 #include "rwstate.h"
-#include "rwstatemap.h"
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -101,7 +101,7 @@ struct ofd_tx
             /** State of the local ofd lock */
             enum   rwstate    rwstate;
             /** States of the local region locks */
-            struct rwstatemap rwstatemap;
+            struct rwcountermap rwcountermap;
             /** Table of all locked areas */
             struct region*    locktab;
             size_t            locktablen;
