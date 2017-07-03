@@ -21,24 +21,20 @@
 #include <assert.h>
 #include <errno.h>
 #include <picotm/picotm-error.h>
+#include <picotm/picotm-lib-array.h>
 #include <picotm/picotm-lib-ptr.h>
 #include <stdlib.h>
-#include <string.h>
 #include "range.h"
+#include "rwcounter.h"
 #include "rwlockmap.h"
 
 /*
  * rwstate_page
  */
 
-enum {
-    RWSTATE_WRITTEN = 0x8000000,
-    RWSTATE_COUNTER = 0x7ffffff
-};
-
 struct rwstatemap_page {
     struct rwlockmap_page* lockpg;
-    unsigned long          state[RWLOCKMAP_PAGE_NENTRIES];
+    struct rwcounter       counter[RWLOCKMAP_PAGE_NENTRIES];
 };
 
 static void
@@ -47,7 +43,14 @@ rwstatemap_page_init(struct rwstatemap_page* self)
     assert(self);
 
     self->lockpg = NULL;
-    memset(self->state, 0, sizeof(self->state));
+
+    struct rwcounter* counter_beg = picotm_arraybeg(self->counter);
+    struct rwcounter* counter_end = picotm_arrayend(self->counter);
+
+    while (counter_beg < counter_end) {
+        rwcounter_init(counter_beg);
+        ++counter_beg;
+    }
 }
 
 static void
@@ -76,22 +79,23 @@ rwstatemap_page_get_rwlockmap_page(struct rwstatemap_page* self,
     return self->lockpg;
 }
 
-static unsigned long*
-call_records(unsigned long* state_beg, const unsigned long* state_end,
+static struct rwcounter*
+call_records(struct rwcounter* counter_beg,
+             const struct rwcounter* counter_end,
              struct picotm_rwlock* lock_beg,
-             void (*call_record)(unsigned long*, struct picotm_rwlock*,
+             void (*call_record)(struct rwcounter*, struct picotm_rwlock*,
                                  struct picotm_error*),
              struct picotm_error* error)
 {
-    for (; state_beg < state_end; ++state_beg, ++lock_beg) {
+    for (; counter_beg < counter_end; ++counter_beg, ++lock_beg) {
 
-        call_record(state_beg, lock_beg, error);
+        call_record(counter_beg, lock_beg, error);
         if (picotm_error_is_set(error)) {
-            return state_beg;
+            return counter_beg;
         }
     }
 
-    return state_beg;
+    return counter_beg;
 }
 
 static unsigned long long
@@ -99,7 +103,7 @@ rwstatemap_page_for_each_record_in_range(struct rwstatemap_page* self,
                                          unsigned long long record_length,
                                          unsigned long long record_offset,
                                          struct rwlockmap* rwlockmap,
-                                         void (*call_record)(unsigned long*,
+                                         void (*call_record)(struct rwcounter*,
                                                              struct picotm_rwlock*,
                                                              struct picotm_error*),
                                          struct picotm_error* error)
@@ -119,15 +123,15 @@ rwstatemap_page_for_each_record_in_range(struct rwstatemap_page* self,
 
     /* execute call-back */
 
-    const unsigned long* end = call_records(self->state + offset,
-                                            self->state + offset + length,
-                                            lockpg->lock + offset,
-                                            call_record, error);
+    const struct rwcounter* end = call_records(self->counter + offset,
+                                               self->counter + offset + length,
+                                               lockpg->lock + offset,
+                                               call_record, error);
     if (picotm_error_is_set(error)) {
-        return end - (self->state + offset);
+        return end - (self->counter + offset);
     }
 
-    return end - (self->state + offset);
+    return end - (self->counter + offset);
 }
 
 /*
@@ -186,7 +190,7 @@ rwstatemap_for_each_record_in_range(struct rwstatemap* self,
                                     unsigned long long record_length,
                                     unsigned long long record_offset,
                                     struct rwlockmap* rwlockmap,
-                                    void (*call_record)(unsigned long*,
+                                    void (*call_record)(struct rwcounter*,
                                                         struct picotm_rwlock*,
                                                         struct picotm_error*),
                                     struct picotm_error* error)
@@ -221,20 +225,10 @@ rwstatemap_for_each_record_in_range(struct rwstatemap* self,
 }
 
 static void
-rdlock_record(unsigned long* state, struct picotm_rwlock* lock,
+rdlock_record(struct rwcounter* counter, struct picotm_rwlock* lock,
               struct picotm_error* error)
 {
-    if ( !((*state) & RWSTATE_COUNTER) ) {
-
-        /* not yet read-locked */
-
-        picotm_rwlock_try_rdlock(lock, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-    }
-
-    *state = ((*state) & RWSTATE_WRITTEN) | (((*state) & RWSTATE_COUNTER) + 1);
+    rwcounter_rdlock(counter, lock, error);
 }
 
 bool
@@ -252,22 +246,10 @@ rwstatemap_rdlock(struct rwstatemap* self,
 }
 
 static void
-wrlock_record(unsigned long* state, struct picotm_rwlock* lock,
+wrlock_record(struct rwcounter* counter, struct picotm_rwlock* lock,
               struct picotm_error* error)
 {
-    if ( !((*state) & RWSTATE_WRITTEN) ) {
-
-        /* not yet write-locked */
-
-        bool upgrade = !!((*state) & RWSTATE_COUNTER);
-
-        picotm_rwlock_try_wrlock(lock, upgrade, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-    }
-
-    *state = RWSTATE_WRITTEN | (((*state) & RWSTATE_COUNTER) + 1);
+    rwcounter_wrlock(counter, lock, error);
 }
 
 bool
@@ -285,19 +267,10 @@ rwstatemap_wrlock(struct rwstatemap* self,
 }
 
 static void
-unlock_record(unsigned long* state, struct picotm_rwlock* lock,
-               struct picotm_error* error)
+unlock_record(struct rwcounter* counter, struct picotm_rwlock* lock,
+              struct picotm_error* error)
 {
-    assert((*state) & RWSTATE_COUNTER);
-
-    *state = ((*state) & RWSTATE_WRITTEN) | (((*state) & RWSTATE_COUNTER) - 1);
-
-    if ( !((*state) & RWSTATE_COUNTER) ) {
-
-        /* last lock of this transaction; unlock */
-        picotm_rwlock_unlock(lock);
-        *state = 0;
-    }
+    rwcounter_unlock(counter, lock);
 }
 
 void
