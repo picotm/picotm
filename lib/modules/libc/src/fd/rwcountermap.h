@@ -31,30 +31,33 @@
 
 struct rwlockmap;
 
-struct rwstatemap {
+struct rwcountermap {
     struct picotm_treemap map;
 };
 
 void
-rwstatemap_init(struct rwstatemap* self);
+rwcountermap_init(struct rwcountermap* self);
 
 void
-rwstatemap_uninit(struct rwstatemap* self);
+rwcountermap_uninit(struct rwcountermap* self);
 
 void
-rwstatemap_rdlock(struct rwstatemap* self, unsigned long long record_length,
-                                           unsigned long long record_offset,
-                                           struct rwlockmap* rwlockmap,
-                                           struct picotm_error* error);
+rwcountermap_rdlock(struct rwcountermap* self,
+                    unsigned long long record_length,
+                    unsigned long long record_offset,
+                    struct rwlockmap* rwlockmap,
+                    struct picotm_error* error);
 
 void
-rwstatemap_wrlock(struct rwstatemap* self, unsigned long long record_length,
-                                           unsigned long long record_offset,
-                                           struct rwlockmap* rwlockmap,
-                                           struct picotm_error* error);
+rwcountermap_wrlock(struct rwcountermap* self,
+                    unsigned long long record_length,
+                    unsigned long long record_offset,
+                    struct rwlockmap* rwlockmap,
+                    struct picotm_error* error);
 
 void
-rwstatemap_unlock(struct rwstatemap* self, unsigned long long record_length,
-                                           unsigned long long record_offset,
-                                           struct rwlockmap *rwlockmap,
-                                           struct picotm_error* error);
+rwcountermap_unlock(struct rwcountermap* self,
+                    unsigned long long record_length,
+                    unsigned long long record_offset,
+                    struct rwlockmap *rwlockmap,
+                    struct picotm_error* error);

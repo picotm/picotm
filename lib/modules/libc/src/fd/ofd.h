@@ -41,7 +41,7 @@
 #define OFD_FL_LAST_BIT (2)
 
 struct picotm_error;
-struct rwstatemap;
+struct rwcountermap;
 
 struct ofd
 {
@@ -149,14 +149,14 @@ void
 ofd_2pl_lock_region(struct ofd *ofd, off_t off,
                                      size_t nbyte,
                                      int write,
-                                     struct rwstatemap *rwstatemap,
+                                     struct rwcountermap *rwcountermap,
                                      struct picotm_error* error);
 
 /** \brief Unlocks the underlying file buffer. */
 void
 ofd_2pl_unlock_region(struct ofd *ofd, off_t off,
                                        size_t nbyte,
-                                       struct rwstatemap *rwstatemap);
+                                       struct rwcountermap *rwcountermap);
 
 #endif
 
