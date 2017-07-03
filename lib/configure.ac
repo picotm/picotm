@@ -42,11 +42,10 @@ LIBS="$PTHREAD_LIBS $LIBS"
 dnl Request C11
 AX_CHECK_COMPILE_FLAG([-std=c11], [CFLAGS="$CFLAGS -std=c11"])
 
-
+dnl By default, all symbols are hidden. Public symbols have to
+dnl exported explicitly.
 AX_CHECK_COMPILE_FLAG([-fvisibility=hidden],
-                      [VISIBILITY_CFLAGS="-fvisibility=hidden"],
-                      [VISIBILITY_CFLAGS=""])
-AC_SUBST(VISIBILITY_CFLAGS, [$VISIBILITY_CFLAGS])
+                      [CFLAGS="$CFLAGS -fvisibility=hidden"])
 
 
 dnl

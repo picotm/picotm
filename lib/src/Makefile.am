@@ -37,5 +37,3 @@ libpicotm_la_SOURCES = log.c \
                        tx_shared.h
 
 AM_CPPFLAGS = -I$(srcdir)/../include
-
-AM_CFLAGS = @VISIBILITY_CFLAGS@

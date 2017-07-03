@@ -33,5 +33,3 @@ AM_CPPFLAGS = -I$(top_srcdir)/modules/libm/include \
               -I$(top_srcdir)/modules/libc/include \
               -I$(top_srcdir)/modules/tm/include \
               -I$(top_srcdir)/include
-
-AM_CFLAGS = @VISIBILITY_CFLAGS@

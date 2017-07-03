@@ -106,5 +106,3 @@ libpicotm_c_la_SOURCES = allocator/allocator_tx.c \
 AM_CPPFLAGS = -I$(top_srcdir)/modules/libc/include \
               -I$(top_srcdir)/modules/tm/include \
               -I$(top_srcdir)/include
-
-AM_CFLAGS = @VISIBILITY_CFLAGS@
