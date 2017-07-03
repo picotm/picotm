@@ -22,6 +22,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <picotm/picotm-error.h>
+#include <picotm/picotm-lib-rwstate.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -353,49 +354,35 @@ ofd_unref(struct ofd *ofd)
  */
 
 void
-ofd_rdlock_state(struct ofd *ofd, enum rwstate *rwstate,
+ofd_rdlock_state(struct ofd *ofd, struct picotm_rwstate* rwstate,
                  struct picotm_error* error)
 {
     assert(ofd);
-    assert(rwstate);
 
-    if (!(*rwstate&RW_RDLOCK) && !(*rwstate&RW_WRLOCK)) {
-
-        picotm_rwlock_try_rdlock(&ofd->rwlock, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-        *rwstate = RW_RDLOCK;
+    picotm_rwstate_try_rdlock(rwstate, &ofd->rwlock, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 }
 
 void
-ofd_wrlock_state(struct ofd *ofd, enum rwstate *rwstate,
+ofd_wrlock_state(struct ofd *ofd, struct picotm_rwstate* rwstate,
                  struct picotm_error* error)
 {
     assert(ofd);
-    assert(rwstate);
 
-    if (!(*rwstate&RW_WRLOCK)) {
-
-        picotm_rwlock_try_wrlock(&ofd->rwlock, (*rwstate) & RW_RDLOCK, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-        *rwstate = RW_WRLOCK;
+    picotm_rwstate_try_wrlock(rwstate, &ofd->rwlock, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 }
 
 void
-ofd_rwunlock_state(struct ofd *ofd, enum rwstate *rwstate)
+ofd_rwunlock_state(struct ofd *ofd, struct picotm_rwstate* rwstate)
 {
     assert(ofd);
-    assert(rwstate);
 
-    if (*rwstate & (RW_RDLOCK | RW_WRLOCK)) {
-        picotm_rwlock_unlock(&ofd->rwlock);
-        *rwstate &= ~(RW_RDLOCK | RW_WRLOCK);
-    }
+    picotm_rwstate_unlock(rwstate, &ofd->rwlock);
 }
 
 void

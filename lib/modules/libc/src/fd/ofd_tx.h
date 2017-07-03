@@ -20,6 +20,7 @@
 #pragma once
 
 #include <picotm/picotm-lib-ref.h>
+#include <picotm/picotm-lib-rwstate.h>
 #include <stdatomic.h>
 #include <sys/queue.h>
 #include <sys/socket.h>
@@ -27,7 +28,6 @@
 #include "fcntlop.h"
 #include "picotm/picotm-libc.h"
 #include "rwcountermap.h"
-#include "rwstate.h"
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -99,7 +99,7 @@ struct ofd_tx
     struct {
         struct {
             /** State of the local ofd lock */
-            enum   rwstate    rwstate;
+            struct picotm_rwstate rwstate;
             /** States of the local region locks */
             struct rwcountermap rwcountermap;
             /** Table of all locked areas */

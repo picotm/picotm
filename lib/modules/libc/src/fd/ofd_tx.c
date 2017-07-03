@@ -95,7 +95,7 @@ ofd_tx_init(struct ofd_tx* self)
 
     /* PLP */
 
-    self->modedata.tpl.rwstate = RW_NOLOCK;
+    picotm_rwstate_init(&self->modedata.tpl.rwstate);
 
     rwcountermap_init(&self->modedata.tpl.rwcountermap);
 
@@ -286,7 +286,8 @@ ofd_tx_ref_or_set_up(struct ofd_tx* self, struct ofd* ofd, int fildes,
     self->wrtablen = 0;
     self->wrbuflen = 0;
 
-    self->modedata.tpl.rwstate = RW_NOLOCK;
+    picotm_rwstate_set_status(&self->modedata.tpl.rwstate,
+                              PICOTM_RWSTATE_UNLOCKED);
     self->modedata.tpl.locktablen = 0;
 
     return;
