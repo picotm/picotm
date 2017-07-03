@@ -34,7 +34,6 @@
 #include "dir.h"
 #include "dirtab.h"
 #include "fd.h"
-#include "fdtab.h"
 #include "fifo.h"
 #include "fifotab.h"
 #include "openop.h"
@@ -77,6 +76,8 @@ void
 fildes_tx_init(struct fildes_tx* self, unsigned long module)
 {
     self->module = module;
+
+    fdtab_tx_init(&self->fdtab_tx);
 
     self->fd_tx_max_fildes = 0;
     SLIST_INIT(&self->fd_tx_active_list);
@@ -157,6 +158,8 @@ fildes_tx_uninit(struct fildes_tx* self)
                      ++fd_tx) {
         fd_tx_uninit(fd_tx);
     }
+
+    fdtab_tx_uninit(&self->fdtab_tx);
 
     pipeoptab_clear(&self->pipeoptab, &self->pipeoptablen);
     openoptab_clear(&self->openoptab, &self->openoptablen);
@@ -548,7 +551,7 @@ get_fd_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
         return fd_tx;
     }
 
-    struct fd* fd = fdtab_ref_fildes(fildes, error);
+    struct fd* fd = fdtab_tx_ref_fildes(&self->fdtab_tx, fildes, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
@@ -3120,6 +3123,12 @@ fildes_tx_update_cc(struct fildes_tx* self, int noundo,
             return;
         }
     }
+
+    /* Update concurrency control on file-descriptor table */
+    fdtab_tx_update_cc(&self->fdtab_tx, error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
 }
 
 void
@@ -3184,6 +3193,12 @@ fildes_tx_clear_cc(struct fildes_tx* self, int noundo,
         if (picotm_error_is_set(error)) {
             return;
         }
+    }
+
+    /* Clear concurrency control on file-descriptor table */
+    fdtab_tx_update_cc(&self->fdtab_tx, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 }
 

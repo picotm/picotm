@@ -26,6 +26,7 @@
 #include "chrdev_tx.h"
 #include "dir_tx.h"
 #include "fd_event.h"
+#include "fdtab_tx.h"
 #include "fd_tx.h"
 #include "fifo_tx.h"
 #include "regfile_tx.h"
@@ -51,6 +52,8 @@ SLIST_HEAD(socket_tx_slist, socket_tx);
 
 struct fildes_tx {
     unsigned long module;
+
+    struct fdtab_tx fdtab_tx;
 
     struct fd_tx fd_tx[MAXNUMFD];
     size_t       fd_tx_max_fildes;
