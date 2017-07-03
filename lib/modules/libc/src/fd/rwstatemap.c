@@ -231,7 +231,7 @@ rdlock_record(struct rwcounter* counter, struct picotm_rwlock* lock,
     rwcounter_rdlock(counter, lock, error);
 }
 
-bool
+void
 rwstatemap_rdlock(struct rwstatemap* self,
                   unsigned long long record_length,
                   unsigned long long record_offset,
@@ -239,10 +239,6 @@ rwstatemap_rdlock(struct rwstatemap* self,
 {
     rwstatemap_for_each_record_in_range(self, record_length, record_offset,
                                         rwlockmap, rdlock_record, error);
-    if (picotm_error_is_set(error)) {
-        return false;
-    }
-    return true;
 }
 
 static void
@@ -252,7 +248,7 @@ wrlock_record(struct rwcounter* counter, struct picotm_rwlock* lock,
     rwcounter_wrlock(counter, lock, error);
 }
 
-bool
+void
 rwstatemap_wrlock(struct rwstatemap* self,
                   unsigned long long record_length,
                   unsigned long long record_offset,
@@ -260,10 +256,6 @@ rwstatemap_wrlock(struct rwstatemap* self,
 {
     rwstatemap_for_each_record_in_range(self, record_length, record_offset,
                                         rwlockmap, wrlock_record, error);
-    if (picotm_error_is_set(error)) {
-        return false;
-    }
-    return true;
 }
 
 static void

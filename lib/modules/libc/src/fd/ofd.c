@@ -406,7 +406,7 @@ ofd_2pl_lock_region(struct ofd *ofd,
                     struct rwstatemap *rwstatemap,
                     struct picotm_error* error)
 {
-    static bool (* const lock[])(struct rwstatemap*,
+    static void (* const lock[])(struct rwstatemap*,
                                  unsigned long long,
                                  unsigned long long,
                                  struct rwlockmap*,

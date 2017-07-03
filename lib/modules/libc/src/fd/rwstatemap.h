@@ -20,7 +20,6 @@
 #pragma once
 
 #include <picotm/picotm-lib-treemap.h>
-#include <stdbool.h>
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -42,13 +41,13 @@ rwstatemap_init(struct rwstatemap* self);
 void
 rwstatemap_uninit(struct rwstatemap* self);
 
-bool
+void
 rwstatemap_rdlock(struct rwstatemap* self, unsigned long long record_length,
                                            unsigned long long record_offset,
                                            struct rwlockmap* rwlockmap,
                                            struct picotm_error* error);
 
-bool
+void
 rwstatemap_wrlock(struct rwstatemap* self, unsigned long long record_length,
                                            unsigned long long record_offset,
                                            struct rwlockmap* rwlockmap,
