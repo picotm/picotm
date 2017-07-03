@@ -70,6 +70,8 @@ libpicotm_c_la_SOURCES = allocator/allocator_tx.c \
                          fd/region.h \
                          fd/regiontab.c \
                          fd/regiontab.h \
+                         fd/rwcounter.c \
+                         fd/rwcounter.h \
                          fd/rwlockmap.c \
                          fd/rwlockmap.h \
                          fd/rwstate.h \
