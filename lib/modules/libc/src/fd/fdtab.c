@@ -20,14 +20,17 @@
 #include "fdtab.h"
 #include <picotm/picotm-error.h>
 #include <picotm/picotm-lib-array.h>
+#include <picotm/picotm-lib-rwlock.h>
+#include <picotm/picotm-lib-rwstate.h>
 #include <picotm/picotm-lib-tab.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include "fd.h"
 
-static struct fd        fdtab[MAXNUMFD];
-static size_t           fdtab_len = 0;
-static pthread_rwlock_t fdtab_rwlock = PTHREAD_RWLOCK_INITIALIZER;
+static struct fd                fdtab[MAXNUMFD];
+static size_t                   fdtab_len = 0;
+static pthread_rwlock_t         fdtab_rwlock = PTHREAD_RWLOCK_INITIALIZER;
+static struct picotm_rwlock     fdtab_lock;
 
 /* Destructor */
 
@@ -128,7 +131,8 @@ search_by_id(int fildes, struct picotm_error* error)
 }
 
 struct fd*
-fdtab_ref_fildes(int fildes, struct picotm_error* error)
+fdtab_ref_fildes(int fildes, struct picotm_rwstate* lock_state,
+                 struct picotm_error* error)
 {
     /* Try to find an existing fd structure with the given file
      * descriptor.
@@ -172,4 +176,24 @@ struct fd*
 fdtab_get_fd(int fildes)
 {
     return fdtab + fildes;
+}
+
+void
+fdtab_try_rdlock(struct picotm_rwstate* lock_state,
+                 struct picotm_error* error)
+{
+    picotm_rwstate_try_rdlock(lock_state, &fdtab_lock, error);
+}
+
+void
+fdtab_try_wrlock(struct picotm_rwstate* lock_state,
+                 struct picotm_error* error)
+{
+    picotm_rwstate_try_wrlock(lock_state, &fdtab_lock, error);
+}
+
+void
+fdtab_unlock(struct picotm_rwstate* lock_state)
+{
+    picotm_rwstate_unlock(lock_state, &fdtab_lock);
 }

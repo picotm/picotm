@@ -19,18 +19,45 @@
 
 #include "fdtab_tx.h"
 #include <assert.h>
+#include <picotm/picotm-error.h>
 #include "fdtab.h"
 
 void
 fdtab_tx_init(struct fdtab_tx* self)
 {
     assert(self);
+
+    picotm_rwstate_init(&self->rwstate);
 }
 
 void
 fdtab_tx_uninit(struct fdtab_tx* self)
 {
     assert(self);
+
+    picotm_rwstate_uninit(&self->rwstate);
+}
+
+void
+fdtab_tx_try_rdlock(struct fdtab_tx* self, struct picotm_error* error)
+{
+    assert(self);
+
+    fdtab_try_rdlock(&self->rwstate, error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
+}
+
+void
+fdtab_tx_try_wrlock(struct fdtab_tx* self, struct picotm_error* error)
+{
+    assert(self);
+
+    fdtab_try_wrlock(&self->rwstate, error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
 }
 
 struct fd*
@@ -39,7 +66,17 @@ fdtab_tx_ref_fildes(struct fdtab_tx* self, int fildes,
 {
     assert(self);
 
-    return fdtab_ref_fildes(fildes, error);
+    fdtab_try_rdlock(&self->rwstate, error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+
+    struct fd* fd = fdtab_ref_fildes(fildes, &self->rwstate, error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+
+    return fd;
 }
 
 /*
@@ -50,10 +87,14 @@ void
 fdtab_tx_update_cc(struct fdtab_tx* self, struct picotm_error* error)
 {
     assert(self);
+
+    fdtab_unlock(&self->rwstate);
 }
 
 void
 fdtab_tx_clear_cc(struct fdtab_tx* self, struct picotm_error* error)
 {
     assert(self);
+
+    fdtab_unlock(&self->rwstate);
 }

@@ -29,9 +29,22 @@
 
 struct fd;
 struct picotm_error;
+struct picotm_rwstate;
 
 struct fd*
-fdtab_ref_fildes(int fildes, struct picotm_error* error);
+fdtab_ref_fildes(int fildes, struct picotm_rwstate* lock_state,
+                 struct picotm_error* error);
 
 struct fd*
 fdtab_get_fd(int fildes);
+
+void
+fdtab_try_rdlock(struct picotm_rwstate* lock_state,
+                 struct picotm_error* error);
+
+void
+fdtab_try_wrlock(struct picotm_rwstate* lock_state,
+                 struct picotm_error* error);
+
+void
+fdtab_unlock(struct picotm_rwstate* lock_state);
