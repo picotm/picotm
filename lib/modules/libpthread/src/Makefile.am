@@ -23,5 +23,3 @@ libpicotm_pthread_la_SOURCES = pthread.c
 AM_CPPFLAGS = -I$(top_srcdir)/modules/libpthread/include \
               -I$(top_srcdir)/modules/tm/include \
               -I$(top_srcdir)/include
-
-AM_CFLAGS = @VISIBILITY_CFLAGS@

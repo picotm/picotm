@@ -33,5 +33,3 @@ libpicotm_tm_la_SOURCES = frame.c \
 
 AM_CPPFLAGS = -I$(top_srcdir)/modules/tm/include \
               -I$(top_srcdir)/include
-
-AM_CFLAGS = @VISIBILITY_CFLAGS@
