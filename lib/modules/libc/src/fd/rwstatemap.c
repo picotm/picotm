@@ -57,10 +57,10 @@ rwstatemap_page_uninit(struct rwstatemap_page* self)
 }
 
 static struct rwlockmap_page*
-rwstatemap_page_get_global_page(struct rwstatemap_page* self,
-                                unsigned long long offset,
-                                struct rwlockmap* rwlockmap,
-                                struct picotm_error* error)
+rwstatemap_page_get_rwlockmap_page(struct rwstatemap_page* self,
+                                   unsigned long long offset,
+                                   struct rwlockmap* rwlockmap,
+                                   struct picotm_error* error)
 {
     assert(self);
 
@@ -105,8 +105,8 @@ rwstatemap_page_for_each_record_in_range(struct rwstatemap_page* self,
                                          struct picotm_error* error)
 {
     struct rwlockmap_page* lockpg =
-        rwstatemap_page_get_global_page(self, record_offset,
-                                        rwlockmap, error);
+        rwstatemap_page_get_rwlockmap_page(self, record_offset,
+                                           rwlockmap, error);
     if (picotm_error_is_set(error)) {
         return 0;
     }
