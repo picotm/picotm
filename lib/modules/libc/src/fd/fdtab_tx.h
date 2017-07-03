@@ -22,7 +22,10 @@
 #include <picotm/picotm-lib-rwstate.h>
 #include <stdbool.h>
 
+struct picotm_error;
+
 struct fdtab_tx {
+    struct picotm_rwstate rwstate;
 };
 
 void
@@ -30,6 +33,12 @@ fdtab_tx_init(struct fdtab_tx* self);
 
 void
 fdtab_tx_uninit(struct fdtab_tx* self);
+
+void
+fdtab_tx_try_rdlock(struct fdtab_tx* self, struct picotm_error* error);
+
+void
+fdtab_tx_try_wrlock(struct fdtab_tx* self, struct picotm_error* error);
 
 struct fd*
 fdtab_tx_ref_fildes(struct fdtab_tx* self, int fildes,

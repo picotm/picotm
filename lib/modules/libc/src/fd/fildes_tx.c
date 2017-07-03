@@ -754,6 +754,12 @@ fildes_tx_exec_accept(struct fildes_tx* self, int sockfd,
                       struct sockaddr* address, socklen_t* address_len,
                       int isnoundo, struct picotm_error* error)
 {
+    /* Write-lock file-descriptor table to preserve file-descriptor order */
+    fdtab_tx_try_wrlock(&self->fdtab_tx, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+
     /* Update/create fd_tx */
 
     struct fd_tx* fd_tx = get_fd_tx_with_ref(self, sockfd, 0, error);
@@ -945,6 +951,12 @@ int
 fildes_tx_exec_close(struct fildes_tx* self, int fildes, int isnoundo,
                      struct picotm_error* error)
 {
+    /* Write-lock file-descriptor table to preserve file-descriptor order */
+    fdtab_tx_try_wrlock(&self->fdtab_tx, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+
     /* Update/create fd_tx */
 
     struct fd_tx* fd_tx = get_fd_tx_with_ref(self, fildes, 0, error);
@@ -1088,6 +1100,12 @@ fildes_tx_exec_dup(struct fildes_tx* self, int fildes, int cloexec,
                    int isnoundo, struct picotm_error* error)
 {
     assert(self);
+
+    /* Write-lock file-descriptor table to preserve file-descriptor order */
+    fdtab_tx_try_wrlock(&self->fdtab_tx, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
 
     /* Update/create fd_tx */
 
@@ -1296,6 +1314,14 @@ fildes_tx_exec_fcntl(struct fildes_tx* self, int fildes, int cmd,
                      struct picotm_error* error)
 {
     assert(self);
+
+    if ((cmd == F_DUPFD) || (cmd == F_DUPFD_CLOEXEC)) {
+        /* Write-lock file-descriptor table to preserve file-descriptor order */
+        fdtab_tx_try_wrlock(&self->fdtab_tx, error);
+        if (picotm_error_is_set(error)) {
+            return -1;
+        }
+    }
 
     /* Update/create fd_tx */
     struct fd_tx* fd_tx = get_fd_tx_with_ref(self, fildes, 0, error);
@@ -1808,6 +1834,12 @@ fildes_tx_exec_mkstemp(struct fildes_tx* self, char* pathname,
     assert(self);
     assert(pathname);
 
+    /* Write-lock file-descriptor table to preserve file-descriptor order */
+    fdtab_tx_try_wrlock(&self->fdtab_tx, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+
     /* Construct absolute pathname */
 
     char* abs_path = absolute_path(pathname, error);
@@ -1882,6 +1914,12 @@ fildes_tx_exec_open(struct fildes_tx* self, const char* path, int oflag,
 
     if ((mode&O_TRUNC) && !isnoundo) {
         picotm_error_set_revocable(error);
+        return -1;
+    }
+
+    /* Write-lock file-descriptor table to preserve file-descriptor order */
+    fdtab_tx_try_wrlock(&self->fdtab_tx, error);
+    if (picotm_error_is_set(error)) {
         return -1;
     }
 
@@ -1978,6 +2016,12 @@ fildes_tx_exec_pipe(struct fildes_tx* self, int pipefd[2],
                     struct picotm_error* error)
 {
     assert(self);
+
+    /* Write-lock file-descriptor table to preserve file-descriptor order */
+    fdtab_tx_try_wrlock(&self->fdtab_tx, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
 
     /* Create pipe */
 
@@ -2598,6 +2642,12 @@ fildes_tx_exec_socket(struct fildes_tx* self, int domain, int type,
                       int protocol, struct picotm_error* error)
 {
     assert(self);
+
+    /* Write-lock file-descriptor table to preserve file-descriptor order */
+    fdtab_tx_try_wrlock(&self->fdtab_tx, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
 
     /* Create socket */
 
