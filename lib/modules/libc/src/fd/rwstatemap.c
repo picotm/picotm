@@ -139,7 +139,7 @@ rwstatemap_init(struct rwstatemap* self)
 {
     assert(self);
 
-    picotm_treemap_init(&self->super, RWLOCKMAP_PAGE_NBITS);
+    picotm_treemap_init(&self->map, RWLOCKMAP_PAGE_NBITS);
 }
 
 static void
@@ -156,7 +156,7 @@ rwstatemap_uninit(struct rwstatemap* self)
 {
     assert(self);
 
-    picotm_treemap_uninit(&self->super, rwstatemap_destroy_page_fn);
+    picotm_treemap_uninit(&self->map, rwstatemap_destroy_page_fn);
 }
 
 static uintptr_t
@@ -195,7 +195,7 @@ rwstatemap_for_each_record_in_range(struct rwstatemap* self,
 
     while (record_length) {
 
-        uintptr_t value = picotm_treemap_find_value(&self->super,
+        uintptr_t value = picotm_treemap_find_value(&self->map,
                                                     key_bits(record_offset, RWLOCKMAP_PAGE_NBITS),
                                                     rwstatemap_create_page_fn,
                                                     error);
@@ -321,7 +321,7 @@ rwstatemap_for_each_page_unlock_regions(uintptr_t value,
                                         struct picotm_error* error)
 {
     struct rwstatemap* statemap =
-        picotm_containerof(treemap, struct rwstatemap, super);
+        picotm_containerof(treemap, struct rwstatemap, map);
 
     rwstatemap_for_each_record_in_range(statemap, RWLOCKMAP_PAGE_NENTRIES,
                                         offset, rwlockmap, unlock_record,
@@ -336,7 +336,7 @@ rwstatemap_unlock_all(struct rwstatemap* self,
                       struct rwlockmap* rwlockmap,
                       struct picotm_error* error)
 {
-    picotm_treemap_for_each_value(&self->super,
+    picotm_treemap_for_each_value(&self->map,
                                   rwlockmap,
                                   rwstatemap_for_each_page_unlock_regions,
                                   error);
