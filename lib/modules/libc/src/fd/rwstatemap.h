@@ -33,7 +33,7 @@
 struct rwlockmap;
 
 struct rwstatemap {
-    struct picotm_treemap super;
+    struct picotm_treemap map;
 };
 
 void
