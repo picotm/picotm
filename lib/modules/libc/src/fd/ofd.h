@@ -26,7 +26,6 @@
 #include "ofdid.h"
 #include "picotm/picotm-libc.h"
 #include "rwlockmap.h"
-#include "rwstate.h"
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -41,6 +40,7 @@
 #define OFD_FL_LAST_BIT (2)
 
 struct picotm_error;
+struct picotm_rwstate;
 struct rwcountermap;
 
 struct ofd
@@ -132,17 +132,17 @@ ofd_unlock(struct ofd *ofd);
 
 /** \brief Locks the open file description for reading. */
 void
-ofd_rdlock_state(struct ofd *ofd, enum rwstate *rwstate,
+ofd_rdlock_state(struct ofd *ofd, struct picotm_rwstate* rwstate,
                  struct picotm_error* error);
 
 /** \brief Locks the open file description for writing. */
 void
-ofd_wrlock_state(struct ofd *ofd, enum rwstate *rwstate,
+ofd_wrlock_state(struct ofd *ofd, struct picotm_rwstate* rwstate,
                  struct picotm_error* error);
 
 /** \brief Unlocks the open file description. */
 void
-ofd_rwunlock_state(struct ofd *ofd, enum rwstate *rwstate);
+ofd_rwunlock_state(struct ofd *ofd, struct picotm_rwstate* rwstate);
 
 /** \brief Locks a region of the underlying file buffer. */
 void
