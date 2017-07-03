@@ -31,13 +31,17 @@ dnl Compiler support
 dnl
 
 AC_USE_SYSTEM_EXTENSIONS
-AC_PROG_CC_C99
+AC_PROG_CC
 
 AX_PTHREAD
 CC="$PTHREAD_CC"
 CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
 LDFLAGS="$LDFLAGS $PTHREAD_LDFLAGS"
 LIBS="$PTHREAD_LIBS $LIBS"
+
+dnl Request C11
+AX_CHECK_COMPILE_FLAG([-std=c11], [CFLAGS="$CFLAGS -std=c11"])
+
 
 AX_CHECK_COMPILE_FLAG([-fvisibility=hidden],
                       [VISIBILITY_CFLAGS="-fvisibility=hidden"],
