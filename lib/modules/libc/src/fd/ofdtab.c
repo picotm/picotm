@@ -176,17 +176,26 @@ struct ofd*
 ofdtab_ref_fildes(int fildes, bool want_new, bool unlink_file,
                   struct picotm_error* error)
 {
+    ofdtab_lock();
+
     struct ofd* ofd = ofdtab_search(fildes, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        goto err_ofdtab_search;
     }
 
     ofd_ref_or_set_up(ofd, fildes, want_new, unlink_file, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        goto err_ofd_ref_or_set_up;
     }
 
+    ofdtab_unlock();
+
     return ofd;
+
+err_ofd_ref_or_set_up:
+err_ofdtab_search:
+    ofdtab_unlock();
+    return NULL;
 }
 
 size_t
