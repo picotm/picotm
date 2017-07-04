@@ -349,6 +349,73 @@ ofd_unref(struct ofd *ofd)
     /* FIXME: Do we have to clean up? */
 }
 
+int
+ofd_cmp_and_ref_or_set_up(struct ofd* ofd, const struct ofdid* id,
+                          int fildes, bool want_new, bool unlink_file,
+                          struct picotm_error* error)
+{
+    assert(ofd);
+
+    ofd_wrlock(ofd);
+
+    int cmp = ofdidcmp(&ofd->id, id);
+    if (cmp) {
+        goto unlock; /* ids are not equal; only return */
+    }
+
+    bool first_ref = picotm_ref_up(&ofd->ref);
+
+    if (!first_ref && !want_new) {
+        /* we got a set-up instance; signal success */
+        goto unlock;
+    }
+
+    if (!first_ref && want_new) {
+        picotm_error_set_conflicting(error, NULL);
+        goto err_want_new;
+    }
+
+    /* Setup ofd for given file descriptor */
+    ofd_setup_from_fildes(ofd, fildes, error);
+    if (picotm_error_is_set(error)) {
+        goto err_ofd_setup_from_fildes;
+    }
+
+    /* Set flags */
+    ofd->flags = 0;
+    if (unlink_file) {
+        ofd->flags |= OFD_FL_UNLINK;
+    }
+
+unlock:
+    ofd_unlock(ofd);
+
+    return cmp;
+
+err_ofd_setup_from_fildes:
+err_want_new:
+    ofd_unlock(ofd);
+    ofd_unref(ofd);
+    return cmp;
+}
+
+int
+ofd_cmp_and_ref(struct ofd* ofd, const struct ofdid* id)
+{
+    assert(ofd);
+
+    ofd_rdlock(ofd);
+
+    int cmp = ofdidcmp(&ofd->id, id);
+    if (!cmp) {
+        ofd_ref(ofd);
+    }
+
+    ofd_unlock(ofd);
+
+    return cmp;
+}
+
 /*
  * Pessimistic CC
  */
