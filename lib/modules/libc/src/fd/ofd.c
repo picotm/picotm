@@ -33,21 +33,12 @@
 
 #define RECSIZE (1ul << RECBITS)
 
-#define bitsof(_x)  (sizeof(_x)*CHAR_BIT)
-
-static const unsigned long flag_bits = OFD_FL_LAST_BIT+4;
-
 static void
 ofd_set_type(struct ofd* self, enum picotm_libc_file_type type)
 {
-	assert(self);
+    assert(self);
 
-	self->type = type;
-
-    const unsigned long fshift = bitsof(self->flags)-flag_bits;
-
-    self->flags = ((self->flags << fshift) >> fshift) |
-                   ((unsigned long)type << flag_bits);
+    self->type = type;
 }
 
 static void
