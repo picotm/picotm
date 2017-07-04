@@ -27,8 +27,9 @@
 #include "ofd.h"
 #include "range.h"
 
-static struct ofd ofdtab[MAXNUMFD];
-static size_t     ofdtab_len = 0;
+static struct ofd       ofdtab[MAXNUMFD];
+static size_t           ofdtab_len = 0;
+static pthread_rwlock_t ofdtab_rwlock = PTHREAD_RWLOCK_INITIALIZER;
 
 /* Destructor */
 
@@ -51,30 +52,43 @@ ofdtab_uninit(void)
     if (picotm_error_is_set(&error)) {
         abort();
     }
+
+    int err = pthread_rwlock_destroy(&ofdtab_rwlock);
+    if (err) {
+        abort();
+    }
 }
 
 /* End of destructor */
 
-static pthread_mutex_t ofdtab_mutex = PTHREAD_MUTEX_INITIALIZER;
-
 static void
-ofdtab_lock(void)
+rdlock_ofdtab(void)
 {
-    int err = pthread_mutex_lock(&ofdtab_mutex);
+    int err = pthread_rwlock_rdlock(&ofdtab_rwlock);
     if (err) {
         abort();
     }
 }
 
 static void
-ofdtab_unlock(void)
+wrlock_ofdtab(void)
 {
-    int err = pthread_mutex_unlock(&ofdtab_mutex);
+    int err = pthread_rwlock_wrlock(&ofdtab_rwlock);
     if (err) {
         abort();
     }
 }
 
+static void
+unlock_ofdtab(void)
+{
+    int err = pthread_rwlock_unlock(&ofdtab_rwlock);
+    if (err) {
+        abort();
+    }
+}
+
+/* requires a writer lock */
 static struct ofd*
 append_empty_ofd(struct picotm_error* error)
 {
@@ -96,6 +110,7 @@ append_empty_ofd(struct picotm_error* error)
     return ofd;
 }
 
+/* requires reader lock */
 static struct ofd*
 find_by_id(const struct ofdid* id)
 {
@@ -104,10 +119,7 @@ find_by_id(const struct ofdid* id)
 
     while (ofd_beg < ofd_end) {
 
-        ofd_rdlock(ofd_beg);
-        const int cmp = ofdidcmp(id, &ofd_beg->id);
-        ofd_unlock(ofd_beg);
-
+        const int cmp = ofd_cmp_and_ref(ofd_beg, id);
         if (!cmp) {
             return ofd_beg;
         }
@@ -118,29 +130,30 @@ find_by_id(const struct ofdid* id)
     return NULL;
 }
 
+/* requires writer lock */
 static struct ofd*
-search_by_id(const struct ofdid* id, struct picotm_error* error)
+search_by_id(const struct ofdid* id, int fildes, bool want_new,
+             bool unlink_file, struct picotm_error* error)
 {
-    struct ofd* ofd = find_by_id(id);
-    if (ofd) {
-        return ofd; /* found ofd for id; return */
+    struct ofd* ofd_beg = picotm_arraybeg(ofdtab);
+    const struct ofd* ofd_end = picotm_arrayat(ofdtab, ofdtab_len);
+
+    while (ofd_beg < ofd_end) {
+
+        const int cmp = ofd_cmp_and_ref_or_set_up(ofd_beg, id, fildes,
+                                                  want_new, unlink_file,
+                                                  error);
+        if (!cmp) {
+            if (picotm_error_is_set(error)) {
+                return NULL;
+            }
+            return ofd_beg; /* set-up ofd structure; return */
+        }
+
+        ++ofd_beg;
     }
 
-    /* Get an empty entry */
-    struct ofdid empty;
-    ofdid_clear(&empty);
-
-    ofd = find_by_id(&empty);
-    if (ofd) {
-        return ofd; /* found empty ofd; return */
-    }
-
-    ofd = append_empty_ofd(error);
-    if (picotm_error_is_set(error)) {
-        return NULL;
-    }
-
-    return ofd;
+    return NULL;
 }
 
 struct ofd*
@@ -153,25 +166,72 @@ ofdtab_ref_fildes(int fildes, bool want_new, bool unlink_file,
         return NULL;
     }
 
-    ofdtab_lock();
+    struct ofd* ofd;
 
-    struct ofd* ofd = search_by_id(&id, error);
+    /* Try to find an existing ofd structure with the given id; iff
+     * a new element was not explicitly requested.
+     */
+
+    if (!want_new) {
+        rdlock_ofdtab();
+
+        ofd = find_by_id(&id);
+        if (ofd) {
+            goto unlock; /* found ofd for id; return */
+        }
+
+        unlock_ofdtab();
+    }
+
+    /* Not found or new entry is requested; acquire writer lock to
+     * create a new entry in the ofd table. */
+    wrlock_ofdtab();
+
+    if (!want_new) {
+        /* Re-try find operation; maybe element was added meanwhile. */
+        ofd = find_by_id(&id);
+        if (ofd) {
+            goto unlock; /* found ofd for id; return */
+        }
+    }
+
+    /* No entry with the id exists; try to set up an existing, but
+     * currently unused, ofd structure.
+     */
+
+    struct ofdid empty_id;
+    ofdid_clear(&empty_id);
+
+    ofd = search_by_id(&empty_id, fildes, want_new, unlink_file, error);
     if (picotm_error_is_set(error)) {
         goto err_search_by_id;
     }
 
+    /* The ofd table is full; create a new entry for the ofd id at the
+     * end of the table.
+     */
+
+    ofd = append_empty_ofd(error);
+    if (picotm_error_is_set(error)) {
+        goto err_append_empty_ofd;
+    }
+
+    /* To perform the setup, we must have acquired a writer lock at
+     * this point. No other transaction may interfere. */
     ofd_ref_or_set_up(ofd, fildes, want_new, unlink_file, error);
     if (picotm_error_is_set(error)) {
         goto err_ofd_ref_or_set_up;
     }
 
-    ofdtab_unlock();
+unlock:
+    unlock_ofdtab();
 
     return ofd;
 
 err_ofd_ref_or_set_up:
+err_append_empty_ofd:
 err_search_by_id:
-    ofdtab_unlock();
+    unlock_ofdtab();
     return NULL;
 }
 
