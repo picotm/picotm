@@ -30,34 +30,6 @@
 static struct ofd ofdtab[MAXNUMFD];
 static size_t     ofdtab_len = 0;
 
-/* Initializer */
-
-static void ofdtab_init(void) __attribute__ ((constructor));
-
-static size_t
-ofdtab_ofd_init_walk(void* ofd, struct picotm_error* error)
-{
-    ofd_init(ofd, error);
-    if (picotm_error_is_set(error)) {
-        return 0;
-    }
-    return 1;
-}
-
-static void
-ofdtab_init(void)
-{
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-    picotm_tabwalk_1(ofdtab, picotm_arraylen(ofdtab), sizeof(ofdtab[0]),
-                     ofdtab_ofd_init_walk, &error);
-    if (picotm_error_is_set(&error)) {
-        abort();
-    }
-}
-
-/* End of initializer */
-
 /* Destructor */
 
 static void ofdtab_uninit(void) __attribute__ ((destructor));
@@ -74,7 +46,7 @@ ofdtab_uninit(void)
 {
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    picotm_tabwalk_1(ofdtab, picotm_arraylen(ofdtab), sizeof(ofdtab[0]),
+    picotm_tabwalk_1(ofdtab, ofdtab_len, sizeof(ofdtab[0]),
                      ofdtab_ofd_uninit_walk, &error);
     if (picotm_error_is_set(&error)) {
         abort();
@@ -103,11 +75,32 @@ ofdtab_unlock(void)
     }
 }
 
-static long
-ofdtab_find_by_id(const struct ofdid* id, size_t len)
+static struct ofd*
+append_empty_ofd(struct picotm_error* error)
+{
+    if (ofdtab_len == picotm_arraylen(ofdtab)) {
+        /* Return error if not enough ids available */
+        picotm_error_set_conflicting(error, NULL);
+        return NULL;
+    }
+
+    struct ofd* ofd = ofdtab + ofdtab_len;
+
+    ofd_init(ofd, error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+
+    ++ofdtab_len;
+
+    return ofd;
+}
+
+static struct ofd*
+find_by_id(const struct ofdid* id)
 {
     struct ofd *ofd_beg = picotm_arraybeg(ofdtab);
-    const struct ofd* ofd_end = picotm_arrayat(ofdtab, len);
+    const struct ofd* ofd_end = picotm_arrayat(ofdtab, ofdtab_len);
 
     while (ofd_beg < ofd_end) {
 
@@ -116,43 +109,43 @@ ofdtab_find_by_id(const struct ofdid* id, size_t len)
         ofd_unlock(ofd_beg);
 
         if (!cmp) {
-            break;
+            return ofd_beg;
         }
 
         ++ofd_beg;
     }
 
-    return (long)(ofd_beg - ofdtab);
+    return NULL;
 }
 
-static long
-ofdtab_search_by_id(const struct ofdid* id, size_t len,
-                    struct picotm_error* error)
+static struct ofd*
+search_by_id(const struct ofdid* id, struct picotm_error* error)
 {
-    size_t max_len = lmin(ofdtab_len, len);
-
-    long i = ofdtab_find_by_id(id, max_len);
-    if (i != (ssize_t)max_len) {
-        return i; /* found id; return */
+    struct ofd* ofd = find_by_id(id);
+    if (ofd) {
+        return ofd; /* found ofd for id; return */
     }
 
     /* Get an empty entry */
     struct ofdid empty;
     ofdid_clear(&empty);
 
-    i = ofdtab_find_by_id(&empty, len);
-
-    if (i == (ssize_t)len) {
-        /* Abort if not enough ids available */
-        picotm_error_set_conflicting(error, NULL);
-        return -1;
+    ofd = find_by_id(&empty);
+    if (ofd) {
+        return ofd; /* found empty ofd; return */
     }
 
-    return i;
+    ofd = append_empty_ofd(error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+
+    return ofd;
 }
 
-static struct ofd*
-ofdtab_search(int fildes, struct picotm_error* error)
+struct ofd*
+ofdtab_ref_fildes(int fildes, bool want_new, bool unlink_file,
+                  struct picotm_error* error)
 {
     struct ofdid id;
     ofdid_init_from_fildes(&id, fildes, error);
@@ -160,26 +153,11 @@ ofdtab_search(int fildes, struct picotm_error* error)
         return NULL;
     }
 
-    long i = ofdtab_search_by_id(&id, picotm_arraylen(ofdtab), error);
-    if (picotm_error_is_set(error)) {
-        return NULL;
-    }
-
-    /* Update maximum index */
-    ofdtab_len = lmax(i + 1, ofdtab_len);
-
-    return ofdtab + i;
-}
-
-struct ofd*
-ofdtab_ref_fildes(int fildes, bool want_new, bool unlink_file,
-                  struct picotm_error* error)
-{
     ofdtab_lock();
 
-    struct ofd* ofd = ofdtab_search(fildes, error);
+    struct ofd* ofd = search_by_id(&id, error);
     if (picotm_error_is_set(error)) {
-        goto err_ofdtab_search;
+        goto err_search_by_id;
     }
 
     ofd_ref_or_set_up(ofd, fildes, want_new, unlink_file, error);
@@ -192,7 +170,7 @@ ofdtab_ref_fildes(int fildes, bool want_new, bool unlink_file,
     return ofd;
 
 err_ofd_ref_or_set_up:
-err_ofdtab_search:
+err_search_by_id:
     ofdtab_unlock();
     return NULL;
 }
