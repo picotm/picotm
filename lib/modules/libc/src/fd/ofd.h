@@ -74,12 +74,6 @@ ofd_init(struct ofd* self, struct picotm_error* error);
 void
 ofd_uninit(struct ofd* self);
 
-void
-ofd_set_id(struct ofd* self, const struct ofdid* id);
-
-void
-ofd_clear_id(struct ofd* self);
-
 /** \brief References the open file description. */
 void
 ofd_ref_or_set_up(struct ofd* self, int fildes, bool want_new,
