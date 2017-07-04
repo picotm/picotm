@@ -20,13 +20,15 @@
 #include "ofdtab.h"
 #include <errno.h>
 #include <picotm/picotm-error.h>
+#include <picotm/picotm-lib-array.h>
 #include <picotm/picotm-lib-tab.h>
 #include <pthread.h>
 #include <stdlib.h>
+#include "ofd.h"
 #include "range.h"
 
-struct ofd ofdtab[MAXNUMFD];
-size_t     ofdtab_len = 0;
+static struct ofd ofdtab[MAXNUMFD];
+static size_t     ofdtab_len = 0;
 
 /* Initializer */
 
@@ -47,8 +49,8 @@ ofdtab_init(void)
 {
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    picotm_tabwalk_1(ofdtab, sizeof(ofdtab)/sizeof(ofdtab[0]),
-                     sizeof(ofdtab[0]), ofdtab_ofd_init_walk, &error);
+    picotm_tabwalk_1(ofdtab, picotm_arraylen(ofdtab), sizeof(ofdtab[0]),
+                     ofdtab_ofd_init_walk, &error);
     if (picotm_error_is_set(&error)) {
         abort();
     }
@@ -72,8 +74,8 @@ ofdtab_uninit(void)
 {
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    picotm_tabwalk_1(ofdtab, sizeof(ofdtab)/sizeof(ofdtab[0]),
-                     sizeof(ofdtab[0]), ofdtab_ofd_uninit_walk, &error);
+    picotm_tabwalk_1(ofdtab, picotm_arraylen(ofdtab), sizeof(ofdtab[0]),
+                     ofdtab_ofd_uninit_walk, &error);
     if (picotm_error_is_set(&error)) {
         abort();
     }
@@ -81,12 +83,10 @@ ofdtab_uninit(void)
 
 /* End of destructor */
 
-#include "ofdtab.h"
-
 static pthread_mutex_t ofdtab_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-void
-ofdtab_lock()
+static void
+ofdtab_lock(void)
 {
     int err = pthread_mutex_lock(&ofdtab_mutex);
     if (err) {
@@ -94,8 +94,8 @@ ofdtab_lock()
     }
 }
 
-void
-ofdtab_unlock()
+static void
+ofdtab_unlock(void)
 {
     int err = pthread_mutex_unlock(&ofdtab_mutex);
     if (err) {
@@ -104,49 +104,48 @@ ofdtab_unlock()
 }
 
 static long
-ofdtab_find_by_id(const struct ofdid *id, size_t len)
+ofdtab_find_by_id(const struct ofdid* id, size_t len)
 {
-    struct ofd *ofd = ofdtab;
+    struct ofd *ofd_beg = picotm_arraybeg(ofdtab);
+    const struct ofd* ofd_end = picotm_arrayat(ofdtab, len);
 
-    while (ofd < ofdtab+len) {
+    while (ofd_beg < ofd_end) {
 
-        ofd_rdlock(ofd);
-        const int cmp = ofdidcmp(id, &ofd->id);
-        ofd_unlock(ofd);
+        ofd_rdlock(ofd_beg);
+        const int cmp = ofdidcmp(id, &ofd_beg->id);
+        ofd_unlock(ofd_beg);
 
         if (!cmp) {
             break;
         }
 
-        ++ofd;
+        ++ofd_beg;
     }
 
-    return (long)(ofd-ofdtab);
+    return (long)(ofd_beg - ofdtab);
 }
 
 static long
-ofdtab_search_by_id(const struct ofdid *id, size_t len,
+ofdtab_search_by_id(const struct ofdid* id, size_t len,
                     struct picotm_error* error)
 {
-    size_t max_len;
-    long i;
+    size_t max_len = lmin(ofdtab_len, len);
 
-    max_len = lmin(ofdtab_len, len);
+    long i = ofdtab_find_by_id(id, max_len);
+    if (i != (ssize_t)max_len) {
+        return i; /* found id; return */
+    }
 
-    i = ofdtab_find_by_id(id, max_len);
+    /* Get an empty entry */
+    struct ofdid empty;
+    ofdid_clear(&empty);
 
-    if (i == (ssize_t)max_len) {
-        /* Get an empty entry */
-        struct ofdid empty;
-        ofdid_clear(&empty);
+    i = ofdtab_find_by_id(&empty, len);
 
-        i = ofdtab_find_by_id(&empty, len);
-
-        if (i == (ssize_t)len) {
-            /* Abort if not enough ids available */
-            picotm_error_set_conflicting(error, NULL);
-            return -1;
-        }
+    if (i == (ssize_t)len) {
+        /* Abort if not enough ids available */
+        picotm_error_set_conflicting(error, NULL);
+        return -1;
     }
 
     return i;
@@ -161,13 +160,13 @@ ofdtab_search(int fildes, struct picotm_error* error)
         return NULL;
     }
 
-    long i = ofdtab_search_by_id(&id, sizeof(ofdtab)/sizeof(ofdtab[0]), error);
+    long i = ofdtab_search_by_id(&id, picotm_arraylen(ofdtab), error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
 
     /* Update maximum index */
-    ofdtab_len = lmax(i+1, ofdtab_len);
+    ofdtab_len = lmax(i + 1, ofdtab_len);
 
     return ofdtab + i;
 }
@@ -199,7 +198,7 @@ err_ofdtab_search:
 }
 
 size_t
-ofdtab_index(struct ofd *ofd)
+ofdtab_index(struct ofd* ofd)
 {
-    return ofd-ofdtab;
+    return ofd - ofdtab;
 }
