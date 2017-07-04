@@ -123,23 +123,6 @@ ofd_uninit(struct ofd* self)
 }
 
 void
-ofd_set_id(struct ofd* self, const struct ofdid* id)
-{
-    assert(self);
-    assert(id);
-
-    memcpy(&self->id, id, sizeof(self->id));
-}
-
-void
-ofd_clear_id(struct ofd* self)
-{
-    assert(self);
-
-    ofdid_clear(&self->id);
-}
-
-void
 ofd_rdlock(struct ofd* self)
 {
     assert(self);
