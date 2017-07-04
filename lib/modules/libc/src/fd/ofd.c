@@ -344,9 +344,20 @@ ofd_unref(struct ofd *ofd)
 {
     assert(ofd);
 
-    picotm_ref_down(&ofd->ref);
+    ofd_wrlock(ofd);
 
-    /* FIXME: Do we have to clean up? */
+    bool final_ref = picotm_ref_down(&ofd->ref);
+    if (!final_ref) {
+        goto unlock;
+    }
+
+    /* We clear the id on releasing the final reference. This
+     * instance remains initialized, but is available for later
+     * use. */
+    ofdid_clear(&ofd->id);
+
+unlock:
+    ofd_unlock(ofd);
 }
 
 int
