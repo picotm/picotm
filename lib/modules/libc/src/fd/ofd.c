@@ -250,8 +250,8 @@ ofd_setup_from_fildes(struct ofd* self, int fildes, struct picotm_error* error)
 }
 
 void
-ofd_ref_or_set_up(struct ofd* self, int fildes, bool want_new,
-                  bool unlink_file, struct picotm_error* error)
+ofd_ref_or_set_up(struct ofd* self, int fildes, bool unlink_file,
+                  struct picotm_error* error)
 {
     assert(self);
     assert(fildes >= 0);
@@ -259,15 +259,9 @@ ofd_ref_or_set_up(struct ofd* self, int fildes, bool want_new,
     ofd_wrlock(self);
 
     bool first_ref = picotm_ref_up(&self->ref);
-
-    if (!first_ref && !want_new) {
+    if (!first_ref) {
         /* we got a set-up instance; signal success */
         goto unlock;
-    }
-
-    if (!first_ref && want_new) {
-        picotm_error_set_conflicting(error, NULL);
-        goto err_want_new;
     }
 
     /* Setup ofd for given file descriptor */
@@ -288,9 +282,8 @@ unlock:
     return;
 
 err_ofd_setup_from_fildes:
-err_want_new:
-    ofd_unlock(self);
     ofd_unref(self);
+    ofd_unlock(self);
 }
 
 void
@@ -345,7 +338,7 @@ unlock:
 
 int
 ofd_cmp_and_ref_or_set_up(struct ofd* self, const struct ofdid* id,
-                          int fildes, bool want_new, bool unlink_file,
+                          int fildes, bool unlink_file,
                           struct picotm_error* error)
 {
     assert(self);
@@ -358,15 +351,9 @@ ofd_cmp_and_ref_or_set_up(struct ofd* self, const struct ofdid* id,
     }
 
     bool first_ref = picotm_ref_up(&self->ref);
-
-    if (!first_ref && !want_new) {
+    if (!first_ref) {
         /* we got a set-up instance; signal success */
         goto unlock;
-    }
-
-    if (!first_ref && want_new) {
-        picotm_error_set_conflicting(error, NULL);
-        goto err_want_new;
     }
 
     /* Setup ofd for given file descriptor */
@@ -387,9 +374,8 @@ unlock:
     return cmp;
 
 err_ofd_setup_from_fildes:
-err_want_new:
-    ofd_unlock(self);
     ofd_unref(self);
+    ofd_unlock(self);
     return cmp;
 }
 

@@ -76,8 +76,8 @@ ofd_uninit(struct ofd* self);
 
 /** \brief References the open file description. */
 void
-ofd_ref_or_set_up(struct ofd* self, int fildes, bool want_new,
-                  bool unlink_file, struct picotm_error* error);
+ofd_ref_or_set_up(struct ofd* self, int fildes, bool unlink_file,
+                  struct picotm_error* error);
 
 /** \brief References the open file description. */
 void
@@ -108,7 +108,6 @@ ofd_cmp_and_ref(struct ofd* self, const struct ofdid* id);
  * \param       self        An ofd structure.
  * \param       id          The id to compare to.
  * \param       fildes      A file descriptor refereing to the open file description.
- * \param       want_new    True to request a new instance.
  * \param       unlink_file True to request unlinking the file during rollback.
  * \param[out]  error       Returns an error.
  * \returns A value less than, equal to, or greater than if the ofd's id is
@@ -116,7 +115,7 @@ ofd_cmp_and_ref(struct ofd* self, const struct ofdid* id);
  */
 int
 ofd_cmp_and_ref_or_set_up(struct ofd* self, const struct ofdid* id,
-                          int fildes, bool want_new, bool unlink_file,
+                          int fildes, bool unlink_file,
                           struct picotm_error* error);
 
 /** \brief Unreferences the open file description. */
