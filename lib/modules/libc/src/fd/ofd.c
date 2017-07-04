@@ -195,7 +195,8 @@ ofd_get_offset_nolock(const struct ofd* self)
  */
 
 static void
-ofd_setup_from_fildes(struct ofd* self, int fildes, struct picotm_error* error)
+ofd_setup_from_fildes(struct ofd* self, int fildes, bool unlink_file,
+                      struct picotm_error* error)
 {
     assert(self);
     assert(fildes >= 0);
@@ -246,7 +247,11 @@ ofd_setup_from_fildes(struct ofd* self, int fildes, struct picotm_error* error)
             abort();
     }
 
+    /* Set flags */
     self->flags = 0;
+    if (unlink_file) {
+        self->flags |= OFD_FL_UNLINK;
+    }
 }
 
 void
@@ -265,15 +270,9 @@ ofd_ref_or_set_up(struct ofd* self, int fildes, bool unlink_file,
     }
 
     /* Setup ofd for given file descriptor */
-    ofd_setup_from_fildes(self, fildes, error);
+    ofd_setup_from_fildes(self, fildes, unlink_file, error);
     if (picotm_error_is_set(error)) {
         goto err_ofd_setup_from_fildes;
-    }
-
-    /* Set flags */
-    self->flags = 0;
-    if (unlink_file) {
-        self->flags |= OFD_FL_UNLINK;
     }
 
 unlock:
@@ -357,15 +356,9 @@ ofd_cmp_and_ref_or_set_up(struct ofd* self, const struct ofdid* id,
     }
 
     /* Setup ofd for given file descriptor */
-    ofd_setup_from_fildes(self, fildes, error);
+    ofd_setup_from_fildes(self, fildes, unlink_file, error);
     if (picotm_error_is_set(error)) {
         goto err_ofd_setup_from_fildes;
-    }
-
-    /* Set flags */
-    self->flags = 0;
-    if (unlink_file) {
-        self->flags |= OFD_FL_UNLINK;
     }
 
 unlock:
