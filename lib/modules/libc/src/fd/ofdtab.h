@@ -17,10 +17,10 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef OFDTAB_H
-#define OFDTAB_H
+#pragma once
 
-#include "ofd.h"
+#include <stdbool.h>
+#include <stddef.h>
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -30,22 +30,28 @@
  * \endcond
  */
 
+struct ofd;
 struct picotm_error;
 
-extern struct ofd ofdtab[MAXNUMFD];
-
-void
-ofdtab_lock(void);
-
-void
-ofdtab_unlock(void);
-
+/**
+ * Returns a reference to an ofd structure for the given file descriptor.
+ *
+ * \param       fildes      A file descriptor.
+ * \param       want_new    True to request a new instance.
+ * \param       unlink_file True to request unlinking the file during rollback.
+ * \param[out]  error       Returns an error.
+ * \returns A referenced instance of `struct ofd` that refers to the file
+ *          descriptor's open file description.
+ */
 struct ofd*
 ofdtab_ref_fildes(int fildes, bool want_new, bool unlink_file,
                   struct picotm_error* error);
 
+/**
+ * Returns the index of an ofd structure within the ofd table.
+ *
+ * \param   ofd An ofd structure.
+ * \returns The ofd structure's index in the ofd table.
+ */
 size_t
-ofdtab_index(struct ofd *ofd);
-
-#endif
-
+ofdtab_index(struct ofd* ofd);
