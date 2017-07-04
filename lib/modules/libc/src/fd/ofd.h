@@ -97,6 +97,35 @@ ofd_ref_state(struct ofd* ofd,
               enum picotm_libc_cc_mode* ccmode,
               off_t* offset);
 
+/**
+ * \brief Compares the ofd's id to an id and acquires a reference if both
+ *        id's are equal.
+ * \param   ofd An ofd structure.
+ * \param   id  The id to compare to.
+ * \returns A value less than, equal to, or greater than if the ofd's id is
+ *          less than, equal to, or greater than the given id.
+ */
+int
+ofd_cmp_and_ref(struct ofd* ofd, const struct ofdid* id);
+
+/**
+ * \brief Compares the ofd's id to an id and acquires a reference if both
+ *        id's are equal. The ofd structure is aet up from the provided
+ *        file descriptor.
+ * \param       ofd         An ofd structure.
+ * \param       id          The id to compare to.
+ * \param       fildes      A file descriptor refereing to the open file description.
+ * \param       want_new    True to request a new instance.
+ * \param       unlink_file True to request unlinking the file during rollback.
+ * \param[out]  error       Returns an error.
+ * \returns A value less than, equal to, or greater than if the ofd's id is
+ *          less than, equal to, or greater than the given id.
+ */
+int
+ofd_cmp_and_ref_or_set_up(struct ofd* ofd, const struct ofdid* id,
+                          int fildes, bool want_new, bool unlink_file,
+                          struct picotm_error* error);
+
 /** \brief Unreferences the open file description. */
 void
 ofd_unref(struct ofd *ofd);
