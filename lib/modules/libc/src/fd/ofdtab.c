@@ -132,8 +132,8 @@ find_by_id(const struct ofdid* id)
 
 /* requires writer lock */
 static struct ofd*
-search_by_id(const struct ofdid* id, int fildes, bool want_new,
-             bool unlink_file, struct picotm_error* error)
+search_by_id(const struct ofdid* id, int fildes, bool unlink_file,
+             struct picotm_error* error)
 {
     struct ofd* ofd_beg = picotm_arraybeg(ofdtab);
     const struct ofd* ofd_end = picotm_arrayat(ofdtab, ofdtab_len);
@@ -141,8 +141,7 @@ search_by_id(const struct ofdid* id, int fildes, bool want_new,
     while (ofd_beg < ofd_end) {
 
         const int cmp = ofd_cmp_and_ref_or_set_up(ofd_beg, id, fildes,
-                                                  want_new, unlink_file,
-                                                  error);
+                                                  unlink_file, error);
         if (!cmp) {
             if (picotm_error_is_set(error)) {
                 return NULL;
@@ -202,7 +201,7 @@ ofdtab_ref_fildes(int fildes, bool want_new, bool unlink_file,
     struct ofdid empty_id;
     ofdid_clear(&empty_id);
 
-    ofd = search_by_id(&empty_id, fildes, want_new, unlink_file, error);
+    ofd = search_by_id(&empty_id, fildes, unlink_file, error);
     if (picotm_error_is_set(error)) {
         goto err_search_by_id;
     }
@@ -218,7 +217,7 @@ ofdtab_ref_fildes(int fildes, bool want_new, bool unlink_file,
 
     /* To perform the setup, we must have acquired a writer lock at
      * this point. No other transaction may interfere. */
-    ofd_ref_or_set_up(ofd, fildes, want_new, unlink_file, error);
+    ofd_ref_or_set_up(ofd, fildes, unlink_file, error);
     if (picotm_error_is_set(error)) {
         goto err_ofd_ref_or_set_up;
     }
