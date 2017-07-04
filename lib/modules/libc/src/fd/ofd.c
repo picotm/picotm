@@ -122,28 +122,37 @@ ofd_uninit(struct ofd* self)
     pthread_rwlock_destroy(&self->lock);
 }
 
-void
+static void
 ofd_rdlock(struct ofd* self)
 {
     assert(self);
 
-    pthread_rwlock_rdlock(&self->lock);
+    int err = pthread_rwlock_rdlock(&self->lock);
+    if (err) {
+        abort();
+    }
 }
 
-void
+static void
 ofd_wrlock(struct ofd* self)
 {
     assert(self);
 
-    pthread_rwlock_wrlock(&self->lock);
+    int err = pthread_rwlock_wrlock(&self->lock);
+    if (err) {
+        abort();
+    }
 }
 
-void
+static void
 ofd_unlock(struct ofd* self)
 {
     assert(self);
 
-    pthread_rwlock_unlock(&self->lock);
+    int err = pthread_rwlock_unlock(&self->lock);
+    if (err) {
+        abort();
+    }
 }
 
 enum picotm_libc_cc_mode
