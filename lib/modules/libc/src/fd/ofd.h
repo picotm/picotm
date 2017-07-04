@@ -139,15 +139,6 @@ ofd_get_offset_nolock(const struct ofd* self);
 void
 ofd_dump(const struct ofd* self);
 
-void
-ofd_rdlock(struct ofd* self);
-
-void
-ofd_wrlock(struct ofd* self);
-
-void
-ofd_unlock(struct ofd* self);
-
 /** \brief Locks the open file description for reading. */
 void
 ofd_rdlock_state(struct ofd* self, struct picotm_rwstate* rwstate,
