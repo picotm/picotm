@@ -24,6 +24,7 @@
 #include <sys/queue.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include "ofd_tx.h"
 #include "picotm/picotm-libc.h"
 
 /**
@@ -44,6 +45,8 @@ struct socket_tx {
     struct picotm_ref16 ref;
 
     SLIST_ENTRY(socket_tx) active_list;
+
+    struct ofd_tx base;
 
     struct ofd* ofd;
 
@@ -70,6 +73,9 @@ struct socket_tx {
     /** State of the local lock */
     struct picotm_rwstate rwstate;
 };
+
+struct socket_tx*
+socket_tx_of_ofd_tx(struct ofd_tx* ofd_tx);
 
 /**
  * Init transaction-local open-file-description state

@@ -22,9 +22,12 @@
 #include <picotm/picotm-module.h>
 #include <stdbool.h>
 #include <sys/queue.h>
-#include "fd_tx.h"
-#include "ofd_tx.h"
+#include "chrdev_tx.h"
 #include "fd_event.h"
+#include "fd_tx.h"
+#include "fifo_tx.h"
+#include "regfile_tx.h"
+#include "socket_tx.h"
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -37,17 +40,49 @@
 struct pipeop;
 struct openop;
 
+SLIST_HEAD(chrdev_tx_slist, chrdev_tx);
 SLIST_HEAD(fd_tx_slist, fd_tx);
-SLIST_HEAD(ofd_tx_slist, ofd_tx);
+SLIST_HEAD(fifo_tx_slist, fifo_tx);
+SLIST_HEAD(regfile_tx_slist, regfile_tx);
+SLIST_HEAD(socket_tx_slist, socket_tx);
 
 struct fildes_tx {
     unsigned long module;
 
+#if 0
     struct ofd_tx ofd_tx[MAXNUMFD];
-    struct fd_tx  fd_tx[MAXNUMFD];
+    size_t        ofd_tx_max_index;
+#endif
 
-    size_t ofd_tx_max_index;
-    size_t fd_tx_max_fildes;
+    struct fd_tx fd_tx[MAXNUMFD];
+    size_t       fd_tx_max_fildes;
+
+    /** Active instances of |struct fd_tx| */
+    struct fd_tx_slist  fd_tx_active_list;
+
+    struct fifo_tx fifo_tx[MAXNUMFD];
+    size_t         fifo_tx_max_index;
+
+    /** Active instances of |struct fifo_tx| */
+    struct fifo_tx_slist    fifo_tx_active_list;
+
+    struct chrdev_tx chrdev_tx[MAXNUMFD];
+    size_t           chrdev_tx_max_index;
+
+    /** Active instances of |struct chrdev_tx| */
+    struct chrdev_tx_slist    chrdev_tx_active_list;
+
+    struct regfile_tx regfile_tx[MAXNUMFD];
+    size_t            regfile_tx_max_index;
+
+    /** Active instances of |struct regfile_tx| */
+    struct regfile_tx_slist regfile_tx_active_list;
+
+    struct socket_tx  socket_tx[MAXNUMFD];
+    size_t            socket_tx_max_index;
+
+    /** Active instances of |struct socket_tx| */
+    struct socket_tx_slist  socket_tx_active_list;
 
     struct fd_event* eventtab;
     size_t           eventtablen;
@@ -58,12 +93,6 @@ struct fildes_tx {
 
     struct pipeop* pipeoptab;
     size_t         pipeoptablen;
-
-    /** Active instances of |struct fd_tx| */
-    struct fd_tx_slist  fd_tx_active_list;
-
-    /** Active instances of |struct ofd_tx| */
-    struct ofd_tx_slist ofd_tx_active_list;
 };
 
 void

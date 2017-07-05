@@ -22,6 +22,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <picotm/picotm-error.h>
+#include <picotm/picotm-lib-ptr.h>
 #include <picotm/picotm-lib-tab.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,6 +33,27 @@
 #include "iooptab.h"
 #include "ofd.h"
 
+struct fifo_tx*
+fifo_tx_of_ofd_tx(struct ofd_tx* ofd_tx)
+{
+    assert(ofd_tx);
+    assert(ofd_tx_file_type(ofd_tx) == PICOTM_LIBC_FILE_TYPE_FIFO);
+
+    return picotm_containerof(ofd_tx, struct fifo_tx, base);
+}
+
+static void
+ref_ofd_tx(struct ofd_tx* ofd_tx)
+{
+    fifo_tx_ref(fifo_tx_of_ofd_tx(ofd_tx));
+}
+
+static void
+unref_ofd_tx(struct ofd_tx* ofd_tx)
+{
+    fifo_tx_unref(fifo_tx_of_ofd_tx(ofd_tx));
+}
+
 void
 fifo_tx_init(struct fifo_tx* self)
 {
@@ -40,6 +62,9 @@ fifo_tx_init(struct fifo_tx* self)
     picotm_ref_init(&self->ref, 0);
 
     memset(&self->active_list, 0, sizeof(self->active_list));
+
+    ofd_tx_init(&self->base, PICOTM_LIBC_FILE_TYPE_FIFO,
+                ref_ofd_tx, unref_ofd_tx);
 
     self->ofd = NULL;
 

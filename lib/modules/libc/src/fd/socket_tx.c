@@ -21,6 +21,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <picotm/picotm-error.h>
+#include <picotm/picotm-lib-ptr.h>
 #include <picotm/picotm-lib-tab.h>
 #include <stdlib.h>
 #include <string.h>
@@ -31,6 +32,27 @@
 #include "iooptab.h"
 #include "ofd.h"
 
+struct socket_tx*
+socket_tx_of_ofd_tx(struct ofd_tx* ofd_tx)
+{
+    assert(ofd_tx);
+    assert(ofd_tx_file_type(ofd_tx) == PICOTM_LIBC_FILE_TYPE_SOCKET);
+
+    return picotm_containerof(ofd_tx, struct socket_tx, base);
+}
+
+static void
+ref_ofd_tx(struct ofd_tx* ofd_tx)
+{
+    socket_tx_ref(socket_tx_of_ofd_tx(ofd_tx));
+}
+
+static void
+unref_ofd_tx(struct ofd_tx* ofd_tx)
+{
+    socket_tx_unref(socket_tx_of_ofd_tx(ofd_tx));
+}
+
 void
 socket_tx_init(struct socket_tx* self)
 {
@@ -39,6 +61,9 @@ socket_tx_init(struct socket_tx* self)
     picotm_ref_init(&self->ref, 0);
 
     memset(&self->active_list, 0, sizeof(self->active_list));
+
+    ofd_tx_init(&self->base, PICOTM_LIBC_FILE_TYPE_SOCKET,
+                ref_ofd_tx, unref_ofd_tx);
 
     self->ofd = NULL;
 
