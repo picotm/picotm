@@ -20,6 +20,7 @@
 #pragma once
 
 #include <picotm/picotm-lib-ref.h>
+#include <picotm/picotm-lib-rwstate.h>
 #include <stdatomic.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -58,10 +59,11 @@ struct fd_tx {
 
 	unsigned long flags;
 
+    /** reader/writer state for file descriptor */
+    struct picotm_rwstate   rwstate;
+
     struct fcntlop* fcntltab;
     size_t          fcntltablen;
-
-    unsigned long fdver; /* Last fd version, modified by fdtx */
 };
 
 /**

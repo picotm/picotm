@@ -43,10 +43,10 @@ fd_tx_init(struct fd_tx* self)
 	self->flags = 0;
 	self->cc_mode = PICOTM_LIBC_CC_MODE_2PL;
 
+    picotm_rwstate_init(&self->rwstate);
+
     self->fcntltab = NULL;
     self->fcntltablen = 0;
-
-    self->fdver = 0;
 }
 
 void
@@ -74,13 +74,8 @@ fd_tx_ref_or_set_up(struct fd_tx* self, struct fd* fd, struct ofd_tx* ofd_tx,
 
     ofd_tx_ref(ofd_tx);
 
-    fd_lock(fd);
-    unsigned long fdver = fd_get_version_nl(fd);
-    fd_unlock(fd);
-
     self->fd = fd;
     self->ofd_tx = ofd_tx;
-    self->fdver = fdver;
     self->flags = flags & FD_FL_WANTNEW ? FDTX_FL_LOCALSTATE : 0;
 
     return;
@@ -145,6 +140,12 @@ static int
 close_exec_noundo(struct fd_tx* self, int fildes, int* cookie,
                   struct picotm_error* error)
 {
+    /* acquire writer lock on file descriptor */
+    fd_try_wrlock(self->fd, &self->rwstate, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+
     *cookie = 0; /* injects event */
     return 0;
 }
@@ -153,6 +154,12 @@ static int
 close_exec_ts(struct fd_tx* self, int fildes, int* cookie,
               struct picotm_error* error)
 {
+    /* acquire writer lock on file descriptor */
+    fd_try_wrlock(self->fd, &self->rwstate, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+
     *cookie = 0; /* injects event */
     return 0;
 }
@@ -240,14 +247,13 @@ fd_tx_fcntl_exec(struct fd_tx* self, int cmd, union fcntl_arg *arg,
     assert(self);
     assert(self->fd);
 
-    union fcntl_arg oldvalue;
-
-    fd_lock(self->fd);
-
-    fd_validate(self->fd, self->fdver, error);
+    /* acquire reader lock on file descriptor */
+    fd_try_rdlock(self->fd, &self->rwstate, error);
     if (picotm_error_is_set(error)) {
-        goto err_fd_validate;
+        return -1;
     }
+
+    union fcntl_arg oldvalue;
 
     int res = -1;
 
@@ -291,13 +297,9 @@ fd_tx_fcntl_exec(struct fd_tx* self, int cmd, union fcntl_arg *arg,
 
 	self->flags |= FDTX_FL_LOCALSTATE;
 
-    fd_unlock(self->fd);
-
     return res;
 
 err_cmd:
-err_fd_validate:
-    fd_unlock(self->fd);
     return -1;
 }
 
@@ -334,8 +336,6 @@ fd_tx_fcntl_undo(struct fd_tx* self, int cookie, bool* next_domain,
     assert(self->fd);
     assert(cookie < (ssize_t)self->fcntltablen);
 
-    fd_lock(self->fd);
-
     switch (self->fcntltab[cookie].command) {
         case F_SETFD: {
             fd_setfd(self->fd, self->fcntltab[cookie].oldvalue.arg0, error);
@@ -351,8 +351,6 @@ fd_tx_fcntl_undo(struct fd_tx* self, int cookie, bool* next_domain,
             *next_domain = true;
             break;
     }
-
-    fd_unlock(self->fd);
 }
 
 /*
@@ -361,27 +359,11 @@ fd_tx_fcntl_undo(struct fd_tx* self, int cookie, bool* next_domain,
 
 void
 fd_tx_lock(struct fd_tx* self)
-{
-    assert(self);
-
-    /* unlock file descriptor at the end of commit */
-
-    if (self->flags&FDTX_FL_LOCALSTATE) {
-        fd_lock(self->fd);
-    }
-}
+{ }
 
 void
 fd_tx_unlock(struct fd_tx* self)
-{
-    assert(self);
-
-    /* file descriptor has local changes */
-
-    if (self->flags&FDTX_FL_LOCALSTATE) {
-        fd_unlock(self->fd);
-    }
-}
+{ }
 
 void
 fd_tx_validate(struct fd_tx* self, struct picotm_error* error)
@@ -402,12 +384,6 @@ fd_tx_validate(struct fd_tx* self, struct picotm_error* error)
 	if (!(self->flags&FDTX_FL_LOCALSTATE)) {
 		return;
 	}
-
-	/* validate version of file descriptor */
-    fd_validate(self->fd, self->fdver, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
 }
 
 void
@@ -415,6 +391,9 @@ fd_tx_update_cc(struct fd_tx* self, struct picotm_error* error)
 {
     assert(self);
     assert(fd_tx_holds_ref(self));
+
+    /* release file-descriptor lock */
+    fd_unlock(self->fd, &self->rwstate);
 }
 
 void
@@ -422,4 +401,7 @@ fd_tx_clear_cc(struct fd_tx* self, struct picotm_error* error)
 {
     assert(self);
     assert(fd_tx_holds_ref(self));
+
+    /* release file-descriptor lock */
+    fd_unlock(self->fd, &self->rwstate);
 }

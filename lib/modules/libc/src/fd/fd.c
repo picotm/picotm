@@ -22,9 +22,27 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <picotm/picotm-error.h>
+#include <picotm/picotm-lib-rwstate.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "fcntlop.h"
+
+static void
+lock_fd(struct fd* fd)
+{
+    int err = pthread_mutex_lock(&fd->lock);
+    if (err) {
+        abort();
+    }
+}
+
+static void
+unlock_fd(struct fd* fd)
+{
+    int err = pthread_mutex_unlock(&fd->lock);
+    if (err) {
+        abort();
+    }
+}
 
 void
 fd_init(struct fd *fd, struct picotm_error* error)
@@ -42,7 +60,7 @@ fd_init(struct fd *fd, struct picotm_error* error)
     fd->fildes = -1;
     fd->state = FD_ST_UNUSED;
 
-    atomic_init(&fd->ver, 0);
+    picotm_rwlock_init(&fd->rwlock);
 }
 
 void
@@ -55,25 +73,35 @@ fd_uninit(struct fd *fd)
 }
 
 void
-fd_lock(struct fd *fd)
+fd_try_rdlock(struct fd *fd, struct picotm_rwstate* rwstate,
+              struct picotm_error* error)
 {
     assert(fd);
 
-    int err = pthread_mutex_lock(&fd->lock);
-    if (err) {
-        abort();
+    picotm_rwstate_try_rdlock(rwstate, &fd->rwlock, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 }
 
 void
-fd_unlock(struct fd *fd)
+fd_try_wrlock(struct fd *fd, struct picotm_rwstate* rwstate,
+              struct picotm_error* error)
 {
     assert(fd);
 
-    int err = pthread_mutex_unlock(&fd->lock);
-    if (err) {
-        abort();
+    picotm_rwstate_try_wrlock(rwstate, &fd->rwlock, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
+}
+
+void
+fd_unlock(struct fd *fd, struct picotm_rwstate* rwstate)
+{
+    assert(fd);
+
+    picotm_rwstate_unlock(rwstate, &fd->rwlock);
 }
 
 int
@@ -85,16 +113,9 @@ fd_is_open_nl(const struct fd *fd)
 }
 
 void
-fd_validate(struct fd* fd, unsigned long ver, struct picotm_error* error)
+fd_validate(struct fd* fd, struct picotm_error* error)
 {
     assert(fd);
-
-    unsigned long myver = atomic_load(&fd->ver);
-
-    if (ver < myver) {
-        picotm_error_set_conflicting(error, NULL);
-        return;
-    }
 }
 
 static bool
@@ -126,32 +147,10 @@ fd_ref(struct fd *fd, struct picotm_error* error)
 }
 
 void
-fd_ref_state(struct fd *fd, unsigned long *version,
-             struct picotm_error* error)
-{
-    assert(fd);
-
-    fd_ref(fd, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
-
-    fd_lock(fd);
-
-    if (fd_is_open_nl(fd)) {
-        if (version) {
-            *version = fd_get_version_nl(fd);
-        }
-    }
-
-    fd_unlock(fd);
-}
-
-void
 fd_ref_or_set_up(struct fd *fd, int fildes, bool want_new,
                  struct picotm_error* error)
 {
-    fd_lock(fd);
+    lock_fd(fd);
 
     bool first_ref = incr_ref_count(fd, error);
     if (picotm_error_is_set(error)) {
@@ -173,13 +172,13 @@ fd_ref_or_set_up(struct fd *fd, int fildes, bool want_new,
     fd->state = FD_ST_INUSE;
 
 unlock:
-    fd_unlock(fd);
+    unlock_fd(fd);
 
     return;
 
 err_want_new:
-    fd_unlock(fd);
     fd_unref(fd);
+    unlock_fd(fd);
 }
 
 static void
@@ -196,7 +195,7 @@ fd_unref(struct fd *fd)
 {
     assert(fd);
 
-    fd_lock(fd);
+    lock_fd(fd);
 
     bool final_ref = picotm_ref_down(&fd->ref);
     if (!final_ref) {
@@ -224,27 +223,7 @@ fd_unref(struct fd *fd)
     }
 
 unlock:
-    fd_unlock(fd);
-}
-
-unsigned long
-fd_get_version_nl(struct fd *fd)
-{
-    assert(fd);
-
-    unsigned long res;
-
-    switch (fd->state) {
-        case FD_ST_INUSE:
-            res = atomic_load(&fd->ver);
-            break;
-        case FD_ST_CLOSING:
-        case FD_ST_UNUSED:
-        default:
-            abort();
-    }
-
-    return res;
+    unlock_fd(fd);
 }
 
 void

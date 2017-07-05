@@ -21,9 +21,9 @@
 #define FD_H
 
 #include <picotm/picotm-lib-ref.h>
-#include <stdatomic.h>
-#include <stdbool.h>
+#include <picotm/picotm-lib-rwlock.h>
 #include <pthread.h>
+#include <stdbool.h>
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -34,6 +34,7 @@
  */
 
 struct picotm_error;
+struct picotm_rwstate;
 
 union fcntl_arg;
 
@@ -56,7 +57,8 @@ struct fd
     int fildes;
     enum fd_state state;
 
-    atomic_ulong ver;
+    /* file-descriptor lock */
+    struct picotm_rwlock rwlock;
 };
 
 /** \brief Init global file-descriptor state*/
@@ -67,17 +69,40 @@ fd_init(struct fd *fd, struct picotm_error* error);
 void
 fd_uninit(struct fd *fd);
 
-/** \brief Lock global file-descriptor state */
+/**
+ * Tries to acquires a reader lock on a file descriptor.
+ *
+ * \param       fd      The file-descriptor structure
+ * \param       rwstate The transaction's reader-writer state.
+ * \param[out]  error   Returns an error.
+ */
 void
-fd_lock(struct fd *fd);
+fd_try_rdlock(struct fd *fd, struct picotm_rwstate* state,
+              struct picotm_error* error);
 
-/** \brief Unlock global file-descriptor state */
+/**
+ * Tries to acquires a writer lock on a file descriptor.
+ *
+ * \param       fd      The file-descriptor structure
+ * \param       rwstate The transaction's reader-writer state.
+ * \param[out]  error   Returns an error.
+ */
 void
-fd_unlock(struct fd *fd);
+fd_try_wrlock(struct fd *fd, struct picotm_rwstate* state,
+              struct picotm_error* error);
 
-/** \brief Validates that ver is not smaller than the global version */
+/**
+ * Releases a reader/writer lock.
+ *
+ * \param   fd      The file-descriptor structure
+ * \param   rwstate The transaction's reader-writer state.
+ */
 void
-fd_validate(struct fd* fd, unsigned long ver, struct picotm_error* error);
+fd_unlock(struct fd *fd, struct picotm_rwstate* state);
+
+/** \brief Validates a file descriptor. */
+void
+fd_validate(struct fd* fd, struct picotm_error* error);
 
 /** \brief Aquires a reference on the file dscriptor */
 void
@@ -88,10 +113,6 @@ void
 fd_ref_or_set_up(struct fd *fd, int fildes, bool want_new,
                  struct picotm_error* error);
 
-void
-fd_ref_state(struct fd *fd, unsigned long *version,
-             struct picotm_error* error);
-
 /** \brief Releases a reference on the file descriptor */
 void
 fd_unref(struct fd *fd);
@@ -99,10 +120,6 @@ fd_unref(struct fd *fd);
 /** \brief Return non-zero value if file-descriptor is open */
 int
 fd_is_open_nl(const struct fd *fd);
-
-/** \brief Get file-descriptor version number */
-unsigned long
-fd_get_version_nl(struct fd *fd);
 
 /** \brief Set file descriptor to state close */
 void
