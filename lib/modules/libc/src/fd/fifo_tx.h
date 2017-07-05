@@ -23,6 +23,7 @@
 #include <picotm/picotm-lib-rwstate.h>
 #include <sys/queue.h>
 #include <sys/types.h>
+#include "ofd_tx.h"
 #include "picotm/picotm-libc.h"
 
 /**
@@ -46,6 +47,8 @@ struct fifo_tx {
     struct picotm_ref16 ref;
 
     SLIST_ENTRY(fifo_tx) active_list;
+
+    struct ofd_tx base;
 
     struct ofd* ofd;
 
@@ -72,6 +75,9 @@ struct fifo_tx {
     /** State of the local lock */
     struct picotm_rwstate rwstate;
 };
+
+struct fifo_tx*
+fifo_tx_of_ofd_tx(struct ofd_tx* ofd_tx);
 
 /**
  * Init transaction-local open-file-description state

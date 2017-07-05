@@ -20,6 +20,7 @@
 #include "fildes_tx.h"
 #include <assert.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <picotm/picotm-lib-tab.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -64,8 +65,20 @@ fildes_tx_init(struct fildes_tx* self, unsigned long module)
 {
     self->module = module;
 
-    self->ofd_tx_max_index = 0;
     self->fd_tx_max_fildes = 0;
+    SLIST_INIT(&self->fd_tx_active_list);
+
+    self->fifo_tx_max_index = 0;
+    SLIST_INIT(&self->fifo_tx_active_list);
+
+    self->chrdev_tx_max_index = 0;
+    SLIST_INIT(&self->chrdev_tx_active_list);
+
+    self->regfile_tx_max_index = 0;
+    SLIST_INIT(&self->regfile_tx_active_list);
+
+    self->socket_tx_max_index = 0;
+    SLIST_INIT(&self->socket_tx_active_list);
 
     self->eventtab = NULL;
     self->eventtablen = 0;
@@ -76,19 +89,41 @@ fildes_tx_init(struct fildes_tx* self, unsigned long module)
 
     self->pipeoptab = NULL;
     self->pipeoptablen = 0;
-
-    SLIST_INIT(&self->ofd_tx_active_list);
 }
 
 void
 fildes_tx_uninit(struct fildes_tx* self)
 {
-    /* Uninit ofd_txs */
+    /* Uninit fifo_txs */
 
-    for (struct ofd_tx* ofd_tx = self->ofd_tx;
-                        ofd_tx < self->ofd_tx + self->ofd_tx_max_index;
-                      ++ofd_tx) {
-        ofd_tx_uninit(ofd_tx);
+    for (struct fifo_tx* fifo_tx = self->fifo_tx;
+                         fifo_tx < self->fifo_tx + self->fifo_tx_max_index;
+                       ++fifo_tx) {
+        fifo_tx_uninit(fifo_tx);
+    }
+
+    /* Uninit chrdev_txs */
+
+    for (struct chrdev_tx* chrdev_tx = self->chrdev_tx;
+                           chrdev_tx < self->chrdev_tx + self->chrdev_tx_max_index;
+                         ++chrdev_tx) {
+        chrdev_tx_uninit(chrdev_tx);
+    }
+
+    /* Uninit regfile_txs */
+
+    for (struct regfile_tx* regfile_tx = self->regfile_tx;
+                            regfile_tx < self->regfile_tx + self->regfile_tx_max_index;
+                          ++regfile_tx) {
+        regfile_tx_uninit(regfile_tx);
+    }
+
+    /* Uninit socket_txs */
+
+    for (struct socket_tx* socket_tx = self->socket_tx;
+                           socket_tx < self->socket_tx + self->socket_tx_max_index;
+                         ++socket_tx) {
+        socket_tx_uninit(socket_tx);
     }
 
     /* Uninit fd_txs */
@@ -118,23 +153,23 @@ fildes_tx_get_validation_mode(const struct fildes_tx* self)
     return picotm_libc_get_validation_mode();
 }
 
-static struct ofd_tx*
-get_ofd_tx(struct fildes_tx* self, int index)
+static struct fifo_tx*
+get_fifo_tx(struct fildes_tx* self, int index)
 {
-    for (struct ofd_tx* ofd_tx = self->ofd_tx + self->ofd_tx_max_index;
-                        ofd_tx < self->ofd_tx + index + 1;
-                      ++ofd_tx) {
-        ofd_tx_init(ofd_tx);
+    for (struct fifo_tx* fifo_tx = self->fifo_tx + self->fifo_tx_max_index;
+                         fifo_tx < self->fifo_tx + index + 1;
+                       ++fifo_tx) {
+        fifo_tx_init(fifo_tx);
     }
 
-    self->ofd_tx_max_index = lmax(index + 1, self->ofd_tx_max_index);
+    self->fifo_tx_max_index = lmax(index + 1, self->fifo_tx_max_index);
 
-    return self->ofd_tx + index;
+    return self->fifo_tx + index;
 }
 
-static struct ofd_tx*
-get_ofd_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
-                    struct picotm_error* error)
+static struct fifo_tx*
+get_fifo_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
+                     struct picotm_error* error)
 {
     struct ofd* ofd = ofdtab_ref_fildes(fildes,
                                         !!(flags & OFD_FL_WANTNEW),
@@ -144,31 +179,249 @@ get_ofd_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
         return NULL;
     }
 
-    struct ofd_tx* ofd_tx = get_ofd_tx(self, ofdtab_index(ofd));
+    struct fifo_tx* fifo_tx = get_fifo_tx(self, ofdtab_index(ofd));
 
     /* In |struct fildes_tx| we hold at most one reference to the
-     * transaction state of each open file description. This reference
-     * is released in fildes_tx_finish().
+     * transaction state of each FIFO. This reference is released
+     * in fildes_tx_finish().
      */
-    if (ofd_tx_holds_ref(ofd_tx)) {
+    if (fifo_tx_holds_ref(fifo_tx)) {
         goto unref;
     }
 
-    ofd_tx_ref_or_set_up(ofd_tx, ofd, fildes, flags, error);
+    fifo_tx_ref_or_set_up(fifo_tx, ofd, fildes, flags, error);
     if (picotm_error_is_set(error)) {
-        goto err_ofd_tx_ref;
+        goto err_fifo_tx_ref_or_set_up;
     }
 
-    SLIST_INSERT_HEAD(&self->ofd_tx_active_list, ofd_tx, active_list);
+    SLIST_INSERT_HEAD(&self->fifo_tx_active_list, fifo_tx, active_list);
 
 unref:
     ofd_unref(ofd);
 
-    return ofd_tx;
+    return fifo_tx;
 
-err_ofd_tx_ref:
+err_fifo_tx_ref_or_set_up:
     ofd_unref(ofd);
     return NULL;
+}
+
+static struct chrdev_tx*
+get_chrdev_tx(struct fildes_tx* self, int index)
+{
+    for (struct chrdev_tx* chrdev_tx = self->chrdev_tx + self->chrdev_tx_max_index;
+                           chrdev_tx < self->chrdev_tx + index + 1;
+                         ++chrdev_tx) {
+        chrdev_tx_init(chrdev_tx);
+    }
+
+    self->chrdev_tx_max_index = lmax(index + 1, self->chrdev_tx_max_index);
+
+    return self->chrdev_tx + index;
+}
+
+static struct chrdev_tx*
+get_chrdev_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
+                       struct picotm_error* error)
+{
+    struct ofd* ofd = ofdtab_ref_fildes(fildes,
+                                        !!(flags & OFD_FL_WANTNEW),
+                                        !!(flags & OFD_FL_UNLINK),
+                                        error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+
+    struct chrdev_tx* chrdev_tx = get_chrdev_tx(self, ofdtab_index(ofd));
+
+    /* In |struct fildes_tx| we hold at most one reference to the
+     * transaction state of each character device. This reference is
+     * released in fildes_tx_finish().
+     */
+    if (chrdev_tx_holds_ref(chrdev_tx)) {
+        goto unref;
+    }
+
+    chrdev_tx_ref_or_set_up(chrdev_tx, ofd, fildes, flags, error);
+    if (picotm_error_is_set(error)) {
+        goto err_chrdev_tx_ref_or_set_up;
+    }
+
+    SLIST_INSERT_HEAD(&self->chrdev_tx_active_list, chrdev_tx, active_list);
+
+unref:
+    ofd_unref(ofd);
+
+    return chrdev_tx;
+
+err_chrdev_tx_ref_or_set_up:
+    ofd_unref(ofd);
+    return NULL;
+}
+
+static struct regfile_tx*
+get_regfile_tx(struct fildes_tx* self, int index)
+{
+    for (struct regfile_tx* regfile_tx = self->regfile_tx + self->regfile_tx_max_index;
+                            regfile_tx < self->regfile_tx + index + 1;
+                          ++regfile_tx) {
+        regfile_tx_init(regfile_tx);
+    }
+
+    self->regfile_tx_max_index = lmax(index + 1, self->regfile_tx_max_index);
+
+    return self->regfile_tx + index;
+}
+
+static struct regfile_tx*
+get_regfile_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
+                        struct picotm_error* error)
+{
+    struct ofd* ofd = ofdtab_ref_fildes(fildes,
+                                        !!(flags & OFD_FL_WANTNEW),
+                                        !!(flags & OFD_FL_UNLINK),
+                                        error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+
+    struct regfile_tx* regfile_tx = get_regfile_tx(self, ofdtab_index(ofd));
+
+    /* In |struct fildes_tx| we hold at most one reference to the
+     * transaction state of each regular file. This reference is
+     * released in fildes_tx_finish().
+     */
+    if (regfile_tx_holds_ref(regfile_tx)) {
+        goto unref;
+    }
+
+    regfile_tx_ref_or_set_up(regfile_tx, ofd, fildes, flags, error);
+    if (picotm_error_is_set(error)) {
+        goto err_regfile_tx_ref_or_set_up;
+    }
+
+    SLIST_INSERT_HEAD(&self->regfile_tx_active_list, regfile_tx, active_list);
+
+unref:
+    ofd_unref(ofd);
+
+    return regfile_tx;
+
+err_regfile_tx_ref_or_set_up:
+    ofd_unref(ofd);
+    return NULL;
+}
+
+static struct socket_tx*
+get_socket_tx(struct fildes_tx* self, int index)
+{
+    for (struct socket_tx* socket_tx = self->socket_tx + self->socket_tx_max_index;
+                           socket_tx < self->socket_tx + index + 1;
+                         ++socket_tx) {
+        socket_tx_init(socket_tx);
+    }
+
+    self->socket_tx_max_index = lmax(index + 1, self->socket_tx_max_index);
+
+    return self->socket_tx + index;
+}
+
+static struct socket_tx*
+get_socket_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
+                       struct picotm_error* error)
+{
+    struct ofd* ofd = ofdtab_ref_fildes(fildes,
+                                        !!(flags & OFD_FL_WANTNEW),
+                                        !!(flags & OFD_FL_UNLINK),
+                                        error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+
+    struct socket_tx* socket_tx = get_socket_tx(self, ofdtab_index(ofd));
+
+    /* In |struct fildes_tx| we hold at most one reference to the
+     * transaction state of each socket. This reference is released
+     * in fildes_tx_finish().
+     */
+    if (socket_tx_holds_ref(socket_tx)) {
+        goto unref;
+    }
+
+    socket_tx_ref_or_set_up(socket_tx, ofd, fildes, flags, error);
+    if (picotm_error_is_set(error)) {
+        goto err_socket_tx_ref_or_set_up;
+    }
+
+    SLIST_INSERT_HEAD(&self->socket_tx_active_list, socket_tx, active_list);
+
+unref:
+    ofd_unref(ofd);
+
+    return socket_tx;
+
+err_socket_tx_ref_or_set_up:
+    ofd_unref(ofd);
+    return NULL;
+}
+
+static struct ofd_tx*
+get_ofd_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
+                    struct picotm_error* error)
+{
+    struct stat buf;
+    int res = fstat(fildes, &buf);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return NULL;
+    }
+
+    switch (buf.st_mode & S_IFMT) {
+        case S_IFIFO: {
+            struct fifo_tx* fifo_tx = get_fifo_tx_with_ref(self,
+                                                           fildes,
+                                                           flags,
+                                                           error);
+            if (picotm_error_is_set(error)) {
+                return NULL;
+            }
+            return &fifo_tx->base;
+        }
+        case S_IFCHR: {
+            struct chrdev_tx* chrdev_tx = get_chrdev_tx_with_ref(self,
+                                                                 fildes,
+                                                                 flags,
+                                                                 error);
+            if (picotm_error_is_set(error)) {
+                return NULL;
+            }
+            return &chrdev_tx->base;
+        }
+        case S_IFREG: {
+            struct regfile_tx* regfile_tx = get_regfile_tx_with_ref(self,
+                                                                    fildes,
+                                                                    flags,
+                                                                    error);
+            if (picotm_error_is_set(error)) {
+                return NULL;
+            }
+            return &regfile_tx->base;
+        }
+        case S_IFSOCK: {
+            struct socket_tx* socket_tx = get_socket_tx_with_ref(self,
+                                                                 fildes,
+                                                                 flags,
+                                                                 error);
+            if (picotm_error_is_set(error)) {
+                return NULL;
+            }
+            return &socket_tx->base;
+        }
+        default:
+            fprintf(stderr, "file type = %x\n", buf.st_mode & S_IFMT);
+            picotm_error_set_errno(error, EINVAL); /* unsupported file type */
+            return NULL;
+    }
 }
 
 static struct fd_tx*
@@ -1847,22 +2100,64 @@ fildes_tx_lock(struct fildes_tx* self, struct picotm_error* error)
         fd_tx_lock(fd_tx);
     }
 
-    /* Lock ofds */
+    /* Lock fifos */
 
-    struct ofd_tx* ofd_tx;
-    SLIST_FOREACH(ofd_tx, &self->ofd_tx_active_list, active_list) {
-        ofd_tx_lock(ofd_tx);
+    struct fifo_tx* fifo_tx;
+    SLIST_FOREACH(fifo_tx, &self->fifo_tx_active_list, active_list) {
+        fifo_tx_lock(fifo_tx);
+    }
+
+    /* Lock character devices */
+
+    struct chrdev_tx* chrdev_tx;
+    SLIST_FOREACH(chrdev_tx, &self->chrdev_tx_active_list, active_list) {
+        chrdev_tx_lock(chrdev_tx);
+    }
+
+    /* Lock regular files */
+
+    struct regfile_tx* regfile_tx;
+    SLIST_FOREACH(regfile_tx, &self->regfile_tx_active_list, active_list) {
+        regfile_tx_lock(regfile_tx);
+    }
+
+    /* Lock sockets */
+
+    struct socket_tx* socket_tx;
+    SLIST_FOREACH(socket_tx, &self->socket_tx_active_list, active_list) {
+        socket_tx_lock(socket_tx);
     }
 }
 
 void
 fildes_tx_unlock(struct fildes_tx* self)
 {
-    /* Unlock ofds */
+    /* Unlock sockets */
 
-    struct ofd_tx* ofd_tx;
-    SLIST_FOREACH(ofd_tx, &self->ofd_tx_active_list, active_list) {
-        ofd_tx_unlock(ofd_tx);
+    struct socket_tx* socket_tx;
+    SLIST_FOREACH(socket_tx, &self->socket_tx_active_list, active_list) {
+        socket_tx_unlock(socket_tx);
+    }
+
+    /* Unlock regular files */
+
+    struct regfile_tx* regfile_tx;
+    SLIST_FOREACH(regfile_tx, &self->regfile_tx_active_list, active_list) {
+        regfile_tx_unlock(regfile_tx);
+    }
+
+    /* Unlock character devices */
+
+    struct chrdev_tx* chrdev_tx;
+    SLIST_FOREACH(chrdev_tx, &self->chrdev_tx_active_list, active_list) {
+        chrdev_tx_unlock(chrdev_tx);
+    }
+
+    /* Unlock fifos */
+
+    struct fifo_tx* fifo_tx;
+    SLIST_FOREACH(fifo_tx, &self->fifo_tx_active_list, active_list) {
+        fifo_tx_unlock(fifo_tx);
     }
 
     /* Unlock fds */
@@ -1887,11 +2182,41 @@ fildes_tx_validate(struct fildes_tx* self, int noundo,
         }
     }
 
-    /* Validate ofd_txs */
+    /* Validate fifo_txs */
 
-    struct ofd_tx* ofd_tx;
-    SLIST_FOREACH(ofd_tx, &self->ofd_tx_active_list, active_list) {
-        ofd_tx_validate(ofd_tx, error);
+    struct fifo_tx* fifo_tx;
+    SLIST_FOREACH(fifo_tx, &self->fifo_tx_active_list, active_list) {
+        fifo_tx_validate(fifo_tx, error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
+    }
+
+    /* Validate chrdev_txs */
+
+    struct chrdev_tx* chrdev_tx;
+    SLIST_FOREACH(chrdev_tx, &self->chrdev_tx_active_list, active_list) {
+        chrdev_tx_validate(chrdev_tx, error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
+    }
+
+    /* Validate regfile_txs */
+
+    struct regfile_tx* regfile_tx;
+    SLIST_FOREACH(regfile_tx, &self->regfile_tx_active_list, active_list) {
+        regfile_tx_validate(regfile_tx, error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
+    }
+
+    /* Validate socket_txs */
+
+    struct socket_tx* socket_tx;
+    SLIST_FOREACH(socket_tx, &self->socket_tx_active_list, active_list) {
+        socket_tx_validate(socket_tx, error);
         if (picotm_error_is_set(error)) {
             return;
         }
@@ -1990,11 +2315,41 @@ fildes_tx_update_cc(struct fildes_tx* self, int noundo,
         }
     }
 
-    /* Update ofd_txs */
+    /* Update fifo_txs */
 
-    struct ofd_tx* ofd_tx;
-    SLIST_FOREACH(ofd_tx, &self->ofd_tx_active_list, active_list) {
-        ofd_tx_update_cc(ofd_tx, error);
+    struct fifo_tx* fifo_tx;
+    SLIST_FOREACH(fifo_tx, &self->fifo_tx_active_list, active_list) {
+        fifo_tx_update_cc(fifo_tx, error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
+    }
+
+    /* Update chrdev_txs */
+
+    struct chrdev_tx* chrdev_tx;
+    SLIST_FOREACH(chrdev_tx, &self->chrdev_tx_active_list, active_list) {
+        chrdev_tx_update_cc(chrdev_tx, error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
+    }
+
+    /* Update regfile_txs */
+
+    struct regfile_tx* regfile_tx;
+    SLIST_FOREACH(regfile_tx, &self->regfile_tx_active_list, active_list) {
+        regfile_tx_update_cc(regfile_tx, error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
+    }
+
+    /* Update socket_txs */
+
+    struct socket_tx* socket_tx;
+    SLIST_FOREACH(socket_tx, &self->socket_tx_active_list, active_list) {
+        socket_tx_update_cc(socket_tx, error);
         if (picotm_error_is_set(error)) {
             return;
         }
@@ -2015,11 +2370,41 @@ fildes_tx_clear_cc(struct fildes_tx* self, int noundo,
         }
     }
 
-    /* Clear ofd_txs' CC */
+    /* Clear fifo_txs' CC */
 
-    struct ofd_tx* ofd_tx;
-    SLIST_FOREACH(ofd_tx, &self->ofd_tx_active_list, active_list) {
-        ofd_tx_clear_cc(ofd_tx, error);
+    struct fifo_tx* fifo_tx;
+    SLIST_FOREACH(fifo_tx, &self->fifo_tx_active_list, active_list) {
+        fifo_tx_clear_cc(fifo_tx, error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
+    }
+
+    /* Clear chrdev_txs' CC */
+
+    struct chrdev_tx* chrdev_tx;
+    SLIST_FOREACH(chrdev_tx, &self->chrdev_tx_active_list, active_list) {
+        chrdev_tx_clear_cc(chrdev_tx, error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
+    }
+
+    /* Clear regfile_txs' CC */
+
+    struct regfile_tx* regfile_tx;
+    SLIST_FOREACH(regfile_tx, &self->regfile_tx_active_list, active_list) {
+        regfile_tx_clear_cc(regfile_tx, error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
+    }
+
+    /* Clear socket_txs' CC */
+
+    struct socket_tx* socket_tx;
+    SLIST_FOREACH(socket_tx, &self->socket_tx_active_list, active_list) {
+        socket_tx_clear_cc(socket_tx, error);
         if (picotm_error_is_set(error)) {
             return;
         }
@@ -2029,14 +2414,44 @@ fildes_tx_clear_cc(struct fildes_tx* self, int noundo,
 void
 fildes_tx_finish(struct fildes_tx* self)
 {
-    /* Unref ofd_txs */
+    /* Unref socket_txs */
 
-    while (!SLIST_EMPTY(&self->ofd_tx_active_list)) {
+    while (!SLIST_EMPTY(&self->socket_tx_active_list)) {
 
-        struct ofd_tx* ofd_tx = SLIST_FIRST(&self->ofd_tx_active_list);
-        SLIST_REMOVE_HEAD(&self->ofd_tx_active_list, active_list);
+        struct socket_tx* socket_tx = SLIST_FIRST(&self->socket_tx_active_list);
+        SLIST_REMOVE_HEAD(&self->socket_tx_active_list, active_list);
 
-        ofd_tx_unref(ofd_tx);
+        socket_tx_unref(socket_tx);
+    }
+
+    /* Unref regfile_txs */
+
+    while (!SLIST_EMPTY(&self->regfile_tx_active_list)) {
+
+        struct regfile_tx* regfile_tx = SLIST_FIRST(&self->regfile_tx_active_list);
+        SLIST_REMOVE_HEAD(&self->regfile_tx_active_list, active_list);
+
+        regfile_tx_unref(regfile_tx);
+    }
+
+    /* Unref chrdev_txs */
+
+    while (!SLIST_EMPTY(&self->chrdev_tx_active_list)) {
+
+        struct chrdev_tx* chrdev_tx = SLIST_FIRST(&self->chrdev_tx_active_list);
+        SLIST_REMOVE_HEAD(&self->chrdev_tx_active_list, active_list);
+
+        chrdev_tx_unref(chrdev_tx);
+    }
+
+    /* Unref fifo_txs */
+
+    while (!SLIST_EMPTY(&self->fifo_tx_active_list)) {
+
+        struct fifo_tx* fifo_tx = SLIST_FIRST(&self->fifo_tx_active_list);
+        SLIST_REMOVE_HEAD(&self->fifo_tx_active_list, active_list);
+
+        fifo_tx_unref(fifo_tx);
     }
 
     /* Unref fd_txs */

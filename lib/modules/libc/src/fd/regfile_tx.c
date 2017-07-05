@@ -21,6 +21,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <picotm/picotm-error.h>
+#include <picotm/picotm-lib-ptr.h>
 #include <picotm/picotm-lib-tab.h>
 #include <stdlib.h>
 #include <string.h>
@@ -56,6 +57,27 @@ regfile_tx_2pl_release_locks(struct regfile_tx* self)
     }
 }
 
+struct regfile_tx*
+regfile_tx_of_ofd_tx(struct ofd_tx* ofd_tx)
+{
+    assert(ofd_tx);
+    assert(ofd_tx_file_type(ofd_tx) == PICOTM_LIBC_FILE_TYPE_REGULAR);
+
+    return picotm_containerof(ofd_tx, struct regfile_tx, base);
+}
+
+static void
+ref_ofd_tx(struct ofd_tx* ofd_tx)
+{
+    regfile_tx_ref(regfile_tx_of_ofd_tx(ofd_tx));
+}
+
+static void
+unref_ofd_tx(struct ofd_tx* ofd_tx)
+{
+    regfile_tx_unref(regfile_tx_of_ofd_tx(ofd_tx));
+}
+
 void
 regfile_tx_init(struct regfile_tx* self)
 {
@@ -64,6 +86,9 @@ regfile_tx_init(struct regfile_tx* self)
     picotm_ref_init(&self->ref, 0);
 
     memset(&self->active_list, 0, sizeof(self->active_list));
+
+    ofd_tx_init(&self->base, PICOTM_LIBC_FILE_TYPE_REGULAR,
+                ref_ofd_tx, unref_ofd_tx);
 
     self->ofd = NULL;
 
