@@ -25,6 +25,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <sys/queue.h>
+#include <sys/socket.h>
 #include "picotm/picotm-libc.h"
 
 /**
@@ -38,6 +39,7 @@
 #define FDTX_FL_LOCALSTATE 1L /** \brief Signals local state changes */
 
 struct fcntlop;
+struct fd_event;
 struct ofd_tx;
 struct picotm_error;
 
@@ -134,6 +136,24 @@ void
 fd_tx_dump(const struct fd_tx* self);
 
 /*
+ * bind()
+ */
+
+int
+fd_tx_bind_exec(struct fd_tx* self, int sockfd, const struct sockaddr *addr,
+                socklen_t addrlen, int* cookie, int noundo,
+                struct picotm_error* error);
+
+void
+fd_tx_bind_apply(struct fd_tx* self, int sockfd,
+                 const struct fd_event* event,
+                 struct picotm_error* error);
+
+void
+fd_tx_bind_undo(struct fd_tx* self, int sockfd, int cookie,
+                struct picotm_error* error);
+
+/*
  * close()
  */
 
@@ -150,17 +170,215 @@ fd_tx_close_undo(struct fd_tx* self, int fildes, int cookie,
                  struct picotm_error* error);
 
 /*
+ * connect()
+ */
+
+int
+fd_tx_connect_exec(struct fd_tx* self, int sockfd,
+                   const struct sockaddr* serv_addr, socklen_t addrlen,
+                   int* cookie, int noundo, struct picotm_error* error);
+
+void
+fd_tx_connect_apply(struct fd_tx* self, int sockfd,
+                    const struct fd_event* event,
+                    struct picotm_error* error);
+
+void
+fd_tx_connect_undo(struct fd_tx* self, int sockfd, int cookie,
+                   struct picotm_error* error);
+
+/*
  * fcntl()
  */
 
 int
-fd_tx_fcntl_exec(struct fd_tx* self, int cmd, union fcntl_arg *arg,
-                 int* cookie, int noundo, struct picotm_error* error);
+fd_tx_fcntl_exec(struct fd_tx* self, int fildes, int cmd,
+                 union fcntl_arg* arg, int* cookie, int noundo,
+                 struct picotm_error* error);
 
 void
-fd_tx_fcntl_apply(struct fd_tx* self, int cookie, bool* next_domain,
+fd_tx_fcntl_apply(struct fd_tx* self, int fildes, int cookie,
+                  const struct fd_event* event,
                   struct picotm_error* error);
 
 void
-fd_tx_fcntl_undo(struct fd_tx* self, int cookie, bool* next_domain,
+fd_tx_fcntl_undo(struct fd_tx* self, int fildes, int cookie,
+                 struct picotm_error* error);
+
+/*
+ * fsync()
+ */
+
+int
+fd_tx_fsync_exec(struct fd_tx* self, int fildes, int noundo, int* cookie,
+                 struct picotm_error* error);
+
+void
+fd_tx_fsync_apply(struct fd_tx* self, int fildes,
+                  const struct fd_event* event,
+                  struct picotm_error* error);
+
+void
+fd_tx_fsync_undo(struct fd_tx* self, int fildes, int cookie,
+                 struct picotm_error* error);
+
+/*
+ * listen()
+ */
+
+int
+fd_tx_listen_exec(struct fd_tx* self, int sockfd, int backlog, int* cookie,
+                  int noundo, struct picotm_error* error);
+
+void
+fd_tx_listen_apply(struct fd_tx* self, int sockfd,
+                   const struct fd_event* event,
+                   struct picotm_error* error);
+
+void
+fd_tx_listen_undo(struct fd_tx* self, int sockfd, int cookie,
+                  struct picotm_error* error);
+
+/*
+ * lseek()
+ */
+
+off_t
+fd_tx_lseek_exec(struct fd_tx* self, int fildes, off_t offset, int whence,
+                 int* cookie, int noundo, struct picotm_error* error);
+
+void
+fd_tx_lseek_apply(struct fd_tx* self, int fildes,
+                  const struct fd_event* event,
+                  struct picotm_error* error);
+
+void
+fd_tx_lseek_undo(struct fd_tx* self, int fildes, int cookie,
+                 struct picotm_error* error);
+
+/*
+ * pread()
+ */
+
+ssize_t
+fd_tx_pread_exec(struct fd_tx* self, int fildes, void* buf, size_t nbyte,
+                 off_t off, int* cookie, int noundo,
+                 enum picotm_libc_validation_mode val_mode,
+                 struct picotm_error* error);
+
+void
+fd_tx_pread_apply(struct fd_tx* self, int fildes,
+                  const struct fd_event* event,
+                  struct picotm_error* error);
+
+void
+fd_tx_pread_undo(struct fd_tx* self, int fildes, int cookie,
+                 struct picotm_error* error);
+
+/*
+ * pwrite()
+ */
+
+ssize_t
+fd_tx_pwrite_exec(struct fd_tx* self, int fildes, const void* buf,
+                  size_t nbyte, off_t off, int* cookie, int noundo,
+                  struct picotm_error* error);
+
+void
+fd_tx_pwrite_apply(struct fd_tx* self, int fildes,
+                   const struct fd_event* event,
+                   struct picotm_error* error);
+
+void
+fd_tx_pwrite_undo(struct fd_tx* self, int fildes, int cookie,
+                  struct picotm_error* error);
+
+/*
+ * read()
+ */
+
+ssize_t
+fd_tx_read_exec(struct fd_tx* self, int fildes, void *buf, size_t nbyte,
+                int* cookie, int noundo,
+                enum picotm_libc_validation_mode val_mode,
+                struct picotm_error* error);
+
+void
+fd_tx_read_apply(struct fd_tx* self, int fildes,
+                 const struct fd_event* event,
+                 struct picotm_error* error);
+
+void
+fd_tx_read_undo(struct fd_tx* self, int fildes, int cookie,
+                struct picotm_error* error);
+
+/*
+ * recv()
+ */
+
+ssize_t
+fd_tx_recv_exec(struct fd_tx* self, int sockfd, void* buffer, size_t length,
+                int flags, int* cookie, int noundo,
+                struct picotm_error* error);
+
+void
+fd_tx_recv_apply(struct fd_tx* self, int sockfd,
+                 const struct fd_event* event,
+                 struct picotm_error* error);
+
+void
+fd_tx_recv_undo(struct fd_tx* self, int sockfd, int cookie,
+                struct picotm_error* error);
+
+/*
+ * send()
+ */
+
+ssize_t
+fd_tx_send_exec(struct fd_tx* self, int sockfd, const void* buffer,
+                size_t length, int flags, int* cookie, int noundo,
+                struct picotm_error* error);
+
+void
+fd_tx_send_apply(struct fd_tx* self, int fildes,
+                 const struct fd_event* event,
+                 struct picotm_error* error);
+
+void
+fd_tx_send_undo(struct fd_tx* self, int fildes, int cookie,
+                struct picotm_error* error);
+
+/*
+ * shutdown()
+ */
+
+int
+fd_tx_shutdown_exec(struct fd_tx* self, int sockfd, int how, int* cookie,
+                    int noundo, struct picotm_error* error);
+
+void
+fd_tx_shutdown_apply(struct fd_tx* self, int fildes,
+                     const struct fd_event* event,
+                     struct picotm_error* error);
+
+void
+fd_tx_shutdown_undo(struct fd_tx* self, int fildes, int cookie,
+                    struct picotm_error* error);
+
+/*
+ * write()
+ */
+
+ssize_t
+fd_tx_write_exec(struct fd_tx* self, int fildes, const void* buf,
+                 size_t nbyte, int* cookie, int noundo,
+                 struct picotm_error* error);
+
+void
+fd_tx_write_apply(struct fd_tx* self, int fildes,
+                  const struct fd_event* event,
+                  struct picotm_error* error);
+
+void
+fd_tx_write_undo(struct fd_tx* self, int fildes, int cookie,
                  struct picotm_error* error);
