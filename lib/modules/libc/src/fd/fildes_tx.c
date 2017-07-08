@@ -612,8 +612,8 @@ fildes_tx_exec_bind(struct fildes_tx* self, int socket,
 
     int cookie = -1;
 
-    int res = fd_tx_bind_exec(fd_tx, socket, address, addresslen, &cookie,
-                              isnoundo, error);
+    int res = fd_tx_bind_exec(fd_tx, socket, address, addresslen,
+                              isnoundo, &cookie, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -641,7 +641,7 @@ apply_bind(struct fildes_tx* self, const struct fd_event* event,
     struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
     assert(fd_tx);
 
-    fd_tx_bind_apply(fd_tx, event->fildes, event, error);
+    fd_tx_bind_apply(fd_tx, event->fildes, event->cookie, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -687,7 +687,7 @@ fildes_tx_exec_close(struct fildes_tx* self, int fildes, int isnoundo,
 
     int cookie = -1;
 
-    int res = fd_tx_close_exec(fd_tx, fildes, &cookie, isnoundo, error);
+    int res = fd_tx_close_exec(fd_tx, fildes, isnoundo, &cookie, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -758,8 +758,8 @@ fildes_tx_exec_connect(struct fildes_tx* self, int sockfd,
 
     int cookie = -1;
 
-    int res = fd_tx_connect_exec(fd_tx, sockfd, serv_addr, addrlen, &cookie,
-                                 isnoundo, error);
+    int res = fd_tx_connect_exec(fd_tx, sockfd, serv_addr, addrlen,
+                                 isnoundo, &cookie, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -787,7 +787,7 @@ apply_connect(struct fildes_tx* self, const struct fd_event* event,
     struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
     assert(fd_tx);
 
-    fd_tx_connect_apply(fd_tx, event->fildes, event, error);
+    fd_tx_connect_apply(fd_tx, event->fildes, event->cookie, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -904,7 +904,7 @@ fildes_tx_exec_fcntl(struct fildes_tx* self, int fildes, int cmd,
 
     int cookie = -1;
 
-    int res = fd_tx_fcntl_exec(fd_tx, fildes, cmd, arg, &cookie, isnoundo,
+    int res = fd_tx_fcntl_exec(fd_tx, fildes, cmd, arg, isnoundo, &cookie,
                                error);
     if (picotm_error_is_set(error)) {
         return -1;
@@ -933,7 +933,7 @@ apply_fcntl(struct fildes_tx* self, const struct fd_event* event,
     struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
     assert(fd_tx);
 
-    fd_tx_fcntl_apply(fd_tx, event->fildes, event->cookie, event, error);
+    fd_tx_fcntl_apply(fd_tx, event->fildes, event->cookie, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -1006,7 +1006,7 @@ apply_fsync(struct fildes_tx* self, const struct fd_event* event,
     struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
     assert(fd_tx);
 
-    fd_tx_fsync_apply(fd_tx, event->fildes, event, error);
+    fd_tx_fsync_apply(fd_tx, event->fildes, event->cookie, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -1050,7 +1050,7 @@ fildes_tx_exec_listen(struct fildes_tx* self, int sockfd, int backlog,
 
     int cookie = -1;
 
-    int res = fd_tx_listen_exec(fd_tx, sockfd, backlog, &cookie, isnoundo,
+    int res = fd_tx_listen_exec(fd_tx, sockfd, backlog, isnoundo, &cookie,
                                 error);
     if (picotm_error_is_set(error)) {
         return -1;
@@ -1079,7 +1079,7 @@ apply_listen(struct fildes_tx* self, const struct fd_event* event,
     struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
     assert(fd_tx);
 
-    fd_tx_listen_apply(fd_tx, event->fildes, event, error);
+    fd_tx_listen_apply(fd_tx, event->fildes, event->cookie, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -1123,8 +1123,8 @@ fildes_tx_exec_lseek(struct fildes_tx* self, int fildes, off_t offset,
 
     int cookie = -1;
 
-    off_t pos = fd_tx_lseek_exec(fd_tx, fildes, offset, whence, &cookie,
-                                 isnoundo, error);
+    off_t pos = fd_tx_lseek_exec(fd_tx, fildes, offset, whence,
+                                 isnoundo, &cookie, error);
     if (picotm_error_is_set(error)) {
         return (off_t)-1;
     }
@@ -1152,7 +1152,7 @@ apply_lseek(struct fildes_tx* self, const struct fd_event* event,
     struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
     assert(fd_tx);
 
-    fd_tx_lseek_apply(fd_tx, event->fildes, event, error);
+    fd_tx_lseek_apply(fd_tx, event->fildes, event->cookie, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -1411,8 +1411,8 @@ fildes_tx_exec_pread(struct fildes_tx* self, int fildes, void* buf,
 
     int cookie = -1;
 
-    ssize_t len = fd_tx_pread_exec(fd_tx, fildes, buf, nbyte, off, &cookie,
-                                   isnoundo, val_mode, error);
+    ssize_t len = fd_tx_pread_exec(fd_tx, fildes, buf, nbyte, off,
+                                   isnoundo, val_mode, &cookie, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -1440,7 +1440,7 @@ apply_pread(struct fildes_tx* self, const struct fd_event* event,
     struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
     assert(fd_tx);
 
-    fd_tx_pread_apply(fd_tx, event->fildes, event, error);
+    fd_tx_pread_apply(fd_tx, event->fildes, event->cookie, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -1485,8 +1485,8 @@ fildes_tx_exec_pwrite(struct fildes_tx* self, int fildes, const void* buf,
 
     int cookie = -1;
 
-    ssize_t len = fd_tx_pwrite_exec(fd_tx, fildes, buf, nbyte, off, &cookie,
-                                    isnoundo, error);
+    ssize_t len = fd_tx_pwrite_exec(fd_tx, fildes, buf, nbyte, off,
+                                    isnoundo, &cookie, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -1514,7 +1514,7 @@ apply_pwrite(struct fildes_tx* self, const struct fd_event* event,
     struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
     assert(fd_tx);
 
-    fd_tx_pwrite_apply(fd_tx, event->fildes, event, error);
+    fd_tx_pwrite_apply(fd_tx, event->fildes, event->cookie, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -1561,8 +1561,8 @@ fildes_tx_exec_read(struct fildes_tx* self, int fildes, void* buf,
 
     int cookie = -1;
 
-    ssize_t len = fd_tx_read_exec(fd_tx, fildes, buf, nbyte, &cookie,
-                                  isnoundo, val_mode, error);
+    ssize_t len = fd_tx_read_exec(fd_tx, fildes, buf, nbyte,
+                                  isnoundo, val_mode, &cookie, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -1590,7 +1590,7 @@ apply_read(struct fildes_tx* self, const struct fd_event* event,
     struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
     assert(fd_tx);
 
-    fd_tx_read_apply(fd_tx, event->fildes, event, error);
+    fd_tx_read_apply(fd_tx, event->fildes, event->cookie, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -1636,7 +1636,7 @@ fildes_tx_exec_recv(struct fildes_tx* self, int sockfd, void* buffer,
     int cookie = -1;
 
     ssize_t len = fd_tx_recv_exec(fd_tx, sockfd, buffer, length, flags,
-                                  &cookie, isnoundo, error);
+                                  isnoundo, &cookie, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -1664,7 +1664,7 @@ apply_recv(struct fildes_tx* self, const struct fd_event* event,
     struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
     assert(fd_tx);
 
-    fd_tx_recv_apply(fd_tx, event->fildes, event, error);
+    fd_tx_recv_apply(fd_tx, event->fildes, event->cookie, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -1790,7 +1790,7 @@ fildes_tx_exec_send(struct fildes_tx* self, int sockfd, const void* buffer,
     int cookie = -1;
 
     ssize_t len = fd_tx_send_exec(fd_tx, sockfd, buffer, length, flags,
-                                  &cookie, isnoundo, error);
+                                  isnoundo, &cookie, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -1818,7 +1818,7 @@ apply_send(struct fildes_tx* self, const struct fd_event* event,
     struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
     assert(fd_tx);
 
-    fd_tx_send_apply(fd_tx, event->fildes, event, error);
+    fd_tx_send_apply(fd_tx, event->fildes, event->cookie, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -1862,7 +1862,7 @@ fildes_tx_exec_shutdown(struct fildes_tx* self, int sockfd, int how,
 
     int cookie = -1;
 
-    int len = fd_tx_shutdown_exec(fd_tx, sockfd, how, &cookie, isnoundo,
+    int len = fd_tx_shutdown_exec(fd_tx, sockfd, how, isnoundo, &cookie,
                                   error);
     if (picotm_error_is_set(error)) {
         return -1;
@@ -1891,7 +1891,7 @@ apply_shutdown(struct fildes_tx* self, const struct fd_event* event,
     struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
     assert(fd_tx);
 
-    fd_tx_shutdown_apply(fd_tx, event->fildes, event, error);
+    fd_tx_shutdown_apply(fd_tx, event->fildes, event->cookie, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -2034,8 +2034,8 @@ fildes_tx_exec_write(struct fildes_tx* self, int fildes, const void* buf,
 
     int cookie = -1;
 
-    ssize_t len = fd_tx_write_exec(fd_tx, fildes, buf, nbyte, &cookie,
-                                   isnoundo, error);
+    ssize_t len = fd_tx_write_exec(fd_tx, fildes, buf, nbyte,
+                                   isnoundo, &cookie, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -2063,7 +2063,7 @@ apply_write(struct fildes_tx* self, const struct fd_event* event,
     struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
     assert(fd_tx);
 
-    fd_tx_write_apply(fd_tx, event->fildes, event, error);
+    fd_tx_write_apply(fd_tx, event->fildes, event->cookie, error);
     if (picotm_error_is_set(error)) {
         return;
     }

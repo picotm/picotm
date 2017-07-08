@@ -28,7 +28,6 @@
 #include "fcntlop.h"
 #include "fcntloptab.h"
 #include "fd.h"
-#include "fd_event.h"
 #include "fifo_tx.h"
 #include "regfile_tx.h"
 #include "socket_tx.h"
@@ -232,7 +231,7 @@ bind_exec_socket(struct ofd_tx* ofd_tx, int sockfd,
 
 int
 fd_tx_bind_exec(struct fd_tx* self, int sockfd, const struct sockaddr* address,
-                socklen_t addresslen, int* cookie, int isnoundo,
+                socklen_t addresslen, bool isnoundo, int* cookie,
                 struct picotm_error* error)
 {
     static int (* const bind_exec[])(struct ofd_tx*,
@@ -264,8 +263,7 @@ bind_apply_socket(struct ofd_tx* ofd_tx, int sockfd, int cookie,
 }
 
 void
-fd_tx_bind_apply(struct fd_tx* self, int sockfd,
-                 const struct fd_event* event,
+fd_tx_bind_apply(struct fd_tx* self, int sockfd, int cookie,
                  struct picotm_error* error)
 {
     static void (* const bind_apply[])(struct ofd_tx*,
@@ -282,7 +280,7 @@ fd_tx_bind_apply(struct fd_tx* self, int sockfd,
     assert(self);
 
     return bind_apply[ofd_tx_file_type(self->ofd_tx)](self->ofd_tx, sockfd,
-                                                      event->cookie, error);
+                                                      cookie, error);
 }
 
 static void
@@ -346,7 +344,7 @@ close_exec_ts(struct fd_tx* self, int fildes, int* cookie,
 }
 
 int
-fd_tx_close_exec(struct fd_tx* self, int fildes, int* cookie, int noundo,
+fd_tx_close_exec(struct fd_tx* self, int fildes, bool isnoundo, int* cookie,
                  struct picotm_error* error)
 {
     static int (* const close_exec[2])(struct fd_tx*,
@@ -461,7 +459,7 @@ connect_exec_socket(struct ofd_tx* ofd_tx, int sockfd,
 int
 fd_tx_connect_exec(struct fd_tx* self, int sockfd,
                    const struct sockaddr* address, socklen_t addresslen,
-                   int* cookie, int isnoundo, struct picotm_error* error)
+                   bool isnoundo, int* cookie, struct picotm_error* error)
 {
     static int (* const connect_exec[])(struct ofd_tx*,
                                         int,
@@ -493,8 +491,7 @@ connect_apply_socket(struct ofd_tx* ofd_tx, int sockfd, int cookie,
 }
 
 void
-fd_tx_connect_apply(struct fd_tx* self, int sockfd,
-                    const struct fd_event* event,
+fd_tx_connect_apply(struct fd_tx* self, int sockfd, int cookie,
                     struct picotm_error* error)
 {
     static void (* const connect_apply[])(struct ofd_tx*,
@@ -511,7 +508,7 @@ fd_tx_connect_apply(struct fd_tx* self, int sockfd,
     assert(self);
 
     connect_apply[ofd_tx_file_type(self->ofd_tx)](self->ofd_tx, sockfd,
-                                                  event->cookie, error);
+                                                  cookie, error);
 }
 
 static void
@@ -585,7 +582,7 @@ fcntl_exec_socket(struct ofd_tx* ofd_tx, int fildes, int cmd,
 
 int
 fd_tx_fcntl_exec(struct fd_tx* self, int fildes, int cmd,
-                 union fcntl_arg* arg, int* cookie, int isnoundo,
+                 union fcntl_arg* arg, bool isnoundo, int* cookie,
                  struct picotm_error* error)
 {
     static int (* const fcntl_exec[])(struct ofd_tx*,
@@ -694,7 +691,6 @@ fcntl_apply_socket(struct ofd_tx* ofd_tx, int fildes, int cookie,
 
 void
 fd_tx_fcntl_apply(struct fd_tx* self, int fildes, int cookie,
-                  const struct fd_event* event,
                   struct picotm_error* error)
 {
     static void (* const fcntl_apply[])(struct ofd_tx*,
@@ -724,7 +720,7 @@ fd_tx_fcntl_apply(struct fd_tx* self, int fildes, int cookie,
             break;
         default:
             fcntl_apply[ofd_tx_file_type(self->ofd_tx)](self->ofd_tx, fildes,
-                                                        event->cookie, error);
+                                                        cookie, error);
             if (picotm_error_is_set(error)) {
                 return;
             }
@@ -838,7 +834,7 @@ fsync_exec_socket(struct ofd_tx* ofd_tx, int fildes, bool isnoundo,
 }
 
 int
-fd_tx_fsync_exec(struct fd_tx* self, int fildes, int isnoundo, int* cookie,
+fd_tx_fsync_exec(struct fd_tx* self, int fildes, bool isnoundo, int* cookie,
                  struct picotm_error* error)
 {
     static int (* const fsync_exec[])(struct ofd_tx*,
@@ -869,8 +865,7 @@ fsync_apply_regfile(struct ofd_tx* ofd_tx, int fildes, int cookie,
 }
 
 void
-fd_tx_fsync_apply(struct fd_tx* self, int fildes,
-                  const struct fd_event* event,
+fd_tx_fsync_apply(struct fd_tx* self, int fildes, int cookie,
                   struct picotm_error* error)
 {
     static void (* const fsync_apply[])(struct ofd_tx*,
@@ -887,7 +882,7 @@ fd_tx_fsync_apply(struct fd_tx* self, int fildes,
     assert(self);
 
     fsync_apply[ofd_tx_file_type(self->ofd_tx)](self->ofd_tx, fildes,
-                                                event->cookie, error);
+                                                cookie, error);
 }
 
 static void
@@ -956,8 +951,8 @@ listen_exec_socket(struct ofd_tx* ofd_tx, int sockfd, int backlog,
 }
 
 int
-fd_tx_listen_exec(struct fd_tx* self, int sockfd, int backlog, int* cookie,
-                  int isnoundo, struct picotm_error* error)
+fd_tx_listen_exec(struct fd_tx* self, int sockfd, int backlog, bool isnoundo,
+                  int* cookie, struct picotm_error* error)
 {
     static int (* const listen_exec[])(struct ofd_tx*,
                                        int,
@@ -987,8 +982,7 @@ listen_apply_socket(struct ofd_tx* ofd_tx, int sockfd, int cookie,
 }
 
 void
-fd_tx_listen_apply(struct fd_tx* self, int sockfd,
-                   const struct fd_event* event,
+fd_tx_listen_apply(struct fd_tx* self, int sockfd, int cookie,
                    struct picotm_error* error)
 {
     static void (* const listen_apply[])(struct ofd_tx*,
@@ -1005,7 +999,7 @@ fd_tx_listen_apply(struct fd_tx* self, int sockfd,
     assert(self);
 
     listen_apply[ofd_tx_file_type(self->ofd_tx)](self->ofd_tx, sockfd,
-                                                 event->cookie, error);
+                                                 cookie, error);
 }
 
 static void
@@ -1074,7 +1068,7 @@ lseek_exec_socket(struct ofd_tx* ofd_tx, int fildes, off_t offset, int whence,
 
 off_t
 fd_tx_lseek_exec(struct fd_tx* self, int fildes, off_t offset, int whence,
-                 int* cookie, int isnoundo, struct picotm_error* error)
+                 bool isnoundo, int* cookie, struct picotm_error* error)
 {
     static off_t (*lseek_exec[])(struct ofd_tx*,
                                  int,
@@ -1107,8 +1101,7 @@ lseek_apply_regfile(struct ofd_tx* ofd_tx, int fildes, int cookie,
 }
 
 void
-fd_tx_lseek_apply(struct fd_tx* self, int fildes,
-                  const struct fd_event* event,
+fd_tx_lseek_apply(struct fd_tx* self, int fildes, int cookie,
                   struct picotm_error* error)
 {
     static void (* const lseek_apply[])(struct ofd_tx*,
@@ -1125,7 +1118,7 @@ fd_tx_lseek_apply(struct fd_tx* self, int fildes,
     assert(self);
 
     lseek_apply[ofd_tx_file_type(self->ofd_tx)](self->ofd_tx, fildes,
-                                                event->cookie, error);
+                                                cookie, error);
 }
 
 static void
@@ -1204,8 +1197,8 @@ pread_exec_socket(struct ofd_tx* ofd_tx, int fildes, void* buf, size_t nbyte,
 
 ssize_t
 fd_tx_pread_exec(struct fd_tx* self, int fildes, void* buf, size_t nbyte,
-                 off_t off, int* cookie, int isnoundo,
-                 enum picotm_libc_validation_mode val_mode,
+                 off_t off, bool isnoundo,
+                 enum picotm_libc_validation_mode val_mode, int* cookie,
                  struct picotm_error* error)
 {
     static ssize_t (* const pread_exec[])(struct ofd_tx*,
@@ -1241,8 +1234,7 @@ pread_apply_regfile(struct ofd_tx* ofd_tx, int fildes, int cookie,
 }
 
 void
-fd_tx_pread_apply(struct fd_tx* self, int fildes,
-                  const struct fd_event* event,
+fd_tx_pread_apply(struct fd_tx* self, int fildes, int cookie,
                   struct picotm_error* error)
 {
     static void (* const pread_apply[])(struct ofd_tx*,
@@ -1259,7 +1251,7 @@ fd_tx_pread_apply(struct fd_tx* self, int fildes,
     assert(self);
 
     pread_apply[ofd_tx_file_type(self->ofd_tx)](self->ofd_tx, fildes,
-                                                event->cookie, error);
+                                                cookie, error);
 }
 
 static void
@@ -1333,7 +1325,7 @@ pwrite_exec_socket(struct ofd_tx* ofd_tx, int fildes, const void* buf,
 
 ssize_t
 fd_tx_pwrite_exec(struct fd_tx* self, int fildes, const void* buf,
-                  size_t nbyte, off_t off, int* cookie, int isnoundo,
+                  size_t nbyte, off_t off, bool isnoundo, int* cookie,
                   struct picotm_error* error)
 {
     static ssize_t (* const pwrite_exec[])(struct ofd_tx*,
@@ -1368,8 +1360,7 @@ pwrite_apply_regfile(struct ofd_tx* ofd_tx, int fildes, int cookie,
 }
 
 void
-fd_tx_pwrite_apply(struct fd_tx* self, int fildes,
-                   const struct fd_event* event,
+fd_tx_pwrite_apply(struct fd_tx* self, int fildes, int cookie,
                    struct picotm_error* error)
 {
     static void (* const pwrite_apply[])(struct ofd_tx*,
@@ -1386,7 +1377,7 @@ fd_tx_pwrite_apply(struct fd_tx* self, int fildes,
     assert(self);
 
     pwrite_apply[ofd_tx_file_type(self->ofd_tx)](self->ofd_tx, fildes,
-                                                 event->cookie, error);
+                                                cookie, error);
 }
 
 static void
@@ -1460,9 +1451,8 @@ read_exec_socket(struct ofd_tx* ofd_tx, int fildes, void* buf, size_t nbyte,
 
 ssize_t
 fd_tx_read_exec(struct fd_tx* self, int fildes, void *buf, size_t nbyte,
-                int* cookie, int isnoundo,
-                enum picotm_libc_validation_mode val_mode,
-                struct picotm_error* error)
+                bool isnoundo, enum picotm_libc_validation_mode val_mode,
+                int* cookie, struct picotm_error* error)
 {
     static ssize_t (* const read_exec[])(struct ofd_tx*,
                                          int,
@@ -1516,8 +1506,7 @@ read_apply_socket(struct ofd_tx* ofd_tx, int fildes, int cookie,
 }
 
 void
-fd_tx_read_apply(struct fd_tx* self, int fildes,
-                 const struct fd_event* event,
+fd_tx_read_apply(struct fd_tx* self, int fildes, int cookie,
                  struct picotm_error* error)
 {
     static void (* const read_apply[])(struct ofd_tx*,
@@ -1534,7 +1523,7 @@ fd_tx_read_apply(struct fd_tx* self, int fildes,
     assert(self);
 
     read_apply[ofd_tx_file_type(self->ofd_tx)](self->ofd_tx, fildes,
-                                               event->cookie, error);
+                                               cookie, error);
 }
 
 static void
@@ -1628,7 +1617,7 @@ recv_exec_socket(struct ofd_tx* ofd_tx, int sockfd, void* buffer,
 
 ssize_t
 fd_tx_recv_exec(struct fd_tx* self, int sockfd, void* buffer, size_t length,
-                int flags, int* cookie, int isnoundo,
+                int flags, bool isnoundo, int* cookie,
                 struct picotm_error* error)
 {
     static ssize_t (* const recv_exec[])(struct ofd_tx*,
@@ -1661,8 +1650,7 @@ recv_apply_socket(struct ofd_tx* ofd_tx, int sockfd, int cookie,
 }
 
 void
-fd_tx_recv_apply(struct fd_tx* self, int sockfd,
-                 const struct fd_event* event,
+fd_tx_recv_apply(struct fd_tx* self, int sockfd, int cookie,
                  struct picotm_error* error)
 {
     static void (*recv_apply[])(struct ofd_tx*,
@@ -1679,7 +1667,7 @@ fd_tx_recv_apply(struct fd_tx* self, int sockfd,
     assert(self);
 
     recv_apply[ofd_tx_file_type(self->ofd_tx)](self->ofd_tx, sockfd,
-                                               event->cookie, error);
+                                               cookie, error);
 }
 
 static void
@@ -1752,7 +1740,7 @@ send_exec_socket(struct ofd_tx* ofd_tx, int sockfd, const void* buffer,
 
 ssize_t
 fd_tx_send_exec(struct fd_tx* self, int sockfd, const void* buffer,
-                size_t length, int flags, int* cookie, int isnoundo,
+                size_t length, int flags, bool isnoundo, int* cookie,
                 struct picotm_error* error)
 {
     static ssize_t (* const send_exec[])(struct ofd_tx*,
@@ -1785,8 +1773,7 @@ send_apply_socket(struct ofd_tx* ofd_tx, int fildes, int cookie,
 }
 
 void
-fd_tx_send_apply(struct fd_tx* self, int fildes,
-                 const struct fd_event* event,
+fd_tx_send_apply(struct fd_tx* self, int fildes, int cookie,
                  struct picotm_error* error)
 {
     static void (* const send_apply[])(struct ofd_tx*,
@@ -1803,7 +1790,7 @@ fd_tx_send_apply(struct fd_tx* self, int fildes,
     assert(self);
 
     send_apply[ofd_tx_file_type(self->ofd_tx)](self->ofd_tx, fildes,
-                                               event->cookie, error);
+                                               cookie, error);
 }
 
 static void
@@ -1873,8 +1860,8 @@ shutdown_exec_socket(struct ofd_tx* ofd_tx, int sockfd, int how,
 }
 
 int
-fd_tx_shutdown_exec(struct fd_tx* self, int sockfd, int how, int* cookie,
-                    int isnoundo, struct picotm_error* error)
+fd_tx_shutdown_exec(struct fd_tx* self, int sockfd, int how, bool isnoundo,
+                    int* cookie, struct picotm_error* error)
 {
     static int (* const shutdown_exec[])(struct ofd_tx*,
                                          int,
@@ -1905,8 +1892,7 @@ shutdown_apply_socket(struct ofd_tx* ofd_tx, int fildes, int cookie,
 }
 
 void
-fd_tx_shutdown_apply(struct fd_tx* self, int fildes,
-                     const struct fd_event* event,
+fd_tx_shutdown_apply(struct fd_tx* self, int fildes, int cookie,
                      struct picotm_error* error)
 {
     static void (* const shutdown_apply[])(struct ofd_tx*,
@@ -1923,7 +1909,7 @@ fd_tx_shutdown_apply(struct fd_tx* self, int fildes,
     assert(self);
 
     shutdown_apply[ofd_tx_file_type(self->ofd_tx)](self->ofd_tx, fildes,
-                                                   event->cookie, error);
+                                                   cookie, error);
 }
 
 static void
@@ -1997,7 +1983,7 @@ write_exec_socket(struct ofd_tx* ofd_tx, int fildes, const void* buf,
 
 ssize_t
 fd_tx_write_exec(struct fd_tx* self, int fildes, const void* buf,
-                 size_t nbyte, int* cookie, int isnoundo,
+                 size_t nbyte, bool isnoundo, int* cookie,
                  struct picotm_error* error)
 {
     static ssize_t (* const write_exec[])(struct ofd_tx*,
@@ -2051,8 +2037,7 @@ write_apply_socket(struct ofd_tx* ofd_tx, int fildes, int cookie,
 }
 
 void
-fd_tx_write_apply(struct fd_tx* self, int fildes,
-                  const struct fd_event* event,
+fd_tx_write_apply(struct fd_tx* self, int fildes, int cookie,
                   struct picotm_error* error)
 {
     static void (* const write_apply[])(struct ofd_tx*,
@@ -2069,7 +2054,7 @@ fd_tx_write_apply(struct fd_tx* self, int fildes,
     assert(self);
 
     write_apply[ofd_tx_file_type(self->ofd_tx)](self->ofd_tx, fildes,
-                                                event->cookie, error);
+                                                cookie, error);
 }
 
 static void
