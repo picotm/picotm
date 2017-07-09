@@ -1,0 +1,162 @@
+/* Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ */
+
+#pragma once
+
+#include <picotm/picotm-lib-ref.h>
+#include <picotm/picotm-lib-rwlock.h>
+#include <pthread.h>
+#include "ofdid.h"
+#include "picotm/picotm-libc.h"
+
+/**
+ * \cond impl || libc_impl || libc_impl_fd
+ * \ingroup libc_impl
+ * \ingroup libc_impl_fd
+ * \file
+ * \endcond
+ */
+
+#define FIFO_FL_WANTNEW  (1<<2)
+#define FIFO_FL_LAST_BIT (2)
+
+struct picotm_rwstate;
+
+/**
+ * Represents a FIFO's open file description.
+ */
+struct fifo {
+
+    /** Internal lock. */
+    pthread_rwlock_t lock;
+
+    /** The reference counter. */
+    struct picotm_shared_ref16 ref;
+
+    /** The FIFO's unique id. */
+    struct ofdid id;
+
+    /** Concurrency-control mode for the FIFO. */
+    enum picotm_libc_cc_mode cc_mode;
+
+    /** Reader/writer state lock. */
+    struct picotm_rwlock  rwlock;
+};
+
+/**
+ * \brief Initializes a FIFO instance.
+ * \param       self    The FIFO instance to initialize.
+ * \param[out]  error   Returns an error to the caller.
+ */
+void
+fifo_init(struct fifo* self, struct picotm_error* error);
+
+/**
+ * \brief Uninitializes a FIFO instance.
+ * \param   self    The FIFO instance to uninitialize.
+ */
+void
+fifo_uninit(struct fifo* self);
+
+/**
+ * \brief Sets up an instance of `struct fifo` or acquires a reference
+ *        on an already set-up instance.
+ * \param       self    The FIFO instance.
+ * \param       fildes  The FIFO's file descriptor.
+ * \param[out]  error   Returns an error to the caller.
+ */
+void
+fifo_ref_or_set_up(struct fifo* self, int fildes, struct picotm_error* error);
+
+/**
+ * \brief Acquires a reference on an instance of `struct fifo`.
+ * \param   self    The FIFO instance.
+ */
+void
+fifo_ref(struct fifo* self);
+
+/**
+ * \brief Compares the FIFO's id to an id and acquires a reference if both
+ *        id's are equal.
+ * \param   self    The FIFO instance.
+ * \param   id      The id to compare to.
+ * \returns A value less than, equal to, or greater than if the FIFO's id
+ *          is less than, equal to, or greater than the given id.
+ */
+int
+fifo_cmp_and_ref(struct fifo* self, const struct ofdid* id);
+
+/**
+ * \brief Compares the FIFO's id to an id and acquires a reference if both
+ *        id's are equal. The FIFO instance is set up from the provided
+ *        file descriptor if necessary.
+ * \param       self        The FIFO instance.
+ * \param       id          The id to compare to.
+ * \param       fildes      The FIFO's file descriptor.
+ * \param[out]  error       Returns an error ot the caller.
+ * \returns A value less than, equal to, or greater than if the ofd's id is
+ *          less than, equal to, or greater than the given id.
+ */
+int
+fifo_cmp_and_ref_or_set_up(struct fifo* self, const struct ofdid* id,
+                           int fildes, struct picotm_error* error);
+
+/**
+ * \brief Unreferences a FIFO.
+ * \param   self    The FIFO instance.
+ */
+void
+fifo_unref(struct fifo* self);
+
+/**
+ * \brief Returns the current concurrency-control mode of a FIFO
+ *        instance.
+ * \param   self    The FIFO instance.
+ * \returns The current concurrency-control mode of the given FIFO.
+ */
+enum picotm_libc_cc_mode
+fifo_get_cc_mode(struct fifo* self);
+
+/**
+ * \brief Tries to acquire a reader lock on a FIFO.
+ * \param       self        The FIFO instance.
+ * \param       rwstate     The transaction's reader/writer state.
+ * \param[out]  error       Returns an error ot the caller.
+ */
+void
+fifo_try_rdlock_state(struct fifo* self, struct picotm_rwstate* rwstate,
+                      struct picotm_error* error);
+
+/**
+ * \brief Tries to acquire a writer lock on a FIFO.
+ * \param       self        The FIFO instance.
+ * \param       rwstate     The transaction's reader/writer state.
+ * \param[out]  error       Returns an error ot the caller.
+ */
+void
+fifo_try_wrlock_state(struct fifo* self, struct picotm_rwstate* rwstate,
+                      struct picotm_error* error);
+
+/**
+ * \brief Releases a lock on a character device.
+ * \param   self    The FIFO instance.
+ * \param   rwstate The transaction's reader/writer state.
+ */
+void
+fifo_unlock_state(struct fifo* self, struct picotm_rwstate* rwstate);
