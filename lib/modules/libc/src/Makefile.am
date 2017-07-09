@@ -29,6 +29,8 @@ libpicotm_c_la_SOURCES = allocator/allocator_tx.c \
                          error/module.h \
                          fcntl-tm.c \
                          fcntl.c \
+                         fd/chrdev.c \
+                         fd/chrdev.h \
                          fd/chrdev_tx.c \
                          fd/chrdev_tx.h \
                          fd/fcntlop.c \
@@ -42,6 +44,8 @@ libpicotm_c_la_SOURCES = allocator/allocator_tx.c \
                          fd/fd_event.h \
                          fd/fd_tx.c \
                          fd/fd_tx.h \
+                         fd/fifo.c \
+                         fd/fifo.h \
                          fd/fifo_tx.c \
                          fd/fifo_tx.h \
                          fd/fildes_tx.c \
@@ -70,6 +74,8 @@ libpicotm_c_la_SOURCES = allocator/allocator_tx.c \
                          fd/pipeoptab.h \
                          fd/range.c \
                          fd/range.h \
+                         fd/regfile.c \
+                         fd/regfile.h \
                          fd/regfile_tx.c \
                          fd/regfile_tx.h \
                          fd/region.c \
@@ -86,6 +92,8 @@ libpicotm_c_la_SOURCES = allocator/allocator_tx.c \
                          fd/seekop.h \
                          fd/seekoptab.c \
                          fd/seekoptab.h \
+                         fd/socket.c \
+                         fd/socket.h \
                          fd/socket_tx.c \
                          fd/socket_tx.h \
                          libc.c \
