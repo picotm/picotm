@@ -34,7 +34,7 @@
  * \endcond
  */
 
-struct ofd;
+struct fifo;
 struct picotm_error;
 
 union fcntl_arg;
@@ -50,7 +50,7 @@ struct fifo_tx {
 
     struct ofd_tx base;
 
-    struct ofd* ofd;
+    struct fifo* fifo;
 
     unsigned long flags;
 
@@ -113,7 +113,7 @@ fifo_tx_clear_cc(struct fifo_tx* self, struct picotm_error* error);
  * Acquire a reference on the open file description
  */
 void
-fifo_tx_ref_or_set_up(struct fifo_tx* self, struct ofd* ofd, int fildes,
+fifo_tx_ref_or_set_up(struct fifo_tx* self, struct fifo* fifo, int fildes,
                      unsigned long flags, struct picotm_error* error);
 
 /**

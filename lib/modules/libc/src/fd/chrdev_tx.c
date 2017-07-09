@@ -27,11 +27,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include "chrdev.h"
 #include "fcntlop.h"
 #include "fcntloptab.h"
 #include "ioop.h"
 #include "iooptab.h"
-#include "ofd.h"
 
 struct chrdev_tx*
 chrdev_tx_of_ofd_tx(struct ofd_tx* ofd_tx)
@@ -66,7 +66,7 @@ chrdev_tx_init(struct chrdev_tx* self)
     ofd_tx_init(&self->base, PICOTM_LIBC_FILE_TYPE_CHRDEV,
                 ref_ofd_tx, unref_ofd_tx);
 
-    self->ofd = NULL;
+    self->chrdev = NULL;
 
     self->flags = 0;
 
@@ -158,9 +158,8 @@ update_cc_2pl(struct chrdev_tx* self, struct picotm_error* error)
     assert(self);
     assert(self->cc_mode == PICOTM_LIBC_CC_MODE_2PL);
 
-    /* release ofd lock */
-
-    ofd_unlock_state(self->ofd, &self->rwstate);
+    /* release lock on character device */
+    chrdev_unlock_state(self->chrdev, &self->rwstate);
 }
 
 void
@@ -193,9 +192,8 @@ clear_cc_2pl(struct chrdev_tx* self, struct picotm_error* error)
     assert(self);
     assert(self->cc_mode == PICOTM_LIBC_CC_MODE_2PL);
 
-    /* release ofd lock */
-
-    ofd_unlock_state(self->ofd, &self->rwstate);
+    /* release lock on character device */
+    chrdev_unlock_state(self->chrdev, &self->rwstate);
 }
 
 void
@@ -216,31 +214,25 @@ chrdev_tx_clear_cc(struct chrdev_tx* self, struct picotm_error* error)
  */
 
 void
-chrdev_tx_ref_or_set_up(struct chrdev_tx* self, struct ofd* ofd, int fildes,
-                        unsigned long flags, struct picotm_error* error)
+chrdev_tx_ref_or_set_up(struct chrdev_tx* self, struct chrdev* chrdev,
+                        int fildes, unsigned long flags,
+                        struct picotm_error* error)
 {
     assert(self);
-    assert(ofd);
+    assert(chrdev);
 
     bool first_ref = picotm_ref_up(&self->ref);
     if (!first_ref) {
         return;
     }
 
-    /* get reference and status */
-
-    off_t offset;
-    enum picotm_libc_file_type type;
-    enum picotm_libc_cc_mode cc_mode;
-    ofd_ref_state(ofd, &type, &cc_mode, &offset);
-    if (picotm_error_is_set(error)) {
-        goto err_ofd_ref_state;
-    }
+    /* acquire reference on character device */
+    chrdev_ref(chrdev);
 
     /* setup fields */
 
-    self->ofd = ofd;
-    self->cc_mode = cc_mode;
+    self->chrdev = chrdev;
+    self->cc_mode = chrdev_get_cc_mode(chrdev);
     self->flags = 0;
 
     self->fcntltablen = 0;
@@ -249,11 +241,6 @@ chrdev_tx_ref_or_set_up(struct chrdev_tx* self, struct ofd* ofd, int fildes,
     self->wrbuflen = 0;
 
     picotm_rwstate_set_status(&self->rwstate, PICOTM_RWSTATE_UNLOCKED);
-
-    return;
-
-err_ofd_ref_state:
-    picotm_ref_down(&self->ref);
 }
 
 void
@@ -272,8 +259,8 @@ chrdev_tx_unref(struct chrdev_tx* self)
         return;
     }
 
-    ofd_unref(self->ofd);
-    self->ofd = NULL;
+    chrdev_unref(self->chrdev);
+    self->chrdev = NULL;
 }
 
 bool
@@ -416,8 +403,8 @@ fcntl_exec_2pl(struct chrdev_tx* self, int fildes, int cmd,
         case F_GETFL:
         case F_GETOWN: {
 
-            /* Read-lock open file description */
-            ofd_rdlock_state(self->ofd, &self->rwstate, error);
+            /* Read-lock character device */
+            chrdev_try_rdlock_state(self->chrdev, &self->rwstate, error);
             if (picotm_error_is_set(error)) {
                 return -1;
             }
@@ -432,8 +419,8 @@ fcntl_exec_2pl(struct chrdev_tx* self, int fildes, int cmd,
         }
         case F_GETLK: {
 
-            /* Read-lock open file description */
-            ofd_rdlock_state(self->ofd, &self->rwstate, error);
+            /* Read-lock character device */
+            chrdev_try_rdlock_state(self->chrdev, &self->rwstate, error);
             if (picotm_error_is_set(error)) {
                 return -1;
             }
@@ -603,9 +590,8 @@ static ssize_t
 write_exec_2pl(struct chrdev_tx* self, int fildes, const void* buf,
                size_t nbyte, int* cookie, struct picotm_error* error)
 {
-    /* Write-lock open file description, because we change the file position */
-
-    ofd_wrlock_state(self->ofd, &self->rwstate, error);
+    /* Write-lock character device, because we change the file position */
+    chrdev_try_wrlock_state(self->chrdev, &self->rwstate, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }

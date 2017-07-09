@@ -34,7 +34,7 @@
  * \endcond
  */
 
-struct ofd;
+struct chrdev;
 struct picotm_error;
 
 union fcntl_arg;
@@ -50,7 +50,7 @@ struct chrdev_tx {
 
     struct ofd_tx base;
 
-    struct ofd* ofd;
+    struct chrdev* chrdev;
 
     unsigned long flags;
 
@@ -115,7 +115,7 @@ chrdev_tx_clear_cc(struct chrdev_tx* self, struct picotm_error* error);
  * Acquire a reference on the open file description
  */
 void
-chrdev_tx_ref_or_set_up(struct chrdev_tx* self, struct ofd* ofd, int fildes,
+chrdev_tx_ref_or_set_up(struct chrdev_tx* self, struct chrdev* chrdev, int fildes,
                         unsigned long flags, struct picotm_error* error);
 
 /**

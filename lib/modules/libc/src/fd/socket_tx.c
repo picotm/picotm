@@ -30,7 +30,7 @@
 #include "fcntloptab.h"
 #include "ioop.h"
 #include "iooptab.h"
-#include "ofd.h"
+#include "socket.h"
 
 struct socket_tx*
 socket_tx_of_ofd_tx(struct ofd_tx* ofd_tx)
@@ -65,7 +65,7 @@ socket_tx_init(struct socket_tx* self)
     ofd_tx_init(&self->base, PICOTM_LIBC_FILE_TYPE_SOCKET,
                 ref_ofd_tx, unref_ofd_tx);
 
-    self->ofd = NULL;
+    self->socket = NULL;
 
     self->flags = 0;
 
@@ -157,9 +157,8 @@ update_cc_2pl(struct socket_tx* self, struct picotm_error* error)
     assert(self);
     assert(self->cc_mode == PICOTM_LIBC_CC_MODE_2PL);
 
-    /* release ofd lock */
-
-    ofd_unlock_state(self->ofd, &self->rwstate);
+    /* release lock on socket */
+    socket_unlock_state(self->socket, &self->rwstate);
 }
 
 void
@@ -192,9 +191,8 @@ clear_cc_2pl(struct socket_tx* self, struct picotm_error* error)
     assert(self);
     assert(self->cc_mode == PICOTM_LIBC_CC_MODE_2PL);
 
-    /* release ofd lock */
-
-    ofd_unlock_state(self->ofd, &self->rwstate);
+    /* release lock on socket */
+    socket_unlock_state(self->socket, &self->rwstate);
 }
 
 void
@@ -215,31 +213,25 @@ socket_tx_clear_cc(struct socket_tx* self, struct picotm_error* error)
  */
 
 void
-socket_tx_ref_or_set_up(struct socket_tx* self, struct ofd* ofd, int fildes,
-                        unsigned long flags, struct picotm_error* error)
+socket_tx_ref_or_set_up(struct socket_tx* self, struct socket* socket,
+                        int fildes, unsigned long flags,
+                        struct picotm_error* error)
 {
     assert(self);
-    assert(ofd);
+    assert(socket);
 
     bool first_ref = picotm_ref_up(&self->ref);
     if (!first_ref) {
         return;
     }
 
-    /* get reference and status */
-
-    off_t offset;
-    enum picotm_libc_file_type type;
-    enum picotm_libc_cc_mode cc_mode;
-    ofd_ref_state(ofd, &type, &cc_mode, &offset);
-    if (picotm_error_is_set(error)) {
-        goto err_ofd_ref_state;
-    }
+    /* get reference on socket */
+    socket_ref(socket);
 
     /* setup fields */
 
-    self->ofd = ofd;
-    self->cc_mode = cc_mode;
+    self->socket = socket;
+    self->cc_mode = socket_get_cc_mode(socket);
     self->flags = 0;
 
     self->fcntltablen = 0;
@@ -248,11 +240,6 @@ socket_tx_ref_or_set_up(struct socket_tx* self, struct ofd* ofd, int fildes,
     self->wrbuflen = 0;
 
     picotm_rwstate_set_status(&self->rwstate, PICOTM_RWSTATE_UNLOCKED);
-
-    return;
-
-err_ofd_ref_state:
-    picotm_ref_down(&self->ref);
 }
 
 void
@@ -271,8 +258,8 @@ socket_tx_unref(struct socket_tx* self)
         return;
     }
 
-    ofd_unref(self->ofd);
-    self->ofd = NULL;
+    socket_unref(self->socket);
+    self->socket = NULL;
 }
 
 bool
@@ -592,8 +579,8 @@ fcntl_exec_2pl(struct socket_tx* self, int fildes, int cmd,
         case F_GETFL:
         case F_GETOWN: {
 
-            /* Read-lock open file description */
-            ofd_rdlock_state(self->ofd, &self->rwstate, error);
+            /* Read-lock socket */
+            socket_try_rdlock_state(self->socket, &self->rwstate, error);
             if (picotm_error_is_set(error)) {
                 return -1;
             }
@@ -609,7 +596,7 @@ fcntl_exec_2pl(struct socket_tx* self, int fildes, int cmd,
         case F_GETLK: {
 
             /* Read-lock open file description */
-            ofd_rdlock_state(self->ofd, &self->rwstate, error);
+            socket_try_rdlock_state(self->socket, &self->rwstate, error);
             if (picotm_error_is_set(error)) {
                 return -1;
             }
@@ -971,9 +958,8 @@ send_exec_2pl(struct socket_tx* self, int sockfd, const void* buf,
         return -1;
     }
 
-    /* Write-lock open file description, because we change the file position */
-
-    ofd_wrlock_state(self->ofd, &self->rwstate, error);
+    /* Write-lock socket */
+    socket_try_wrlock_state(self->socket, &self->rwstate, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -1199,9 +1185,8 @@ static ssize_t
 write_exec_2pl(struct socket_tx* self, int fildes, const void* buf,
                size_t nbyte, int* cookie, struct picotm_error* error)
 {
-    /* Write-lock open file description, because we change the file position */
-
-    ofd_wrlock_state(self->ofd, &self->rwstate, error);
+    /* Write-lock socket */
+    socket_try_wrlock_state(self->socket, &self->rwstate, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
