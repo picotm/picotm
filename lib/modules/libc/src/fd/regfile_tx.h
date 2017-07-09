@@ -35,6 +35,8 @@
  * \endcond
  */
 
+struct regfile;
+
 union fcntl_arg;
 
 /**
@@ -48,7 +50,7 @@ struct regfile_tx {
 
     struct ofd_tx base;
 
-    struct ofd* ofd;
+    struct regfile* regfile;
 
     unsigned long flags;
 
@@ -128,8 +130,9 @@ regfile_tx_clear_cc(struct regfile_tx* self, struct picotm_error* error);
  * Acquire a reference on the open file description
  */
 void
-regfile_tx_ref_or_set_up(struct regfile_tx* self, struct ofd* ofd, int fildes,
-                         unsigned long flags, struct picotm_error* error);
+regfile_tx_ref_or_set_up(struct regfile_tx* self, struct regfile* regfile,
+                         int fildes, unsigned long flags,
+                         struct picotm_error* error);
 
 /**
  * Acquire a reference on the open file description
@@ -170,15 +173,6 @@ regfile_tx_lock(struct regfile_tx* self);
  */
 void
 regfile_tx_unlock(struct regfile_tx* self);
-
-/*
- * concurrency control
- */
-
-int
-regfile_tx_2pl_lock_region(struct regfile_tx* self, size_t nbyte,
-                           off_t offset, bool iswrite,
-                           struct picotm_error* error);
 
 /*
  * fcntl()

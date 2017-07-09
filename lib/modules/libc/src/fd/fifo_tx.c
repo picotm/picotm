@@ -29,9 +29,9 @@
 #include <unistd.h>
 #include "fcntlop.h"
 #include "fcntloptab.h"
+#include "fifo.h"
 #include "ioop.h"
 #include "iooptab.h"
-#include "ofd.h"
 
 struct fifo_tx*
 fifo_tx_of_ofd_tx(struct ofd_tx* ofd_tx)
@@ -66,7 +66,7 @@ fifo_tx_init(struct fifo_tx* self)
     ofd_tx_init(&self->base, PICOTM_LIBC_FILE_TYPE_FIFO,
                 ref_ofd_tx, unref_ofd_tx);
 
-    self->ofd = NULL;
+    self->fifo = NULL;
 
     self->flags = 0;
 
@@ -158,9 +158,8 @@ update_cc_2pl(struct fifo_tx* self, struct picotm_error* error)
     assert(self);
     assert(self->cc_mode == PICOTM_LIBC_CC_MODE_2PL);
 
-    /* release ofd lock */
-
-    ofd_unlock_state(self->ofd, &self->rwstate);
+    /* release lock on FIFO */
+    fifo_unlock_state(self->fifo, &self->rwstate);
 }
 
 void
@@ -193,9 +192,8 @@ clear_cc_2pl(struct fifo_tx* self, struct picotm_error* error)
     assert(self);
     assert(self->cc_mode == PICOTM_LIBC_CC_MODE_2PL);
 
-    /* release ofd lock */
-
-    ofd_unlock_state(self->ofd, &self->rwstate);
+    /* release lock on FIFO */
+    fifo_unlock_state(self->fifo, &self->rwstate);
 }
 
 void
@@ -216,31 +214,24 @@ fifo_tx_clear_cc(struct fifo_tx* self, struct picotm_error* error)
  */
 
 void
-fifo_tx_ref_or_set_up(struct fifo_tx* self, struct ofd* ofd, int fildes,
+fifo_tx_ref_or_set_up(struct fifo_tx* self, struct fifo* fifo, int fildes,
                      unsigned long flags, struct picotm_error* error)
 {
     assert(self);
-    assert(ofd);
+    assert(fifo);
 
     bool first_ref = picotm_ref_up(&self->ref);
     if (!first_ref) {
         return;
     }
 
-    /* get reference and status */
-
-    off_t offset;
-    enum picotm_libc_file_type type;
-    enum picotm_libc_cc_mode cc_mode;
-    ofd_ref_state(ofd, &type, &cc_mode, &offset);
-    if (picotm_error_is_set(error)) {
-        goto err_ofd_ref_state;
-    }
+    /* get reference on FIFO */
+    fifo_ref(fifo);
 
     /* setup fields */
 
-    self->ofd = ofd;
-    self->cc_mode = cc_mode;
+    self->fifo = fifo;
+    self->cc_mode = fifo_get_cc_mode(fifo);
     self->flags = 0;
 
     self->fcntltablen = 0;
@@ -249,11 +240,6 @@ fifo_tx_ref_or_set_up(struct fifo_tx* self, struct ofd* ofd, int fildes,
     self->wrbuflen = 0;
 
     picotm_rwstate_set_status(&self->rwstate, PICOTM_RWSTATE_UNLOCKED);
-
-    return;
-
-err_ofd_ref_state:
-    picotm_ref_down(&self->ref);
 }
 
 void
@@ -272,8 +258,8 @@ fifo_tx_unref(struct fifo_tx* self)
         return;
     }
 
-    ofd_unref(self->ofd);
-    self->ofd = NULL;
+    fifo_unref(self->fifo);
+    self->fifo = NULL;
 }
 
 bool
@@ -416,8 +402,8 @@ fcntl_exec_2pl(struct fifo_tx* self, int fildes, int cmd,
         case F_GETFL:
         case F_GETOWN: {
 
-            /* Read-lock open file description */
-            ofd_rdlock_state(self->ofd, &self->rwstate, error);
+            /* Read-lock FIFO */
+            fifo_try_rdlock_state(self->fifo, &self->rwstate, error);
             if (picotm_error_is_set(error)) {
                 return -1;
             }
@@ -432,8 +418,8 @@ fcntl_exec_2pl(struct fifo_tx* self, int fildes, int cmd,
         }
         case F_GETLK: {
 
-            /* Read-lock open file description */
-            ofd_rdlock_state(self->ofd, &self->rwstate, error);
+            /* Read-lock FIFO */
+            fifo_try_rdlock_state(self->fifo, &self->rwstate, error);
             if (picotm_error_is_set(error)) {
                 return -1;
             }
@@ -603,9 +589,8 @@ static ssize_t
 write_exec_2pl(struct fifo_tx* self, int fildes, const void* buf,
                size_t nbyte, int* cookie, struct picotm_error* error)
 {
-    /* Write-lock open file description, because we change the file position */
-
-    ofd_wrlock_state(self->ofd, &self->rwstate, error);
+    /* Write-lock FIFO, because we change the file position */
+    fifo_try_wrlock_state(self->fifo, &self->rwstate, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }

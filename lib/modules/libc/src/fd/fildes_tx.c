@@ -26,14 +26,20 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include "chrdev.h"
+#include "chrdevtab.h"
 #include "fdtab.h"
-#include "ofd.h"
-#include "ofdtab.h"
+#include "fifo.h"
+#include "fifotab.h"
 #include "openop.h"
 #include "openoptab.h"
 #include "pipeop.h"
 #include "pipeoptab.h"
 #include "range.h"
+#include "regfile.h"
+#include "regfiletab.h"
+#include "socket.h"
+#include "sockettab.h"
 #include "vfs/module.h"
 
 enum fildes_tx_cmd {
@@ -171,15 +177,14 @@ static struct fifo_tx*
 get_fifo_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
                      struct picotm_error* error)
 {
-    struct ofd* ofd = ofdtab_ref_fildes(fildes,
-                                        !!(flags & OFD_FL_WANTNEW),
-                                        !!(flags & OFD_FL_UNLINK),
-                                        error);
+    struct fifo* fifo = fifotab_ref_fildes(fildes,
+                                           !!(flags & FIFO_FL_WANTNEW),
+                                           error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
 
-    struct fifo_tx* fifo_tx = get_fifo_tx(self, ofdtab_index(ofd));
+    struct fifo_tx* fifo_tx = get_fifo_tx(self, fifotab_index(fifo));
 
     /* In |struct fildes_tx| we hold at most one reference to the
      * transaction state of each FIFO. This reference is released
@@ -189,7 +194,7 @@ get_fifo_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
         goto unref;
     }
 
-    fifo_tx_ref_or_set_up(fifo_tx, ofd, fildes, flags, error);
+    fifo_tx_ref_or_set_up(fifo_tx, fifo, fildes, flags, error);
     if (picotm_error_is_set(error)) {
         goto err_fifo_tx_ref_or_set_up;
     }
@@ -197,12 +202,12 @@ get_fifo_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
     SLIST_INSERT_HEAD(&self->fifo_tx_active_list, fifo_tx, active_list);
 
 unref:
-    ofd_unref(ofd);
+    fifo_unref(fifo);
 
     return fifo_tx;
 
 err_fifo_tx_ref_or_set_up:
-    ofd_unref(ofd);
+    fifo_unref(fifo);
     return NULL;
 }
 
@@ -224,15 +229,15 @@ static struct chrdev_tx*
 get_chrdev_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
                        struct picotm_error* error)
 {
-    struct ofd* ofd = ofdtab_ref_fildes(fildes,
-                                        !!(flags & OFD_FL_WANTNEW),
-                                        !!(flags & OFD_FL_UNLINK),
-                                        error);
+    struct chrdev* chrdev = chrdevtab_ref_fildes(fildes,
+                                                 !!(flags & CHRDEV_FL_WANTNEW),
+                                                 error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
 
-    struct chrdev_tx* chrdev_tx = get_chrdev_tx(self, ofdtab_index(ofd));
+    struct chrdev_tx* chrdev_tx = get_chrdev_tx(self,
+                                                chrdevtab_index(chrdev));
 
     /* In |struct fildes_tx| we hold at most one reference to the
      * transaction state of each character device. This reference is
@@ -242,7 +247,7 @@ get_chrdev_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
         goto unref;
     }
 
-    chrdev_tx_ref_or_set_up(chrdev_tx, ofd, fildes, flags, error);
+    chrdev_tx_ref_or_set_up(chrdev_tx, chrdev, fildes, flags, error);
     if (picotm_error_is_set(error)) {
         goto err_chrdev_tx_ref_or_set_up;
     }
@@ -250,12 +255,12 @@ get_chrdev_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
     SLIST_INSERT_HEAD(&self->chrdev_tx_active_list, chrdev_tx, active_list);
 
 unref:
-    ofd_unref(ofd);
+    chrdev_unref(chrdev);
 
     return chrdev_tx;
 
 err_chrdev_tx_ref_or_set_up:
-    ofd_unref(ofd);
+    chrdev_unref(chrdev);
     return NULL;
 }
 
@@ -277,15 +282,16 @@ static struct regfile_tx*
 get_regfile_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
                         struct picotm_error* error)
 {
-    struct ofd* ofd = ofdtab_ref_fildes(fildes,
-                                        !!(flags & OFD_FL_WANTNEW),
-                                        !!(flags & OFD_FL_UNLINK),
-                                        error);
+    struct regfile* regfile = regfiletab_ref_fildes(
+        fildes,
+        !!(flags & REGFILE_FL_WANTNEW),
+        error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
 
-    struct regfile_tx* regfile_tx = get_regfile_tx(self, ofdtab_index(ofd));
+    struct regfile_tx* regfile_tx = get_regfile_tx(self,
+                                                   regfiletab_index(regfile));
 
     /* In |struct fildes_tx| we hold at most one reference to the
      * transaction state of each regular file. This reference is
@@ -295,7 +301,7 @@ get_regfile_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
         goto unref;
     }
 
-    regfile_tx_ref_or_set_up(regfile_tx, ofd, fildes, flags, error);
+    regfile_tx_ref_or_set_up(regfile_tx, regfile, fildes, flags, error);
     if (picotm_error_is_set(error)) {
         goto err_regfile_tx_ref_or_set_up;
     }
@@ -303,12 +309,12 @@ get_regfile_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
     SLIST_INSERT_HEAD(&self->regfile_tx_active_list, regfile_tx, active_list);
 
 unref:
-    ofd_unref(ofd);
+    regfile_unref(regfile);
 
     return regfile_tx;
 
 err_regfile_tx_ref_or_set_up:
-    ofd_unref(ofd);
+    regfile_unref(regfile);
     return NULL;
 }
 
@@ -330,15 +336,15 @@ static struct socket_tx*
 get_socket_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
                        struct picotm_error* error)
 {
-    struct ofd* ofd = ofdtab_ref_fildes(fildes,
-                                        !!(flags & OFD_FL_WANTNEW),
-                                        !!(flags & OFD_FL_UNLINK),
-                                        error);
+    struct socket* socket = sockettab_ref_fildes(fildes,
+                                                 !!(flags & SOCKET_FL_WANTNEW),
+                                                 error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
 
-    struct socket_tx* socket_tx = get_socket_tx(self, ofdtab_index(ofd));
+    struct socket_tx* socket_tx = get_socket_tx(self,
+                                                sockettab_index(socket));
 
     /* In |struct fildes_tx| we hold at most one reference to the
      * transaction state of each socket. This reference is released
@@ -348,7 +354,7 @@ get_socket_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
         goto unref;
     }
 
-    socket_tx_ref_or_set_up(socket_tx, ofd, fildes, flags, error);
+    socket_tx_ref_or_set_up(socket_tx, socket, fildes, flags, error);
     if (picotm_error_is_set(error)) {
         goto err_socket_tx_ref_or_set_up;
     }
@@ -356,12 +362,12 @@ get_socket_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
     SLIST_INSERT_HEAD(&self->socket_tx_active_list, socket_tx, active_list);
 
 unref:
-    ofd_unref(ofd);
+    socket_unref(socket);
 
     return socket_tx;
 
 err_socket_tx_ref_or_set_up:
-    ofd_unref(ofd);
+    socket_unref(socket);
     return NULL;
 }
 

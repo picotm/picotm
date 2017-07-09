@@ -31,8 +31,8 @@
 #include "fcntloptab.h"
 #include "ioop.h"
 #include "iooptab.h"
-#include "ofd.h"
 #include "range.h"
+#include "regfile.h"
 #include "region.h"
 #include "regiontab.h"
 #include "seekop.h"
@@ -49,7 +49,7 @@ regfile_tx_2pl_release_locks(struct regfile_tx* self)
     const struct region* regionend = region+self->locktablen;
 
     while (region < regionend) {
-        ofd_2pl_unlock_region(self->ofd,
+        regfile_unlock_region(self->regfile,
                               region->offset,
                               region->nbyte,
                               &self->rwcountermap);
@@ -90,7 +90,7 @@ regfile_tx_init(struct regfile_tx* self)
     ofd_tx_init(&self->base, PICOTM_LIBC_FILE_TYPE_REGULAR,
                 ref_ofd_tx, unref_ofd_tx);
 
-    self->ofd = NULL;
+    self->regfile = NULL;
 
     self->flags = 0;
 
@@ -170,7 +170,7 @@ validate_2pl(struct regfile_tx* self, struct picotm_error* error)
     /* Locked regions are ours, so we do not need to validate here. All
      * conflicting transactions will have aborted on encountering our locks.
      *
-     * The state of the OFD itself is guarded by ofd::rwlock.
+     * The state of the OFD itself is guarded by regfile::rwlock.
      */
 }
 
@@ -206,9 +206,8 @@ update_cc_2pl(struct regfile_tx* self, struct picotm_error* error)
     /* release record locks */
     regfile_tx_2pl_release_locks(self);
 
-    /* release ofd lock */
-
-    ofd_unlock_state(self->ofd, &self->rwstate);
+    /* release lock on file */
+    regfile_unlock_state(self->regfile, &self->rwstate);
 }
 
 void
@@ -245,9 +244,8 @@ clear_cc_2pl(struct regfile_tx* self, struct picotm_error* error)
 
     regfile_tx_2pl_release_locks(self);
 
-    /* release ofd lock */
-
-    ofd_unlock_state(self->ofd, &self->rwstate);
+    /* release lock on file */
+    regfile_unlock_state(self->regfile, &self->rwstate);
 }
 
 void
@@ -268,32 +266,26 @@ regfile_tx_clear_cc(struct regfile_tx* self, struct picotm_error* error)
  */
 
 void
-regfile_tx_ref_or_set_up(struct regfile_tx* self, struct ofd* ofd, int fildes,
-                         unsigned long flags, struct picotm_error* error)
+regfile_tx_ref_or_set_up(struct regfile_tx* self, struct regfile* regfile,
+                         int fildes, unsigned long flags,
+                         struct picotm_error* error)
 {
     assert(self);
-    assert(ofd);
+    assert(regfile);
 
     bool first_ref = picotm_ref_up(&self->ref);
     if (!first_ref) {
         return;
     }
 
-    /* get reference and status */
-
-    off_t offset;
-    enum picotm_libc_file_type type;
-    enum picotm_libc_cc_mode cc_mode;
-    ofd_ref_state(ofd, &type, &cc_mode, &offset);
-    if (picotm_error_is_set(error)) {
-        goto err_ofd_ref_state;
-    }
+    /* get reference on file */
+    regfile_ref(regfile);
 
     /* setup fields */
 
-    self->ofd = ofd;
-    self->cc_mode = cc_mode;
-    self->offset = offset;
+    self->regfile = regfile;
+    self->cc_mode = regfile_get_cc_mode(regfile);
+    self->offset = regfile_get_offset(regfile);
     self->size = 0;
     self->flags = 0;
 
@@ -305,11 +297,6 @@ regfile_tx_ref_or_set_up(struct regfile_tx* self, struct ofd* ofd, int fildes,
 
     picotm_rwstate_set_status(&self->rwstate, PICOTM_RWSTATE_UNLOCKED);
     self->locktablen = 0;
-
-    return;
-
-err_ofd_ref_state:
-    picotm_ref_down(&self->ref);
 }
 
 void
@@ -328,8 +315,8 @@ regfile_tx_unref(struct regfile_tx* self)
         return;
     }
 
-    ofd_unref(self->ofd);
-    self->ofd = NULL;
+    regfile_unref(self->regfile);
+    self->regfile = NULL;
 }
 
 bool
@@ -419,18 +406,26 @@ regfile_tx_append_to_readset(struct regfile_tx* self, size_t nbyte, off_t offset
  * Concurrency Control
  */
 
-int
+static int
 regfile_tx_2pl_lock_region(struct regfile_tx* self, size_t nbyte, off_t offset,
                            bool iswrite, struct picotm_error* error)
 {
+    void (* const try_lock_region[])(struct regfile*,
+                                     off_t,
+                                     size_t,
+                                     struct rwcountermap*,
+                                     struct picotm_error*) = {
+        regfile_try_rdlock_region,
+        regfile_try_wrlock_region
+    };
+
     assert(self);
 
-    ofd_2pl_lock_region(self->ofd,
-                        offset,
-                        nbyte,
-                        iswrite,
-                        &self->rwcountermap,
-                        error);
+    try_lock_region[iswrite](self->regfile,
+                             offset,
+                             nbyte,
+                             &self->rwcountermap,
+                             error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -505,7 +500,7 @@ fcntl_exec_2pl(struct regfile_tx* self, int fildes, int cmd,
         case F_GETOWN: {
 
             /* Read-lock open file description */
-            ofd_rdlock_state(self->ofd, &self->rwstate, error);
+            regfile_try_rdlock_state(self->regfile, &self->rwstate, error);
             if (picotm_error_is_set(error)) {
                 return -1;
             }
@@ -521,7 +516,7 @@ fcntl_exec_2pl(struct regfile_tx* self, int fildes, int cmd,
         case F_GETLK: {
 
             /* Read-lock open file description */
-            ofd_rdlock_state(self->ofd, &self->rwstate, error);
+            regfile_try_rdlock_state(self->regfile, &self->rwstate, error);
             if (picotm_error_is_set(error)) {
                 return -1;
             }
@@ -717,8 +712,7 @@ lseek_exec_2pl(struct regfile_tx* self, int fildes, off_t offset,
                int whence, int* cookie, struct picotm_error* error)
 {
     /* Read-lock open file description */
-
-    ofd_rdlock_state(self->ofd, &self->rwstate, error);
+    regfile_try_rdlock_state(self->regfile, &self->rwstate, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -729,8 +723,7 @@ lseek_exec_2pl(struct regfile_tx* self, int fildes, off_t offset,
 	}
 
     /* Write-lock open file description to change position */
-
-    ofd_wrlock_state(self->ofd, &self->rwstate, error);
+    regfile_try_wrlock_state(self->regfile, &self->rwstate, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -828,7 +821,7 @@ lseek_apply_2pl(struct regfile_tx* self, int fildes, int cookie,
         return;
     }
 
-    self->ofd->data.regular.offset = pos;
+    self->regfile->offset = pos;
 }
 
 void
@@ -1232,8 +1225,7 @@ read_exec_2pl(struct regfile_tx* self, int fildes, void* buf, size_t nbyte,
     assert(self);
 
     /* write-lock open file description, because we change the file position */
-
-    ofd_wrlock_state(self->ofd, &self->rwstate, error);
+    regfile_try_wrlock_state(self->regfile, &self->rwstate, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -1310,9 +1302,9 @@ static void
 read_apply_2pl(struct regfile_tx* self, int fildes, int cookie,
                struct picotm_error* error)
 {
-    self->ofd->data.regular.offset += self->rdtab[cookie].nbyte;
+    self->regfile->offset += self->rdtab[cookie].nbyte;
 
-    off_t res = lseek(fildes, self->ofd->data.regular.offset, SEEK_SET);
+    off_t res = lseek(fildes, self->regfile->offset, SEEK_SET);
     if (res == (off_t)-1) {
         picotm_error_set_errno(error, errno);
         return;
@@ -1379,8 +1371,7 @@ write_exec_2pl(struct regfile_tx* self, int fildes, const void* buf,
     if (__builtin_expect(!!cookie, 1)) {
 
         /* write-lock open file description, because we change the file position */
-
-        ofd_wrlock_state(self->ofd, &self->rwstate, error);
+        regfile_try_wrlock_state(self->regfile, &self->rwstate, error);
         if (picotm_error_is_set(error)) {
             return -1;
         }
@@ -1461,9 +1452,9 @@ write_apply_2pl(struct regfile_tx* self, int fildes, int cookie,
     }
 
     /* Update file position */
-    self->ofd->data.regular.offset = self->wrtab[cookie].off+len;
+    self->regfile->offset = self->wrtab[cookie].off+len;
 
-    off_t res = lseek(fildes, self->ofd->data.regular.offset, SEEK_SET);
+    off_t res = lseek(fildes, self->regfile->offset, SEEK_SET);
     if (res == (off_t)-1) {
         picotm_error_set_errno(error, errno);
         return;

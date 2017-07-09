@@ -35,6 +35,8 @@
  * \endcond
  */
 
+struct socket;
+
 union fcntl_arg;
 
 /**
@@ -48,7 +50,7 @@ struct socket_tx {
 
     struct ofd_tx base;
 
-    struct ofd* ofd;
+    struct socket* socket;
 
     unsigned long flags;
 
@@ -111,8 +113,9 @@ socket_tx_clear_cc(struct socket_tx* self, struct picotm_error* error);
  * Acquire a reference on the open file description
  */
 void
-socket_tx_ref_or_set_up(struct socket_tx* self, struct ofd* ofd, int fildes,
-                        unsigned long flags, struct picotm_error* error);
+socket_tx_ref_or_set_up(struct socket_tx* self, struct socket* socket,
+                        int fildes, unsigned long flags,
+                        struct picotm_error* error);
 
 /**
  * Acquire a reference on the open file description
