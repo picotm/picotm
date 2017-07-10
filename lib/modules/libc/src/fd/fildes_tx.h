@@ -49,11 +49,6 @@ SLIST_HEAD(socket_tx_slist, socket_tx);
 struct fildes_tx {
     unsigned long module;
 
-#if 0
-    struct ofd_tx ofd_tx[MAXNUMFD];
-    size_t        ofd_tx_max_index;
-#endif
-
     struct fd_tx fd_tx[MAXNUMFD];
     size_t       fd_tx_max_fildes;
 
