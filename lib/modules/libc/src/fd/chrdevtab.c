@@ -202,6 +202,8 @@ chrdevtab_ref_fildes(int fildes, bool want_new, struct picotm_error* error)
     chrdev = search_by_id(&empty_id, fildes, error);
     if (picotm_error_is_set(error)) {
         goto err_search_by_id;
+    } else if (chrdev) {
+        goto unlock; /* found chrdev for id; return */
     }
 
     /* The chrdev table is full; create a new entry for the chrdev id at the
