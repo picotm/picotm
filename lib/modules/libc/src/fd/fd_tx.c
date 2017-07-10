@@ -241,10 +241,9 @@ fd_tx_bind_exec(struct fd_tx* self, int sockfd, const struct sockaddr* address,
                                      bool,
                                      int*,
                                      struct picotm_error*) = {
-        NULL,
         bind_exec_chrdev,
-        bind_exec_regfile,
         bind_exec_fifo,
+        bind_exec_regfile,
         bind_exec_socket
     };
 
@@ -273,7 +272,6 @@ fd_tx_bind_apply(struct fd_tx* self, int sockfd, int cookie,
         NULL,
         NULL,
         NULL,
-        NULL,
         bind_apply_socket
     };
 
@@ -298,7 +296,6 @@ fd_tx_bind_undo(struct fd_tx* self, int sockfd, int cookie,
                                       int,
                                       int,
                                       struct picotm_error*) = {
-        NULL,
         NULL,
         NULL,
         NULL,
@@ -468,10 +465,9 @@ fd_tx_connect_exec(struct fd_tx* self, int sockfd,
                                         bool,
                                         int*,
                                         struct picotm_error*) = {
-        NULL,
         connect_exec_chrdev,
-        connect_exec_regfile,
         connect_exec_fifo,
+        connect_exec_regfile,
         connect_exec_socket
     };
 
@@ -501,7 +497,6 @@ fd_tx_connect_apply(struct fd_tx* self, int sockfd, int cookie,
         NULL,
         NULL,
         NULL,
-        NULL,
         connect_apply_socket
     };
 
@@ -527,7 +522,6 @@ fd_tx_connect_undo(struct fd_tx* self, int sockfd, int cookie,
                                          int,
                                          int,
                                          struct picotm_error*) = {
-        NULL,
         NULL,
         NULL,
         NULL,
@@ -592,10 +586,9 @@ fd_tx_fcntl_exec(struct fd_tx* self, int fildes, int cmd,
                                       bool,
                                       int*,
                                       struct picotm_error*) = {
-        NULL,
         fcntl_exec_chrdev,
-        fcntl_exec_regfile,
         fcntl_exec_fifo,
+        fcntl_exec_regfile,
         fcntl_exec_socket
     };
 
@@ -697,10 +690,9 @@ fd_tx_fcntl_apply(struct fd_tx* self, int fildes, int cookie,
                                         int,
                                         int,
                                         struct picotm_error*) = {
-        NULL,
         fcntl_apply_chrdev,
-        fcntl_apply_regfile,
         fcntl_apply_fifo,
+        fcntl_apply_regfile,
         fcntl_apply_socket
     };
 
@@ -766,10 +758,9 @@ fd_tx_fcntl_undo(struct fd_tx* self, int fildes, int cookie,
                                        int,
                                        int,
                                        struct picotm_error*) = {
-        NULL,
         fcntl_undo_chrdev,
-        fcntl_undo_regfile,
         fcntl_undo_fifo,
+        fcntl_undo_regfile,
         fcntl_undo_socket
     };
 
@@ -842,10 +833,9 @@ fd_tx_fsync_exec(struct fd_tx* self, int fildes, bool isnoundo, int* cookie,
                                       bool,
                                       int* cookie,
                                       struct picotm_error*) = {
-        NULL,
         fsync_exec_chrdev,
-        fsync_exec_regfile,
         fsync_exec_fifo,
+        fsync_exec_regfile,
         fsync_exec_socket
     };
 
@@ -875,7 +865,6 @@ fd_tx_fsync_apply(struct fd_tx* self, int fildes, int cookie,
         NULL,
         NULL,
         fsync_apply_regfile,
-        NULL,
         NULL
     };
 
@@ -904,7 +893,6 @@ fd_tx_fsync_undo(struct fd_tx* self, int fildes, int cookie,
         NULL,
         NULL,
         fsync_undo_regfile,
-        NULL,
         NULL
     };
 
@@ -960,10 +948,9 @@ fd_tx_listen_exec(struct fd_tx* self, int sockfd, int backlog, bool isnoundo,
                                        bool,
                                        int*,
                                        struct picotm_error*) = {
-        NULL,
         listen_exec_chrdev,
-        listen_exec_regfile,
         listen_exec_fifo,
+        listen_exec_regfile,
         listen_exec_socket
     };
 
@@ -992,7 +979,6 @@ fd_tx_listen_apply(struct fd_tx* self, int sockfd, int cookie,
         NULL,
         NULL,
         NULL,
-        NULL,
         listen_apply_socket
     };
 
@@ -1017,7 +1003,6 @@ fd_tx_listen_undo(struct fd_tx* self, int sockfd, int cookie,
                                         int,
                                         int,
                                         struct picotm_error*) = {
-        NULL,
         NULL,
         NULL,
         NULL,
@@ -1077,10 +1062,9 @@ fd_tx_lseek_exec(struct fd_tx* self, int fildes, off_t offset, int whence,
                                  bool,
                                  int*,
                                  struct picotm_error*) = {
-        NULL,
         lseek_exec_chrdev,
-        lseek_exec_regfile,
         lseek_exec_fifo,
+        lseek_exec_regfile,
         lseek_exec_socket
     };
 
@@ -1111,7 +1095,6 @@ fd_tx_lseek_apply(struct fd_tx* self, int fildes, int cookie,
         NULL,
         NULL,
         lseek_apply_regfile,
-        NULL,
         NULL
     };
 
@@ -1140,7 +1123,6 @@ fd_tx_lseek_undo(struct fd_tx* self, int fildes, int cookie,
         NULL,
         NULL,
         lseek_undo_regfile,
-        NULL,
         NULL
     };
 
@@ -1210,10 +1192,9 @@ fd_tx_pread_exec(struct fd_tx* self, int fildes, void* buf, size_t nbyte,
                                           enum picotm_libc_validation_mode,
                                           int*,
                                           struct picotm_error*) = {
-        NULL,
         pread_exec_chrdev,
-        pread_exec_regfile,
         pread_exec_fifo,
+        pread_exec_regfile,
         pread_exec_socket
     };
 
@@ -1244,7 +1225,6 @@ fd_tx_pread_apply(struct fd_tx* self, int fildes, int cookie,
         NULL,
         NULL,
         pread_apply_regfile,
-        NULL,
         NULL
     };
 
@@ -1273,7 +1253,6 @@ fd_tx_pread_undo(struct fd_tx* self, int fildes, int cookie,
         NULL,
         NULL,
         pread_undo_regfile,
-        NULL,
         NULL
     };
 
@@ -1336,10 +1315,9 @@ fd_tx_pwrite_exec(struct fd_tx* self, int fildes, const void* buf,
                                            bool,
                                            int*,
                                            struct picotm_error*) = {
-        NULL,
         pwrite_exec_chrdev,
-        pwrite_exec_regfile,
         pwrite_exec_fifo,
+        pwrite_exec_regfile,
         pwrite_exec_socket
     };
 
@@ -1370,7 +1348,6 @@ fd_tx_pwrite_apply(struct fd_tx* self, int fildes, int cookie,
         NULL,
         NULL,
         pwrite_apply_regfile,
-        NULL,
         NULL
     };
 
@@ -1399,7 +1376,6 @@ fd_tx_pwrite_undo(struct fd_tx* self, int fildes, int cookie,
         NULL,
         NULL,
         pwrite_undo_regfile,
-        NULL,
         NULL
     };
 
@@ -1462,10 +1438,9 @@ fd_tx_read_exec(struct fd_tx* self, int fildes, void *buf, size_t nbyte,
                                          enum picotm_libc_validation_mode,
                                          int*,
                                          struct picotm_error*) = {
-        NULL,
         read_exec_chrdev,
-        read_exec_regfile,
         read_exec_fifo,
+        read_exec_regfile,
         read_exec_socket
     };
 
@@ -1513,10 +1488,9 @@ fd_tx_read_apply(struct fd_tx* self, int fildes, int cookie,
                                        int,
                                        int,
                                        struct picotm_error*) = {
-        NULL,
         read_apply_chrdev,
-        read_apply_regfile,
         read_apply_fifo,
+        read_apply_regfile,
         read_apply_socket
     };
 
@@ -1562,10 +1536,9 @@ fd_tx_read_undo(struct fd_tx* self, int fildes, int cookie,
                                       int,
                                       int,
                                       struct picotm_error*) = {
-        NULL,
         read_undo_chrdev,
-        read_undo_regfile,
         read_undo_fifo,
+        read_undo_regfile,
         read_undo_socket
     };
 
@@ -1628,10 +1601,9 @@ fd_tx_recv_exec(struct fd_tx* self, int sockfd, void* buffer, size_t length,
                                          bool,
                                          int*,
                                          struct picotm_error*) = {
-        NULL,
         recv_exec_chrdev,
-        recv_exec_regfile,
         recv_exec_fifo,
+        recv_exec_regfile,
         recv_exec_socket
     };
 
@@ -1660,7 +1632,6 @@ fd_tx_recv_apply(struct fd_tx* self, int sockfd, int cookie,
         NULL,
         NULL,
         NULL,
-        NULL,
         recv_apply_socket
     };
 
@@ -1685,7 +1656,6 @@ fd_tx_recv_undo(struct fd_tx* self, int sockfd, int cookie,
                                int,
                                int,
                                struct picotm_error*) = {
-        NULL,
         NULL,
         NULL,
         NULL,
@@ -1751,10 +1721,9 @@ fd_tx_send_exec(struct fd_tx* self, int sockfd, const void* buffer,
                                          bool,
                                          int*,
                                          struct picotm_error*) = {
-        NULL,
         send_exec_chrdev,
-        send_exec_regfile,
         send_exec_fifo,
+        send_exec_regfile,
         send_exec_socket
     };
 
@@ -1783,7 +1752,6 @@ fd_tx_send_apply(struct fd_tx* self, int fildes, int cookie,
         NULL,
         NULL,
         NULL,
-        NULL,
         send_apply_socket
     };
 
@@ -1808,7 +1776,6 @@ fd_tx_send_undo(struct fd_tx* self, int fildes, int cookie,
                                       int,
                                       int,
                                       struct picotm_error*) = {
-        NULL,
         NULL,
         NULL,
         NULL,
@@ -1869,10 +1836,9 @@ fd_tx_shutdown_exec(struct fd_tx* self, int sockfd, int how, bool isnoundo,
                                          bool,
                                          int*,
                                          struct picotm_error*) = {
-        NULL,
         shutdown_exec_chrdev,
-        shutdown_exec_regfile,
         shutdown_exec_fifo,
+        shutdown_exec_regfile,
         shutdown_exec_socket
     };
 
@@ -1902,7 +1868,6 @@ fd_tx_shutdown_apply(struct fd_tx* self, int fildes, int cookie,
         NULL,
         NULL,
         NULL,
-        NULL,
         shutdown_apply_socket
     };
 
@@ -1928,7 +1893,6 @@ fd_tx_shutdown_undo(struct fd_tx* self, int fildes, int cookie,
                                           int,
                                           int,
                                           struct picotm_error*) = {
-        NULL,
         NULL,
         NULL,
         NULL,
@@ -1993,10 +1957,9 @@ fd_tx_write_exec(struct fd_tx* self, int fildes, const void* buf,
                                           bool,
                                           int*,
                                           struct picotm_error*) = {
-        NULL,
         write_exec_chrdev,
-        write_exec_regfile,
         write_exec_fifo,
+        write_exec_regfile,
         write_exec_socket
     };
 
@@ -2044,10 +2007,9 @@ fd_tx_write_apply(struct fd_tx* self, int fildes, int cookie,
                                         int,
                                         int,
                                         struct picotm_error*) = {
-        NULL,
         write_apply_chrdev,
-        write_apply_regfile,
         write_apply_fifo,
+        write_apply_regfile,
         write_apply_socket
     };
 
@@ -2094,10 +2056,9 @@ fd_tx_write_undo(struct fd_tx* self, int fildes, int cookie,
                                        int,
                                        int,
                                        struct picotm_error*) = {
-        NULL,
         write_undo_chrdev,
-        write_undo_regfile,
         write_undo_fifo,
+        write_undo_regfile,
         write_undo_socket
     };
 
