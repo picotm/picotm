@@ -110,8 +110,7 @@ fd_ref(struct fd *fd, struct picotm_error* error);
 
 /** \brief Aquires a reference on the file descriptor */
 void
-fd_ref_or_set_up(struct fd *fd, int fildes, bool want_new,
-                 struct picotm_error* error);
+fd_ref_or_set_up(struct fd *fd, int fildes, struct picotm_error* error);
 
 /** \brief Releases a reference on the file descriptor */
 void

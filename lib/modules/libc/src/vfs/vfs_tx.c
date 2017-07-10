@@ -245,7 +245,7 @@ vfs_tx_exec_fchdir(struct vfs_tx* self, int fildes,
 
     /* Reference new directory's file descriptor */
 
-    struct fd* fd = fdtab_ref_fildes(fildes, false, error);
+    struct fd* fd = fdtab_ref_fildes(fildes, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -272,7 +272,7 @@ vfs_tx_exec_fchdir(struct vfs_tx* self, int fildes,
         }
     } else {
         /* Replace old CWD with new CWD */
-        struct fd* fd = fdtab + self->newcwd;
+        struct fd* fd = fdtab_get_fd(self->newcwd);
         fd_unref(fd);
     }
 
@@ -313,7 +313,7 @@ vfs_tx_exec_fchmod(struct vfs_tx* self, int fildes, mode_t mode,
 {
     /* reference file descriptor while working on it */
 
-    struct fd* fd = fdtab_ref_fildes(fildes, false, error);
+    struct fd* fd = fdtab_ref_fildes(fildes, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -343,7 +343,7 @@ vfs_tx_exec_fstat(struct vfs_tx* self, int fildes, struct stat* buf,
 {
     /* reference file descriptor while working on it */
 
-    struct fd* fd = fdtab_ref_fildes(fildes, false, error);
+    struct fd* fd = fdtab_ref_fildes(fildes, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -707,7 +707,7 @@ vfs_tx_finish(struct vfs_tx* self, struct picotm_error* error)
     }
 
     if (self->newcwd >= 0) {
-        struct fd* fd = fdtab + self->newcwd;
+        struct fd* fd = fdtab_get_fd(self->newcwd);
         fd_unref(fd);
         self->newcwd = -1;
     }
