@@ -147,8 +147,7 @@ fd_ref(struct fd *fd, struct picotm_error* error)
 }
 
 void
-fd_ref_or_set_up(struct fd *fd, int fildes, bool want_new,
-                 struct picotm_error* error)
+fd_ref_or_set_up(struct fd *fd, int fildes, struct picotm_error* error)
 {
     lock_fd(fd);
 
@@ -157,14 +156,9 @@ fd_ref_or_set_up(struct fd *fd, int fildes, bool want_new,
         return;
     }
 
-    if (!first_ref && !want_new) {
+    if (!first_ref) {
         /* we got a set-up instance; signal success */
         goto unlock;
-    }
-
-    if (!first_ref && want_new) {
-        picotm_error_set_conflicting(error, NULL);
-        goto err_want_new;
     }
 
     /* set up instance */
@@ -172,12 +166,6 @@ fd_ref_or_set_up(struct fd *fd, int fildes, bool want_new,
     fd->state = FD_ST_INUSE;
 
 unlock:
-    unlock_fd(fd);
-
-    return;
-
-err_want_new:
-    fd_unref(fd);
     unlock_fd(fd);
 }
 

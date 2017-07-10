@@ -17,10 +17,7 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef FDTAB_H
-#define FDTAB_H
-
-#include "fd.h"
+#pragma once
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -30,13 +27,11 @@
  * \endcond
  */
 
-extern struct fd fdtab[MAXNUMFD];
-
-/*int
-fdtab_init(void);*/
+struct fd;
+struct picotm_error;
 
 struct fd*
-fdtab_ref_fildes(int fildes, bool want_new, struct picotm_error* error);
+fdtab_ref_fildes(int fildes, struct picotm_error* error);
 
-#endif
-
+struct fd*
+fdtab_get_fd(int fildes);

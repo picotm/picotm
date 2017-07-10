@@ -30,6 +30,7 @@
 #include "chrdevtab.h"
 #include "dir.h"
 #include "dirtab.h"
+#include "fd.h"
 #include "fdtab.h"
 #include "fifo.h"
 #include "fifotab.h"
@@ -543,7 +544,7 @@ get_fd_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
         return fd_tx;
     }
 
-    struct fd* fd = fdtab_ref_fildes(fildes, !!(flags & FD_FL_WANTNEW), error);
+    struct fd* fd = fdtab_ref_fildes(fildes, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
@@ -567,7 +568,7 @@ get_fd_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
 err_fd_tx_ref:
     ofd_tx_unref(ofd_tx);
 err_get_ofd_tx_with_ref:
-    fd_unref(fdtab + fildes);
+    fd_unref(fd);
     return NULL;
 }
 

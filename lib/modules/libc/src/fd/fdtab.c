@@ -19,38 +19,15 @@
 
 #include "fdtab.h"
 #include <picotm/picotm-error.h>
+#include <picotm/picotm-lib-array.h>
 #include <picotm/picotm-lib-tab.h>
+#include <pthread.h>
 #include <stdlib.h>
+#include "fd.h"
 
-struct fd fdtab[MAXNUMFD];
-
-/* Initializer */
-
-static void fdtab_init(void) __attribute__((constructor));
-
-static size_t
-fdtab_fd_init_walk(void *fd, struct picotm_error* error)
-{
-    fd_init(fd, error);
-    if (picotm_error_is_set(error)) {
-        return 0;
-    }
-    return 1;
-}
-
-static void
-fdtab_init(void)
-{
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-    picotm_tabwalk_1(fdtab, sizeof(fdtab)/sizeof(fdtab[0]), sizeof(fdtab[0]),
-                     fdtab_fd_init_walk, &error);
-    if (picotm_error_is_set(&error)) {
-        abort();
-    }
-}
-
-/* End of initalizer */
+static struct fd        fdtab[MAXNUMFD];
+static size_t           fdtab_len = 0;
+static pthread_rwlock_t fdtab_rwlock = PTHREAD_RWLOCK_INITIALIZER;
 
 /* Destructor */
 
@@ -77,17 +54,122 @@ fdtab_uninit(void)
 
 /* End of destructor */
 
-#include "fdtab.h"
-
-struct fd*
-fdtab_ref_fildes(int fildes, bool want_new, struct picotm_error* error)
+static void
+rdlock_fdtab(void)
 {
+    int err = pthread_rwlock_rdlock(&fdtab_rwlock);
+    if (err) {
+        abort();
+    }
+}
+
+static void
+wrlock_fdtab(void)
+{
+    int err = pthread_rwlock_wrlock(&fdtab_rwlock);
+    if (err) {
+        abort();
+    }
+}
+
+static void
+unlock_fdtab(void)
+{
+    int err = pthread_rwlock_unlock(&fdtab_rwlock);
+    if (err) {
+        abort();
+    }
+}
+
+/* requires reader lock */
+static struct fd*
+find_by_id(int fildes, struct picotm_error* error)
+{
+    if ((ssize_t)fdtab_len <= fildes) {
+        return NULL;
+    }
+
     struct fd* fd = fdtab + fildes;
 
-    fd_ref_or_set_up(fd, fildes, want_new, error);
+    fd_ref_or_set_up(fd, fildes, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
 
     return fd;
+}
+
+/* requires writer lock */
+static struct fd*
+search_by_id(int fildes, struct picotm_error* error)
+{
+    struct fd* fd_beg = picotm_arrayat(fdtab, fdtab_len);
+    const struct fd* fd_end = picotm_arrayat(fdtab, fildes + 1);
+
+    while (fd_beg < fd_end) {
+
+        fd_init(fd_beg, error);
+        if (picotm_error_is_set(error)) {
+            return NULL;
+        }
+
+        ++fdtab_len;
+        ++fd_beg;
+    }
+
+    struct fd* fd = fdtab + fildes;
+
+    fd_ref_or_set_up(fd, fildes, error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+
+    return fd;
+}
+
+struct fd*
+fdtab_ref_fildes(int fildes, struct picotm_error* error)
+{
+    /* Try to find an existing fd structure with the given file
+     * descriptor.
+     */
+
+    rdlock_fdtab();
+
+    struct fd* fd = find_by_id(fildes, error);
+    if (picotm_error_is_set(error)) {
+        goto err_find_by_id;
+    } else if (fd) {
+        goto unlock; /* found fd for fildes; return */
+    }
+
+    unlock_fdtab();
+
+    /* Not found; acquire writer lock to create a new entry
+     * in the file-descriptor table.
+     */
+
+    wrlock_fdtab();
+
+    fd = search_by_id(fildes, error);
+    if (picotm_error_is_set(error)) {
+        goto err_search_by_id;
+        return NULL;
+    }
+
+unlock:
+    unlock_fdtab();
+
+    return fd;
+
+err_search_by_id:
+err_find_by_id:
+    unlock_fdtab();
+    return NULL;
+}
+
+struct fd*
+fdtab_get_fd(int fildes)
+{
+    return fdtab + fildes;
 }
