@@ -204,6 +204,8 @@ sockettab_ref_fildes(int fildes, bool want_new, struct picotm_error* error)
     socket = search_by_id(&empty_id, fildes, error);
     if (picotm_error_is_set(error)) {
         goto err_search_by_id;
+    } else if (socket) {
+        goto unlock; /* found socket for id; return */
     }
 
     /* The socket table is full; create a new entry for the socket id at the
