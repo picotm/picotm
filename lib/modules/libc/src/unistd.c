@@ -25,7 +25,6 @@
 #include "error/module.h"
 #include "fd/module.h"
 #include "picotm/unistd-tm.h"
-#include "vfs/module.h"
 
 PICOTM_EXPORT
 void
@@ -107,7 +106,7 @@ fchdir_tx(int fildes)
     int res;
 
     do {
-        res = vfs_module_fchdir(fildes);
+        res = fd_module_fchdir(fildes);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }

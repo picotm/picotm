@@ -95,7 +95,7 @@ finish_cb(void* data, struct picotm_error* error)
 {
     struct fd_module* module = data;
 
-    fildes_tx_finish(&module->tx);
+    fildes_tx_finish(&module->tx, error);
 }
 
 static void
@@ -198,6 +198,35 @@ fd_module_bind(int sockfd, const struct sockaddr* address,
 }
 
 int
+fd_module_chdir(const char* path)
+{
+    int fildes = fd_module_open(path, O_RDONLY, 0);
+    if (fildes < 0) {
+        return -1;
+    }
+
+    return fd_module_fchdir(fildes);
+}
+
+int
+fd_module_chmod(const char* path, mode_t mode)
+{
+    struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
+
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+        int res = fildes_tx_exec_chmod(fildes_tx, path, mode, &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return res;
+        }
+        picotm_recover_from_error(&error);
+
+    } while (true);
+}
+
+int
 fd_module_close(int fildes)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
@@ -219,7 +248,7 @@ fd_module_close(int fildes)
 
 int
 fd_module_connect(int sockfd, const struct sockaddr* serv_addr,
-                   socklen_t addr_len)
+                  socklen_t addr_len)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
@@ -263,6 +292,42 @@ fd_module_dup(int fildes)
 }
 
 int
+fd_module_fchdir(int fildes)
+{
+    struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
+
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+        int res = fildes_tx_exec_fchdir(fildes_tx, fildes, &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return res;
+        }
+        picotm_recover_from_error(&error);
+
+    } while (true);
+}
+
+int
+fd_module_fchmod(int fildes, mode_t mode)
+{
+    struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
+
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+        int res = fildes_tx_exec_fchmod(fildes_tx, fildes, mode, &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return res;
+        }
+        picotm_recover_from_error(&error);
+
+    } while (true);
+}
+
+int
 fd_module_fcntl(int fildes, int cmd, union fcntl_arg* arg)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
@@ -282,6 +347,24 @@ fd_module_fcntl(int fildes, int cmd, union fcntl_arg* arg)
 }
 
 int
+fd_module_fstat(int fildes, struct stat* buf)
+{
+    struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
+
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+        int res = fildes_tx_exec_fstat(fildes_tx, fildes, buf, &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return res;
+        }
+        picotm_recover_from_error(&error);
+
+    } while (true);
+}
+
+int
 fd_module_fsync(int fildes)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
@@ -291,6 +374,42 @@ fd_module_fsync(int fildes)
 
         int res = fildes_tx_exec_fsync(fildes_tx, fildes,
                                        picotm_is_irrevocable(), &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return res;
+        }
+        picotm_recover_from_error(&error);
+
+    } while (true);
+}
+
+char*
+fd_module_getcwd(char* buf, size_t size)
+{
+    struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
+
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+        char* cwd = fildes_tx_exec_getcwd(fildes_tx, buf, size, &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return cwd;
+        }
+        picotm_recover_from_error(&error);
+
+    } while (true);
+}
+
+int
+fd_module_link(const char* path1, const char* path2)
+{
+    struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
+
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+        int res = fildes_tx_exec_link(fildes_tx, path1, path2, &error);
 
         if (!picotm_error_is_set(&error)) {
             return res;
@@ -332,6 +451,96 @@ fd_module_lseek(int fildes, off_t offset, int whence)
 
         if (!picotm_error_is_set(&error)) {
             return res;
+        }
+        picotm_recover_from_error(&error);
+
+    } while (true);
+}
+
+int
+fd_module_lstat(const char* path, struct stat* buf)
+{
+    struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
+
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+        int res = fildes_tx_exec_lstat(fildes_tx, path, buf, &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return res;
+        }
+        picotm_recover_from_error(&error);
+
+    } while (true);
+}
+
+int
+fd_module_mkdir(const char* path, mode_t mode)
+{
+    struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
+
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+        int res = fildes_tx_exec_mkdir(fildes_tx, path, mode, &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return res;
+        }
+        picotm_recover_from_error(&error);
+
+    } while (true);
+}
+
+int
+fd_module_mkfifo(const char* path, mode_t mode)
+{
+    struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
+
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+        int res = fildes_tx_exec_mkfifo(fildes_tx, path, mode, &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return res;
+        }
+        picotm_recover_from_error(&error);
+
+    } while (true);
+}
+
+int
+fd_module_mknod(const char* path, mode_t mode, dev_t dev)
+{
+    struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
+
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+        int res = fildes_tx_exec_mknod(fildes_tx, path, mode, dev, &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return res;
+        }
+        picotm_recover_from_error(&error);
+
+    } while (true);
+}
+
+int
+fd_module_mkstemp(char* template)
+{
+    struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
+
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+        int fildes = fildes_tx_exec_mkstemp(fildes_tx, template, &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return fildes;
         }
         picotm_recover_from_error(&error);
 
@@ -455,7 +664,7 @@ fd_module_recv(int sockfd, void* buffer, size_t length, int flags)
 
 int
 fd_module_select(int nfds, fd_set* readfds, fd_set* writefds,
-                  fd_set* errorfds, struct timeval* timeout)
+                 fd_set* errorfds, struct timeval* timeout)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
@@ -533,6 +742,24 @@ fd_module_socket(int domain, int type, int protocol)
     } while (true);
 }
 
+int
+fd_module_stat(const char* path, struct stat* buf)
+{
+    struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
+
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+        int fildes = fildes_tx_exec_stat(fildes_tx, path, buf, &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return fildes;
+        }
+        picotm_recover_from_error(&error);
+
+    } while (true);
+}
+
 void
 fd_module_sync()
 {
@@ -545,6 +772,24 @@ fd_module_sync()
 
         if (!picotm_error_is_set(&error)) {
             return;
+        }
+        picotm_recover_from_error(&error);
+
+    } while (true);
+}
+
+int
+fd_module_unlink(const char* path)
+{
+    struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
+
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+        int fildes = fildes_tx_exec_unlink(fildes_tx, path, &error);
+
+        if (!picotm_error_is_set(&error)) {
+            return fildes;
         }
         picotm_recover_from_error(&error);
 
