@@ -24,6 +24,7 @@
 #include <picotm/picotm-lib-tab.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include "chrdev.h"
@@ -43,7 +44,6 @@
 #include "regfiletab.h"
 #include "socket.h"
 #include "sockettab.h"
-#include "vfs/module.h"
 
 enum fildes_tx_cmd {
     CMD_CLOSE = 0,
@@ -66,7 +66,10 @@ enum fildes_tx_cmd {
     CMD_SEND,
     CMD_RECV,
     CMD_SHUTDOWN,
-    CMD_BIND
+    CMD_BIND,
+    /* VFS calls */
+    CMD_FCHDIR,
+    CMD_MKSTEMP
 };
 
 void
@@ -91,6 +94,9 @@ fildes_tx_init(struct fildes_tx* self, unsigned long module)
 
     self->socket_tx_max_index = 0;
     SLIST_INIT(&self->socket_tx_active_list);
+
+    self->inicwd = -1;
+    self->newcwd = -1;
 
     self->eventtab = NULL;
     self->eventtablen = 0;
@@ -603,6 +609,106 @@ append_cmd(struct fildes_tx* self, enum fildes_tx_cmd cmd, int fildes,
     return (int)self->eventtablen++;
 }
 
+static int
+get_cwd(struct fildes_tx* self, struct picotm_error* error)
+{
+    assert(self);
+
+    if (self->newcwd >= 0) {
+        return self->newcwd;
+    }
+
+    if (self->inicwd >= 0) {
+        return self->inicwd;
+    }
+
+    char* cwd = get_current_dir_name();
+
+    int fildes = TEMP_FAILURE_RETRY(open(cwd, O_RDONLY));
+    if (fildes < 0) {
+        picotm_error_set_errno(error, errno);
+        goto err_open;
+    }
+
+    self->inicwd = fildes;
+
+    free(cwd);
+
+    return fildes;
+
+err_open:
+    free(cwd);
+    return -1;
+}
+
+static char*
+get_cwd_path(struct fildes_tx* self, struct picotm_error* error)
+{
+    assert(self);
+
+    int fildes = get_cwd(self, error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+
+    char path[64];
+    snprintf(path, sizeof(path), "/proc/self/fd/%d", fildes);
+
+    char* canonpath = canonicalize_file_name(path);
+    if (!canonpath) {
+        picotm_error_set_errno(error, errno);
+        return NULL;
+    }
+
+    return canonpath;
+}
+
+static char*
+absolute_path(struct fildes_tx* self, const char* path,
+              struct picotm_error* error)
+{
+    assert(self);
+    assert(path);
+
+    if (path[0] == '/') {
+        char* abspath = strdup(path);
+        if (!abspath) {
+            picotm_error_set_errno(error, errno);
+            return NULL;
+        }
+        return abspath;
+    }
+
+    /* Construct absolute pathname */
+
+    char* cwd = get_cwd_path(self, error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+
+    size_t pathlen = strlen(path);
+    size_t cwdlen = strlen(cwd);
+
+    char* abspath = malloc(pathlen + cwdlen + 2 * sizeof(*abspath));
+    if (!abspath) {
+        picotm_error_set_errno(error, errno);
+        goto err_malloc;
+    }
+
+    memcpy(abspath, path, pathlen);
+    abspath[pathlen] = '/';
+    memcpy(abspath + pathlen + 1, cwd, cwdlen);
+    abspath[pathlen + 1 + cwdlen] = '\0';
+
+    free(cwd);
+
+    return abspath;
+
+err_malloc:
+    free(cwd);
+    return NULL;
+}
+
 /*
  * accept()
  */
@@ -747,6 +853,27 @@ undo_bind(struct fildes_tx* self, int fildes, int cookie,
     if (picotm_error_is_set(error)) {
         return;
     }
+}
+
+/*
+ * chmod()
+ */
+
+int
+fildes_tx_exec_chmod(struct fildes_tx* self, const char* path, mode_t mode,
+                     struct picotm_error* error)
+{
+    int cwd = get_cwd(self, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+
+    int res = fchmodat(cwd, path, mode, 0);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return -1;
+    }
+    return res;
 }
 
 /*
@@ -966,6 +1093,108 @@ undo_dup(struct fildes_tx* self, int fildes, int cookie,
 }
 
 /*
+ * fchdir()
+ */
+
+int
+fildes_tx_exec_fchdir(struct fildes_tx* self, int fildes,
+                      struct picotm_error* error)
+{
+    assert(self);
+
+    /* Reference new directory's file descriptor */
+
+    struct fd* fd = fdtab_ref_fildes(fildes, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+
+    /* Check file descriptor */
+
+    struct stat buf;
+    int res = fstat(fildes, &buf);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        goto err_fstab;
+    }
+
+    if (!S_ISDIR(buf.st_mode)) {
+        picotm_error_set_errno(error, ENOTDIR);
+        goto err_s_isdir;
+    }
+
+    if (self->newcwd < 0) {
+        /* Inject event */
+        append_cmd(self, CMD_FCHDIR, self->newcwd, -1, error);
+        if (picotm_error_is_set(error)) {
+            goto err_append_cmd;
+        }
+    } else {
+        /* Replace old CWD with new CWD */
+        struct fd* fd = fdtab_get_fd(self->newcwd);
+        fd_unref(fd);
+    }
+
+    self->newcwd = fildes;
+
+    return 0;
+
+err_append_cmd:
+err_s_isdir:
+err_fstab:
+    fd_unref(fd);
+    return -1;
+}
+
+static void
+apply_fchdir(struct fildes_tx* self, const struct fd_event* event,
+             struct picotm_error* error)
+{
+    assert(self);
+
+    int res = TEMP_FAILURE_RETRY(fchdir(self->newcwd));
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return;
+    }
+}
+
+static void
+undo_fchdir(struct fildes_tx* self, int fildes, int cookie,
+            struct picotm_error* error)
+{ }
+
+/*
+ * fchmod()
+ */
+
+int
+fildes_tx_exec_fchmod(struct fildes_tx* self, int fildes, mode_t mode,
+                      struct picotm_error* error)
+{
+    /* reference file descriptor while working on it */
+
+    struct fd* fd = fdtab_ref_fildes(fildes, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+
+    int res = fchmod(fildes, mode);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        goto err_fchmod;
+    }
+
+    fd_unref(fd);
+
+    return res;
+
+err_fchmod:
+    fd_unref(fd);
+    return -1;
+}
+
+/*
  * fcntl()
  */
 
@@ -1035,6 +1264,36 @@ undo_fcntl(struct fildes_tx* self, int fildes, int cookie,
     if (picotm_error_is_set(error)) {
         return;
     }
+}
+
+/*
+ * fstat()
+ */
+
+int
+fildes_tx_exec_fstat(struct fildes_tx* self, int fildes, struct stat* buf,
+                     struct picotm_error* error)
+{
+    /* reference file descriptor while working on it */
+
+    struct fd* fd = fdtab_ref_fildes(fildes, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+
+    int res = fstat(fildes, buf);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        goto err_fstat;
+    }
+
+    fd_unref(fd);
+
+    return res;
+
+err_fstat:
+    fd_unref(fd);
+    return -1;
 }
 
 /*
@@ -1108,6 +1367,59 @@ undo_fsync(struct fildes_tx* self, int fildes, int cookie,
     if (picotm_error_is_set(error)) {
         return;
     }
+}
+
+/*
+ * getcwd()
+ */
+
+char*
+fildes_tx_exec_getcwd(struct fildes_tx* self, char* buf, size_t size,
+                      struct picotm_error* error)
+{
+    /* return transaction-local working directory */
+
+    char* cwd = get_cwd_path(self, error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+
+    size_t len = strlen(cwd) + sizeof(*cwd);
+
+    if (!(size >= len)) {
+        picotm_error_set_errno(error, ERANGE);
+        goto err_size_ge_len;
+    }
+
+    memcpy(buf, cwd, len);
+    free(cwd);
+
+    return buf;
+
+err_size_ge_len:
+    free(cwd);
+    return NULL;
+}
+
+/*
+ * link()
+ */
+
+int
+fildes_tx_exec_link(struct fildes_tx* self, const char* path1, const char* path2,
+                    struct picotm_error* error)
+{
+    int cwd = get_cwd(self, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+
+    int res = linkat(cwd, path1, cwd, path2, AT_SYMLINK_FOLLOW);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return -1;
+    }
+    return res;
 }
 
 /*
@@ -1257,6 +1569,186 @@ undo_lseek(struct fildes_tx* self, int fildes, int cookie,
 }
 
 /*
+ * lstat()
+ */
+
+int
+fildes_tx_exec_lstat(struct fildes_tx* self, const char* path, struct stat* buf,
+                     struct picotm_error* error)
+{
+    int cwd = get_cwd(self, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+
+    int res = fstatat(cwd, path, buf, AT_SYMLINK_NOFOLLOW);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return -1;
+    }
+    return res;
+}
+
+/*
+ * mkdir()
+ */
+
+int
+fildes_tx_exec_mkdir(struct fildes_tx* self, const char* path, mode_t mode,
+                     struct picotm_error* error)
+{
+    int cwd = get_cwd(self, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+
+    int res = mkdirat(cwd, path, mode);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return -1;
+    }
+    return res;
+}
+
+/*
+ * mkfifo()
+ */
+
+int
+fildes_tx_exec_mkfifo(struct fildes_tx* self, const char* path, mode_t mode,
+                      struct picotm_error* error)
+{
+    int cwd = get_cwd(self, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+
+    int res = mkfifoat(cwd, path, mode);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return -1;
+    }
+    return res;
+}
+
+/*
+ * mknod()
+ */
+
+int
+fildes_tx_exec_mknod(struct fildes_tx* self, const char* path, mode_t mode,
+                     dev_t dev, struct picotm_error* error)
+{
+    int cwd = get_cwd(self, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+
+    int res = mknodat(cwd, path, mode, dev);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return -1;
+    }
+    return res;
+}
+
+/*
+ * mkstemp()
+ */
+
+int
+fildes_tx_exec_mkstemp(struct fildes_tx* self, char* pathname,
+                       struct picotm_error* error)
+{
+    assert(self);
+    assert(pathname);
+
+    /* Construct absolute pathname */
+
+    char* abspath = absolute_path(self, pathname, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+
+    /* Make call */
+
+    int res = mkstemp(abspath);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        goto err_mkstemp;
+    }
+    int fildes = res;
+
+    /* Copy trailing filled XXXXXX back to pathname */
+    memcpy(pathname + strlen(pathname) - 6, abspath + strlen(abspath) - 6, 6);
+
+    append_cmd(self, CMD_MKSTEMP, fildes, fildes, error);
+    if (picotm_error_is_set(error)) {
+        goto err_append_cmd;
+    }
+
+    free(abspath);
+
+    return fildes;
+
+err_append_cmd:
+    unlink(abspath);
+err_mkstemp:
+    free(abspath);
+    return -1;
+}
+
+static void
+apply_mkstemp(struct fildes_tx* self, const struct fd_event* event,
+              struct picotm_error* error)
+{ }
+
+/* Remove temporary file in a quite reliable, but Linux-only, way. This is
+ * only possible because it is certain that the transaction created that file
+ * initially. Note that there is still a race condition. An attacker could
+ * replace the file at 'canonpath' while the process is between stat and
+ * unlink.
+ */
+static void
+undo_mkstemp(struct fildes_tx* self, int fildes, int cookie,
+             struct picotm_error* error)
+{
+    char path[64];
+    int res = snprintf(path, sizeof(path), "/proc/self/fd/%d", cookie);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return;
+    }
+
+    char* canonpath = canonicalize_file_name(path);
+
+    if (canonpath) {
+
+        struct stat buf[2];
+
+        if (fstat(cookie, buf+0) != -1
+            && stat(canonpath, buf+1) != -1
+            && buf[0].st_dev == buf[1].st_dev
+            && buf[0].st_ino == buf[1].st_ino) {
+
+            if (unlink(canonpath) < 0) {
+                perror("unlink");
+            }
+        }
+
+        free(canonpath);
+    } else {
+        perror("canonicalize_file_name");
+    }
+
+    res = TEMP_FAILURE_RETRY(close(cookie));
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return;
+    }
+}
+
+/*
  * open()
  */
 
@@ -1276,8 +1768,12 @@ fildes_tx_exec_open(struct fildes_tx* self, const char* path, int oflag,
 
     /* Open file */
 
-    int fildes = TEMP_FAILURE_RETRY(
-        openat(vfs_module_getcwd_fildes(), path, oflag, mode));
+    int cwd = get_cwd(self, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+
+    int fildes = TEMP_FAILURE_RETRY(openat(cwd, path, oflag, mode));
 
     if (fildes < 0) {
         picotm_error_set_errno(error, errno);
@@ -2061,6 +2557,27 @@ undo_socket(struct fildes_tx* self, int fildes, int cookie,
 }
 
 /*
+ * stat()
+ */
+
+int
+fildes_tx_exec_stat(struct fildes_tx* self, const char* path,
+                    struct stat* buf, struct picotm_error* error)
+{
+    int cwd = get_cwd(self, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+
+    int res = fstatat(cwd, path, buf, 0);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return -1;
+    }
+    return res;
+}
+
+/*
  * sync()
  */
 
@@ -2093,6 +2610,27 @@ static void
 undo_sync(struct fildes_tx* self, int fildes, int cookie,
           struct picotm_error* error)
 { }
+
+/*
+ * unlink()
+ */
+
+int
+fildes_tx_exec_unlink(struct fildes_tx* self, const char* path,
+                      struct picotm_error* error)
+{
+    int cwd = get_cwd(self, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+
+    int res = unlinkat(cwd, path, 0);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return -1;
+    }
+    return res;
+}
 
 /*
  * write()
@@ -2356,7 +2894,10 @@ fildes_tx_apply_event(struct fildes_tx* self,
         apply_send,
         apply_recv,
         apply_shutdown,
-        apply_bind
+        apply_bind,
+        /* VFS calls */
+        apply_fchdir,
+        apply_mkstemp
     };
 
     apply[event->call](self, self->eventtab + event->cookie, error);
@@ -2394,7 +2935,10 @@ fildes_tx_undo_event(struct fildes_tx* self,
         undo_send,
         undo_recv,
         undo_shutdown,
-        undo_bind
+        undo_bind,
+        /* VFS calls */
+        undo_fchdir,
+        undo_mkstemp
     };
 
     undo[event->call](self,
@@ -2537,7 +3081,7 @@ fildes_tx_clear_cc(struct fildes_tx* self, int noundo,
 }
 
 void
-fildes_tx_finish(struct fildes_tx* self)
+fildes_tx_finish(struct fildes_tx* self, struct picotm_error* error)
 {
     /* Unref socket_txs */
 
@@ -2597,5 +3141,20 @@ fildes_tx_finish(struct fildes_tx* self)
         SLIST_REMOVE_HEAD(&self->fd_tx_active_list, active_list);
 
         fd_tx_unref(fd_tx);
+    }
+
+    if (self->inicwd >= 0) {
+        int res = TEMP_FAILURE_RETRY(close(self->inicwd));
+        if (res < 0) {
+            picotm_error_set_errno(error, errno);
+            return;
+        }
+        self->inicwd = -1;
+    }
+
+    if (self->newcwd >= 0) {
+        struct fd* fd = fdtab_get_fd(self->newcwd);
+        fd_unref(fd);
+        self->newcwd = -1;
     }
 }

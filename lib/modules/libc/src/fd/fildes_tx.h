@@ -22,6 +22,7 @@
 #include <picotm/picotm-module.h>
 #include <stdbool.h>
 #include <sys/queue.h>
+#include <sys/stat.h>
 #include "chrdev_tx.h"
 #include "dir_tx.h"
 #include "fd_event.h"
@@ -87,6 +88,11 @@ struct fildes_tx {
     /** Active instances of |struct socket_tx| */
     struct socket_tx_slist  socket_tx_active_list;
 
+    /** File descriptor of initial working dir */
+    int inicwd;
+    /** File descriptor of current working dir */
+    int newcwd;
+
     struct fd_event* eventtab;
     size_t           eventtablen;
     size_t           eventtabsiz;
@@ -122,6 +128,10 @@ fildes_tx_exec_bind(struct fildes_tx* self, int socket,
                     int isnoundo, struct picotm_error* error);
 
 int
+fildes_tx_exec_chmod(struct fildes_tx* self, const char* path, mode_t mode,
+                     struct picotm_error* error);
+
+int
 fildes_tx_exec_close(struct fildes_tx* self, int fildes, int isnoundo,
                      struct picotm_error* error);
 
@@ -135,21 +145,61 @@ fildes_tx_exec_dup(struct fildes_tx* self, int fildes, int cloexec,
                    struct picotm_error* error);
 
 int
+fildes_tx_exec_fchdir(struct fildes_tx* self, int fildes,
+                      struct picotm_error* error);
+
+int
+fildes_tx_exec_fchmod(struct fildes_tx* self, int fildes, mode_t mode,
+                      struct picotm_error* error);
+
+int
 fildes_tx_exec_fcntl(struct fildes_tx* self, int fildes, int cmd,
                      union fcntl_arg* arg, int isnoundo,
+                     struct picotm_error* error);
+
+int
+fildes_tx_exec_fstat(struct fildes_tx* self, int fildes, struct stat* buf,
                      struct picotm_error* error);
 
 int
 fildes_tx_exec_fsync(struct fildes_tx* self, int fildes, int isnoundo,
                      struct picotm_error* error);
 
+char*
+fildes_tx_exec_getcwd(struct fildes_tx* self, char* buf, size_t size,
+                      struct picotm_error* error);
+
+int
+fildes_tx_exec_link(struct fildes_tx* self, const char* path1, const char* path2,
+                    struct picotm_error* error);
+
 int
 fildes_tx_exec_listen(struct fildes_tx* self, int sockfd, int backlog,
                       int isnoundo, struct picotm_error* error);
 
+int
+fildes_tx_exec_lstat(struct fildes_tx* self, const char* path, struct stat* buf,
+                     struct picotm_error* error);
+
 off_t
 fildes_tx_exec_lseek(struct fildes_tx* self, int fildes, off_t offset,
                      int whence, int isnoundo, struct picotm_error* error);
+
+int
+fildes_tx_exec_mkdir(struct fildes_tx* self, const char* path, mode_t mode,
+                     struct picotm_error* error);
+
+int
+fildes_tx_exec_mkfifo(struct fildes_tx* self, const char* path, mode_t mode,
+                      struct picotm_error* error);
+
+int
+fildes_tx_exec_mknod(struct fildes_tx* self, const char* path, mode_t mode,
+                     dev_t dev, struct picotm_error* error);
+
+int
+fildes_tx_exec_mkstemp(struct fildes_tx* self, char* pathname,
+                       struct picotm_error* error);
 
 int
 fildes_tx_exec_open(struct fildes_tx* self, const char* path, int oflag,
@@ -197,12 +247,24 @@ int
 fildes_tx_exec_socket(struct fildes_tx* self, int domain, int type,
                       int protocol, struct picotm_error* error);
 
+int
+fildes_tx_exec_stat(struct fildes_tx* self, const char* path, struct stat* buf,
+                    struct picotm_error* error);
+
 void
 fildes_tx_exec_sync(struct fildes_tx* self, struct picotm_error* error);
+
+int
+fildes_tx_exec_unlink(struct fildes_tx* self, const char* path,
+                      struct picotm_error* error);
 
 ssize_t
 fildes_tx_exec_write(struct fildes_tx* self, int fildes, const void* buf,
                      size_t nbyte, int isnoundo, struct picotm_error* error);
+
+/*
+ * Module interface
+ */
 
 void
 fildes_tx_lock(struct fildes_tx* self, struct picotm_error* error);
@@ -233,4 +295,4 @@ fildes_tx_clear_cc(struct fildes_tx* self, int noundo,
                    struct picotm_error* error);
 
 void
-fildes_tx_finish(struct fildes_tx* self);
+fildes_tx_finish(struct fildes_tx* self, struct picotm_error* error);

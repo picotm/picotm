@@ -23,7 +23,6 @@
 #include <picotm/picotm-module.h>
 #include "error/module.h"
 #include "fd/module.h"
-#include "vfs/module.h"
 
 static bool
 perform_recovery(int errno_hint)
@@ -47,7 +46,7 @@ chdir_tm(const char* path)
     int res;
 
     do {
-        res = vfs_module_chdir(path);
+        res = fd_module_chdir(path);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }
@@ -65,7 +64,7 @@ getcwd_tm(char* buf, size_t size)
     char* str;
 
     do {
-        str = vfs_module_getcwd(buf, size);
+        str = fd_module_getcwd(buf, size);
         if (!str) {
             picotm_recover_from_errno(errno);
         }
@@ -83,7 +82,7 @@ link_tm(const char* path1, const char* path2)
     int res;
 
     do {
-        res = vfs_module_link(path1, path2);
+        res = fd_module_link(path1, path2);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }
@@ -185,7 +184,7 @@ unlink_tm(const char* path)
     int res;
 
     do {
-        res = vfs_module_unlink(path);
+        res = fd_module_unlink(path);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }
