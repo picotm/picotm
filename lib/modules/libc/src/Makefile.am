@@ -118,15 +118,7 @@ libpicotm_c_la_SOURCES = allocator/allocator_tx.c \
                          sys_stat.c \
                          sys_stat-tm.c \
                          unistd.c \
-                         unistd-tm.c \
-                         vfs/fchdirop.c \
-                         vfs/fchdirop.h \
-                         vfs/fchdiroptab.c \
-                         vfs/fchdiroptab.h \
-                         vfs/module.c \
-                         vfs/module.h \
-                         vfs/vfs_tx.c \
-                         vfs/vfs_tx.h
+                         unistd-tm.c
 
 AM_CPPFLAGS = -I$(top_srcdir)/modules/libc/include \
               -I$(top_srcdir)/modules/tm/include \
