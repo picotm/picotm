@@ -83,6 +83,7 @@ enum picotm_libc_file_type {
     PICOTM_LIBC_FILE_TYPE_CHRDEV = 0,   /**< \brief Character device */
     PICOTM_LIBC_FILE_TYPE_FIFO,         /**< \brief FIFO */
     PICOTM_LIBC_FILE_TYPE_REGULAR,      /**< \brief Regular file */
+    PICOTM_LIBC_FILE_TYPE_DIR,          /**< \brief Directory */
     PICOTM_LIBC_FILE_TYPE_SOCKET        /**< \brief Socket */
 };
 

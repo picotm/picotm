@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "chrdev_tx.h"
+#include "dir_tx.h"
 #include "fcntlop.h"
 #include "fcntloptab.h"
 #include "fd.h"
@@ -220,6 +221,15 @@ bind_exec_regfile(struct ofd_tx* ofd_tx, int sockfd,
 }
 
 static int
+bind_exec_dir(struct ofd_tx* ofd_tx, int sockfd,
+              const struct sockaddr* address, socklen_t addresslen,
+              bool isnoundo, int* cookie, struct picotm_error* error)
+{
+    picotm_error_set_errno(error, ENOTSOCK);
+    return -1;
+}
+
+static int
 bind_exec_socket(struct ofd_tx* ofd_tx, int sockfd,
                  const struct sockaddr* address, socklen_t addresslen,
                  bool isnoundo, int* cookie, struct picotm_error* error)
@@ -244,6 +254,7 @@ fd_tx_bind_exec(struct fd_tx* self, int sockfd, const struct sockaddr* address,
         bind_exec_chrdev,
         bind_exec_fifo,
         bind_exec_regfile,
+        bind_exec_dir,
         bind_exec_socket
     };
 
@@ -272,6 +283,7 @@ fd_tx_bind_apply(struct fd_tx* self, int sockfd, int cookie,
         NULL,
         NULL,
         NULL,
+        NULL,
         bind_apply_socket
     };
 
@@ -296,6 +308,7 @@ fd_tx_bind_undo(struct fd_tx* self, int sockfd, int cookie,
                                       int,
                                       int,
                                       struct picotm_error*) = {
+        NULL,
         NULL,
         NULL,
         NULL,
@@ -444,6 +457,15 @@ connect_exec_regfile(struct ofd_tx* ofd_tx, int sockfd,
 }
 
 int
+connect_exec_dir(struct ofd_tx* ofd_tx, int sockfd,
+                 const struct sockaddr* address, socklen_t addresslen,
+                 bool isnoundo, int* cookie, struct picotm_error* error)
+{
+    picotm_error_set_errno(error, ENOTSOCK);
+    return -1;
+}
+
+int
 connect_exec_socket(struct ofd_tx* ofd_tx, int sockfd,
                     const struct sockaddr* address, socklen_t addresslen,
                     bool isnoundo, int* cookie, struct picotm_error* error)
@@ -468,6 +490,7 @@ fd_tx_connect_exec(struct fd_tx* self, int sockfd,
         connect_exec_chrdev,
         connect_exec_fifo,
         connect_exec_regfile,
+        connect_exec_dir,
         connect_exec_socket
     };
 
@@ -497,6 +520,7 @@ fd_tx_connect_apply(struct fd_tx* self, int sockfd, int cookie,
         NULL,
         NULL,
         NULL,
+        NULL,
         connect_apply_socket
     };
 
@@ -522,6 +546,7 @@ fd_tx_connect_undo(struct fd_tx* self, int sockfd, int cookie,
                                          int,
                                          int,
                                          struct picotm_error*) = {
+        NULL,
         NULL,
         NULL,
         NULL,
@@ -566,6 +591,15 @@ fcntl_exec_regfile(struct ofd_tx* ofd_tx, int fildes, int cmd,
 }
 
 static int
+fcntl_exec_dir(struct ofd_tx* ofd_tx, int fildes, int cmd,
+               union fcntl_arg* arg, bool isnoundo, int* cookie,
+               struct picotm_error* error)
+{
+    return dir_tx_fcntl_exec(dir_tx_of_ofd_tx(ofd_tx), fildes, cmd,
+                             arg, isnoundo, cookie, error);
+}
+
+static int
 fcntl_exec_socket(struct ofd_tx* ofd_tx, int fildes, int cmd,
                   union fcntl_arg* arg, bool isnoundo, int* cookie,
                   struct picotm_error* error)
@@ -589,6 +623,7 @@ fd_tx_fcntl_exec(struct fd_tx* self, int fildes, int cmd,
         fcntl_exec_chrdev,
         fcntl_exec_fifo,
         fcntl_exec_regfile,
+        fcntl_exec_dir,
         fcntl_exec_socket
     };
 
@@ -676,6 +711,13 @@ fcntl_apply_regfile(struct ofd_tx* ofd_tx, int fildes, int cookie,
 }
 
 void
+fcntl_apply_dir(struct ofd_tx* ofd_tx, int fildes, int cookie,
+                struct picotm_error* error)
+{
+    dir_tx_fcntl_apply(dir_tx_of_ofd_tx(ofd_tx), fildes, cookie, error);
+}
+
+void
 fcntl_apply_socket(struct ofd_tx* ofd_tx, int fildes, int cookie,
                    struct picotm_error* error)
 {
@@ -693,6 +735,7 @@ fd_tx_fcntl_apply(struct fd_tx* self, int fildes, int cookie,
         fcntl_apply_chrdev,
         fcntl_apply_fifo,
         fcntl_apply_regfile,
+        fcntl_apply_dir,
         fcntl_apply_socket
     };
 
@@ -743,6 +786,13 @@ fcntl_undo_regfile(struct ofd_tx* ofd_tx, int fildes, int cookie,
 }
 
 void
+fcntl_undo_dir(struct ofd_tx* ofd_tx, int fildes, int cookie,
+               struct picotm_error* error)
+{
+    dir_tx_fcntl_undo(dir_tx_of_ofd_tx(ofd_tx), fildes, cookie, error);
+}
+
+void
 fcntl_undo_socket(struct ofd_tx* ofd_tx, int fildes, int cookie,
                   struct picotm_error* error)
 {
@@ -761,6 +811,7 @@ fd_tx_fcntl_undo(struct fd_tx* self, int fildes, int cookie,
         fcntl_undo_chrdev,
         fcntl_undo_fifo,
         fcntl_undo_regfile,
+        fcntl_undo_dir,
         fcntl_undo_socket
     };
 
@@ -817,6 +868,14 @@ fsync_exec_regfile(struct ofd_tx* ofd_tx, int fildes, bool isnoundo,
 }
 
 static int
+fsync_exec_dir(struct ofd_tx* ofd_tx, int fildes, bool isnoundo,
+               int* cookie, struct picotm_error* error)
+{
+    return dir_tx_fsync_exec(dir_tx_of_ofd_tx(ofd_tx), fildes,
+                             isnoundo, cookie, error);
+}
+
+static int
 fsync_exec_socket(struct ofd_tx* ofd_tx, int fildes, bool isnoundo,
                   int* cookie, struct picotm_error* error)
 {
@@ -836,6 +895,7 @@ fd_tx_fsync_exec(struct fd_tx* self, int fildes, bool isnoundo, int* cookie,
         fsync_exec_chrdev,
         fsync_exec_fifo,
         fsync_exec_regfile,
+        fsync_exec_dir,
         fsync_exec_socket
     };
 
@@ -854,6 +914,13 @@ fsync_apply_regfile(struct ofd_tx* ofd_tx, int fildes, int cookie,
                            error);
 }
 
+static void
+fsync_apply_dir(struct ofd_tx* ofd_tx, int fildes, int cookie,
+                struct picotm_error* error)
+{
+    dir_tx_fsync_apply(dir_tx_of_ofd_tx(ofd_tx), fildes, cookie, error);
+}
+
 void
 fd_tx_fsync_apply(struct fd_tx* self, int fildes, int cookie,
                   struct picotm_error* error)
@@ -865,6 +932,7 @@ fd_tx_fsync_apply(struct fd_tx* self, int fildes, int cookie,
         NULL,
         NULL,
         fsync_apply_regfile,
+        fsync_apply_dir,
         NULL
     };
 
@@ -882,6 +950,13 @@ fsync_undo_regfile(struct ofd_tx* ofd_tx, int fildes, int cookie,
                           error);
 }
 
+static void
+fsync_undo_dir(struct ofd_tx* ofd_tx, int fildes, int cookie,
+               struct picotm_error* error)
+{
+    dir_tx_fsync_undo(dir_tx_of_ofd_tx(ofd_tx), fildes, cookie, error);
+}
+
 void
 fd_tx_fsync_undo(struct fd_tx* self, int fildes, int cookie,
                  struct picotm_error* error)
@@ -893,6 +968,7 @@ fd_tx_fsync_undo(struct fd_tx* self, int fildes, int cookie,
         NULL,
         NULL,
         fsync_undo_regfile,
+        fsync_undo_dir,
         NULL
     };
 
@@ -931,6 +1007,14 @@ listen_exec_regfile(struct ofd_tx* ofd_tx, int sockfd, int backlog,
 }
 
 static int
+listen_exec_dir(struct ofd_tx* ofd_tx, int sockfd, int backlog,
+                bool isnoundo, int* cookie, struct picotm_error* error)
+{
+    picotm_error_set_errno(error, ENOTSOCK);
+    return -1;
+}
+
+static int
 listen_exec_socket(struct ofd_tx* ofd_tx, int sockfd, int backlog,
                    bool isnoundo, int* cookie, struct picotm_error* error)
 {
@@ -951,6 +1035,7 @@ fd_tx_listen_exec(struct fd_tx* self, int sockfd, int backlog, bool isnoundo,
         listen_exec_chrdev,
         listen_exec_fifo,
         listen_exec_regfile,
+        listen_exec_dir,
         listen_exec_socket
     };
 
@@ -979,6 +1064,7 @@ fd_tx_listen_apply(struct fd_tx* self, int sockfd, int cookie,
         NULL,
         NULL,
         NULL,
+        NULL,
         listen_apply_socket
     };
 
@@ -1003,6 +1089,7 @@ fd_tx_listen_undo(struct fd_tx* self, int sockfd, int cookie,
                                         int,
                                         int,
                                         struct picotm_error*) = {
+        NULL,
         NULL,
         NULL,
         NULL,
@@ -1044,6 +1131,14 @@ lseek_exec_regfile(struct ofd_tx* ofd_tx, int fildes, off_t offset, int whence,
 }
 
 static off_t
+lseek_exec_dir(struct ofd_tx* ofd_tx, int fildes, off_t offset, int whence,
+               bool isnoundo, int* cookie, struct picotm_error* error)
+{
+    picotm_error_set_errno(error, EINVAL);
+    return (off_t)-1;
+}
+
+static off_t
 lseek_exec_socket(struct ofd_tx* ofd_tx, int fildes, off_t offset, int whence,
                   bool isnoundo, int* cookie, struct picotm_error* error)
 {
@@ -1065,6 +1160,7 @@ fd_tx_lseek_exec(struct fd_tx* self, int fildes, off_t offset, int whence,
         lseek_exec_chrdev,
         lseek_exec_fifo,
         lseek_exec_regfile,
+        lseek_exec_dir,
         lseek_exec_socket
     };
 
@@ -1095,6 +1191,7 @@ fd_tx_lseek_apply(struct fd_tx* self, int fildes, int cookie,
         NULL,
         NULL,
         lseek_apply_regfile,
+        NULL,
         NULL
     };
 
@@ -1123,6 +1220,7 @@ fd_tx_lseek_undo(struct fd_tx* self, int fildes, int cookie,
         NULL,
         NULL,
         lseek_undo_regfile,
+        NULL,
         NULL
     };
 
@@ -1168,6 +1266,16 @@ pread_exec_regfile(struct ofd_tx* ofd_tx, int fildes, void* buf, size_t nbyte,
 }
 
 static ssize_t
+pread_exec_dir(struct ofd_tx* ofd_tx, int fildes, void* buf, size_t nbyte,
+               off_t off, bool isnoundo,
+               enum picotm_libc_validation_mode val_mode, int* cookie,
+               struct picotm_error* error)
+{
+    picotm_error_set_errno(error, EISDIR);
+    return -1;
+}
+
+static ssize_t
 pread_exec_socket(struct ofd_tx* ofd_tx, int fildes, void* buf, size_t nbyte,
                   off_t off, bool isnoundo,
                   enum picotm_libc_validation_mode val_mode, int* cookie,
@@ -1195,6 +1303,7 @@ fd_tx_pread_exec(struct fd_tx* self, int fildes, void* buf, size_t nbyte,
         pread_exec_chrdev,
         pread_exec_fifo,
         pread_exec_regfile,
+        pread_exec_dir,
         pread_exec_socket
     };
 
@@ -1225,6 +1334,7 @@ fd_tx_pread_apply(struct fd_tx* self, int fildes, int cookie,
         NULL,
         NULL,
         pread_apply_regfile,
+        NULL,
         NULL
     };
 
@@ -1253,6 +1363,7 @@ fd_tx_pread_undo(struct fd_tx* self, int fildes, int cookie,
         NULL,
         NULL,
         pread_undo_regfile,
+        NULL,
         NULL
     };
 
@@ -1294,6 +1405,15 @@ pwrite_exec_regfile(struct ofd_tx* ofd_tx, int fildes, const void* buf,
 }
 
 static ssize_t
+pwrite_exec_dir(struct ofd_tx* ofd_tx, int fildes, const void* buf,
+                size_t nbyte, off_t off, bool isnoundo, int* cookie,
+                struct picotm_error* error)
+{
+    picotm_error_set_errno(error, EISDIR);
+    return -1;
+}
+
+static ssize_t
 pwrite_exec_socket(struct ofd_tx* ofd_tx, int fildes, const void* buf,
                    size_t nbyte, off_t off, bool isnoundo, int* cookie,
                    struct picotm_error* error)
@@ -1318,6 +1438,7 @@ fd_tx_pwrite_exec(struct fd_tx* self, int fildes, const void* buf,
         pwrite_exec_chrdev,
         pwrite_exec_fifo,
         pwrite_exec_regfile,
+        pwrite_exec_dir,
         pwrite_exec_socket
     };
 
@@ -1348,6 +1469,7 @@ fd_tx_pwrite_apply(struct fd_tx* self, int fildes, int cookie,
         NULL,
         NULL,
         pwrite_apply_regfile,
+        NULL,
         NULL
     };
 
@@ -1376,6 +1498,7 @@ fd_tx_pwrite_undo(struct fd_tx* self, int fildes, int cookie,
         NULL,
         NULL,
         pwrite_undo_regfile,
+        NULL,
         NULL
     };
 
@@ -1417,6 +1540,15 @@ read_exec_regfile(struct ofd_tx* ofd_tx, int fildes, void* buf, size_t nbyte,
 }
 
 static ssize_t
+read_exec_dir(struct ofd_tx* ofd_tx, int fildes, void* buf, size_t nbyte,
+              bool isnoundo, enum picotm_libc_validation_mode val_mode,
+              int* cookie, struct picotm_error* error)
+{
+    picotm_error_set_errno(error, EISDIR);
+    return -1;
+}
+
+static ssize_t
 read_exec_socket(struct ofd_tx* ofd_tx, int fildes, void* buf, size_t nbyte,
                  bool isnoundo, enum picotm_libc_validation_mode val_mode,
                  int* cookie, struct picotm_error* error)
@@ -1441,6 +1573,7 @@ fd_tx_read_exec(struct fd_tx* self, int fildes, void *buf, size_t nbyte,
         read_exec_chrdev,
         read_exec_fifo,
         read_exec_regfile,
+        read_exec_dir,
         read_exec_socket
     };
 
@@ -1491,6 +1624,7 @@ fd_tx_read_apply(struct fd_tx* self, int fildes, int cookie,
         read_apply_chrdev,
         read_apply_fifo,
         read_apply_regfile,
+        NULL,
         read_apply_socket
     };
 
@@ -1539,6 +1673,7 @@ fd_tx_read_undo(struct fd_tx* self, int fildes, int cookie,
         read_undo_chrdev,
         read_undo_fifo,
         read_undo_regfile,
+        NULL,
         read_undo_socket
     };
 
@@ -1580,6 +1715,15 @@ recv_exec_regfile(struct ofd_tx* ofd_tx, int sockfd, void* buffer,
 }
 
 static ssize_t
+recv_exec_dir(struct ofd_tx* ofd_tx, int sockfd, void* buffer,
+              size_t length, int flags, bool isnoundo, int* cookie,
+              struct picotm_error* error)
+{
+    picotm_error_set_errno(error, ENOTSOCK);
+    return -1;
+}
+
+static ssize_t
 recv_exec_socket(struct ofd_tx* ofd_tx, int sockfd, void* buffer,
                  size_t length, int flags, bool isnoundo, int* cookie,
                  struct picotm_error* error)
@@ -1604,6 +1748,7 @@ fd_tx_recv_exec(struct fd_tx* self, int sockfd, void* buffer, size_t length,
         recv_exec_chrdev,
         recv_exec_fifo,
         recv_exec_regfile,
+        recv_exec_dir,
         recv_exec_socket
     };
 
@@ -1632,6 +1777,7 @@ fd_tx_recv_apply(struct fd_tx* self, int sockfd, int cookie,
         NULL,
         NULL,
         NULL,
+        NULL,
         recv_apply_socket
     };
 
@@ -1656,6 +1802,7 @@ fd_tx_recv_undo(struct fd_tx* self, int sockfd, int cookie,
                                int,
                                int,
                                struct picotm_error*) = {
+        NULL,
         NULL,
         NULL,
         NULL,
@@ -1700,6 +1847,15 @@ send_exec_regfile(struct ofd_tx* ofd_tx, int sockfd, const void* buffer,
 }
 
 static ssize_t
+send_exec_dir(struct ofd_tx* ofd_tx, int sockfd, const void* buffer,
+              size_t length, int flags, bool isnoundo, int* cookie,
+              struct picotm_error* error)
+{
+    picotm_error_set_errno(error, ENOTSOCK);
+    return -1;
+}
+
+static ssize_t
 send_exec_socket(struct ofd_tx* ofd_tx, int sockfd, const void* buffer,
                  size_t length, int flags, bool isnoundo, int* cookie,
                  struct picotm_error* error)
@@ -1724,6 +1880,7 @@ fd_tx_send_exec(struct fd_tx* self, int sockfd, const void* buffer,
         send_exec_chrdev,
         send_exec_fifo,
         send_exec_regfile,
+        send_exec_dir,
         send_exec_socket
     };
 
@@ -1752,6 +1909,7 @@ fd_tx_send_apply(struct fd_tx* self, int fildes, int cookie,
         NULL,
         NULL,
         NULL,
+        NULL,
         send_apply_socket
     };
 
@@ -1776,6 +1934,7 @@ fd_tx_send_undo(struct fd_tx* self, int fildes, int cookie,
                                       int,
                                       int,
                                       struct picotm_error*) = {
+        NULL,
         NULL,
         NULL,
         NULL,
@@ -1818,6 +1977,15 @@ shutdown_exec_regfile(struct ofd_tx* ofd_tx, int sockfd, int how,
 }
 
 static int
+shutdown_exec_dir(struct ofd_tx* ofd_tx, int sockfd, int how,
+                  bool isnoundo, int* cookie,
+                  struct picotm_error* error)
+{
+    picotm_error_set_errno(error, ENOTSOCK);
+    return -1;
+}
+
+static int
 shutdown_exec_socket(struct ofd_tx* ofd_tx, int sockfd, int how,
                      bool isnoundo, int* cookie,
                      struct picotm_error* error)
@@ -1839,6 +2007,7 @@ fd_tx_shutdown_exec(struct fd_tx* self, int sockfd, int how, bool isnoundo,
         shutdown_exec_chrdev,
         shutdown_exec_fifo,
         shutdown_exec_regfile,
+        shutdown_exec_dir,
         shutdown_exec_socket
     };
 
@@ -1868,6 +2037,7 @@ fd_tx_shutdown_apply(struct fd_tx* self, int fildes, int cookie,
         NULL,
         NULL,
         NULL,
+        NULL,
         shutdown_apply_socket
     };
 
@@ -1893,6 +2063,7 @@ fd_tx_shutdown_undo(struct fd_tx* self, int fildes, int cookie,
                                           int,
                                           int,
                                           struct picotm_error*) = {
+        NULL,
         NULL,
         NULL,
         NULL,
@@ -1937,6 +2108,15 @@ write_exec_regfile(struct ofd_tx* ofd_tx, int fildes, const void* buf,
 }
 
 static ssize_t
+write_exec_dir(struct ofd_tx* ofd_tx, int fildes, const void* buf,
+               size_t nbyte, bool isnoundo, int* cookie,
+               struct picotm_error* error)
+{
+    picotm_error_set_errno(error, EISDIR);
+    return -1;
+}
+
+static ssize_t
 write_exec_socket(struct ofd_tx* ofd_tx, int fildes, const void* buf,
                   size_t nbyte, bool isnoundo, int* cookie,
                   struct picotm_error* error)
@@ -1960,6 +2140,7 @@ fd_tx_write_exec(struct fd_tx* self, int fildes, const void* buf,
         write_exec_chrdev,
         write_exec_fifo,
         write_exec_regfile,
+        write_exec_dir,
         write_exec_socket
     };
 
@@ -2010,6 +2191,7 @@ fd_tx_write_apply(struct fd_tx* self, int fildes, int cookie,
         write_apply_chrdev,
         write_apply_fifo,
         write_apply_regfile,
+        NULL,
         write_apply_socket
     };
 
@@ -2059,6 +2241,7 @@ fd_tx_write_undo(struct fd_tx* self, int fildes, int cookie,
         write_undo_chrdev,
         write_undo_fifo,
         write_undo_regfile,
+        NULL,
         write_undo_socket
     };
 
