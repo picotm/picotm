@@ -23,6 +23,7 @@
 #include <stdbool.h>
 #include <sys/queue.h>
 #include "chrdev_tx.h"
+#include "dir_tx.h"
 #include "fd_event.h"
 #include "fd_tx.h"
 #include "fifo_tx.h"
@@ -41,6 +42,7 @@ struct pipeop;
 struct openop;
 
 SLIST_HEAD(chrdev_tx_slist, chrdev_tx);
+SLIST_HEAD(dir_tx_slist, dir_tx);
 SLIST_HEAD(fd_tx_slist, fd_tx);
 SLIST_HEAD(fifo_tx_slist, fifo_tx);
 SLIST_HEAD(regfile_tx_slist, regfile_tx);
@@ -55,23 +57,29 @@ struct fildes_tx {
     /** Active instances of |struct fd_tx| */
     struct fd_tx_slist  fd_tx_active_list;
 
-    struct fifo_tx fifo_tx[MAXNUMFD];
-    size_t         fifo_tx_max_index;
-
-    /** Active instances of |struct fifo_tx| */
-    struct fifo_tx_slist    fifo_tx_active_list;
-
     struct chrdev_tx chrdev_tx[MAXNUMFD];
     size_t           chrdev_tx_max_index;
 
     /** Active instances of |struct chrdev_tx| */
     struct chrdev_tx_slist    chrdev_tx_active_list;
 
+    struct fifo_tx fifo_tx[MAXNUMFD];
+    size_t         fifo_tx_max_index;
+
+    /** Active instances of |struct fifo_tx| */
+    struct fifo_tx_slist    fifo_tx_active_list;
+
     struct regfile_tx regfile_tx[MAXNUMFD];
     size_t            regfile_tx_max_index;
 
     /** Active instances of |struct regfile_tx| */
     struct regfile_tx_slist regfile_tx_active_list;
+
+    struct dir_tx dir_tx[MAXNUMFD];
+    size_t        dir_tx_max_index;
+
+    /** Active instances of |struct dir_tx| */
+    struct dir_tx_slist dir_tx_active_list;
 
     struct socket_tx  socket_tx[MAXNUMFD];
     size_t            socket_tx_max_index;

@@ -54,6 +54,9 @@ static _Atomic enum picotm_libc_cc_mode g_file_type_cc_mode[] = {
     PICOTM_LIBC_CC_MODE_2PL,
     PICOTM_LIBC_CC_MODE_2PL,
     PICOTM_LIBC_CC_MODE_2PL,
+    PICOTM_LIBC_CC_MODE_2PL,
+    PICOTM_LIBC_CC_MODE_2PL,
+    PICOTM_LIBC_CC_MODE_2PL,
     PICOTM_LIBC_CC_MODE_2PL
 };
 

@@ -28,6 +28,8 @@
 #include <unistd.h>
 #include "chrdev.h"
 #include "chrdevtab.h"
+#include "dir.h"
+#include "dirtab.h"
 #include "fdtab.h"
 #include "fifo.h"
 #include "fifotab.h"
@@ -74,14 +76,17 @@ fildes_tx_init(struct fildes_tx* self, unsigned long module)
     self->fd_tx_max_fildes = 0;
     SLIST_INIT(&self->fd_tx_active_list);
 
-    self->fifo_tx_max_index = 0;
-    SLIST_INIT(&self->fifo_tx_active_list);
-
     self->chrdev_tx_max_index = 0;
     SLIST_INIT(&self->chrdev_tx_active_list);
 
+    self->fifo_tx_max_index = 0;
+    SLIST_INIT(&self->fifo_tx_active_list);
+
     self->regfile_tx_max_index = 0;
     SLIST_INIT(&self->regfile_tx_active_list);
+
+    self->dir_tx_max_index = 0;
+    SLIST_INIT(&self->dir_tx_active_list);
 
     self->socket_tx_max_index = 0;
     SLIST_INIT(&self->socket_tx_active_list);
@@ -100,14 +105,6 @@ fildes_tx_init(struct fildes_tx* self, unsigned long module)
 void
 fildes_tx_uninit(struct fildes_tx* self)
 {
-    /* Uninit fifo_txs */
-
-    for (struct fifo_tx* fifo_tx = self->fifo_tx;
-                         fifo_tx < self->fifo_tx + self->fifo_tx_max_index;
-                       ++fifo_tx) {
-        fifo_tx_uninit(fifo_tx);
-    }
-
     /* Uninit chrdev_txs */
 
     for (struct chrdev_tx* chrdev_tx = self->chrdev_tx;
@@ -116,12 +113,28 @@ fildes_tx_uninit(struct fildes_tx* self)
         chrdev_tx_uninit(chrdev_tx);
     }
 
+    /* Uninit fifo_txs */
+
+    for (struct fifo_tx* fifo_tx = self->fifo_tx;
+                         fifo_tx < self->fifo_tx + self->fifo_tx_max_index;
+                       ++fifo_tx) {
+        fifo_tx_uninit(fifo_tx);
+    }
+
     /* Uninit regfile_txs */
 
     for (struct regfile_tx* regfile_tx = self->regfile_tx;
                             regfile_tx < self->regfile_tx + self->regfile_tx_max_index;
                           ++regfile_tx) {
         regfile_tx_uninit(regfile_tx);
+    }
+
+    /* Uninit dir_txs */
+
+    for (struct dir_tx* dir_tx = self->dir_tx;
+                        dir_tx < self->dir_tx + self->dir_tx_max_index;
+                      ++dir_tx) {
+        dir_tx_uninit(dir_tx);
     }
 
     /* Uninit socket_txs */
@@ -157,58 +170,6 @@ enum picotm_libc_validation_mode
 fildes_tx_get_validation_mode(const struct fildes_tx* self)
 {
     return picotm_libc_get_validation_mode();
-}
-
-static struct fifo_tx*
-get_fifo_tx(struct fildes_tx* self, int index)
-{
-    for (struct fifo_tx* fifo_tx = self->fifo_tx + self->fifo_tx_max_index;
-                         fifo_tx < self->fifo_tx + index + 1;
-                       ++fifo_tx) {
-        fifo_tx_init(fifo_tx);
-    }
-
-    self->fifo_tx_max_index = lmax(index + 1, self->fifo_tx_max_index);
-
-    return self->fifo_tx + index;
-}
-
-static struct fifo_tx*
-get_fifo_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
-                     struct picotm_error* error)
-{
-    struct fifo* fifo = fifotab_ref_fildes(fildes,
-                                           !!(flags & FIFO_FL_WANTNEW),
-                                           error);
-    if (picotm_error_is_set(error)) {
-        return NULL;
-    }
-
-    struct fifo_tx* fifo_tx = get_fifo_tx(self, fifotab_index(fifo));
-
-    /* In |struct fildes_tx| we hold at most one reference to the
-     * transaction state of each FIFO. This reference is released
-     * in fildes_tx_finish().
-     */
-    if (fifo_tx_holds_ref(fifo_tx)) {
-        goto unref;
-    }
-
-    fifo_tx_ref_or_set_up(fifo_tx, fifo, fildes, flags, error);
-    if (picotm_error_is_set(error)) {
-        goto err_fifo_tx_ref_or_set_up;
-    }
-
-    SLIST_INSERT_HEAD(&self->fifo_tx_active_list, fifo_tx, active_list);
-
-unref:
-    fifo_unref(fifo);
-
-    return fifo_tx;
-
-err_fifo_tx_ref_or_set_up:
-    fifo_unref(fifo);
-    return NULL;
 }
 
 static struct chrdev_tx*
@@ -264,6 +225,58 @@ err_chrdev_tx_ref_or_set_up:
     return NULL;
 }
 
+static struct fifo_tx*
+get_fifo_tx(struct fildes_tx* self, int index)
+{
+    for (struct fifo_tx* fifo_tx = self->fifo_tx + self->fifo_tx_max_index;
+                         fifo_tx < self->fifo_tx + index + 1;
+                       ++fifo_tx) {
+        fifo_tx_init(fifo_tx);
+    }
+
+    self->fifo_tx_max_index = lmax(index + 1, self->fifo_tx_max_index);
+
+    return self->fifo_tx + index;
+}
+
+static struct fifo_tx*
+get_fifo_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
+                     struct picotm_error* error)
+{
+    struct fifo* fifo = fifotab_ref_fildes(fildes,
+                                           !!(flags & FIFO_FL_WANTNEW),
+                                           error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+
+    struct fifo_tx* fifo_tx = get_fifo_tx(self, fifotab_index(fifo));
+
+    /* In |struct fildes_tx| we hold at most one reference to the
+     * transaction state of each FIFO. This reference is released
+     * in fildes_tx_finish().
+     */
+    if (fifo_tx_holds_ref(fifo_tx)) {
+        goto unref;
+    }
+
+    fifo_tx_ref_or_set_up(fifo_tx, fifo, fildes, flags, error);
+    if (picotm_error_is_set(error)) {
+        goto err_fifo_tx_ref_or_set_up;
+    }
+
+    SLIST_INSERT_HEAD(&self->fifo_tx_active_list, fifo_tx, active_list);
+
+unref:
+    fifo_unref(fifo);
+
+    return fifo_tx;
+
+err_fifo_tx_ref_or_set_up:
+    fifo_unref(fifo);
+    return NULL;
+}
+
 static struct regfile_tx*
 get_regfile_tx(struct fildes_tx* self, int index)
 {
@@ -315,6 +328,58 @@ unref:
 
 err_regfile_tx_ref_or_set_up:
     regfile_unref(regfile);
+    return NULL;
+}
+
+static struct dir_tx*
+get_dir_tx(struct fildes_tx* self, int index)
+{
+    for (struct dir_tx* dir_tx = self->dir_tx + self->dir_tx_max_index;
+                        dir_tx < self->dir_tx + index + 1;
+                      ++dir_tx) {
+        dir_tx_init(dir_tx);
+    }
+
+    self->dir_tx_max_index = lmax(index + 1, self->dir_tx_max_index);
+
+    return self->dir_tx + index;
+}
+
+static struct dir_tx*
+get_dir_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
+                    struct picotm_error* error)
+{
+    struct dir* dir = dirtab_ref_fildes(fildes,
+                                        !!(flags & DIR_FL_WANTNEW),
+                                        error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+
+    struct dir_tx* dir_tx = get_dir_tx(self, dirtab_index(dir));
+
+    /* In |struct fildes_tx| we hold at most one reference to the
+     * transaction state of each directory. This reference is
+     * released in fildes_tx_finish().
+     */
+    if (dir_tx_holds_ref(dir_tx)) {
+        goto unref;
+    }
+
+    dir_tx_ref_or_set_up(dir_tx, dir, fildes, flags, error);
+    if (picotm_error_is_set(error)) {
+        goto err_dir_tx_ref_or_set_up;
+    }
+
+    SLIST_INSERT_HEAD(&self->dir_tx_active_list, dir_tx, active_list);
+
+unref:
+    dir_unref(dir);
+
+    return dir_tx;
+
+err_dir_tx_ref_or_set_up:
+    dir_unref(dir);
     return NULL;
 }
 
@@ -383,16 +448,6 @@ get_ofd_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
     }
 
     switch (buf.st_mode & S_IFMT) {
-        case S_IFIFO: {
-            struct fifo_tx* fifo_tx = get_fifo_tx_with_ref(self,
-                                                           fildes,
-                                                           flags,
-                                                           error);
-            if (picotm_error_is_set(error)) {
-                return NULL;
-            }
-            return &fifo_tx->base;
-        }
         case S_IFCHR: {
             struct chrdev_tx* chrdev_tx = get_chrdev_tx_with_ref(self,
                                                                  fildes,
@@ -403,6 +458,16 @@ get_ofd_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
             }
             return &chrdev_tx->base;
         }
+        case S_IFIFO: {
+            struct fifo_tx* fifo_tx = get_fifo_tx_with_ref(self,
+                                                           fildes,
+                                                           flags,
+                                                           error);
+            if (picotm_error_is_set(error)) {
+                return NULL;
+            }
+            return &fifo_tx->base;
+        }
         case S_IFREG: {
             struct regfile_tx* regfile_tx = get_regfile_tx_with_ref(self,
                                                                     fildes,
@@ -412,6 +477,16 @@ get_ofd_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
                 return NULL;
             }
             return &regfile_tx->base;
+        }
+        case S_IFDIR: {
+            struct dir_tx* dir_tx = get_dir_tx_with_ref(self,
+                                                        fildes,
+                                                        flags,
+                                                        error);
+            if (picotm_error_is_set(error)) {
+                return NULL;
+            }
+            return &dir_tx->base;
         }
         case S_IFSOCK: {
             struct socket_tx* socket_tx = get_socket_tx_with_ref(self,
@@ -424,7 +499,6 @@ get_ofd_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
             return &socket_tx->base;
         }
         default:
-            fprintf(stderr, "file type = %x\n", buf.st_mode & S_IFMT);
             picotm_error_set_errno(error, EINVAL); /* unsupported file type */
             return NULL;
     }
@@ -2106,13 +2180,6 @@ fildes_tx_lock(struct fildes_tx* self, struct picotm_error* error)
         fd_tx_lock(fd_tx);
     }
 
-    /* Lock fifos */
-
-    struct fifo_tx* fifo_tx;
-    SLIST_FOREACH(fifo_tx, &self->fifo_tx_active_list, active_list) {
-        fifo_tx_lock(fifo_tx);
-    }
-
     /* Lock character devices */
 
     struct chrdev_tx* chrdev_tx;
@@ -2120,11 +2187,25 @@ fildes_tx_lock(struct fildes_tx* self, struct picotm_error* error)
         chrdev_tx_lock(chrdev_tx);
     }
 
+    /* Lock fifos */
+
+    struct fifo_tx* fifo_tx;
+    SLIST_FOREACH(fifo_tx, &self->fifo_tx_active_list, active_list) {
+        fifo_tx_lock(fifo_tx);
+    }
+
     /* Lock regular files */
 
     struct regfile_tx* regfile_tx;
     SLIST_FOREACH(regfile_tx, &self->regfile_tx_active_list, active_list) {
         regfile_tx_lock(regfile_tx);
+    }
+
+    /* Lock directories */
+
+    struct dir_tx* dir_tx;
+    SLIST_FOREACH(dir_tx, &self->dir_tx_active_list, active_list) {
+        dir_tx_lock(dir_tx);
     }
 
     /* Lock sockets */
@@ -2145,6 +2226,13 @@ fildes_tx_unlock(struct fildes_tx* self)
         socket_tx_unlock(socket_tx);
     }
 
+    /* Unlock directories */
+
+    struct dir_tx* dir_tx;
+    SLIST_FOREACH(dir_tx, &self->dir_tx_active_list, active_list) {
+        dir_tx_unlock(dir_tx);
+    }
+
     /* Unlock regular files */
 
     struct regfile_tx* regfile_tx;
@@ -2152,18 +2240,18 @@ fildes_tx_unlock(struct fildes_tx* self)
         regfile_tx_unlock(regfile_tx);
     }
 
-    /* Unlock character devices */
-
-    struct chrdev_tx* chrdev_tx;
-    SLIST_FOREACH(chrdev_tx, &self->chrdev_tx_active_list, active_list) {
-        chrdev_tx_unlock(chrdev_tx);
-    }
-
     /* Unlock fifos */
 
     struct fifo_tx* fifo_tx;
     SLIST_FOREACH(fifo_tx, &self->fifo_tx_active_list, active_list) {
         fifo_tx_unlock(fifo_tx);
+    }
+
+    /* Unlock character devices */
+
+    struct chrdev_tx* chrdev_tx;
+    SLIST_FOREACH(chrdev_tx, &self->chrdev_tx_active_list, active_list) {
+        chrdev_tx_unlock(chrdev_tx);
     }
 
     /* Unlock fds */
@@ -2188,16 +2276,6 @@ fildes_tx_validate(struct fildes_tx* self, int noundo,
         }
     }
 
-    /* Validate fifo_txs */
-
-    struct fifo_tx* fifo_tx;
-    SLIST_FOREACH(fifo_tx, &self->fifo_tx_active_list, active_list) {
-        fifo_tx_validate(fifo_tx, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-    }
-
     /* Validate chrdev_txs */
 
     struct chrdev_tx* chrdev_tx;
@@ -2208,11 +2286,31 @@ fildes_tx_validate(struct fildes_tx* self, int noundo,
         }
     }
 
+    /* Validate fifo_txs */
+
+    struct fifo_tx* fifo_tx;
+    SLIST_FOREACH(fifo_tx, &self->fifo_tx_active_list, active_list) {
+        fifo_tx_validate(fifo_tx, error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
+    }
+
     /* Validate regfile_txs */
 
     struct regfile_tx* regfile_tx;
     SLIST_FOREACH(regfile_tx, &self->regfile_tx_active_list, active_list) {
         regfile_tx_validate(regfile_tx, error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
+    }
+
+    /* Validate dir_txs */
+
+    struct dir_tx* dir_tx;
+    SLIST_FOREACH(dir_tx, &self->dir_tx_active_list, active_list) {
+        dir_tx_validate(dir_tx, error);
         if (picotm_error_is_set(error)) {
             return;
         }
@@ -2321,16 +2419,6 @@ fildes_tx_update_cc(struct fildes_tx* self, int noundo,
         }
     }
 
-    /* Update fifo_txs */
-
-    struct fifo_tx* fifo_tx;
-    SLIST_FOREACH(fifo_tx, &self->fifo_tx_active_list, active_list) {
-        fifo_tx_update_cc(fifo_tx, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-    }
-
     /* Update chrdev_txs */
 
     struct chrdev_tx* chrdev_tx;
@@ -2341,11 +2429,31 @@ fildes_tx_update_cc(struct fildes_tx* self, int noundo,
         }
     }
 
+    /* Update fifo_txs */
+
+    struct fifo_tx* fifo_tx;
+    SLIST_FOREACH(fifo_tx, &self->fifo_tx_active_list, active_list) {
+        fifo_tx_update_cc(fifo_tx, error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
+    }
+
     /* Update regfile_txs */
 
     struct regfile_tx* regfile_tx;
     SLIST_FOREACH(regfile_tx, &self->regfile_tx_active_list, active_list) {
         regfile_tx_update_cc(regfile_tx, error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
+    }
+
+    /* Update dir_txs */
+
+    struct dir_tx* dir_tx;
+    SLIST_FOREACH(dir_tx, &self->dir_tx_active_list, active_list) {
+        dir_tx_update_cc(dir_tx, error);
         if (picotm_error_is_set(error)) {
             return;
         }
@@ -2376,16 +2484,6 @@ fildes_tx_clear_cc(struct fildes_tx* self, int noundo,
         }
     }
 
-    /* Clear fifo_txs' CC */
-
-    struct fifo_tx* fifo_tx;
-    SLIST_FOREACH(fifo_tx, &self->fifo_tx_active_list, active_list) {
-        fifo_tx_clear_cc(fifo_tx, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-    }
-
     /* Clear chrdev_txs' CC */
 
     struct chrdev_tx* chrdev_tx;
@@ -2396,11 +2494,31 @@ fildes_tx_clear_cc(struct fildes_tx* self, int noundo,
         }
     }
 
+    /* Clear fifo_txs' CC */
+
+    struct fifo_tx* fifo_tx;
+    SLIST_FOREACH(fifo_tx, &self->fifo_tx_active_list, active_list) {
+        fifo_tx_clear_cc(fifo_tx, error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
+    }
+
     /* Clear regfile_txs' CC */
 
     struct regfile_tx* regfile_tx;
     SLIST_FOREACH(regfile_tx, &self->regfile_tx_active_list, active_list) {
         regfile_tx_clear_cc(regfile_tx, error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
+    }
+
+    /* Clear dir_txs' CC */
+
+    struct dir_tx* dir_tx;
+    SLIST_FOREACH(dir_tx, &self->dir_tx_active_list, active_list) {
+        dir_tx_clear_cc(dir_tx, error);
         if (picotm_error_is_set(error)) {
             return;
         }
@@ -2430,6 +2548,16 @@ fildes_tx_finish(struct fildes_tx* self)
         socket_tx_unref(socket_tx);
     }
 
+    /* Unref dir_txs */
+
+    while (!SLIST_EMPTY(&self->dir_tx_active_list)) {
+
+        struct dir_tx* dir_tx = SLIST_FIRST(&self->dir_tx_active_list);
+        SLIST_REMOVE_HEAD(&self->dir_tx_active_list, active_list);
+
+        dir_tx_unref(dir_tx);
+    }
+
     /* Unref regfile_txs */
 
     while (!SLIST_EMPTY(&self->regfile_tx_active_list)) {
@@ -2440,16 +2568,6 @@ fildes_tx_finish(struct fildes_tx* self)
         regfile_tx_unref(regfile_tx);
     }
 
-    /* Unref chrdev_txs */
-
-    while (!SLIST_EMPTY(&self->chrdev_tx_active_list)) {
-
-        struct chrdev_tx* chrdev_tx = SLIST_FIRST(&self->chrdev_tx_active_list);
-        SLIST_REMOVE_HEAD(&self->chrdev_tx_active_list, active_list);
-
-        chrdev_tx_unref(chrdev_tx);
-    }
-
     /* Unref fifo_txs */
 
     while (!SLIST_EMPTY(&self->fifo_tx_active_list)) {
@@ -2458,6 +2576,16 @@ fildes_tx_finish(struct fildes_tx* self)
         SLIST_REMOVE_HEAD(&self->fifo_tx_active_list, active_list);
 
         fifo_tx_unref(fifo_tx);
+    }
+
+    /* Unref chrdev_txs */
+
+    while (!SLIST_EMPTY(&self->chrdev_tx_active_list)) {
+
+        struct chrdev_tx* chrdev_tx = SLIST_FIRST(&self->chrdev_tx_active_list);
+        SLIST_REMOVE_HEAD(&self->chrdev_tx_active_list, active_list);
+
+        chrdev_tx_unref(chrdev_tx);
     }
 
     /* Unref fd_txs */

@@ -35,6 +35,12 @@ libpicotm_c_la_SOURCES = allocator/allocator_tx.c \
                          fd/chrdevtab.h \
                          fd/chrdev_tx.c \
                          fd/chrdev_tx.h \
+                         fd/dir.c \
+                         fd/dir.h \
+                         fd/dirtab.c \
+                         fd/dirtab.h \
+                         fd/dir_tx.c \
+                         fd/dir_tx.h \
                          fd/fcntlop.c \
                          fd/fcntlop.h \
                          fd/fcntloptab.c \
