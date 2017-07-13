@@ -37,6 +37,7 @@
  */
 
 struct socket;
+struct stat;
 
 union fcntl_arg;
 
@@ -224,6 +225,22 @@ socket_tx_fcntl_apply(struct socket_tx* self, int fildes, int cookie,
 
 void
 socket_tx_fcntl_undo(struct socket_tx* self, int fildes, int cookie,
+                     struct picotm_error* error);
+
+/*
+ * fstat()
+ */
+
+int
+socket_tx_fstat_exec(struct socket_tx* self, int fildes, struct stat* buf,
+                     bool isnoundo, int* cookie, struct picotm_error* error);
+
+void
+socket_tx_fstat_apply(struct socket_tx* self, int fildes, int cookie,
+                      struct picotm_error* error);
+
+void
+socket_tx_fstat_undo(struct socket_tx* self, int fildes, int cookie,
                      struct picotm_error* error);
 
 /*

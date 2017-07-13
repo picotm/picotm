@@ -42,6 +42,7 @@ struct picotm_rwstate;
  * Enumerates fields of `struct socket`.
  */
 enum socket_field {
+    SOCKET_FIELD_FILE_MODE,
     SOCKET_FIELD_STATE,
     NUMBER_OF_SOCKET_FIELDS
 };

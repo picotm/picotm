@@ -27,6 +27,7 @@
 #include <picotm/picotm-lib-tab.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include "fcntlop.h"
 #include "fcntloptab.h"
@@ -539,6 +540,122 @@ void
 chrdev_tx_fcntl_undo(struct chrdev_tx* self, int fildes, int cookie,
                      struct picotm_error* error)
 { }
+
+/*
+ * fstat()
+ */
+
+static int
+fstat_exec_noundo(struct chrdev_tx* self, int fildes, struct stat* buf,
+                  int* cookie, struct picotm_error* error)
+{
+    int res = fstat(fildes, buf);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return res;
+    }
+    return res;
+}
+
+static int
+fstat_exec_2pl(struct chrdev_tx* self, int fildes, struct stat* buf,
+               int* cookie, struct picotm_error* error)
+{
+    assert(self);
+    assert(buf);
+
+    /* Acquire file-mode reader lock. */
+    chrdev_tx_try_rdlock_field(self, CHRDEV_FIELD_FILE_MODE, error);
+    if (picotm_error_is_set(error)) {
+        picotm_error_set_errno(error, errno);
+        return -1;
+    }
+
+    int res = fstat(fildes, buf);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return res;
+    }
+
+    return res;
+}
+
+int
+chrdev_tx_fstat_exec(struct chrdev_tx* self, int fildes, struct stat* buf,
+                     bool isnoundo, int* cookie, struct picotm_error* error)
+{
+    static int (* const fstat_exec[2])(struct chrdev_tx*,
+                                       int,
+                                       struct stat*,
+                                       int*,
+                                       struct picotm_error*) = {
+        fstat_exec_noundo,
+        fstat_exec_2pl
+    };
+
+    if (isnoundo) {
+        /* TX irrevokable */
+        self->cc_mode = PICOTM_LIBC_CC_MODE_NOUNDO;
+    } else {
+        /* TX revokable */
+        if ((self->cc_mode == PICOTM_LIBC_CC_MODE_NOUNDO)
+            || !fstat_exec[self->cc_mode]) {
+            picotm_error_set_revocable(error);
+            return -1;
+        }
+    }
+
+    return fstat_exec[self->cc_mode](self, fildes, buf, cookie, error);
+}
+
+static void
+fstat_apply_noundo(struct chrdev_tx* self, int fildes, int cookie,
+                   struct picotm_error* error)
+{ }
+
+static void
+fstat_apply_2pl(struct chrdev_tx* self, int fildes, int cookie,
+                struct picotm_error* error)
+{ }
+
+void
+chrdev_tx_fstat_apply(struct chrdev_tx* self, int fildes, int cookie,
+                      struct picotm_error* error)
+{
+    static void (* const fstat_apply[2])(struct chrdev_tx*,
+                                         int,
+                                         int,
+                                         struct picotm_error*) = {
+        fstat_apply_noundo,
+        fstat_apply_2pl
+    };
+
+    assert(fstat_apply[self->cc_mode]);
+
+    fstat_apply[self->cc_mode](self, fildes, cookie, error);
+}
+
+static void
+fstat_undo_2pl(struct chrdev_tx* self, int fildes, int cookie,
+                struct picotm_error* error)
+{ }
+
+void
+chrdev_tx_fstat_undo(struct chrdev_tx* self, int fildes, int cookie,
+                     struct picotm_error* error)
+{
+    static void (* const fstat_undo[2])(struct chrdev_tx*,
+                                        int,
+                                        int,
+                                        struct picotm_error*) = {
+        NULL,
+        fstat_undo_2pl
+    };
+
+    assert(fstat_undo[self->cc_mode]);
+
+    fstat_undo[self->cc_mode](self, fildes, cookie, error);
+}
 
 /*
  * read()

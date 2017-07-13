@@ -54,6 +54,7 @@ enum fildes_tx_cmd {
     CMD_FCHDIR,
     CMD_FCHMOD,
     CMD_FCNTL,
+    CMD_FSTAT,
     CMD_FSYNC,
     CMD_LISTEN,
     CMD_LSEEK,
@@ -1418,28 +1419,71 @@ undo_fcntl(struct fildes_tx* self, int fildes, int cookie,
 
 int
 fildes_tx_exec_fstat(struct fildes_tx* self, int fildes, struct stat* buf,
-                     struct picotm_error* error)
+                     int isnoundo, struct picotm_error* error)
 {
-    /* reference file descriptor while working on it */
+    assert(self);
 
-    struct fd* fd = fdtab_ref_fildes(fildes, error);
+    /* Update/create fd_tx */
+
+    struct fd_tx* fd_tx = get_fd_tx_with_ref(self, fildes, 0, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
 
-    int res = fstat(fildes, buf);
-    if (res < 0) {
-        picotm_error_set_errno(error, errno);
-        goto err_fstat;
+    /* fstat() */
+
+    int cookie = -1;
+
+    int res = fd_tx_fstat_exec(fd_tx, fildes, buf, isnoundo, &cookie,
+                               error);
+    if (picotm_error_is_set(error)) {
+        return -1;
     }
 
-    fd_unref(fd);
+    /* Inject event */
+    if (cookie >= 0) {
+        append_cmd(self, CMD_FSTAT, fildes, cookie, error);
+        if (picotm_error_is_set(error)) {
+            return -1;
+        }
+    }
 
     return res;
+}
 
-err_fstat:
-    fd_unref(fd);
-    return -1;
+static void
+apply_fstat(struct fildes_tx* self, const struct fd_event* event,
+            struct picotm_error* error)
+{
+    assert(self);
+    assert(event);
+    assert(event->fildes >= 0);
+    assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
+
+    struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
+    assert(fd_tx);
+
+    fd_tx_fstat_apply(fd_tx, event->fildes, event->cookie, error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
+}
+
+static void
+undo_fstat(struct fildes_tx* self, int fildes, int cookie,
+           struct picotm_error* error)
+{
+    assert(self);
+    assert(fildes >= 0);
+    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
+
+    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    assert(fd_tx);
+
+    fd_tx_fstat_undo(fd_tx, fildes, cookie, error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
 }
 
 /*
@@ -2979,6 +3023,7 @@ fildes_tx_apply_event(struct fildes_tx* self,
         apply_fchdir,
         apply_fchmod,
         apply_fcntl,
+        apply_fstat,
         apply_fsync,
         apply_listen,
         apply_lseek,
@@ -3019,6 +3064,7 @@ fildes_tx_undo_event(struct fildes_tx* self,
         undo_fchdir,
         undo_fchmod,
         undo_fcntl,
+        undo_fstat,
         undo_fsync,
         undo_listen,
         undo_lseek,

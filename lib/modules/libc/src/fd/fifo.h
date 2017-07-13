@@ -42,6 +42,7 @@ struct picotm_rwstate;
  * Enumerates fields of `struct fifo`.
  */
 enum fifo_field {
+    FIFO_FIELD_FILE_MODE,
     FIFO_FIELD_STATE,
     NUMBER_OF_FIFO_FIELDS
 };

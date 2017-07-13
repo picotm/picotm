@@ -358,7 +358,8 @@ fd_module_fstat(int fildes, struct stat* buf)
     do {
         struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-        int res = fildes_tx_exec_fstat(fildes_tx, fildes, buf, &error);
+        int res = fildes_tx_exec_fstat(fildes_tx, fildes, buf,
+                                       picotm_is_irrevocable(), &error);
 
         if (!picotm_error_is_set(&error)) {
             return res;

@@ -36,6 +36,8 @@
  * \endcond
  */
 
+struct stat;
+
 union fcntl_arg;
 
 /**
@@ -208,6 +210,23 @@ regfile_tx_fcntl_apply(struct regfile_tx* self, int fildes, int cookie,
 
 void
 regfile_tx_fcntl_undo(struct regfile_tx* self, int fildes, int cookie,
+                      struct picotm_error* error);
+
+/*
+ * fstat()
+ */
+
+int
+regfile_tx_fstat_exec(struct regfile_tx* self, int fildes, struct stat* buf,
+                      bool isnoundo, int* cookie,
+                      struct picotm_error* error);
+
+void
+regfile_tx_fstat_apply(struct regfile_tx* self, int fildes, int cookie,
+                       struct picotm_error* error);
+
+void
+regfile_tx_fstat_undo(struct regfile_tx* self, int fildes, int cookie,
                       struct picotm_error* error);
 
 /*

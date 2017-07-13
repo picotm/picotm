@@ -42,6 +42,7 @@ struct picotm_rwstate;
  * Enumerates fields of `struct chrdev`.
  */
 enum chrdev_field {
+    CHRDEV_FIELD_FILE_MODE,
     CHRDEV_FIELD_STATE,
     NUMBER_OF_CHRDEV_FIELDS
 };
