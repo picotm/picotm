@@ -35,6 +35,7 @@
  * \endcond
  */
 
+struct fchmodop;
 struct picotm_error;
 
 union fcntl_arg;
@@ -53,6 +54,9 @@ struct dir_tx {
     struct dir* dir;
 
     unsigned long flags;
+
+    struct fchmodop* fchmodtab;
+    size_t           fchmodtablen;
 
     struct fcntlop* fcntltab;
     size_t          fcntltablen;
@@ -135,6 +139,23 @@ dir_tx_lock(struct dir_tx* self);
  */
 void
 dir_tx_unlock(struct dir_tx* self);
+
+/*
+ * fchmod()
+ */
+
+int
+dir_tx_fchmod_exec(struct dir_tx* self, int fildes, mode_t mode,
+                   bool isnoundo, int* cookie,
+                   struct picotm_error* error);
+
+void
+dir_tx_fchmod_apply(struct dir_tx* self, int fildes, int cookie,
+                    struct picotm_error* error);
+
+void
+dir_tx_fchmod_undo(struct dir_tx* self, int fildes, int cookie,
+                   struct picotm_error* error);
 
 /*
  * fcntl()

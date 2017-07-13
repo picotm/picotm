@@ -42,6 +42,7 @@ struct picotm_rwstate;
  * Enumerates fields of `struct dir`.
  */
 enum dir_field {
+    DIR_FIELD_FILE_MODE,
     DIR_FIELD_STATE,
     NUMBER_OF_DIR_FIELDS
 };

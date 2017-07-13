@@ -150,7 +150,7 @@ fildes_tx_exec_fchdir(struct fildes_tx* self, int fildes,
 
 int
 fildes_tx_exec_fchmod(struct fildes_tx* self, int fildes, mode_t mode,
-                      struct picotm_error* error);
+                      int isnoundo, struct picotm_error* error);
 
 int
 fildes_tx_exec_fcntl(struct fildes_tx* self, int fildes, int cmd,
