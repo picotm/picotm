@@ -68,6 +68,9 @@ struct regfile_tx {
     struct seekop* seektab;
     size_t         seektablen;
 
+    struct fchmodop* fchmodtab;
+    size_t           fchmodtablen;
+
     struct fcntlop* fcntltab;
     size_t          fcntltablen;
 
@@ -172,6 +175,23 @@ regfile_tx_lock(struct regfile_tx* self);
  */
 void
 regfile_tx_unlock(struct regfile_tx* self);
+
+/*
+ * fchmod()
+ */
+
+int
+regfile_tx_fchmod_exec(struct regfile_tx* self, int fildes, mode_t mode,
+                       bool isnoundo, int* cookie,
+                       struct picotm_error* error);
+
+void
+regfile_tx_fchmod_apply(struct regfile_tx* self, int fildes, int cookie,
+                        struct picotm_error* error);
+
+void
+regfile_tx_fchmod_undo(struct regfile_tx* self, int fildes, int cookie,
+                       struct picotm_error* error);
 
 /*
  * fcntl()

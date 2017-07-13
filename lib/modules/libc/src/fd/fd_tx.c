@@ -784,6 +784,146 @@ fd_tx_dup_undo(struct fd_tx* self, int fildes, int cookie,
 { }
 
 /*
+ * fchmod()
+ */
+
+static int
+fchmod_exec_chrdev(struct ofd_tx* ofd_tx, int fildes, mode_t mode,
+                   bool isnoundo, int* cookie, struct picotm_error* error)
+{
+    picotm_error_set_errno(error, EINVAL);
+    return -1;
+}
+
+static int
+fchmod_exec_fifo(struct ofd_tx* ofd_tx, int fildes, mode_t mode,
+                 bool isnoundo, int* cookie, struct picotm_error* error)
+{
+    picotm_error_set_errno(error, EINVAL);
+    return -1;
+}
+
+static int
+fchmod_exec_regfile(struct ofd_tx* ofd_tx, int fildes, mode_t mode,
+                    bool isnoundo, int* cookie, struct picotm_error* error)
+{
+    return regfile_tx_fchmod_exec(regfile_tx_of_ofd_tx(ofd_tx), fildes, mode,
+                                  isnoundo, cookie, error);
+}
+
+static int
+fchmod_exec_dir(struct ofd_tx* ofd_tx, int fildes, mode_t mode,
+                bool isnoundo, int* cookie, struct picotm_error* error)
+{
+    return dir_tx_fchmod_exec(dir_tx_of_ofd_tx(ofd_tx), fildes, mode,
+                              isnoundo, cookie, error);
+}
+
+static int
+fchmod_exec_socket(struct ofd_tx* ofd_tx, int fildes, mode_t mode,
+                   bool isnoundo, int* cookie, struct picotm_error* error)
+{
+    picotm_error_set_errno(error, EINVAL);
+    return -1;
+}
+
+int
+fd_tx_fchmod_exec(struct fd_tx* self, int fildes, mode_t mode,
+                  bool isnoundo, int* cookie, struct picotm_error* error)
+{
+    static int (* const fchmod_exec[])(struct ofd_tx*,
+                                       int,
+                                       mode_t,
+                                       bool,
+                                       int* cookie,
+                                       struct picotm_error*) = {
+        fchmod_exec_chrdev,
+        fchmod_exec_fifo,
+        fchmod_exec_regfile,
+        fchmod_exec_dir,
+        fchmod_exec_socket
+    };
+
+    assert(self);
+
+    return fchmod_exec[ofd_tx_file_type(self->ofd_tx)](self->ofd_tx, fildes,
+                                                       mode, isnoundo, cookie,
+                                                       error);
+}
+
+static void
+fchmod_apply_regfile(struct ofd_tx* ofd_tx, int fildes, int cookie,
+                     struct picotm_error* error)
+{
+    regfile_tx_fchmod_apply(regfile_tx_of_ofd_tx(ofd_tx), fildes, cookie,
+                            error);
+}
+
+static void
+fchmod_apply_dir(struct ofd_tx* ofd_tx, int fildes, int cookie,
+                 struct picotm_error* error)
+{
+    dir_tx_fchmod_apply(dir_tx_of_ofd_tx(ofd_tx), fildes, cookie, error);
+}
+
+void
+fd_tx_fchmod_apply(struct fd_tx* self, int fildes, int cookie,
+                   struct picotm_error* error)
+{
+    static void (* const fchmod_apply[])(struct ofd_tx*,
+                                         int,
+                                         int,
+                                         struct picotm_error*) = {
+        NULL,
+        NULL,
+        fchmod_apply_regfile,
+        fchmod_apply_dir,
+        NULL
+    };
+
+    assert(self);
+
+    fchmod_apply[ofd_tx_file_type(self->ofd_tx)](self->ofd_tx, fildes,
+                                                 cookie, error);
+}
+
+static void
+fchmod_undo_regfile(struct ofd_tx* ofd_tx, int fildes, int cookie,
+                   struct picotm_error* error)
+{
+    regfile_tx_fchmod_undo(regfile_tx_of_ofd_tx(ofd_tx), fildes, cookie,
+                           error);
+}
+
+static void
+fchmod_undo_dir(struct ofd_tx* ofd_tx, int fildes, int cookie,
+                struct picotm_error* error)
+{
+    dir_tx_fchmod_undo(dir_tx_of_ofd_tx(ofd_tx), fildes, cookie, error);
+}
+
+void
+fd_tx_fchmod_undo(struct fd_tx* self, int fildes, int cookie,
+                 struct picotm_error* error)
+{
+    static void (* const fchmod_undo[])(struct ofd_tx*,
+                                        int,
+                                        int,
+                                        struct picotm_error*) = {
+        NULL,
+        NULL,
+        fchmod_undo_regfile,
+        fchmod_undo_dir,
+        NULL
+    };
+
+    assert(self);
+
+    fchmod_undo[ofd_tx_file_type(self->ofd_tx)](self->ofd_tx, fildes,
+                                                cookie, error);
+}
+
+/*
  * fcntl()
  */
 

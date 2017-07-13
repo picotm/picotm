@@ -319,7 +319,9 @@ fd_module_fchmod(int fildes, mode_t mode)
     do {
         struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-        int res = fildes_tx_exec_fchmod(fildes_tx, fildes, mode, &error);
+        int res = fildes_tx_exec_fchmod(fildes_tx, fildes, mode,
+                                        picotm_is_irrevocable(),
+                                        &error);
 
         if (!picotm_error_is_set(&error)) {
             return res;

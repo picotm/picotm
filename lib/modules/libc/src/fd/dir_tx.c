@@ -27,7 +27,10 @@
 #include <picotm/picotm-lib-tab.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
+#include "fchmodop.h"
+#include "fchmodoptab.h"
 #include "fcntlop.h"
 #include "fcntloptab.h"
 
@@ -47,6 +50,15 @@ dir_tx_try_rdlock_field(struct dir_tx* self, enum dir_field field,
     assert(self);
 
     dir_try_rdlock_field(self->dir, field, self->rwstate + field, error);
+}
+
+static void
+dir_tx_try_wrlock_field(struct dir_tx* self, enum dir_field field,
+                        struct picotm_error* error)
+{
+    assert(self);
+
+    dir_try_wrlock_field(self->dir, field, self->rwstate + field, error);
 }
 
 static void
@@ -108,6 +120,9 @@ dir_tx_init(struct dir_tx* self)
 
     self->flags = 0;
 
+    self->fchmodtab = NULL;
+    self->fchmodtablen = 0;
+
     self->fcntltab = NULL;
     self->fcntltablen = 0;
 
@@ -123,6 +138,7 @@ dir_tx_uninit(struct dir_tx* self)
     assert(self);
 
     fcntloptab_clear(&self->fcntltab, &self->fcntltablen);
+    fchmodoptab_clear(&self->fchmodtab, &self->fchmodtablen);
 
     uninit_rwstates(picotm_arraybeg(self->rwstate),
                     picotm_arrayend(self->rwstate));
@@ -264,6 +280,7 @@ dir_tx_ref_or_set_up(struct dir_tx* self, struct dir* dir,
     self->cc_mode = dir_get_cc_mode(dir);
     self->flags = 0;
 
+    self->fchmodtablen = 0;
     self->fcntltablen = 0;
 }
 
@@ -293,6 +310,142 @@ dir_tx_holds_ref(struct dir_tx* self)
     assert(self);
 
     return picotm_ref_count(&self->ref) > 0;
+}
+
+/*
+ * fchmod()
+ */
+
+static int
+fchmod_exec_noundo(struct dir_tx* self, int fildes, mode_t mode,
+                   int* cookie, struct picotm_error* error)
+{
+    int res = fchmod(fildes, mode);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return res;
+    }
+    return res;
+}
+
+static int
+fchmod_exec_2pl(struct dir_tx* self, int fildes, mode_t mode,
+                int* cookie, struct picotm_error* error)
+{
+    assert(self);
+    assert(cookie);
+
+    /* Acquire file-mode lock. */
+    dir_tx_try_wrlock_field(self, DIR_FIELD_FILE_MODE, error);
+    if (picotm_error_is_set(error)) {
+        picotm_error_set_errno(error, errno);
+        return -1;
+    }
+
+    struct stat buf;
+    int res = fstat(fildes, &buf);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return res;
+    }
+
+    mode_t old_mode = buf.st_mode & ~S_IFMT;
+
+    res = fchmod(fildes, mode);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return res;
+    }
+
+    *cookie = fchmodoptab_append(&self->fchmodtab,
+                                 &self->fchmodtablen,
+                                 mode, old_mode,
+                                 error);
+    if (picotm_error_is_set(error)) {
+        picotm_error_set_errno(error, errno);
+    }
+
+    return res;
+}
+
+int
+dir_tx_fchmod_exec(struct dir_tx* self, int fildes, mode_t mode,
+                      bool isnoundo, int* cookie, struct picotm_error* error)
+{
+    static int (* const fchmod_exec[2])(struct dir_tx*,
+                                        int,
+                                        mode_t,
+                                        int*,
+                                        struct picotm_error*) = {
+        fchmod_exec_noundo,
+        fchmod_exec_2pl
+    };
+
+    if (isnoundo) {
+        /* TX irrevokable */
+        self->cc_mode = PICOTM_LIBC_CC_MODE_NOUNDO;
+    } else {
+        /* TX revokable */
+        if ((self->cc_mode == PICOTM_LIBC_CC_MODE_NOUNDO)
+            || !fchmod_exec[self->cc_mode]) {
+            picotm_error_set_revocable(error);
+            return -1;
+        }
+    }
+
+    return fchmod_exec[self->cc_mode](self, fildes, mode, cookie, error);
+}
+
+static void
+fchmod_apply_noundo(int fildes, struct picotm_error* error)
+{ }
+
+static void
+fchmod_apply_2pl(int fildes, struct picotm_error* error)
+{ }
+
+void
+dir_tx_fchmod_apply(struct dir_tx* self, int fildes, int cookie,
+                    struct picotm_error* error)
+{
+    static void (* const fchmod_apply[2])(int, struct picotm_error*) = {
+        fchmod_apply_noundo,
+        fchmod_apply_2pl
+    };
+
+    assert(fchmod_apply[self->cc_mode]);
+
+    fchmod_apply[self->cc_mode](fildes, error);
+}
+
+static void
+fchmod_undo_2pl(struct dir_tx* self, int fildes, int cookie,
+                struct picotm_error* error)
+{
+    const struct fchmodop* op = self->fchmodtab + cookie;
+
+    int res = fchmod(fildes, op->old_mode);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return;
+    }
+}
+
+void
+dir_tx_fchmod_undo(struct dir_tx* self, int fildes, int cookie,
+                   struct picotm_error* error)
+{
+    static void (* const fchmod_undo[2])(struct dir_tx*,
+                                         int,
+                                         int,
+                                         struct picotm_error*) = {
+        NULL,
+        fchmod_undo_2pl
+    };
+
+    assert(fchmod_undo[self->cc_mode]);
+
+    fchmod_undo[self->cc_mode](self, fildes, cookie, error);
 }
 
 /*

@@ -220,6 +220,23 @@ fd_tx_dup_undo(struct fd_tx* self, int fildes, int cookie,
                struct picotm_error* error);
 
 /*
+ * fchmod()
+ */
+
+int
+fd_tx_fchmod_exec(struct fd_tx* self, int fildes, mode_t mode,
+                  bool isnoundo, int* cookie,
+                  struct picotm_error* error);
+
+void
+fd_tx_fchmod_apply(struct fd_tx* self, int fildes, int cookie,
+                   struct picotm_error* error);
+
+void
+fd_tx_fchmod_undo(struct fd_tx* self, int fildes, int cookie,
+                  struct picotm_error* error);
+
+/*
  * fcntl()
  */
 
