@@ -639,6 +639,32 @@ err_open:
     return -1;
 }
 
+/* For each file descriptor, Linux puts a symlink in /proc/self/fd/. The
+ * link refers to the actual file. This function isn't portable, as other
+ * Unix systems might use different techniques.
+ */
+static char*
+fildes_path(int fildes, struct picotm_error* error)
+{
+    char symlink[40];
+    int res = snprintf(symlink, sizeof(symlink), "/proc/self/fd/%d", fildes);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return NULL;
+    } else if ((size_t)res >= sizeof(symlink)) {
+        picotm_error_set_error_code(error, PICOTM_OUT_OF_MEMORY);
+        return NULL;
+    }
+
+    char* path = realpath(symlink, NULL);
+    if (!path) {
+        picotm_error_set_errno(error, errno);
+        return NULL;
+    }
+
+    return path;
+}
+
 static char*
 get_cwd_path(struct fildes_tx* self, struct picotm_error* error)
 {
@@ -649,16 +675,7 @@ get_cwd_path(struct fildes_tx* self, struct picotm_error* error)
         return NULL;
     }
 
-    char path[64];
-    snprintf(path, sizeof(path), "/proc/self/fd/%d", fildes);
-
-    char* canonpath = canonicalize_file_name(path);
-    if (!canonpath) {
-        picotm_error_set_errno(error, errno);
-        return NULL;
-    }
-
-    return canonpath;
+    return fildes_path(fildes, error);
 }
 
 static char*
@@ -1711,32 +1728,23 @@ static void
 undo_mkstemp(struct fildes_tx* self, int fildes, int cookie,
              struct picotm_error* error)
 {
-    char path[64];
-    int res = snprintf(path, sizeof(path), "/proc/self/fd/%d", cookie);
-    if (res < 0) {
-        picotm_error_set_errno(error, errno);
-        return;
-    }
+    path = fildes_path(fildes, error);
 
-    char* canonpath = canonicalize_file_name(path);
-
-    if (canonpath) {
+    if (path) {
 
         struct stat buf[2];
 
-        if (fstat(cookie, buf+0) != -1
-            && stat(canonpath, buf+1) != -1
+        if (fstat(fildes, buf+0) != -1
+            && stat(path, buf+1) != -1
             && buf[0].st_dev == buf[1].st_dev
             && buf[0].st_ino == buf[1].st_ino) {
 
-            if (unlink(canonpath) < 0) {
+            if (unlink(path) < 0) {
                 perror("unlink");
             }
         }
 
-        free(canonpath);
-    } else {
-        perror("canonicalize_file_name");
+        free(path);
     }
 
     res = TEMP_FAILURE_RETRY(close(cookie));
@@ -1836,29 +1844,23 @@ undo_open(struct fildes_tx* self, int fildes, int cookie,
 
     if (self->openoptab[cookie].unlink) {
 
-        char path[64];
+        char* path = fildes_path(fildes, error);
 
-        sprintf(path, "/proc/self/fd/%d", fildes);
-
-        char* canonpath = canonicalize_file_name(path);
-
-        if (canonpath) {
+        if (path) {
 
             struct stat buf[2];
 
             if (fstat(fildes, buf+0) != -1
-                && stat(canonpath, buf+1) != -1
+                && stat(path, buf+1) != -1
                 && buf[0].st_dev == buf[1].st_dev
                 && buf[0].st_ino == buf[1].st_ino) {
 
-                if (unlink(canonpath) < 0) {
+                if (unlink(path) < 0) {
                     perror("unlink");
                 }
             }
 
-            free(canonpath);
-        } else {
-            perror("canonicalize_file_name");
+            free(path);
         }
     }
 
