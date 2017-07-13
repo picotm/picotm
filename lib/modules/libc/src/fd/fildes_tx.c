@@ -724,6 +724,65 @@ err_malloc:
     return NULL;
 }
 
+/* Unlink a file descriptor's file in a quite reliable, but Linux-only,
+ * way. The function does some additional checks to ensure that the file
+ * we're unlinking is the file we created in the first place. Note that
+ * this is not fully atomic. The file could be replaced while this function
+ * is between stat() and unlink(). We would remove a file which we don't
+ * own.
+ */
+static void
+unlink_fildes(int fildes, struct picotm_error* error)
+{
+    struct stat buf[2];
+
+    char* path = fildes_path(fildes, error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
+
+    /* Get file status of descriptor and path */
+
+    int res = fstat(fildes, buf + 0);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        goto err_fstat;
+    }
+
+    res = stat(path, buf + 1);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        goto err_stat;
+    }
+
+    /* Check if file descriptor and path refer to the same file */
+
+    if (buf[0].st_dev != buf[1].st_dev) {
+        goto out;
+    }
+    if (buf[0].st_ino != buf[1].st_ino) {
+        goto out;
+    }
+
+    /* Unlink file */
+
+    res = unlink(path);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        goto err_unlink;
+    }
+
+out:
+    free(path);
+
+    return;
+
+err_unlink:
+err_stat:
+err_fstat:
+    free(path);
+}
+
 /*
  * accept()
  */
@@ -1718,36 +1777,18 @@ apply_mkstemp(struct fildes_tx* self, const struct fd_event* event,
               struct picotm_error* error)
 { }
 
-/* Remove temporary file in a quite reliable, but Linux-only, way. This is
- * only possible because it is certain that the transaction created that file
- * initially. Note that there is still a race condition. An attacker could
- * replace the file at 'canonpath' while the process is between stat and
- * unlink.
+/* Removing the temporary file is only possible because it is certain
+ * that the transaction created that file initially.
  */
 static void
 undo_mkstemp(struct fildes_tx* self, int fildes, int cookie,
              struct picotm_error* error)
 {
-    path = fildes_path(fildes, error);
+    /* don't care about errors */
+    struct picotm_error ignored_error = PICOTM_ERROR_INITIALIZER;
+    unlink_fildes(fildes, &ignored_error);
 
-    if (path) {
-
-        struct stat buf[2];
-
-        if (fstat(fildes, buf+0) != -1
-            && stat(path, buf+1) != -1
-            && buf[0].st_dev == buf[1].st_dev
-            && buf[0].st_ino == buf[1].st_ino) {
-
-            if (unlink(path) < 0) {
-                perror("unlink");
-            }
-        }
-
-        free(path);
-    }
-
-    res = TEMP_FAILURE_RETRY(close(cookie));
+    int res = TEMP_FAILURE_RETRY(close(fildes));
     if (res < 0) {
         picotm_error_set_errno(error, errno);
         return;
@@ -1843,25 +1884,9 @@ undo_open(struct fildes_tx* self, int fildes, int cookie,
     assert(cookie < (ssize_t)self->openoptablen);
 
     if (self->openoptab[cookie].unlink) {
-
-        char* path = fildes_path(fildes, error);
-
-        if (path) {
-
-            struct stat buf[2];
-
-            if (fstat(fildes, buf+0) != -1
-                && stat(path, buf+1) != -1
-                && buf[0].st_dev == buf[1].st_dev
-                && buf[0].st_ino == buf[1].st_ino) {
-
-                if (unlink(path) < 0) {
-                    perror("unlink");
-                }
-            }
-
-            free(path);
-        }
+        /* don't care about errors */
+        struct picotm_error ignored_error = PICOTM_ERROR_INITIALIZER;
+        unlink_fildes(fildes, &ignored_error);
     }
 
     struct fd_tx* fd_tx = get_fd_tx(self, fildes);
