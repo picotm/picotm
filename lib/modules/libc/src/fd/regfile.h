@@ -46,6 +46,7 @@ struct rwcountermap;
  */
 enum regfile_field {
     REGFILE_FIELD_FILE_MODE,
+    REGFILE_FIELD_FILE_SIZE,
     REGFILE_FIELD_STATE,
     NUMBER_OF_REGFILE_FIELDS
 };

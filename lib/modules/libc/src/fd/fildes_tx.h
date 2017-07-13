@@ -159,7 +159,7 @@ fildes_tx_exec_fcntl(struct fildes_tx* self, int fildes, int cmd,
 
 int
 fildes_tx_exec_fstat(struct fildes_tx* self, int fildes, struct stat* buf,
-                     struct picotm_error* error);
+                     int isnoundo, struct picotm_error* error);
 
 int
 fildes_tx_exec_fsync(struct fildes_tx* self, int fildes, int isnoundo,

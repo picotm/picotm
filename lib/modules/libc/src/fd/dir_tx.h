@@ -37,6 +37,7 @@
 
 struct fchmodop;
 struct picotm_error;
+struct stat;
 
 union fcntl_arg;
 
@@ -172,6 +173,22 @@ dir_tx_fcntl_apply(struct dir_tx* self, int fildes, int cookie,
 
 void
 dir_tx_fcntl_undo(struct dir_tx* self, int fildes, int cookie,
+                  struct picotm_error* error);
+
+/*
+ * fstat()
+ */
+
+int
+dir_tx_fstat_exec(struct dir_tx* self, int fildes, struct stat* buf,
+                  bool isnoundo, int* cookie, struct picotm_error* error);
+
+void
+dir_tx_fstat_apply(struct dir_tx* self, int fildes, int cookie,
+                   struct picotm_error* error);
+
+void
+dir_tx_fstat_undo(struct dir_tx* self, int fildes, int cookie,
                   struct picotm_error* error);
 
 /*

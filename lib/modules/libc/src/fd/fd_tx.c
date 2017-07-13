@@ -1204,6 +1204,194 @@ fd_tx_fcntl_undo(struct fd_tx* self, int fildes, int cookie,
 }
 
 /*
+ * fstat()
+ */
+
+static int
+fstat_exec_chrdev(struct ofd_tx* ofd_tx, int fildes, struct stat* buf,
+                  bool isnoundo, int* cookie, struct picotm_error* error)
+{
+    return chrdev_tx_fstat_exec(chrdev_tx_of_ofd_tx(ofd_tx), fildes, buf,
+                                isnoundo, cookie, error);
+}
+
+static int
+fstat_exec_fifo(struct ofd_tx* ofd_tx, int fildes, struct stat* buf,
+                bool isnoundo, int* cookie, struct picotm_error* error)
+{
+    return fifo_tx_fstat_exec(fifo_tx_of_ofd_tx(ofd_tx), fildes, buf,
+                              isnoundo, cookie, error);
+}
+
+static int
+fstat_exec_regfile(struct ofd_tx* ofd_tx, int fildes, struct stat* buf,
+                   bool isnoundo, int* cookie, struct picotm_error* error)
+{
+    return regfile_tx_fstat_exec(regfile_tx_of_ofd_tx(ofd_tx), fildes, buf,
+                                 isnoundo, cookie, error);
+}
+
+static int
+fstat_exec_dir(struct ofd_tx* ofd_tx, int fildes, struct stat* buf,
+               bool isnoundo, int* cookie, struct picotm_error* error)
+{
+    return dir_tx_fstat_exec(dir_tx_of_ofd_tx(ofd_tx), fildes, buf,
+                             isnoundo, cookie, error);
+}
+
+static int
+fstat_exec_socket(struct ofd_tx* ofd_tx, int fildes, struct stat* buf,
+                  bool isnoundo, int* cookie, struct picotm_error* error)
+{
+    return socket_tx_fstat_exec(socket_tx_of_ofd_tx(ofd_tx), fildes, buf,
+                                isnoundo, cookie, error);
+}
+
+int
+fd_tx_fstat_exec(struct fd_tx* self, int fildes, struct stat* buf,
+                 bool isnoundo, int* cookie, struct picotm_error* error)
+{
+    static int (* const fstat_exec[])(struct ofd_tx*,
+                                      int,
+                                      struct stat*,
+                                      bool,
+                                      int* cookie,
+                                      struct picotm_error*) = {
+        fstat_exec_chrdev,
+        fstat_exec_fifo,
+        fstat_exec_regfile,
+        fstat_exec_dir,
+        fstat_exec_socket
+    };
+
+    assert(self);
+
+    return fstat_exec[ofd_tx_file_type(self->ofd_tx)](self->ofd_tx, fildes,
+                                                      buf, isnoundo, cookie,
+                                                      error);
+}
+
+static void
+fstat_apply_chrdev(struct ofd_tx* ofd_tx, int fildes, int cookie,
+                   struct picotm_error* error)
+{
+    chrdev_tx_fstat_apply(chrdev_tx_of_ofd_tx(ofd_tx), fildes, cookie,
+                          error);
+}
+
+static void
+fstat_apply_fifo(struct ofd_tx* ofd_tx, int fildes, int cookie,
+                 struct picotm_error* error)
+{
+    fifo_tx_fstat_apply(fifo_tx_of_ofd_tx(ofd_tx), fildes, cookie,
+                        error);
+}
+
+static void
+fstat_apply_regfile(struct ofd_tx* ofd_tx, int fildes, int cookie,
+                    struct picotm_error* error)
+{
+    regfile_tx_fstat_apply(regfile_tx_of_ofd_tx(ofd_tx), fildes, cookie,
+                           error);
+}
+
+static void
+fstat_apply_dir(struct ofd_tx* ofd_tx, int fildes, int cookie,
+                struct picotm_error* error)
+{
+    dir_tx_fstat_apply(dir_tx_of_ofd_tx(ofd_tx), fildes, cookie,
+                       error);
+}
+
+static void
+fstat_apply_socket(struct ofd_tx* ofd_tx, int fildes, int cookie,
+                   struct picotm_error* error)
+{
+    socket_tx_fstat_apply(socket_tx_of_ofd_tx(ofd_tx), fildes, cookie,
+                          error);
+}
+
+void
+fd_tx_fstat_apply(struct fd_tx* self, int fildes, int cookie,
+                  struct picotm_error* error)
+{
+    static void (* const fstat_apply[])(struct ofd_tx*,
+                                        int,
+                                        int,
+                                        struct picotm_error*) = {
+        fstat_apply_chrdev,
+        fstat_apply_fifo,
+        fstat_apply_regfile,
+        fstat_apply_dir,
+        fstat_apply_socket
+    };
+
+    assert(self);
+
+    fstat_apply[ofd_tx_file_type(self->ofd_tx)](self->ofd_tx, fildes,
+                                                cookie, error);
+}
+
+static void
+fstat_undo_chrdev(struct ofd_tx* ofd_tx, int fildes, int cookie,
+                  struct picotm_error* error)
+{
+    chrdev_tx_fstat_undo(chrdev_tx_of_ofd_tx(ofd_tx), fildes, cookie,
+                         error);
+}
+
+static void
+fstat_undo_fifo(struct ofd_tx* ofd_tx, int fildes, int cookie,
+                struct picotm_error* error)
+{
+    fifo_tx_fstat_undo(fifo_tx_of_ofd_tx(ofd_tx), fildes, cookie,
+                       error);
+}
+
+static void
+fstat_undo_regfile(struct ofd_tx* ofd_tx, int fildes, int cookie,
+                   struct picotm_error* error)
+{
+    regfile_tx_fstat_undo(regfile_tx_of_ofd_tx(ofd_tx), fildes, cookie,
+                          error);
+}
+
+static void
+fstat_undo_dir(struct ofd_tx* ofd_tx, int fildes, int cookie,
+               struct picotm_error* error)
+{
+    dir_tx_fstat_undo(dir_tx_of_ofd_tx(ofd_tx), fildes, cookie, error);
+}
+
+static void
+fstat_undo_socket(struct ofd_tx* ofd_tx, int fildes, int cookie,
+                  struct picotm_error* error)
+{
+    socket_tx_fstat_undo(socket_tx_of_ofd_tx(ofd_tx), fildes, cookie, error);
+}
+
+void
+fd_tx_fstat_undo(struct fd_tx* self, int fildes, int cookie,
+                 struct picotm_error* error)
+{
+    static void (* const fstat_undo[])(struct ofd_tx*,
+                                       int,
+                                       int,
+                                       struct picotm_error*) = {
+        fstat_undo_chrdev,
+        fstat_undo_fifo,
+        fstat_undo_regfile,
+        fstat_undo_dir,
+        fstat_undo_socket,
+    };
+
+    assert(self);
+
+    fstat_undo[ofd_tx_file_type(self->ofd_tx)](self->ofd_tx, fildes,
+                                               cookie, error);
+}
+
+/*
  * fsync()
  */
 

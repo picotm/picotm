@@ -36,6 +36,7 @@
  */
 
 struct picotm_error;
+struct stat;
 
 union fcntl_arg;
 
@@ -171,6 +172,22 @@ chrdev_tx_fcntl_apply(struct chrdev_tx* self, int fildes, int cookie,
 
 void
 chrdev_tx_fcntl_undo(struct chrdev_tx* self, int fildes, int cookie,
+                     struct picotm_error* error);
+
+/*
+ * fstat()
+ */
+
+int
+chrdev_tx_fstat_exec(struct chrdev_tx* self, int fildes, struct stat* buf,
+                     bool isnoundo, int* cookie, struct picotm_error* error);
+
+void
+chrdev_tx_fstat_apply(struct chrdev_tx* self, int fildes, int cookie,
+                      struct picotm_error* error);
+
+void
+chrdev_tx_fstat_undo(struct chrdev_tx* self, int fildes, int cookie,
                      struct picotm_error* error);
 
 /*
