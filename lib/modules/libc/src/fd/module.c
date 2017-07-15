@@ -167,7 +167,8 @@ fd_module_accept(int sockfd, struct sockaddr* address, socklen_t* address_len)
         struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
         int res = fildes_tx_exec_accept(fildes_tx, sockfd, address,
-                                        address_len, &error);
+                                        address_len, picotm_is_irrevocable(),
+                                        &error);
 
         if (!picotm_error_is_set(&error)) {
             return res;

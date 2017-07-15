@@ -136,6 +136,23 @@ void
 fd_tx_dump(const struct fd_tx* self);
 
 /*
+ * accept()
+ */
+
+int
+fd_tx_accept_exec(struct fd_tx* self, int sockfd,
+                  struct sockaddr* address, socklen_t* address_len,
+                  bool isnoundo, int* cookie, struct picotm_error* error);
+
+void
+fd_tx_accept_apply(struct fd_tx* self, int sockfd, int cookie,
+                   struct picotm_error* error);
+
+void
+fd_tx_accept_undo(struct fd_tx* self, int sockfd, int cookie,
+                  struct picotm_error* error);
+
+/*
  * bind()
  */
 

@@ -790,20 +790,22 @@ err_fstat:
 int
 fildes_tx_exec_accept(struct fildes_tx* self, int sockfd,
                       struct sockaddr* address, socklen_t* address_len,
-                      struct picotm_error* error)
+                      int isnoundo, struct picotm_error* error)
 {
     /* Update/create fd_tx */
 
-    get_fd_tx_with_ref(self, sockfd, 0, error);
+    struct fd_tx* fd_tx = get_fd_tx_with_ref(self, sockfd, 0, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
 
     /* Accept connection */
 
-    int connfd = TEMP_FAILURE_RETRY(accept(sockfd, address, address_len));
-    if (connfd < 0) {
-        picotm_error_set_errno(error, errno);
+    int cookie = -1;
+
+    int connfd = fd_tx_accept_exec(fd_tx, sockfd, address, address_len,
+                                   isnoundo, &cookie, error);
+    if (picotm_error_is_set(error)) {
         return -1;
     }
 
@@ -815,7 +817,7 @@ fildes_tx_exec_accept(struct fildes_tx* self, int sockfd,
     }
 
     /* Inject event */
-    append_cmd(self, CMD_ACCEPT, connfd, -1, error);
+    append_cmd(self, CMD_ACCEPT, connfd, cookie, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -835,6 +837,18 @@ apply_accept(struct fildes_tx* self, const struct fd_event* event,
 {
     assert(self);
     assert(event);
+    assert(event->fildes >= 0);
+    assert(event->fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
+
+    struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
+    assert(fd_tx);
+
+    if (event->cookie != -1) {
+        fd_tx_accept_apply(fd_tx, event->fildes, event->cookie, error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
+    }
 }
 
 static void
@@ -843,11 +857,15 @@ undo_accept(struct fildes_tx* self, int fildes, int cookie,
 {
     assert(self);
 
-    assert(fildes >= 0);
-    assert(fildes < MAXNUMFD);
-
     struct fd_tx* fd_tx = get_fd_tx(self, fildes);
     assert(fd_tx);
+
+    if (cookie != -1) {
+        fd_tx_accept_undo(fd_tx, fildes, cookie, error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
+    }
 
     /* Mark file descriptor to be closed */
     fd_tx_signal_close(fd_tx);

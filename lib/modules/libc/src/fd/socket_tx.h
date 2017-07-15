@@ -159,6 +159,23 @@ void
 socket_tx_unlock(struct socket_tx* self);
 
 /*
+ * accept()
+ */
+
+int
+socket_tx_accept_exec(struct socket_tx* self, int sockfd,
+                      struct sockaddr* address, socklen_t* address_len,
+                      bool isnoundo, int* cookie, struct picotm_error* error);
+
+void
+socket_tx_accept_apply(struct socket_tx* self, int sockfd, int cookie,
+                       struct picotm_error* error);
+
+void
+socket_tx_accept_undo(struct socket_tx* self, int sockfd, int cookie,
+                      struct picotm_error* error);
+
+/*
  * bind()
  */
 
