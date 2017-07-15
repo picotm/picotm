@@ -399,6 +399,91 @@ socket_tx_append_to_readset(struct socket_tx* self, size_t nbyte, off_t offset,
 }
 
 /*
+ * accept()
+ */
+
+static int
+accept_exec_noundo(struct socket_tx* self, int sockfd,
+                   struct sockaddr* address, socklen_t* address_len,
+                   int* cookie, struct picotm_error* error)
+{
+    int res = TEMP_FAILURE_RETRY(accept(sockfd, address, address_len));
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return res;
+    }
+    return res;
+}
+
+int
+socket_tx_accept_exec(struct socket_tx* self, int sockfd,
+                      struct sockaddr* address, socklen_t* address_len,
+                      bool isnoundo, int* cookie, struct picotm_error* error)
+{
+    static int (* const accept_exec[2])(struct socket_tx*,
+                                        int,
+                                        struct sockaddr*,
+                                        socklen_t*,
+                                        int*,
+                                        struct picotm_error* error) = {
+        accept_exec_noundo,
+        NULL
+    };
+
+    if (isnoundo) {
+        /* TX irrevokable */
+        self->cc_mode = PICOTM_LIBC_CC_MODE_NOUNDO;
+    } else {
+        /* TX revokable */
+        if ((self->cc_mode == PICOTM_LIBC_CC_MODE_NOUNDO)
+            || !accept_exec[self->cc_mode]) {
+            picotm_error_set_revocable(error);
+            return -1;
+        }
+    }
+
+    return accept_exec[self->cc_mode](self, sockfd, address, address_len,
+                                      cookie, error);
+}
+
+static void
+accept_apply_noundo(struct socket_tx* self, int sockfd, int cookie,
+                    struct picotm_error* error)
+{ }
+
+void
+socket_tx_accept_apply(struct socket_tx* self, int sockfd, int cookie,
+                       struct picotm_error* error)
+{
+    static void (* const accept_apply[2])(struct socket_tx*,
+                                          int,
+                                          int,
+                                          struct picotm_error*) = {
+        accept_apply_noundo,
+        NULL
+    };
+
+    assert(accept_apply[self->cc_mode]);
+
+    accept_apply[self->cc_mode](self, sockfd, cookie, error);
+}
+
+void
+socket_tx_accept_undo(struct socket_tx* self, int sockfd, int cookie,
+                      struct picotm_error* error)
+{
+    static void (* const accept_undo[2])(int, struct picotm_error*) = {
+        NULL,
+        NULL
+    };
+
+    assert(self->cc_mode < sizeof(accept_undo)/sizeof(accept_undo[0]));
+    assert(accept_undo[self->cc_mode]);
+
+    accept_undo[self->cc_mode](cookie, error);
+}
+
+/*
  * bind()
  */
 

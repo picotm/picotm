@@ -247,6 +247,138 @@ fd_tx_clear_cc(struct fd_tx* self, struct picotm_error* error)
 }
 
 /*
+ * accept()
+ */
+
+static int
+accept_exec_chrdev(struct ofd_tx* ofd_tx, int sockfd,
+                   struct sockaddr* address, socklen_t* address_len,
+                   bool isnoundo, int* cookie, struct picotm_error* error)
+{
+    picotm_error_set_errno(error, ENOTSOCK);
+    return -1;
+}
+
+static int
+accept_exec_fifo(struct ofd_tx* ofd_tx, int sockfd,
+                 struct sockaddr* address, socklen_t* address_len,
+                 bool isnoundo, int* cookie, struct picotm_error* error)
+{
+    picotm_error_set_errno(error, ENOTSOCK);
+    return -1;
+}
+
+static int
+accept_exec_regfile(struct ofd_tx* ofd_tx, int sockfd,
+                    struct sockaddr* address, socklen_t* address_len,
+                    bool isnoundo, int* cookie, struct picotm_error* error)
+{
+    picotm_error_set_errno(error, ENOTSOCK);
+    return -1;
+}
+
+static int
+accept_exec_dir(struct ofd_tx* ofd_tx, int sockfd,
+                struct sockaddr* address, socklen_t* address_len,
+                bool isnoundo, int* cookie, struct picotm_error* error)
+{
+    picotm_error_set_errno(error, ENOTSOCK);
+    return -1;
+}
+
+static int
+accept_exec_socket(struct ofd_tx* ofd_tx, int sockfd,
+                   struct sockaddr* address, socklen_t* address_len,
+                   bool isnoundo, int* cookie, struct picotm_error* error)
+{
+    return socket_tx_accept_exec(socket_tx_of_ofd_tx(ofd_tx),
+                                 sockfd, address, address_len,
+                                 isnoundo, cookie, error);
+}
+
+int
+fd_tx_accept_exec(struct fd_tx* self, int sockfd, struct sockaddr* address,
+                  socklen_t* addresslen, bool isnoundo, int* cookie,
+                  struct picotm_error* error)
+{
+    static int (* const accept_exec[])(struct ofd_tx*,
+                                       int,
+                                       struct sockaddr*,
+                                       socklen_t*,
+                                       bool,
+                                       int*,
+                                       struct picotm_error*) = {
+        accept_exec_chrdev,
+        accept_exec_fifo,
+        accept_exec_regfile,
+        accept_exec_dir,
+        accept_exec_socket
+    };
+
+    assert(self);
+
+    return accept_exec[ofd_tx_file_type(self->ofd_tx)](self->ofd_tx, sockfd,
+                                                       address, addresslen,
+                                                       isnoundo, cookie, error);
+}
+
+static void
+accept_apply_socket(struct ofd_tx* ofd_tx, int sockfd, int cookie,
+                    struct picotm_error* error)
+{
+    socket_tx_accept_apply(socket_tx_of_ofd_tx(ofd_tx), sockfd, cookie, error);
+}
+
+void
+fd_tx_accept_apply(struct fd_tx* self, int sockfd, int cookie,
+                   struct picotm_error* error)
+{
+    static void (* const accept_apply[])(struct ofd_tx*,
+                                         int,
+                                         int,
+                                         struct picotm_error*) = {
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        accept_apply_socket
+    };
+
+    assert(self);
+
+    return accept_apply[ofd_tx_file_type(self->ofd_tx)](self->ofd_tx, sockfd,
+                                                        cookie, error);
+}
+
+static void
+accept_undo_socket(struct ofd_tx* ofd_tx, int sockfd, int cookie,
+                   struct picotm_error* error)
+{
+    socket_tx_accept_undo(socket_tx_of_ofd_tx(ofd_tx), sockfd, cookie, error);
+}
+
+void
+fd_tx_accept_undo(struct fd_tx* self, int sockfd, int cookie,
+                  struct picotm_error* error)
+{
+    static void (* const accept_undo[])(struct ofd_tx*,
+                                        int,
+                                        int,
+                                        struct picotm_error*) = {
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        accept_undo_socket
+    };
+
+    assert(self);
+
+    return accept_undo[ofd_tx_file_type(self->ofd_tx)](self->ofd_tx, sockfd,
+                                                       cookie, error);
+}
+
+/*
  * bind()
  */
 
