@@ -35,10 +35,14 @@ use File::Temp qw/ tempdir tempfile /;
 use Getopt::Long;
 use IO::Handle;
 
+my $opt_package = 1;
 my $release_type = undef;
+my $opt_tag = 1;
 
-GetOptions('release-type=s' =>  \$release_type) # string: 'major', 'minor',
+GetOptions('package!'       =>  \$opt_package,  # flag
+           'release-type=s' =>  \$release_type, # string: 'major', 'minor',
                                                 #         'micro'
+           'tag!'           =>  \$opt_tag)      # flag
     or die;
 
 die('Undefined release type') unless defined $release_type;
@@ -465,9 +469,9 @@ commitChanges($new_package_string);
 # Perform build and tests
 #
 
-createPackages($package, $new_major, $new_minor, $new_micro);
+createPackages($package, $new_major, $new_minor, $new_micro) unless $opt_package eq 0;
 
 # Tag release
 #
 
-tagRelease($new_package_string, $new_major, $new_minor, $new_micro)
+tagRelease($new_package_string, $new_major, $new_minor, $new_micro) unless $opt_tag eq 0;
