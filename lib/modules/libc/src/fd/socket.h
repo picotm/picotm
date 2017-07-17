@@ -39,6 +39,14 @@
 struct picotm_rwstate;
 
 /**
+ * Enumerates fields of `struct socket`.
+ */
+enum socket_field {
+    SOCKET_FIELD_STATE,
+    NUMBER_OF_SOCKET_FIELDS
+};
+
+/**
  * Represents a socket's open file description.
  */
 struct socket {
@@ -55,8 +63,8 @@ struct socket {
     /** Concurrency-control mode for the socket. */
     enum picotm_libc_cc_mode cc_mode;
 
-    /** Reader/writer state lock. */
-    struct picotm_rwlock rwlock;
+    /** Reader/writer state locks. */
+    struct picotm_rwlock rwlock[NUMBER_OF_SOCKET_FIELDS];
 };
 
 /**
@@ -135,29 +143,35 @@ enum picotm_libc_cc_mode
 socket_get_cc_mode(struct socket* self);
 
 /**
- * \brief Tries to acquire a reader lock on a FIFO.
+ * \brief Tries to acquire a reader lock on a socket.
  * \param       self        The socket instance.
+ * \param       field       The reader lock's field.
  * \param       rwstate     The transaction's reader/writer state.
  * \param[out]  error       Returns an error ot the caller.
  */
 void
-socket_try_rdlock_state(struct socket* self, struct picotm_rwstate* rwstate,
+socket_try_rdlock_field(struct socket* self, enum socket_field field,
+                        struct picotm_rwstate* rwstate,
                         struct picotm_error* error);
 
 /**
- * \brief Tries to acquire a writer lock on a FIFO.
+ * \brief Tries to acquire a writer lock on a socket.
  * \param       self        The socket instance.
+ * \param       field       The writer lock's field.
  * \param       rwstate     The transaction's reader/writer state.
  * \param[out]  error       Returns an error ot the caller.
  */
 void
-socket_try_wrlock_state(struct socket* self, struct picotm_rwstate* rwstate,
+socket_try_wrlock_field(struct socket* self, enum socket_field field,
+                        struct picotm_rwstate* rwstate,
                         struct picotm_error* error);
 
 /**
- * \brief Releases a lock on a character device.
+ * \brief Releases a lock on a socket.
  * \param   self    The socket instance.
+ * \param   field   The reader/writer lock's field.
  * \param   rwstate The transaction's reader/writer state.
  */
 void
-socket_unlock_state(struct socket* self, struct picotm_rwstate* rwstate);
+socket_unlock_field(struct socket* self, enum socket_field field,
+                    struct picotm_rwstate* rwstate);

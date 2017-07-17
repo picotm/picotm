@@ -22,12 +22,12 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <picotm/picotm-error.h>
+#include <picotm/picotm-lib-array.h>
 #include <picotm/picotm-lib-ptr.h>
 #include <picotm/picotm-lib-tab.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "chrdev.h"
 #include "fcntlop.h"
 #include "fcntloptab.h"
 #include "ioop.h"
@@ -52,6 +52,55 @@ static void
 unref_ofd_tx(struct ofd_tx* ofd_tx)
 {
     chrdev_tx_unref(chrdev_tx_of_ofd_tx(ofd_tx));
+}
+
+static void
+chrdev_tx_try_rdlock_field(struct chrdev_tx* self, enum chrdev_field field,
+                           struct picotm_error* error)
+{
+    assert(self);
+
+    chrdev_try_rdlock_field(self->chrdev, field, self->rwstate + field, error);
+}
+
+static void
+chrdev_tx_try_wrlock_field(struct chrdev_tx* self, enum chrdev_field field,
+                           struct picotm_error* error)
+{
+    assert(self);
+
+    chrdev_try_wrlock_field(self->chrdev, field, self->rwstate + field, error);
+}
+
+static void
+init_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end)
+{
+    while (beg < end) {
+        picotm_rwstate_init(beg);
+        ++beg;
+    }
+}
+
+static void
+uninit_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end)
+{
+    while (beg < end) {
+        picotm_rwstate_uninit(beg);
+        ++beg;
+    }
+}
+
+static void
+unlock_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end,
+                struct chrdev* chrdev)
+{
+    enum chrdev_field field = 0;
+
+    while (beg < end) {
+        chrdev_unlock_field(chrdev, field, beg);
+        ++field;
+        ++beg;
+    }
 }
 
 void
@@ -87,9 +136,8 @@ chrdev_tx_init(struct chrdev_tx* self)
 
     self->cc_mode = PICOTM_LIBC_CC_MODE_NOUNDO;
 
-    /* PLP */
-
-    picotm_rwstate_init(&self->rwstate);
+    init_rwstates(picotm_arraybeg(self->rwstate),
+                  picotm_arrayend(self->rwstate));
 }
 
 void
@@ -101,6 +149,9 @@ chrdev_tx_uninit(struct chrdev_tx* self)
     iooptab_clear(&self->wrtab, &self->wrtablen);
     iooptab_clear(&self->rdtab, &self->rdtablen);
     free(self->wrbuf);
+
+    uninit_rwstates(picotm_arraybeg(self->rwstate),
+                    picotm_arrayend(self->rwstate));
 }
 
 /*
@@ -158,8 +209,10 @@ update_cc_2pl(struct chrdev_tx* self, struct picotm_error* error)
     assert(self);
     assert(self->cc_mode == PICOTM_LIBC_CC_MODE_2PL);
 
-    /* release lock on character device */
-    chrdev_unlock_state(self->chrdev, &self->rwstate);
+    /* release reader/writer locks on character-device state */
+    unlock_rwstates(picotm_arraybeg(self->rwstate),
+                    picotm_arrayend(self->rwstate),
+                    self->chrdev);
 }
 
 void
@@ -192,8 +245,10 @@ clear_cc_2pl(struct chrdev_tx* self, struct picotm_error* error)
     assert(self);
     assert(self->cc_mode == PICOTM_LIBC_CC_MODE_2PL);
 
-    /* release lock on character device */
-    chrdev_unlock_state(self->chrdev, &self->rwstate);
+    /* release reader/writer locks on character-device state */
+    unlock_rwstates(picotm_arraybeg(self->rwstate),
+                    picotm_arrayend(self->rwstate),
+                    self->chrdev);
 }
 
 void
@@ -239,8 +294,6 @@ chrdev_tx_ref_or_set_up(struct chrdev_tx* self, struct chrdev* chrdev,
     self->rdtablen = 0;
     self->wrtablen = 0;
     self->wrbuflen = 0;
-
-    picotm_rwstate_set_status(&self->rwstate, PICOTM_RWSTATE_UNLOCKED);
 }
 
 void
@@ -404,7 +457,7 @@ fcntl_exec_2pl(struct chrdev_tx* self, int fildes, int cmd,
         case F_GETOWN: {
 
             /* Read-lock character device */
-            chrdev_try_rdlock_state(self->chrdev, &self->rwstate, error);
+            chrdev_tx_try_rdlock_field(self, CHRDEV_FIELD_STATE, error);
             if (picotm_error_is_set(error)) {
                 return -1;
             }
@@ -420,7 +473,7 @@ fcntl_exec_2pl(struct chrdev_tx* self, int fildes, int cmd,
         case F_GETLK: {
 
             /* Read-lock character device */
-            chrdev_try_rdlock_state(self->chrdev, &self->rwstate, error);
+            chrdev_tx_try_rdlock_field(self, CHRDEV_FIELD_STATE, error);
             if (picotm_error_is_set(error)) {
                 return -1;
             }
@@ -591,7 +644,7 @@ write_exec_2pl(struct chrdev_tx* self, int fildes, const void* buf,
                size_t nbyte, int* cookie, struct picotm_error* error)
 {
     /* Write-lock character device, because we change the file position */
-    chrdev_try_wrlock_state(self->chrdev, &self->rwstate, error);
+    chrdev_tx_try_wrlock_field(self, CHRDEV_FIELD_STATE, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }

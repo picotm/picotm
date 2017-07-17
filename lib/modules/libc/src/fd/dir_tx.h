@@ -23,6 +23,7 @@
 #include <picotm/picotm-lib-rwstate.h>
 #include <sys/queue.h>
 #include <sys/types.h>
+#include "dir.h"
 #include "ofd_tx.h"
 #include "picotm/picotm-libc.h"
 
@@ -34,7 +35,6 @@
  * \endcond
  */
 
-struct dir;
 struct picotm_error;
 
 union fcntl_arg;
@@ -60,8 +60,8 @@ struct dir_tx {
     /** Concurrency-control mode */
     enum picotm_libc_cc_mode cc_mode;
 
-    /** State of the local lock */
-    struct picotm_rwstate rwstate;
+    /** State of the local locks */
+    struct picotm_rwstate rwstate[NUMBER_OF_DIR_FIELDS];
 };
 
 struct dir_tx*

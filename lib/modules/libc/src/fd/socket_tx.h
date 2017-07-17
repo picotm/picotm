@@ -26,6 +26,7 @@
 #include <sys/types.h>
 #include "ofd_tx.h"
 #include "picotm/picotm-libc.h"
+#include "socket.h"
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -72,8 +73,8 @@ struct socket_tx {
     /** CC mode of domain */
     enum picotm_libc_cc_mode cc_mode;
 
-    /** State of the local lock */
-    struct picotm_rwstate rwstate;
+    /** State of the local reader/writer locks. */
+    struct picotm_rwstate rwstate[NUMBER_OF_SOCKET_FIELDS];
 };
 
 struct socket_tx*

@@ -20,8 +20,27 @@
 #include "socket.h"
 #include <assert.h>
 #include <picotm/picotm-error.h>
+#include <picotm/picotm-lib-array.h>
 #include <picotm/picotm-lib-rwstate.h>
 #include <stdlib.h>
+
+static void
+init_rwlocks(struct picotm_rwlock* beg, const struct picotm_rwlock* end)
+{
+    while (beg < end) {
+        picotm_rwlock_init(beg);
+        ++beg;
+    }
+}
+
+static void
+uninit_rwlocks(struct picotm_rwlock* beg, const struct picotm_rwlock* end)
+{
+    while (beg < end) {
+        picotm_rwlock_uninit(beg);
+        ++beg;
+    }
+}
 
 void
 socket_init(struct socket* self, struct picotm_error* error)
@@ -37,14 +56,17 @@ socket_init(struct socket* self, struct picotm_error* error)
     picotm_ref_init(&self->ref, 0);
     ofdid_clear(&self->id);
 
-    picotm_rwlock_init(&self->rwlock);
     self->cc_mode = PICOTM_LIBC_CC_MODE_NOUNDO;
+
+    init_rwlocks(picotm_arraybeg(self->rwlock),
+                 picotm_arrayend(self->rwlock));
 }
 
 void
 socket_uninit(struct socket* self)
 {
-    picotm_rwlock_uninit(&self->rwlock);
+    uninit_rwlocks(picotm_arraybeg(self->rwlock),
+                   picotm_arrayend(self->rwlock));
 
     pthread_rwlock_destroy(&self->lock);
 }
@@ -216,33 +238,36 @@ socket_cmp_and_ref(struct socket* self, const struct ofdid* id)
 }
 
 void
-socket_try_rdlock_state(struct socket* self, struct picotm_rwstate* rwstate,
+socket_try_rdlock_field(struct socket* self, enum socket_field field,
+                        struct picotm_rwstate* rwstate,
                         struct picotm_error* error)
 {
     assert(self);
 
-    picotm_rwstate_try_rdlock(rwstate, &self->rwlock, error);
+    picotm_rwstate_try_rdlock(rwstate, self->rwlock + field, error);
     if (picotm_error_is_set(error)) {
         return;
     }
 }
 
 void
-socket_try_wrlock_state(struct socket* self, struct picotm_rwstate* rwstate,
+socket_try_wrlock_field(struct socket* self, enum socket_field field,
+                        struct picotm_rwstate* rwstate,
                         struct picotm_error* error)
 {
     assert(self);
 
-    picotm_rwstate_try_wrlock(rwstate, &self->rwlock, error);
+    picotm_rwstate_try_wrlock(rwstate, self->rwlock + field, error);
     if (picotm_error_is_set(error)) {
         return;
     }
 }
 
 void
-socket_unlock_state(struct socket* self, struct picotm_rwstate* rwstate)
+socket_unlock_field(struct socket* self, enum socket_field field,
+                    struct picotm_rwstate* rwstate)
 {
     assert(self);
 
-    picotm_rwstate_unlock(rwstate, &self->rwlock);
+    picotm_rwstate_unlock(rwstate, self->rwlock + field);
 }

@@ -22,6 +22,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <picotm/picotm-error.h>
+#include <picotm/picotm-lib-array.h>
 #include <picotm/picotm-lib-rwstate.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -29,6 +30,24 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
+static void
+init_rwlocks(struct picotm_rwlock* beg, const struct picotm_rwlock* end)
+{
+    while (beg < end) {
+        picotm_rwlock_init(beg);
+        ++beg;
+    }
+}
+
+static void
+uninit_rwlocks(struct picotm_rwlock* beg, const struct picotm_rwlock* end)
+{
+    while (beg < end) {
+        picotm_rwlock_uninit(beg);
+        ++beg;
+    }
+}
 
 void
 fifo_init(struct fifo* self, struct picotm_error* error)
@@ -45,13 +64,16 @@ fifo_init(struct fifo* self, struct picotm_error* error)
     ofdid_clear(&self->id);
 
     self->cc_mode = PICOTM_LIBC_CC_MODE_NOUNDO;
-    picotm_rwlock_init(&self->rwlock);
+
+    init_rwlocks(picotm_arraybeg(self->rwlock),
+                 picotm_arrayend(self->rwlock));
 }
 
 void
 fifo_uninit(struct fifo* self)
 {
-    picotm_rwlock_uninit(&self->rwlock);
+    uninit_rwlocks(picotm_arraybeg(self->rwlock),
+                   picotm_arrayend(self->rwlock));
 
     pthread_rwlock_destroy(&self->lock);
 }
@@ -222,33 +244,36 @@ fifo_cmp_and_ref(struct fifo* self, const struct ofdid* id)
 }
 
 void
-fifo_try_rdlock_state(struct fifo* self, struct picotm_rwstate* rwstate,
+fifo_try_rdlock_field(struct fifo* self, enum fifo_field field,
+                      struct picotm_rwstate* rwstate,
                       struct picotm_error* error)
 {
     assert(self);
 
-    picotm_rwstate_try_rdlock(rwstate, &self->rwlock, error);
+    picotm_rwstate_try_rdlock(rwstate, self->rwlock + field, error);
     if (picotm_error_is_set(error)) {
         return;
     }
 }
 
 void
-fifo_try_wrlock_state(struct fifo* self, struct picotm_rwstate* rwstate,
+fifo_try_wrlock_field(struct fifo* self, enum fifo_field field,
+                      struct picotm_rwstate* rwstate,
                       struct picotm_error* error)
 {
     assert(self);
 
-    picotm_rwstate_try_wrlock(rwstate, &self->rwlock, error);
+    picotm_rwstate_try_wrlock(rwstate, self->rwlock + field, error);
     if (picotm_error_is_set(error)) {
         return;
     }
 }
 
 void
-fifo_unlock_state(struct fifo* self, struct picotm_rwstate* rwstate)
+fifo_unlock_field(struct fifo* self, enum fifo_field field,
+                  struct picotm_rwstate* rwstate)
 {
     assert(self);
 
-    picotm_rwstate_unlock(rwstate, &self->rwlock);
+    picotm_rwstate_unlock(rwstate, self->rwlock + field);
 }

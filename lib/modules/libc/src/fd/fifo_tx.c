@@ -22,6 +22,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <picotm/picotm-error.h>
+#include <picotm/picotm-lib-array.h>
 #include <picotm/picotm-lib-ptr.h>
 #include <picotm/picotm-lib-tab.h>
 #include <stdlib.h>
@@ -29,7 +30,6 @@
 #include <unistd.h>
 #include "fcntlop.h"
 #include "fcntloptab.h"
-#include "fifo.h"
 #include "ioop.h"
 #include "iooptab.h"
 
@@ -52,6 +52,55 @@ static void
 unref_ofd_tx(struct ofd_tx* ofd_tx)
 {
     fifo_tx_unref(fifo_tx_of_ofd_tx(ofd_tx));
+}
+
+static void
+fifo_tx_try_rdlock_field(struct fifo_tx* self, enum fifo_field field,
+                         struct picotm_error* error)
+{
+    assert(self);
+
+    fifo_try_rdlock_field(self->fifo, field, self->rwstate + field, error);
+}
+
+static void
+fifo_tx_try_wrlock_field(struct fifo_tx* self, enum fifo_field field,
+                         struct picotm_error* error)
+{
+    assert(self);
+
+    fifo_try_wrlock_field(self->fifo, field, self->rwstate + field, error);
+}
+
+static void
+init_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end)
+{
+    while (beg < end) {
+        picotm_rwstate_init(beg);
+        ++beg;
+    }
+}
+
+static void
+uninit_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end)
+{
+    while (beg < end) {
+        picotm_rwstate_uninit(beg);
+        ++beg;
+    }
+}
+
+static void
+unlock_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end,
+                struct fifo* fifo)
+{
+    enum fifo_field field = 0;
+
+    while (beg < end) {
+        fifo_unlock_field(fifo, field, beg);
+        ++field;
+        ++beg;
+    }
 }
 
 void
@@ -87,9 +136,8 @@ fifo_tx_init(struct fifo_tx* self)
 
     self->cc_mode = PICOTM_LIBC_CC_MODE_NOUNDO;
 
-    /* PLP */
-
-    picotm_rwstate_init(&self->rwstate);
+    init_rwstates(picotm_arraybeg(self->rwstate),
+                  picotm_arrayend(self->rwstate));
 }
 
 void
@@ -101,6 +149,9 @@ fifo_tx_uninit(struct fifo_tx* self)
     iooptab_clear(&self->wrtab, &self->wrtablen);
     iooptab_clear(&self->rdtab, &self->rdtablen);
     free(self->wrbuf);
+
+    uninit_rwstates(picotm_arraybeg(self->rwstate),
+                    picotm_arrayend(self->rwstate));
 }
 
 /*
@@ -158,8 +209,10 @@ update_cc_2pl(struct fifo_tx* self, struct picotm_error* error)
     assert(self);
     assert(self->cc_mode == PICOTM_LIBC_CC_MODE_2PL);
 
-    /* release lock on FIFO */
-    fifo_unlock_state(self->fifo, &self->rwstate);
+    /* release reader/writer locks on FIFO state */
+    unlock_rwstates(picotm_arraybeg(self->rwstate),
+                    picotm_arrayend(self->rwstate),
+                    self->fifo);
 }
 
 void
@@ -192,8 +245,10 @@ clear_cc_2pl(struct fifo_tx* self, struct picotm_error* error)
     assert(self);
     assert(self->cc_mode == PICOTM_LIBC_CC_MODE_2PL);
 
-    /* release lock on FIFO */
-    fifo_unlock_state(self->fifo, &self->rwstate);
+    /* release reader/writer locks on FIFO state */
+    unlock_rwstates(picotm_arraybeg(self->rwstate),
+                    picotm_arrayend(self->rwstate),
+                    self->fifo);
 }
 
 void
@@ -238,8 +293,6 @@ fifo_tx_ref_or_set_up(struct fifo_tx* self, struct fifo* fifo, int fildes,
     self->rdtablen = 0;
     self->wrtablen = 0;
     self->wrbuflen = 0;
-
-    picotm_rwstate_set_status(&self->rwstate, PICOTM_RWSTATE_UNLOCKED);
 }
 
 void
@@ -403,7 +456,7 @@ fcntl_exec_2pl(struct fifo_tx* self, int fildes, int cmd,
         case F_GETOWN: {
 
             /* Read-lock FIFO */
-            fifo_try_rdlock_state(self->fifo, &self->rwstate, error);
+            fifo_tx_try_rdlock_field(self, FIFO_FIELD_STATE, error);
             if (picotm_error_is_set(error)) {
                 return -1;
             }
@@ -419,7 +472,7 @@ fcntl_exec_2pl(struct fifo_tx* self, int fildes, int cmd,
         case F_GETLK: {
 
             /* Read-lock FIFO */
-            fifo_try_rdlock_state(self->fifo, &self->rwstate, error);
+            fifo_tx_try_rdlock_field(self, FIFO_FIELD_STATE, error);
             if (picotm_error_is_set(error)) {
                 return -1;
             }
@@ -590,7 +643,7 @@ write_exec_2pl(struct fifo_tx* self, int fildes, const void* buf,
                size_t nbyte, int* cookie, struct picotm_error* error)
 {
     /* Write-lock FIFO, because we change the file position */
-    fifo_try_wrlock_state(self->fifo, &self->rwstate, error);
+    fifo_tx_try_wrlock_field(self, FIFO_FIELD_STATE, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
