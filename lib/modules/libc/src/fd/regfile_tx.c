@@ -21,6 +21,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <picotm/picotm-error.h>
+#include <picotm/picotm-lib-array.h>
 #include <picotm/picotm-lib-ptr.h>
 #include <picotm/picotm-lib-tab.h>
 #include <stdlib.h>
@@ -32,7 +33,6 @@
 #include "ioop.h"
 #include "iooptab.h"
 #include "range.h"
-#include "regfile.h"
 #include "region.h"
 #include "regiontab.h"
 #include "seekop.h"
@@ -54,6 +54,57 @@ regfile_tx_2pl_release_locks(struct regfile_tx* self)
                               region->nbyte,
                               &self->rwcountermap);
         ++region;
+    }
+}
+
+static void
+regfile_tx_try_rdlock_field(struct regfile_tx* self, enum regfile_field field,
+                            struct picotm_error* error)
+{
+    assert(self);
+
+    regfile_try_rdlock_field(self->regfile, field, self->rwstate + field,
+                             error);
+}
+
+static void
+regfile_tx_try_wrlock_field(struct regfile_tx* self, enum regfile_field field,
+                            struct picotm_error* error)
+{
+    assert(self);
+
+    regfile_try_wrlock_field(self->regfile, field, self->rwstate + field,
+                             error);
+}
+
+static void
+init_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end)
+{
+    while (beg < end) {
+        picotm_rwstate_init(beg);
+        ++beg;
+    }
+}
+
+static void
+uninit_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end)
+{
+    while (beg < end) {
+        picotm_rwstate_uninit(beg);
+        ++beg;
+    }
+}
+
+static void
+unlock_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end,
+                struct regfile* regfile)
+{
+    enum regfile_field field = 0;
+
+    while (beg < end) {
+        regfile_unlock_field(regfile, field, beg);
+        ++field;
+        ++beg;
     }
 }
 
@@ -116,9 +167,8 @@ regfile_tx_init(struct regfile_tx* self)
     self->size = 0;
     self->cc_mode = PICOTM_LIBC_CC_MODE_NOUNDO;
 
-    /* PLP */
-
-    picotm_rwstate_init(&self->rwstate);
+    init_rwstates(picotm_arraybeg(self->rwstate),
+                  picotm_arrayend(self->rwstate));
 
     rwcountermap_init(&self->rwcountermap);
 
@@ -140,6 +190,9 @@ regfile_tx_uninit(struct regfile_tx* self)
     iooptab_clear(&self->wrtab, &self->wrtablen);
     iooptab_clear(&self->rdtab, &self->rdtablen);
     free(self->wrbuf);
+
+    uninit_rwstates(picotm_arraybeg(self->rwstate),
+                    picotm_arrayend(self->rwstate));
 }
 
 /*
@@ -206,8 +259,10 @@ update_cc_2pl(struct regfile_tx* self, struct picotm_error* error)
     /* release record locks */
     regfile_tx_2pl_release_locks(self);
 
-    /* release lock on file */
-    regfile_unlock_state(self->regfile, &self->rwstate);
+    /* release reader/writer locks on file state */
+    unlock_rwstates(picotm_arraybeg(self->rwstate),
+                    picotm_arrayend(self->rwstate),
+                    self->regfile);
 }
 
 void
@@ -244,8 +299,10 @@ clear_cc_2pl(struct regfile_tx* self, struct picotm_error* error)
 
     regfile_tx_2pl_release_locks(self);
 
-    /* release lock on file */
-    regfile_unlock_state(self->regfile, &self->rwstate);
+    /* release reader/writer locks on file state */
+    unlock_rwstates(picotm_arraybeg(self->rwstate),
+                    picotm_arrayend(self->rwstate),
+                    self->regfile);
 }
 
 void
@@ -295,7 +352,6 @@ regfile_tx_ref_or_set_up(struct regfile_tx* self, struct regfile* regfile,
     self->wrtablen = 0;
     self->wrbuflen = 0;
 
-    picotm_rwstate_set_status(&self->rwstate, PICOTM_RWSTATE_UNLOCKED);
     self->locktablen = 0;
 }
 
@@ -500,7 +556,7 @@ fcntl_exec_2pl(struct regfile_tx* self, int fildes, int cmd,
         case F_GETOWN: {
 
             /* Read-lock open file description */
-            regfile_try_rdlock_state(self->regfile, &self->rwstate, error);
+            regfile_tx_try_rdlock_field(self, REGFILE_FIELD_STATE, error);
             if (picotm_error_is_set(error)) {
                 return -1;
             }
@@ -516,7 +572,7 @@ fcntl_exec_2pl(struct regfile_tx* self, int fildes, int cmd,
         case F_GETLK: {
 
             /* Read-lock open file description */
-            regfile_try_rdlock_state(self->regfile, &self->rwstate, error);
+            regfile_tx_try_rdlock_field(self, REGFILE_FIELD_STATE, error);
             if (picotm_error_is_set(error)) {
                 return -1;
             }
@@ -712,7 +768,7 @@ lseek_exec_2pl(struct regfile_tx* self, int fildes, off_t offset,
                int whence, int* cookie, struct picotm_error* error)
 {
     /* Read-lock open file description */
-    regfile_try_rdlock_state(self->regfile, &self->rwstate, error);
+    regfile_tx_try_rdlock_field(self, REGFILE_FIELD_STATE, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -723,7 +779,7 @@ lseek_exec_2pl(struct regfile_tx* self, int fildes, off_t offset,
 	}
 
     /* Write-lock open file description to change position */
-    regfile_try_wrlock_state(self->regfile, &self->rwstate, error);
+    regfile_tx_try_wrlock_field(self, REGFILE_FIELD_STATE, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -1225,7 +1281,7 @@ read_exec_2pl(struct regfile_tx* self, int fildes, void* buf, size_t nbyte,
     assert(self);
 
     /* write-lock open file description, because we change the file position */
-    regfile_try_wrlock_state(self->regfile, &self->rwstate, error);
+    regfile_tx_try_wrlock_field(self, REGFILE_FIELD_STATE, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -1371,7 +1427,7 @@ write_exec_2pl(struct regfile_tx* self, int fildes, const void* buf,
     if (__builtin_expect(!!cookie, 1)) {
 
         /* write-lock open file description, because we change the file position */
-        regfile_try_wrlock_state(self->regfile, &self->rwstate, error);
+        regfile_tx_try_wrlock_field(self, REGFILE_FIELD_STATE, error);
         if (picotm_error_is_set(error)) {
             return -1;
         }

@@ -25,6 +25,7 @@
 #include <sys/types.h>
 #include "ofd_tx.h"
 #include "picotm/picotm-libc.h"
+#include "regfile.h"
 #include "rwcountermap.h"
 
 /**
@@ -34,8 +35,6 @@
  * \file
  * \endcond
  */
-
-struct regfile;
 
 union fcntl_arg;
 
@@ -81,8 +80,8 @@ struct regfile_tx {
     /** Size of regular files */
     off_t size;
 
-    /** State of the local lock */
-    struct picotm_rwstate rwstate;
+    /** State of the local reader/writer locks. */
+    struct picotm_rwstate rwstate[NUMBER_OF_REGFILE_FIELDS];
 
     /** States of the local region locks */
     struct rwcountermap rwcountermap;

@@ -23,6 +23,7 @@
 #include <picotm/picotm-lib-rwstate.h>
 #include <sys/queue.h>
 #include <sys/types.h>
+#include "fifo.h"
 #include "ofd_tx.h"
 #include "picotm/picotm-libc.h"
 
@@ -72,8 +73,8 @@ struct fifo_tx {
     /** CC mode of domain */
     enum picotm_libc_cc_mode cc_mode;
 
-    /** State of the local lock */
-    struct picotm_rwstate rwstate;
+    /** State of the local reader/writer locks */
+    struct picotm_rwstate rwstate[NUMBER_OF_FIFO_FIELDS];
 };
 
 struct fifo_tx*

@@ -23,6 +23,7 @@
 #include <picotm/picotm-lib-rwstate.h>
 #include <sys/queue.h>
 #include <sys/types.h>
+#include "chrdev.h"
 #include "ofd_tx.h"
 #include "picotm/picotm-libc.h"
 
@@ -34,7 +35,6 @@
  * \endcond
  */
 
-struct chrdev;
 struct picotm_error;
 
 union fcntl_arg;
@@ -72,8 +72,8 @@ struct chrdev_tx {
     /** Concurrency-control mode */
     enum picotm_libc_cc_mode cc_mode;
 
-    /** State of the local lock */
-    struct picotm_rwstate rwstate;
+    /** State of the local reader/writer locks */
+    struct picotm_rwstate rwstate[NUMBER_OF_CHRDEV_FIELDS];
 };
 
 struct chrdev_tx*

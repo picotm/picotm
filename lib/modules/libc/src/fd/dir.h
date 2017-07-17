@@ -39,6 +39,14 @@
 struct picotm_rwstate;
 
 /**
+ * Enumerates fields of `struct dir`.
+ */
+enum dir_field {
+    DIR_FIELD_STATE,
+    NUMBER_OF_DIR_FIELDS
+};
+
+/**
  * Represents a directory's open file description.
  */
 struct dir {
@@ -55,8 +63,8 @@ struct dir {
     /** Concurrency-control mode for the directory. */
     enum picotm_libc_cc_mode cc_mode;
 
-    /** Reader/writer state lock. */
-    struct picotm_rwlock rwlock;
+    /** Reader/writer state locks. */
+    struct picotm_rwlock rwlock[NUMBER_OF_DIR_FIELDS];
 };
 
 /**
@@ -136,27 +144,33 @@ dir_get_cc_mode(struct dir* self);
 /**
  * \brief Tries to acquire a reader lock on a directory.
  * \param       self        The dir instance.
+ * \param       field       The reader/writer lock's field.
  * \param       rwstate     The transaction's reader/writer state.
  * \param[out]  error       Returns an error ot the caller.
  */
 void
-dir_try_rdlock_state(struct dir* self, struct picotm_rwstate* rwstate,
+dir_try_rdlock_field(struct dir* self, enum dir_field field,
+                     struct picotm_rwstate* rwstate,
                      struct picotm_error* error);
 
 /**
  * \brief Tries to acquire a writer lock on a directory.
  * \param       self        The dir instance.
+ * \param       field       The reader/writer lock's field.
  * \param       rwstate     The transaction's reader/writer state.
  * \param[out]  error       Returns an error ot the caller.
  */
 void
-dir_try_wrlock_state(struct dir* self, struct picotm_rwstate* rwstate,
+dir_try_wrlock_field(struct dir* self, enum dir_field field,
+                     struct picotm_rwstate* rwstate,
                      struct picotm_error* error);
 
 /**
  * \brief Releases a lock on a directory.
  * \param   self    The dir instance.
+ * \param   field   The reader/writer lock's field.
  * \param   rwstate The transaction's reader/writer state.
  */
 void
-dir_unlock_state(struct dir* self, struct picotm_rwstate* rwstate);
+dir_unlock_field(struct dir* self, enum dir_field field,
+                 struct picotm_rwstate* rwstate);

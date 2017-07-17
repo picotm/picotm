@@ -21,6 +21,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <picotm/picotm-error.h>
+#include <picotm/picotm-lib-array.h>
 #include <picotm/picotm-lib-rwstate.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -40,6 +41,24 @@ reccount(size_t len)
     return 1 + len/RECSIZE;
 }
 
+static void
+init_rwlocks(struct picotm_rwlock* beg, const struct picotm_rwlock* end)
+{
+    while (beg < end) {
+        picotm_rwlock_init(beg);
+        ++beg;
+    }
+}
+
+static void
+uninit_rwlocks(struct picotm_rwlock* beg, const struct picotm_rwlock* end)
+{
+    while (beg < end) {
+        picotm_rwlock_uninit(beg);
+        ++beg;
+    }
+}
+
 void
 regfile_init(struct regfile* self, struct picotm_error* error)
 {
@@ -55,7 +74,9 @@ regfile_init(struct regfile* self, struct picotm_error* error)
     ofdid_clear(&self->id);
 
     self->cc_mode = PICOTM_LIBC_CC_MODE_NOUNDO;
-    picotm_rwlock_init(&self->rwlock);
+
+    init_rwlocks(picotm_arraybeg(self->rwlock),
+                 picotm_arrayend(self->rwlock));
 
     self->offset = 0;
     rwlockmap_init(&self->rwlockmap);
@@ -66,7 +87,8 @@ regfile_uninit(struct regfile* self)
 {
     rwlockmap_uninit(&self->rwlockmap);
 
-    picotm_rwlock_uninit(&self->rwlock);
+    uninit_rwlocks(picotm_arraybeg(self->rwlock),
+                   picotm_arrayend(self->rwlock));
 
     pthread_rwlock_destroy(&self->lock);
 }
@@ -258,35 +280,38 @@ regfile_cmp_and_ref(struct regfile* self, const struct ofdid* id)
 }
 
 void
-regfile_try_rdlock_state(struct regfile* self, struct picotm_rwstate* rwstate,
+regfile_try_rdlock_field(struct regfile* self, enum regfile_field field,
+                         struct picotm_rwstate* rwstate,
                          struct picotm_error* error)
 {
     assert(self);
 
-    picotm_rwstate_try_rdlock(rwstate, &self->rwlock, error);
+    picotm_rwstate_try_rdlock(rwstate, self->rwlock + field, error);
     if (picotm_error_is_set(error)) {
         return;
     }
 }
 
 void
-regfile_try_wrlock_state(struct regfile* self, struct picotm_rwstate* rwstate,
+regfile_try_wrlock_field(struct regfile* self, enum regfile_field field,
+                         struct picotm_rwstate* rwstate,
                          struct picotm_error* error)
 {
     assert(self);
 
-    picotm_rwstate_try_wrlock(rwstate, &self->rwlock, error);
+    picotm_rwstate_try_wrlock(rwstate, self->rwlock + field, error);
     if (picotm_error_is_set(error)) {
         return;
     }
 }
 
 void
-regfile_unlock_state(struct regfile* self, struct picotm_rwstate* rwstate)
+regfile_unlock_field(struct regfile* self, enum regfile_field field,
+                     struct picotm_rwstate* rwstate)
 {
     assert(self);
 
-    picotm_rwstate_unlock(rwstate, &self->rwlock);
+    picotm_rwstate_unlock(rwstate, self->rwlock + field);
 }
 
 void

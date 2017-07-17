@@ -42,6 +42,14 @@ struct picotm_rwstate;
 struct rwcountermap;
 
 /**
+ * Enumerates fields of `struct regfile`.
+ */
+enum regfile_field {
+    REGFILE_FIELD_STATE,
+    NUMBER_OF_REGFILE_FIELDS
+};
+
+/**
  * Represents a file's open file description.
  */
 struct regfile {
@@ -58,8 +66,8 @@ struct regfile {
     /** Concurrency-control mode for the file. */
     enum picotm_libc_cc_mode cc_mode;
 
-    /** Reader/writer state lock. */
-    struct picotm_rwlock  rwlock;
+    /** Reader/writer state locks. */
+    struct picotm_rwlock  rwlock[NUMBER_OF_REGFILE_FIELDS];
 
     /** \brief Current file offset. */
     off_t offset;
@@ -154,30 +162,36 @@ regfile_get_offset(struct regfile* self);
 /**
  * \brief Tries to acquire a reader lock on a file.
  * \param       self        The file instance.
+ * \param       field       The reader lock's field.
  * \param       rwstate     The transaction's reader/writer state.
  * \param[out]  error       Returns an error ot the caller.
  */
 void
-regfile_try_rdlock_state(struct regfile* self, struct picotm_rwstate* rwstate,
+regfile_try_rdlock_field(struct regfile* self, enum regfile_field field,
+                         struct picotm_rwstate* rwstate,
                          struct picotm_error* error);
 
 /**
  * \brief Tries to acquire a writer lock on a file.
  * \param       self        The file instance.
+ * \param       field       The writer lock's field.
  * \param       rwstate     The transaction's reader/writer state.
  * \param[out]  error       Returns an error ot the caller.
  */
 void
-regfile_try_wrlock_state(struct regfile* self, struct picotm_rwstate* rwstate,
+regfile_try_wrlock_field(struct regfile* self, enum regfile_field field,
+                         struct picotm_rwstate* rwstate,
                          struct picotm_error* error);
 
 /**
  * \brief Releases a lock on a file.
  * \param   self    The file instance.
+ * \param   field   The reader/writer lock's field.
  * \param   rwstate The transaction's reader/writer state.
  */
 void
-regfile_unlock_state(struct regfile* self, struct picotm_rwstate* rwstate);
+regfile_unlock_field(struct regfile* self, enum regfile_field field,
+                     struct picotm_rwstate* rwstate);
 
 /**
  * \brief Tries to acquire a reader lock on a file region.

@@ -39,6 +39,14 @@
 struct picotm_rwstate;
 
 /**
+ * Enumerates fields of `struct chrdev`.
+ */
+enum chrdev_field {
+    CHRDEV_FIELD_STATE,
+    NUMBER_OF_CHRDEV_FIELDS
+};
+
+/**
  * Represents a character device's open file description.
  */
 struct chrdev {
@@ -55,8 +63,8 @@ struct chrdev {
     /** Concurrency-control mode for the character device. */
     enum picotm_libc_cc_mode cc_mode;
 
-    /** Reader/writer state lock. */
-    struct picotm_rwlock rwlock;
+    /** Reader/writer state locks. */
+    struct picotm_rwlock rwlock[NUMBER_OF_CHRDEV_FIELDS];
 };
 
 /**
@@ -137,27 +145,33 @@ chrdev_get_cc_mode(struct chrdev* self);
 /**
  * \brief Tries to acquire a reader lock on a character device.
  * \param       self        The chrdev instance.
+ * \param       field       The reader lock's field.
  * \param       rwstate     The transaction's reader/writer state.
  * \param[out]  error       Returns an error ot the caller.
  */
 void
-chrdev_try_rdlock_state(struct chrdev* self, struct picotm_rwstate* rwstate,
+chrdev_try_rdlock_field(struct chrdev* self, enum chrdev_field field,
+                        struct picotm_rwstate* rwstate,
                         struct picotm_error* error);
 
 /**
  * \brief Tries to acquire a writer lock on a character device.
  * \param       self        The chrdev instance.
+ * \param       field       The writer lock's field.
  * \param       rwstate     The transaction's reader/writer state.
  * \param[out]  error       Returns an error ot the caller.
  */
 void
-chrdev_try_wrlock_state(struct chrdev* self, struct picotm_rwstate* rwstate,
+chrdev_try_wrlock_field(struct chrdev* self, enum chrdev_field field,
+                        struct picotm_rwstate* rwstate,
                         struct picotm_error* error);
 
 /**
  * \brief Releases a lock on a character device.
  * \param   self    The chrdev instance.
+ * \param   field   The reader/writer lock's field.
  * \param   rwstate The transaction's reader/writer state.
  */
 void
-chrdev_unlock_state(struct chrdev* self, struct picotm_rwstate* rwstate);
+chrdev_unlock_field(struct chrdev* self, enum chrdev_field field,
+                    struct picotm_rwstate* rwstate);

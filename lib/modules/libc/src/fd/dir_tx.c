@@ -22,12 +22,12 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <picotm/picotm-error.h>
+#include <picotm/picotm-lib-array.h>
 #include <picotm/picotm-lib-ptr.h>
 #include <picotm/picotm-lib-tab.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "dir.h"
 #include "fcntlop.h"
 #include "fcntloptab.h"
 
@@ -41,6 +41,15 @@ dir_tx_of_ofd_tx(struct ofd_tx* ofd_tx)
 }
 
 static void
+dir_tx_try_rdlock_field(struct dir_tx* self, enum dir_field field,
+                        struct picotm_error* error)
+{
+    assert(self);
+
+    dir_try_rdlock_field(self->dir, field, self->rwstate + field, error);
+}
+
+static void
 ref_ofd_tx(struct ofd_tx* ofd_tx)
 {
     dir_tx_ref(dir_tx_of_ofd_tx(ofd_tx));
@@ -50,6 +59,37 @@ static void
 unref_ofd_tx(struct ofd_tx* ofd_tx)
 {
     dir_tx_unref(dir_tx_of_ofd_tx(ofd_tx));
+}
+
+static void
+init_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end)
+{
+    while (beg < end) {
+        picotm_rwstate_init(beg);
+        ++beg;
+    }
+}
+
+static void
+uninit_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end)
+{
+    while (beg < end) {
+        picotm_rwstate_uninit(beg);
+        ++beg;
+    }
+}
+
+static void
+unlock_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end,
+                struct dir* dir)
+{
+    enum dir_field field = 0;
+
+    while (beg < end) {
+        dir_unlock_field(dir, field, beg);
+        ++field;
+        ++beg;
+    }
 }
 
 void
@@ -73,7 +113,8 @@ dir_tx_init(struct dir_tx* self)
 
     self->cc_mode = PICOTM_LIBC_CC_MODE_NOUNDO;
 
-    picotm_rwstate_init(&self->rwstate);
+    init_rwstates(picotm_arraybeg(self->rwstate),
+                  picotm_arrayend(self->rwstate));
 }
 
 void
@@ -82,6 +123,9 @@ dir_tx_uninit(struct dir_tx* self)
     assert(self);
 
     fcntloptab_clear(&self->fcntltab, &self->fcntltablen);
+
+    uninit_rwstates(picotm_arraybeg(self->rwstate),
+                    picotm_arrayend(self->rwstate));
 }
 
 /*
@@ -139,8 +183,10 @@ update_cc_2pl(struct dir_tx* self, struct picotm_error* error)
     assert(self);
     assert(self->cc_mode == PICOTM_LIBC_CC_MODE_2PL);
 
-    /* release lock on directory */
-    dir_unlock_state(self->dir, &self->rwstate);
+    /* release reader/writer locks on directory state */
+    unlock_rwstates(picotm_arraybeg(self->rwstate),
+                    picotm_arrayend(self->rwstate),
+                    self->dir);
 }
 
 void
@@ -174,7 +220,9 @@ clear_cc_2pl(struct dir_tx* self, struct picotm_error* error)
     assert(self->cc_mode == PICOTM_LIBC_CC_MODE_2PL);
 
     /* release lock on directory */
-    dir_unlock_state(self->dir, &self->rwstate);
+    unlock_rwstates(picotm_arraybeg(self->rwstate),
+                    picotm_arrayend(self->rwstate),
+                    self->dir);
 }
 
 void
@@ -217,8 +265,6 @@ dir_tx_ref_or_set_up(struct dir_tx* self, struct dir* dir,
     self->flags = 0;
 
     self->fcntltablen = 0;
-
-    picotm_rwstate_set_status(&self->rwstate, PICOTM_RWSTATE_UNLOCKED);
 }
 
 void
@@ -307,7 +353,7 @@ fcntl_exec_2pl(struct dir_tx* self, int fildes, int cmd,
         case F_GETOWN: {
 
             /* Read-lock directory */
-            dir_try_rdlock_state(self->dir, &self->rwstate, error);
+            dir_tx_try_rdlock_field(self, DIR_FIELD_STATE, error);
             if (picotm_error_is_set(error)) {
                 return -1;
             }
@@ -323,7 +369,7 @@ fcntl_exec_2pl(struct dir_tx* self, int fildes, int cmd,
         case F_GETLK: {
 
             /* Read-lock directory */
-            dir_try_rdlock_state(self->dir, &self->rwstate, error);
+            dir_tx_try_rdlock_field(self, DIR_FIELD_STATE, error);
             if (picotm_error_is_set(error)) {
                 return -1;
             }

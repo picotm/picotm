@@ -21,6 +21,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <picotm/picotm-error.h>
+#include <picotm/picotm-lib-array.h>
 #include <picotm/picotm-lib-ptr.h>
 #include <picotm/picotm-lib-tab.h>
 #include <stdlib.h>
@@ -30,7 +31,6 @@
 #include "fcntloptab.h"
 #include "ioop.h"
 #include "iooptab.h"
-#include "socket.h"
 
 struct socket_tx*
 socket_tx_of_ofd_tx(struct ofd_tx* ofd_tx)
@@ -51,6 +51,55 @@ static void
 unref_ofd_tx(struct ofd_tx* ofd_tx)
 {
     socket_tx_unref(socket_tx_of_ofd_tx(ofd_tx));
+}
+
+static void
+socket_tx_try_rdlock_field(struct socket_tx* self, enum socket_field field,
+                           struct picotm_error* error)
+{
+    assert(self);
+
+    socket_try_rdlock_field(self->socket, field, self->rwstate + field, error);
+}
+
+static void
+socket_tx_try_wrlock_field(struct socket_tx* self, enum socket_field field,
+                           struct picotm_error* error)
+{
+    assert(self);
+
+    socket_try_wrlock_field(self->socket, field, self->rwstate + field, error);
+}
+
+static void
+init_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end)
+{
+    while (beg < end) {
+        picotm_rwstate_init(beg);
+        ++beg;
+    }
+}
+
+static void
+uninit_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end)
+{
+    while (beg < end) {
+        picotm_rwstate_uninit(beg);
+        ++beg;
+    }
+}
+
+static void
+unlock_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end,
+                struct socket* socket)
+{
+    enum socket_field field = 0;
+
+    while (beg < end) {
+        socket_unlock_field(socket, field, beg);
+        ++field;
+        ++beg;
+    }
 }
 
 void
@@ -86,9 +135,8 @@ socket_tx_init(struct socket_tx* self)
 
     self->cc_mode = PICOTM_LIBC_CC_MODE_NOUNDO;
 
-    /* PLP */
-
-    picotm_rwstate_init(&self->rwstate);
+    init_rwstates(picotm_arraybeg(self->rwstate),
+                  picotm_arrayend(self->rwstate));
 }
 
 void
@@ -100,6 +148,9 @@ socket_tx_uninit(struct socket_tx* self)
     iooptab_clear(&self->wrtab, &self->wrtablen);
     iooptab_clear(&self->rdtab, &self->rdtablen);
     free(self->wrbuf);
+
+    uninit_rwstates(picotm_arraybeg(self->rwstate),
+                    picotm_arrayend(self->rwstate));
 }
 
 /*
@@ -157,8 +208,10 @@ update_cc_2pl(struct socket_tx* self, struct picotm_error* error)
     assert(self);
     assert(self->cc_mode == PICOTM_LIBC_CC_MODE_2PL);
 
-    /* release lock on socket */
-    socket_unlock_state(self->socket, &self->rwstate);
+    /* release reader/writer locks on socket state */
+    unlock_rwstates(picotm_arraybeg(self->rwstate),
+                    picotm_arrayend(self->rwstate),
+                    self->socket);
 }
 
 void
@@ -191,8 +244,10 @@ clear_cc_2pl(struct socket_tx* self, struct picotm_error* error)
     assert(self);
     assert(self->cc_mode == PICOTM_LIBC_CC_MODE_2PL);
 
-    /* release lock on socket */
-    socket_unlock_state(self->socket, &self->rwstate);
+    /* release reader/writer locks on socket state */
+    unlock_rwstates(picotm_arraybeg(self->rwstate),
+                    picotm_arrayend(self->rwstate),
+                    self->socket);
 }
 
 void
@@ -238,8 +293,6 @@ socket_tx_ref_or_set_up(struct socket_tx* self, struct socket* socket,
     self->rdtablen = 0;
     self->wrtablen = 0;
     self->wrbuflen = 0;
-
-    picotm_rwstate_set_status(&self->rwstate, PICOTM_RWSTATE_UNLOCKED);
 }
 
 void
@@ -580,7 +633,7 @@ fcntl_exec_2pl(struct socket_tx* self, int fildes, int cmd,
         case F_GETOWN: {
 
             /* Read-lock socket */
-            socket_try_rdlock_state(self->socket, &self->rwstate, error);
+            socket_tx_try_rdlock_field(self, SOCKET_FIELD_STATE, error);
             if (picotm_error_is_set(error)) {
                 return -1;
             }
@@ -596,7 +649,7 @@ fcntl_exec_2pl(struct socket_tx* self, int fildes, int cmd,
         case F_GETLK: {
 
             /* Read-lock open file description */
-            socket_try_rdlock_state(self->socket, &self->rwstate, error);
+            socket_tx_try_rdlock_field(self, SOCKET_FIELD_STATE, error);
             if (picotm_error_is_set(error)) {
                 return -1;
             }
@@ -959,7 +1012,7 @@ send_exec_2pl(struct socket_tx* self, int sockfd, const void* buf,
     }
 
     /* Write-lock socket */
-    socket_try_wrlock_state(self->socket, &self->rwstate, error);
+    socket_tx_try_wrlock_field(self, SOCKET_FIELD_STATE, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -1186,7 +1239,7 @@ write_exec_2pl(struct socket_tx* self, int fildes, const void* buf,
                size_t nbyte, int* cookie, struct picotm_error* error)
 {
     /* Write-lock socket */
-    socket_try_wrlock_state(self->socket, &self->rwstate, error);
+    socket_tx_try_wrlock_field(self, SOCKET_FIELD_STATE, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }

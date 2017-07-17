@@ -39,6 +39,14 @@
 struct picotm_rwstate;
 
 /**
+ * Enumerates fields of `struct fifo`.
+ */
+enum fifo_field {
+    FIFO_FIELD_STATE,
+    NUMBER_OF_FIFO_FIELDS
+};
+
+/**
  * Represents a FIFO's open file description.
  */
 struct fifo {
@@ -55,8 +63,8 @@ struct fifo {
     /** Concurrency-control mode for the FIFO. */
     enum picotm_libc_cc_mode cc_mode;
 
-    /** Reader/writer state lock. */
-    struct picotm_rwlock  rwlock;
+    /** Reader/writer state locks. */
+    struct picotm_rwlock  rwlock[NUMBER_OF_FIFO_FIELDS];
 };
 
 /**
@@ -136,27 +144,33 @@ fifo_get_cc_mode(struct fifo* self);
 /**
  * \brief Tries to acquire a reader lock on a FIFO.
  * \param       self        The FIFO instance.
+ * \param       field       The reader lock's field.
  * \param       rwstate     The transaction's reader/writer state.
  * \param[out]  error       Returns an error ot the caller.
  */
 void
-fifo_try_rdlock_state(struct fifo* self, struct picotm_rwstate* rwstate,
+fifo_try_rdlock_field(struct fifo* self, enum fifo_field field,
+                      struct picotm_rwstate* rwstate,
                       struct picotm_error* error);
 
 /**
  * \brief Tries to acquire a writer lock on a FIFO.
  * \param       self        The FIFO instance.
+ * \param       field       The writer lock's field.
  * \param       rwstate     The transaction's reader/writer state.
  * \param[out]  error       Returns an error ot the caller.
  */
 void
-fifo_try_wrlock_state(struct fifo* self, struct picotm_rwstate* rwstate,
+fifo_try_wrlock_field(struct fifo* self, enum fifo_field field,
+                      struct picotm_rwstate* rwstate,
                       struct picotm_error* error);
 
 /**
  * \brief Releases a lock on a character device.
  * \param   self    The FIFO instance.
+ * \param   field   The reader/writer lock's field.
  * \param   rwstate The transaction's reader/writer state.
  */
 void
-fifo_unlock_state(struct fifo* self, struct picotm_rwstate* rwstate);
+fifo_unlock_field(struct fifo* self, enum fifo_field field,
+                  struct picotm_rwstate* rwstate);
