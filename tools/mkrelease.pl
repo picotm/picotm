@@ -251,6 +251,92 @@ sub updateChangeLog {
 
 #########################################################################
 #                                                                       #
+#   releases.json                                                       #
+#                                                                       #
+#########################################################################
+
+# Updates the ChangeLog file
+#
+sub updateReleasesJson {
+
+    my $transform = sub {
+
+        sub StateString {
+            my ($new_major) = @_;
+            return 'production' if $new_major gt 0;
+            return 'beta'       if $new_major eq 0;
+            die;
+        }
+
+        sub ScopeString {
+            my ($release_type) = @_;
+            return 'major'  if $release_type eq 'major';
+            return 'minor'  if $release_type eq 'minor';
+            return 'bugfix' if $release_type eq 'micro';
+            die;
+        }
+
+        my ($srcfh, $srcfilename, $dstfh, $dstfilename, $release_type, $new_major, $new_minor, $new_micro) = @_;
+
+        my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = gmtime();
+        $year = 1900 + $year;
+
+        my @month = ('01', '02', '03', '04', '05', '06',
+                     '07', '08', '09', '10', '11', '12');
+        my @leadingzero = ('00',
+                           '01', '02', '03', '04', '05', '06',
+                           '07', '08', '09', '10', '11', '12',
+                           '13', '14', '15', '16', '17', '18',
+                           '19', '20', '21', '22', '23', '24',
+                           '25', '26', '27', '28', '29', '30',
+                           '31', '32', '33', '34', '35', '36',
+                           '37', '38', '39', '40', '41', '42',
+                           '43', '44', '45', '46', '47', '48',
+                           '49', '50', '51', '52', '53', '54',
+                           '55', '56', '57', '58', '59');
+
+        my $state = StateString($new_major);
+        my $scope = ScopeString($release_type);
+        my $download = "https://github.com/picotm/picotm/releases/download/v$new_major.$new_minor.$new_micro/picotm-$new_major.$new_minor.$new_micro.tar.gz";
+        my $published = "$year-$month[$mon]-$leadingzero[$mday]" .
+                        "T$leadingzero[$hour]:$leadingzero[$min]:$leadingzero[$sec]+00:00";
+
+        # Create out-commented header for new release
+        print $dstfh "/*\n" .
+                     "/*  1) Move this block to the first entry in the 'releases' array.\n" .
+                     "/*  2) Update 'changes' field.\n" .
+                     "/*  3) Remove comment lines.\n" .
+                     "/*\n" .
+                     "        {\n" .
+                     "            \"version\": \"$new_major.$new_minor.$new_micro\",\n" .
+                     "            \"state\": \"$state\",\n" .
+                     "            \"scope\": \"$scope\",\n" .
+                     "            \"changes\": \"\",\n" .
+                     "            \"download\": \"$download\",\n" .
+                     "            \"published\": \"$published\"\n" .
+                     "        },\n" .
+                     "*/\n";
+
+        # Copy existing change-log entries
+        while (<$srcfh>) {
+            print $dstfh $_;
+        }
+
+        # We have to flush buffers before opening the editor.
+        $dstfh->flush();
+
+        # Open text editor for user to update ChangeLog file.
+        system("\$EDITOR $dstfilename") == 0 or die;
+    };
+
+    my ($filename, $release_type, $new_major, $new_minor, $new_micro) = @_;
+
+    transformFile($transform, $filename, $release_type, $new_major, $new_minor, $new_micro);
+}
+
+
+#########################################################################
+#                                                                       #
 #   git                                                                 #
 #                                                                       #
 #########################################################################
@@ -460,6 +546,8 @@ my $new_package_string = "$package $new_major.$new_minor.$new_micro";
 
 updateChangeLog('lib/ChangeLog', $package, $new_major, $new_minor, $new_micro);
 updateChangeLog('tests/ChangeLog', "$package-tests", $new_major, $new_minor, $new_micro);
+
+updateReleasesJson('releases.json', $release_type, $new_major, $new_minor, $new_micro);
 
 updateConfigureAc('lib/configure.ac', $new_major, $new_minor, $new_micro);
 updateConfigureAc('tests/configure.ac', $new_major, $new_minor, $new_micro);
