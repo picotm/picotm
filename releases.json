@@ -1,0 +1,34 @@
+{
+    "name": "picotm",
+    "title": "picotm",
+    "description": "A system-level transaction manager",
+    "homepage": "http://picotm.org",
+    "license": "MITL",
+    "tags": "c, concurrency, development, distributedsystems, embedded, errorhandling, failsafe, framework, linux, lockless, manufacturing, multicore, multithreading, softwaretransactionalmemory, transactions",
+    "releases": [
+        {
+            "version": "0.3.0",
+            "state": "beta",
+            "scope": "minor",
+            "changes": "Module library for tables and arrays; Fixes bug in tranasctional close(); MIT license.",
+            "download": "https://github.com/picotm/picotm/releases/download/v0.3.0/picotm-0.3.0.tar.gz",
+            "published": "2017-06-27T10:00:00+02:00"
+        },
+        {
+            "version": "0.2.0",
+            "state": "beta",
+            "scope": "minor",
+            "changes": "Improved documentation; Detailed error reporting; Cleanups.",
+            "download": "https://github.com/picotm/picotm/releases/download/v0.2.0/picotm-0.2.0.tar.gz",
+            "published": "2017-05-31T13:45:00+02:00"
+        },
+        {
+            "version": "0.1.0",
+            "state": "beta",
+            "scope": "minor",
+            "changes": "Initial release with STM, transactional C Standard Library, I/O, error handling; MPL v2.",
+            "download": "https://github.com/picotm/picotm/releases/download/v0.1.0/picotm-0.1.0.tar.gz",
+            "published": "2017-04-19T19:05:00+02:00"
+        }
+    ]
+}
