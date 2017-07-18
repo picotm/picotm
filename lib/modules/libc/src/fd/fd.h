@@ -48,6 +48,14 @@ enum fd_state
     FD_ST_CLOSING /** \brief File descriptor has been closed by transaction; other users need to abort */
 };
 
+/**
+ * Enumerates fields of `struct fd`.
+ */
+enum fd_field {
+    FD_FIELD_STATE,
+    NUMBER_OF_FD_FIELDS
+};
+
 struct fd
 {
     struct picotm_shared_ref16 ref;
@@ -57,8 +65,8 @@ struct fd
     int fildes;
     enum fd_state state;
 
-    /* file-descriptor lock */
-    struct picotm_rwlock rwlock;
+    /** File-descriptor reader/writer locks */
+    struct picotm_rwlock rwlock[NUMBER_OF_FD_FIELDS];
 };
 
 /** \brief Init global file-descriptor state*/
@@ -73,32 +81,38 @@ fd_uninit(struct fd *fd);
  * Tries to acquires a reader lock on a file descriptor.
  *
  * \param       fd      The file-descriptor structure
+ * \param       field   The reader lock's field.
  * \param       rwstate The transaction's reader-writer state.
  * \param[out]  error   Returns an error.
  */
 void
-fd_try_rdlock(struct fd *fd, struct picotm_rwstate* state,
-              struct picotm_error* error);
+fd_try_rdlock_field(struct fd *fd, enum fd_field field,
+                    struct picotm_rwstate* state,
+                    struct picotm_error* error);
 
 /**
  * Tries to acquires a writer lock on a file descriptor.
  *
  * \param       fd      The file-descriptor structure
+ * \param       field   The writer lock's field.
  * \param       rwstate The transaction's reader-writer state.
  * \param[out]  error   Returns an error.
  */
 void
-fd_try_wrlock(struct fd *fd, struct picotm_rwstate* state,
-              struct picotm_error* error);
+fd_try_wrlock_field(struct fd *fd, enum fd_field field,
+                    struct picotm_rwstate* state,
+                    struct picotm_error* error);
 
 /**
  * Releases a reader/writer lock.
  *
  * \param   fd      The file-descriptor structure
+ * \param   field   The reader/writer lock's field.
  * \param   rwstate The transaction's reader-writer state.
  */
 void
-fd_unlock(struct fd *fd, struct picotm_rwstate* state);
+fd_unlock_field(struct fd *fd, enum fd_field field,
+                struct picotm_rwstate* state);
 
 /** \brief Validates a file descriptor. */
 void
