@@ -21,6 +21,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <picotm/picotm-error.h>
+#include <picotm/picotm-lib-array.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,10 +29,58 @@
 #include "dir_tx.h"
 #include "fcntlop.h"
 #include "fcntloptab.h"
-#include "fd.h"
 #include "fifo_tx.h"
 #include "regfile_tx.h"
 #include "socket_tx.h"
+
+static void
+fd_tx_try_rdlock_field(struct fd_tx* self, enum fd_field field,
+                       struct picotm_error* error)
+{
+    assert(self);
+
+    fd_try_rdlock_field(self->fd, field, self->rwstate + field, error);
+}
+
+static void
+fd_tx_try_wrlock_field(struct fd_tx* self, enum fd_field field,
+                       struct picotm_error* error)
+{
+    assert(self);
+
+    fd_try_wrlock_field(self->fd, field, self->rwstate + field, error);
+}
+
+static void
+init_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end)
+{
+    while (beg < end) {
+        picotm_rwstate_init(beg);
+        ++beg;
+    }
+}
+
+static void
+uninit_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end)
+{
+    while (beg < end) {
+        picotm_rwstate_uninit(beg);
+        ++beg;
+    }
+}
+
+static void
+unlock_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end,
+                struct fd* fd)
+{
+    enum fd_field field = 0;
+
+    while (beg < end) {
+        fd_unlock_field(fd, field, beg);
+        ++field;
+        ++beg;
+    }
+}
 
 void
 fd_tx_init(struct fd_tx* self)
@@ -47,7 +96,8 @@ fd_tx_init(struct fd_tx* self)
 	self->flags = 0;
 	self->cc_mode = PICOTM_LIBC_CC_MODE_2PL;
 
-    picotm_rwstate_init(&self->rwstate);
+    init_rwstates(picotm_arraybeg(self->rwstate),
+                  picotm_arrayend(self->rwstate));
 
     self->fcntltab = NULL;
     self->fcntltablen = 0;
@@ -57,6 +107,9 @@ void
 fd_tx_uninit(struct fd_tx* self)
 {
     assert(self);
+
+    uninit_rwstates(picotm_arraybeg(self->rwstate),
+                    picotm_arrayend(self->rwstate));
 }
 
 void
@@ -175,8 +228,10 @@ fd_tx_update_cc(struct fd_tx* self, struct picotm_error* error)
     assert(self);
     assert(fd_tx_holds_ref(self));
 
-    /* release file-descriptor lock */
-    fd_unlock(self->fd, &self->rwstate);
+    /* release reader/writer locks on file-descriptor state */
+    unlock_rwstates(picotm_arraybeg(self->rwstate),
+                    picotm_arrayend(self->rwstate),
+                    self->fd);
 }
 
 void
@@ -185,8 +240,10 @@ fd_tx_clear_cc(struct fd_tx* self, struct picotm_error* error)
     assert(self);
     assert(fd_tx_holds_ref(self));
 
-    /* release file-descriptor lock */
-    fd_unlock(self->fd, &self->rwstate);
+    /* release reader/writer locks on file-descriptor state */
+    unlock_rwstates(picotm_arraybeg(self->rwstate),
+                    picotm_arrayend(self->rwstate),
+                    self->fd);
 }
 
 /*
@@ -330,7 +387,7 @@ close_exec_noundo(struct fd_tx* self, int fildes, int* cookie,
                   struct picotm_error* error)
 {
     /* acquire writer lock on file descriptor */
-    fd_try_wrlock(self->fd, &self->rwstate, error);
+    fd_tx_try_wrlock_field(self, FD_FIELD_STATE, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -344,7 +401,7 @@ close_exec_ts(struct fd_tx* self, int fildes, int* cookie,
               struct picotm_error* error)
 {
     /* acquire writer lock on file descriptor */
-    fd_try_wrlock(self->fd, &self->rwstate, error);
+    fd_tx_try_wrlock_field(self, FD_FIELD_STATE, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -631,7 +688,7 @@ fd_tx_fcntl_exec(struct fd_tx* self, int fildes, int cmd,
     assert(self->fd);
 
     /* acquire reader lock on file descriptor */
-    fd_try_rdlock(self->fd, &self->rwstate, error);
+    fd_tx_try_rdlock_field(self, FD_FIELD_STATE, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }

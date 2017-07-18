@@ -26,6 +26,7 @@
 #include <stddef.h>
 #include <sys/queue.h>
 #include <sys/socket.h>
+#include "fd.h"
 #include "picotm/picotm-libc.h"
 
 /**
@@ -60,8 +61,8 @@ struct fd_tx {
 
 	unsigned long flags;
 
-    /** reader/writer state for file descriptor */
-    struct picotm_rwstate   rwstate;
+    /** Reader/writer state for file descriptor */
+    struct picotm_rwstate   rwstate[NUMBER_OF_FD_FIELDS];
 
     struct fcntlop* fcntltab;
     size_t          fcntltablen;

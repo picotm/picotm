@@ -22,6 +22,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <picotm/picotm-error.h>
+#include <picotm/picotm-lib-array.h>
 #include <picotm/picotm-lib-rwstate.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -44,6 +45,24 @@ unlock_fd(struct fd* fd)
     }
 }
 
+static void
+init_rwlocks(struct picotm_rwlock* beg, const struct picotm_rwlock* end)
+{
+    while (beg < end) {
+        picotm_rwlock_init(beg);
+        ++beg;
+    }
+}
+
+static void
+uninit_rwlocks(struct picotm_rwlock* beg, const struct picotm_rwlock* end)
+{
+    while (beg < end) {
+        picotm_rwlock_uninit(beg);
+        ++beg;
+    }
+}
+
 void
 fd_init(struct fd *fd, struct picotm_error* error)
 {
@@ -60,7 +79,8 @@ fd_init(struct fd *fd, struct picotm_error* error)
     fd->fildes = -1;
     fd->state = FD_ST_UNUSED;
 
-    picotm_rwlock_init(&fd->rwlock);
+    init_rwlocks(picotm_arraybeg(fd->rwlock),
+                 picotm_arrayend(fd->rwlock));
 }
 
 void
@@ -70,38 +90,44 @@ fd_uninit(struct fd *fd)
     if (err) {
         abort();
     }
+
+    uninit_rwlocks(picotm_arraybeg(fd->rwlock),
+                   picotm_arrayend(fd->rwlock));
 }
 
 void
-fd_try_rdlock(struct fd *fd, struct picotm_rwstate* rwstate,
-              struct picotm_error* error)
+fd_try_rdlock_field(struct fd *fd, enum fd_field field,
+                    struct picotm_rwstate* rwstate,
+                    struct picotm_error* error)
 {
     assert(fd);
 
-    picotm_rwstate_try_rdlock(rwstate, &fd->rwlock, error);
+    picotm_rwstate_try_rdlock(rwstate, fd->rwlock + field, error);
     if (picotm_error_is_set(error)) {
         return;
     }
 }
 
 void
-fd_try_wrlock(struct fd *fd, struct picotm_rwstate* rwstate,
-              struct picotm_error* error)
+fd_try_wrlock_field(struct fd *fd, enum fd_field field,
+                    struct picotm_rwstate* rwstate,
+                    struct picotm_error* error)
 {
     assert(fd);
 
-    picotm_rwstate_try_wrlock(rwstate, &fd->rwlock, error);
+    picotm_rwstate_try_wrlock(rwstate, fd->rwlock + field, error);
     if (picotm_error_is_set(error)) {
         return;
     }
 }
 
 void
-fd_unlock(struct fd *fd, struct picotm_rwstate* rwstate)
+fd_unlock_field(struct fd *fd, enum fd_field field,
+                struct picotm_rwstate* rwstate)
 {
     assert(fd);
 
-    picotm_rwstate_unlock(rwstate, &fd->rwlock);
+    picotm_rwstate_unlock(rwstate, fd->rwlock + field);
 }
 
 int
