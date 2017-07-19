@@ -22,6 +22,12 @@ libpicotm_c_la_SOURCES = allocator/allocator_tx.c \
                          allocator/allocator_tx.h \
                          allocator/module.c \
                          allocator/module.h \
+                         cwd/cwd.c \
+                         cwd/cwd.h \
+                         cwd/cwd_tx.c \
+                         cwd/cwd_tx.h \
+                         cwd/module.c \
+                         cwd/module.h \
                          errno.c \
                          error/error_tx.c \
                          error/error_tx.h \
