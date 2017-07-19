@@ -46,13 +46,14 @@ fcntl_tm(int fildes, int cmd, ...)
             case F_DUPFD:
                 /* Handle like dup() */
                 res = fd_module_dup_internal(fildes, false);
+                break;
             case F_DUPFD_CLOEXEC:
                 /* Handle like dup() with CLOEXEC */
                 res = fd_module_dup_internal(fildes, true);
+                break;
             case F_SETFD:
             case F_SETFL:
-            case F_SETOWN:
-            {
+            case F_SETOWN: {
                 union fcntl_arg val;
                 va_list arg;
                 va_start(arg, cmd);
@@ -60,11 +61,11 @@ fcntl_tm(int fildes, int cmd, ...)
                 va_end(arg);
 
                 res = fd_module_fcntl(fildes, cmd, &val);
+                break;
             }
             case F_GETLK:
             case F_SETLK:
-            case F_SETLKW:
-            {
+            case F_SETLKW: {
                 union fcntl_arg val;
                 struct flock* f;
                 va_list arg;
@@ -75,9 +76,11 @@ fcntl_tm(int fildes, int cmd, ...)
                 memcpy(&val.arg1, f, sizeof(val.arg1));
 
                 res = fd_module_fcntl(fildes, cmd, &val);
+                break;
             }
             default:
                 res = fd_module_fcntl(fildes, cmd, NULL);
+                break;
         }
         if (res < 0) {
             picotm_recover_from_errno(errno);
