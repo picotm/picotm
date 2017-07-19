@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include "chrdev_tx.h"
 #include "dir_tx.h"
 #include "fcntlop.h"
@@ -747,6 +748,40 @@ fd_tx_connect_undo(struct fd_tx* self, int sockfd, int cookie,
     connect_undo[ofd_tx_file_type(self->ofd_tx)](self->ofd_tx, sockfd,
                                                  cookie, error);
 }
+
+/*
+ * dup()
+ */
+
+int
+fd_tx_dup_exec(struct fd_tx* self, int fildes, bool cloexec,
+               bool isnoundo, int* cookie, struct picotm_error* error)
+{
+    static const int fcntl_cmd[] = {
+        F_DUPFD,
+        F_DUPFD_CLOEXEC
+    };
+
+    static const int start_fildes = 0;
+
+    int res = TEMP_FAILURE_RETRY(fcntl(fildes, fcntl_cmd[cloexec],
+                                       start_fildes));
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return -1;
+    }
+    return res;
+}
+
+void
+fd_tx_dup_apply(struct fd_tx* self, int fildes, int cookie,
+                struct picotm_error* error)
+{ }
+
+void
+fd_tx_dup_undo(struct fd_tx* self, int fildes, int cookie,
+               struct picotm_error* error)
+{ }
 
 /*
  * fcntl()

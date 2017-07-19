@@ -142,7 +142,7 @@ fildes_tx_exec_connect(struct fildes_tx* self, int sockfd,
 
 int
 fildes_tx_exec_dup(struct fildes_tx* self, int fildes, int cloexec,
-                   struct picotm_error* error);
+                   int isnoundo, struct picotm_error* error);
 
 int
 fildes_tx_exec_fchdir(struct fildes_tx* self, int fildes,
