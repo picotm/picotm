@@ -1116,48 +1116,47 @@ undo_connect(struct fildes_tx* self, int fildes, int cookie,
 
 int
 fildes_tx_exec_dup(struct fildes_tx* self, int fildes, int cloexec,
-                   struct picotm_error* error)
+                   int isnoundo, struct picotm_error* error)
 {
     assert(self);
 
-    /* Reference/validate fd_tx for fildes */
+    /* Update/create fd_tx */
 
-    get_fd_tx_with_ref(self, fildes, 0, error);
+    struct fd_tx* fd_tx = get_fd_tx_with_ref(self, fildes, 0, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
 
-    /* Duplicate fildes */
+    /* Execute dup() */
 
-    static const int dupcmd[] = {F_DUPFD, F_DUPFD_CLOEXEC};
+    int cookie = -1;
 
-    int res = TEMP_FAILURE_RETRY(fcntl(fildes, dupcmd[!!cloexec], 0));
-    if (res < 0) {
-        picotm_error_set_errno(error, errno);
+    int res = fd_tx_dup_exec(fd_tx, fildes, cloexec, isnoundo, &cookie,
+                             error);
+    if (picotm_error_is_set(error)) {
         return -1;
     }
-    int fildes2 = res;
+    int new_fildes = res;
 
-    /* Reference fd_tx for fildes2 */
+    /* Reference fd_tx for new_fildes */
 
-    get_fd_tx_with_ref(self, fildes2, 0, error);
+    get_fd_tx_with_ref(self, new_fildes, 0, error);
     if (picotm_error_is_set(error)) {
-        if (TEMP_FAILURE_RETRY(close(fildes2)) < 0) {
-            perror("close");
-        }
-        return -1;
+        goto err_get_fd_tx_with_ref;
     }
 
     /* Inject event */
-    append_cmd(self, CMD_DUP, fildes2, -1, error);
+    append_cmd(self, CMD_DUP, new_fildes, cookie, error);
     if (picotm_error_is_set(error)) {
-        if (TEMP_FAILURE_RETRY(close(fildes2)) < 0) {
-            perror("close");
-        }
-        return -1;
+        goto err_append_cmd;
     }
 
-    return fildes2;
+    return new_fildes;
+
+err_append_cmd:
+err_get_fd_tx_with_ref:
+    TEMP_FAILURE_RETRY(close(new_fildes));
+    return -1;
 }
 
 static void
@@ -1166,6 +1165,16 @@ apply_dup(struct fildes_tx* self, const struct fd_event* event,
 {
     assert(self);
     assert(event);
+
+    struct fd_tx* fd_tx = get_fd_tx(self, event->fildes);
+    assert(fd_tx);
+
+    if (event->cookie >= 0) {
+        fd_tx_dup_apply(fd_tx, event->fildes, event->cookie, error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
+    }
 }
 
 static void
@@ -1178,6 +1187,13 @@ undo_dup(struct fildes_tx* self, int fildes, int cookie,
 
     struct fd_tx* fd_tx = get_fd_tx(self, fildes);
     assert(fd_tx);
+
+    if (cookie >= 0) {
+        fd_tx_dup_undo(fd_tx, fildes, cookie, error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
+    }
 
     /* Mark file descriptor to be closed. This works, because dup() occured
        inside transaction. So no other transaction should have access to it. */

@@ -276,7 +276,8 @@ fd_module_dup_internal(int fildes, int cloexec)
     do {
         struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-        int res = fildes_tx_exec_dup(fildes_tx, fildes, cloexec, &error);
+        int res = fildes_tx_exec_dup(fildes_tx, fildes, cloexec,
+                                     picotm_is_irrevocable(), &error);
 
         if (!picotm_error_is_set(&error)) {
             return res;

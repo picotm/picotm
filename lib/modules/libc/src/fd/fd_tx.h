@@ -203,6 +203,23 @@ fd_tx_connect_undo(struct fd_tx* self, int sockfd, int cookie,
                    struct picotm_error* error);
 
 /*
+ * dup()
+ */
+
+int
+fd_tx_dup_exec(struct fd_tx* self, int fildes, bool cloexec,
+               bool isnoundo, int* cookie,
+               struct picotm_error* error);
+
+void
+fd_tx_dup_apply(struct fd_tx* self, int fildes, int cookie,
+                struct picotm_error* error);
+
+void
+fd_tx_dup_undo(struct fd_tx* self, int fildes, int cookie,
+               struct picotm_error* error);
+
+/*
  * fcntl()
  */
 
