@@ -199,17 +199,6 @@ fd_module_bind(int sockfd, const struct sockaddr* address,
 }
 
 int
-fd_module_chdir(const char* path)
-{
-    int fildes = fd_module_open(path, O_RDONLY, 0);
-    if (fildes < 0) {
-        return -1;
-    }
-
-    return fd_module_fchdir(fildes);
-}
-
-int
 fd_module_chmod(const char* path, mode_t mode)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
@@ -382,24 +371,6 @@ fd_module_fsync(int fildes)
 
         if (!picotm_error_is_set(&error)) {
             return res;
-        }
-        picotm_recover_from_error(&error);
-
-    } while (true);
-}
-
-char*
-fd_module_getcwd(char* buf, size_t size)
-{
-    struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
-
-    do {
-        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-        char* cwd = fildes_tx_exec_getcwd(fildes_tx, buf, size, &error);
-
-        if (!picotm_error_is_set(&error)) {
-            return cwd;
         }
         picotm_recover_from_error(&error);
 

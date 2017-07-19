@@ -41,9 +41,6 @@ fd_module_bind(int socket,
                socklen_t address_len);
 
 int
-fd_module_chdir(const char* path);
-
-int
 fd_module_chmod(const char* path, mode_t mode);
 
 int
@@ -74,9 +71,6 @@ fd_module_fstat(int fildes, struct stat* buf);
 
 int
 fd_module_fsync(int fildes);
-
-char*
-fd_module_getcwd(char* buf, size_t size);
 
 int
 fd_module_link(const char* path1, const char* path2);

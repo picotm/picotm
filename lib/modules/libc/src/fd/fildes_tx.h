@@ -88,11 +88,6 @@ struct fildes_tx {
     /** Active instances of |struct socket_tx| */
     struct socket_tx_slist  socket_tx_active_list;
 
-    /** File descriptor of initial working dir */
-    int inicwd;
-    /** File descriptor of current working dir */
-    int newcwd;
-
     struct fd_event* eventtab;
     size_t           eventtablen;
     size_t           eventtabsiz;
@@ -164,10 +159,6 @@ fildes_tx_exec_fstat(struct fildes_tx* self, int fildes, struct stat* buf,
 int
 fildes_tx_exec_fsync(struct fildes_tx* self, int fildes, int isnoundo,
                      struct picotm_error* error);
-
-char*
-fildes_tx_exec_getcwd(struct fildes_tx* self, char* buf, size_t size,
-                      struct picotm_error* error);
 
 int
 fildes_tx_exec_link(struct fildes_tx* self, const char* path1, const char* path2,

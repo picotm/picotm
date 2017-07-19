@@ -21,6 +21,7 @@
 #include <errno.h>
 #include <picotm/picotm.h>
 #include <picotm/picotm-module.h>
+#include "cwd/module.h"
 #include "error/module.h"
 #include "fd/module.h"
 
@@ -43,16 +44,15 @@ chdir_tm(const char* path)
 {
     error_module_save_errno();
 
-    int res;
-
     do {
-        res = fd_module_chdir(path);
-        if (res < 0) {
-            picotm_recover_from_errno(errno);
-        }
-    } while (res < 0);
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    return res;
+        int res = cwd_module_chdir(path, &error);
+        if (!picotm_error_is_set(&error)) {
+            return res;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 
 PICOTM_EXPORT
@@ -61,16 +61,15 @@ getcwd_tm(char* buf, size_t size)
 {
     error_module_save_errno();
 
-    char* str;
-
     do {
-        str = fd_module_getcwd(buf, size);
-        if (!str) {
-            picotm_recover_from_errno(errno);
-        }
-    } while (!str);
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    return str;
+        char* cwd = cwd_module_getcwd(buf, size, &error);
+        if (!picotm_error_is_set(&error)) {
+            return cwd;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 
 PICOTM_EXPORT
