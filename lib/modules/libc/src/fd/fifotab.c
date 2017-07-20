@@ -155,7 +155,7 @@ search_by_id(const struct ofdid* id, int fildes, struct picotm_error* error)
 }
 
 struct fifo*
-fifotab_ref_fildes(int fildes, bool want_new, struct picotm_error* error)
+fifotab_ref_fildes(int fildes, bool newly_created, struct picotm_error* error)
 {
     struct ofdid id;
     ofdid_init_from_fildes(&id, fildes, error);
@@ -169,7 +169,7 @@ fifotab_ref_fildes(int fildes, bool want_new, struct picotm_error* error)
      * a new element was not explicitly requested.
      */
 
-    if (!want_new) {
+    if (!newly_created) {
         rdlock_fifotab();
 
         fifo = find_by_id(&id);
@@ -184,7 +184,7 @@ fifotab_ref_fildes(int fildes, bool want_new, struct picotm_error* error)
      * create a new entry in the fifo table. */
     wrlock_fifotab();
 
-    if (!want_new) {
+    if (!newly_created) {
         /* Re-try find operation; maybe element was added meanwhile. */
         fifo = find_by_id(&id);
         if (fifo) {
