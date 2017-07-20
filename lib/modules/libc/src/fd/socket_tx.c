@@ -117,8 +117,6 @@ socket_tx_init(struct socket_tx* self)
 
     self->socket = NULL;
 
-    self->flags = 0;
-
     self->wrbuf = NULL;
     self->wrbuflen = 0;
     self->wrbufsiz = 0;
@@ -270,8 +268,7 @@ socket_tx_clear_cc(struct socket_tx* self, struct picotm_error* error)
 
 void
 socket_tx_ref_or_set_up(struct socket_tx* self, struct socket* socket,
-                        int fildes, unsigned long flags,
-                        struct picotm_error* error)
+                        int fildes, struct picotm_error* error)
 {
     assert(self);
     assert(socket);
@@ -288,7 +285,6 @@ socket_tx_ref_or_set_up(struct socket_tx* self, struct socket* socket,
 
     self->socket = socket;
     self->cc_mode = socket_get_cc_mode(socket);
-    self->flags = 0;
 
     self->fcntltablen = 0;
     self->rdtablen = 0;

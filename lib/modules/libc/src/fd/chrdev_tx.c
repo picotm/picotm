@@ -118,8 +118,6 @@ chrdev_tx_init(struct chrdev_tx* self)
 
     self->chrdev = NULL;
 
-    self->flags = 0;
-
     self->wrbuf = NULL;
     self->wrbuflen = 0;
     self->wrbufsiz = 0;
@@ -271,8 +269,7 @@ chrdev_tx_clear_cc(struct chrdev_tx* self, struct picotm_error* error)
 
 void
 chrdev_tx_ref_or_set_up(struct chrdev_tx* self, struct chrdev* chrdev,
-                        int fildes, unsigned long flags,
-                        struct picotm_error* error)
+                        int fildes, struct picotm_error* error)
 {
     assert(self);
     assert(chrdev);
@@ -289,7 +286,6 @@ chrdev_tx_ref_or_set_up(struct chrdev_tx* self, struct chrdev* chrdev,
 
     self->chrdev = chrdev;
     self->cc_mode = chrdev_get_cc_mode(chrdev);
-    self->flags = 0;
 
     self->fcntltablen = 0;
     self->rdtablen = 0;

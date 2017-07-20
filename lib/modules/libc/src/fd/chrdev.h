@@ -33,9 +33,6 @@
  * \endcond
  */
 
-#define CHRDEV_FL_WANTNEW  (1<<2)
-#define CHRDEV_FL_LAST_BIT (2)
-
 struct picotm_rwstate;
 
 /**

@@ -118,8 +118,6 @@ dir_tx_init(struct dir_tx* self)
 
     self->dir = NULL;
 
-    self->flags = 0;
-
     self->fchmodtab = NULL;
     self->fchmodtablen = 0;
 
@@ -259,9 +257,8 @@ dir_tx_clear_cc(struct dir_tx* self, struct picotm_error* error)
  */
 
 void
-dir_tx_ref_or_set_up(struct dir_tx* self, struct dir* dir,
-                        int fildes, unsigned long flags,
-                        struct picotm_error* error)
+dir_tx_ref_or_set_up(struct dir_tx* self, struct dir* dir, int fildes,
+                     struct picotm_error* error)
 {
     assert(self);
     assert(dir);
@@ -278,7 +275,6 @@ dir_tx_ref_or_set_up(struct dir_tx* self, struct dir* dir,
 
     self->dir = dir;
     self->cc_mode = dir_get_cc_mode(dir);
-    self->flags = 0;
 
     self->fchmodtablen = 0;
     self->fcntltablen = 0;

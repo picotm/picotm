@@ -33,9 +33,6 @@
  * \endcond
  */
 
-#define DIR_FL_WANTNEW  (1<<2)
-#define DIR_FL_LAST_BIT (2)
-
 struct picotm_rwstate;
 
 /**

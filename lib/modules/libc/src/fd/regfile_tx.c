@@ -145,8 +145,6 @@ regfile_tx_init(struct regfile_tx* self)
 
     self->regfile = NULL;
 
-    self->flags = 0;
-
     self->wrbuf = NULL;
     self->wrbuflen = 0;
     self->wrbufsiz = 0;
@@ -329,8 +327,7 @@ regfile_tx_clear_cc(struct regfile_tx* self, struct picotm_error* error)
 
 void
 regfile_tx_ref_or_set_up(struct regfile_tx* self, struct regfile* regfile,
-                         int fildes, unsigned long flags,
-                         struct picotm_error* error)
+                         int fildes, struct picotm_error* error)
 {
     assert(self);
     assert(regfile);
@@ -349,7 +346,6 @@ regfile_tx_ref_or_set_up(struct regfile_tx* self, struct regfile* regfile,
     self->cc_mode = regfile_get_cc_mode(regfile);
     self->offset = regfile_get_offset(regfile);
     self->size = 0;
-    self->flags = 0;
 
     self->fchmodtablen = 0;
     self->fcntltablen = 0;
