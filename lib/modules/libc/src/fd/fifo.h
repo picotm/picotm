@@ -33,9 +33,6 @@
  * \endcond
  */
 
-#define FIFO_FL_WANTNEW  (1<<2)
-#define FIFO_FL_LAST_BIT (2)
-
 struct picotm_rwstate;
 
 /**

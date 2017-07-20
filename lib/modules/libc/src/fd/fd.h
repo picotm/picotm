@@ -38,9 +38,6 @@ struct picotm_rwstate;
 
 union fcntl_arg;
 
-#define FD_FL_WANTNEW  (1<<2)
-#define FD_FL_LAST_BIT (2)
-
 enum fd_state
 {
     FD_ST_UNUSED = 0, /** \brief File descriptor is currenty not in use */

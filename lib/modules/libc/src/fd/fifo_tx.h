@@ -54,8 +54,6 @@ struct fifo_tx {
 
     struct fifo* fifo;
 
-    unsigned long flags;
-
     unsigned char* wrbuf;
     size_t         wrbuflen;
     size_t         wrbufsiz;
@@ -116,7 +114,7 @@ fifo_tx_clear_cc(struct fifo_tx* self, struct picotm_error* error);
  */
 void
 fifo_tx_ref_or_set_up(struct fifo_tx* self, struct fifo* fifo, int fildes,
-                     unsigned long flags, struct picotm_error* error);
+                      struct picotm_error* error);
 
 /**
  * Acquire a reference on the open file description

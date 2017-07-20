@@ -195,11 +195,10 @@ get_chrdev_tx(struct fildes_tx* self, int index)
 }
 
 static struct chrdev_tx*
-get_chrdev_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
+get_chrdev_tx_with_ref(struct fildes_tx* self, int fildes, bool newly_created,
                        struct picotm_error* error)
 {
-    struct chrdev* chrdev = chrdevtab_ref_fildes(fildes,
-                                                 !!(flags & CHRDEV_FL_WANTNEW),
+    struct chrdev* chrdev = chrdevtab_ref_fildes(fildes, newly_created,
                                                  error);
     if (picotm_error_is_set(error)) {
         return NULL;
@@ -216,7 +215,7 @@ get_chrdev_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
         goto unref;
     }
 
-    chrdev_tx_ref_or_set_up(chrdev_tx, chrdev, fildes, flags, error);
+    chrdev_tx_ref_or_set_up(chrdev_tx, chrdev, fildes, error);
     if (picotm_error_is_set(error)) {
         goto err_chrdev_tx_ref_or_set_up;
     }
@@ -248,11 +247,10 @@ get_fifo_tx(struct fildes_tx* self, int index)
 }
 
 static struct fifo_tx*
-get_fifo_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
+get_fifo_tx_with_ref(struct fildes_tx* self, int fildes, bool newly_created,
                      struct picotm_error* error)
 {
-    struct fifo* fifo = fifotab_ref_fildes(fildes,
-                                           !!(flags & FIFO_FL_WANTNEW),
+    struct fifo* fifo = fifotab_ref_fildes(fildes, newly_created,
                                            error);
     if (picotm_error_is_set(error)) {
         return NULL;
@@ -268,7 +266,7 @@ get_fifo_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
         goto unref;
     }
 
-    fifo_tx_ref_or_set_up(fifo_tx, fifo, fildes, flags, error);
+    fifo_tx_ref_or_set_up(fifo_tx, fifo, fildes, error);
     if (picotm_error_is_set(error)) {
         goto err_fifo_tx_ref_or_set_up;
     }
@@ -300,13 +298,11 @@ get_regfile_tx(struct fildes_tx* self, int index)
 }
 
 static struct regfile_tx*
-get_regfile_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
+get_regfile_tx_with_ref(struct fildes_tx* self, int fildes, bool newly_created,
                         struct picotm_error* error)
 {
-    struct regfile* regfile = regfiletab_ref_fildes(
-        fildes,
-        !!(flags & REGFILE_FL_WANTNEW),
-        error);
+    struct regfile* regfile = regfiletab_ref_fildes(fildes, newly_created,
+                                                    error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
@@ -322,7 +318,7 @@ get_regfile_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
         goto unref;
     }
 
-    regfile_tx_ref_or_set_up(regfile_tx, regfile, fildes, flags, error);
+    regfile_tx_ref_or_set_up(regfile_tx, regfile, fildes, error);
     if (picotm_error_is_set(error)) {
         goto err_regfile_tx_ref_or_set_up;
     }
@@ -354,11 +350,10 @@ get_dir_tx(struct fildes_tx* self, int index)
 }
 
 static struct dir_tx*
-get_dir_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
+get_dir_tx_with_ref(struct fildes_tx* self, int fildes, bool newly_created,
                     struct picotm_error* error)
 {
-    struct dir* dir = dirtab_ref_fildes(fildes,
-                                        !!(flags & DIR_FL_WANTNEW),
+    struct dir* dir = dirtab_ref_fildes(fildes, newly_created,
                                         error);
     if (picotm_error_is_set(error)) {
         return NULL;
@@ -374,7 +369,7 @@ get_dir_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
         goto unref;
     }
 
-    dir_tx_ref_or_set_up(dir_tx, dir, fildes, flags, error);
+    dir_tx_ref_or_set_up(dir_tx, dir, fildes, error);
     if (picotm_error_is_set(error)) {
         goto err_dir_tx_ref_or_set_up;
     }
@@ -406,11 +401,10 @@ get_socket_tx(struct fildes_tx* self, int index)
 }
 
 static struct socket_tx*
-get_socket_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
+get_socket_tx_with_ref(struct fildes_tx* self, int fildes, bool newly_created,
                        struct picotm_error* error)
 {
-    struct socket* socket = sockettab_ref_fildes(fildes,
-                                                 !!(flags & SOCKET_FL_WANTNEW),
+    struct socket* socket = sockettab_ref_fildes(fildes, newly_created,
                                                  error);
     if (picotm_error_is_set(error)) {
         return NULL;
@@ -427,7 +421,7 @@ get_socket_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
         goto unref;
     }
 
-    socket_tx_ref_or_set_up(socket_tx, socket, fildes, flags, error);
+    socket_tx_ref_or_set_up(socket_tx, socket, fildes, error);
     if (picotm_error_is_set(error)) {
         goto err_socket_tx_ref_or_set_up;
     }
@@ -528,7 +522,7 @@ get_fd_tx(struct fildes_tx* self, int fildes)
 }
 
 static struct fd_tx*
-get_fd_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
+get_fd_tx_with_ref(struct fildes_tx* self, int fildes, bool newly_created_ofd,
                    struct picotm_error* error)
 {
     struct fd_tx* fd_tx = get_fd_tx(self, fildes);
@@ -556,12 +550,14 @@ get_fd_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
         return NULL;
     }
 
-    struct ofd_tx* ofd_tx = get_ofd_tx_with_ref(self, fildes, flags, error);
+    struct ofd_tx* ofd_tx = get_ofd_tx_with_ref(self, fildes,
+                                                newly_created_ofd,
+                                                error);
     if (picotm_error_is_set(error)) {
         goto err_get_ofd_tx_with_ref;
     }
 
-    fd_tx_ref_or_set_up(fd_tx, fd, ofd_tx, flags, error);
+    fd_tx_ref_or_set_up(fd_tx, fd, ofd_tx, error);
     if (picotm_error_is_set(error)) {
         goto err_fd_tx_ref;
     }
@@ -1929,7 +1925,7 @@ fildes_tx_exec_open(struct fildes_tx* self, const char* path, int oflag,
 
     /* Update/create fd_tx */
 
-    get_fd_tx_with_ref(self, fildes, FD_FL_WANTNEW, error);
+    get_fd_tx_with_ref(self, fildes, true, error);
     if (picotm_error_is_set(error)) {
         goto err_get_fd_tx_with_ref;
     }

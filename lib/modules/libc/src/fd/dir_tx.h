@@ -54,8 +54,6 @@ struct dir_tx {
 
     struct dir* dir;
 
-    unsigned long flags;
-
     struct fchmodop* fchmodtab;
     size_t           fchmodtablen;
 
@@ -109,7 +107,7 @@ dir_tx_clear_cc(struct dir_tx* self, struct picotm_error* error);
  */
 void
 dir_tx_ref_or_set_up(struct dir_tx* self, struct dir* dir, int fildes,
-                        unsigned long flags, struct picotm_error* error);
+                     struct picotm_error* error);
 
 /**
  * Acquire a reference on the open file description

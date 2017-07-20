@@ -33,9 +33,6 @@
  * \endcond
  */
 
-#define SOCKET_FL_WANTNEW  (1<<2)
-#define SOCKET_FL_LAST_BIT (2)
-
 struct picotm_rwstate;
 
 /**

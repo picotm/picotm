@@ -94,7 +94,6 @@ fd_tx_init(struct fd_tx* self)
 
     self->fd = NULL;
     self->ofd_tx = NULL;
-	self->flags = 0;
 	self->cc_mode = PICOTM_LIBC_CC_MODE_2PL;
 
     init_rwstates(picotm_arraybeg(self->rwstate),
@@ -115,7 +114,7 @@ fd_tx_uninit(struct fd_tx* self)
 
 void
 fd_tx_ref_or_set_up(struct fd_tx* self, struct fd* fd, struct ofd_tx* ofd_tx,
-                    unsigned long flags, struct picotm_error* error)
+                    struct picotm_error* error)
 {
     assert(self);
     assert(fd);
@@ -134,7 +133,6 @@ fd_tx_ref_or_set_up(struct fd_tx* self, struct fd* fd, struct ofd_tx* ofd_tx,
 
     self->fd = fd;
     self->ofd_tx = ofd_tx;
-    self->flags = flags & FD_FL_WANTNEW ? FDTX_FL_LOCALSTATE : 0;
 
     return;
 
@@ -161,7 +159,6 @@ fd_tx_unref(struct fd_tx* self)
     ofd_tx_unref(self->ofd_tx);
     fd_unref(self->fd);
 
-    self->flags = 0;
     self->fd = NULL;
 }
 
@@ -214,11 +211,6 @@ fd_tx_validate(struct fd_tx* self, struct picotm_error* error)
 	/* file descriptor is still open; previously locked */
 	if (!fd_is_open_nl(self->fd)) {
         picotm_error_set_conflicting(error, NULL);
-		return;
-	}
-
-	/* fastpath: no dependencies to other domains */
-	if (!(self->flags&FDTX_FL_LOCALSTATE)) {
 		return;
 	}
 }
@@ -1043,8 +1035,6 @@ fd_tx_fcntl_exec(struct fd_tx* self, int fildes, int cmd,
             abort();
         }
     }
-
-	self->flags |= FDTX_FL_LOCALSTATE;
 
     return res;
 

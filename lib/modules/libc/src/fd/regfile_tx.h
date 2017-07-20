@@ -53,8 +53,6 @@ struct regfile_tx {
 
     struct regfile* regfile;
 
-    unsigned long flags;
-
     unsigned char* wrbuf;
     size_t         wrbuflen;
     size_t         wrbufsiz;
@@ -135,8 +133,7 @@ regfile_tx_clear_cc(struct regfile_tx* self, struct picotm_error* error);
  */
 void
 regfile_tx_ref_or_set_up(struct regfile_tx* self, struct regfile* regfile,
-                         int fildes, unsigned long flags,
-                         struct picotm_error* error);
+                         int fildes, struct picotm_error* error);
 
 /**
  * Acquire a reference on the open file description

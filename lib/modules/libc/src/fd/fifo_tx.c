@@ -118,8 +118,6 @@ fifo_tx_init(struct fifo_tx* self)
 
     self->fifo = NULL;
 
-    self->flags = 0;
-
     self->wrbuf = NULL;
     self->wrbuflen = 0;
     self->wrbufsiz = 0;
@@ -271,7 +269,7 @@ fifo_tx_clear_cc(struct fifo_tx* self, struct picotm_error* error)
 
 void
 fifo_tx_ref_or_set_up(struct fifo_tx* self, struct fifo* fifo, int fildes,
-                     unsigned long flags, struct picotm_error* error)
+                      struct picotm_error* error)
 {
     assert(self);
     assert(fifo);
@@ -288,7 +286,6 @@ fifo_tx_ref_or_set_up(struct fifo_tx* self, struct fifo* fifo, int fildes,
 
     self->fifo = fifo;
     self->cc_mode = fifo_get_cc_mode(fifo);
-    self->flags = 0;
 
     self->fcntltablen = 0;
     self->rdtablen = 0;

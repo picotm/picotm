@@ -60,8 +60,6 @@ struct fd_tx {
     struct ofd_tx* ofd_tx;
     enum picotm_libc_cc_mode cc_mode;
 
-	unsigned long flags;
-
     /** Reader/writer state for file descriptor */
     struct picotm_rwstate   rwstate[NUMBER_OF_FD_FIELDS];
 
@@ -98,7 +96,7 @@ fd_tx_clear_cc(struct fd_tx* self, struct picotm_error* error);
  */
 void
 fd_tx_ref_or_set_up(struct fd_tx* self, struct fd* fd, struct ofd_tx* ofd_tx,
-                    unsigned long flags, struct picotm_error* error);
+                    struct picotm_error* error);
 
 /**
  * Aquire a reference
