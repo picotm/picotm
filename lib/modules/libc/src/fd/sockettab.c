@@ -157,7 +157,8 @@ search_by_id(const struct ofdid* id, int fildes, struct picotm_error* error)
 }
 
 struct socket*
-sockettab_ref_fildes(int fildes, bool want_new, struct picotm_error* error)
+sockettab_ref_fildes(int fildes, bool newly_created,
+                     struct picotm_error* error)
 {
     struct ofdid id;
     ofdid_init_from_fildes(&id, fildes, error);
@@ -171,7 +172,7 @@ sockettab_ref_fildes(int fildes, bool want_new, struct picotm_error* error)
      * a new element was not explicitly requested.
      */
 
-    if (!want_new) {
+    if (!newly_created) {
         rdlock_sockettab();
 
         socket = find_by_id(&id);
@@ -186,7 +187,7 @@ sockettab_ref_fildes(int fildes, bool want_new, struct picotm_error* error)
      * create a new entry in the socket table. */
     wrlock_sockettab();
 
-    if (!want_new) {
+    if (!newly_created) {
         /* Re-try find operation; maybe element was added meanwhile. */
         socket = find_by_id(&id);
         if (socket) {

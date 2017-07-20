@@ -36,14 +36,15 @@ struct regfile;
 /**
  * Returns a reference to a regfile structure for the given file descriptor.
  *
- * \param       fildes      A file descriptor.
- * \param       want_new    True to request a new instance.
- * \param[out]  error       Returns an error.
+ * \param       fildes          A file descriptor.
+ * \param       newly_created   True if the open file description has been
+ *                              newly created.
+ * \param[out]  error           Returns an error.
  * \returns A referenced instance of `struct regfile` that refers to the file
  *          descriptor's open file description.
  */
 struct regfile*
-regfiletab_ref_fildes(int fildes, bool want_new, struct picotm_error* error);
+regfiletab_ref_fildes(int fildes, bool newly_created, struct picotm_error* error);
 
 /**
  * Returns the index of an regfile structure within the regfile table.

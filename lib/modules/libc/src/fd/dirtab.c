@@ -155,7 +155,7 @@ search_by_id(const struct ofdid* id, int fildes, struct picotm_error* error)
 }
 
 struct dir*
-dirtab_ref_fildes(int fildes, bool want_new, struct picotm_error* error)
+dirtab_ref_fildes(int fildes, bool newly_created, struct picotm_error* error)
 {
     struct ofdid id;
     ofdid_init_from_fildes(&id, fildes, error);
@@ -169,7 +169,7 @@ dirtab_ref_fildes(int fildes, bool want_new, struct picotm_error* error)
      * a new element was not explicitly requested.
      */
 
-    if (!want_new) {
+    if (!newly_created) {
         rdlock_dirtab();
 
         dir = find_by_id(&id);
@@ -184,7 +184,7 @@ dirtab_ref_fildes(int fildes, bool want_new, struct picotm_error* error)
      * create a new entry in the dir table. */
     wrlock_dirtab();
 
-    if (!want_new) {
+    if (!newly_created) {
         /* Re-try find operation; maybe element was added meanwhile. */
         dir = find_by_id(&id);
         if (dir) {
