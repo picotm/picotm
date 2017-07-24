@@ -30,56 +30,53 @@
  */
 
 /**
- * Holds transaction-local state for an open file description.
+ * Holds transaction-local state for a file.
  */
-struct ofd_tx {
+struct file_tx {
 
-    void (*ref)(struct ofd_tx*);
-    void (*unref)(struct ofd_tx*);
+    void (*ref)(struct file_tx*);
+    void (*unref)(struct file_tx*);
 
     enum picotm_libc_file_type type;
 };
 
 /**
- * Init transaction-local open-file-description state
- *
- * \param   self    An open file description.
+ * \brief Init transaction-local file state.
+ * \param   self    A file transaction.
  * \param   type    The open file description's file type.
  * \param   ref     A call-back function to acquire a reference.
  * \param   unref   A call-back function to release a reference.
  */
 void
-ofd_tx_init(struct ofd_tx* self, enum picotm_libc_file_type type,
-            void (*ref)(struct ofd_tx*),
-            void (*unref)(struct ofd_tx*));
+file_tx_init(struct file_tx* self, enum picotm_libc_file_type type,
+             void (*ref)(struct file_tx*),
+             void (*unref)(struct file_tx*));
 
 /**
- * Uninit state
+ * \brief Uninit transaction-local file state.
+ * \param   self    A file transaction.
  */
 void
-ofd_tx_uninit(struct ofd_tx* self);
+file_tx_uninit(struct file_tx* self);
 
 /**
- * Returns the open file description's file type.
- *
- * \param   self    An ofd structure.
+ * \brief Returns the file type.
+ * \param   self    A file transaction.
  * \returns The open file description's file type.
  */
 enum picotm_libc_file_type
-ofd_tx_file_type(const struct ofd_tx* self);
+file_tx_file_type(const struct file_tx* self);
 
 /**
- * Acquire a reference on an open file description.
- *
- * \param   self    An open file description.
+ * Acquire a reference on a file transaction.
+ * \param   self    A file transaction.
  */
 void
-ofd_tx_ref(struct ofd_tx* self);
+file_tx_ref(struct file_tx* self);
 
 /**
- * Release a reference on an open file description.
- *
- * \param   self    An open file description.
+ * Release a reference on a file transaction.
+ * \param   self    A file transaction.
  */
 void
-ofd_tx_unref(struct ofd_tx* self);
+file_tx_unref(struct file_tx* self);

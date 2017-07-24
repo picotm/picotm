@@ -24,7 +24,7 @@
 #include <sys/queue.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include "ofd_tx.h"
+#include "file_tx.h"
 #include "picotm/picotm-libc.h"
 #include "socket.h"
 
@@ -50,7 +50,7 @@ struct socket_tx {
 
     SLIST_ENTRY(socket_tx) active_list;
 
-    struct ofd_tx base;
+    struct file_tx base;
 
     struct socket* socket;
 
@@ -77,7 +77,7 @@ struct socket_tx {
 };
 
 struct socket_tx*
-socket_tx_of_ofd_tx(struct ofd_tx* ofd_tx);
+socket_tx_of_file_tx(struct file_tx* file_tx);
 
 /**
  * Init transaction-local open-file-description state

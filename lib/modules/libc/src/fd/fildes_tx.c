@@ -438,9 +438,9 @@ err_socket_tx_ref_or_set_up:
     return NULL;
 }
 
-static struct ofd_tx*
-get_ofd_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
-                    struct picotm_error* error)
+static struct file_tx*
+get_file_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
+                     struct picotm_error* error)
 {
     struct stat buf;
     int res = fstat(fildes, &buf);
@@ -550,14 +550,14 @@ get_fd_tx_with_ref(struct fildes_tx* self, int fildes, bool newly_created_ofd,
         return NULL;
     }
 
-    struct ofd_tx* ofd_tx = get_ofd_tx_with_ref(self, fildes,
-                                                newly_created_ofd,
-                                                error);
+    struct file_tx* file_tx = get_file_tx_with_ref(self, fildes,
+                                                   newly_created_ofd,
+                                                   error);
     if (picotm_error_is_set(error)) {
-        goto err_get_ofd_tx_with_ref;
+        goto err_get_file_tx_with_ref;
     }
 
-    fd_tx_ref_or_set_up(fd_tx, fd, ofd_tx, error);
+    fd_tx_ref_or_set_up(fd_tx, fd, file_tx, error);
     if (picotm_error_is_set(error)) {
         goto err_fd_tx_ref;
     }
@@ -569,8 +569,8 @@ get_fd_tx_with_ref(struct fildes_tx* self, int fildes, bool newly_created_ofd,
     return fd_tx;
 
 err_fd_tx_ref:
-    ofd_tx_unref(ofd_tx);
-err_get_ofd_tx_with_ref:
+    file_tx_unref(file_tx);
+err_get_file_tx_with_ref:
     fd_unref(fd);
     return NULL;
 }

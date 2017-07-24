@@ -35,12 +35,12 @@
 #include "fcntloptab.h"
 
 struct dir_tx*
-dir_tx_of_ofd_tx(struct ofd_tx* ofd_tx)
+dir_tx_of_file_tx(struct file_tx* file_tx)
 {
-    assert(ofd_tx);
-    assert(ofd_tx_file_type(ofd_tx) == PICOTM_LIBC_FILE_TYPE_DIR);
+    assert(file_tx);
+    assert(file_tx_file_type(file_tx) == PICOTM_LIBC_FILE_TYPE_DIR);
 
-    return picotm_containerof(ofd_tx, struct dir_tx, base);
+    return picotm_containerof(file_tx, struct dir_tx, base);
 }
 
 static void
@@ -62,15 +62,15 @@ dir_tx_try_wrlock_field(struct dir_tx* self, enum dir_field field,
 }
 
 static void
-ref_ofd_tx(struct ofd_tx* ofd_tx)
+ref_file_tx(struct file_tx* file_tx)
 {
-    dir_tx_ref(dir_tx_of_ofd_tx(ofd_tx));
+    dir_tx_ref(dir_tx_of_file_tx(file_tx));
 }
 
 static void
-unref_ofd_tx(struct ofd_tx* ofd_tx)
+unref_file_tx(struct file_tx* file_tx)
 {
-    dir_tx_unref(dir_tx_of_ofd_tx(ofd_tx));
+    dir_tx_unref(dir_tx_of_file_tx(file_tx));
 }
 
 static void
@@ -113,8 +113,8 @@ dir_tx_init(struct dir_tx* self)
 
     memset(&self->active_list, 0, sizeof(self->active_list));
 
-    ofd_tx_init(&self->base, PICOTM_LIBC_FILE_TYPE_DIR,
-                ref_ofd_tx, unref_ofd_tx);
+    file_tx_init(&self->base, PICOTM_LIBC_FILE_TYPE_DIR,
+                 ref_file_tx, unref_file_tx);
 
     self->dir = NULL;
 

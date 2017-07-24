@@ -23,7 +23,7 @@
 #include <picotm/picotm-lib-rwstate.h>
 #include <sys/queue.h>
 #include <sys/types.h>
-#include "ofd_tx.h"
+#include "file_tx.h"
 #include "picotm/picotm-libc.h"
 #include "regfile.h"
 #include "rwcountermap.h"
@@ -49,7 +49,7 @@ struct regfile_tx {
 
     SLIST_ENTRY(regfile_tx) active_list;
 
-    struct ofd_tx base;
+    struct file_tx base;
 
     struct regfile* regfile;
 
@@ -96,7 +96,7 @@ struct regfile_tx {
 };
 
 struct regfile_tx*
-regfile_tx_of_ofd_tx(struct ofd_tx* ofd_tx);
+regfile_tx_of_file_tx(struct file_tx* file_tx);
 
 /**
  * Init transaction-local open-file-description state

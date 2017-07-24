@@ -24,7 +24,7 @@
 #include <sys/queue.h>
 #include <sys/types.h>
 #include "fifo.h"
-#include "ofd_tx.h"
+#include "file_tx.h"
 #include "picotm/picotm-libc.h"
 
 /**
@@ -50,7 +50,7 @@ struct fifo_tx {
 
     SLIST_ENTRY(fifo_tx) active_list;
 
-    struct ofd_tx base;
+    struct file_tx base;
 
     struct fifo* fifo;
 
@@ -77,7 +77,7 @@ struct fifo_tx {
 };
 
 struct fifo_tx*
-fifo_tx_of_ofd_tx(struct ofd_tx* ofd_tx);
+fifo_tx_of_file_tx(struct file_tx* file_tx);
 
 /**
  * Init transaction-local open-file-description state

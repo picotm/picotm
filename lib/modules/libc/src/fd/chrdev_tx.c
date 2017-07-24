@@ -35,24 +35,24 @@
 #include "iooptab.h"
 
 struct chrdev_tx*
-chrdev_tx_of_ofd_tx(struct ofd_tx* ofd_tx)
+chrdev_tx_of_file_tx(struct file_tx* file_tx)
 {
-    assert(ofd_tx);
-    assert(ofd_tx_file_type(ofd_tx) == PICOTM_LIBC_FILE_TYPE_CHRDEV);
+    assert(file_tx);
+    assert(file_tx_file_type(file_tx) == PICOTM_LIBC_FILE_TYPE_CHRDEV);
 
-    return picotm_containerof(ofd_tx, struct chrdev_tx, base);
+    return picotm_containerof(file_tx, struct chrdev_tx, base);
 }
 
 static void
-ref_ofd_tx(struct ofd_tx* ofd_tx)
+ref_file_tx(struct file_tx* file_tx)
 {
-    chrdev_tx_ref(chrdev_tx_of_ofd_tx(ofd_tx));
+    chrdev_tx_ref(chrdev_tx_of_file_tx(file_tx));
 }
 
 static void
-unref_ofd_tx(struct ofd_tx* ofd_tx)
+unref_file_tx(struct file_tx* file_tx)
 {
-    chrdev_tx_unref(chrdev_tx_of_ofd_tx(ofd_tx));
+    chrdev_tx_unref(chrdev_tx_of_file_tx(file_tx));
 }
 
 static void
@@ -113,8 +113,8 @@ chrdev_tx_init(struct chrdev_tx* self)
 
     memset(&self->active_list, 0, sizeof(self->active_list));
 
-    ofd_tx_init(&self->base, PICOTM_LIBC_FILE_TYPE_CHRDEV,
-                ref_ofd_tx, unref_ofd_tx);
+    file_tx_init(&self->base, PICOTM_LIBC_FILE_TYPE_CHRDEV,
+                 ref_file_tx, unref_file_tx);
 
     self->chrdev = NULL;
 
