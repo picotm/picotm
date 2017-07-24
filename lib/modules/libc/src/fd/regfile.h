@@ -23,7 +23,7 @@
 #include <picotm/picotm-lib-rwlock.h>
 #include <pthread.h>
 #include <stdbool.h>
-#include "ofdid.h"
+#include "fileid.h"
 #include "picotm/picotm-libc.h"
 #include "rwlockmap.h"
 
@@ -60,7 +60,7 @@ struct regfile {
     struct picotm_shared_ref16 ref;
 
     /** The file's unique id. */
-    struct ofdid id;
+    struct file_id id;
 
     /** Concurrency-control mode for the file. */
     enum picotm_libc_cc_mode cc_mode;
@@ -117,7 +117,7 @@ regfile_ref(struct regfile* self);
  *          is less than, equal to, or greater than the given id.
  */
 int
-regfile_cmp_and_ref(struct regfile* self, const struct ofdid* id);
+regfile_cmp_and_ref(struct regfile* self, const struct file_id* id);
 
 /**
  * \brief Compares the file's id to an id and acquires a reference if both
@@ -131,7 +131,7 @@ regfile_cmp_and_ref(struct regfile* self, const struct ofdid* id);
  *          less than, equal to, or greater than the given id.
  */
 int
-regfile_cmp_and_ref_or_set_up(struct regfile* self, const struct ofdid* id,
+regfile_cmp_and_ref_or_set_up(struct regfile* self, const struct file_id* id,
                               int fildes, struct picotm_error* error);
 
 /**

@@ -71,7 +71,7 @@ regfile_init(struct regfile* self, struct picotm_error* error)
     }
 
     picotm_ref_init(&self->ref, 0);
-    ofdid_clear(&self->id);
+    file_id_clear(&self->id);
 
     self->cc_mode = PICOTM_LIBC_CC_MODE_NOUNDO;
 
@@ -166,9 +166,9 @@ ref_or_set_up(struct regfile* self, int fildes, struct picotm_error* error)
         return;
     }
 
-    ofdid_init_from_fildes(&self->id, fildes, error);
+    file_id_init_from_fildes(&self->id, fildes, error);
     if (picotm_error_is_set(error)) {
-        goto err_ofdid_init_from_fildes;
+        goto err_file_id_init_from_fildes;
     }
 
     self->cc_mode =
@@ -184,7 +184,7 @@ ref_or_set_up(struct regfile* self, int fildes, struct picotm_error* error)
     return;
 
 err_lseek:
-err_ofdid_init_from_fildes:
+err_file_id_init_from_fildes:
     regfile_unref(self);
 }
 
@@ -228,21 +228,21 @@ regfile_unref(struct regfile* self)
     /* We clear the id on releasing the final reference. This
      * instance remains initialized, but is available for later
      * use. */
-    ofdid_clear(&self->id);
+    file_id_clear(&self->id);
 
 unlock:
     regfile_unlock(self);
 }
 
 int
-regfile_cmp_and_ref_or_set_up(struct regfile* self, const struct ofdid* id,
+regfile_cmp_and_ref_or_set_up(struct regfile* self, const struct file_id* id,
                               int fildes, struct picotm_error* error)
 {
     assert(self);
 
     regfile_wrlock(self);
 
-    int cmp = ofdidcmp(&self->id, id);
+    int cmp = file_id_cmp(&self->id, id);
     if (cmp) {
         goto unlock; /* ids are not equal; only return */
     }
@@ -263,13 +263,13 @@ err_ref_or_set_up:
 }
 
 int
-regfile_cmp_and_ref(struct regfile* self, const struct ofdid* id)
+regfile_cmp_and_ref(struct regfile* self, const struct file_id* id)
 {
     assert(self);
 
     regfile_rdlock(self);
 
-    int cmp = ofdidcmp(&self->id, id);
+    int cmp = file_id_cmp(&self->id, id);
     if (!cmp) {
         regfile_ref(self);
     }

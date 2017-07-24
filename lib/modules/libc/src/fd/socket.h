@@ -22,7 +22,7 @@
 #include <picotm/picotm-lib-ref.h>
 #include <picotm/picotm-lib-rwlock.h>
 #include <pthread.h>
-#include "ofdid.h"
+#include "fileid.h"
 #include "picotm/picotm-libc.h"
 
 /**
@@ -56,7 +56,7 @@ struct socket {
     struct picotm_shared_ref16 ref;
 
     /** The socket's unique id. */
-    struct ofdid id;
+    struct file_id id;
 
     /** Concurrency-control mode for the socket. */
     enum picotm_libc_cc_mode cc_mode;
@@ -107,7 +107,7 @@ socket_ref(struct socket* self);
  *          is less than, equal to, or greater than the given id.
  */
 int
-socket_cmp_and_ref(struct socket* self, const struct ofdid* id);
+socket_cmp_and_ref(struct socket* self, const struct file_id* id);
 
 /**
  * \brief Compares the socket's id to an id and acquires a reference if both
@@ -121,7 +121,7 @@ socket_cmp_and_ref(struct socket* self, const struct ofdid* id);
  *          less than, equal to, or greater than the given id.
  */
 int
-socket_cmp_and_ref_or_set_up(struct socket* self, const struct ofdid* id,
+socket_cmp_and_ref_or_set_up(struct socket* self, const struct file_id* id,
                              int fildes, struct picotm_error* error);
 
 /**

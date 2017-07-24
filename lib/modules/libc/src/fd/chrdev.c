@@ -54,7 +54,7 @@ chrdev_init(struct chrdev* self, struct picotm_error* error)
     }
 
     picotm_ref_init(&self->ref, 0);
-    ofdid_clear(&self->id);
+    file_id_clear(&self->id);
 
     self->cc_mode = PICOTM_LIBC_CC_MODE_NOUNDO;
 
@@ -132,9 +132,9 @@ ref_or_set_up(struct chrdev* self, int fildes, struct picotm_error* error)
         return;
     }
 
-    ofdid_init_from_fildes(&self->id, fildes, error);
+    file_id_init_from_fildes(&self->id, fildes, error);
     if (picotm_error_is_set(error)) {
-        goto err_ofdid_init_from_fildes;
+        goto err_file_id_init_from_fildes;
     }
 
     self->cc_mode =
@@ -142,7 +142,7 @@ ref_or_set_up(struct chrdev* self, int fildes, struct picotm_error* error)
 
     return;
 
-err_ofdid_init_from_fildes:
+err_file_id_init_from_fildes:
     chrdev_unref(self);
 }
 
@@ -186,21 +186,21 @@ chrdev_unref(struct chrdev* self)
     /* We clear the id on releasing the final reference. This
      * instance remains initialized, but is available for later
      * use. */
-    ofdid_clear(&self->id);
+    file_id_clear(&self->id);
 
 unlock:
     chrdev_unlock(self);
 }
 
 int
-chrdev_cmp_and_ref_or_set_up(struct chrdev* self, const struct ofdid* id,
+chrdev_cmp_and_ref_or_set_up(struct chrdev* self, const struct file_id* id,
                           int fildes, struct picotm_error* error)
 {
     assert(self);
 
     chrdev_wrlock(self);
 
-    int cmp = ofdidcmp(&self->id, id);
+    int cmp = file_id_cmp(&self->id, id);
     if (cmp) {
         goto unlock; /* ids are not equal; only return */
     }
@@ -221,13 +221,13 @@ err_ref_or_set_up:
 }
 
 int
-chrdev_cmp_and_ref(struct chrdev* self, const struct ofdid* id)
+chrdev_cmp_and_ref(struct chrdev* self, const struct file_id* id)
 {
     assert(self);
 
     chrdev_rdlock(self);
 
-    int cmp = ofdidcmp(&self->id, id);
+    int cmp = file_id_cmp(&self->id, id);
     if (!cmp) {
         chrdev_ref(self);
     }
