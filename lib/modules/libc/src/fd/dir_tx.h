@@ -24,7 +24,7 @@
 #include <sys/queue.h>
 #include <sys/types.h>
 #include "dir.h"
-#include "ofd_tx.h"
+#include "file_tx.h"
 #include "picotm/picotm-libc.h"
 
 /**
@@ -50,7 +50,7 @@ struct dir_tx {
 
     SLIST_ENTRY(dir_tx) active_list;
 
-    struct ofd_tx base;
+    struct file_tx base;
 
     struct dir* dir;
 
@@ -68,7 +68,7 @@ struct dir_tx {
 };
 
 struct dir_tx*
-dir_tx_of_ofd_tx(struct ofd_tx* ofd_tx);
+dir_tx_of_file_tx(struct file_tx* file_tx);
 
 /**
  * Initialize transaction-local directory.

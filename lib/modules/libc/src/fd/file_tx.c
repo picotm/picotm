@@ -17,13 +17,13 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include "ofd_tx.h"
+#include "file_tx.h"
 #include <assert.h>
 
 void
-ofd_tx_init(struct ofd_tx* self, enum picotm_libc_file_type type,
-            void (*ref)(struct ofd_tx*),
-            void (*unref)(struct ofd_tx*))
+file_tx_init(struct file_tx* self, enum picotm_libc_file_type type,
+             void (*ref)(struct file_tx*),
+             void (*unref)(struct file_tx*))
 {
     assert(self);
     assert(ref);
@@ -35,11 +35,11 @@ ofd_tx_init(struct ofd_tx* self, enum picotm_libc_file_type type,
 }
 
 void
-ofd_tx_uninit(struct ofd_tx* self)
+file_tx_uninit(struct file_tx* self)
 { }
 
 enum picotm_libc_file_type
-ofd_tx_file_type(const struct ofd_tx* self)
+file_tx_file_type(const struct file_tx* self)
 {
     assert(self);
 
@@ -47,7 +47,7 @@ ofd_tx_file_type(const struct ofd_tx* self)
 }
 
 void
-ofd_tx_ref(struct ofd_tx* self)
+file_tx_ref(struct file_tx* self)
 {
     assert(self);
 
@@ -55,7 +55,7 @@ ofd_tx_ref(struct ofd_tx* self)
 }
 
 void
-ofd_tx_unref(struct ofd_tx* self)
+file_tx_unref(struct file_tx* self)
 {
     assert(self);
 

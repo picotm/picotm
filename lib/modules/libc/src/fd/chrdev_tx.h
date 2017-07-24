@@ -24,7 +24,7 @@
 #include <sys/queue.h>
 #include <sys/types.h>
 #include "chrdev.h"
-#include "ofd_tx.h"
+#include "file_tx.h"
 #include "picotm/picotm-libc.h"
 
 /**
@@ -49,7 +49,7 @@ struct chrdev_tx {
 
     SLIST_ENTRY(chrdev_tx) active_list;
 
-    struct ofd_tx base;
+    struct file_tx base;
 
     struct chrdev* chrdev;
 
@@ -76,7 +76,7 @@ struct chrdev_tx {
 };
 
 struct chrdev_tx*
-chrdev_tx_of_ofd_tx(struct ofd_tx* ofd_tx);
+chrdev_tx_of_file_tx(struct file_tx* file_tx);
 
 /**
  * Initialize transaction-local character device.
