@@ -112,7 +112,7 @@ append_empty_socket(struct picotm_error* error)
 
 /* requires reader lock */
 static struct socket*
-find_by_id(const struct ofdid* id)
+find_by_id(const struct file_id* id)
 {
     struct socket *socket_beg = picotm_arraybeg(sockettab);
     const struct socket* socket_end = picotm_arrayat(sockettab,
@@ -133,7 +133,7 @@ find_by_id(const struct ofdid* id)
 
 /* requires writer lock */
 static struct socket*
-search_by_id(const struct ofdid* id, int fildes, struct picotm_error* error)
+search_by_id(const struct file_id* id, int fildes, struct picotm_error* error)
 {
     struct socket* socket_beg = picotm_arraybeg(sockettab);
     const struct socket* socket_end = picotm_arrayat(sockettab,
@@ -160,8 +160,8 @@ struct socket*
 sockettab_ref_fildes(int fildes, bool newly_created,
                      struct picotm_error* error)
 {
-    struct ofdid id;
-    ofdid_init_from_fildes(&id, fildes, error);
+    struct file_id id;
+    file_id_init_from_fildes(&id, fildes, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
@@ -199,8 +199,8 @@ sockettab_ref_fildes(int fildes, bool newly_created,
      * currently unused, socket structure.
      */
 
-    struct ofdid empty_id;
-    ofdid_clear(&empty_id);
+    struct file_id empty_id;
+    file_id_clear(&empty_id);
 
     socket = search_by_id(&empty_id, fildes, error);
     if (picotm_error_is_set(error)) {

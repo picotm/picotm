@@ -112,7 +112,7 @@ append_empty_chrdev(struct picotm_error* error)
 
 /* requires reader lock */
 static struct chrdev*
-find_by_id(const struct ofdid* id)
+find_by_id(const struct file_id* id)
 {
     struct chrdev *chrdev_beg = picotm_arraybeg(chrdevtab);
     const struct chrdev* chrdev_end = picotm_arrayat(chrdevtab, chrdevtab_len);
@@ -132,7 +132,7 @@ find_by_id(const struct ofdid* id)
 
 /* requires writer lock */
 static struct chrdev*
-search_by_id(const struct ofdid* id, int fildes, struct picotm_error* error)
+search_by_id(const struct file_id* id, int fildes, struct picotm_error* error)
 {
     struct chrdev* chrdev_beg = picotm_arraybeg(chrdevtab);
     const struct chrdev* chrdev_end = picotm_arrayat(chrdevtab, chrdevtab_len);
@@ -158,8 +158,8 @@ struct chrdev*
 chrdevtab_ref_fildes(int fildes, bool newly_created,
                      struct picotm_error* error)
 {
-    struct ofdid id;
-    ofdid_init_from_fildes(&id, fildes, error);
+    struct file_id id;
+    file_id_init_from_fildes(&id, fildes, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
@@ -197,8 +197,8 @@ chrdevtab_ref_fildes(int fildes, bool newly_created,
      * currently unused, chrdev structure.
      */
 
-    struct ofdid empty_id;
-    ofdid_clear(&empty_id);
+    struct file_id empty_id;
+    file_id_clear(&empty_id);
 
     chrdev = search_by_id(&empty_id, fildes, error);
     if (picotm_error_is_set(error)) {

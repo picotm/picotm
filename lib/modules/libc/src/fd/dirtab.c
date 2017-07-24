@@ -112,7 +112,7 @@ append_empty_dir(struct picotm_error* error)
 
 /* requires reader lock */
 static struct dir*
-find_by_id(const struct ofdid* id)
+find_by_id(const struct file_id* id)
 {
     struct dir *dir_beg = picotm_arraybeg(dirtab);
     const struct dir* dir_end = picotm_arrayat(dirtab, dirtab_len);
@@ -132,7 +132,7 @@ find_by_id(const struct ofdid* id)
 
 /* requires writer lock */
 static struct dir*
-search_by_id(const struct ofdid* id, int fildes, struct picotm_error* error)
+search_by_id(const struct file_id* id, int fildes, struct picotm_error* error)
 {
     struct dir* dir_beg = picotm_arraybeg(dirtab);
     const struct dir* dir_end = picotm_arrayat(dirtab, dirtab_len);
@@ -157,8 +157,8 @@ search_by_id(const struct ofdid* id, int fildes, struct picotm_error* error)
 struct dir*
 dirtab_ref_fildes(int fildes, bool newly_created, struct picotm_error* error)
 {
-    struct ofdid id;
-    ofdid_init_from_fildes(&id, fildes, error);
+    struct file_id id;
+    file_id_init_from_fildes(&id, fildes, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
@@ -196,8 +196,8 @@ dirtab_ref_fildes(int fildes, bool newly_created, struct picotm_error* error)
      * currently unused, dir structure.
      */
 
-    struct ofdid empty_id;
-    ofdid_clear(&empty_id);
+    struct file_id empty_id;
+    file_id_clear(&empty_id);
 
     dir = search_by_id(&empty_id, fildes, error);
     if (picotm_error_is_set(error)) {
