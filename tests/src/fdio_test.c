@@ -48,7 +48,7 @@ MiB_to_bytes(unsigned short MiB)
     return 1024 * 1024 * MiB;
 }
 
-static const char const g_test_str[] = "Hello world!\n";
+static const char g_test_str[] = "Hello world!\n";
 
 static char g_filename[PATH_MAX];
 static int  g_fildes = -1;
