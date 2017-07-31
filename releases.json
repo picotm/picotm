@@ -7,6 +7,14 @@
     "tags": "c, concurrency, development, distributedsystems, embedded, errorhandling, failsafe, framework, linux, lockless, manufacturing, multicore, multithreading, softwaretransactionalmemory, transactions",
     "releases": [
         {
+            "version": "0.4.0",
+            "state": "beta",
+            "scope": "minor",
+            "changes": "Transactional access to file-descriptor table; Adds R/W locks, R/W state, tree maps, ref counters to module library; C11 code.",
+            "download": "https://github.com/picotm/picotm/releases/download/v0.4.0/picotm-0.4.0.tar.gz",
+            "published": "2017-07-31T08:54:01+00:00"
+        },
+        {
             "version": "0.3.0",
             "state": "beta",
             "scope": "minor",

@@ -17,7 +17,7 @@ dnl FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 dnl DEALINGS IN THE SOFTWARE.
 
 AC_PREREQ([2.69])
-AC_INIT([picotm-tests], [0.3.0], [bugs@picotm.org], [], [http://picotm.org])
+AC_INIT([picotm-tests], [0.4.0], [bugs@picotm.org], [], [http://picotm.org])
 
 AC_CONFIG_SRCDIR([src/Makefile.am])
 AC_CONFIG_AUX_DIR([build-aux])

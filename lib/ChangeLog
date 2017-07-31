@@ -1,4 +1,30 @@
 
+picotm 0.4.0 (2017-07-31)
+------------
+
+    * The package now builds in C11 mode by default. C11 is a minimum
+      requirement. Gcc 4.8 to 7.1 and clang 4.0 should be compatible.
+
+    * The module library now contains support for reference counters,
+      R/W locks and thread-local R/W state, shared and thread-local tree
+      maps, and container structures.
+
+    * Cleaned up R/W state maps and R/W lock maps in fd module.
+
+    * The file-descriptor table is now protected by transactional data
+      structures.
+
+    * The vfs module has been merged into the fd module.
+
+    * Internal cleanups.
+
+    * Bug: Fixed offsets of file-buffer record locks. (#67)
+
+    * Bug: Add lost support for directories (#79)
+
+    * Bug: Add missing break statements in fcntl() code (#83)
+
+
 picotm 0.3.0 (2017-06-27)
 ------------
 

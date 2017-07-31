@@ -1,4 +1,12 @@
 
+picotm-tests 0.4.0 (2017-07-31)
+------------------
+
+    * Build tests in C11 mode.
+
+    * Build with GCC 7.1
+
+
 picotm-tests 0.3.0 (2017-06-27)
 ------------------
 
