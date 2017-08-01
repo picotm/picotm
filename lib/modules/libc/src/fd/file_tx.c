@@ -58,3 +58,57 @@ file_tx_unref(struct file_tx* self)
 
     self->ops->unref(self);
 }
+
+/*
+ * Module interfaces
+ */
+
+void
+file_tx_lock(struct file_tx* self, struct picotm_error* error)
+{
+    assert(self);
+    assert(self->ops);
+    assert(self->ops->lock);
+
+    self->ops->lock(self, error);
+}
+
+void
+file_tx_unlock(struct file_tx* self, struct picotm_error* error)
+{
+    assert(self);
+    assert(self->ops);
+    assert(self->ops->unlock);
+
+    self->ops->unlock(self, error);
+}
+
+void
+file_tx_validate(struct file_tx* self, struct picotm_error* error)
+{
+    assert(self);
+    assert(self->ops);
+    assert(self->ops->validate);
+
+    self->ops->validate(self, error);
+}
+
+void
+file_tx_update_cc(struct file_tx* self, struct picotm_error* error)
+{
+    assert(self);
+    assert(self->ops);
+    assert(self->ops->update_cc);
+
+    self->ops->update_cc(self, error);
+}
+
+void
+file_tx_clear_cc(struct file_tx* self, struct picotm_error* error)
+{
+    assert(self);
+    assert(self->ops);
+    assert(self->ops->clear_cc);
+
+    self->ops->clear_cc(self, error);
+}

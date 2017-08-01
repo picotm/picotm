@@ -51,6 +51,16 @@ struct file_tx_ops {
     void (*unref)(struct file_tx*);
 
     /*
+     * Module interfaces
+     */
+
+    void (*lock)(struct file_tx*, struct picotm_error*);
+    void (*unlock)(struct file_tx*, struct picotm_error*);
+    void (*validate)(struct file_tx*, struct picotm_error*r);
+    void (*update_cc)(struct file_tx*, struct picotm_error*);
+    void (*clear_cc)(struct file_tx*, struct picotm_error*);
+
+    /*
      * accept()
      */
 
@@ -275,3 +285,49 @@ file_tx_ref(struct file_tx* self);
  */
 void
 file_tx_unref(struct file_tx* self);
+
+/*
+ * Module interfaces
+ */
+
+/**
+ * Locks the transaction-local file state before commit or validation.
+ * \param   self        The transaction-local file state.
+ * \param[out]  error   Returns an error to the caller.
+ */
+void
+file_tx_lock(struct file_tx* self, struct picotm_error* error);
+
+/**
+ * Unlocks the transaction-local file state after commit or validation.
+ * \param   self        The transaction-local file state.
+ * \param[out]  error   Returns an error to the caller.
+ */
+void
+file_tx_unlock(struct file_tx* self, struct picotm_error* error);
+
+/**
+ * Validates the transaction-local file state.
+ * \param       self    The transaction-local file state.
+ * \param[out]  error   Returns an error to the caller.
+ */
+void
+file_tx_validate(struct file_tx* self, struct picotm_error* error);
+
+/**
+ * \brief Updates the concurrency control on transaction-local file state
+ *        after a successful apply.
+ * \param       self    The transaction-local file state.
+ * \param[out]  error   Returns an error to the caller.
+ */
+void
+file_tx_update_cc(struct file_tx* self, struct picotm_error* error);
+
+/**
+ * \brief Clears the concurrency control on transaction-local file state
+ *        after a successful apply.
+ * \param       self    The transaction-local file state.
+ * \param[out]  error   Returns an error to the caller.
+ */
+void
+file_tx_clear_cc(struct file_tx* self, struct picotm_error* error);

@@ -868,10 +868,46 @@ write_undo(struct file_tx* base, int fildes, int cookie,
  * Public interfaces
  */
 
+static void
+lock_file_tx(struct file_tx* base, struct picotm_error* error)
+{
+    fifo_tx_lock(fifo_tx_of_file_tx(base));
+}
+
+static void
+unlock_file_tx(struct file_tx* base, struct picotm_error* error)
+{
+    fifo_tx_unlock(fifo_tx_of_file_tx(base));
+}
+
+static void
+validate_file_tx(struct file_tx* base, struct picotm_error* error)
+{
+    fifo_tx_validate(fifo_tx_of_file_tx(base), error);
+}
+
+static void
+update_cc_file_tx(struct file_tx* base, struct picotm_error* error)
+{
+    fifo_tx_update_cc(fifo_tx_of_file_tx(base), error);
+}
+
+static void
+clear_cc_file_tx(struct file_tx* base, struct picotm_error* error)
+{
+    fifo_tx_clear_cc(fifo_tx_of_file_tx(base), error);
+}
+
 static const struct file_tx_ops fifo_tx_ops = {
     /* ref counting */
     ref_file_tx,
     unref_file_tx,
+    /* module interfaces */
+    lock_file_tx,
+    unlock_file_tx,
+    validate_file_tx,
+    update_cc_file_tx,
+    clear_cc_file_tx,
     /* file ops */
     accept_exec,
     NULL,

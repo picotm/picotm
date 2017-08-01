@@ -837,10 +837,46 @@ write_exec(struct file_tx* base, int fildes, const void* buf, size_t nbyte,
  * Public interface
  */
 
+static void
+lock_file_tx(struct file_tx* base, struct picotm_error* error)
+{
+    dir_tx_lock(dir_tx_of_file_tx(base));
+}
+
+static void
+unlock_file_tx(struct file_tx* base, struct picotm_error* error)
+{
+    dir_tx_unlock(dir_tx_of_file_tx(base));
+}
+
+static void
+validate_file_tx(struct file_tx* base, struct picotm_error* error)
+{
+    dir_tx_validate(dir_tx_of_file_tx(base), error);
+}
+
+static void
+update_cc_file_tx(struct file_tx* base, struct picotm_error* error)
+{
+    dir_tx_update_cc(dir_tx_of_file_tx(base), error);
+}
+
+static void
+clear_cc_file_tx(struct file_tx* base, struct picotm_error* error)
+{
+    dir_tx_clear_cc(dir_tx_of_file_tx(base), error);
+}
+
 static const struct file_tx_ops dir_tx_ops = {
     /* ref counting */
     ref_file_tx,
     unref_file_tx,
+    /* module interfaces */
+    lock_file_tx,
+    unlock_file_tx,
+    validate_file_tx,
+    update_cc_file_tx,
+    clear_cc_file_tx,
     /* file ops */
     accept_exec,
     NULL,

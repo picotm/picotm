@@ -1616,10 +1616,46 @@ write_undo(struct file_tx* base, int fildes, int cookie,
  * Public interface
  */
 
+static void
+lock_file_tx(struct file_tx* base, struct picotm_error* error)
+{
+    socket_tx_lock(socket_tx_of_file_tx(base));
+}
+
+static void
+unlock_file_tx(struct file_tx* base, struct picotm_error* error)
+{
+    socket_tx_unlock(socket_tx_of_file_tx(base));
+}
+
+static void
+validate_file_tx(struct file_tx* base, struct picotm_error* error)
+{
+    socket_tx_validate(socket_tx_of_file_tx(base), error);
+}
+
+static void
+update_cc_file_tx(struct file_tx* base, struct picotm_error* error)
+{
+    socket_tx_update_cc(socket_tx_of_file_tx(base), error);
+}
+
+static void
+clear_cc_file_tx(struct file_tx* base, struct picotm_error* error)
+{
+    socket_tx_clear_cc(socket_tx_of_file_tx(base), error);
+}
+
 static const struct file_tx_ops socket_tx_ops = {
     /* ref counting */
     ref_file_tx,
     unref_file_tx,
+    /* module interfaces */
+    lock_file_tx,
+    unlock_file_tx,
+    validate_file_tx,
+    update_cc_file_tx,
+    clear_cc_file_tx,
     /* file ops */
     accept_exec,
     accept_apply,
