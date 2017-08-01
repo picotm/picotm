@@ -838,6 +838,10 @@ write_exec(struct file_tx* base, int fildes, const void* buf, size_t nbyte,
  */
 
 static const struct file_tx_ops dir_tx_ops = {
+    /* ref counting */
+    ref_file_tx,
+    unref_file_tx,
+    /* file ops */
     accept_exec,
     NULL,
     NULL,
@@ -897,8 +901,7 @@ dir_tx_init(struct dir_tx* self)
 
     memset(&self->active_list, 0, sizeof(self->active_list));
 
-    file_tx_init(&self->base, PICOTM_LIBC_FILE_TYPE_DIR, &dir_tx_ops,
-                 ref_file_tx, unref_file_tx);
+    file_tx_init(&self->base, PICOTM_LIBC_FILE_TYPE_DIR, &dir_tx_ops);
 
     self->dir = NULL;
 
