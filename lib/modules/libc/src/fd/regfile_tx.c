@@ -110,7 +110,7 @@ unlock_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end,
     }
 }
 
-struct regfile_tx*
+static struct regfile_tx*
 regfile_tx_of_file_tx(struct file_tx* file_tx)
 {
     assert(file_tx);
@@ -341,7 +341,7 @@ fchmod_exec_2pl(struct regfile_tx* self, int fildes, mode_t mode,
     return res;
 }
 
-int
+static int
 regfile_tx_fchmod_exec(struct regfile_tx* self, int fildes, mode_t mode,
                        bool isnoundo, int* cookie, struct picotm_error* error)
 {
@@ -385,7 +385,7 @@ static void
 fchmod_apply_2pl(int fildes, struct picotm_error* error)
 { }
 
-void
+static void
 regfile_tx_fchmod_apply(struct regfile_tx* self, int fildes, int cookie,
                         struct picotm_error* error)
 {
@@ -420,7 +420,7 @@ fchmod_undo_2pl(struct regfile_tx* self, int fildes, int cookie,
     }
 }
 
-void
+static void
 regfile_tx_fchmod_undo(struct regfile_tx* self, int fildes, int cookie,
                        struct picotm_error* error)
 {
@@ -546,7 +546,7 @@ fcntl_exec_2pl(struct regfile_tx* self, int fildes, int cmd,
     return -1;
 }
 
-int
+static int
 regfile_tx_fcntl_exec(struct regfile_tx* self, int fildes, int cmd,
                       union fcntl_arg* arg, bool isnoundo, int* cookie,
                       struct picotm_error* error)
@@ -640,7 +640,7 @@ fstat_exec_2pl(struct regfile_tx* self, int fildes, struct stat* buf,
     return res;
 }
 
-int
+static int
 regfile_tx_fstat_exec(struct regfile_tx* self, int fildes, struct stat* buf,
                       bool isnoundo, int* cookie, struct picotm_error* error)
 {
@@ -686,7 +686,7 @@ fstat_apply_2pl(struct regfile_tx* self, int fildes, int cookie,
                 struct picotm_error* error)
 { }
 
-void
+static void
 regfile_tx_fstat_apply(struct regfile_tx* self, int fildes, int cookie,
                        struct picotm_error* error)
 {
@@ -715,7 +715,7 @@ fstat_undo_2pl(struct regfile_tx* self, int fildes, int cookie,
                struct picotm_error* error)
 { }
 
-void
+static void
 regfile_tx_fstat_undo(struct regfile_tx* self, int fildes, int cookie,
                       struct picotm_error* error)
 {
@@ -763,7 +763,7 @@ fsync_exec_2pl(int fildes, int* cookie, struct picotm_error* error)
     return 0;
 }
 
-int
+static int
 regfile_tx_fsync_exec(struct regfile_tx* self, int fildes, bool isnoundo,
                       int* cookie, struct picotm_error* error)
 {
@@ -809,7 +809,7 @@ fsync_apply_2pl(int fildes, struct picotm_error* error)
     }
 }
 
-void
+static void
 regfile_tx_fsync_apply(struct regfile_tx* self, int fildes, int cookie,
                        struct picotm_error* error)
 {
@@ -835,7 +835,7 @@ static void
 fsync_undo_2pl(int fildes, int cookie, struct picotm_error* error)
 { }
 
-void
+static void
 regfile_tx_fsync_undo(struct regfile_tx* self, int fildes, int cookie,
                       struct picotm_error* error)
 {
@@ -965,7 +965,7 @@ lseek_exec_2pl(struct regfile_tx* self, int fildes, off_t offset,
     return pos;
 }
 
-off_t
+static off_t
 regfile_tx_lseek_exec(struct regfile_tx* self, int fildes, off_t offset,
                       int whence, bool isnoundo, int* cookie,
                       struct picotm_error* error)
@@ -1024,7 +1024,7 @@ lseek_apply_2pl(struct regfile_tx* self, int fildes, int cookie,
     self->regfile->offset = pos;
 }
 
-void
+static void
 regfile_tx_lseek_apply(struct regfile_tx* self, int fildes, int cookie,
                        struct picotm_error* error)
 {
@@ -1052,7 +1052,7 @@ static void
 lseek_undo_2pl(struct picotm_error* error)
 { }
 
-void
+static void
 regfile_tx_lseek_undo(struct regfile_tx* self, int fildes, int cookie,
                       struct picotm_error* error)
 {
@@ -1167,7 +1167,7 @@ pread_exec_2pl(struct regfile_tx* self, int fildes, void* buf,
     return llmax(len, len2);
 }
 
-ssize_t
+static ssize_t
 regfile_tx_pread_exec(struct regfile_tx* self, int fildes, void* buf,
                       size_t nbyte, off_t offset, bool isnoundo,
                       enum picotm_libc_validation_mode val_mode, int* cookie,
@@ -1220,7 +1220,7 @@ static void
 pread_apply_2pl(struct picotm_error* error)
 { }
 
-void
+static void
 regfile_tx_pread_apply(struct regfile_tx* self, int fildes, int cookie,
                        struct picotm_error* error)
 {
@@ -1248,7 +1248,7 @@ static void
 pread_undo_2pl(struct picotm_error* error)
 { }
 
-void
+static void
 regfile_tx_pread_undo(struct regfile_tx* self, int fildes, int cookie,
                       struct picotm_error* error)
 {
@@ -1347,7 +1347,7 @@ pwrite_exec_2pl(struct regfile_tx* self, int fildes,
     return nbyte;
 }
 
-ssize_t
+static ssize_t
 regfile_tx_pwrite_exec(struct regfile_tx* self, int fildes, const void* buf,
                        size_t nbyte, off_t offset, bool isnoundo, int* cookie,
                        struct picotm_error* error)
@@ -1413,7 +1413,7 @@ pwrite_apply_2pl(struct regfile_tx* self, int fildes, int cookie,
     }
 }
 
-void
+static void
 regfile_tx_pwrite_apply(struct regfile_tx* self, int fildes, int cookie,
                         struct picotm_error* error)
 {
@@ -1442,7 +1442,7 @@ static void
 pwrite_undo_2pl(struct picotm_error* error)
 { }
 
-void
+static void
 regfile_tx_pwrite_undo(struct regfile_tx* self, int fildes, int cookie,
                        struct picotm_error* error)
 {
@@ -1584,7 +1584,7 @@ read_apply_2pl(struct regfile_tx* self, int fildes, int cookie,
     }
 }
 
-void
+static void
 regfile_tx_read_apply(struct regfile_tx* self, int fildes, int cookie,
                       struct picotm_error* error)
 {
@@ -1613,7 +1613,7 @@ static void
 read_undo_2pl(struct picotm_error* error)
 { }
 
-void
+static void
 regfile_tx_read_undo(struct regfile_tx* self, int fildes, int cookie,
                      struct picotm_error* error)
 {
@@ -1722,7 +1722,7 @@ write_exec_2pl(struct regfile_tx* self, int fildes, const void* buf,
     return nbyte;
 }
 
-ssize_t
+static ssize_t
 regfile_tx_write_exec(struct regfile_tx* self, int fildes, const void* buf,
                       size_t nbyte, bool isnoundo, int* cookie,
                       struct picotm_error* error)
@@ -1794,7 +1794,7 @@ write_apply_2pl(struct regfile_tx* self, int fildes, int cookie,
     }
 }
 
-void
+static void
 regfile_tx_write_apply(struct regfile_tx* self, int fildes, int cookie,
                        struct picotm_error* error)
 {
@@ -1826,7 +1826,7 @@ static void
 write_undo_2pl(struct picotm_error* error)
 { }
 
-void
+static void
 regfile_tx_write_undo(struct regfile_tx* self, int fildes, int cookie,
                       struct picotm_error* error)
 {

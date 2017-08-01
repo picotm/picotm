@@ -36,9 +36,7 @@
  * \endcond
  */
 
-struct stat;
-
-union fcntl_arg;
+struct picotm_error;
 
 /**
  * Holds transaction-local reads and writes for a regular file.
@@ -94,9 +92,6 @@ struct regfile_tx {
     size_t            locktablen;
     size_t            locktabsiz;
 };
-
-struct regfile_tx*
-regfile_tx_of_file_tx(struct file_tx* file_tx);
 
 /**
  * Init transaction-local open-file-description state
@@ -174,157 +169,3 @@ regfile_tx_lock(struct regfile_tx* self);
  */
 void
 regfile_tx_unlock(struct regfile_tx* self);
-
-/*
- * fchmod()
- */
-
-int
-regfile_tx_fchmod_exec(struct regfile_tx* self, int fildes, mode_t mode,
-                       bool isnoundo, int* cookie,
-                       struct picotm_error* error);
-
-void
-regfile_tx_fchmod_apply(struct regfile_tx* self, int fildes, int cookie,
-                        struct picotm_error* error);
-
-void
-regfile_tx_fchmod_undo(struct regfile_tx* self, int fildes, int cookie,
-                       struct picotm_error* error);
-
-/*
- * fcntl()
- */
-
-int
-regfile_tx_fcntl_exec(struct regfile_tx* self, int fildes, int cmd,
-                      union fcntl_arg* arg, bool isnoundo, int* cookie,
-                      struct picotm_error* error);
-
-void
-regfile_tx_fcntl_apply(struct regfile_tx* self, int fildes, int cookie,
-                       struct picotm_error* error);
-
-void
-regfile_tx_fcntl_undo(struct regfile_tx* self, int fildes, int cookie,
-                      struct picotm_error* error);
-
-/*
- * fstat()
- */
-
-int
-regfile_tx_fstat_exec(struct regfile_tx* self, int fildes, struct stat* buf,
-                      bool isnoundo, int* cookie,
-                      struct picotm_error* error);
-
-void
-regfile_tx_fstat_apply(struct regfile_tx* self, int fildes, int cookie,
-                       struct picotm_error* error);
-
-void
-regfile_tx_fstat_undo(struct regfile_tx* self, int fildes, int cookie,
-                      struct picotm_error* error);
-
-/*
- * fsync()
- */
-
-int
-regfile_tx_fsync_exec(struct regfile_tx* self, int fildes, bool isnoundo,
-                      int* cookie, struct picotm_error* error);
-
-void
-regfile_tx_fsync_apply(struct regfile_tx* self, int fildes, int cookie,
-                       struct picotm_error* error);
-
-void
-regfile_tx_fsync_undo(struct regfile_tx* self, int fildes, int cookie,
-                      struct picotm_error* error);
-
-/*
- * lseek()
- */
-
-off_t
-regfile_tx_lseek_exec(struct regfile_tx* self, int fildes, off_t offset,
-                      int whence, bool isnoundo, int* cookie,
-                      struct picotm_error* error);
-
-void
-regfile_tx_lseek_apply(struct regfile_tx* self, int fildes, int cookie,
-                       struct picotm_error* error);
-
-void
-regfile_tx_lseek_undo(struct regfile_tx* self, int fildes, int cookie,
-                      struct picotm_error* error);
-
-/*
- * pread()
- */
-
-ssize_t
-regfile_tx_pread_exec(struct regfile_tx* self, int fildes, void* buf,
-                      size_t nbyte, off_t off, bool isnoundo,
-                      enum picotm_libc_validation_mode val_mode, int* cookie,
-                      struct picotm_error* error);
-
-void
-regfile_tx_pread_apply(struct regfile_tx* self, int fildes, int cookie,
-                       struct picotm_error* error);
-
-void
-regfile_tx_pread_undo(struct regfile_tx* self, int fildes, int cookie,
-                      struct picotm_error* error);
-
-/*
- * pwrite()
- */
-
-ssize_t
-regfile_tx_pwrite_exec(struct regfile_tx* self, int fildes, const void* buf,
-                       size_t nbyte, off_t off, bool isnoundo, int* cookie,
-                       struct picotm_error* error);
-
-void
-regfile_tx_pwrite_apply(struct regfile_tx* self, int fildes, int cookie,
-                        struct picotm_error* error);
-
-void
-regfile_tx_pwrite_undo(struct regfile_tx* self, int fildes, int cookie,
-                       struct picotm_error* error);
-
-/*
- * read()
- */
-
-ssize_t
-regfile_tx_read_exec(struct regfile_tx* self, int fildes, void* buf,
-                     size_t nbyte, bool isnoundo,
-                     enum picotm_libc_validation_mode val_mode, int* cookie,
-                     struct picotm_error* error);
-
-void
-regfile_tx_read_apply(struct regfile_tx* self, int fildes, int cookie,
-                      struct picotm_error* error);
-
-void
-regfile_tx_read_undo(struct regfile_tx* self, int fildes, int cookie,
-                     struct picotm_error* error);
-
-/*
- * write()
- */
-
-ssize_t
-regfile_tx_write_exec(struct regfile_tx* self, int fildes, const void* buf,
-                      size_t nbyte, bool isnoundo, int* cookie,
-                      struct picotm_error* error);
-
-void
-regfile_tx_write_apply(struct regfile_tx* self, int fildes, int cookie,
-                       struct picotm_error* error);
-
-void
-regfile_tx_write_undo(struct regfile_tx* self, int fildes, int cookie,
-                      struct picotm_error* error);

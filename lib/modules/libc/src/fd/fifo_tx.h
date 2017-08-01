@@ -35,11 +35,7 @@
  * \endcond
  */
 
-struct fifo;
 struct picotm_error;
-struct stat;
-
-union fcntl_arg;
 
 /**
  * Holds transaction-local state for an FIFO.
@@ -75,9 +71,6 @@ struct fifo_tx {
     /** State of the local reader/writer locks */
     struct picotm_rwstate rwstate[NUMBER_OF_FIFO_FIELDS];
 };
-
-struct fifo_tx*
-fifo_tx_of_file_tx(struct file_tx* file_tx);
 
 /**
  * Init transaction-local open-file-description state
@@ -153,70 +146,3 @@ fifo_tx_lock(struct fifo_tx* self);
  */
 void
 fifo_tx_unlock(struct fifo_tx* self);
-
-/*
- * fcntl()
- */
-
-int
-fifo_tx_fcntl_exec(struct fifo_tx* self, int fildes, int cmd,
-                   union fcntl_arg* arg, bool isnoundo, int* cookie,
-                   struct picotm_error* error);
-
-void
-fifo_tx_fcntl_apply(struct fifo_tx* self, int fildes, int cookie,
-                    struct picotm_error* error);
-
-void
-fifo_tx_fcntl_undo(struct fifo_tx* self, int fildes, int cookie,
-                   struct picotm_error* error);
-
-/*
- * fstat()
- */
-
-int
-fifo_tx_fstat_exec(struct fifo_tx* self, int fildes, struct stat* buf,
-                   bool isnoundo, int* cookie, struct picotm_error* error);
-
-void
-fifo_tx_fstat_apply(struct fifo_tx* self, int fildes, int cookie,
-                    struct picotm_error* error);
-
-void
-fifo_tx_fstat_undo(struct fifo_tx* self, int fildes, int cookie,
-                   struct picotm_error* error);
-
-/*
- * read()
- */
-
-ssize_t
-fifo_tx_read_exec(struct fifo_tx* self, int fildes, void* buf, size_t nbyte,
-                  bool isnoundo, enum picotm_libc_validation_mode val_mode,
-                  int* cookie,  struct picotm_error* error);
-
-void
-fifo_tx_read_apply(struct fifo_tx* self, int fildes, int cookie,
-                   struct picotm_error* error);
-
-void
-fifo_tx_read_undo(struct fifo_tx* self, int fildes, int cookie,
-                  struct picotm_error* error);
-
-/*
- * write()
- */
-
-ssize_t
-fifo_tx_write_exec(struct fifo_tx* self, int fildes, const void* buf,
-                   size_t nbyte, bool isnoundo, int* cookie,
-                   struct picotm_error* error);
-
-void
-fifo_tx_write_apply(struct fifo_tx* self, int fildes, int cookie,
-                    struct picotm_error* error);
-
-void
-fifo_tx_write_undo(struct fifo_tx* self, int fildes, int cookie,
-                   struct picotm_error* error);

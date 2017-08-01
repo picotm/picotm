@@ -34,7 +34,7 @@
 #include "fcntlop.h"
 #include "fcntloptab.h"
 
-struct dir_tx*
+static struct dir_tx*
 dir_tx_of_file_tx(struct file_tx* file_tx)
 {
     assert(file_tx);
@@ -199,7 +199,7 @@ fchmod_exec_2pl(struct dir_tx* self, int fildes, mode_t mode,
     return res;
 }
 
-int
+static int
 dir_tx_fchmod_exec(struct dir_tx* self, int fildes, mode_t mode,
                       bool isnoundo, int* cookie, struct picotm_error* error)
 {
@@ -243,7 +243,7 @@ static void
 fchmod_apply_2pl(int fildes, struct picotm_error* error)
 { }
 
-void
+static void
 dir_tx_fchmod_apply(struct dir_tx* self, int fildes, int cookie,
                     struct picotm_error* error)
 {
@@ -277,7 +277,7 @@ fchmod_undo_2pl(struct dir_tx* self, int fildes, int cookie,
     }
 }
 
-void
+static void
 dir_tx_fchmod_undo(struct dir_tx* self, int fildes, int cookie,
                    struct picotm_error* error)
 {
@@ -402,7 +402,7 @@ fcntl_exec_2pl(struct dir_tx* self, int fildes, int cmd,
     return -1;
 }
 
-int
+static int
 dir_tx_fcntl_exec(struct dir_tx* self, int fildes, int cmd,
                   union fcntl_arg* arg, bool isnoundo, int* cookie,
                   struct picotm_error* error)
@@ -441,7 +441,7 @@ fcntl_exec(struct file_tx* base, int fildes, int cmd,
                              isnoundo, cookie, error);
 }
 
-void
+static void
 dir_tx_fcntl_apply(struct dir_tx* self, int fildes, int cookie,
                    struct picotm_error* error)
 { }
@@ -453,7 +453,7 @@ fcntl_apply(struct file_tx* base, int fildes, int cookie,
     dir_tx_fcntl_apply(dir_tx_of_file_tx(base), fildes, cookie, error);
 }
 
-void
+static void
 dir_tx_fcntl_undo(struct dir_tx* self, int fildes, int cookie,
                   struct picotm_error* error)
 { }
@@ -504,7 +504,7 @@ fstat_exec_2pl(struct dir_tx* self, int fildes, struct stat* buf,
     return res;
 }
 
-int
+static int
 dir_tx_fstat_exec(struct dir_tx* self, int fildes, struct stat* buf,
                   bool isnoundo, int* cookie, struct picotm_error* error)
 {
@@ -550,7 +550,7 @@ fstat_apply_2pl(struct dir_tx* self, int fildes, int cookie,
                 struct picotm_error* error)
 { }
 
-void
+static void
 dir_tx_fstat_apply(struct dir_tx* self, int fildes, int cookie,
                    struct picotm_error* error)
 {
@@ -579,7 +579,7 @@ fstat_undo_2pl(struct dir_tx* self, int fildes, int cookie,
                struct picotm_error* error)
 { }
 
-void
+static void
 dir_tx_fstat_undo(struct dir_tx* self, int fildes, int cookie,
                   struct picotm_error* error)
 {
@@ -627,7 +627,7 @@ fsync_exec_2pl(int fildes, int* cookie, struct picotm_error* error)
     return 0;
 }
 
-int
+static int
 dir_tx_fsync_exec(struct dir_tx* self, int fildes, bool isnoundo, int* cookie,
                   struct picotm_error* error)
 {
@@ -673,7 +673,7 @@ fsync_apply_2pl(int fildes, struct picotm_error* error)
     }
 }
 
-void
+static void
 dir_tx_fsync_apply(struct dir_tx* self, int fildes, int cookie,
                    struct picotm_error* error)
 {
@@ -698,7 +698,7 @@ static void
 fsync_undo_2pl(int fildes, int cookie, struct picotm_error* error)
 { }
 
-void
+static void
 dir_tx_fsync_undo(struct dir_tx* self, int fildes, int cookie,
                   struct picotm_error* error)
 {
