@@ -134,7 +134,7 @@ append_to_iobuffer(struct socket_tx* self, size_t nbyte, const void* buf,
     return bufoffset;
 }
 
-int
+static int
 socket_tx_append_to_writeset(struct socket_tx* self, size_t nbyte, off_t offset,
                              const void* buf, struct picotm_error* error)
 {
@@ -148,28 +148,6 @@ socket_tx_append_to_writeset(struct socket_tx* self, size_t nbyte, off_t offset,
     unsigned long res = iooptab_append(&self->wrtab,
                                        &self->wrtablen,
                                        &self->wrtabsiz,
-                                       nbyte, offset, bufoffset,
-                                       error);
-    if (picotm_error_is_set(error)) {
-        return -1;
-    }
-    return res;
-}
-
-int
-socket_tx_append_to_readset(struct socket_tx* self, size_t nbyte, off_t offset,
-                            const void* buf, struct picotm_error* error)
-{
-    assert(self);
-
-    off_t bufoffset = append_to_iobuffer(self, nbyte, buf, error);
-    if (picotm_error_is_set(error)) {
-        return -1;
-    }
-
-    unsigned long res = iooptab_append(&self->rdtab,
-                                       &self->rdtablen,
-                                       &self->rdtabsiz,
                                        nbyte, offset, bufoffset,
                                        error);
     if (picotm_error_is_set(error)) {

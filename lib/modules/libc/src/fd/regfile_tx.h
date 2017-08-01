@@ -148,16 +148,6 @@ regfile_tx_unref(struct regfile_tx* self);
 bool
 regfile_tx_holds_ref(struct regfile_tx* self);
 
-int
-regfile_tx_append_to_writeset(struct regfile_tx* self, size_t nbyte,
-                              off_t offset, const void* buf,
-                              struct picotm_error* error);
-
-int
-regfile_tx_append_to_readset(struct regfile_tx* self, size_t nbyte,
-                             off_t offset, const void* buf,
-                             struct picotm_error* error);
-
 /**
  * Prepares the open file description for commit
  */

@@ -127,14 +127,6 @@ fifo_tx_unref(struct fifo_tx* self);
 bool
 fifo_tx_holds_ref(struct fifo_tx* self);
 
-int
-fifo_tx_append_to_writeset(struct fifo_tx* self, size_t nbyte, off_t offset,
-                           const void* buf, struct picotm_error* error);
-
-int
-fifo_tx_append_to_readset(struct fifo_tx* self, size_t nbyte, off_t offset,
-                          const void* buf, struct picotm_error* error);
-
 /**
  * Prepares the open file description for commit
  */
