@@ -128,16 +128,6 @@ socket_tx_unref(struct socket_tx* self);
 bool
 socket_tx_holds_ref(struct socket_tx* self);
 
-int
-socket_tx_append_to_writeset(struct socket_tx* self, size_t nbyte,
-                             off_t offset, const void* buf,
-                             struct picotm_error* error);
-
-int
-socket_tx_append_to_readset(struct socket_tx* self, size_t nbyte,
-                            off_t offset, const void* buf,
-                            struct picotm_error* error);
-
 /**
  * Prepares the open file description for commit
  */

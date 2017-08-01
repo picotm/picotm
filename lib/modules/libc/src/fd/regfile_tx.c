@@ -162,7 +162,7 @@ append_to_iobuffer(struct regfile_tx* self, size_t nbyte, const void* buf,
     return bufoffset;
 }
 
-int
+static int
 regfile_tx_append_to_writeset(struct regfile_tx* self, size_t nbyte, off_t offset,
                               const void* buf, struct picotm_error* error)
 {
@@ -176,28 +176,6 @@ regfile_tx_append_to_writeset(struct regfile_tx* self, size_t nbyte, off_t offse
     unsigned long res = iooptab_append(&self->wrtab,
                                        &self->wrtablen,
                                        &self->wrtabsiz,
-                                       nbyte, offset, bufoffset,
-                                       error);
-    if (picotm_error_is_set(error)) {
-        return -1;
-    }
-    return res;
-}
-
-int
-regfile_tx_append_to_readset(struct regfile_tx* self, size_t nbyte, off_t offset,
-                             const void* buf, struct picotm_error* error)
-{
-    assert(self);
-
-    off_t bufoffset = append_to_iobuffer(self, nbyte, buf, error);
-    if (picotm_error_is_set(error)) {
-        return -1;
-    }
-
-    unsigned long res = iooptab_append(&self->rdtab,
-                                       &self->rdtablen,
-                                       &self->rdtabsiz,
                                        nbyte, offset, bufoffset,
                                        error);
     if (picotm_error_is_set(error)) {

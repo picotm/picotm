@@ -129,14 +129,6 @@ chrdev_tx_unref(struct chrdev_tx* self);
 bool
 chrdev_tx_holds_ref(struct chrdev_tx* self);
 
-int
-chrdev_tx_append_to_writeset(struct chrdev_tx* self, size_t nbyte, off_t offset,
-                             const void* buf, struct picotm_error* error);
-
-int
-chrdev_tx_append_to_readset(struct chrdev_tx* self, size_t nbyte, off_t offset,
-                            const void* buf, struct picotm_error* error);
-
 /**
  * Prepares the open file description for commit
  */
