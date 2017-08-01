@@ -103,24 +103,6 @@ void
 regfile_tx_uninit(struct regfile_tx* self);
 
 /**
- * Validate the local state
- */
-void
-regfile_tx_validate(struct regfile_tx* self, struct picotm_error* error);
-
-/**
- * Updates the data structures for concurrency control after a successful apply
- */
-void
-regfile_tx_update_cc(struct regfile_tx* self, struct picotm_error* error);
-
-/**
- * Clears the data structures for concurrency control after a successful undo
- */
-void
-regfile_tx_clear_cc(struct regfile_tx* self, struct picotm_error* error);
-
-/**
  * Acquire a reference on the open file description
  */
 void
@@ -144,15 +126,3 @@ regfile_tx_unref(struct regfile_tx* self);
  */
 bool
 regfile_tx_holds_ref(struct regfile_tx* self);
-
-/**
- * Prepares the open file description for commit
- */
-void
-regfile_tx_lock(struct regfile_tx* self);
-
-/**
- * Finishes commit for open file description
- */
-void
-regfile_tx_unlock(struct regfile_tx* self);

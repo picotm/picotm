@@ -1832,14 +1832,44 @@ write_undo(struct file_tx* base, int fildes, int cookie,
 
 static void
 lock_file_tx(struct file_tx* base, struct picotm_error* error)
-{
-    regfile_tx_lock(regfile_tx_of_file_tx(base));
-}
+{ }
 
 static void
 unlock_file_tx(struct file_tx* base, struct picotm_error* error)
+{ }
+
+/* Validation
+ */
+
+static void
+validate_noundo(struct regfile_tx* self, struct picotm_error* error)
+{ }
+
+static void
+validate_2pl(struct regfile_tx* self, struct picotm_error* error)
 {
-    regfile_tx_unlock(regfile_tx_of_file_tx(base));
+    assert(self);
+
+    /* Locked regions are ours, so we do not need to validate here. All
+     * conflicting transactions will have aborted on encountering our locks.
+     *
+     * The state of the OFD itself is guarded by regfile::rwlock.
+     */
+}
+
+static void
+regfile_tx_validate(struct regfile_tx* self, struct picotm_error* error)
+{
+    static void (* const validate[])(struct regfile_tx*, struct picotm_error*) = {
+        validate_noundo,
+        validate_2pl
+    };
+
+    if (!regfile_tx_holds_ref(self)) {
+        return;
+    }
+
+    validate[self->cc_mode](self, error);
 }
 
 static void
@@ -1848,10 +1878,83 @@ validate_file_tx(struct file_tx* base, struct picotm_error* error)
     regfile_tx_validate(regfile_tx_of_file_tx(base), error);
 }
 
+/* Update CC
+ */
+
+static void
+update_cc_noundo(struct regfile_tx* self, struct picotm_error* error)
+{ }
+
+static void
+update_cc_2pl(struct regfile_tx* self, struct picotm_error* error)
+{
+    assert(self);
+    assert(self->cc_mode == PICOTM_LIBC_CC_MODE_2PL);
+
+    /* release record locks */
+    regfile_tx_2pl_release_locks(self);
+
+    /* release reader/writer locks on file state */
+    unlock_rwstates(picotm_arraybeg(self->rwstate),
+                    picotm_arrayend(self->rwstate),
+                    self->regfile);
+}
+
+static void
+regfile_tx_update_cc(struct regfile_tx* self, struct picotm_error* error)
+{
+    static void (* const update_cc[])(struct regfile_tx*, struct picotm_error*) = {
+        update_cc_noundo,
+        update_cc_2pl
+    };
+
+    assert(regfile_tx_holds_ref(self));
+
+    update_cc[self->cc_mode](self, error);
+}
+
 static void
 update_cc_file_tx(struct file_tx* base, struct picotm_error* error)
 {
     regfile_tx_update_cc(regfile_tx_of_file_tx(base), error);
+}
+
+/* Clear CC
+ */
+
+static void
+clear_cc_noundo(struct regfile_tx* self, struct picotm_error* error)
+{
+    assert(self);
+    assert(self->cc_mode == PICOTM_LIBC_CC_MODE_NOUNDO);
+}
+
+static void
+clear_cc_2pl(struct regfile_tx* self, struct picotm_error* error)
+{
+    assert(self);
+    assert(self->cc_mode == PICOTM_LIBC_CC_MODE_2PL);
+
+    /* release record locks */
+    regfile_tx_2pl_release_locks(self);
+
+    /* release reader/writer locks on file state */
+    unlock_rwstates(picotm_arraybeg(self->rwstate),
+                    picotm_arrayend(self->rwstate),
+                    self->regfile);
+}
+
+static void
+regfile_tx_clear_cc(struct regfile_tx* self, struct picotm_error* error)
+{
+    static void (* const clear_cc[])(struct regfile_tx*, struct picotm_error*) = {
+        clear_cc_noundo,
+        clear_cc_2pl
+    };
+
+    assert(regfile_tx_holds_ref(self));
+
+    clear_cc[self->cc_mode](self, error);
 }
 
 static void
@@ -1859,6 +1962,10 @@ clear_cc_file_tx(struct file_tx* base, struct picotm_error* error)
 {
     regfile_tx_clear_cc(regfile_tx_of_file_tx(base), error);
 }
+
+/*
+ * Public interface
+ */
 
 static const struct file_tx_ops regfile_tx_ops = {
     /* ref counting */
@@ -1984,128 +2091,6 @@ regfile_tx_uninit(struct regfile_tx* self)
 
     uninit_rwstates(picotm_arraybeg(self->rwstate),
                     picotm_arrayend(self->rwstate));
-}
-
-/*
- * Validation
- */
-
-void
-regfile_tx_lock(struct regfile_tx* self)
-{
-    assert(self);
-}
-
-void
-regfile_tx_unlock(struct regfile_tx* self)
-{
-    assert(self);
-}
-
-static void
-validate_noundo(struct regfile_tx* self, struct picotm_error* error)
-{ }
-
-static void
-validate_2pl(struct regfile_tx* self, struct picotm_error* error)
-{
-    assert(self);
-
-    /* Locked regions are ours, so we do not need to validate here. All
-     * conflicting transactions will have aborted on encountering our locks.
-     *
-     * The state of the OFD itself is guarded by regfile::rwlock.
-     */
-}
-
-void
-regfile_tx_validate(struct regfile_tx* self, struct picotm_error* error)
-{
-    static void (* const validate[])(struct regfile_tx*, struct picotm_error*) = {
-        validate_noundo,
-        validate_2pl
-    };
-
-    if (!regfile_tx_holds_ref(self)) {
-        return;
-    }
-
-    validate[self->cc_mode](self, error);
-}
-
-/*
- * Update CC
- */
-
-static void
-update_cc_noundo(struct regfile_tx* self, struct picotm_error* error)
-{ }
-
-static void
-update_cc_2pl(struct regfile_tx* self, struct picotm_error* error)
-{
-    assert(self);
-    assert(self->cc_mode == PICOTM_LIBC_CC_MODE_2PL);
-
-    /* release record locks */
-    regfile_tx_2pl_release_locks(self);
-
-    /* release reader/writer locks on file state */
-    unlock_rwstates(picotm_arraybeg(self->rwstate),
-                    picotm_arrayend(self->rwstate),
-                    self->regfile);
-}
-
-void
-regfile_tx_update_cc(struct regfile_tx* self, struct picotm_error* error)
-{
-    static void (* const update_cc[])(struct regfile_tx*, struct picotm_error*) = {
-        update_cc_noundo,
-        update_cc_2pl
-    };
-
-    assert(regfile_tx_holds_ref(self));
-
-    update_cc[self->cc_mode](self, error);
-}
-
-/*
- * Clear CC
- */
-
-static void
-clear_cc_noundo(struct regfile_tx* self, struct picotm_error* error)
-{
-    assert(self);
-    assert(self->cc_mode == PICOTM_LIBC_CC_MODE_NOUNDO);
-}
-
-static void
-clear_cc_2pl(struct regfile_tx* self, struct picotm_error* error)
-{
-    assert(self);
-    assert(self->cc_mode == PICOTM_LIBC_CC_MODE_2PL);
-
-    /* release record locks */
-    regfile_tx_2pl_release_locks(self);
-
-    /* release reader/writer locks on file state */
-    unlock_rwstates(picotm_arraybeg(self->rwstate),
-                    picotm_arrayend(self->rwstate),
-                    self->regfile);
-}
-
-void
-regfile_tx_clear_cc(struct regfile_tx* self, struct picotm_error* error)
-{
-    static void (* const clear_cc[])(struct regfile_tx*, struct picotm_error*) = {
-        clear_cc_noundo,
-        clear_cc_2pl
-    };
-
-    assert(regfile_tx_holds_ref(self));
-
-    clear_cc[self->cc_mode](self, error);
 }
 
 /*

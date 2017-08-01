@@ -865,19 +865,43 @@ write_undo(struct file_tx* base, int fildes, int cookie,
 }
 
 /*
- * Public interface
+ * Module interface
  */
 
 static void
 lock_file_tx(struct file_tx* base, struct picotm_error* error)
-{
-    chrdev_tx_lock(chrdev_tx_of_file_tx(base));
-}
+{ }
 
 static void
 unlock_file_tx(struct file_tx* base, struct picotm_error* error)
+{ }
+
+/* Validation
+ */
+
+static void
+validate_noundo(struct chrdev_tx* self, struct picotm_error* error)
+{ }
+
+static void
+validate_2pl(struct chrdev_tx* self, struct picotm_error* error)
 {
-    chrdev_tx_unlock(chrdev_tx_of_file_tx(base));
+    assert(self);
+}
+
+static void
+chrdev_tx_validate(struct chrdev_tx* self, struct picotm_error* error)
+{
+    static void (* const validate[])(struct chrdev_tx*, struct picotm_error*) = {
+        validate_noundo,
+        validate_2pl
+    };
+
+    if (!chrdev_tx_holds_ref(self)) {
+        return;
+    }
+
+    validate[self->cc_mode](self, error);
 }
 
 static void
@@ -886,10 +910,77 @@ validate_file_tx(struct file_tx* base, struct picotm_error* error)
     chrdev_tx_validate(chrdev_tx_of_file_tx(base), error);
 }
 
+/* Update CC
+ */
+
+static void
+update_cc_noundo(struct chrdev_tx* self, struct picotm_error* error)
+{ }
+
+static void
+update_cc_2pl(struct chrdev_tx* self, struct picotm_error* error)
+{
+    assert(self);
+    assert(self->cc_mode == PICOTM_LIBC_CC_MODE_2PL);
+
+    /* release reader/writer locks on character-device state */
+    unlock_rwstates(picotm_arraybeg(self->rwstate),
+                    picotm_arrayend(self->rwstate),
+                    self->chrdev);
+}
+
+static void
+chrdev_tx_update_cc(struct chrdev_tx* self, struct picotm_error* error)
+{
+    static void (* const update_cc[])(struct chrdev_tx*, struct picotm_error*) = {
+        update_cc_noundo,
+        update_cc_2pl
+    };
+
+    assert(chrdev_tx_holds_ref(self));
+
+    update_cc[self->cc_mode](self, error);
+}
+
 static void
 update_cc_file_tx(struct file_tx* base, struct picotm_error* error)
 {
     chrdev_tx_update_cc(chrdev_tx_of_file_tx(base), error);
+}
+
+/* Clear CC
+ */
+
+static void
+clear_cc_noundo(struct chrdev_tx* self, struct picotm_error* error)
+{
+    assert(self);
+    assert(self->cc_mode == PICOTM_LIBC_CC_MODE_NOUNDO);
+}
+
+static void
+clear_cc_2pl(struct chrdev_tx* self, struct picotm_error* error)
+{
+    assert(self);
+    assert(self->cc_mode == PICOTM_LIBC_CC_MODE_2PL);
+
+    /* release reader/writer locks on character-device state */
+    unlock_rwstates(picotm_arraybeg(self->rwstate),
+                    picotm_arrayend(self->rwstate),
+                    self->chrdev);
+}
+
+static void
+chrdev_tx_clear_cc(struct chrdev_tx* self, struct picotm_error* error)
+{
+    static void (* const clear_cc[])(struct chrdev_tx*, struct picotm_error*) = {
+        clear_cc_noundo,
+        clear_cc_2pl
+    };
+
+    assert(chrdev_tx_holds_ref(self));
+
+    clear_cc[self->cc_mode](self, error);
 }
 
 static void
@@ -897,6 +988,10 @@ clear_cc_file_tx(struct file_tx* base, struct picotm_error* error)
 {
     chrdev_tx_clear_cc(chrdev_tx_of_file_tx(base), error);
 }
+
+/*
+ * Public interface
+ */
 
 static const struct file_tx_ops chrdev_tx_ops = {
     /* ref counting */
@@ -1003,116 +1098,6 @@ chrdev_tx_uninit(struct chrdev_tx* self)
 
     uninit_rwstates(picotm_arraybeg(self->rwstate),
                     picotm_arrayend(self->rwstate));
-}
-
-/*
- * Validation
- */
-
-void
-chrdev_tx_lock(struct chrdev_tx* self)
-{
-    assert(self);
-}
-
-void
-chrdev_tx_unlock(struct chrdev_tx* self)
-{
-    assert(self);
-}
-
-static void
-validate_noundo(struct chrdev_tx* self, struct picotm_error* error)
-{ }
-
-static void
-validate_2pl(struct chrdev_tx* self, struct picotm_error* error)
-{
-    assert(self);
-}
-
-void
-chrdev_tx_validate(struct chrdev_tx* self, struct picotm_error* error)
-{
-    static void (* const validate[])(struct chrdev_tx*, struct picotm_error*) = {
-        validate_noundo,
-        validate_2pl
-    };
-
-    if (!chrdev_tx_holds_ref(self)) {
-        return;
-    }
-
-    validate[self->cc_mode](self, error);
-}
-
-/*
- * Update CC
- */
-
-static void
-update_cc_noundo(struct chrdev_tx* self, struct picotm_error* error)
-{ }
-
-static void
-update_cc_2pl(struct chrdev_tx* self, struct picotm_error* error)
-{
-    assert(self);
-    assert(self->cc_mode == PICOTM_LIBC_CC_MODE_2PL);
-
-    /* release reader/writer locks on character-device state */
-    unlock_rwstates(picotm_arraybeg(self->rwstate),
-                    picotm_arrayend(self->rwstate),
-                    self->chrdev);
-}
-
-void
-chrdev_tx_update_cc(struct chrdev_tx* self, struct picotm_error* error)
-{
-    static void (* const update_cc[])(struct chrdev_tx*, struct picotm_error*) = {
-        update_cc_noundo,
-        update_cc_2pl
-    };
-
-    assert(chrdev_tx_holds_ref(self));
-
-    update_cc[self->cc_mode](self, error);
-}
-
-/*
- * Clear CC
- */
-
-static void
-clear_cc_noundo(struct chrdev_tx* self, struct picotm_error* error)
-{
-    assert(self);
-    assert(self->cc_mode == PICOTM_LIBC_CC_MODE_NOUNDO);
-}
-
-static void
-clear_cc_2pl(struct chrdev_tx* self, struct picotm_error* error)
-{
-    assert(self);
-    assert(self->cc_mode == PICOTM_LIBC_CC_MODE_2PL);
-
-    /* release reader/writer locks on character-device state */
-    unlock_rwstates(picotm_arraybeg(self->rwstate),
-                    picotm_arrayend(self->rwstate),
-                    self->chrdev);
-}
-
-void
-chrdev_tx_clear_cc(struct chrdev_tx* self, struct picotm_error* error)
-{
-    static void (* const clear_cc[])(struct chrdev_tx*, struct picotm_error*) = {
-        clear_cc_noundo,
-        clear_cc_2pl
-    };
-
-    assert(chrdev_tx_holds_ref(self));
-
-    clear_cc[self->cc_mode](self, error);
 }
 
 /*

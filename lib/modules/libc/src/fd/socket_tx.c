@@ -1618,14 +1618,38 @@ write_undo(struct file_tx* base, int fildes, int cookie,
 
 static void
 lock_file_tx(struct file_tx* base, struct picotm_error* error)
-{
-    socket_tx_lock(socket_tx_of_file_tx(base));
-}
+{ }
 
 static void
 unlock_file_tx(struct file_tx* base, struct picotm_error* error)
+{ }
+
+/* Validation
+ */
+
+static void
+validate_noundo(struct socket_tx* self, struct picotm_error* error)
+{ }
+
+static void
+validate_2pl(struct socket_tx* self, struct picotm_error* error)
+{ }
+
+static void
+socket_tx_validate(struct socket_tx* self, struct picotm_error* error)
 {
-    socket_tx_unlock(socket_tx_of_file_tx(base));
+    static void (* const validate[])(struct socket_tx*, struct picotm_error*) = {
+        validate_noundo,
+        validate_2pl
+    };
+
+    assert(self);
+
+    if (!socket_tx_holds_ref(self)) {
+        return;
+    }
+
+    validate[self->cc_mode](self, error);
 }
 
 static void
@@ -1634,10 +1658,77 @@ validate_file_tx(struct file_tx* base, struct picotm_error* error)
     socket_tx_validate(socket_tx_of_file_tx(base), error);
 }
 
+/* Update CC
+ */
+
+static void
+update_cc_noundo(struct socket_tx* self, struct picotm_error* error)
+{ }
+
+static void
+update_cc_2pl(struct socket_tx* self, struct picotm_error* error)
+{
+    assert(self);
+    assert(self->cc_mode == PICOTM_LIBC_CC_MODE_2PL);
+
+    /* release reader/writer locks on socket state */
+    unlock_rwstates(picotm_arraybeg(self->rwstate),
+                    picotm_arrayend(self->rwstate),
+                    self->socket);
+}
+
+static void
+socket_tx_update_cc(struct socket_tx* self, struct picotm_error* error)
+{
+    static void (* const update_cc[])(struct socket_tx*, struct picotm_error*) = {
+        update_cc_noundo,
+        update_cc_2pl
+    };
+
+    assert(socket_tx_holds_ref(self));
+
+    update_cc[self->cc_mode](self, error);
+}
+
 static void
 update_cc_file_tx(struct file_tx* base, struct picotm_error* error)
 {
     socket_tx_update_cc(socket_tx_of_file_tx(base), error);
+}
+
+/* Clear CC
+ */
+
+static void
+clear_cc_noundo(struct socket_tx* self, struct picotm_error* error)
+{
+    assert(self);
+    assert(self->cc_mode == PICOTM_LIBC_CC_MODE_NOUNDO);
+}
+
+static void
+clear_cc_2pl(struct socket_tx* self, struct picotm_error* error)
+{
+    assert(self);
+    assert(self->cc_mode == PICOTM_LIBC_CC_MODE_2PL);
+
+    /* release reader/writer locks on socket state */
+    unlock_rwstates(picotm_arraybeg(self->rwstate),
+                    picotm_arrayend(self->rwstate),
+                    self->socket);
+}
+
+static void
+socket_tx_clear_cc(struct socket_tx* self, struct picotm_error* error)
+{
+    static void (* const clear_cc[])(struct socket_tx*, struct picotm_error*) = {
+        clear_cc_noundo,
+        clear_cc_2pl
+    };
+
+    assert(socket_tx_holds_ref(self));
+
+    clear_cc[self->cc_mode](self, error);
 }
 
 static void
@@ -1645,6 +1736,10 @@ clear_cc_file_tx(struct file_tx* base, struct picotm_error* error)
 {
     socket_tx_clear_cc(socket_tx_of_file_tx(base), error);
 }
+
+/*
+ * Public interface
+ */
 
 static const struct file_tx_ops socket_tx_ops = {
     /* ref counting */
@@ -1751,116 +1846,6 @@ socket_tx_uninit(struct socket_tx* self)
 
     uninit_rwstates(picotm_arraybeg(self->rwstate),
                     picotm_arrayend(self->rwstate));
-}
-
-/*
- * Validation
- */
-
-void
-socket_tx_lock(struct socket_tx* self)
-{
-    assert(self);
-}
-
-void
-socket_tx_unlock(struct socket_tx* self)
-{
-    assert(self);
-}
-
-static void
-validate_noundo(struct socket_tx* self, struct picotm_error* error)
-{ }
-
-static void
-validate_2pl(struct socket_tx* self, struct picotm_error* error)
-{ }
-
-void
-socket_tx_validate(struct socket_tx* self, struct picotm_error* error)
-{
-    static void (* const validate[])(struct socket_tx*, struct picotm_error*) = {
-        validate_noundo,
-        validate_2pl
-    };
-
-    assert(self);
-
-    if (!socket_tx_holds_ref(self)) {
-        return;
-    }
-
-    validate[self->cc_mode](self, error);
-}
-
-/*
- * Update CC
- */
-
-static void
-update_cc_noundo(struct socket_tx* self, struct picotm_error* error)
-{ }
-
-static void
-update_cc_2pl(struct socket_tx* self, struct picotm_error* error)
-{
-    assert(self);
-    assert(self->cc_mode == PICOTM_LIBC_CC_MODE_2PL);
-
-    /* release reader/writer locks on socket state */
-    unlock_rwstates(picotm_arraybeg(self->rwstate),
-                    picotm_arrayend(self->rwstate),
-                    self->socket);
-}
-
-void
-socket_tx_update_cc(struct socket_tx* self, struct picotm_error* error)
-{
-    static void (* const update_cc[])(struct socket_tx*, struct picotm_error*) = {
-        update_cc_noundo,
-        update_cc_2pl
-    };
-
-    assert(socket_tx_holds_ref(self));
-
-    update_cc[self->cc_mode](self, error);
-}
-
-/*
- * Clear CC
- */
-
-static void
-clear_cc_noundo(struct socket_tx* self, struct picotm_error* error)
-{
-    assert(self);
-    assert(self->cc_mode == PICOTM_LIBC_CC_MODE_NOUNDO);
-}
-
-static void
-clear_cc_2pl(struct socket_tx* self, struct picotm_error* error)
-{
-    assert(self);
-    assert(self->cc_mode == PICOTM_LIBC_CC_MODE_2PL);
-
-    /* release reader/writer locks on socket state */
-    unlock_rwstates(picotm_arraybeg(self->rwstate),
-                    picotm_arrayend(self->rwstate),
-                    self->socket);
-}
-
-void
-socket_tx_clear_cc(struct socket_tx* self, struct picotm_error* error)
-{
-    static void (* const clear_cc[])(struct socket_tx*, struct picotm_error*) = {
-        clear_cc_noundo,
-        clear_cc_2pl
-    };
-
-    assert(socket_tx_holds_ref(self));
-
-    clear_cc[self->cc_mode](self, error);
 }
 
 /*
