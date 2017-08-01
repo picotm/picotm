@@ -34,7 +34,7 @@
 #include "ioop.h"
 #include "iooptab.h"
 
-struct fifo_tx*
+static struct fifo_tx*
 fifo_tx_of_file_tx(struct file_tx* file_tx)
 {
     assert(file_tx);
@@ -331,7 +331,7 @@ fcntl_exec_2pl(struct fifo_tx* self, int fildes, int cmd,
     return -1;
 }
 
-int
+static int
 fifo_tx_fcntl_exec(struct fifo_tx* self, int fildes, int cmd,
                    union fcntl_arg* arg, bool isnoundo, int* cookie,
                    struct picotm_error* error)
@@ -370,7 +370,7 @@ fcntl_exec(struct file_tx* base, int fildes, int cmd,
                               isnoundo, cookie, error);
 }
 
-void
+static void
 fifo_tx_fcntl_apply(struct fifo_tx* self, int fildes, int cookie,
                     struct picotm_error* error)
 { }
@@ -382,7 +382,7 @@ fcntl_apply(struct file_tx* base, int fildes, int cookie,
     fifo_tx_fcntl_apply(fifo_tx_of_file_tx(base), fildes, cookie, error);
 }
 
-void
+static void
 fifo_tx_fcntl_undo(struct fifo_tx* self, int fildes, int cookie,
                    struct picotm_error* error)
 { }
@@ -433,7 +433,7 @@ fstat_exec_2pl(struct fifo_tx* self, int fildes, struct stat* buf,
     return res;
 }
 
-int
+static int
 fifo_tx_fstat_exec(struct fifo_tx* self, int fildes, struct stat* buf,
                    bool isnoundo, int* cookie, struct picotm_error* error)
 {
@@ -479,7 +479,7 @@ fstat_apply_2pl(struct fifo_tx* self, int fildes, int cookie,
                 struct picotm_error* error)
 { }
 
-void
+static void
 fifo_tx_fstat_apply(struct fifo_tx* self, int fildes, int cookie,
                     struct picotm_error* error)
 {
@@ -508,7 +508,7 @@ fstat_undo_2pl(struct fifo_tx* self, int fildes, int cookie,
                struct picotm_error* error)
 { }
 
-void
+static void
 fifo_tx_fstat_undo(struct fifo_tx* self, int fildes, int cookie,
                    struct picotm_error* error)
 {
@@ -612,7 +612,7 @@ read_exec_noundo(struct fifo_tx* self, int fildes, void* buf,
     return res;
 }
 
-ssize_t
+static size_t
 fifo_tx_read_exec(struct fifo_tx* self, int fildes, void* buf, size_t nbyte,
                   bool isnoundo, enum picotm_libc_validation_mode val_mode,
                   int* cookie, struct picotm_error* error)
@@ -658,7 +658,7 @@ read_apply_noundo(struct fifo_tx* self, int fildes, int cookie,
                   struct picotm_error* error)
 { }
 
-void
+static void
 fifo_tx_read_apply(struct fifo_tx* self, int fildes, int cookie,
                    struct picotm_error* error)
 {
@@ -680,7 +680,7 @@ read_apply(struct file_tx* base, int fildes, int cookie,
     fifo_tx_read_apply(fifo_tx_of_file_tx(base), fildes, cookie, error);
 }
 
-void
+static void
 fifo_tx_read_undo(struct fifo_tx* self, int fildes, int cookie,
                   struct picotm_error* error)
 {
@@ -776,7 +776,7 @@ write_exec_2pl(struct fifo_tx* self, int fildes, const void* buf,
     return nbyte;
 }
 
-ssize_t
+static ssize_t
 fifo_tx_write_exec(struct fifo_tx* self, int fildes, const void* buf,
                    size_t nbyte, bool isnoundo, int* cookie,
                    struct picotm_error* error)
@@ -838,7 +838,7 @@ write_apply_2pl(struct fifo_tx* self, int fildes, int cookie,
     }
 }
 
-void
+static void
 fifo_tx_write_apply(struct fifo_tx* self, int fildes, int cookie,
                     struct picotm_error* error)
 {
@@ -867,7 +867,7 @@ static void
 write_any_undo(struct picotm_error* error)
 { }
 
-void
+static void
 fifo_tx_write_undo(struct fifo_tx* self, int fildes, int cookie,
                    struct picotm_error* error)
 {

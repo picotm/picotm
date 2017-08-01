@@ -37,9 +37,6 @@
 
 struct fchmodop;
 struct picotm_error;
-struct stat;
-
-union fcntl_arg;
 
 /**
  * Holds transaction-local state for a directory.
@@ -66,9 +63,6 @@ struct dir_tx {
     /** State of the local locks */
     struct picotm_rwstate rwstate[NUMBER_OF_DIR_FIELDS];
 };
-
-struct dir_tx*
-dir_tx_of_file_tx(struct file_tx* file_tx);
 
 /**
  * Initialize transaction-local directory.
@@ -138,69 +132,3 @@ dir_tx_lock(struct dir_tx* self);
  */
 void
 dir_tx_unlock(struct dir_tx* self);
-
-/*
- * fchmod()
- */
-
-int
-dir_tx_fchmod_exec(struct dir_tx* self, int fildes, mode_t mode,
-                   bool isnoundo, int* cookie,
-                   struct picotm_error* error);
-
-void
-dir_tx_fchmod_apply(struct dir_tx* self, int fildes, int cookie,
-                    struct picotm_error* error);
-
-void
-dir_tx_fchmod_undo(struct dir_tx* self, int fildes, int cookie,
-                   struct picotm_error* error);
-
-/*
- * fcntl()
- */
-
-int
-dir_tx_fcntl_exec(struct dir_tx* self, int fildes, int cmd,
-                  union fcntl_arg* arg, bool isnoundo, int* cookie,
-                  struct picotm_error* error);
-
-void
-dir_tx_fcntl_apply(struct dir_tx* self, int fildes, int cookie,
-                   struct picotm_error* error);
-
-void
-dir_tx_fcntl_undo(struct dir_tx* self, int fildes, int cookie,
-                  struct picotm_error* error);
-
-/*
- * fstat()
- */
-
-int
-dir_tx_fstat_exec(struct dir_tx* self, int fildes, struct stat* buf,
-                  bool isnoundo, int* cookie, struct picotm_error* error);
-
-void
-dir_tx_fstat_apply(struct dir_tx* self, int fildes, int cookie,
-                   struct picotm_error* error);
-
-void
-dir_tx_fstat_undo(struct dir_tx* self, int fildes, int cookie,
-                  struct picotm_error* error);
-
-/*
- * fsync()
- */
-
-int
-dir_tx_fsync_exec(struct dir_tx* self, int fildes, bool isnoundo,
-                  int* cookie, struct picotm_error* error);
-
-void
-dir_tx_fsync_apply(struct dir_tx* self, int fildes, int cookie,
-                   struct picotm_error* error);
-
-void
-dir_tx_fsync_undo(struct dir_tx* self, int fildes, int cookie,
-                  struct picotm_error* error);

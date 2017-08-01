@@ -36,9 +36,6 @@
  */
 
 struct picotm_error;
-struct stat;
-
-union fcntl_arg;
 
 /**
  * Holds transaction-local state for a character device.
@@ -74,9 +71,6 @@ struct chrdev_tx {
     /** State of the local reader/writer locks */
     struct picotm_rwstate rwstate[NUMBER_OF_CHRDEV_FIELDS];
 };
-
-struct chrdev_tx*
-chrdev_tx_of_file_tx(struct file_tx* file_tx);
 
 /**
  * Initialize transaction-local character device.
@@ -154,70 +148,3 @@ chrdev_tx_lock(struct chrdev_tx* self);
  */
 void
 chrdev_tx_unlock(struct chrdev_tx* self);
-
-/*
- * fcntl()
- */
-
-int
-chrdev_tx_fcntl_exec(struct chrdev_tx* self, int fildes, int cmd,
-                     union fcntl_arg* arg, bool isnoundo, int* cookie,
-                     struct picotm_error* error);
-
-void
-chrdev_tx_fcntl_apply(struct chrdev_tx* self, int fildes, int cookie,
-                      struct picotm_error* error);
-
-void
-chrdev_tx_fcntl_undo(struct chrdev_tx* self, int fildes, int cookie,
-                     struct picotm_error* error);
-
-/*
- * fstat()
- */
-
-int
-chrdev_tx_fstat_exec(struct chrdev_tx* self, int fildes, struct stat* buf,
-                     bool isnoundo, int* cookie, struct picotm_error* error);
-
-void
-chrdev_tx_fstat_apply(struct chrdev_tx* self, int fildes, int cookie,
-                      struct picotm_error* error);
-
-void
-chrdev_tx_fstat_undo(struct chrdev_tx* self, int fildes, int cookie,
-                     struct picotm_error* error);
-
-/*
- * read()
- */
-
-ssize_t
-chrdev_tx_read_exec(struct chrdev_tx* self, int fildes, void* buf, size_t nbyte,
-                    bool isnoundo, enum picotm_libc_validation_mode val_mode,
-                    int* cookie,  struct picotm_error* error);
-
-void
-chrdev_tx_read_apply(struct chrdev_tx* self, int fildes, int cookie,
-                     struct picotm_error* error);
-
-void
-chrdev_tx_read_undo(struct chrdev_tx* self, int fildes, int cookie,
-                    struct picotm_error* error);
-
-/*
- * write()
- */
-
-ssize_t
-chrdev_tx_write_exec(struct chrdev_tx* self, int fildes, const void* buf,
-                     size_t nbyte, bool isnoundo, int* cookie,
-                     struct picotm_error* error);
-
-void
-chrdev_tx_write_apply(struct chrdev_tx* self, int fildes, int cookie,
-                      struct picotm_error* error);
-
-void
-chrdev_tx_write_undo(struct chrdev_tx* self, int fildes, int cookie,
-                     struct picotm_error* error);
