@@ -869,6 +869,10 @@ write_undo(struct file_tx* base, int fildes, int cookie,
  */
 
 static const struct file_tx_ops chrdev_tx_ops = {
+    /* ref counting */
+    ref_file_tx,
+    unref_file_tx,
+    /* file ops */
     accept_exec,
     NULL,
     NULL,
@@ -928,8 +932,7 @@ chrdev_tx_init(struct chrdev_tx* self)
 
     memset(&self->active_list, 0, sizeof(self->active_list));
 
-    file_tx_init(&self->base, PICOTM_LIBC_FILE_TYPE_CHRDEV, &chrdev_tx_ops,
-                 ref_file_tx, unref_file_tx);
+    file_tx_init(&self->base, PICOTM_LIBC_FILE_TYPE_CHRDEV, &chrdev_tx_ops);
 
     self->chrdev = NULL;
 

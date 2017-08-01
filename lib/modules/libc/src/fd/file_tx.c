@@ -22,17 +22,11 @@
 
 void
 file_tx_init(struct file_tx* self, enum picotm_libc_file_type type,
-             const struct file_tx_ops* ops,
-             void (*ref)(struct file_tx*),
-             void (*unref)(struct file_tx*))
+             const struct file_tx_ops* ops)
 {
     assert(self);
     assert(ops);
-    assert(ref);
-    assert(unref);
 
-    self->ref = ref;
-    self->unref = unref;
     self->ops = ops;
     self->type = type;
 }
@@ -54,7 +48,7 @@ file_tx_ref(struct file_tx* self)
 {
     assert(self);
 
-    self->ref(self);
+    self->ops->ref(self);
 }
 
 void
@@ -62,5 +56,5 @@ file_tx_unref(struct file_tx* self)
 {
     assert(self);
 
-    self->unref(self);
+    self->ops->unref(self);
 }

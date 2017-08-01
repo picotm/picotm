@@ -1617,6 +1617,10 @@ write_undo(struct file_tx* base, int fildes, int cookie,
  */
 
 static const struct file_tx_ops socket_tx_ops = {
+    /* ref counting */
+    ref_file_tx,
+    unref_file_tx,
+    /* file ops */
     accept_exec,
     accept_apply,
     accept_undo,
@@ -1676,8 +1680,7 @@ socket_tx_init(struct socket_tx* self)
 
     memset(&self->active_list, 0, sizeof(self->active_list));
 
-    file_tx_init(&self->base, PICOTM_LIBC_FILE_TYPE_SOCKET, &socket_tx_ops,
-                 ref_file_tx, unref_file_tx);
+    file_tx_init(&self->base, PICOTM_LIBC_FILE_TYPE_SOCKET, &socket_tx_ops);
 
     self->socket = NULL;
 
