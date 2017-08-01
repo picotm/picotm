@@ -84,24 +84,6 @@ void
 chrdev_tx_uninit(struct chrdev_tx* self);
 
 /**
- * Validate the local state
- */
-void
-chrdev_tx_validate(struct chrdev_tx* self, struct picotm_error* error);
-
-/**
- * Updates the data structures for concurrency control after a successful apply
- */
-void
-chrdev_tx_update_cc(struct chrdev_tx* self, struct picotm_error* error);
-
-/**
- * Clears the data structures for concurrency control after a successful undo
- */
-void
-chrdev_tx_clear_cc(struct chrdev_tx* self, struct picotm_error* error);
-
-/**
  * Acquire a reference on the open file description
  */
 void
@@ -125,15 +107,3 @@ chrdev_tx_unref(struct chrdev_tx* self);
  */
 bool
 chrdev_tx_holds_ref(struct chrdev_tx* self);
-
-/**
- * Prepares the open file description for commit
- */
-void
-chrdev_tx_lock(struct chrdev_tx* self);
-
-/**
- * Finishes commit for open file description
- */
-void
-chrdev_tx_unlock(struct chrdev_tx* self);

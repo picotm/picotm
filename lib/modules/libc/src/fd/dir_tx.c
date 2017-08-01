@@ -834,19 +834,43 @@ write_exec(struct file_tx* base, int fildes, const void* buf, size_t nbyte,
 }
 
 /*
- * Public interface
+ * Module interface
  */
 
 static void
 lock_file_tx(struct file_tx* base, struct picotm_error* error)
-{
-    dir_tx_lock(dir_tx_of_file_tx(base));
-}
+{ }
 
 static void
 unlock_file_tx(struct file_tx* base, struct picotm_error* error)
+{ }
+
+/* Validation
+ */
+
+static void
+validate_noundo(struct dir_tx* self, struct picotm_error* error)
+{ }
+
+static void
+validate_2pl(struct dir_tx* self, struct picotm_error* error)
 {
-    dir_tx_unlock(dir_tx_of_file_tx(base));
+    assert(self);
+}
+
+static void
+dir_tx_validate(struct dir_tx* self, struct picotm_error* error)
+{
+    static void (* const validate[])(struct dir_tx*, struct picotm_error*) = {
+        validate_noundo,
+        validate_2pl
+    };
+
+    if (!dir_tx_holds_ref(self)) {
+        return;
+    }
+
+    validate[self->cc_mode](self, error);
 }
 
 static void
@@ -855,10 +879,77 @@ validate_file_tx(struct file_tx* base, struct picotm_error* error)
     dir_tx_validate(dir_tx_of_file_tx(base), error);
 }
 
+/* Update CC
+ */
+
+static void
+update_cc_noundo(struct dir_tx* self, struct picotm_error* error)
+{ }
+
+static void
+update_cc_2pl(struct dir_tx* self, struct picotm_error* error)
+{
+    assert(self);
+    assert(self->cc_mode == PICOTM_LIBC_CC_MODE_2PL);
+
+    /* release reader/writer locks on directory state */
+    unlock_rwstates(picotm_arraybeg(self->rwstate),
+                    picotm_arrayend(self->rwstate),
+                    self->dir);
+}
+
+static void
+dir_tx_update_cc(struct dir_tx* self, struct picotm_error* error)
+{
+    static void (* const update_cc[])(struct dir_tx*, struct picotm_error*) = {
+        update_cc_noundo,
+        update_cc_2pl
+    };
+
+    assert(dir_tx_holds_ref(self));
+
+    update_cc[self->cc_mode](self, error);
+}
+
 static void
 update_cc_file_tx(struct file_tx* base, struct picotm_error* error)
 {
     dir_tx_update_cc(dir_tx_of_file_tx(base), error);
+}
+
+/* Clear CC
+ */
+
+static void
+clear_cc_noundo(struct dir_tx* self, struct picotm_error* error)
+{
+    assert(self);
+    assert(self->cc_mode == PICOTM_LIBC_CC_MODE_NOUNDO);
+}
+
+static void
+clear_cc_2pl(struct dir_tx* self, struct picotm_error* error)
+{
+    assert(self);
+    assert(self->cc_mode == PICOTM_LIBC_CC_MODE_2PL);
+
+    /* release lock on directory */
+    unlock_rwstates(picotm_arraybeg(self->rwstate),
+                    picotm_arrayend(self->rwstate),
+                    self->dir);
+}
+
+static void
+dir_tx_clear_cc(struct dir_tx* self, struct picotm_error* error)
+{
+    static void (* const clear_cc[])(struct dir_tx*, struct picotm_error*) = {
+        clear_cc_noundo,
+        clear_cc_2pl
+    };
+
+    assert(dir_tx_holds_ref(self));
+
+    clear_cc[self->cc_mode](self, error);
 }
 
 static void
@@ -866,6 +957,10 @@ clear_cc_file_tx(struct file_tx* base, struct picotm_error* error)
 {
     dir_tx_clear_cc(dir_tx_of_file_tx(base), error);
 }
+
+/*
+ * Public interface
+ */
 
 static const struct file_tx_ops dir_tx_ops = {
     /* ref counting */
@@ -961,116 +1056,6 @@ dir_tx_uninit(struct dir_tx* self)
 
     uninit_rwstates(picotm_arraybeg(self->rwstate),
                     picotm_arrayend(self->rwstate));
-}
-
-/*
- * Validation
- */
-
-void
-dir_tx_lock(struct dir_tx* self)
-{
-    assert(self);
-}
-
-void
-dir_tx_unlock(struct dir_tx* self)
-{
-    assert(self);
-}
-
-static void
-validate_noundo(struct dir_tx* self, struct picotm_error* error)
-{ }
-
-static void
-validate_2pl(struct dir_tx* self, struct picotm_error* error)
-{
-    assert(self);
-}
-
-void
-dir_tx_validate(struct dir_tx* self, struct picotm_error* error)
-{
-    static void (* const validate[])(struct dir_tx*, struct picotm_error*) = {
-        validate_noundo,
-        validate_2pl
-    };
-
-    if (!dir_tx_holds_ref(self)) {
-        return;
-    }
-
-    validate[self->cc_mode](self, error);
-}
-
-/*
- * Update CC
- */
-
-static void
-update_cc_noundo(struct dir_tx* self, struct picotm_error* error)
-{ }
-
-static void
-update_cc_2pl(struct dir_tx* self, struct picotm_error* error)
-{
-    assert(self);
-    assert(self->cc_mode == PICOTM_LIBC_CC_MODE_2PL);
-
-    /* release reader/writer locks on directory state */
-    unlock_rwstates(picotm_arraybeg(self->rwstate),
-                    picotm_arrayend(self->rwstate),
-                    self->dir);
-}
-
-void
-dir_tx_update_cc(struct dir_tx* self, struct picotm_error* error)
-{
-    static void (* const update_cc[])(struct dir_tx*, struct picotm_error*) = {
-        update_cc_noundo,
-        update_cc_2pl
-    };
-
-    assert(dir_tx_holds_ref(self));
-
-    update_cc[self->cc_mode](self, error);
-}
-
-/*
- * Clear CC
- */
-
-static void
-clear_cc_noundo(struct dir_tx* self, struct picotm_error* error)
-{
-    assert(self);
-    assert(self->cc_mode == PICOTM_LIBC_CC_MODE_NOUNDO);
-}
-
-static void
-clear_cc_2pl(struct dir_tx* self, struct picotm_error* error)
-{
-    assert(self);
-    assert(self->cc_mode == PICOTM_LIBC_CC_MODE_2PL);
-
-    /* release lock on directory */
-    unlock_rwstates(picotm_arraybeg(self->rwstate),
-                    picotm_arrayend(self->rwstate),
-                    self->dir);
-}
-
-void
-dir_tx_clear_cc(struct dir_tx* self, struct picotm_error* error)
-{
-    static void (* const clear_cc[])(struct dir_tx*, struct picotm_error*) = {
-        clear_cc_noundo,
-        clear_cc_2pl
-    };
-
-    assert(dir_tx_holds_ref(self));
-
-    clear_cc[self->cc_mode](self, error);
 }
 
 /*

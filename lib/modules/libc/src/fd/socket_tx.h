@@ -83,24 +83,6 @@ void
 socket_tx_uninit(struct socket_tx* self);
 
 /**
- * Validate the local state
- */
-void
-socket_tx_validate(struct socket_tx* self, struct picotm_error* error);
-
-/**
- * Updates the data structures for concurrency control after a successful apply
- */
-void
-socket_tx_update_cc(struct socket_tx* self, struct picotm_error* error);
-
-/**
- * Clears the data structures for concurrency control after a successful undo
- */
-void
-socket_tx_clear_cc(struct socket_tx* self, struct picotm_error* error);
-
-/**
  * Acquire a reference on the open file description
  */
 void
@@ -124,15 +106,3 @@ socket_tx_unref(struct socket_tx* self);
  */
 bool
 socket_tx_holds_ref(struct socket_tx* self);
-
-/**
- * Prepares the open file description for commit
- */
-void
-socket_tx_lock(struct socket_tx* self);
-
-/**
- * Finishes commit for open file description
- */
-void
-socket_tx_unlock(struct socket_tx* self);

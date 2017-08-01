@@ -82,24 +82,6 @@ void
 fifo_tx_uninit(struct fifo_tx* self);
 
 /**
- * Validate the local state
- */
-void
-fifo_tx_validate(struct fifo_tx* self, struct picotm_error* error);
-
-/**
- * Updates the data structures for concurrency control after a successful apply
- */
-void
-fifo_tx_update_cc(struct fifo_tx* self, struct picotm_error* error);
-
-/**
- * Clears the data structures for concurrency control after a successful undo
- */
-void
-fifo_tx_clear_cc(struct fifo_tx* self, struct picotm_error* error);
-
-/**
  * Acquire a reference on the open file description
  */
 void
@@ -123,15 +105,3 @@ fifo_tx_unref(struct fifo_tx* self);
  */
 bool
 fifo_tx_holds_ref(struct fifo_tx* self);
-
-/**
- * Prepares the open file description for commit
- */
-void
-fifo_tx_lock(struct fifo_tx* self);
-
-/**
- * Finishes commit for open file description
- */
-void
-fifo_tx_unlock(struct fifo_tx* self);

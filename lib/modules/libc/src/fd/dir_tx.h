@@ -76,24 +76,6 @@ void
 dir_tx_uninit(struct dir_tx* self);
 
 /**
- * Validate the local state
- */
-void
-dir_tx_validate(struct dir_tx* self, struct picotm_error* error);
-
-/**
- * Updates the data structures for concurrency control after a successful apply
- */
-void
-dir_tx_update_cc(struct dir_tx* self, struct picotm_error* error);
-
-/**
- * Clears the data structures for concurrency control after a successful undo
- */
-void
-dir_tx_clear_cc(struct dir_tx* self, struct picotm_error* error);
-
-/**
  * Acquire a reference on the open file description
  */
 void
@@ -117,15 +99,3 @@ dir_tx_unref(struct dir_tx* self);
  */
 bool
 dir_tx_holds_ref(struct dir_tx* self);
-
-/**
- * Prepares the open file description for commit
- */
-void
-dir_tx_lock(struct dir_tx* self);
-
-/**
- * Finishes commit for open file description
- */
-void
-dir_tx_unlock(struct dir_tx* self);
