@@ -1106,7 +1106,7 @@ chrdev_tx_uninit(struct chrdev_tx* self)
 
 void
 chrdev_tx_ref_or_set_up(struct chrdev_tx* self, struct chrdev* chrdev,
-                        int fildes, struct picotm_error* error)
+                        struct picotm_error* error)
 {
     assert(self);
     assert(chrdev);

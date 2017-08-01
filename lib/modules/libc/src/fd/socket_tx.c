@@ -1854,7 +1854,7 @@ socket_tx_uninit(struct socket_tx* self)
 
 void
 socket_tx_ref_or_set_up(struct socket_tx* self, struct socket* socket,
-                        int fildes, struct picotm_error* error)
+                        struct picotm_error* error)
 {
     assert(self);
     assert(socket);

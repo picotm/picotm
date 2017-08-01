@@ -87,7 +87,7 @@ chrdev_tx_uninit(struct chrdev_tx* self);
  * Acquire a reference on the open file description
  */
 void
-chrdev_tx_ref_or_set_up(struct chrdev_tx* self, struct chrdev* chrdev, int fildes,
+chrdev_tx_ref_or_set_up(struct chrdev_tx* self, struct chrdev* chrdev,
                         struct picotm_error* error);
 
 /**

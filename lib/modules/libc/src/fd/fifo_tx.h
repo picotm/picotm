@@ -85,7 +85,7 @@ fifo_tx_uninit(struct fifo_tx* self);
  * Acquire a reference on the open file description
  */
 void
-fifo_tx_ref_or_set_up(struct fifo_tx* self, struct fifo* fifo, int fildes,
+fifo_tx_ref_or_set_up(struct fifo_tx* self, struct fifo* fifo,
                       struct picotm_error* error);
 
 /**
