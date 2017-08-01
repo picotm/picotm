@@ -21,7 +21,6 @@
 
 #include <picotm/picotm-lib-ref.h>
 #include <picotm/picotm-lib-rwstate.h>
-#include <sys/queue.h>
 #include <sys/types.h>
 #include "file_tx.h"
 #include "picotm/picotm-libc.h"
@@ -44,8 +43,6 @@ struct picotm_error;
 struct regfile_tx {
 
     struct picotm_ref16 ref;
-
-    SLIST_ENTRY(regfile_tx) active_list;
 
     struct file_tx base;
 

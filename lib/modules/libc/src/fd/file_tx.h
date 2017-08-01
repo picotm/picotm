@@ -20,6 +20,7 @@
 #pragma once
 
 #include <stdbool.h>
+#include <sys/queue.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include "picotm/picotm-libc.h"
@@ -242,6 +243,8 @@ struct file_tx_ops {
  * Holds transaction-local state for a file.
  */
 struct file_tx {
+
+    SLIST_ENTRY(file_tx) active_list;
 
     const struct file_tx_ops* ops;
 

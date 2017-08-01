@@ -80,22 +80,16 @@ fildes_tx_init(struct fildes_tx* self, unsigned long module)
     fdtab_tx_init(&self->fdtab_tx);
 
     self->fd_tx_max_fildes = 0;
+
     SLIST_INIT(&self->fd_tx_active_list);
 
     self->chrdev_tx_max_index = 0;
-    SLIST_INIT(&self->chrdev_tx_active_list);
-
     self->fifo_tx_max_index = 0;
-    SLIST_INIT(&self->fifo_tx_active_list);
-
     self->regfile_tx_max_index = 0;
-    SLIST_INIT(&self->regfile_tx_active_list);
-
     self->dir_tx_max_index = 0;
-    SLIST_INIT(&self->dir_tx_active_list);
-
     self->socket_tx_max_index = 0;
-    SLIST_INIT(&self->socket_tx_active_list);
+
+    SLIST_INIT(&self->file_tx_active_list);
 
     self->eventtab = NULL;
     self->eventtablen = 0;
@@ -220,7 +214,8 @@ get_chrdev_tx_with_ref(struct fildes_tx* self, int fildes, bool newly_created,
         goto err_chrdev_tx_ref_or_set_up;
     }
 
-    SLIST_INSERT_HEAD(&self->chrdev_tx_active_list, chrdev_tx, active_list);
+    SLIST_INSERT_HEAD(&self->file_tx_active_list, &chrdev_tx->base,
+                      active_list);
 
 unref:
     chrdev_unref(chrdev);
@@ -271,7 +266,8 @@ get_fifo_tx_with_ref(struct fildes_tx* self, int fildes, bool newly_created,
         goto err_fifo_tx_ref_or_set_up;
     }
 
-    SLIST_INSERT_HEAD(&self->fifo_tx_active_list, fifo_tx, active_list);
+    SLIST_INSERT_HEAD(&self->file_tx_active_list, &fifo_tx->base,
+                      active_list);
 
 unref:
     fifo_unref(fifo);
@@ -323,7 +319,8 @@ get_regfile_tx_with_ref(struct fildes_tx* self, int fildes, bool newly_created,
         goto err_regfile_tx_ref_or_set_up;
     }
 
-    SLIST_INSERT_HEAD(&self->regfile_tx_active_list, regfile_tx, active_list);
+    SLIST_INSERT_HEAD(&self->file_tx_active_list, &regfile_tx->base,
+                      active_list);
 
 unref:
     regfile_unref(regfile);
@@ -374,7 +371,8 @@ get_dir_tx_with_ref(struct fildes_tx* self, int fildes, bool newly_created,
         goto err_dir_tx_ref_or_set_up;
     }
 
-    SLIST_INSERT_HEAD(&self->dir_tx_active_list, dir_tx, active_list);
+    SLIST_INSERT_HEAD(&self->file_tx_active_list, &dir_tx->base,
+                      active_list);
 
 unref:
     dir_unref(dir);
@@ -426,7 +424,8 @@ get_socket_tx_with_ref(struct fildes_tx* self, int fildes, bool newly_created,
         goto err_socket_tx_ref_or_set_up;
     }
 
-    SLIST_INSERT_HEAD(&self->socket_tx_active_list, socket_tx, active_list);
+    SLIST_INSERT_HEAD(&self->file_tx_active_list, &socket_tx->base,
+                      active_list);
 
 unref:
     socket_unref(socket);
@@ -2844,88 +2843,37 @@ undo_write(struct fildes_tx* self, int fildes, int cookie,
 void
 fildes_tx_lock(struct fildes_tx* self, struct picotm_error* error)
 {
-    /* Lock fds */
+    /* Lock file descriptors */
 
     struct fd_tx* fd_tx;
     SLIST_FOREACH(fd_tx, &self->fd_tx_active_list, active_list) {
         fd_tx_lock(fd_tx);
     }
 
-    /* Lock character devices */
+    /* Lock files */
 
-    struct chrdev_tx* chrdev_tx;
-    SLIST_FOREACH(chrdev_tx, &self->chrdev_tx_active_list, active_list) {
-        chrdev_tx_lock(chrdev_tx);
-    }
-
-    /* Lock fifos */
-
-    struct fifo_tx* fifo_tx;
-    SLIST_FOREACH(fifo_tx, &self->fifo_tx_active_list, active_list) {
-        fifo_tx_lock(fifo_tx);
-    }
-
-    /* Lock regular files */
-
-    struct regfile_tx* regfile_tx;
-    SLIST_FOREACH(regfile_tx, &self->regfile_tx_active_list, active_list) {
-        regfile_tx_lock(regfile_tx);
-    }
-
-    /* Lock directories */
-
-    struct dir_tx* dir_tx;
-    SLIST_FOREACH(dir_tx, &self->dir_tx_active_list, active_list) {
-        dir_tx_lock(dir_tx);
-    }
-
-    /* Lock sockets */
-
-    struct socket_tx* socket_tx;
-    SLIST_FOREACH(socket_tx, &self->socket_tx_active_list, active_list) {
-        socket_tx_lock(socket_tx);
+    struct file_tx* file_tx;
+    SLIST_FOREACH(file_tx, &self->file_tx_active_list, active_list) {
+        file_tx_lock(file_tx, error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
     }
 }
 
 void
 fildes_tx_unlock(struct fildes_tx* self)
 {
-    /* Unlock sockets */
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    struct socket_tx* socket_tx;
-    SLIST_FOREACH(socket_tx, &self->socket_tx_active_list, active_list) {
-        socket_tx_unlock(socket_tx);
+    /* Unlock files */
+
+    struct file_tx* file_tx;
+    SLIST_FOREACH(file_tx, &self->file_tx_active_list, active_list) {
+        file_tx_unlock(file_tx, &error);
     }
 
-    /* Unlock directories */
-
-    struct dir_tx* dir_tx;
-    SLIST_FOREACH(dir_tx, &self->dir_tx_active_list, active_list) {
-        dir_tx_unlock(dir_tx);
-    }
-
-    /* Unlock regular files */
-
-    struct regfile_tx* regfile_tx;
-    SLIST_FOREACH(regfile_tx, &self->regfile_tx_active_list, active_list) {
-        regfile_tx_unlock(regfile_tx);
-    }
-
-    /* Unlock fifos */
-
-    struct fifo_tx* fifo_tx;
-    SLIST_FOREACH(fifo_tx, &self->fifo_tx_active_list, active_list) {
-        fifo_tx_unlock(fifo_tx);
-    }
-
-    /* Unlock character devices */
-
-    struct chrdev_tx* chrdev_tx;
-    SLIST_FOREACH(chrdev_tx, &self->chrdev_tx_active_list, active_list) {
-        chrdev_tx_unlock(chrdev_tx);
-    }
-
-    /* Unlock fds */
+    /* Unlock file descriptors */
 
     struct fd_tx* fd_tx;
     SLIST_FOREACH(fd_tx, &self->fd_tx_active_list, active_list) {
@@ -2937,7 +2885,7 @@ void
 fildes_tx_validate(struct fildes_tx* self, int noundo,
                    struct picotm_error* error)
 {
-    /* Validate fd_txs */
+    /* Validate file-descriptor state */
 
     struct fd_tx* fd_tx;
     SLIST_FOREACH(fd_tx, &self->fd_tx_active_list, active_list) {
@@ -2947,51 +2895,11 @@ fildes_tx_validate(struct fildes_tx* self, int noundo,
         }
     }
 
-    /* Validate chrdev_txs */
+    /* Validate files */
 
-    struct chrdev_tx* chrdev_tx;
-    SLIST_FOREACH(chrdev_tx, &self->chrdev_tx_active_list, active_list) {
-        chrdev_tx_validate(chrdev_tx, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-    }
-
-    /* Validate fifo_txs */
-
-    struct fifo_tx* fifo_tx;
-    SLIST_FOREACH(fifo_tx, &self->fifo_tx_active_list, active_list) {
-        fifo_tx_validate(fifo_tx, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-    }
-
-    /* Validate regfile_txs */
-
-    struct regfile_tx* regfile_tx;
-    SLIST_FOREACH(regfile_tx, &self->regfile_tx_active_list, active_list) {
-        regfile_tx_validate(regfile_tx, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-    }
-
-    /* Validate dir_txs */
-
-    struct dir_tx* dir_tx;
-    SLIST_FOREACH(dir_tx, &self->dir_tx_active_list, active_list) {
-        dir_tx_validate(dir_tx, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-    }
-
-    /* Validate socket_txs */
-
-    struct socket_tx* socket_tx;
-    SLIST_FOREACH(socket_tx, &self->socket_tx_active_list, active_list) {
-        socket_tx_validate(socket_tx, error);
+    struct file_tx* file_tx;
+    SLIST_FOREACH(file_tx, &self->file_tx_active_list, active_list) {
+        file_tx_validate(file_tx, error);
         if (picotm_error_is_set(error)) {
             return;
         }
@@ -3088,7 +2996,7 @@ void
 fildes_tx_update_cc(struct fildes_tx* self, int noundo,
                     struct picotm_error* error)
 {
-    /* Update fd_txs */
+    /* Update concurrency control on file descriptors */
 
     struct fd_tx* fd_tx;
     SLIST_FOREACH(fd_tx, &self->fd_tx_active_list, active_list) {
@@ -3098,57 +3006,18 @@ fildes_tx_update_cc(struct fildes_tx* self, int noundo,
         }
     }
 
-    /* Update chrdev_txs */
+    /* Update concurrency control on files */
 
-    struct chrdev_tx* chrdev_tx;
-    SLIST_FOREACH(chrdev_tx, &self->chrdev_tx_active_list, active_list) {
-        chrdev_tx_update_cc(chrdev_tx, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-    }
-
-    /* Update fifo_txs */
-
-    struct fifo_tx* fifo_tx;
-    SLIST_FOREACH(fifo_tx, &self->fifo_tx_active_list, active_list) {
-        fifo_tx_update_cc(fifo_tx, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-    }
-
-    /* Update regfile_txs */
-
-    struct regfile_tx* regfile_tx;
-    SLIST_FOREACH(regfile_tx, &self->regfile_tx_active_list, active_list) {
-        regfile_tx_update_cc(regfile_tx, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-    }
-
-    /* Update dir_txs */
-
-    struct dir_tx* dir_tx;
-    SLIST_FOREACH(dir_tx, &self->dir_tx_active_list, active_list) {
-        dir_tx_update_cc(dir_tx, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-    }
-
-    /* Update socket_txs */
-
-    struct socket_tx* socket_tx;
-    SLIST_FOREACH(socket_tx, &self->socket_tx_active_list, active_list) {
-        socket_tx_update_cc(socket_tx, error);
+    struct file_tx* file_tx;
+    SLIST_FOREACH(file_tx, &self->file_tx_active_list, active_list) {
+        file_tx_update_cc(file_tx, error);
         if (picotm_error_is_set(error)) {
             return;
         }
     }
 
     /* Update concurrency control on file-descriptor table */
+
     fdtab_tx_update_cc(&self->fdtab_tx, error);
     if (picotm_error_is_set(error)) {
         return;
@@ -3159,7 +3028,7 @@ void
 fildes_tx_clear_cc(struct fildes_tx* self, int noundo,
                    struct picotm_error* error)
 {
-    /* Clear fd_txs' CC */
+    /* Clear concurrency control on file descriptors */
 
     struct fd_tx* fd_tx;
     SLIST_FOREACH(fd_tx, &self->fd_tx_active_list, active_list) {
@@ -3169,57 +3038,18 @@ fildes_tx_clear_cc(struct fildes_tx* self, int noundo,
         }
     }
 
-    /* Clear chrdev_txs' CC */
+    /* Clear concurrency control on files */
 
-    struct chrdev_tx* chrdev_tx;
-    SLIST_FOREACH(chrdev_tx, &self->chrdev_tx_active_list, active_list) {
-        chrdev_tx_clear_cc(chrdev_tx, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-    }
-
-    /* Clear fifo_txs' CC */
-
-    struct fifo_tx* fifo_tx;
-    SLIST_FOREACH(fifo_tx, &self->fifo_tx_active_list, active_list) {
-        fifo_tx_clear_cc(fifo_tx, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-    }
-
-    /* Clear regfile_txs' CC */
-
-    struct regfile_tx* regfile_tx;
-    SLIST_FOREACH(regfile_tx, &self->regfile_tx_active_list, active_list) {
-        regfile_tx_clear_cc(regfile_tx, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-    }
-
-    /* Clear dir_txs' CC */
-
-    struct dir_tx* dir_tx;
-    SLIST_FOREACH(dir_tx, &self->dir_tx_active_list, active_list) {
-        dir_tx_clear_cc(dir_tx, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-    }
-
-    /* Clear socket_txs' CC */
-
-    struct socket_tx* socket_tx;
-    SLIST_FOREACH(socket_tx, &self->socket_tx_active_list, active_list) {
-        socket_tx_clear_cc(socket_tx, error);
+    struct file_tx* file_tx;
+    SLIST_FOREACH(file_tx, &self->file_tx_active_list, active_list) {
+        file_tx_clear_cc(file_tx, error);
         if (picotm_error_is_set(error)) {
             return;
         }
     }
 
     /* Clear concurrency control on file-descriptor table */
+
     fdtab_tx_update_cc(&self->fdtab_tx, error);
     if (picotm_error_is_set(error)) {
         return;
@@ -3229,57 +3059,17 @@ fildes_tx_clear_cc(struct fildes_tx* self, int noundo,
 void
 fildes_tx_finish(struct fildes_tx* self, struct picotm_error* error)
 {
-    /* Unref socket_txs */
+    /* Unref files */
 
-    while (!SLIST_EMPTY(&self->socket_tx_active_list)) {
+    while (!SLIST_EMPTY(&self->file_tx_active_list)) {
 
-        struct socket_tx* socket_tx = SLIST_FIRST(&self->socket_tx_active_list);
-        SLIST_REMOVE_HEAD(&self->socket_tx_active_list, active_list);
+        struct file_tx* file_tx = SLIST_FIRST(&self->file_tx_active_list);
+        SLIST_REMOVE_HEAD(&self->file_tx_active_list, active_list);
 
-        socket_tx_unref(socket_tx);
+        file_tx_unref(file_tx);
     }
 
-    /* Unref dir_txs */
-
-    while (!SLIST_EMPTY(&self->dir_tx_active_list)) {
-
-        struct dir_tx* dir_tx = SLIST_FIRST(&self->dir_tx_active_list);
-        SLIST_REMOVE_HEAD(&self->dir_tx_active_list, active_list);
-
-        dir_tx_unref(dir_tx);
-    }
-
-    /* Unref regfile_txs */
-
-    while (!SLIST_EMPTY(&self->regfile_tx_active_list)) {
-
-        struct regfile_tx* regfile_tx = SLIST_FIRST(&self->regfile_tx_active_list);
-        SLIST_REMOVE_HEAD(&self->regfile_tx_active_list, active_list);
-
-        regfile_tx_unref(regfile_tx);
-    }
-
-    /* Unref fifo_txs */
-
-    while (!SLIST_EMPTY(&self->fifo_tx_active_list)) {
-
-        struct fifo_tx* fifo_tx = SLIST_FIRST(&self->fifo_tx_active_list);
-        SLIST_REMOVE_HEAD(&self->fifo_tx_active_list, active_list);
-
-        fifo_tx_unref(fifo_tx);
-    }
-
-    /* Unref chrdev_txs */
-
-    while (!SLIST_EMPTY(&self->chrdev_tx_active_list)) {
-
-        struct chrdev_tx* chrdev_tx = SLIST_FIRST(&self->chrdev_tx_active_list);
-        SLIST_REMOVE_HEAD(&self->chrdev_tx_active_list, active_list);
-
-        chrdev_tx_unref(chrdev_tx);
-    }
-
-    /* Unref fd_txs */
+    /* Unref file descriptors */
 
     while (!SLIST_EMPTY(&self->fd_tx_active_list)) {
 
