@@ -79,7 +79,7 @@ dir_tx_uninit(struct dir_tx* self);
  * Acquire a reference on the open file description
  */
 void
-dir_tx_ref_or_set_up(struct dir_tx* self, struct dir* dir, int fildes,
+dir_tx_ref_or_set_up(struct dir_tx* self, struct dir* dir,
                      struct picotm_error* error);
 
 /**

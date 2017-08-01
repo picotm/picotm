@@ -107,7 +107,7 @@ regfile_tx_uninit(struct regfile_tx* self);
  */
 void
 regfile_tx_ref_or_set_up(struct regfile_tx* self, struct regfile* regfile,
-                         int fildes, struct picotm_error* error);
+                         struct picotm_error* error);
 
 /**
  * Acquire a reference on the open file description
