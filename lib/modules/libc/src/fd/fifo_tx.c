@@ -966,8 +966,6 @@ fifo_tx_init(struct fifo_tx* self)
 
     picotm_ref_init(&self->ref, 0);
 
-    memset(&self->active_list, 0, sizeof(self->active_list));
-
     file_tx_init(&self->base, PICOTM_LIBC_FILE_TYPE_FIFO, &fifo_tx_ops);
 
     self->fifo = NULL;

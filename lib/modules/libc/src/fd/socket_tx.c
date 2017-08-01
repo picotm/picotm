@@ -1714,8 +1714,6 @@ socket_tx_init(struct socket_tx* self)
 
     picotm_ref_init(&self->ref, 0);
 
-    memset(&self->active_list, 0, sizeof(self->active_list));
-
     file_tx_init(&self->base, PICOTM_LIBC_FILE_TYPE_SOCKET, &socket_tx_ops);
 
     self->socket = NULL;
