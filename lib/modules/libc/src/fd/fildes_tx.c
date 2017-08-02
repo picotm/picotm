@@ -662,7 +662,7 @@ get_fd_tx_with_ref(struct fildes_tx* self, int fildes, bool newly_created_ofd,
         goto err_get_ofd_tx_with_ref;
     }
 
-    fd_tx_ref_or_set_up(fd_tx, fd, ofd_tx->file_tx, error);
+    fd_tx_ref_or_set_up(fd_tx, fd, ofd_tx, error);
     if (picotm_error_is_set(error)) {
         goto err_fd_tx_ref;
     }

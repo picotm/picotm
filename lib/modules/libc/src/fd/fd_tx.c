@@ -31,6 +31,7 @@
 #include "fcntlop.h"
 #include "fcntloptab.h"
 #include "fifo_tx.h"
+#include "ofd_tx.h"
 #include "regfile_tx.h"
 #include "socket_tx.h"
 
@@ -93,7 +94,7 @@ fd_tx_init(struct fd_tx* self)
     memset(&self->active_list, 0, sizeof(self->active_list));
 
     self->fd = NULL;
-    self->file_tx = NULL;
+    self->ofd_tx = NULL;
 	self->cc_mode = PICOTM_LIBC_CC_MODE_2PL;
 
     init_rwstates(picotm_arraybeg(self->rwstate),
@@ -113,7 +114,7 @@ fd_tx_uninit(struct fd_tx* self)
 }
 
 void
-fd_tx_ref_or_set_up(struct fd_tx* self, struct fd* fd, struct file_tx* file_tx,
+fd_tx_ref_or_set_up(struct fd_tx* self, struct fd* fd, struct ofd_tx* ofd_tx,
                     struct picotm_error* error)
 {
     assert(self);
@@ -129,10 +130,10 @@ fd_tx_ref_or_set_up(struct fd_tx* self, struct fd* fd, struct file_tx* file_tx,
         goto err_fd_ref;
     }
 
-    file_tx_ref(file_tx);
+    ofd_tx_ref(ofd_tx);
 
     self->fd = fd;
-    self->file_tx = file_tx;
+    self->ofd_tx = ofd_tx;
 
     return;
 
@@ -156,7 +157,7 @@ fd_tx_unref(struct fd_tx* self)
         return;
     }
 
-    file_tx_unref(self->file_tx);
+    ofd_tx_unref(self->ofd_tx);
     fd_unref(self->fd);
 
     self->fd = NULL;
@@ -249,13 +250,9 @@ fd_tx_accept_exec(struct fd_tx* self, int sockfd, struct sockaddr* address,
                   struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->accept_exec);
 
-    return self->file_tx->ops->accept_exec(self->file_tx, sockfd, address,
-                                           addresslen, isnoundo, cookie,
-                                           error);
+    return ofd_tx_exec(accept, self->ofd_tx, sockfd, address, addresslen,
+                       isnoundo, cookie, error);
 }
 
 void
@@ -263,11 +260,8 @@ fd_tx_accept_apply(struct fd_tx* self, int sockfd, int cookie,
                    struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->accept_apply);
 
-    self->file_tx->ops->accept_apply(self->file_tx, sockfd, cookie, error);
+    ofd_tx_apply(accept, self->ofd_tx, sockfd, cookie, error);
 }
 
 void
@@ -275,11 +269,8 @@ fd_tx_accept_undo(struct fd_tx* self, int sockfd, int cookie,
                   struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->accept_undo);
 
-    self->file_tx->ops->accept_undo(self->file_tx, sockfd, cookie, error);
+    ofd_tx_undo(accept, self->ofd_tx, sockfd, cookie, error);
 }
 
 /*
@@ -292,12 +283,9 @@ fd_tx_bind_exec(struct fd_tx* self, int sockfd, const struct sockaddr* address,
                 struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->bind_exec);
 
-    return self->file_tx->ops->bind_exec(self->file_tx, sockfd, address,
-                                         addresslen, isnoundo, cookie, error);
+    return ofd_tx_exec(bind, self->ofd_tx, sockfd, address, addresslen,
+                       isnoundo, cookie, error);
 }
 
 void
@@ -305,11 +293,8 @@ fd_tx_bind_apply(struct fd_tx* self, int sockfd, int cookie,
                  struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->bind_apply);
 
-    self->file_tx->ops->bind_apply(self->file_tx, sockfd, cookie, error);
+    ofd_tx_apply(bind, self->ofd_tx, sockfd, cookie, error);
 }
 
 void
@@ -317,11 +302,8 @@ fd_tx_bind_undo(struct fd_tx* self, int sockfd, int cookie,
                 struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->bind_undo);
 
-    self->file_tx->ops->bind_undo(self->file_tx, sockfd, cookie, error);
+    ofd_tx_undo(bind, self->ofd_tx, sockfd, cookie, error);
 }
 
 /*
@@ -438,13 +420,9 @@ fd_tx_connect_exec(struct fd_tx* self, int sockfd,
                    bool isnoundo, int* cookie, struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->connect_exec);
 
-    return self->file_tx->ops->connect_exec(self->file_tx,
-                                            sockfd, address, addresslen,
-                                            isnoundo, cookie, error);
+    return ofd_tx_exec(connect, self->ofd_tx, sockfd, address, addresslen,
+                       isnoundo, cookie, error);
 }
 
 void
@@ -452,11 +430,8 @@ fd_tx_connect_apply(struct fd_tx* self, int sockfd, int cookie,
                     struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->connect_apply);
 
-    self->file_tx->ops->connect_apply(self->file_tx, sockfd, cookie, error);
+    ofd_tx_apply(connect, self->ofd_tx, sockfd, cookie, error);
 }
 
 void
@@ -464,11 +439,8 @@ fd_tx_connect_undo(struct fd_tx* self, int sockfd, int cookie,
                    struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->connect_undo);
 
-    self->file_tx->ops->connect_undo(self->file_tx, sockfd, cookie, error);
+    ofd_tx_undo(connect, self->ofd_tx, sockfd, cookie, error);
 }
 
 /*
@@ -514,12 +486,9 @@ fd_tx_fchmod_exec(struct fd_tx* self, int fildes, mode_t mode,
                   bool isnoundo, int* cookie, struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->fchmod_exec);
 
-    return self->file_tx->ops->fchmod_exec(self->file_tx, fildes, mode,
-                                           isnoundo, cookie, error);
+    return ofd_tx_exec(fchmod, self->ofd_tx, fildes, mode, isnoundo, cookie,
+                       error);
 }
 
 void
@@ -527,11 +496,8 @@ fd_tx_fchmod_apply(struct fd_tx* self, int fildes, int cookie,
                    struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->fchmod_apply);
 
-    self->file_tx->ops->fchmod_apply(self->file_tx, fildes, cookie, error);
+    ofd_tx_apply(fchmod, self->ofd_tx, fildes, cookie, error);
 }
 
 void
@@ -539,11 +505,8 @@ fd_tx_fchmod_undo(struct fd_tx* self, int fildes, int cookie,
                  struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->fchmod_undo);
 
-    self->file_tx->ops->fchmod_undo(self->file_tx, fildes, cookie, error);
+    ofd_tx_undo(fchmod, self->ofd_tx, fildes, cookie, error);
 }
 
 /*
@@ -584,13 +547,8 @@ fd_tx_fcntl_exec(struct fd_tx* self, int fildes, int cmd,
             arg->arg0 = res;
             break;
         default:
-            assert(self);
-            assert(self->file_tx);
-            assert(self->file_tx->ops);
-            assert(self->file_tx->ops->fcntl_exec);
-            return self->file_tx->ops->fcntl_exec(self->file_tx, fildes, cmd,
-                                                  arg, isnoundo, cookie,
-                                                  error);
+            return ofd_tx_exec(fcntl, self->ofd_tx, fildes, cmd, arg,
+                               isnoundo, cookie, error);
     }
 
     if (picotm_error_is_set(error)) {
@@ -633,12 +591,7 @@ fd_tx_fcntl_apply(struct fd_tx* self, int fildes, int cookie,
         case F_GETFD:
             break;
         default:
-            assert(self);
-            assert(self->file_tx);
-            assert(self->file_tx->ops);
-            assert(self->file_tx->ops->fcntl_apply);
-            self->file_tx->ops->fcntl_apply(self->file_tx, fildes, cookie,
-                                            error);
+            ofd_tx_apply(fcntl, self->ofd_tx, fildes, cookie, error);
             if (picotm_error_is_set(error)) {
                 return;
             }
@@ -665,12 +618,7 @@ fd_tx_fcntl_undo(struct fd_tx* self, int fildes, int cookie,
         case F_GETFD:
             break;
         default:
-            assert(self);
-            assert(self->file_tx);
-            assert(self->file_tx->ops);
-            assert(self->file_tx->ops->fcntl_undo);
-            self->file_tx->ops->fcntl_undo(self->file_tx, fildes, cookie,
-                                           error);
+            ofd_tx_undo(fcntl, self->ofd_tx, fildes, cookie, error);
             if (picotm_error_is_set(error)) {
                 return;
             }
@@ -687,12 +635,9 @@ fd_tx_fstat_exec(struct fd_tx* self, int fildes, struct stat* buf,
                  bool isnoundo, int* cookie, struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->fstat_exec);
 
-    return self->file_tx->ops->fstat_exec(self->file_tx, fildes, buf,
-                                          isnoundo, cookie, error);
+    return ofd_tx_exec(fstat, self->ofd_tx, fildes, buf, isnoundo, cookie,
+                       error);
 }
 
 void
@@ -700,11 +645,8 @@ fd_tx_fstat_apply(struct fd_tx* self, int fildes, int cookie,
                   struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->fstat_apply);
 
-    self->file_tx->ops->fstat_apply(self->file_tx, fildes, cookie, error);
+    ofd_tx_apply(fstat, self->ofd_tx, fildes, cookie, error);
 }
 
 void
@@ -712,11 +654,8 @@ fd_tx_fstat_undo(struct fd_tx* self, int fildes, int cookie,
                  struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->fstat_undo);
 
-    self->file_tx->ops->fstat_undo(self->file_tx, fildes, cookie, error);
+    ofd_tx_undo(fstat, self->ofd_tx, fildes, cookie, error);
 }
 
 /*
@@ -728,12 +667,8 @@ fd_tx_fsync_exec(struct fd_tx* self, int fildes, bool isnoundo, int* cookie,
                  struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->fsync_exec);
 
-    return self->file_tx->ops->fsync_exec(self->file_tx, fildes, isnoundo,
-                                          cookie, error);
+    return ofd_tx_exec(fsync, self->ofd_tx, fildes, isnoundo, cookie, error);
 }
 
 void
@@ -741,11 +676,8 @@ fd_tx_fsync_apply(struct fd_tx* self, int fildes, int cookie,
                   struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->fsync_apply);
 
-    self->file_tx->ops->fsync_apply(self->file_tx, fildes, cookie, error);
+    ofd_tx_apply(fsync, self->ofd_tx, fildes, cookie, error);
 }
 
 void
@@ -753,11 +685,8 @@ fd_tx_fsync_undo(struct fd_tx* self, int fildes, int cookie,
                  struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->fsync_undo);
 
-    self->file_tx->ops->fsync_undo(self->file_tx, fildes, cookie, error);
+    ofd_tx_undo(fsync, self->ofd_tx, fildes, cookie, error);
 }
 
 /*
@@ -769,12 +698,9 @@ fd_tx_listen_exec(struct fd_tx* self, int sockfd, int backlog, bool isnoundo,
                   int* cookie, struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->listen_exec);
 
-    return self->file_tx->ops->listen_exec(self->file_tx, sockfd, backlog, isnoundo,
-                                           cookie, error);
+    return ofd_tx_exec(listen, self->ofd_tx, sockfd, backlog, isnoundo,
+                       cookie, error);
 }
 
 void
@@ -782,11 +708,8 @@ fd_tx_listen_apply(struct fd_tx* self, int sockfd, int cookie,
                    struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->listen_apply);
 
-    self->file_tx->ops->listen_apply(self->file_tx, sockfd, cookie, error);
+    ofd_tx_apply(listen, self->ofd_tx, sockfd, cookie, error);
 }
 
 void
@@ -794,11 +717,8 @@ fd_tx_listen_undo(struct fd_tx* self, int sockfd, int cookie,
                   struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->listen_undo);
 
-    self->file_tx->ops->listen_undo(self->file_tx, sockfd, cookie, error);
+    ofd_tx_undo(listen, self->ofd_tx, sockfd, cookie, error);
 }
 
 /*
@@ -810,12 +730,9 @@ fd_tx_lseek_exec(struct fd_tx* self, int fildes, off_t offset, int whence,
                  bool isnoundo, int* cookie, struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->lseek_exec);
 
-    return self->file_tx->ops->lseek_exec(self->file_tx, fildes, offset,
-                                          whence, isnoundo, cookie, error);
+    return ofd_tx_exec(lseek, self->ofd_tx, fildes, offset, whence, isnoundo,
+                       cookie, error);
 }
 
 void
@@ -823,11 +740,8 @@ fd_tx_lseek_apply(struct fd_tx* self, int fildes, int cookie,
                   struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->lseek_apply);
 
-    self->file_tx->ops->lseek_apply(self->file_tx, fildes, cookie, error);
+    ofd_tx_apply(lseek, self->ofd_tx, fildes, cookie, error);
 }
 
 void
@@ -835,11 +749,8 @@ fd_tx_lseek_undo(struct fd_tx* self, int fildes, int cookie,
                  struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->lseek_undo);
 
-    self->file_tx->ops->lseek_undo(self->file_tx, fildes, cookie, error);
+    ofd_tx_undo(lseek, self->ofd_tx, fildes, cookie, error);
 }
 
 /*
@@ -853,13 +764,9 @@ fd_tx_pread_exec(struct fd_tx* self, int fildes, void* buf, size_t nbyte,
                  struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->pread_exec);
 
-    return self->file_tx->ops->pread_exec(self->file_tx, fildes, buf, nbyte,
-                                          off, isnoundo, val_mode, cookie,
-                                          error);
+    return ofd_tx_exec(pread, self->ofd_tx, fildes, buf, nbyte, off, isnoundo,
+                       val_mode, cookie, error);
 }
 
 void
@@ -867,11 +774,8 @@ fd_tx_pread_apply(struct fd_tx* self, int fildes, int cookie,
                   struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->pread_apply);
 
-    self->file_tx->ops->pread_apply(self->file_tx, fildes, cookie, error);
+    ofd_tx_apply(pread, self->ofd_tx, fildes, cookie, error);
 }
 
 void
@@ -879,11 +783,8 @@ fd_tx_pread_undo(struct fd_tx* self, int fildes, int cookie,
                  struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->pread_undo);
 
-    self->file_tx->ops->pread_undo(self->file_tx, fildes, cookie, error);
+    ofd_tx_undo(pread, self->ofd_tx, fildes, cookie, error);
 }
 
 /*
@@ -896,12 +797,9 @@ fd_tx_pwrite_exec(struct fd_tx* self, int fildes, const void* buf,
                   struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->pwrite_exec);
 
-    return self->file_tx->ops->pwrite_exec(self->file_tx, fildes, buf, nbyte,
-                                           off, isnoundo, cookie, error);
+    return ofd_tx_exec(pwrite, self->ofd_tx, fildes, buf, nbyte, off,
+                       isnoundo, cookie, error);
 }
 
 void
@@ -909,11 +807,8 @@ fd_tx_pwrite_apply(struct fd_tx* self, int fildes, int cookie,
                    struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->pwrite_apply);
 
-    self->file_tx->ops->pwrite_apply(self->file_tx, fildes, cookie, error);
+    ofd_tx_apply(pwrite, self->ofd_tx, fildes, cookie, error);
 }
 
 void
@@ -921,11 +816,8 @@ fd_tx_pwrite_undo(struct fd_tx* self, int fildes, int cookie,
                   struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->pwrite_undo);
 
-    self->file_tx->ops->pwrite_undo(self->file_tx, fildes, cookie, error);
+    ofd_tx_undo(pwrite, self->ofd_tx, fildes, cookie, error);
 }
 
 /*
@@ -938,12 +830,9 @@ fd_tx_read_exec(struct fd_tx* self, int fildes, void *buf, size_t nbyte,
                 int* cookie, struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->read_exec);
 
-    return self->file_tx->ops->read_exec(self->file_tx, fildes, buf, nbyte,
-                                         isnoundo, val_mode, cookie, error);
+    return ofd_tx_exec(read, self->ofd_tx, fildes, buf, nbyte, isnoundo,
+                       val_mode, cookie, error);
 }
 
 void
@@ -951,11 +840,8 @@ fd_tx_read_apply(struct fd_tx* self, int fildes, int cookie,
                  struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->read_apply);
 
-    self->file_tx->ops->read_apply(self->file_tx, fildes, cookie, error);
+    ofd_tx_apply(read, self->ofd_tx, fildes, cookie, error);
 }
 
 void
@@ -963,11 +849,8 @@ fd_tx_read_undo(struct fd_tx* self, int fildes, int cookie,
                 struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->read_undo);
 
-    self->file_tx->ops->read_undo(self->file_tx, fildes, cookie, error);
+    ofd_tx_undo(read, self->ofd_tx, fildes, cookie, error);
 }
 
 /*
@@ -980,13 +863,9 @@ fd_tx_recv_exec(struct fd_tx* self, int sockfd, void* buffer, size_t length,
                 struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->recv_exec);
 
-    return self->file_tx->ops->recv_exec(self->file_tx, sockfd, buffer,
-                                         length, flags, isnoundo, cookie,
-                                         error);
+    return ofd_tx_exec(recv, self->ofd_tx, sockfd, buffer, length, flags,
+                       isnoundo, cookie, error);
 }
 
 void
@@ -994,11 +873,8 @@ fd_tx_recv_apply(struct fd_tx* self, int sockfd, int cookie,
                  struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->recv_apply);
 
-    self->file_tx->ops->recv_apply(self->file_tx, sockfd, cookie, error);
+    ofd_tx_apply(recv, self->ofd_tx, sockfd, cookie, error);
 }
 
 void
@@ -1006,11 +882,8 @@ fd_tx_recv_undo(struct fd_tx* self, int sockfd, int cookie,
                 struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->recv_undo);
 
-    self->file_tx->ops->recv_undo(self->file_tx, sockfd, cookie, error);
+    ofd_tx_undo(recv, self->ofd_tx, sockfd, cookie, error);
 }
 
 /*
@@ -1023,37 +896,27 @@ fd_tx_send_exec(struct fd_tx* self, int sockfd, const void* buffer,
                 struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->send_exec);
 
-    return self->file_tx->ops->send_exec(self->file_tx, sockfd, buffer,
-                                         length, flags, isnoundo, cookie,
-                                         error);
+    return ofd_tx_exec(send, self->ofd_tx, sockfd, buffer, length, flags,
+                       isnoundo, cookie, error);
 }
 
 void
-fd_tx_send_apply(struct fd_tx* self, int fildes, int cookie,
+fd_tx_send_apply(struct fd_tx* self, int sockfd, int cookie,
                  struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->send_apply);
 
-    self->file_tx->ops->send_apply(self->file_tx, fildes, cookie, error);
+    ofd_tx_apply(send, self->ofd_tx, sockfd, cookie, error);
 }
 
 void
-fd_tx_send_undo(struct fd_tx* self, int fildes, int cookie,
+fd_tx_send_undo(struct fd_tx* self, int sockfd, int cookie,
                 struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->send_undo);
 
-    self->file_tx->ops->send_undo(self->file_tx, fildes, cookie, error);
+    ofd_tx_undo(send, self->ofd_tx, sockfd, cookie, error);
 }
 
 /*
@@ -1065,36 +928,27 @@ fd_tx_shutdown_exec(struct fd_tx* self, int sockfd, int how, bool isnoundo,
                     int* cookie, struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->shutdown_exec);
 
-    return self->file_tx->ops->shutdown_exec(self->file_tx, sockfd, how,
-                                             isnoundo, cookie, error);
+    return ofd_tx_exec(shutdown, self->ofd_tx, sockfd, how, isnoundo, cookie,
+                       error);
 }
 
 void
-fd_tx_shutdown_apply(struct fd_tx* self, int fildes, int cookie,
+fd_tx_shutdown_apply(struct fd_tx* self, int sockfd, int cookie,
                      struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->shutdown_apply);
 
-    self->file_tx->ops->shutdown_apply(self->file_tx, fildes, cookie, error);
+    ofd_tx_apply(shutdown, self->ofd_tx, sockfd, cookie, error);
 }
 
 void
-fd_tx_shutdown_undo(struct fd_tx* self, int fildes, int cookie,
+fd_tx_shutdown_undo(struct fd_tx* self, int sockfd, int cookie,
                     struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->shutdown_undo);
 
-    self->file_tx->ops->shutdown_undo(self->file_tx, fildes, cookie, error);
+    ofd_tx_undo(shutdown, self->ofd_tx, sockfd, cookie, error);
 }
 
 /*
@@ -1107,12 +961,9 @@ fd_tx_write_exec(struct fd_tx* self, int fildes, const void* buf,
                  struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->write_exec);
 
-    return self->file_tx->ops->write_exec(self->file_tx, fildes, buf, nbyte,
-                                          isnoundo, cookie, error);
+    return ofd_tx_exec(write, self->ofd_tx, fildes, buf, nbyte, isnoundo,
+                       cookie, error);
 }
 
 void
@@ -1120,11 +971,8 @@ fd_tx_write_apply(struct fd_tx* self, int fildes, int cookie,
                   struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->write_apply);
 
-    self->file_tx->ops->write_apply(self->file_tx, fildes, cookie, error);
+    ofd_tx_apply(write, self->ofd_tx, fildes, cookie, error);
 }
 
 void
@@ -1132,9 +980,6 @@ fd_tx_write_undo(struct fd_tx* self, int fildes, int cookie,
                  struct picotm_error* error)
 {
     assert(self);
-    assert(self->file_tx);
-    assert(self->file_tx->ops);
-    assert(self->file_tx->ops->write_undo);
 
-    self->file_tx->ops->write_undo(self->file_tx, fildes, cookie, error);
+    ofd_tx_undo(write, self->ofd_tx, fildes, cookie, error);
 }
