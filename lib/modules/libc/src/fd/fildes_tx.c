@@ -21,6 +21,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <picotm/picotm-lib-array.h>
 #include <picotm/picotm-lib-tab.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,6 +37,7 @@
 #include "fd.h"
 #include "fifo.h"
 #include "fifotab.h"
+#include "ofdtab.h"
 #include "openop.h"
 #include "openoptab.h"
 #include "pipeop.h"
@@ -90,6 +92,10 @@ fildes_tx_init(struct fildes_tx* self, unsigned long module)
     self->socket_tx_max_index = 0;
 
     SLIST_INIT(&self->file_tx_active_list);
+
+    self->ofd_tx_max_index = 0;
+
+    SLIST_INIT(&self->ofd_tx_active_list);
 
     self->eventtab = NULL;
     self->eventtablen = 0;
@@ -505,6 +511,106 @@ get_file_tx_with_ref(struct fildes_tx* self, int fildes, unsigned long flags,
     }
 }
 
+static struct ofd_tx*
+get_ofd_tx(struct fildes_tx* self, const struct ofd_id* id,
+           struct picotm_error* error)
+{
+    struct ofd_tx* empty = NULL;
+
+    struct ofd_tx* beg = self->ofd_tx;
+    const struct ofd_tx* end = self->ofd_tx + self->ofd_tx_max_index;
+
+    for (; beg < end; ++beg) {
+
+        if (!ofd_tx_holds_ref(beg)) {
+            if (!empty) {
+                empty = beg;
+            }
+            continue;
+        }
+
+        int cmp = ofd_tx_cmp_with_id(beg, id);
+        if (!cmp) {
+            return beg; /* found correct entry; return */
+        }
+    }
+
+    /* no entry found; return an empty element */
+
+    if (empty) {
+        return empty;
+    }
+
+    empty = self->ofd_tx + self->ofd_tx_max_index;
+
+    if (empty == picotm_arrayend(self->ofd_tx)) {
+        picotm_error_set_error_code(error, PICOTM_OUT_OF_MEMORY);
+        return NULL;
+    }
+
+    ofd_tx_init(empty);
+    ++self->ofd_tx_max_index;
+
+    return empty;
+}
+
+static struct ofd_tx*
+get_ofd_tx_with_ref(struct fildes_tx* self, int fildes, bool newly_created,
+                    struct picotm_error* error)
+{
+    struct ofd_id id;
+    ofd_id_init_from_fildes(&id, fildes, error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+
+    struct ofd_tx* ofd_tx = get_ofd_tx(self, &id, error);
+    if (picotm_error_is_set(error)) {
+        goto err_get_ofd_tx;
+    }
+
+    if (ofd_tx_holds_ref(ofd_tx)) {
+        return ofd_tx; /* fast path: already holds a reference */
+    }
+
+    struct file_tx* file_tx = get_file_tx_with_ref(self, fildes,
+                                                   newly_created,
+                                                   error);
+    if (picotm_error_is_set(error)) {
+        goto err_get_file_tx_with_ref;
+    }
+
+    struct ofd* ofd = ofdtab_ref_fildes(fildes, newly_created, error);
+    if (picotm_error_is_set(error)) {
+        goto err_ofdtab_ref_fildes;
+    }
+
+    ofd_tx_ref_or_set_up(ofd_tx, ofd, file_tx, error);
+    if (picotm_error_is_set(error)) {
+        goto err_ofd_tx_ref_or_set_up;
+    }
+
+    SLIST_INSERT_HEAD(&self->ofd_tx_active_list, ofd_tx, active_list);
+
+    /* In |struct fildes_tx| we hold at most one reference to the
+     * transaction state of each open file description. This reference is
+     * released in fildes_tx_finish().
+     */
+    ofd_unref(ofd);
+
+    ofd_id_uninit(&id);
+
+    return ofd_tx;
+
+err_ofd_tx_ref_or_set_up:
+    ofd_unref(ofd);
+err_ofdtab_ref_fildes:
+err_get_file_tx_with_ref:
+err_get_ofd_tx:
+    ofd_id_uninit(&id);
+    return NULL;
+}
+
 static struct fd_tx*
 get_fd_tx(struct fildes_tx* self, int fildes)
 {
@@ -549,14 +655,14 @@ get_fd_tx_with_ref(struct fildes_tx* self, int fildes, bool newly_created_ofd,
         return NULL;
     }
 
-    struct file_tx* file_tx = get_file_tx_with_ref(self, fildes,
-                                                   newly_created_ofd,
-                                                   error);
+    struct ofd_tx* ofd_tx = get_ofd_tx_with_ref(self, fildes,
+                                                newly_created_ofd,
+                                                error);
     if (picotm_error_is_set(error)) {
-        goto err_get_file_tx_with_ref;
+        goto err_get_ofd_tx_with_ref;
     }
 
-    fd_tx_ref_or_set_up(fd_tx, fd, file_tx, error);
+    fd_tx_ref_or_set_up(fd_tx, fd, ofd_tx->file_tx, error);
     if (picotm_error_is_set(error)) {
         goto err_fd_tx_ref;
     }
@@ -568,8 +674,8 @@ get_fd_tx_with_ref(struct fildes_tx* self, int fildes, bool newly_created_ofd,
     return fd_tx;
 
 err_fd_tx_ref:
-    file_tx_unref(file_tx);
-err_get_file_tx_with_ref:
+    ofd_tx_unref(ofd_tx);
+err_get_ofd_tx_with_ref:
     fd_unref(fd);
     return NULL;
 }
@@ -2850,6 +2956,16 @@ fildes_tx_lock(struct fildes_tx* self, struct picotm_error* error)
         fd_tx_lock(fd_tx);
     }
 
+    /* Lock open file descriptions */
+
+    struct ofd_tx* ofd_tx;
+    SLIST_FOREACH(ofd_tx, &self->ofd_tx_active_list, active_list) {
+        ofd_tx_lock(ofd_tx, error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
+    }
+
     /* Lock files */
 
     struct file_tx* file_tx;
@@ -2873,6 +2989,13 @@ fildes_tx_unlock(struct fildes_tx* self)
         file_tx_unlock(file_tx, &error);
     }
 
+    /* Unlock open file descriptions */
+
+    struct ofd_tx* ofd_tx;
+    SLIST_FOREACH(ofd_tx, &self->ofd_tx_active_list, active_list) {
+        ofd_tx_unlock(ofd_tx, &error);
+    }
+
     /* Unlock file descriptors */
 
     struct fd_tx* fd_tx;
@@ -2890,6 +3013,16 @@ fildes_tx_validate(struct fildes_tx* self, int noundo,
     struct fd_tx* fd_tx;
     SLIST_FOREACH(fd_tx, &self->fd_tx_active_list, active_list) {
         fd_tx_validate(fd_tx, error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
+    }
+
+    /* Validate open file descriptions */
+
+    struct ofd_tx* ofd_tx;
+    SLIST_FOREACH(ofd_tx, &self->ofd_tx_active_list, active_list) {
+        ofd_tx_validate(ofd_tx, error);
         if (picotm_error_is_set(error)) {
             return;
         }
@@ -3006,6 +3139,16 @@ fildes_tx_update_cc(struct fildes_tx* self, int noundo,
         }
     }
 
+    /* Update concurrency control on open file descriptions */
+
+    struct ofd_tx* ofd_tx;
+    SLIST_FOREACH(ofd_tx, &self->ofd_tx_active_list, active_list) {
+        ofd_tx_update_cc(ofd_tx, error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
+    }
+
     /* Update concurrency control on files */
 
     struct file_tx* file_tx;
@@ -3033,6 +3176,16 @@ fildes_tx_clear_cc(struct fildes_tx* self, int noundo,
     struct fd_tx* fd_tx;
     SLIST_FOREACH(fd_tx, &self->fd_tx_active_list, active_list) {
         fd_tx_clear_cc(fd_tx, error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
+    }
+
+    /* Clear concurrency control on open file descriptions */
+
+    struct ofd_tx* ofd_tx;
+    SLIST_FOREACH(ofd_tx, &self->ofd_tx_active_list, active_list) {
+        ofd_tx_clear_cc(ofd_tx, error);
         if (picotm_error_is_set(error)) {
             return;
         }
@@ -3067,6 +3220,16 @@ fildes_tx_finish(struct fildes_tx* self, struct picotm_error* error)
         SLIST_REMOVE_HEAD(&self->file_tx_active_list, active_list);
 
         file_tx_unref(file_tx);
+    }
+
+    /* Unref open file descriptions */
+
+    while (!SLIST_EMPTY(&self->ofd_tx_active_list)) {
+
+        struct ofd_tx* ofd_tx = SLIST_FIRST(&self->ofd_tx_active_list);
+        SLIST_REMOVE_HEAD(&self->ofd_tx_active_list, active_list);
+
+        ofd_tx_unref(ofd_tx);
     }
 
     /* Unref file descriptors */
