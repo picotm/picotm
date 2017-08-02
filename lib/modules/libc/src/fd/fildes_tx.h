@@ -29,6 +29,7 @@
 #include "fdtab_tx.h"
 #include "fd_tx.h"
 #include "fifo_tx.h"
+#include "ofd_tx.h"
 #include "regfile_tx.h"
 #include "socket_tx.h"
 
@@ -45,6 +46,7 @@ struct openop;
 
 SLIST_HEAD(fd_tx_slist, fd_tx);
 SLIST_HEAD(file_tx_slist, file_tx);
+SLIST_HEAD(ofd_tx_slist, ofd_tx);
 
 struct fildes_tx {
     unsigned long module;
@@ -74,6 +76,12 @@ struct fildes_tx {
 
     /** Active instances of `struct file_tx` */
     struct file_tx_slist  file_tx_active_list;
+
+    struct ofd_tx ofd_tx[MAXNUMFD];
+    size_t        ofd_tx_max_index;
+
+    /** Active instances of |struct ofd_tx| */
+    struct ofd_tx_slist ofd_tx_active_list;
 
     struct fd_event* eventtab;
     size_t           eventtablen;
