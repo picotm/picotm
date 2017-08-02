@@ -162,9 +162,9 @@ fifo_tx_append_to_writeset(struct fifo_tx* self, size_t nbyte, off_t offset,
  */
 
 static int
-accept_exec(struct file_tx* base, int sockfd, struct sockaddr* address,
-            socklen_t* address_len, bool isnoundo, int* cookie,
-            struct picotm_error* error)
+accept_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
+            struct sockaddr* address, socklen_t* address_len, bool isnoundo,
+            int* cookie, struct picotm_error* error)
 {
     picotm_error_set_errno(error, ENOTSOCK);
     return -1;
@@ -175,9 +175,9 @@ accept_exec(struct file_tx* base, int sockfd, struct sockaddr* address,
  */
 
 static int
-bind_exec(struct file_tx* base, int sockfd, const struct sockaddr* address,
-          socklen_t addresslen, bool isnoundo, int* cookie,
-          struct picotm_error* error)
+bind_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
+          const struct sockaddr* address, socklen_t addresslen, bool isnoundo,
+          int* cookie, struct picotm_error* error)
 {
     picotm_error_set_errno(error, ENOTSOCK);
     return -1;
@@ -188,7 +188,7 @@ bind_exec(struct file_tx* base, int sockfd, const struct sockaddr* address,
  */
 
 static int
-connect_exec(struct file_tx* base, int sockfd,
+connect_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
              const struct sockaddr* address, socklen_t addresslen,
              bool isnoundo, int* cookie, struct picotm_error* error)
 {
@@ -201,8 +201,9 @@ connect_exec(struct file_tx* base, int sockfd,
  */
 
 static int
-fchmod_exec(struct file_tx* base, int fildes, mode_t mode, bool isnoundo,
-            int* cookie, struct picotm_error* error)
+fchmod_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
+            mode_t mode, bool isnoundo, int* cookie,
+            struct picotm_error* error)
 {
     picotm_error_set_errno(error, EINVAL);
     return -1;
@@ -340,7 +341,7 @@ fifo_tx_fcntl_exec(struct fifo_tx* self, int fildes, int cmd,
 }
 
 static int
-fcntl_exec(struct file_tx* base, int fildes, int cmd,
+fcntl_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, int cmd,
            union fcntl_arg* arg, bool isnoundo, int* cookie,
            struct picotm_error* error)
 {
@@ -354,8 +355,8 @@ fifo_tx_fcntl_apply(struct fifo_tx* self, int fildes, int cookie,
 { }
 
 static void
-fcntl_apply(struct file_tx* base, int fildes, int cookie,
-            struct picotm_error* error)
+fcntl_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
+            int cookie, struct picotm_error* error)
 {
     fifo_tx_fcntl_apply(fifo_tx_of_file_tx(base), fildes, cookie, error);
 }
@@ -366,8 +367,8 @@ fifo_tx_fcntl_undo(struct fifo_tx* self, int fildes, int cookie,
 { }
 
 static void
-fcntl_undo(struct file_tx* base, int fildes, int cookie,
-           struct picotm_error* error)
+fcntl_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
+           int cookie, struct picotm_error* error)
 {
     fifo_tx_fcntl_undo(fifo_tx_of_file_tx(base), fildes, cookie, error);
 }
@@ -440,8 +441,9 @@ fifo_tx_fstat_exec(struct fifo_tx* self, int fildes, struct stat* buf,
 }
 
 static int
-fstat_exec(struct file_tx* base, int fildes, struct stat* buf,
-           bool isnoundo, int* cookie, struct picotm_error* error)
+fstat_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
+           struct stat* buf, bool isnoundo, int* cookie,
+           struct picotm_error* error)
 {
     return fifo_tx_fstat_exec(fifo_tx_of_file_tx(base), fildes, buf,
                               isnoundo, cookie, error);
@@ -475,8 +477,8 @@ fifo_tx_fstat_apply(struct fifo_tx* self, int fildes, int cookie,
 }
 
 static void
-fstat_apply(struct file_tx* base, int fildes, int cookie,
-            struct picotm_error* error)
+fstat_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
+            int cookie, struct picotm_error* error)
 {
     fifo_tx_fstat_apply(fifo_tx_of_file_tx(base), fildes, cookie, error);
 }
@@ -504,8 +506,8 @@ fifo_tx_fstat_undo(struct fifo_tx* self, int fildes, int cookie,
 }
 
 static void
-fstat_undo(struct file_tx* base, int fildes, int cookie,
-           struct picotm_error* error)
+fstat_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
+           int cookie, struct picotm_error* error)
 {
     fifo_tx_fstat_undo(fifo_tx_of_file_tx(base), fildes, cookie, error);
 }
@@ -515,8 +517,8 @@ fstat_undo(struct file_tx* base, int fildes, int cookie,
  */
 
 static int
-fsync_exec(struct file_tx* base, int fildes, bool isnoundo, int* cookie,
-           struct picotm_error* error)
+fsync_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
+           bool isnoundo, int* cookie, struct picotm_error* error)
 {
     picotm_error_set_errno(error, EINVAL);
     return -1;
@@ -527,8 +529,9 @@ fsync_exec(struct file_tx* base, int fildes, bool isnoundo, int* cookie,
  */
 
 static int
-listen_exec(struct file_tx* base, int sockfd, int backlog, bool isnoundo,
-            int* cookie, struct picotm_error* error)
+listen_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
+            int backlog, bool isnoundo, int* cookie,
+            struct picotm_error* error)
 {
     picotm_error_set_errno(error, ENOTSOCK);
     return -1;
@@ -539,8 +542,9 @@ listen_exec(struct file_tx* base, int sockfd, int backlog, bool isnoundo,
  */
 
 static off_t
-lseek_exec(struct file_tx* base, int fildes, off_t offset, int whence,
-           bool isnoundo, int* cookie, struct picotm_error* error)
+lseek_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
+           off_t offset, int whence, bool isnoundo, int* cookie,
+           struct picotm_error* error)
 {
     picotm_error_set_errno(error, ESPIPE);
     return (off_t)-1;
@@ -551,8 +555,8 @@ lseek_exec(struct file_tx* base, int fildes, off_t offset, int whence,
  */
 
 static ssize_t
-pread_exec(struct file_tx* base, int fildes, void* buf, size_t nbyte,
-           off_t off, bool isnoundo,
+pread_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, void* buf,
+           size_t nbyte, off_t off, bool isnoundo,
            enum picotm_libc_validation_mode val_mode, int* cookie,
            struct picotm_error* error)
 {
@@ -565,9 +569,9 @@ pread_exec(struct file_tx* base, int fildes, void* buf, size_t nbyte,
  */
 
 static ssize_t
-pwrite_exec(struct file_tx* base, int fildes, const void* buf,
-            size_t nbyte, off_t off, bool isnoundo, int* cookie,
-            struct picotm_error* error)
+pwrite_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
+            const void* buf, size_t nbyte, off_t off, bool isnoundo,
+            int* cookie, struct picotm_error* error)
 {
     picotm_error_set_errno(error, ESPIPE);
     return -1;
@@ -623,9 +627,10 @@ fifo_tx_read_exec(struct fifo_tx* self, int fildes, void* buf, size_t nbyte,
 }
 
 static ssize_t
-read_exec(struct file_tx* base, int fildes, void* buf, size_t nbyte,
-          bool isnoundo, enum picotm_libc_validation_mode val_mode,
-          int* cookie, struct picotm_error* error)
+read_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, void* buf,
+          size_t nbyte, bool isnoundo,
+          enum picotm_libc_validation_mode val_mode, int* cookie,
+          struct picotm_error* error)
 {
     return fifo_tx_read_exec(fifo_tx_of_file_tx(base), fildes, buf, nbyte,
                              isnoundo, val_mode, cookie, error);
@@ -652,8 +657,8 @@ fifo_tx_read_apply(struct fifo_tx* self, int fildes, int cookie,
 }
 
 static void
-read_apply(struct file_tx* base, int fildes, int cookie,
-           struct picotm_error* error)
+read_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
+           int cookie, struct picotm_error* error)
 {
     fifo_tx_read_apply(fifo_tx_of_file_tx(base), fildes, cookie, error);
 }
@@ -673,8 +678,8 @@ fifo_tx_read_undo(struct fifo_tx* self, int fildes, int cookie,
 }
 
 static void
-read_undo(struct file_tx* base, int fildes, int cookie,
-          struct picotm_error* error)
+read_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
+          int cookie, struct picotm_error* error)
 {
     fifo_tx_read_undo(fifo_tx_of_file_tx(base), fildes, cookie, error);
 }
@@ -684,8 +689,9 @@ read_undo(struct file_tx* base, int fildes, int cookie,
  */
 
 static ssize_t
-recv_exec(struct file_tx* base, int sockfd, void* buffer, size_t length,
-          int flags, bool isnoundo, int* cookie, struct picotm_error* error)
+recv_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
+          void* buffer, size_t length, int flags, bool isnoundo, int* cookie,
+          struct picotm_error* error)
 {
     picotm_error_set_errno(error, ENOTSOCK);
     return -1;
@@ -696,9 +702,9 @@ recv_exec(struct file_tx* base, int sockfd, void* buffer, size_t length,
  */
 
 static ssize_t
-send_exec(struct file_tx* base, int sockfd, const void* buffer,
-          size_t length, int flags, bool isnoundo, int* cookie,
-          struct picotm_error* error)
+send_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
+          const void* buffer, size_t length, int flags, bool isnoundo,
+          int* cookie, struct picotm_error* error)
 {
     picotm_error_set_errno(error, ENOTSOCK);
     return -1;
@@ -709,8 +715,8 @@ send_exec(struct file_tx* base, int sockfd, const void* buffer,
  */
 
 static int
-shutdown_exec(struct file_tx* base, int sockfd, int how, bool isnoundo,
-              int* cookie, struct picotm_error* error)
+shutdown_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
+              int how, bool isnoundo, int* cookie, struct picotm_error* error)
 {
     picotm_error_set_errno(error, ENOTSOCK);
     return -1;
@@ -785,8 +791,9 @@ fifo_tx_write_exec(struct fifo_tx* self, int fildes, const void* buf,
 }
 
 static ssize_t
-write_exec(struct file_tx* base, int fildes, const void* buf, size_t nbyte,
-           bool isnoundo, int* cookie, struct picotm_error* error)
+write_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
+           const void* buf, size_t nbyte, bool isnoundo, int* cookie,
+           struct picotm_error* error)
 {
     return fifo_tx_write_exec(fifo_tx_of_file_tx(base), fildes, buf, nbyte,
                               isnoundo, cookie, error);
@@ -835,8 +842,8 @@ fifo_tx_write_apply(struct fifo_tx* self, int fildes, int cookie,
 }
 
 static void
-write_apply(struct file_tx* base, int fildes, int cookie,
-            struct picotm_error* error)
+write_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
+            int cookie, struct picotm_error* error)
 {
     fifo_tx_write_apply(fifo_tx_of_file_tx(base), fildes, cookie, error);
 }
@@ -858,8 +865,8 @@ fifo_tx_write_undo(struct fifo_tx* self, int fildes, int cookie,
 }
 
 static void
-write_undo(struct file_tx* base, int fildes, int cookie,
-           struct picotm_error* error)
+write_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
+           int cookie, struct picotm_error* error)
 {
     fifo_tx_write_undo(fifo_tx_of_file_tx(base), fildes, cookie, error);
 }

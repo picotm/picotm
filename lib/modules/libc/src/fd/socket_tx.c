@@ -205,9 +205,9 @@ socket_tx_accept_exec(struct socket_tx* self, int sockfd,
 }
 
 static int
-accept_exec(struct file_tx* base, int sockfd, struct sockaddr* address,
-            socklen_t* address_len, bool isnoundo, int* cookie,
-            struct picotm_error* error)
+accept_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
+            struct sockaddr* address, socklen_t* address_len, bool isnoundo,
+            int* cookie, struct picotm_error* error)
 {
     return socket_tx_accept_exec(socket_tx_of_file_tx(base), sockfd, address,
                                  address_len, isnoundo, cookie, error);
@@ -236,8 +236,8 @@ socket_tx_accept_apply(struct socket_tx* self, int sockfd, int cookie,
 }
 
 static void
-accept_apply(struct file_tx* base, int sockfd, int cookie,
-             struct picotm_error* error)
+accept_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
+             int cookie, struct picotm_error* error)
 {
     socket_tx_accept_apply(socket_tx_of_file_tx(base), sockfd, cookie, error);
 }
@@ -258,8 +258,8 @@ socket_tx_accept_undo(struct socket_tx* self, int sockfd, int cookie,
 }
 
 static void
-accept_undo(struct file_tx* base, int sockfd, int cookie,
-            struct picotm_error* error)
+accept_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
+            int cookie, struct picotm_error* error)
 {
     socket_tx_accept_undo(socket_tx_of_file_tx(base), sockfd, cookie, error);
 }
@@ -313,9 +313,9 @@ socket_tx_bind_exec(struct socket_tx* self, int sockfd,
 }
 
 static int
-bind_exec(struct file_tx* base, int sockfd, const struct sockaddr* address,
-          socklen_t address_len, bool isnoundo, int* cookie,
-          struct picotm_error* error)
+bind_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
+          const struct sockaddr* address, socklen_t address_len,
+          bool isnoundo, int* cookie, struct picotm_error* error)
 {
     return socket_tx_bind_exec(socket_tx_of_file_tx(base), sockfd, address,
                                address_len, isnoundo, cookie, error);
@@ -344,8 +344,8 @@ socket_tx_bind_apply(struct socket_tx* self, int sockfd, int cookie,
 }
 
 static void
-bind_apply(struct file_tx* base, int sockfd, int cookie,
-           struct picotm_error* error)
+bind_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
+           int cookie, struct picotm_error* error)
 {
     socket_tx_bind_apply(socket_tx_of_file_tx(base), sockfd, cookie, error);
 }
@@ -366,8 +366,8 @@ socket_tx_bind_undo(struct socket_tx* self, int sockfd, int cookie,
 }
 
 static void
-bind_undo(struct file_tx* base, int sockfd, int cookie,
-          struct picotm_error* error)
+bind_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
+          int cookie, struct picotm_error* error)
 {
     socket_tx_bind_undo(socket_tx_of_file_tx(base), sockfd, cookie, error);
 }
@@ -424,9 +424,9 @@ socket_tx_connect_exec(struct socket_tx* self, int sockfd,
 }
 
 static int
-connect_exec(struct file_tx* base, int sockfd, const struct sockaddr* address,
-             socklen_t address_len, bool isnoundo, int* cookie,
-             struct picotm_error* error)
+connect_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
+             const struct sockaddr* address, socklen_t address_len,
+             bool isnoundo, int* cookie, struct picotm_error* error)
 {
     return socket_tx_connect_exec(socket_tx_of_file_tx(base), sockfd,
                                   address, address_len, isnoundo, cookie,
@@ -457,8 +457,8 @@ socket_tx_connect_apply(struct socket_tx* self, int sockfd, int cookie,
 }
 
 static void
-connect_apply(struct file_tx* base, int sockfd, int cookie,
-              struct picotm_error* error)
+connect_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
+              int cookie, struct picotm_error* error)
 {
     return socket_tx_connect_apply(socket_tx_of_file_tx(base), sockfd,
                                    cookie, error);
@@ -483,8 +483,8 @@ socket_tx_connect_undo(struct socket_tx* self, int sockfd, int cookie,
 }
 
 static void
-connect_undo(struct file_tx* base, int sockfd, int cookie,
-             struct picotm_error* error)
+connect_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
+             int cookie, struct picotm_error* error)
 {
     return socket_tx_connect_undo(socket_tx_of_file_tx(base), sockfd,
                                   cookie, error);
@@ -495,8 +495,9 @@ connect_undo(struct file_tx* base, int sockfd, int cookie,
  */
 
 static int
-fchmod_exec(struct file_tx* base, int fildes, mode_t mode, bool isnoundo,
-            int* cookie, struct picotm_error* error)
+fchmod_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
+            mode_t mode, bool isnoundo, int* cookie,
+            struct picotm_error* error)
 {
     picotm_error_set_errno(error, EINVAL);
     return -1;
@@ -637,7 +638,7 @@ socket_tx_fcntl_exec(struct socket_tx* self, int fildes, int cmd,
 }
 
 static int
-fcntl_exec(struct file_tx* base, int fildes, int cmd,
+fcntl_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, int cmd,
            union fcntl_arg* arg, bool isnoundo, int* cookie,
            struct picotm_error* error)
 {
@@ -646,13 +647,13 @@ fcntl_exec(struct file_tx* base, int fildes, int cmd,
 }
 
 static void
-fcntl_apply(struct file_tx* base, int fildes, int cookie,
-            struct picotm_error* error)
+fcntl_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
+            int cookie, struct picotm_error* error)
 { }
 
 static void
-fcntl_undo(struct file_tx* base, int fildes, int cookie,
-           struct picotm_error* error)
+fcntl_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
+           int cookie, struct picotm_error* error)
 { }
 
 /*
@@ -723,8 +724,9 @@ socket_tx_fstat_exec(struct socket_tx* self, int fildes, struct stat* buf,
 }
 
 static int
-fstat_exec(struct file_tx* base, int fildes, struct stat* buf, bool isnoundo,
-           int* cookie, struct picotm_error* error)
+fstat_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
+           struct stat* buf, bool isnoundo, int* cookie,
+           struct picotm_error* error)
 {
     return socket_tx_fstat_exec(socket_tx_of_file_tx(base), fildes, buf,
                                 isnoundo, cookie, error);
@@ -758,8 +760,8 @@ socket_tx_fstat_apply(struct socket_tx* self, int fildes, int cookie,
 }
 
 static void
-fstat_apply(struct file_tx* base, int fildes, int cookie,
-            struct picotm_error* error)
+fstat_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
+            int cookie, struct picotm_error* error)
 {
     socket_tx_fstat_apply(socket_tx_of_file_tx(base), fildes, cookie, error);
 }
@@ -787,8 +789,8 @@ socket_tx_fstat_undo(struct socket_tx* self, int fildes, int cookie,
 }
 
 static void
-fstat_undo(struct file_tx* base, int fildes, int cookie,
-           struct picotm_error* error)
+fstat_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
+           int cookie, struct picotm_error* error)
 {
     socket_tx_fstat_undo(socket_tx_of_file_tx(base), fildes, cookie, error);
 }
@@ -798,8 +800,8 @@ fstat_undo(struct file_tx* base, int fildes, int cookie,
  */
 
 static int
-fsync_exec(struct file_tx* base, int fildes, bool isnoundo, int* cookie,
-           struct picotm_error* error)
+fsync_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
+           bool isnoundo, int* cookie, struct picotm_error* error)
 {
     picotm_error_set_errno(error, EINVAL);
     return -1;
@@ -853,8 +855,9 @@ socket_tx_listen_exec(struct socket_tx* self, int sockfd, int backlog,
 }
 
 static int
-listen_exec(struct file_tx* base, int sockfd, int backlog, bool isnoundo,
-            int* cookie, struct picotm_error* error)
+listen_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
+            int backlog, bool isnoundo, int* cookie,
+            struct picotm_error* error)
 {
     return socket_tx_listen_exec(socket_tx_of_file_tx(base), sockfd, backlog,
                                  isnoundo, cookie, error);
@@ -880,8 +883,8 @@ socket_tx_listen_apply(struct socket_tx* self, int sockfd, int cookie,
 }
 
 static void
-listen_apply(struct file_tx* base, int sockfd, int cookie,
-             struct picotm_error* error)
+listen_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
+             int cookie, struct picotm_error* error)
 {
     socket_tx_listen_apply(socket_tx_of_file_tx(base), sockfd, cookie, error);
 }
@@ -905,8 +908,8 @@ socket_tx_listen_undo(struct socket_tx* self, int sockfd, int cookie,
 }
 
 static void
-listen_undo(struct file_tx* base, int sockfd, int cookie,
-            struct picotm_error* error)
+listen_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
+            int cookie, struct picotm_error* error)
 {
     socket_tx_listen_undo(socket_tx_of_file_tx(base), sockfd, cookie, error);
 }
@@ -916,8 +919,9 @@ listen_undo(struct file_tx* base, int sockfd, int cookie,
  */
 
 static off_t
-lseek_exec(struct file_tx* base, int fildes, off_t offset, int whence,
-           bool isnoundo, int* cookie, struct picotm_error* error)
+lseek_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
+           off_t offset, int whence, bool isnoundo, int* cookie,
+           struct picotm_error* error)
 {
     picotm_error_set_errno(error, ESPIPE);
     return (off_t)-1;
@@ -928,8 +932,8 @@ lseek_exec(struct file_tx* base, int fildes, off_t offset, int whence,
  */
 
 static ssize_t
-pread_exec(struct file_tx* base, int fildes, void* buf, size_t nbyte,
-           off_t off, bool isnoundo,
+pread_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
+           void* buf, size_t nbyte, off_t off, bool isnoundo,
            enum picotm_libc_validation_mode val_mode, int* cookie,
            struct picotm_error* error)
 {
@@ -942,8 +946,9 @@ pread_exec(struct file_tx* base, int fildes, void* buf, size_t nbyte,
  */
 
 static ssize_t
-pwrite_exec(struct file_tx* base, int fildes, const void* buf, size_t nbyte,
-            off_t off, bool isnoundo, int* cookie, struct picotm_error* error)
+pwrite_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
+            const void* buf, size_t nbyte, off_t off, bool isnoundo,
+            int* cookie, struct picotm_error* error)
 {
     picotm_error_set_errno(error, ESPIPE);
     return -1;
@@ -1003,9 +1008,10 @@ socket_tx_read_exec(struct socket_tx* self, int fildes, void* buf,
 }
 
 static ssize_t
-read_exec(struct file_tx* base, int fildes, void* buf, size_t nbyte,
-          bool isnoundo, enum picotm_libc_validation_mode val_mode,
-          int* cookie, struct picotm_error* error)
+read_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, void* buf,
+          size_t nbyte, bool isnoundo,
+          enum picotm_libc_validation_mode val_mode, int* cookie,
+          struct picotm_error* error)
 {
     return socket_tx_read_exec(socket_tx_of_file_tx(base), fildes, buf, nbyte,
                                isnoundo, val_mode, cookie, error);
@@ -1035,8 +1041,8 @@ socket_tx_read_apply(struct socket_tx* self, int fildes, int cookie,
 }
 
 static void
-read_apply(struct file_tx* base, int fildes, int cookie,
-           struct picotm_error* error)
+read_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
+           int cookie, struct picotm_error* error)
 {
     socket_tx_read_apply(socket_tx_of_file_tx(base), fildes, cookie, error);
 }
@@ -1057,7 +1063,7 @@ socket_tx_read_undo(struct socket_tx* self, int fildes, int cookie,
 }
 
 static void
-read_undo(struct file_tx* base, int fildes, int cookie,
+read_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, int cookie,
           struct picotm_error* error)
 {
     socket_tx_read_undo(socket_tx_of_file_tx(base), fildes, cookie, error);
@@ -1116,8 +1122,9 @@ socket_tx_recv_exec(struct socket_tx* self, int sockfd, void* buffer,
 }
 
 static ssize_t
-recv_exec(struct file_tx* base, int sockfd, void* buffer, size_t length,
-          int flags, bool isnoundo, int* cookie, struct picotm_error* error)
+recv_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
+          void* buffer, size_t length, int flags, bool isnoundo, int* cookie,
+          struct picotm_error* error)
 {
     return socket_tx_recv_exec(socket_tx_of_file_tx(base), sockfd, buffer,
                                length, flags, isnoundo, cookie, error);
@@ -1143,8 +1150,8 @@ socket_tx_recv_apply(struct socket_tx* self, int sockfd, int cookie,
 }
 
 static void
-recv_apply(struct file_tx* base, int sockfd, int cookie,
-           struct picotm_error* error)
+recv_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
+           int cookie, struct picotm_error* error)
 {
     socket_tx_recv_apply(socket_tx_of_file_tx(base), sockfd, cookie, error);
 }
@@ -1168,7 +1175,7 @@ socket_tx_recv_undo(struct socket_tx* self, int sockfd, int cookie,
 }
 
 static void
-recv_undo(struct file_tx* base, int sockfd, int cookie,
+recv_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd, int cookie,
           struct picotm_error* error)
 {
     socket_tx_recv_undo(socket_tx_of_file_tx(base), sockfd, cookie, error);
@@ -1256,8 +1263,9 @@ socket_tx_send_exec(struct socket_tx* self, int sockfd, const void* buffer,
 }
 
 static ssize_t
-send_exec(struct file_tx* base, int sockfd, const void* buffer, size_t length,
-          int flags, bool isnoundo, int* cookie, struct picotm_error* error)
+send_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
+          const void* buffer, size_t length, int flags, bool isnoundo,
+          int* cookie, struct picotm_error* error)
 {
     return socket_tx_send_exec(socket_tx_of_file_tx(base), sockfd, buffer,
                                length, flags, isnoundo, cookie, error);
@@ -1310,8 +1318,8 @@ socket_tx_send_apply(struct socket_tx* self, int sockfd, int cookie,
 }
 
 static void
-send_apply(struct file_tx* base, int sockfd, int cookie,
-           struct picotm_error* error)
+send_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
+           int cookie, struct picotm_error* error)
 {
     socket_tx_send_apply(socket_tx_of_file_tx(base), sockfd, cookie, error);
 }
@@ -1336,7 +1344,7 @@ socket_tx_send_undo(struct socket_tx* self, int sockfd, int cookie,
 }
 
 static void
-send_undo(struct file_tx* base, int sockfd, int cookie,
+send_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd, int cookie,
           struct picotm_error* error)
 {
     socket_tx_send_undo(socket_tx_of_file_tx(base), sockfd, cookie, error);
@@ -1391,8 +1399,8 @@ socket_tx_shutdown_exec(struct socket_tx* self, int sockfd, int how,
 }
 
 static int
-shutdown_exec(struct file_tx* base, int sockfd, int how, bool isnoundo,
-              int* cookie, struct picotm_error* error)
+shutdown_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
+              int how, bool isnoundo, int* cookie, struct picotm_error* error)
 {
     return socket_tx_shutdown_exec(socket_tx_of_file_tx(base), sockfd, how,
                                    isnoundo, cookie, error);
@@ -1422,8 +1430,8 @@ socket_tx_shutdown_apply(struct socket_tx* self, int sockfd, int cookie,
 }
 
 static void
-shutdown_apply(struct file_tx* base, int sockfd, int cookie,
-               struct picotm_error* error)
+shutdown_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
+               int cookie, struct picotm_error* error)
 {
     socket_tx_shutdown_apply(socket_tx_of_file_tx(base), sockfd, cookie,
                              error);
@@ -1448,8 +1456,8 @@ socket_tx_shutdown_undo(struct socket_tx* self, int sockfd, int cookie,
 }
 
 static void
-shutdown_undo(struct file_tx* base, int sockfd, int cookie,
-              struct picotm_error* error)
+shutdown_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
+              int cookie, struct picotm_error* error)
 {
     socket_tx_shutdown_undo(socket_tx_of_file_tx(base), sockfd, cookie,
                             error);
@@ -1527,8 +1535,9 @@ socket_tx_write_exec(struct socket_tx* self, int fildes, const void* buf,
 }
 
 static ssize_t
-write_exec(struct file_tx* base, int fildes, const void* buf, size_t nbyte,
-           bool isnoundo, int* cookie, struct picotm_error* error)
+write_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
+           const void* buf, size_t nbyte, bool isnoundo, int* cookie,
+           struct picotm_error* error)
 {
     return socket_tx_write_exec(socket_tx_of_file_tx(base), fildes, buf,
                                 nbyte, isnoundo, cookie, error);
@@ -1580,8 +1589,8 @@ socket_tx_write_apply(struct socket_tx* self, int fildes, int cookie,
 }
 
 static void
-write_apply(struct file_tx* base, int fildes, int cookie,
-            struct picotm_error* error)
+write_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
+            int cookie, struct picotm_error* error)
 {
     socket_tx_write_apply(socket_tx_of_file_tx(base), fildes, cookie, error);
 }
@@ -1606,8 +1615,8 @@ socket_tx_write_undo(struct socket_tx* self, int fildes, int cookie,
 }
 
 static void
-write_undo(struct file_tx* base, int fildes, int cookie,
-           struct picotm_error* error)
+write_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
+           int cookie, struct picotm_error* error)
 {
     socket_tx_write_undo(socket_tx_of_file_tx(base), fildes, cookie, error);
 }
