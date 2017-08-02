@@ -34,6 +34,7 @@
  */
 
 struct file_tx;
+struct ofd_tx;
 struct picotm_error;
 struct stat;
 
@@ -65,178 +66,214 @@ struct file_tx_ops {
      * accept()
      */
 
-    int (*accept_exec)(struct file_tx*, int, struct sockaddr*, socklen_t*,
-                       bool, int*, struct picotm_error*);
+    int (*accept_exec)(struct file_tx*, struct ofd_tx*, int,
+                       struct sockaddr*, socklen_t*, bool, int*,
+                       struct picotm_error*);
 
-    void (*accept_apply)(struct file_tx*, int, int, struct picotm_error*);
+    void (*accept_apply)(struct file_tx*, struct ofd_tx*, int, int,
+                         struct picotm_error*);
 
-    void (*accept_undo)(struct file_tx*, int, int, struct picotm_error*);
+    void (*accept_undo)(struct file_tx*, struct ofd_tx*, int, int,
+                        struct picotm_error*);
 
     /*
      * bind()
      */
 
-    int (*bind_exec)(struct file_tx*, int, const struct sockaddr*, socklen_t,
-                     bool, int*, struct picotm_error*);
+    int (*bind_exec)(struct file_tx*, struct ofd_tx*, int,
+                     const struct sockaddr*, socklen_t, bool, int*,
+                     struct picotm_error*);
 
-    void (*bind_apply)(struct file_tx*, int, int, struct picotm_error*);
+    void (*bind_apply)(struct file_tx*, struct ofd_tx*, int, int,
+                       struct picotm_error*);
 
-    void (*bind_undo)(struct file_tx*, int, int, struct picotm_error*);
+    void (*bind_undo)(struct file_tx*, struct ofd_tx*, int, int,
+                      struct picotm_error*);
 
     /*
      * connect()
      */
 
-    int (*connect_exec)(struct file_tx*, int, const struct sockaddr*, socklen_t,
-                        bool, int*, struct picotm_error*);
+    int (*connect_exec)(struct file_tx*, struct ofd_tx*, int,
+                        const struct sockaddr*, socklen_t, bool, int*,
+                        struct picotm_error*);
 
-    void (*connect_apply)(struct file_tx*, int, int, struct picotm_error*);
+    void (*connect_apply)(struct file_tx*, struct ofd_tx*, int, int,
+                          struct picotm_error*);
 
-    void (*connect_undo)(struct file_tx*, int, int, struct picotm_error*);
+    void (*connect_undo)(struct file_tx*, struct ofd_tx*, int, int,
+                         struct picotm_error*);
 
     /*
      * fchmod()
      */
 
-    int (*fchmod_exec)(struct file_tx*, int, mode_t, bool, int*,
-                       struct picotm_error*);
+    int (*fchmod_exec)(struct file_tx*, struct ofd_tx*, int, mode_t, bool,
+                       int*, struct picotm_error*);
 
-    void (*fchmod_apply)(struct file_tx*, int, int, struct picotm_error*);
+    void (*fchmod_apply)(struct file_tx*, struct ofd_tx*, int, int,
+                         struct picotm_error*);
 
-    void (*fchmod_undo)(struct file_tx*, int, int, struct picotm_error*);
+    void (*fchmod_undo)(struct file_tx*, struct ofd_tx*, int, int,
+                        struct picotm_error*);
 
     /*
      * fcntl()
      */
 
-    int (*fcntl_exec)(struct file_tx*, int, int, union fcntl_arg*, bool, int*,
-                      struct picotm_error*);
+    int (*fcntl_exec)(struct file_tx*, struct ofd_tx*, int, int,
+                      union fcntl_arg*, bool, int*, struct picotm_error*);
 
-    void (*fcntl_apply)(struct file_tx*, int, int, struct picotm_error*);
+    void (*fcntl_apply)(struct file_tx*, struct ofd_tx*, int, int,
+                        struct picotm_error*);
 
-    void (*fcntl_undo)(struct file_tx*, int, int, struct picotm_error*);
+    void (*fcntl_undo)(struct file_tx*, struct ofd_tx*, int, int,
+                       struct picotm_error*);
 
     /*
      * fstat()
      */
 
-    int (*fstat_exec)(struct file_tx*, int, struct stat*, bool, int*,
-                      struct picotm_error*);
+    int (*fstat_exec)(struct file_tx*, struct ofd_tx*, int, struct stat*,
+                      bool, int*, struct picotm_error*);
 
-    void (*fstat_apply)(struct file_tx*, int, int, struct picotm_error*);
+    void (*fstat_apply)(struct file_tx*, struct ofd_tx*, int, int,
+                        struct picotm_error*);
 
-    void (*fstat_undo)(struct file_tx*, int, int, struct picotm_error*);
+    void (*fstat_undo)(struct file_tx*, struct ofd_tx*, int, int,
+                       struct picotm_error*);
 
     /*
      * fsync()
      */
 
-    int (*fsync_exec)(struct file_tx*, int, bool, int*, struct picotm_error*);
+    int (*fsync_exec)(struct file_tx*, struct ofd_tx*, int, bool, int*,
+                      struct picotm_error*);
 
-    void (*fsync_apply)(struct file_tx*, int, int, struct picotm_error*);
+    void (*fsync_apply)(struct file_tx*, struct ofd_tx*, int, int,
+                        struct picotm_error*);
 
-    void (*fsync_undo)(struct file_tx*, int, int, struct picotm_error*);
+    void (*fsync_undo)(struct file_tx*, struct ofd_tx*, int, int,
+                       struct picotm_error*);
 
     /*
      * listen()
      */
 
-    int (*listen_exec)(struct file_tx*, int, int, bool, int*,
+    int (*listen_exec)(struct file_tx*, struct ofd_tx*, int, int, bool, int*,
                        struct picotm_error*);
 
-    void (*listen_apply)(struct file_tx*, int, int, struct picotm_error*);
+    void (*listen_apply)(struct file_tx*, struct ofd_tx*, int, int,
+                         struct picotm_error*);
 
-    void (*listen_undo)(struct file_tx*, int, int, struct picotm_error*);
+    void (*listen_undo)(struct file_tx*, struct ofd_tx*, int, int,
+                        struct picotm_error*);
 
     /*
      * lseek()
      */
 
-    off_t (*lseek_exec)(struct file_tx*, int, off_t, int, bool, int*,
+    off_t (*lseek_exec)(struct file_tx*, struct ofd_tx*, int, off_t, int,
+                        bool, int*, struct picotm_error*);
+
+    void (*lseek_apply)(struct file_tx*, struct ofd_tx*, int, int,
                         struct picotm_error*);
 
-    void (*lseek_apply)(struct file_tx*, int, int, struct picotm_error*);
-
-    void (*lseek_undo)(struct file_tx*, int, int, struct picotm_error*);
+    void (*lseek_undo)(struct file_tx*, struct ofd_tx*, int, int,
+                       struct picotm_error*);
 
     /*
      * pread()
      */
 
-    ssize_t (*pread_exec)(struct file_tx*, int, void*, size_t, off_t, bool,
-                          enum picotm_libc_validation_mode, int*,
+    ssize_t (*pread_exec)(struct file_tx*, struct ofd_tx*, int, void*, size_t,
+                          off_t, bool, enum picotm_libc_validation_mode, int*,
                           struct picotm_error*);
 
-    void (*pread_apply)(struct file_tx*, int, int, struct picotm_error*);
+    void (*pread_apply)(struct file_tx*, struct ofd_tx*, int, int,
+                        struct picotm_error*);
 
-    void (*pread_undo)(struct file_tx*, int, int, struct picotm_error*);
+    void (*pread_undo)(struct file_tx*, struct ofd_tx*, int, int,
+                       struct picotm_error*);
 
     /*
      * pwrite()
      */
 
-    ssize_t (*pwrite_exec)(struct file_tx*, int, const void*, size_t, off_t,
-                           bool, int*, struct picotm_error*);
+    ssize_t (*pwrite_exec)(struct file_tx*, struct ofd_tx*, int, const void*,
+                           size_t, off_t, bool, int*, struct picotm_error*);
 
-    void (*pwrite_apply)(struct file_tx*, int, int, struct picotm_error*);
+    void (*pwrite_apply)(struct file_tx*, struct ofd_tx*, int, int,
+                         struct picotm_error*);
 
-    void (*pwrite_undo)(struct file_tx*, int, int, struct picotm_error*);
+    void (*pwrite_undo)(struct file_tx*, struct ofd_tx*, int, int,
+                        struct picotm_error*);
 
     /*
      * read()
      */
 
-    ssize_t (*read_exec)(struct file_tx*, int, void *buf, size_t, bool,
-                         enum picotm_libc_validation_mode, int*,
+    ssize_t (*read_exec)(struct file_tx*, struct ofd_tx*, int, void *buf,
+                         size_t, bool, enum picotm_libc_validation_mode, int*,
                          struct picotm_error*);
 
-    void (*read_apply)(struct file_tx*, int, int, struct picotm_error*);
+    void (*read_apply)(struct file_tx*, struct ofd_tx*, int, int,
+                       struct picotm_error*);
 
-    void (*read_undo)(struct file_tx*, int, int, struct picotm_error*);
+    void (*read_undo)(struct file_tx*, struct ofd_tx*, int, int,
+                      struct picotm_error*);
 
     /*
      * recv()
      */
 
-    ssize_t (*recv_exec)(struct file_tx*, int, void*, size_t, int, bool, int*,
-                         struct picotm_error*);
+    ssize_t (*recv_exec)(struct file_tx*, struct ofd_tx*, int, void*, size_t,
+                         int, bool, int*, struct picotm_error*);
 
-    void (*recv_apply)(struct file_tx*, int, int, struct picotm_error*);
+    void (*recv_apply)(struct file_tx*, struct ofd_tx*, int, int,
+                       struct picotm_error*);
 
-    void (*recv_undo)(struct file_tx*, int, int, struct picotm_error*);
+    void (*recv_undo)(struct file_tx*, struct ofd_tx*, int, int,
+                      struct picotm_error*);
 
     /*
      * send()
      */
 
-    ssize_t (*send_exec)(struct file_tx*, int, const void*, size_t, int, bool,
-                         int*, struct picotm_error*);
+    ssize_t (*send_exec)(struct file_tx*, struct ofd_tx*, int, const void*,
+                         size_t, int, bool, int*, struct picotm_error*);
 
-    void (*send_apply)(struct file_tx*, int, int, struct picotm_error*);
+    void (*send_apply)(struct file_tx*, struct ofd_tx*, int, int,
+                       struct picotm_error*);
 
-    void (*send_undo)(struct file_tx*, int, int, struct picotm_error*);
+    void (*send_undo)(struct file_tx*, struct ofd_tx*, int, int,
+                      struct picotm_error*);
 
     /*
      * shutdown()
      */
 
-    int (*shutdown_exec)(struct file_tx*, int, int, bool, int*,
-                         struct picotm_error*);
+    int (*shutdown_exec)(struct file_tx*, struct ofd_tx*, int, int, bool,
+                         int*, struct picotm_error*);
 
-    void (*shutdown_apply)(struct file_tx*, int, int, struct picotm_error*);
+    void (*shutdown_apply)(struct file_tx*, struct ofd_tx*, int, int,
+                           struct picotm_error*);
 
-    void (*shutdown_undo)(struct file_tx*, int, int, struct picotm_error*);
+    void (*shutdown_undo)(struct file_tx*, struct ofd_tx*, int, int,
+                          struct picotm_error*);
 
     /*
      * write()
      */
 
-    ssize_t (*write_exec)(struct file_tx*, int, const void*, size_t, bool,
-                          int*, struct picotm_error*);
+    ssize_t (*write_exec)(struct file_tx*, struct ofd_tx*, int, const void*,
+                          size_t, bool, int*, struct picotm_error*);
 
-    void (*write_apply)(struct file_tx*, int, int, struct picotm_error*);
+    void (*write_apply)(struct file_tx*, struct ofd_tx*, int, int,
+                        struct picotm_error*);
 
-    void (*write_undo)(struct file_tx*, int, int, struct picotm_error*);
+    void (*write_undo)(struct file_tx*, struct ofd_tx*, int, int,
+                       struct picotm_error*);
 };
 
 /**

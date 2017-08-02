@@ -117,6 +117,7 @@ ofd_tx_set_file_offset(struct ofd_tx* self, off_t offset,
 
 #define _ofd_tx_file_op(_op, _file_op, _ofd_tx, ...) \
     (_ofd_tx)->file_tx->ops->_op ## _ ## _file_op((_ofd_tx)->file_tx, \
+                                                  (_ofd_tx), \
                                                   __VA_ARGS__)
 
 /**
