@@ -78,7 +78,6 @@ regfile_init(struct regfile* self, struct picotm_error* error)
     init_rwlocks(picotm_arraybeg(self->rwlock),
                  picotm_arrayend(self->rwlock));
 
-    self->offset = 0;
     rwlockmap_init(&self->rwlockmap);
 }
 
@@ -138,18 +137,6 @@ regfile_get_cc_mode(struct regfile* self)
     return cc_mode;
 }
 
-off_t
-regfile_get_offset(struct regfile* self)
-{
-    assert(self);
-
-    regfile_rdlock(self);
-    off_t offset = self->offset;
-    regfile_unlock(self);
-
-    return offset;
-}
-
 /*
  * Referencing
  */
@@ -174,16 +161,8 @@ ref_or_set_up(struct regfile* self, int fildes, struct picotm_error* error)
     self->cc_mode =
         picotm_libc_get_file_type_cc_mode(PICOTM_LIBC_FILE_TYPE_REGULAR);
 
-    off_t res = lseek(fildes, 0, SEEK_CUR);
-    if (res == (off_t)-1) {
-        picotm_error_set_errno(error, errno);
-        goto err_lseek;
-    }
-    self->offset = res;
-
     return;
 
-err_lseek:
 err_file_id_init_from_fildes:
     regfile_unref(self);
 }

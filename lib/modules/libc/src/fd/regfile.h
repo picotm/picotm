@@ -68,9 +68,6 @@ struct regfile {
     /** Reader/writer state locks. */
     struct picotm_rwlock  rwlock[NUMBER_OF_REGFILE_FIELDS];
 
-    /** \brief Current file offset. */
-    off_t offset;
-
     /** \brief Reader/writer region-lock table. */
     struct rwlockmap rwlockmap;
 };
@@ -149,14 +146,6 @@ regfile_unref(struct regfile* self);
  */
 enum picotm_libc_cc_mode
 regfile_get_cc_mode(struct regfile* self);
-
-/**
- * \brief Returns the current file offset of a file instance.
- * \param   self    The file instance.
- * \returns The current file offset of the given file.
- */
-off_t
-regfile_get_offset(struct regfile* self);
 
 /**
  * \brief Tries to acquire a reader lock on a file.
