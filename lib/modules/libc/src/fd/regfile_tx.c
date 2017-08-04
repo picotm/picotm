@@ -34,6 +34,7 @@
 #include "fcntloptab.h"
 #include "ioop.h"
 #include "iooptab.h"
+#include "ofd_tx.h"
 #include "range.h"
 #include "region.h"
 #include "regiontab.h"
@@ -481,12 +482,6 @@ fcntl_exec_2pl(struct regfile_tx* self, int fildes, int cmd,
         case F_GETFL:
         case F_GETOWN: {
 
-            /* Read-lock open file description */
-            regfile_tx_try_rdlock_field(self, REGFILE_FIELD_STATE, error);
-            if (picotm_error_is_set(error)) {
-                return -1;
-            }
-
             int res = TEMP_FAILURE_RETRY(fcntl(fildes, cmd));
             arg->arg0 = res;
             if (res < 0) {
@@ -496,12 +491,6 @@ fcntl_exec_2pl(struct regfile_tx* self, int fildes, int cmd,
             return res;
         }
         case F_GETLK: {
-
-            /* Read-lock open file description */
-            regfile_tx_try_rdlock_field(self, REGFILE_FIELD_STATE, error);
-            if (picotm_error_is_set(error)) {
-                return -1;
-            }
 
             int res = TEMP_FAILURE_RETRY(fcntl(fildes, cmd, arg->arg1));
             if (res < 0) {
@@ -600,14 +589,13 @@ fstat_exec_2pl(struct regfile_tx* self, int fildes, struct stat* buf,
     /* Acquire file-mode reader lock. */
     regfile_tx_try_wrlock_field(self, REGFILE_FIELD_FILE_MODE, error);
     if (picotm_error_is_set(error)) {
-        picotm_error_set_errno(error, errno);
         return -1;
     }
 
-    /* Acquire file-size reader lock. */
-    regfile_tx_try_rdlock_field(self, REGFILE_FIELD_FILE_SIZE, error);
+    /* get transaction-local file size */
+
+    off_t file_size = regfile_tx_get_file_size(self, fildes, error);
     if (picotm_error_is_set(error)) {
-        picotm_error_set_errno(error, errno);
         return -1;
     }
 
@@ -616,6 +604,8 @@ fstat_exec_2pl(struct regfile_tx* self, int fildes, struct stat* buf,
         picotm_error_set_errno(error, errno);
         return res;
     }
+
+    buf->st_size = file_size;
 
     return res;
 }
@@ -856,22 +846,68 @@ listen_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
  */
 
 static off_t
-filesize(int fildes, struct picotm_error* error)
+file_offset_after_lseek(struct regfile_tx* self, struct ofd_tx* ofd_tx,
+                        int fildes, off_t offset, int whence,
+                        struct picotm_error* error)
 {
-    struct stat buf;
-
-    int res = fstat(fildes, &buf);
-    if (res < 0) {
-        picotm_error_set_errno(error, errno);
-        return (off_t)-1;
+    switch (whence) {
+        case SEEK_SET:
+            if (offset < 0) {
+                /* negative result */
+                picotm_error_set_errno(error, EINVAL);
+                return (off_t)-1;
+            }
+            return offset;
+        case SEEK_CUR: {
+            off_t pos = ofd_tx_get_file_offset(ofd_tx, fildes, error);
+            if (picotm_error_is_set(error)) {
+                return pos;
+            }
+            if (offset < 0) {
+                if ((pos + offset) < 0) {
+                    /* negative result */
+                    picotm_error_set_errno(error, EINVAL);
+                    return (off_t)-1;
+                }
+            } else if (offset > 0) {
+                if ((pos + offset) < pos) {
+                    /* overflow */
+                    picotm_error_set_errno(error, EOVERFLOW);
+                    return (off_t)-1;
+                }
+            }
+            return pos + offset;
+        }
+        case SEEK_END: {
+            off_t size = regfile_tx_get_file_size(self, fildes, error);
+            if (picotm_error_is_set(error)) {
+                return size;
+            }
+            if (offset < 0) {
+                if ((size + offset) < 0) {
+                    /* negative result */
+                    picotm_error_set_errno(error, EINVAL);
+                    return (off_t)-1;
+                }
+            } else if (offset > 0) {
+                if ((size + offset) < size) {
+                    /* overflow */
+                    picotm_error_set_errno(error, EOVERFLOW);
+                    return (off_t)-1;
+                }
+            }
+            return size + offset;
+        }
+        default:
+            picotm_error_set_errno(error, EINVAL);
+            return (off_t)-1;
     }
-
-    return buf.st_size;
 }
 
 static off_t
-lseek_exec_noundo(struct regfile_tx* self, int fildes, off_t offset,
-                  int whence, int* cookie, struct picotm_error* error)
+lseek_exec_noundo(struct regfile_tx* self, struct ofd_tx* ofd_tx, int fildes,
+                  off_t offset, int whence, int* cookie,
+                  struct picotm_error* error)
 {
     off_t res = TEMP_FAILURE_RETRY(lseek(fildes, offset, whence));
     if (res == (off_t)-1) {
@@ -882,77 +918,51 @@ lseek_exec_noundo(struct regfile_tx* self, int fildes, off_t offset,
 }
 
 static off_t
-lseek_exec_2pl(struct regfile_tx* self, int fildes, off_t offset,
-               int whence, int* cookie, struct picotm_error* error)
+lseek_exec_2pl(struct regfile_tx* self, struct ofd_tx* ofd_tx, int fildes,
+               off_t offset, int whence, int* cookie,
+               struct picotm_error* error)
 {
-    /* Read-lock open file description */
-    regfile_tx_try_rdlock_field(self, REGFILE_FIELD_STATE, error);
+	off_t from = ofd_tx_get_file_offset(ofd_tx, fildes, error);
     if (picotm_error_is_set(error)) {
-        return -1;
+        return from;
     }
 
 	/* Fastpath: Read current position */
 	if (!offset && (whence == SEEK_CUR)) {
-		return self->offset;
+        return from;
 	}
 
-    /* Write-lock open file description to change position */
-    regfile_tx_try_wrlock_field(self, REGFILE_FIELD_STATE, error);
+    off_t to = file_offset_after_lseek(self, ofd_tx, fildes, offset, whence,
+                                       error);
     if (picotm_error_is_set(error)) {
-        return -1;
+        return to;
     }
 
-    /* Compute absolute position */
-
-    self->size = llmax(self->offset, self->size);
-
-    off_t pos;
-
-    switch (whence) {
-        case SEEK_SET:
-            pos = offset;
-            break;
-        case SEEK_CUR:
-            pos = self->offset + offset;
-            break;
-        case SEEK_END: {
-            const off_t fs = filesize(fildes, error);
-            if (picotm_error_is_set(error)) {
-                break;
-            }
-            pos = llmax(self->size, fs)+offset;
-            break;
-        }
-        default:
-            pos = -1;
-            break;
-    }
-
+    ofd_tx_set_file_offset(ofd_tx, to, error);
     if (picotm_error_is_set(error)) {
-        return -1;
+        return (off_t)-1;
     }
 
     if (cookie) {
-        *cookie = seekoptab_append(&self->seektab,
-                                   &self->seektablen,
-                                    self->offset, offset, whence,
+        *cookie = seekoptab_append(&ofd_tx->seektab,
+                                   &ofd_tx->seektablen,
+                                    from, offset, whence,
                                     error);
         if (picotm_error_is_set(error)) {
             abort();
         }
     }
 
-    self->offset = pos; /* Update file pointer */
-
-    return pos;
+    return to;
 }
 
 static off_t
-regfile_tx_lseek_exec(struct regfile_tx* self, int fildes, off_t offset,
-                      int whence, bool isnoundo, int* cookie,
-                      struct picotm_error* error)
+regfile_tx_lseek_exec(struct regfile_tx* self, struct ofd_tx* ofd_tx,
+                      int fildes, off_t offset, int whence, bool isnoundo,
+                      int* cookie, struct picotm_error* error)
 {
     static off_t (* const lseek_exec[2])(struct regfile_tx*,
+                                         struct ofd_tx*,
                                          int,
                                          off_t,
                                          int,
@@ -974,7 +984,7 @@ regfile_tx_lseek_exec(struct regfile_tx* self, int fildes, off_t offset,
         }
     }
 
-    return lseek_exec[self->cc_mode](self, fildes, offset, whence,
+    return lseek_exec[self->cc_mode](self, ofd_tx, fildes, offset, whence,
                                      cookie, error);
 }
 
@@ -983,35 +993,33 @@ lseek_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
            off_t offset, int whence, bool isnoundo, int* cookie,
            struct picotm_error* error)
 {
-    return regfile_tx_lseek_exec(regfile_tx_of_file_tx(base), fildes, offset,
-                                 whence, isnoundo, cookie, error);
+    return regfile_tx_lseek_exec(regfile_tx_of_file_tx(base), ofd_tx, fildes,
+                                 offset, whence, isnoundo, cookie, error);
 }
 
 static void
-lseek_apply_noundo(struct regfile_tx* self, int fildes, int cookie,
-                   struct picotm_error* error)
+lseek_apply_noundo(struct regfile_tx* self, struct ofd_tx* ofd_tx, int fildes,
+                   int cookie, struct picotm_error* error)
 { }
 
 static void
-lseek_apply_2pl(struct regfile_tx* self, int fildes, int cookie,
-                struct picotm_error* error)
+lseek_apply_2pl(struct regfile_tx* self, struct ofd_tx* ofd_tx, int fildes,
+                int cookie, struct picotm_error* error)
 {
-    const off_t pos = lseek(fildes, self->seektab[cookie].offset,
-                                    self->seektab[cookie].whence);
-
+    off_t pos = lseek(fildes, ofd_tx->seektab[cookie].offset,
+                              ofd_tx->seektab[cookie].whence);
     if (pos == (off_t)-1) {
         picotm_error_set_errno(error, errno);
         return;
     }
-
-    self->regfile->offset = pos;
 }
 
 static void
-regfile_tx_lseek_apply(struct regfile_tx* self, int fildes, int cookie,
-                       struct picotm_error* error)
+regfile_tx_lseek_apply(struct regfile_tx* self, struct ofd_tx* ofd_tx,
+                       int fildes, int cookie, struct picotm_error* error)
 {
     static void (* const lseek_apply[2])(struct regfile_tx*,
+                                         struct ofd_tx*,
                                          int,
                                          int,
                                          struct picotm_error*) = {
@@ -1021,14 +1029,15 @@ regfile_tx_lseek_apply(struct regfile_tx* self, int fildes, int cookie,
 
     assert(lseek_apply[self->cc_mode]);
 
-    lseek_apply[self->cc_mode](self, fildes, cookie, error);
+    lseek_apply[self->cc_mode](self, ofd_tx, fildes, cookie, error);
 }
 
 static void
 lseek_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
             int cookie, struct picotm_error* error)
 {
-    regfile_tx_lseek_apply(regfile_tx_of_file_tx(base), fildes, cookie, error);
+    regfile_tx_lseek_apply(regfile_tx_of_file_tx(base), ofd_tx, fildes,
+                           cookie, error);
 }
 
 static void
@@ -1309,19 +1318,27 @@ pwrite_exec_2pl(struct regfile_tx* self, int fildes,
                 const void* buf, size_t nbyte, off_t offset,
                 int* cookie, struct picotm_error* error)
 {
-    /* register written data */
+    /* lock region */
+    regfile_tx_2pl_lock_region(self, nbyte, offset, 1, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
 
-    if (__builtin_expect(!!cookie, 1)) {
+    /* add data to write set */
+    *cookie = regfile_tx_append_to_writeset(self, nbyte, offset, buf, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
 
-        /* lock region */
+    /* update file size if necessary */
 
-        regfile_tx_2pl_lock_region(self, nbyte, offset, 1, error);
-        if (picotm_error_is_set(error)) {
-            return -1;
-        }
+    off_t file_size = regfile_tx_get_file_size(self, fildes, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
 
-        /* add data to write set */
-        *cookie = regfile_tx_append_to_writeset(self, nbyte, offset, buf, error);
+    if (file_size < (off_t)(offset + nbyte)) {
+        regfile_tx_set_file_size(self, offset + nbyte, error);
         if (picotm_error_is_set(error)) {
             return -1;
         }
@@ -1452,7 +1469,8 @@ pwrite_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
  */
 
 static ssize_t
-read_exec_noundo(struct regfile_tx* self, int fildes, void* buf, size_t nbyte,
+read_exec_noundo(struct regfile_tx* self, struct ofd_tx* ofd_tx, int fildes,
+                 void* buf, size_t nbyte,
                  enum picotm_libc_validation_mode val_mode, int* cookie,
                  struct picotm_error* error)
 {
@@ -1465,28 +1483,28 @@ read_exec_noundo(struct regfile_tx* self, int fildes, void* buf, size_t nbyte,
 }
 
 static ssize_t
-read_exec_2pl(struct regfile_tx* self, int fildes, void* buf, size_t nbyte,
+read_exec_2pl(struct regfile_tx* self, struct ofd_tx* ofd_tx, int fildes,
+              void* buf, size_t nbyte,
               enum picotm_libc_validation_mode val_mode, int* cookie,
               struct picotm_error* error)
 {
     assert(self);
 
-    /* write-lock open file description, because we change the file position */
-    regfile_tx_try_wrlock_field(self, REGFILE_FIELD_STATE, error);
+    off_t offset = ofd_tx_get_file_offset(ofd_tx, fildes, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
 
     /* read-lock region */
 
-    regfile_tx_2pl_lock_region(self, nbyte, self->offset, 0, error);
+    regfile_tx_2pl_lock_region(self, nbyte, offset, 0, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
 
     /* read from file */
 
-    ssize_t len = TEMP_FAILURE_RETRY(pread(fildes, buf, nbyte, self->offset));
+    ssize_t len = TEMP_FAILURE_RETRY(pread(fildes, buf, nbyte, offset));
     if (len < 0) {
         picotm_error_set_errno(error, errno);
         return -1;
@@ -1495,25 +1513,29 @@ read_exec_2pl(struct regfile_tx* self, int fildes, void* buf, size_t nbyte,
     /* read from local write set */
 
     ssize_t len2 = iooptab_read(self->wrtab,
-                                self->wrtablen, buf, nbyte,
-                                self->offset,
+                                self->wrtablen, buf, nbyte, offset,
                                 self->wrbuf);
 
     ssize_t res = llmax(len, len2);
 
-    /* update file pointer */
-    self->offset += res;
+    /* update file offset */
+
+    ofd_tx_set_file_offset(ofd_tx, offset + res, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
 
     return res;
 }
 
 ssize_t
-regfile_tx_read_exec(struct regfile_tx* self, int fildes, void* buf,
-                     size_t nbyte, bool isnoundo,
+regfile_tx_read_exec(struct regfile_tx* self, struct ofd_tx* ofd_tx,
+                     int fildes, void* buf, size_t nbyte, bool isnoundo,
                      enum picotm_libc_validation_mode val_mode, int* cookie,
                      struct picotm_error* error)
 {
     static ssize_t (* const read_exec[2])(struct regfile_tx*,
+                                          struct ofd_tx*,
                                           int,
                                           void*,
                                           size_t,
@@ -1536,8 +1558,8 @@ regfile_tx_read_exec(struct regfile_tx* self, int fildes, void* buf,
         }
     }
 
-    return read_exec[self->cc_mode](self, fildes, buf, nbyte, val_mode,
-                                    cookie, error);
+    return read_exec[self->cc_mode](self, ofd_tx, fildes, buf, nbyte,
+                                    val_mode, cookie, error);
 }
 
 static ssize_t
@@ -1546,8 +1568,9 @@ read_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, void* buf,
           enum picotm_libc_validation_mode val_mode, int* cookie,
           struct picotm_error* error)
 {
-    return regfile_tx_read_exec(regfile_tx_of_file_tx(base), fildes, buf,
-                                nbyte, isnoundo, val_mode, cookie, error);
+    return regfile_tx_read_exec(regfile_tx_of_file_tx(base), ofd_tx, fildes,
+                                buf, nbyte, isnoundo, val_mode, cookie,
+                                error);
 }
 
 static void
@@ -1559,9 +1582,9 @@ static void
 read_apply_2pl(struct regfile_tx* self, int fildes, int cookie,
                struct picotm_error* error)
 {
-    self->regfile->offset += self->rdtab[cookie].nbyte;
+    off_t offset = self->rdtab[cookie].off + self->rdtab[cookie].nbyte;
 
-    off_t res = lseek(fildes, self->regfile->offset, SEEK_SET);
+    off_t res = lseek(fildes, offset, SEEK_SET);
     if (res == (off_t)-1) {
         picotm_error_set_errno(error, errno);
         return;
@@ -1662,8 +1685,9 @@ shutdown_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
  */
 
 static ssize_t
-write_exec_noundo(struct regfile_tx* self, int fildes, const void* buf,
-                  size_t nbyte, int* cookie, struct picotm_error* error)
+write_exec_noundo(struct regfile_tx* self, struct ofd_tx* ofd_tx, int fildes,
+                  const void* buf, size_t nbyte, int* cookie,
+                  struct picotm_error* error)
 {
     ssize_t res = TEMP_FAILURE_RETRY(write(fildes, buf, nbyte));
     if ((res < 0) && (errno != EAGAIN) && (errno != EWOULDBLOCK)) {
@@ -1674,46 +1698,57 @@ write_exec_noundo(struct regfile_tx* self, int fildes, const void* buf,
 }
 
 static ssize_t
-write_exec_2pl(struct regfile_tx* self, int fildes, const void* buf,
-               size_t nbyte, int* cookie, struct picotm_error* error)
+write_exec_2pl(struct regfile_tx* self, struct ofd_tx* ofd_tx, int fildes,
+               const void* buf, size_t nbyte, int* cookie,
+               struct picotm_error* error)
 {
-    /* register written data */
+    off_t offset = ofd_tx_get_file_offset(ofd_tx, fildes, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
 
-    if (__builtin_expect(!!cookie, 1)) {
+    /* write-lock region */
+    regfile_tx_2pl_lock_region(self, nbyte, offset, 1, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
 
-        /* write-lock open file description, because we change the file position */
-        regfile_tx_try_wrlock_field(self, REGFILE_FIELD_STATE, error);
-        if (picotm_error_is_set(error)) {
-            return -1;
-        }
+    /* add buf to write set */
+    *cookie = regfile_tx_append_to_writeset(self, nbyte, offset, buf, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
 
-        /* write-lock region */
+    /* update file offset */
+    ofd_tx_set_file_offset(ofd_tx, offset + nbyte, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
 
-        regfile_tx_2pl_lock_region(self, nbyte, self->offset, 1, error);
-        if (picotm_error_is_set(error)) {
-            return -1;
-        }
+    /* update file size if necessary */
 
-        /* add buf to write set */
-        *cookie = regfile_tx_append_to_writeset(self, nbyte, self->offset,
-                                                buf, error);
+    off_t file_size = regfile_tx_get_file_size(self, fildes, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+
+    if (file_size < (off_t)(offset + nbyte)) {
+        regfile_tx_set_file_size(self, offset + nbyte, error);
         if (picotm_error_is_set(error)) {
             return -1;
         }
     }
 
-    /* update file pointer */
-    self->offset += nbyte;
-
     return nbyte;
 }
 
 static ssize_t
-regfile_tx_write_exec(struct regfile_tx* self, int fildes, const void* buf,
-                      size_t nbyte, bool isnoundo, int* cookie,
-                      struct picotm_error* error)
+regfile_tx_write_exec(struct regfile_tx* self, struct ofd_tx* ofd_tx,
+                      int fildes, const void* buf, size_t nbyte,
+                      bool isnoundo, int* cookie, struct picotm_error* error)
 {
     static ssize_t (* const write_exec[2])(struct regfile_tx*,
+                                           struct ofd_tx*,
                                            int,
                                            const void*,
                                            size_t,
@@ -1735,7 +1770,8 @@ regfile_tx_write_exec(struct regfile_tx* self, int fildes, const void* buf,
         }
     }
 
-    return write_exec[self->cc_mode](self, fildes, buf, nbyte, cookie, error);
+    return write_exec[self->cc_mode](self, ofd_tx, fildes, buf, nbyte,
+                                     cookie, error);
 }
 
 static ssize_t
@@ -1743,8 +1779,9 @@ write_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
            const void* buf, size_t nbyte, bool isnoundo, int* cookie,
            struct picotm_error* error)
 {
-    return regfile_tx_write_exec(regfile_tx_of_file_tx(base), fildes, buf,
-                                 nbyte, isnoundo, cookie, error);
+    return regfile_tx_write_exec(regfile_tx_of_file_tx(base), ofd_tx,
+                                 fildes, buf, nbyte, isnoundo, cookie,
+                                 error);
 }
 
 static void
@@ -1771,10 +1808,11 @@ write_apply_2pl(struct regfile_tx* self, int fildes, int cookie,
         return;
     }
 
-    /* Update file position */
-    self->regfile->offset = self->wrtab[cookie].off+len;
+    /* Update file offset */
 
-    off_t res = lseek(fildes, self->regfile->offset, SEEK_SET);
+    off_t offset = self->wrtab[cookie].off + len;
+
+    off_t res = lseek(fildes, offset, SEEK_SET);
     if (res == (off_t)-1) {
         picotm_error_set_errno(error, errno);
         return;
@@ -2060,18 +2098,15 @@ regfile_tx_init(struct regfile_tx* self)
     self->rdtablen = 0;
     self->rdtabsiz = 0;
 
-    self->seektab = NULL;
-    self->seektablen = 0;
-
     self->fchmodtab = NULL;
     self->fchmodtablen = 0;
 
     self->fcntltab = NULL;
     self->fcntltablen = 0;
 
-    self->offset = 0;
-    self->size = 0;
     self->cc_mode = PICOTM_LIBC_CC_MODE_NOUNDO;
+
+    self->file_size = 0;
 
     init_rwstates(picotm_arraybeg(self->rwstate),
                   picotm_arrayend(self->rwstate));
@@ -2093,13 +2128,58 @@ regfile_tx_uninit(struct regfile_tx* self)
 
     fcntloptab_clear(&self->fcntltab, &self->fcntltablen);
     fchmodoptab_clear(&self->fchmodtab, &self->fchmodtablen);
-    seekoptab_clear(&self->seektab, &self->seektablen);
     iooptab_clear(&self->wrtab, &self->wrtablen);
     iooptab_clear(&self->rdtab, &self->rdtablen);
     free(self->wrbuf);
 
     uninit_rwstates(picotm_arraybeg(self->rwstate),
                     picotm_arrayend(self->rwstate));
+}
+
+off_t
+regfile_tx_get_file_size(struct regfile_tx* self, int fildes,
+                      struct picotm_error* error)
+{
+    assert(self);
+
+    enum picotm_rwstate_status lock_status =
+        picotm_rwstate_get_status(self->rwstate + REGFILE_FIELD_FILE_SIZE);
+
+    if (lock_status != PICOTM_RWSTATE_UNLOCKED) {
+        /* fast path: we have already read the file size. */
+        return self->file_size;
+    }
+
+    /* Read-lock file-size field and ... */
+    regfile_tx_try_rdlock_field(self, REGFILE_FIELD_FILE_SIZE, error);
+    if (picotm_error_is_set(error)) {
+        return (off_t)-1;
+    }
+
+    /* ...get current file buffer size. */
+    struct stat buf;
+    int res = fstat(fildes, &buf);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return (off_t)res;
+    }
+    self->file_size = buf.st_size;
+
+    return self->file_size;
+}
+
+void
+regfile_tx_set_file_size(struct regfile_tx* self, off_t size,
+                         struct picotm_error* error)
+{
+    assert(self);
+
+    regfile_tx_try_wrlock_field(self, REGFILE_FIELD_FILE_SIZE, error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
+
+    self->file_size = size;
 }
 
 /*
@@ -2125,12 +2205,10 @@ regfile_tx_ref_or_set_up(struct regfile_tx* self, struct regfile* regfile,
 
     self->regfile = regfile;
     self->cc_mode = regfile_get_cc_mode(regfile);
-    self->offset = regfile_get_offset(regfile);
-    self->size = 0;
+    self->file_size = 0;
 
     self->fchmodtablen = 0;
     self->fcntltablen = 0;
-    self->seektablen = 0;
     self->rdtablen = 0;
     self->wrtablen = 0;
     self->wrbuflen = 0;

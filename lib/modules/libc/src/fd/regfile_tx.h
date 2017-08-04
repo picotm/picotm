@@ -60,9 +60,6 @@ struct regfile_tx {
     size_t       rdtablen;
     size_t       rdtabsiz;
 
-    struct seekop* seektab;
-    size_t         seektablen;
-
     struct fchmodop* fchmodtab;
     size_t           fchmodtablen;
 
@@ -72,11 +69,8 @@ struct regfile_tx {
     /** CC mode of domain */
     enum picotm_libc_cc_mode cc_mode;
 
-    /** Local file-pointer position */
-    off_t offset;
-
-    /** Size of regular files */
-    off_t size;
+    /** Transaction-local file size */
+    off_t file_size;
 
     /** State of the local reader/writer locks. */
     struct picotm_rwstate rwstate[NUMBER_OF_REGFILE_FIELDS];
@@ -101,6 +95,28 @@ regfile_tx_init(struct regfile_tx* self);
  */
 void
 regfile_tx_uninit(struct regfile_tx* self);
+
+/**
+ * \brief Returns the transaction-local file size.
+ * \param       self    A transaction-local regular-file state.
+ * \param       fildes  A reference file descriptor.
+ * \param[out]  error   Returns an error to the caller.
+ * \returns The transaction-local file size.
+ */
+off_t
+regfile_tx_get_file_size(struct regfile_tx* self, int fildes,
+                         struct picotm_error* error);
+
+/**
+ * \brief Sets the transaction-local file size.
+ * \param       self    A transaction-local regular-file state.
+ * \param       size    The new file size.
+ * \param[out]  error   Returns an error to the caller.
+ * \returns The transaction-local file size.
+ */
+void
+regfile_tx_set_file_size(struct regfile_tx* self, off_t size,
+                         struct picotm_error* error);
 
 /**
  * Acquire a reference on the open file description
