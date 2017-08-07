@@ -60,8 +60,6 @@ static _Atomic enum picotm_libc_cc_mode g_file_type_cc_mode[] = {
     PICOTM_LIBC_CC_MODE_2PL
 };
 
-static _Atomic enum picotm_libc_validation_mode g_validation_mode;
-
 PICOTM_EXPORT
 void
 picotm_libc_set_file_type_cc_mode(enum picotm_libc_file_type file_type,
@@ -77,18 +75,4 @@ picotm_libc_get_file_type_cc_mode(enum picotm_libc_file_type file_type)
 {
     return atomic_load_explicit(g_file_type_cc_mode + file_type,
                                 memory_order_acquire);
-}
-
-PICOTM_EXPORT
-void
-picotm_libc_set_validation_mode(enum picotm_libc_validation_mode val_mode)
-{
-    atomic_store_explicit(&g_validation_mode, val_mode, memory_order_release);
-}
-
-PICOTM_EXPORT
-enum picotm_libc_validation_mode
-picotm_libc_get_validation_mode()
-{
-    return atomic_load_explicit(&g_validation_mode, memory_order_acquire);
 }

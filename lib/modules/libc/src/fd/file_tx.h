@@ -187,8 +187,7 @@ struct file_tx_ops {
      */
 
     ssize_t (*pread_exec)(struct file_tx*, struct ofd_tx*, int, void*, size_t,
-                          off_t, bool, enum picotm_libc_validation_mode, int*,
-                          struct picotm_error*);
+                          off_t, bool, int*, struct picotm_error*);
 
     void (*pread_apply)(struct file_tx*, struct ofd_tx*, int, int,
                         struct picotm_error*);
@@ -214,8 +213,7 @@ struct file_tx_ops {
      */
 
     ssize_t (*read_exec)(struct file_tx*, struct ofd_tx*, int, void *buf,
-                         size_t, bool, enum picotm_libc_validation_mode, int*,
-                         struct picotm_error*);
+                         size_t, bool, int*, struct picotm_error*);
 
     void (*read_apply)(struct file_tx*, struct ofd_tx*, int, int,
                        struct picotm_error*);

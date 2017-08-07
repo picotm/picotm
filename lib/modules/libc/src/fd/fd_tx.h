@@ -323,8 +323,7 @@ fd_tx_lseek_undo(struct fd_tx* self, int fildes, int cookie,
 
 ssize_t
 fd_tx_pread_exec(struct fd_tx* self, int fildes, void* buf, size_t nbyte,
-                 off_t off, bool isnoundo,
-                 enum picotm_libc_validation_mode val_mode, int* cookie,
+                 off_t off, bool isnoundo, int* cookie,
                  struct picotm_error* error);
 
 void
@@ -358,8 +357,7 @@ fd_tx_pwrite_undo(struct fd_tx* self, int fildes, int cookie,
 
 ssize_t
 fd_tx_read_exec(struct fd_tx* self, int fildes, void *buf, size_t nbyte,
-                bool isnoundo, enum picotm_libc_validation_mode val_mode,
-                int* cookie, struct picotm_error* error);
+                bool isnoundo, int* cookie, struct picotm_error* error);
 
 void
 fd_tx_read_apply(struct fd_tx* self, int fildes, int cookie,

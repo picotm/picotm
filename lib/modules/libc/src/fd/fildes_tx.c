@@ -167,19 +167,6 @@ fildes_tx_uninit(struct fildes_tx* self)
     free(self->eventtab);
 }
 
-void
-fildes_tx_set_validation_mode(struct fildes_tx* self,
-                              enum picotm_libc_validation_mode val_mode)
-{
-    picotm_libc_set_validation_mode(val_mode);
-}
-
-enum picotm_libc_validation_mode
-fildes_tx_get_validation_mode(const struct fildes_tx* self)
-{
-    return picotm_libc_get_validation_mode();
-}
-
 static struct chrdev_tx*
 get_chrdev_tx(struct fildes_tx* self, int index)
 {
@@ -2212,13 +2199,10 @@ fildes_tx_exec_pread(struct fildes_tx* self, int fildes, void* buf,
 
     /* pread */
 
-    enum picotm_libc_validation_mode val_mode =
-        fildes_tx_get_validation_mode(self);
-
     int cookie = -1;
 
     ssize_t len = fd_tx_pread_exec(fd_tx, fildes, buf, nbyte, off,
-                                   isnoundo, val_mode, &cookie, error);
+                                   isnoundo, &cookie, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -2360,13 +2344,10 @@ fildes_tx_exec_read(struct fildes_tx* self, int fildes, void* buf,
 
     /* Read */
 
-    enum picotm_libc_validation_mode val_mode =
-        fildes_tx_get_validation_mode(self);
-
     int cookie = -1;
 
     ssize_t len = fd_tx_read_exec(fd_tx, fildes, buf, nbyte,
-                                  isnoundo, val_mode, &cookie, error);
+                                  isnoundo, &cookie, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }

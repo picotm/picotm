@@ -100,13 +100,6 @@ fildes_tx_init(struct fildes_tx* self, unsigned long module);
 void
 fildes_tx_uninit(struct fildes_tx* self);
 
-void
-fildes_tx_set_validation_mode(struct fildes_tx* self,
-                              enum picotm_libc_validation_mode val_mode);
-
-enum picotm_libc_validation_mode
-fildes_tx_get_validation_mode(const struct fildes_tx* self);
-
 int
 fildes_tx_exec_accept(struct fildes_tx* self, int sockfd,
                       struct sockaddr* address, socklen_t* address_len,
