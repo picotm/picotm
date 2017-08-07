@@ -48,6 +48,8 @@ struct regfile_tx {
 
     struct regfile* regfile;
 
+    enum picotm_libc_write_mode wrmode;
+
     unsigned char* wrbuf;
     size_t         wrbuflen;
     size_t         wrbufsiz;
@@ -65,9 +67,6 @@ struct regfile_tx {
 
     struct fcntlop* fcntltab;
     size_t          fcntltablen;
-
-    /** CC mode of domain */
-    enum picotm_libc_cc_mode cc_mode;
 
     /** Transaction-local file size */
     off_t file_size;

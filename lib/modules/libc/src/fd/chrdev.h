@@ -40,6 +40,7 @@ struct picotm_rwstate;
  */
 enum chrdev_field {
     CHRDEV_FIELD_FILE_MODE,
+    CHRDEV_FIELD_FILE_OFFSET,
     CHRDEV_FIELD_STATE,
     NUMBER_OF_CHRDEV_FIELDS
 };

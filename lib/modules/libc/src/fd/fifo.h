@@ -40,7 +40,9 @@ struct picotm_rwstate;
  */
 enum fifo_field {
     FIFO_FIELD_FILE_MODE,
+    FIFO_FIELD_READ_END,
     FIFO_FIELD_STATE,
+    FIFO_FIELD_WRITE_END,
     NUMBER_OF_FIFO_FIELDS
 };
 

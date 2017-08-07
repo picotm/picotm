@@ -48,6 +48,8 @@ struct socket_tx {
 
     struct socket* socket;
 
+    enum picotm_libc_write_mode wrmode;
+
     unsigned char* wrbuf;
     size_t         wrbuflen;
     size_t         wrbufsiz;
@@ -62,9 +64,6 @@ struct socket_tx {
 
     struct fcntlop* fcntltab;
     size_t          fcntltablen;
-
-    /** CC mode of domain */
-    enum picotm_libc_cc_mode cc_mode;
 
     /** State of the local reader/writer locks. */
     struct picotm_rwstate rwstate[NUMBER_OF_SOCKET_FIELDS];
