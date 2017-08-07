@@ -47,6 +47,8 @@ struct chrdev_tx {
 
     struct chrdev* chrdev;
 
+    enum picotm_libc_write_mode wrmode;
+
     unsigned char* wrbuf;
     size_t         wrbuflen;
     size_t         wrbufsiz;
@@ -61,9 +63,6 @@ struct chrdev_tx {
 
     struct fcntlop* fcntltab;
     size_t          fcntltablen;
-
-    /** Concurrency-control mode */
-    enum picotm_libc_cc_mode cc_mode;
 
     /** State of the local reader/writer locks */
     struct picotm_rwstate rwstate[NUMBER_OF_CHRDEV_FIELDS];

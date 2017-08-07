@@ -48,14 +48,13 @@ struct dir_tx {
 
     struct dir* dir;
 
+    enum picotm_libc_write_mode wrmode;
+
     struct fchmodop* fchmodtab;
     size_t           fchmodtablen;
 
     struct fcntlop* fcntltab;
     size_t          fcntltablen;
-
-    /** Concurrency-control mode */
-    enum picotm_libc_cc_mode cc_mode;
 
     /** State of the local locks */
     struct picotm_rwstate rwstate[NUMBER_OF_DIR_FIELDS];

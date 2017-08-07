@@ -97,6 +97,16 @@ enum picotm_libc_cc_mode {
     PICOTM_LIBC_CC_MODE_2PL
 };
 
+/**
+ * File-descriptor I/O write mode.
+ */
+enum picotm_libc_write_mode {
+    /** \brief Write-back mode. */
+    PICOTM_LIBC_WRITE_BACK,
+    /** \brief Write-through mode */
+    PICOTM_LIBC_WRITE_THROUGH
+};
+
 PICOTM_NOTHROW
 /**
  * Saves the value of 'errno' during a transaction. Module authors should

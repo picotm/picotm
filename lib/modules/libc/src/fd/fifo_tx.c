@@ -44,13 +44,13 @@ fifo_tx_of_file_tx(struct file_tx* file_tx)
 }
 
 static void
-ref_file_tx(struct file_tx* file_tx)
+ref(struct file_tx* file_tx)
 {
     fifo_tx_ref(fifo_tx_of_file_tx(file_tx));
 }
 
 static void
-unref_file_tx(struct file_tx* file_tx)
+unref(struct file_tx* file_tx)
 {
     fifo_tx_unref(fifo_tx_of_file_tx(file_tx));
 }
@@ -214,52 +214,11 @@ fchmod_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
  */
 
 static int
-fcntl_exec_noundo(struct fifo_tx* self, int fildes, int cmd,
-                  union fcntl_arg* arg, int* cookie,
-                  struct picotm_error* error)
+fcntl_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, int cmd,
+           union fcntl_arg* arg, bool isnoundo, int* cookie,
+           struct picotm_error* error)
 {
-    int res = 0;
-
-    assert(arg);
-
-    switch (cmd) {
-        case F_GETFD:
-        case F_GETFL:
-        case F_GETOWN:
-            res = TEMP_FAILURE_RETRY(fcntl(fildes, cmd));
-            arg->arg0 = res;
-            break;
-        case F_GETLK:
-            res = TEMP_FAILURE_RETRY(fcntl(fildes, cmd, arg->arg1));
-            break;
-        case F_SETFL:
-        case F_SETFD:
-        case F_SETOWN:
-            res = TEMP_FAILURE_RETRY(fcntl(fildes, cmd, arg->arg0));
-            break;
-        case F_SETLK:
-        case F_SETLKW:
-            res = TEMP_FAILURE_RETRY(fcntl(fildes, cmd, arg->arg1));
-            break;
-        default:
-            errno = EINVAL;
-            res = -1;
-            break;
-    }
-
-    if (res < 0) {
-        picotm_error_set_errno(error, errno);
-        return res;
-    }
-
-    return res;
-}
-
-static int
-fcntl_exec_2pl(struct fifo_tx* self, int fildes, int cmd,
-               union fcntl_arg* arg, int* cookie, struct picotm_error* error)
-{
-    assert(arg);
+    struct fifo_tx* self = fifo_tx_of_file_tx(base);
 
     switch (cmd) {
         case F_GETFD:
@@ -297,104 +256,61 @@ fcntl_exec_2pl(struct fifo_tx* self, int fildes, int cmd,
         }
         case F_SETFL:
         case F_SETFD:
-        case F_SETOWN:
-        case F_SETLK:
-        case F_SETLKW:
-            picotm_error_set_revocable(error);
-            return -1;
-        default:
-            break;
-    }
+        case F_SETOWN: {
 
-    picotm_error_set_errno(error, EINVAL);
-    return -1;
-}
+            if (!isnoundo) {
+                picotm_error_set_revocable(error);
+                return -1;
+            }
 
-static int
-fifo_tx_fcntl_exec(struct fifo_tx* self, int fildes, int cmd,
-                   union fcntl_arg* arg, bool isnoundo, int* cookie,
-                   struct picotm_error* error)
-{
-    static int (* const fcntl_exec[2])(struct fifo_tx*,
-                                       int,
-                                       int,
-                                       union fcntl_arg*,
-                                       int*,
-                                       struct picotm_error*) = {
-        fcntl_exec_noundo,
-        fcntl_exec_2pl
-    };
-
-    if (isnoundo) {
-        /* TX irrevokable */
-        self->cc_mode = PICOTM_LIBC_CC_MODE_NOUNDO;
-    } else {
-        /* TX revokable */
-        if ((self->cc_mode == PICOTM_LIBC_CC_MODE_NOUNDO)
-            || !fcntl_exec[self->cc_mode]) {
-            picotm_error_set_revocable(error);
-            return -1;
+            int res = TEMP_FAILURE_RETRY(fcntl(fildes, cmd, arg->arg0));
+            if (res < 0) {
+                picotm_error_set_errno(error, errno);
+                return res;
+            }
+            return res;
         }
+        case F_SETLK:
+        case F_SETLKW: {
+
+            if (!isnoundo) {
+                picotm_error_set_revocable(error);
+                return -1;
+            }
+
+            int res = TEMP_FAILURE_RETRY(fcntl(fildes, cmd, arg->arg1));
+            if (res < 0) {
+                picotm_error_set_errno(error, errno);
+                return res;
+            }
+            return res;
+        }
+        default:
+            picotm_error_set_errno(error, EINVAL);
+            return -1;
     }
-
-    return fcntl_exec[self->cc_mode](self, fildes, cmd, arg, cookie, error);
 }
-
-static int
-fcntl_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, int cmd,
-           union fcntl_arg* arg, bool isnoundo, int* cookie,
-           struct picotm_error* error)
-{
-    return fifo_tx_fcntl_exec(fifo_tx_of_file_tx(base), fildes, cmd, arg,
-                              isnoundo, cookie, error);
-}
-
-static void
-fifo_tx_fcntl_apply(struct fifo_tx* self, int fildes, int cookie,
-                    struct picotm_error* error)
-{ }
 
 static void
 fcntl_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
             int cookie, struct picotm_error* error)
-{
-    fifo_tx_fcntl_apply(fifo_tx_of_file_tx(base), fildes, cookie, error);
-}
-
-static void
-fifo_tx_fcntl_undo(struct fifo_tx* self, int fildes, int cookie,
-                   struct picotm_error* error)
 { }
 
 static void
 fcntl_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
            int cookie, struct picotm_error* error)
-{
-    fifo_tx_fcntl_undo(fifo_tx_of_file_tx(base), fildes, cookie, error);
-}
+{ }
 
 /*
  * fstat()
  */
 
 static int
-fstat_exec_noundo(struct fifo_tx* self, int fildes, struct stat* buf,
-                  int* cookie, struct picotm_error* error)
+fstat_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
+           struct stat* buf, bool isnoundo, int* cookie,
+           struct picotm_error* error)
 {
-    int res = fstat(fildes, buf);
-    if (res < 0) {
-        picotm_error_set_errno(error, errno);
-        return res;
-    }
-    return res;
-}
-
-static int
-fstat_exec_2pl(struct fifo_tx* self, int fildes, struct stat* buf,
-               int* cookie, struct picotm_error* error)
-{
-    assert(self);
-    assert(buf);
+    struct fifo_tx* self = fifo_tx_of_file_tx(base);
 
     /* Acquire file-mode reader lock. */
     fifo_tx_try_rdlock_field(self, FIFO_FIELD_FILE_MODE, error);
@@ -408,109 +324,18 @@ fstat_exec_2pl(struct fifo_tx* self, int fildes, struct stat* buf,
         picotm_error_set_errno(error, errno);
         return res;
     }
-
     return res;
-}
-
-static int
-fifo_tx_fstat_exec(struct fifo_tx* self, int fildes, struct stat* buf,
-                   bool isnoundo, int* cookie, struct picotm_error* error)
-{
-    static int (* const fstat_exec[2])(struct fifo_tx*,
-                                       int,
-                                       struct stat*,
-                                       int*,
-                                       struct picotm_error*) = {
-        fstat_exec_noundo,
-        fstat_exec_2pl
-    };
-
-    if (isnoundo) {
-        /* TX irrevokable */
-        self->cc_mode = PICOTM_LIBC_CC_MODE_NOUNDO;
-    } else {
-        /* TX revokable */
-        if ((self->cc_mode == PICOTM_LIBC_CC_MODE_NOUNDO)
-            || !fstat_exec[self->cc_mode]) {
-            picotm_error_set_revocable(error);
-            return -1;
-        }
-    }
-
-    return fstat_exec[self->cc_mode](self, fildes, buf, cookie, error);
-}
-
-static int
-fstat_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-           struct stat* buf, bool isnoundo, int* cookie,
-           struct picotm_error* error)
-{
-    return fifo_tx_fstat_exec(fifo_tx_of_file_tx(base), fildes, buf,
-                              isnoundo, cookie, error);
-}
-
-static void
-fstat_apply_noundo(struct fifo_tx* self, int fildes, int cookie,
-                   struct picotm_error* error)
-{ }
-
-static void
-fstat_apply_2pl(struct fifo_tx* self, int fildes, int cookie,
-                struct picotm_error* error)
-{ }
-
-static void
-fifo_tx_fstat_apply(struct fifo_tx* self, int fildes, int cookie,
-                    struct picotm_error* error)
-{
-    static void (* const fstat_apply[2])(struct fifo_tx*,
-                                         int,
-                                         int,
-                                         struct picotm_error*) = {
-        fstat_apply_noundo,
-        fstat_apply_2pl
-    };
-
-    assert(fstat_apply[self->cc_mode]);
-
-    fstat_apply[self->cc_mode](self, fildes, cookie, error);
 }
 
 static void
 fstat_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
             int cookie, struct picotm_error* error)
-{
-    fifo_tx_fstat_apply(fifo_tx_of_file_tx(base), fildes, cookie, error);
-}
-
-static void
-fstat_undo_2pl(struct fifo_tx* self, int fildes, int cookie,
-               struct picotm_error* error)
 { }
-
-static void
-fifo_tx_fstat_undo(struct fifo_tx* self, int fildes, int cookie,
-                   struct picotm_error* error)
-{
-    static void (* const fstat_undo[2])(struct fifo_tx*,
-                                        int,
-                                        int,
-                                        struct picotm_error*) = {
-        NULL,
-        fstat_undo_2pl
-    };
-
-    assert(fstat_undo[self->cc_mode]);
-
-    fstat_undo[self->cc_mode](self, fildes, cookie, error);
-}
 
 static void
 fstat_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
            int cookie, struct picotm_error* error)
-{
-    fifo_tx_fstat_undo(fifo_tx_of_file_tx(base), fildes, cookie, error);
-}
+{ }
 
 /*
  * fsync()
@@ -580,45 +405,39 @@ pwrite_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
  * read()
  */
 
-static ssize_t
-read_exec_noundo(struct fifo_tx* self, int fildes, void* buf, size_t nbyte,
-                 int* cookie, struct picotm_error* error)
+static bool
+errno_signals_blocking_io(int errno_code)
 {
-    ssize_t res = TEMP_FAILURE_RETRY(read(fildes, buf, nbyte));
-    if ((res < 0) && (errno != EAGAIN) && (errno != EWOULDBLOCK)) {
-        picotm_error_set_errno(error, errno);
-        return res;
-    }
-    return res;
+    return (errno_code == EAGAIN) || (errno_code == EWOULDBLOCK);
 }
 
-static size_t
-fifo_tx_read_exec(struct fifo_tx* self, int fildes, void* buf, size_t nbyte,
-                  bool isnoundo, int* cookie, struct picotm_error* error)
+static ssize_t
+do_read(int fildes, void* buf, size_t nbyte, struct picotm_error* error)
 {
-    static ssize_t (* const read_exec[2])(struct fifo_tx*,
-                                          int,
-                                          void*,
-                                          size_t,
-                                          int*,
-                                          struct picotm_error*) = {
-        read_exec_noundo,
-        NULL
-    };
+    uint8_t* pos = buf;
+    const uint8_t* beg = pos;
+    const uint8_t* end = beg + nbyte;
 
-    if (isnoundo) {
-        /* TX irrevokable */
-        self->cc_mode = PICOTM_LIBC_CC_MODE_NOUNDO;
-    } else {
-        /* TX revokable */
-        if ((self->cc_mode == PICOTM_LIBC_CC_MODE_NOUNDO)
-            || !read_exec[self->cc_mode]) {
-            picotm_error_set_revocable(error);
-            return -1;
+    while (pos < end) {
+
+        ssize_t res = TEMP_FAILURE_RETRY(read(fildes, pos, end - pos));
+        if (res < 0) {
+            if (pos != beg) {
+                break; /* return read data */
+            } else if (errno_signals_blocking_io(errno)) {
+                return -1; /* error for non-blocking I/O */
+            } else {
+                picotm_error_set_errno(error, errno);
+                return res;
+            }
+        } else if (!res) {
+            break; /* EOF reached */
         }
+
+        pos += res;
     }
 
-    return read_exec[self->cc_mode](self, fildes, buf, nbyte, cookie, error);
+    return pos - beg;
 }
 
 static ssize_t
@@ -626,57 +445,34 @@ read_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, void* buf,
           size_t nbyte, bool isnoundo, int* cookie,
           struct picotm_error* error)
 {
-    return fifo_tx_read_exec(fifo_tx_of_file_tx(base), fildes, buf, nbyte,
-                             isnoundo, cookie, error);
-}
+    if (!isnoundo) {
+        picotm_error_set_revocable(error);
+        return -1;
+    }
 
-static void
-read_apply_noundo(struct fifo_tx* self, int fildes, int cookie,
-                  struct picotm_error* error)
-{ }
+    struct fifo_tx* self = fifo_tx_of_file_tx(base);
 
-static void
-fifo_tx_read_apply(struct fifo_tx* self, int fildes, int cookie,
-                   struct picotm_error* error)
-{
-    static void (* const read_apply[2])(struct fifo_tx*,
-                                        int,
-                                        int,
-                                        struct picotm_error*) = {
-        read_apply_noundo,
-        NULL
-    };
+    fifo_tx_try_wrlock_field(self, FIFO_FIELD_READ_END, error);
+    if (picotm_error_is_set(error)) {
+        return (off_t)-1;
+    }
 
-    read_apply[self->cc_mode](self, fildes, cookie, error);
+    ssize_t res = do_read(fildes, buf, nbyte, error);
+    if (picotm_error_is_set(error)) {
+        return res;
+    }
+    return res;
 }
 
 static void
 read_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
            int cookie, struct picotm_error* error)
-{
-    fifo_tx_read_apply(fifo_tx_of_file_tx(base), fildes, cookie, error);
-}
-
-static void
-fifo_tx_read_undo(struct fifo_tx* self, int fildes, int cookie,
-                  struct picotm_error* error)
-{
-    static void (* const read_undo[2])(struct picotm_error*) = {
-        NULL,
-        NULL
-    };
-
-    assert(read_undo[self->cc_mode]);
-
-    read_undo[self->cc_mode](error);
-}
+{ }
 
 static void
 read_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
           int cookie, struct picotm_error* error)
-{
-    fifo_tx_read_undo(fifo_tx_of_file_tx(base), fildes, cookie, error);
-}
+{ }
 
 /*
  * recv()
@@ -721,67 +517,31 @@ shutdown_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
  */
 
 static ssize_t
-write_exec_noundo(struct fifo_tx* self, int fildes, const void* buf,
-                  size_t nbyte, int* cookie, struct picotm_error* error)
+do_write(int fildes, const void* buf, size_t nbyte,
+         struct picotm_error* error)
 {
-    ssize_t res = TEMP_FAILURE_RETRY(write(fildes, buf, nbyte));
-    if ((res < 0) && (errno != EAGAIN) && (errno != EWOULDBLOCK)) {
-        picotm_error_set_errno(error, errno);
-        return res;
-    }
-    return res;
-}
+    const uint8_t* pos = buf;
+    const uint8_t* beg = pos;
+    const uint8_t* end = beg + nbyte;
 
-static ssize_t
-write_exec_2pl(struct fifo_tx* self, int fildes, const void* buf,
-               size_t nbyte, int* cookie, struct picotm_error* error)
-{
-    /* Write-lock FIFO, because we change the file position */
-    fifo_tx_try_wrlock_field(self, FIFO_FIELD_STATE, error);
-    if (picotm_error_is_set(error)) {
-        return -1;
-    }
+    while (pos < end) {
 
-    /* Register write data */
-
-    if (cookie) {
-        *cookie = fifo_tx_append_to_writeset(self, nbyte, 0, buf, error);
-        if (picotm_error_is_set(error)) {
-            return -1;
+        ssize_t res = TEMP_FAILURE_RETRY(write(fildes, pos, end - pos));
+        if (res < 0) {
+            if (pos != beg) {
+                break; /* return written data */
+            } else if (errno_signals_blocking_io(errno)) {
+                return -1; /* error for non-blocking I/O */
+            } else {
+                picotm_error_set_errno(error, errno);
+                return res;
+            }
         }
+
+        pos += res;
     }
 
-    return nbyte;
-}
-
-static ssize_t
-fifo_tx_write_exec(struct fifo_tx* self, int fildes, const void* buf,
-                   size_t nbyte, bool isnoundo, int* cookie,
-                   struct picotm_error* error)
-{
-    static ssize_t (* const write_exec[2])(struct fifo_tx*,
-                                           int,
-                                           const void*,
-                                           size_t,
-                                           int*,
-                                           struct picotm_error*) = {
-        write_exec_noundo,
-        write_exec_2pl
-    };
-
-    if (isnoundo) {
-        /* TX irrevokable */
-        self->cc_mode = PICOTM_LIBC_CC_MODE_NOUNDO;
-    } else {
-        /* TX revokable */
-        if ((self->cc_mode == PICOTM_LIBC_CC_MODE_NOUNDO)
-            || !write_exec[self->cc_mode]) {
-            picotm_error_set_revocable(error);
-            return -1;
-        }
-    }
-
-    return write_exec[self->cc_mode](self, fildes, buf, nbyte, cookie, error);
+    return pos - beg;
 }
 
 static ssize_t
@@ -789,205 +549,107 @@ write_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
            const void* buf, size_t nbyte, bool isnoundo, int* cookie,
            struct picotm_error* error)
 {
-    return fifo_tx_write_exec(fifo_tx_of_file_tx(base), fildes, buf, nbyte,
-                              isnoundo, cookie, error);
-}
+    struct fifo_tx* self = fifo_tx_of_file_tx(base);
 
-static void
-write_apply_noundo(struct fifo_tx* self, int fildes, int cookie,
-                   struct picotm_error* error)
-{ }
-
-static void
-write_apply_2pl(struct fifo_tx* self, int fildes, int cookie,
-                struct picotm_error* error)
-{
-    assert(self);
-    assert(fildes >= 0);
-
-    /* FIXME: Use select() to prevent blocking? */
-
-    const ssize_t len =
-        TEMP_FAILURE_RETRY(write(fildes,
-                                 self->wrbuf+self->wrtab[cookie].bufoff,
-                                 self->wrtab[cookie].nbyte));
-    if (len < 0) {
-        picotm_error_set_errno(error, errno);
-        return;
+    if (isnoundo) {
+        self->wrmode = PICOTM_LIBC_WRITE_THROUGH;
+    } else if (self->wrmode == PICOTM_LIBC_WRITE_THROUGH) {
+        picotm_error_set_revocable(error);
+        return -1;
     }
-}
 
-static void
-fifo_tx_write_apply(struct fifo_tx* self, int fildes, int cookie,
-                    struct picotm_error* error)
-{
-    static void (* const write_apply[2])(struct fifo_tx*,
-                                         int,
-                                         int,
-                                         struct picotm_error*) = {
-        write_apply_noundo,
-        write_apply_2pl
-    };
-
-    write_apply[self->cc_mode](self, fildes, cookie, error);
+    /* Write-lock FIFO write end */
+    fifo_tx_try_wrlock_field(self, FIFO_FIELD_WRITE_END, error);
     if (picotm_error_is_set(error)) {
-        return;
+        return -1;
     }
+
+    ssize_t res;
+
+    if (self->wrmode == PICOTM_LIBC_WRITE_THROUGH) {
+        res = do_write(fildes, buf, nbyte, error);
+        if (picotm_error_is_set(error)) {
+            return res;
+        }
+    } else {
+
+        /* Register write data */
+        *cookie = fifo_tx_append_to_writeset(self, nbyte, 0, buf, error);
+        if (picotm_error_is_set(error)) {
+            return -1;
+        }
+        res = nbyte;
+    }
+
+    return res;
 }
 
 static void
 write_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
             int cookie, struct picotm_error* error)
 {
-    fifo_tx_write_apply(fifo_tx_of_file_tx(base), fildes, cookie, error);
-}
+    struct fifo_tx* self = fifo_tx_of_file_tx(base);
 
-static void
-write_any_undo(struct picotm_error* error)
-{ }
-
-static void
-fifo_tx_write_undo(struct fifo_tx* self, int fildes, int cookie,
-                   struct picotm_error* error)
-{
-    static void (* const write_undo[2])(struct picotm_error*) = {
-        NULL,
-        write_any_undo
-    };
-
-    write_undo[self->cc_mode](error);
+    if (self->wrmode == PICOTM_LIBC_WRITE_BACK) {
+        do_write(fildes,
+                 self->wrbuf + self->wrtab[cookie].bufoff,
+                 self->wrtab[cookie].nbyte, error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
+    }
 }
 
 static void
 write_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
            int cookie, struct picotm_error* error)
-{
-    fifo_tx_write_undo(fifo_tx_of_file_tx(base), fildes, cookie, error);
-}
+{ }
 
 /*
  * Public interfaces
  */
 
 static void
-lock_file_tx(struct file_tx* base, struct picotm_error* error)
+lock(struct file_tx* base, struct picotm_error* error)
 { }
 
 static void
-unlock_file_tx(struct file_tx* base, struct picotm_error* error)
+unlock(struct file_tx* base, struct picotm_error* error)
 { }
 
 /* Validation
  */
 
 static void
-validate_noundo(struct fifo_tx* self, struct picotm_error* error)
+validate(struct file_tx* base, struct picotm_error* error)
 { }
-
-static void
-validate_2pl(struct fifo_tx* self, struct picotm_error* error)
-{
-    assert(self);
-}
-
-static void
-fifo_tx_validate(struct fifo_tx* self, struct picotm_error* error)
-{
-    static void (* const validate[])(struct fifo_tx*, struct picotm_error*) = {
-        validate_noundo,
-        validate_2pl
-    };
-
-    if (!fifo_tx_holds_ref(self)) {
-        return;
-    }
-
-    validate[self->cc_mode](self, error);
-}
-
-static void
-validate_file_tx(struct file_tx* base, struct picotm_error* error)
-{
-    fifo_tx_validate(fifo_tx_of_file_tx(base), error);
-}
 
 /* Update CC
  */
 
 static void
-update_cc_noundo(struct fifo_tx* self, struct picotm_error* error)
-{ }
-
-static void
-update_cc_2pl(struct fifo_tx* self, struct picotm_error* error)
+update_cc(struct file_tx* base, struct picotm_error* error)
 {
-    assert(self);
-    assert(self->cc_mode == PICOTM_LIBC_CC_MODE_2PL);
+    struct fifo_tx* self = fifo_tx_of_file_tx(base);
 
     /* release reader/writer locks on FIFO state */
     unlock_rwstates(picotm_arraybeg(self->rwstate),
                     picotm_arrayend(self->rwstate),
                     self->fifo);
-}
-
-static void
-fifo_tx_update_cc(struct fifo_tx* self, struct picotm_error* error)
-{
-    static void (* const update_cc[])(struct fifo_tx*, struct picotm_error*) = {
-        update_cc_noundo,
-        update_cc_2pl
-    };
-
-    assert(fifo_tx_holds_ref(self));
-
-    update_cc[self->cc_mode](self, error);
-}
-
-static void
-update_cc_file_tx(struct file_tx* base, struct picotm_error* error)
-{
-    fifo_tx_update_cc(fifo_tx_of_file_tx(base), error);
 }
 
 /* Clear CC
  */
 
 static void
-clear_cc_noundo(struct fifo_tx* self, struct picotm_error* error)
+clear_cc(struct file_tx* base, struct picotm_error* error)
 {
-    assert(self);
-    assert(self->cc_mode == PICOTM_LIBC_CC_MODE_NOUNDO);
-}
-
-static void
-clear_cc_2pl(struct fifo_tx* self, struct picotm_error* error)
-{
-    assert(self);
-    assert(self->cc_mode == PICOTM_LIBC_CC_MODE_2PL);
+    struct fifo_tx* self = fifo_tx_of_file_tx(base);
 
     /* release reader/writer locks on FIFO state */
     unlock_rwstates(picotm_arraybeg(self->rwstate),
                     picotm_arrayend(self->rwstate),
                     self->fifo);
-}
-
-static void
-fifo_tx_clear_cc(struct fifo_tx* self, struct picotm_error* error)
-{
-    static void (* const clear_cc[])(struct fifo_tx*, struct picotm_error*) = {
-        clear_cc_noundo,
-        clear_cc_2pl
-    };
-
-    assert(fifo_tx_holds_ref(self));
-
-    clear_cc[self->cc_mode](self, error);
-}
-
-static void
-clear_cc_file_tx(struct file_tx* base, struct picotm_error* error)
-{
-    fifo_tx_clear_cc(fifo_tx_of_file_tx(base), error);
 }
 
 /*
@@ -997,14 +659,14 @@ clear_cc_file_tx(struct file_tx* base, struct picotm_error* error)
 static const struct file_tx_ops fifo_tx_ops = {
     PICOTM_LIBC_FILE_TYPE_FIFO,
     /* ref counting */
-    ref_file_tx,
-    unref_file_tx,
+    ref,
+    unref,
     /* module interfaces */
-    lock_file_tx,
-    unlock_file_tx,
-    validate_file_tx,
-    update_cc_file_tx,
-    clear_cc_file_tx,
+    lock,
+    unlock,
+    validate,
+    update_cc,
+    clear_cc,
     /* file ops */
     accept_exec,
     NULL,
@@ -1067,6 +729,8 @@ fifo_tx_init(struct fifo_tx* self)
 
     self->fifo = NULL;
 
+    self->wrmode = PICOTM_LIBC_WRITE_BACK;
+
     self->wrbuf = NULL;
     self->wrbuflen = 0;
     self->wrbufsiz = 0;
@@ -1081,8 +745,6 @@ fifo_tx_init(struct fifo_tx* self)
 
     self->fcntltab = NULL;
     self->fcntltablen = 0;
-
-    self->cc_mode = PICOTM_LIBC_CC_MODE_NOUNDO;
 
     init_rwstates(picotm_arraybeg(self->rwstate),
                   picotm_arrayend(self->rwstate));
@@ -1124,7 +786,8 @@ fifo_tx_ref_or_set_up(struct fifo_tx* self, struct fifo* fifo,
     /* setup fields */
 
     self->fifo = fifo;
-    self->cc_mode = fifo_get_cc_mode(fifo);
+
+    self->wrmode = PICOTM_LIBC_WRITE_BACK;
 
     self->fcntltablen = 0;
     self->rdtablen = 0;

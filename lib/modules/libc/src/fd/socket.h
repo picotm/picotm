@@ -40,6 +40,8 @@ struct picotm_rwstate;
  */
 enum socket_field {
     SOCKET_FIELD_FILE_MODE,
+    SOCKET_FIELD_RECV_END,
+    SOCKET_FIELD_SEND_END,
     SOCKET_FIELD_STATE,
     NUMBER_OF_SOCKET_FIELDS
 };
