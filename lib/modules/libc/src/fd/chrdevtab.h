@@ -19,7 +19,6 @@
 
 #pragma once
 
-#include <stdbool.h>
 #include <stddef.h>
 
 /**
@@ -36,16 +35,13 @@ struct picotm_error;
 /**
  * Returns a reference to an chrdev structure for the given file descriptor.
  *
- * \param       fildes          A file descriptor.
- * \param       newly_created   True if the open file description has been
- *                              newly created.
- * \param[out]  error           Returns an error.
+ * \param       fildes  A file descriptor.
+ * \param[out]  error   Returns an error to the caller.
  * \returns A referenced instance of `struct chrdev` that refers to the file
- *          descriptor's open file description.
+ *          descriptor's character device.
  */
 struct chrdev*
-chrdevtab_ref_fildes(int fildes, bool newly_created,
-                     struct picotm_error* error);
+chrdevtab_ref_fildes(int fildes, struct picotm_error* error);
 
 /**
  * Returns the index of an chrdev structure within the chrdev table.

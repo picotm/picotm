@@ -157,8 +157,7 @@ search_by_id(const struct file_id* id, int fildes, struct picotm_error* error)
 }
 
 struct socket*
-sockettab_ref_fildes(int fildes, bool newly_created,
-                     struct picotm_error* error)
+sockettab_ref_fildes(int fildes, struct picotm_error* error)
 {
     struct file_id id;
     file_id_init_from_fildes(&id, fildes, error);
@@ -166,33 +165,28 @@ sockettab_ref_fildes(int fildes, bool newly_created,
         return NULL;
     }
 
-    struct socket* socket;
-
-    /* Try to find an existing socket structure with the given id; iff
-     * a new element was not explicitly requested.
+    /* Try to find an existing socket structure with the given id.
      */
 
-    if (!newly_created) {
-        rdlock_sockettab();
+    rdlock_sockettab();
 
-        socket = find_by_id(&id);
-        if (socket) {
-            goto unlock; /* found socket for id; return */
-        }
-
-        unlock_sockettab();
+    struct socket* socket = find_by_id(&id);
+    if (socket) {
+        goto unlock; /* found socket for id; return */
     }
 
-    /* Not found or new entry is requested; acquire writer lock to
-     * create a new entry in the socket table. */
+    unlock_sockettab();
+
+    /* Not found entry; acquire writer lock to create a new entry in
+     * the socket table.
+     */
+
     wrlock_sockettab();
 
-    if (!newly_created) {
-        /* Re-try find operation; maybe element was added meanwhile. */
-        socket = find_by_id(&id);
-        if (socket) {
-            goto unlock; /* found socket for id; return */
-        }
+    /* Re-try find operation; maybe element was added meanwhile. */
+    socket = find_by_id(&id);
+    if (socket) {
+        goto unlock; /* found socket for id; return */
     }
 
     /* No entry with the id exists; try to set up an existing, but

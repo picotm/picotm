@@ -27,7 +27,7 @@
 #include "fifo.h"
 #include "range.h"
 
-static struct fifo    fifotab[MAXNUMFD];
+static struct fifo      fifotab[MAXNUMFD];
 static size_t           fifotab_len = 0;
 static pthread_rwlock_t fifotab_rwlock = PTHREAD_RWLOCK_INITIALIZER;
 
@@ -155,7 +155,7 @@ search_by_id(const struct file_id* id, int fildes, struct picotm_error* error)
 }
 
 struct fifo*
-fifotab_ref_fildes(int fildes, bool newly_created, struct picotm_error* error)
+fifotab_ref_fildes(int fildes, struct picotm_error* error)
 {
     struct file_id id;
     file_id_init_from_fildes(&id, fildes, error);
@@ -163,33 +163,29 @@ fifotab_ref_fildes(int fildes, bool newly_created, struct picotm_error* error)
         return NULL;
     }
 
-    struct fifo* fifo;
 
-    /* Try to find an existing fifo structure with the given id; iff
-     * a new element was not explicitly requested.
+    /* Try to find an existing fifo structure with the given id.
      */
 
-    if (!newly_created) {
-        rdlock_fifotab();
+    rdlock_fifotab();
 
-        fifo = find_by_id(&id);
-        if (fifo) {
-            goto unlock; /* found fifo for id; return */
-        }
-
-        unlock_fifotab();
+    struct fifo* fifo = find_by_id(&id);
+    if (fifo) {
+        goto unlock; /* found fifo for id; return */
     }
 
-    /* Not found or new entry is requested; acquire writer lock to
-     * create a new entry in the fifo table. */
+    unlock_fifotab();
+
+    /* Not found entry; acquire writer lock to create a new entry in
+     * the fifo table.
+     */
+
     wrlock_fifotab();
 
-    if (!newly_created) {
-        /* Re-try find operation; maybe element was added meanwhile. */
-        fifo = find_by_id(&id);
-        if (fifo) {
-            goto unlock; /* found fifo for id; return */
-        }
+    /* Re-try find operation; maybe element was added meanwhile. */
+    fifo = find_by_id(&id);
+    if (fifo) {
+        goto unlock; /* found fifo for id; return */
     }
 
     /* No entry with the id exists; try to set up an existing, but

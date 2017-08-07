@@ -19,7 +19,6 @@
 
 #pragma once
 
-#include <stdbool.h>
 #include <stddef.h>
 
 /**
@@ -36,15 +35,13 @@ struct socket;
 /**
  * Returns a reference to a socket structure for the given file descriptor.
  *
- * \param       fildes          A file descriptor.
- * \param       newly_created   True if the open file description has been
- *                              newly created.
- * \param[out]  error           Returns an error.
+ * \param       fildes  A file descriptor.
+ * \param[out]  error   Returns an error to caller.
  * \returns A referenced instance of `struct socket` that refers to the file
- *          descriptor's open file description.
+ *          descriptor's socket.
  */
 struct socket*
-sockettab_ref_fildes(int fildes, bool newly_created, struct picotm_error* error);
+sockettab_ref_fildes(int fildes, struct picotm_error* error);
 
 /**
  * Returns the index of an socket structure within the socket table.
