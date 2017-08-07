@@ -19,7 +19,6 @@
 
 #pragma once
 
-#include <stdbool.h>
 #include <stddef.h>
 
 /**
@@ -36,15 +35,13 @@ struct picotm_error;
 /**
  * Returns a reference to a dir structure for the given file descriptor.
  *
- * \param       fildes          A file descriptor.
- * \param       newly_created   True if the open file description has been
- *                              newly created.
- * \param[out]  error           Returns an error.
+ * \param       fildes  A file descriptor.
+ * \param[out]  error   Returns an error to the caller.
  * \returns A referenced instance of `struct dir` that refers to the file
- *          descriptor's open file description.
+ *          descriptor's directory.
  */
 struct dir*
-dirtab_ref_fildes(int fildes, bool newly_created, struct picotm_error* error);
+dirtab_ref_fildes(int fildes, struct picotm_error* error);
 
 /**
  * Returns the index of a dir structure within the dir table.

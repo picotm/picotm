@@ -157,8 +157,7 @@ search_by_id(const struct file_id* id, int fildes, struct picotm_error* error)
 }
 
 struct regfile*
-regfiletab_ref_fildes(int fildes, bool newly_created,
-                      struct picotm_error* error)
+regfiletab_ref_fildes(int fildes, struct picotm_error* error)
 {
     struct file_id id;
     file_id_init_from_fildes(&id, fildes, error);
@@ -166,33 +165,30 @@ regfiletab_ref_fildes(int fildes, bool newly_created,
         return NULL;
     }
 
-    struct regfile* regfile;
 
     /* Try to find an existing regfile structure with the given id; iff
      * a new element was not explicitly requested.
      */
 
-    if (!newly_created) {
-        rdlock_regfiletab();
+    rdlock_regfiletab();
 
-        regfile = find_by_id(&id);
-        if (regfile) {
-            goto unlock; /* found regfile for id; return */
-        }
-
-        unlock_regfiletab();
+    struct regfile* regfile = find_by_id(&id);
+    if (regfile) {
+        goto unlock; /* found regfile for id; return */
     }
 
-    /* Not found or new entry is requested; acquire writer lock to
-     * create a new entry in the regfile table. */
+    unlock_regfiletab();
+
+    /* Not found entry; acquire writer lock to create a new entry in
+     * the regfile table.
+     */
+
     wrlock_regfiletab();
 
-    if (!newly_created) {
-        /* Re-try find operation; maybe element was added meanwhile. */
-        regfile = find_by_id(&id);
-        if (regfile) {
-            goto unlock; /* found regfile for id; return */
-        }
+    /* Re-try find operation; maybe element was added meanwhile. */
+    regfile = find_by_id(&id);
+    if (regfile) {
+        goto unlock; /* found regfile for id; return */
     }
 
     /* No entry with the id exists; try to set up an existing, but

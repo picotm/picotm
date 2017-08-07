@@ -155,7 +155,7 @@ search_by_id(const struct file_id* id, int fildes, struct picotm_error* error)
 }
 
 struct dir*
-dirtab_ref_fildes(int fildes, bool newly_created, struct picotm_error* error)
+dirtab_ref_fildes(int fildes, struct picotm_error* error)
 {
     struct file_id id;
     file_id_init_from_fildes(&id, fildes, error);
@@ -163,33 +163,27 @@ dirtab_ref_fildes(int fildes, bool newly_created, struct picotm_error* error)
         return NULL;
     }
 
-    struct dir* dir;
-
-    /* Try to find an existing dir structure with the given id; iff
-     * a new element was not explicitly requested.
+    /* Try to find an existing dir structure with the given id.
      */
 
-    if (!newly_created) {
-        rdlock_dirtab();
+    rdlock_dirtab();
 
-        dir = find_by_id(&id);
-        if (dir) {
-            goto unlock; /* found dir for id; return */
-        }
-
-        unlock_dirtab();
+    struct dir* dir = find_by_id(&id);
+    if (dir) {
+        goto unlock; /* found dir for id; return */
     }
 
-    /* Not found or new entry is requested; acquire writer lock to
-     * create a new entry in the dir table. */
+    unlock_dirtab();
+
+    /* Not found entry; acquire writer lock to create a new entry in
+     * the dir table.
+     */
     wrlock_dirtab();
 
-    if (!newly_created) {
-        /* Re-try find operation; maybe element was added meanwhile. */
-        dir = find_by_id(&id);
-        if (dir) {
-            goto unlock; /* found dir for id; return */
-        }
+    /* Re-try find operation; maybe element was added meanwhile. */
+    dir = find_by_id(&id);
+    if (dir) {
+        goto unlock; /* found dir for id; return */
     }
 
     /* No entry with the id exists; try to set up an existing, but
