@@ -1745,6 +1745,7 @@ clear_cc_file_tx(struct file_tx* base, struct picotm_error* error)
  */
 
 static const struct file_tx_ops socket_tx_ops = {
+    PICOTM_LIBC_FILE_TYPE_SOCKET,
     /* ref counting */
     ref_file_tx,
     unref_file_tx,
@@ -1812,7 +1813,7 @@ socket_tx_init(struct socket_tx* self)
 
     picotm_ref_init(&self->ref, 0);
 
-    file_tx_init(&self->base, PICOTM_LIBC_FILE_TYPE_SOCKET, &socket_tx_ops);
+    file_tx_init(&self->base, &socket_tx_ops);
 
     self->socket = NULL;
 

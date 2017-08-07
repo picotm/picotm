@@ -22,8 +22,7 @@
 #include <string.h>
 
 void
-file_tx_init(struct file_tx* self, enum picotm_libc_file_type type,
-             const struct file_tx_ops* ops)
+file_tx_init(struct file_tx* self,  const struct file_tx_ops* ops)
 {
     assert(self);
     assert(ops);
@@ -31,7 +30,6 @@ file_tx_init(struct file_tx* self, enum picotm_libc_file_type type,
     memset(&self->active_list, 0, sizeof(self->active_list));
 
     self->ops = ops;
-    self->type = type;
 }
 
 void
@@ -43,7 +41,7 @@ file_tx_file_type(const struct file_tx* self)
 {
     assert(self);
 
-    return self->type;
+    return self->ops->type;
 }
 
 void

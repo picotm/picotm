@@ -45,6 +45,8 @@ union fcntl_arg;
  */
 struct file_tx_ops {
 
+    enum picotm_libc_file_type type;
+
     /*
      * Reference counting
      */
@@ -282,18 +284,15 @@ struct file_tx {
     SLIST_ENTRY(file_tx) active_list;
 
     const struct file_tx_ops* ops;
-
-    enum picotm_libc_file_type type;
 };
 
 /**
  * \brief Init transaction-local file state.
  * \param   self    A file transaction.
- * \param   type    The open file description's file type.
+ * \param   ops     The file type's constants and operations.
  */
 void
-file_tx_init(struct file_tx* self, enum picotm_libc_file_type type,
-             const struct file_tx_ops* ops);
+file_tx_init(struct file_tx* self, const struct file_tx_ops* ops);
 
 /**
  * \brief Uninit transaction-local file state.

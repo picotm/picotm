@@ -995,6 +995,7 @@ clear_cc_file_tx(struct file_tx* base, struct picotm_error* error)
  */
 
 static const struct file_tx_ops fifo_tx_ops = {
+    PICOTM_LIBC_FILE_TYPE_FIFO,
     /* ref counting */
     ref_file_tx,
     unref_file_tx,
@@ -1062,7 +1063,7 @@ fifo_tx_init(struct fifo_tx* self)
 
     picotm_ref_init(&self->ref, 0);
 
-    file_tx_init(&self->base, PICOTM_LIBC_FILE_TYPE_FIFO, &fifo_tx_ops);
+    file_tx_init(&self->base, &fifo_tx_ops);
 
     self->fifo = NULL;
 
