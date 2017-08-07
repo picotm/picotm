@@ -97,18 +97,6 @@ enum picotm_libc_cc_mode {
     PICOTM_LIBC_CC_MODE_2PL
 };
 
-/**
- * Validation mode for optimistic domains.
- */
-enum picotm_libc_validation_mode {
-    /** Validate the current operation. */
-    PICOTM_LIBC_VALIDATE_OP = 0,
-    /** Validate the current domain. */
-    PICOTM_LIBC_VALIDATE_DOMAIN,
-    /** Validate everything. */
-    PICOTM_LIBC_VALIDATE_FULL
-};
-
 PICOTM_NOTHROW
 /**
  * Saves the value of 'errno' during a transaction. Module authors should
@@ -138,22 +126,6 @@ PICOTM_NOTHROW
  */
 enum picotm_libc_cc_mode
 picotm_libc_get_file_type_cc_mode(enum picotm_libc_file_type file_type);
-
-PICOTM_NOTHROW
-/**
- * Sets the mode of validation for optimistic domains.
- * \param   val_mode    The validation mode.
- */
-void
-picotm_libc_set_validation_mode(enum picotm_libc_validation_mode val_mode);
-
-PICOTM_NOTHROW
-/**
- * Returns the current mode of validation for optimistic domains.
- * \returns The current validation mode.
- */
-enum picotm_libc_validation_mode
-picotm_libc_get_validation_mode(void);
 
 PICOTM_END_DECLS
 

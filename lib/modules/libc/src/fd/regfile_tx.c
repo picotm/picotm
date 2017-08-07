@@ -1107,8 +1107,7 @@ pread_wait(int fildes, void *buf, size_t nbyte, off_t off)
 
 static ssize_t
 pread_exec_noundo(struct regfile_tx* self, int fildes, void* buf,
-                  size_t nbyte, off_t offset,
-                  enum picotm_libc_validation_mode val_mode, int* cookie,
+                  size_t nbyte, off_t offset, int* cookie,
                   struct picotm_error* error)
 {
     ssize_t res = TEMP_FAILURE_RETRY(pread(fildes, buf, nbyte, offset));
@@ -1121,8 +1120,7 @@ pread_exec_noundo(struct regfile_tx* self, int fildes, void* buf,
 
 static ssize_t
 pread_exec_2pl(struct regfile_tx* self, int fildes, void* buf,
-               size_t nbyte, off_t offset,
-               enum picotm_libc_validation_mode val_mode, int* cookie,
+               size_t nbyte, off_t offset, int* cookie,
                struct picotm_error* error)
 {
     /* lock region */
@@ -1161,8 +1159,7 @@ pread_exec_2pl(struct regfile_tx* self, int fildes, void* buf,
 
 static ssize_t
 regfile_tx_pread_exec(struct regfile_tx* self, int fildes, void* buf,
-                      size_t nbyte, off_t offset, bool isnoundo,
-                      enum picotm_libc_validation_mode val_mode, int* cookie,
+                      size_t nbyte, off_t offset, bool isnoundo, int* cookie,
                       struct picotm_error* error)
 {
     static ssize_t (* const pread_exec[2])(struct regfile_tx*,
@@ -1170,7 +1167,6 @@ regfile_tx_pread_exec(struct regfile_tx* self, int fildes, void* buf,
                                            void*,
                                            size_t,
                                            off_t,
-                                           enum picotm_libc_validation_mode,
                                            int*,
                                            struct picotm_error*) = {
         pread_exec_noundo,
@@ -1190,18 +1186,16 @@ regfile_tx_pread_exec(struct regfile_tx* self, int fildes, void* buf,
     }
 
     return pread_exec[self->cc_mode](self, fildes, buf, nbyte, offset,
-                                     val_mode, cookie, error);
+                                     cookie, error);
 }
 
 static ssize_t
 pread_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, void* buf,
-           size_t nbyte, off_t offset, bool isnoundo,
-           enum picotm_libc_validation_mode val_mode, int* cookie,
+           size_t nbyte, off_t offset, bool isnoundo, int* cookie,
            struct picotm_error* error)
 {
     return regfile_tx_pread_exec(regfile_tx_of_file_tx(base), fildes, buf,
-                                 nbyte, offset, isnoundo, val_mode, cookie,
-                                 error);
+                                 nbyte, offset, isnoundo, cookie, error);
 }
 
 static void
@@ -1470,8 +1464,7 @@ pwrite_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
 
 static ssize_t
 read_exec_noundo(struct regfile_tx* self, struct ofd_tx* ofd_tx, int fildes,
-                 void* buf, size_t nbyte,
-                 enum picotm_libc_validation_mode val_mode, int* cookie,
+                 void* buf, size_t nbyte, int* cookie,
                  struct picotm_error* error)
 {
     ssize_t res = TEMP_FAILURE_RETRY(read(fildes, buf, nbyte));
@@ -1484,8 +1477,7 @@ read_exec_noundo(struct regfile_tx* self, struct ofd_tx* ofd_tx, int fildes,
 
 static ssize_t
 read_exec_2pl(struct regfile_tx* self, struct ofd_tx* ofd_tx, int fildes,
-              void* buf, size_t nbyte,
-              enum picotm_libc_validation_mode val_mode, int* cookie,
+              void* buf, size_t nbyte, int* cookie,
               struct picotm_error* error)
 {
     assert(self);
@@ -1531,15 +1523,13 @@ read_exec_2pl(struct regfile_tx* self, struct ofd_tx* ofd_tx, int fildes,
 ssize_t
 regfile_tx_read_exec(struct regfile_tx* self, struct ofd_tx* ofd_tx,
                      int fildes, void* buf, size_t nbyte, bool isnoundo,
-                     enum picotm_libc_validation_mode val_mode, int* cookie,
-                     struct picotm_error* error)
+                     int* cookie, struct picotm_error* error)
 {
     static ssize_t (* const read_exec[2])(struct regfile_tx*,
                                           struct ofd_tx*,
                                           int,
                                           void*,
                                           size_t,
-                                          enum picotm_libc_validation_mode,
                                           int*,
                                           struct picotm_error*) = {
         read_exec_noundo,
@@ -1559,18 +1549,16 @@ regfile_tx_read_exec(struct regfile_tx* self, struct ofd_tx* ofd_tx,
     }
 
     return read_exec[self->cc_mode](self, ofd_tx, fildes, buf, nbyte,
-                                    val_mode, cookie, error);
+                                    cookie, error);
 }
 
 static ssize_t
 read_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, void* buf,
-          size_t nbyte, bool isnoundo,
-          enum picotm_libc_validation_mode val_mode, int* cookie,
+          size_t nbyte, bool isnoundo, int* cookie,
           struct picotm_error* error)
 {
     return regfile_tx_read_exec(regfile_tx_of_file_tx(base), ofd_tx, fildes,
-                                buf, nbyte, isnoundo, val_mode, cookie,
-                                error);
+                                buf, nbyte, isnoundo, cookie, error);
 }
 
 static void

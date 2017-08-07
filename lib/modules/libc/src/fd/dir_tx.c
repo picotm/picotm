@@ -753,8 +753,7 @@ lseek_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
 
 static ssize_t
 pread_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, void* buf,
-           size_t nbyte, off_t off, bool isnoundo,
-           enum picotm_libc_validation_mode val_mode, int* cookie,
+           size_t nbyte, off_t off, bool isnoundo, int* cookie,
            struct picotm_error* error)
 {
     picotm_error_set_errno(error, EISDIR);
@@ -780,8 +779,7 @@ pwrite_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
 
 static ssize_t
 read_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, void* buf,
-          size_t nbyte, bool isnoundo,
-          enum picotm_libc_validation_mode val_mode, int* cookie,
+          size_t nbyte, bool isnoundo, int* cookie,
           struct picotm_error* error)
 {
     picotm_error_set_errno(error, EISDIR);
