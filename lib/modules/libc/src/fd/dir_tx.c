@@ -33,6 +33,7 @@
 #include "fchmodoptab.h"
 #include "fcntlop.h"
 #include "fcntloptab.h"
+#include "file_tx_ops.h"
 
 static struct dir_tx*
 dir_tx_of_file_tx(struct file_tx* file_tx)
@@ -105,45 +106,6 @@ unlock_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end,
 }
 
 /*
- * accept()
- */
-
-static int
-accept_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
-            struct sockaddr* address, socklen_t* address_len, bool isnoundo,
-            int* cookie, struct picotm_error* error)
-{
-    picotm_error_set_errno(error, ENOTSOCK);
-    return -1;
-}
-
-/*
- * bind()
- */
-
-static int
-bind_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
-          const struct sockaddr* address, socklen_t addresslen, bool isnoundo,
-          int* cookie, struct picotm_error* error)
-{
-    picotm_error_set_errno(error, ENOTSOCK);
-    return -1;
-}
-
-/*
- * connect()
- */
-
-static int
-connect_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
-             const struct sockaddr* address, socklen_t addresslen,
-             bool isnoundo, int* cookie, struct picotm_error* error)
-{
-    picotm_error_set_errno(error, ENOTSOCK);
-    return -1;
-}
-
-/*
  * fchmod()
  */
 
@@ -188,11 +150,6 @@ fchmod_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
 
     return res;
 }
-
-static void
-fchmod_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-             int cookie, struct picotm_error* error)
-{ }
 
 static void
 fchmod_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
@@ -291,16 +248,6 @@ fcntl_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, int cmd,
     }
 }
 
-static void
-fcntl_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-            int cookie, struct picotm_error* error)
-{ }
-
-static void
-fcntl_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-           int cookie, struct picotm_error* error)
-{ }
-
 /*
  * fstat()
  */
@@ -327,16 +274,6 @@ fstat_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
 
     return res;
 }
-
-static void
-fstat_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-            int cookie, struct picotm_error* error)
-{ }
-
-static void
-fstat_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-           int cookie, struct picotm_error* error)
-{ }
 
 /*
  * fsync()
@@ -373,127 +310,6 @@ fsync_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
         picotm_error_set_errno(error, errno);
         return;
     }
-}
-
-static void
-fsync_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-           int cookie, struct picotm_error* error)
-{ }
-
-/*
- * listen()
- */
-
-static int
-listen_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
-            int backlog, bool isnoundo, int* cookie,
-            struct picotm_error* error)
-{
-    picotm_error_set_errno(error, ENOTSOCK);
-    return -1;
-}
-
-/*
- * lseek()
- */
-
-static off_t
-lseek_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-           off_t offset, int whence, bool isnoundo, int* cookie,
-           struct picotm_error* error)
-{
-    picotm_error_set_errno(error, EINVAL);
-    return (off_t)-1;
-}
-
-/*
- * pread()
- */
-
-static ssize_t
-pread_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, void* buf,
-           size_t nbyte, off_t off, bool isnoundo, int* cookie,
-           struct picotm_error* error)
-{
-    picotm_error_set_errno(error, EISDIR);
-    return -1;
-}
-
-/*
- * pwrite()
- */
-
-static ssize_t
-pwrite_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-            const void* buf, size_t nbyte, off_t off, bool isnoundo,
-            int* cookie, struct picotm_error* error)
-{
-    picotm_error_set_errno(error, EISDIR);
-    return -1;
-}
-
-/*
- * read()
- */
-
-static ssize_t
-read_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, void* buf,
-          size_t nbyte, bool isnoundo, int* cookie,
-          struct picotm_error* error)
-{
-    picotm_error_set_errno(error, EISDIR);
-    return -1;
-}
-
-/*
- * recv()
- */
-
-static ssize_t
-recv_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
-          void* buffer, size_t length, int flags, bool isnoundo, int* cookie,
-          struct picotm_error* error)
-{
-    picotm_error_set_errno(error, ENOTSOCK);
-    return -1;
-}
-
-/*
- * send()
- */
-
-static ssize_t
-send_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
-          const void* buffer, size_t length, int flags, bool isnoundo,
-          int* cookie, struct picotm_error* error)
-{
-    picotm_error_set_errno(error, ENOTSOCK);
-    return -1;
-}
-
-/*
- * shutdown()
- */
-
-static int
-shutdown_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
-              int how, bool isnoundo, int* cookie, struct picotm_error* error)
-{
-    picotm_error_set_errno(error, ENOTSOCK);
-    return -1;
-}
-
-/*
- * write()
- */
-
-static ssize_t
-write_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-           const void* buf, size_t nbyte, bool isnoundo, int* cookie,
-           struct picotm_error* error)
-{
-    picotm_error_set_errno(error, EISDIR);
-    return -1;
 }
 
 /*
@@ -559,52 +375,52 @@ static const struct file_tx_ops dir_tx_ops = {
     update_cc,
     clear_cc,
     /* file ops */
-    accept_exec,
+    file_tx_op_accept_exec_enotsock,
     NULL,
     NULL,
-    bind_exec,
+    file_tx_op_bind_exec_enotsock,
     NULL,
     NULL,
-    connect_exec,
+    file_tx_op_connect_exec_enotsock,
     NULL,
     NULL,
     fchmod_exec,
-    fchmod_apply,
+    file_tx_op_apply,
     fchmod_undo,
     fcntl_exec,
-    fcntl_apply,
-    fcntl_undo,
+    file_tx_op_apply,
+    file_tx_op_undo,
     fstat_exec,
-    fstat_apply,
-    fstat_undo,
+    file_tx_op_apply,
+    file_tx_op_undo,
     fsync_exec,
     fsync_apply,
-    fsync_undo,
-    listen_exec,
+    file_tx_op_undo,
+    file_tx_op_listen_exec_enotsock,
     NULL,
     NULL,
-    lseek_exec,
+    file_tx_op_lseek_exec_einval,
     NULL,
     NULL,
-    pread_exec,
+    file_tx_op_pread_exec_eisdir,
     NULL,
     NULL,
-    pwrite_exec,
+    file_tx_op_pwrite_exec_eisdir,
     NULL,
     NULL,
-    read_exec,
+    file_tx_op_read_exec_eisdir,
     NULL,
     NULL,
-    recv_exec,
+    file_tx_op_recv_exec_enotsock,
     NULL,
     NULL,
-    send_exec,
+    file_tx_op_send_exec_enotsock,
     NULL,
     NULL,
-    shutdown_exec,
+    file_tx_op_shutdown_exec_enotsock,
     NULL,
     NULL,
-    write_exec,
+    file_tx_op_write_exec_eisdir,
     NULL,
     NULL
 };

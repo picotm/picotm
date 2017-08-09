@@ -32,6 +32,7 @@
 #include "fchmodoptab.h"
 #include "fcntlop.h"
 #include "fcntloptab.h"
+#include "file_tx_ops.h"
 #include "ioop.h"
 #include "iooptab.h"
 #include "ofd_tx.h"
@@ -248,45 +249,6 @@ regfile_tx_2pl_lock_region(struct regfile_tx* self, size_t nbyte, off_t offset,
 }
 
 /*
- * accept()
- */
-
-static int
-accept_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
-            struct sockaddr* address, socklen_t* address_len,
-            bool isnoundo, int* cookie, struct picotm_error* error)
-{
-    picotm_error_set_errno(error, ENOTSOCK);
-    return -1;
-}
-
-/*
- * bind()
- */
-
-static int
-bind_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
-          const struct sockaddr* address, socklen_t addresslen, bool isnoundo,
-          int* cookie, struct picotm_error* error)
-{
-    picotm_error_set_errno(error, ENOTSOCK);
-    return -1;
-}
-
-/*
- * connect()
- */
-
-static int
-connect_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
-             const struct sockaddr* address, socklen_t addresslen,
-             bool isnoundo, int* cookie, struct picotm_error* error)
-{
-    picotm_error_set_errno(error, ENOTSOCK);
-    return -1;
-}
-
-/*
  * fchmod()
  */
 
@@ -331,11 +293,6 @@ fchmod_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
 
     return res;
 }
-
-static void
-fchmod_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-             int cookie, struct picotm_error* error)
-{ }
 
 static void
 fchmod_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
@@ -434,16 +391,6 @@ fcntl_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, int cmd,
     }
 }
 
-static void
-fcntl_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-            int cookie, struct picotm_error* error)
-{ }
-
-static void
-fcntl_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-           int cookie, struct picotm_error* error)
-{ }
-
 /*
  * fstat()
  */
@@ -484,16 +431,6 @@ fstat_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
     return res;
 }
 
-static void
-fstat_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-            int cookie, struct picotm_error* error)
-{ }
-
-static void
-fstat_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-           int cookie, struct picotm_error* error)
-{ }
-
 /*
  * fsync()
  */
@@ -528,24 +465,6 @@ fsync_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
         picotm_error_set_errno(error, errno);
         return;
     }
-}
-
-static void
-fsync_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-           int cookie, struct picotm_error* error)
-{ }
-
-/*
- * listen()
- */
-
-static int
-listen_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
-            int backlog, bool isnoundo, int* cookie,
-            struct picotm_error* error)
-{
-    picotm_error_set_errno(error, ENOTSOCK);
-    return -1;
 }
 
 /*
@@ -801,16 +720,6 @@ pread_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, void* buf,
     return llmax(len, len2);
 }
 
-static void
-pread_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-            int cookie, struct picotm_error* error)
-{ }
-
-static void
-pread_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-           int cookie, struct picotm_error* error)
-{ }
-
 /*
  * pwrite()
  */
@@ -953,11 +862,6 @@ pwrite_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
     }
 }
 
-static void
-pwrite_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-            int cookie, struct picotm_error* error)
-{ }
-
 /*
  * read()
  */
@@ -1027,49 +931,6 @@ read_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
         picotm_error_set_errno(error, errno);
         return;
     }
-}
-
-static void
-read_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, int cookie,
-          struct picotm_error* error)
-{ }
-
-/*
- * recv()
- */
-
-static ssize_t
-recv_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
-          void* buffer, size_t length, int flags, bool isnoundo, int* cookie,
-          struct picotm_error* error)
-{
-    picotm_error_set_errno(error, ENOTSOCK);
-    return -1;
-}
-
-/*
- * send()
- */
-
-static ssize_t
-send_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
-          const void* buffer, size_t length, int flags, bool isnoundo,
-          int* cookie, struct picotm_error* error)
-{
-    picotm_error_set_errno(error, ENOTSOCK);
-    return -1;
-}
-
-/*
- * shutdown()
- */
-
-static int
-shutdown_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
-              int how, bool isnoundo, int* cookie, struct picotm_error* error)
-{
-    picotm_error_set_errno(error, ENOTSOCK);
-    return -1;
 }
 
 /*
@@ -1182,11 +1043,6 @@ write_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
     /* TODO: error is less than len bytes were written */
 }
 
-static void
-write_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-           int cookie, struct picotm_error* error)
-{ }
-
 /*
  * Public interface
  */
@@ -1262,54 +1118,54 @@ static const struct file_tx_ops regfile_tx_ops = {
     update_cc,
     clear_cc,
     /* file ops */
-    accept_exec,
+    file_tx_op_accept_exec_enotsock,
     NULL,
     NULL,
-    bind_exec,
+    file_tx_op_bind_exec_enotsock,
     NULL,
     NULL,
-    connect_exec,
+    file_tx_op_connect_exec_enotsock,
     NULL,
     NULL,
     fchmod_exec,
-    fchmod_apply,
+    file_tx_op_apply,
     fchmod_undo,
     fcntl_exec,
-    fcntl_apply,
-    fcntl_undo,
+    file_tx_op_apply,
+    file_tx_op_undo,
     fstat_exec,
-    fstat_apply,
-    fstat_undo,
+    file_tx_op_apply,
+    file_tx_op_undo,
     fsync_exec,
     fsync_apply,
-    fsync_undo,
-    listen_exec,
+    file_tx_op_undo,
+    file_tx_op_listen_exec_enotsock,
     NULL,
     NULL,
     lseek_exec,
     lseek_apply,
     lseek_undo,
     pread_exec,
-    pread_apply,
-    pread_undo,
+    file_tx_op_apply,
+    file_tx_op_undo,
     pwrite_exec,
     pwrite_apply,
-    pwrite_undo,
+    file_tx_op_undo,
     read_exec,
     read_apply,
-    read_undo,
-    recv_exec,
+    file_tx_op_undo,
+    file_tx_op_recv_exec_enotsock,
     NULL,
     NULL,
-    send_exec,
+    file_tx_op_send_exec_enotsock,
     NULL,
     NULL,
-    shutdown_exec,
+    file_tx_op_shutdown_exec_enotsock,
     NULL,
     NULL,
     write_exec,
     write_apply,
-    write_undo
+    file_tx_op_undo
 };
 
 void
