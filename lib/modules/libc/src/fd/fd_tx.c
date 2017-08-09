@@ -31,6 +31,7 @@
 #include "fcntlop.h"
 #include "fcntloptab.h"
 #include "fifo_tx.h"
+#include "file_tx_ops.h"
 #include "ofd_tx.h"
 #include "regfile_tx.h"
 #include "socket_tx.h"

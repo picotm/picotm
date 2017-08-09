@@ -20,6 +20,7 @@
 #include "file_tx.h"
 #include <assert.h>
 #include <string.h>
+#include "file_tx_ops.h"
 
 void
 file_tx_init(struct file_tx* self,  const struct file_tx_ops* ops)
