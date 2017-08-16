@@ -619,17 +619,17 @@ fdio_test_8(unsigned int tid)
 
         close_tx(fildes);
 
-        /* Close pipe */
-
-        for (size_t i = 0; i < arraylen(pfd); ++i) {
-            close_tx(pfd[i]);
-        }
-
     picotm_commit
 
         abort_transaction_on_error(__func__);
 
     picotm_end
+
+    /* Close pipe */
+
+    for (size_t i = 0; i < arraylen(pfd); ++i) {
+        close(pfd[i]);
+    }
 }
 
 void
@@ -940,17 +940,9 @@ fdio_test_14_post(unsigned long nthreads, enum loop_mode loop,
 void
 fdio_test_15(unsigned int tid)
 {
-    int fildes = TEMP_FAILURE_RETRY(open(g_filename,
-                                         O_WRONLY | O_CREAT,
-                                         S_IRWXU | S_IRWXG | S_IRWXO));
-    if (fildes < 0) {
-        perror("open");
-        abort();
-    }
-
     picotm_begin
 
-        int fildes2 = dup_tx(fildes);
+        int fildes2 = dup_tx(g_fildes);
 
         delay_transaction(tid);
 
@@ -961,11 +953,6 @@ fdio_test_15(unsigned int tid)
         abort_transaction_on_error(__func__);
 
     picotm_end
-
-    if (TEMP_FAILURE_RETRY(close(fildes)) < 0) {
-        perror("close");
-        abort();
-    }
 }
 
 void
@@ -973,7 +960,7 @@ fdio_test_15_pre(unsigned long nthreads, enum loop_mode loop,
                  enum boundary_type btype, unsigned long long bound,
                  int (*logmsg)(const char*, ...))
 {
-    temp_filename(15, 0);
+    g_fildes = temp_fildes(14, 0, O_CLOEXEC | O_WRONLY);
 }
 
 void
@@ -981,6 +968,7 @@ fdio_test_15_post(unsigned long nthreads, enum loop_mode loop,
                   enum boundary_type btype, unsigned long long bound,
                   int (*logmsg)(const char*, ...))
 {
+    close_fildes(g_fildes);
     remove_file(g_filename);
 }
 

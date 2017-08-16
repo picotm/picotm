@@ -24,6 +24,7 @@
 #include <picotm/picotm-lib-tab.h>
 #include <pthread.h>
 #include <stdlib.h>
+#include <string.h>
 #include "range.h"
 #include "ofd.h"
 
@@ -112,19 +113,35 @@ append_empty_ofd(struct picotm_error* error)
 
 /* requires reader lock */
 static struct ofd*
-find_by_id(const struct ofd_id* id)
+find_by_id(const struct ofd_id* id, bool error_ne_fildes,
+           struct picotm_error* error)
 {
+    struct picotm_error saved_error = PICOTM_ERROR_INITIALIZER;
+
     struct ofd *ofd_beg = picotm_arraybeg(ofdtab);
     const struct ofd* ofd_end = picotm_arrayat(ofdtab, ofdtab_len);
 
     while (ofd_beg < ofd_end) {
 
-        const int cmp = ofd_cmp_and_ref(ofd_beg, id);
-        if (!cmp) {
+        struct picotm_error cmp_error = PICOTM_ERROR_INITIALIZER;
+
+        const int cmp = ofd_cmp_and_ref(ofd_beg, id, error_ne_fildes,
+                                        &cmp_error);
+        if (picotm_error_is_set(&cmp_error)) {
+            /* An error might be reported if the id's file descriptors don't
+             * match. We save the error, but continue the loops. If we later
+             * find a full match, the function succeeds. Otherwise, it reports
+             * the last error. */
+            memcpy(&saved_error, &cmp_error, sizeof(saved_error));
+        } else if (!cmp) {
             return ofd_beg;
         }
 
         ++ofd_beg;
+    }
+
+    if (picotm_error_is_set(&saved_error)) {
+        memcpy(error, &saved_error, sizeof(*error));
     }
 
     return NULL;
@@ -139,11 +156,11 @@ search_by_id(const struct ofd_id* id, int fildes, struct picotm_error* error)
 
     while (ofd_beg < ofd_end) {
 
-        const int cmp = ofd_cmp_and_ref_or_set_up(ofd_beg, id, fildes, error);
-        if (!cmp) {
-            if (picotm_error_is_set(error)) {
-                return NULL;
-            }
+        const int cmp = ofd_cmp_and_ref_or_set_up(ofd_beg, id, fildes, false,
+                                                  error);
+        if (picotm_error_is_set(error)) {
+            return NULL;
+        } else if (!cmp) {
             return ofd_beg; /* set-up ofd structure; return */
         }
 
@@ -151,6 +168,12 @@ search_by_id(const struct ofd_id* id, int fildes, struct picotm_error* error)
     }
 
     return NULL;
+}
+
+static bool
+error_ne_fildes(bool newly_created)
+{
+    return !newly_created;
 }
 
 struct ofd*
@@ -171,8 +194,10 @@ ofdtab_ref_fildes(int fildes, bool newly_created, struct picotm_error* error)
     if (!newly_created) {
         rdlock_ofdtab();
 
-        ofd = find_by_id(&id);
-        if (ofd) {
+        ofd = find_by_id(&id, error_ne_fildes(newly_created), error);
+        if (picotm_error_is_set(error)) {
+            goto err_find_by_id_1;
+        } else if (ofd) {
             goto unlock; /* found ofd for id; return */
         }
 
@@ -185,8 +210,10 @@ ofdtab_ref_fildes(int fildes, bool newly_created, struct picotm_error* error)
 
     if (!newly_created) {
         /* Re-try find operation; maybe element was added meanwhile. */
-        ofd = find_by_id(&id);
-        if (ofd) {
+        ofd = find_by_id(&id, error_ne_fildes(newly_created), error);
+        if (picotm_error_is_set(error)) {
+            goto err_find_by_id_2;
+        } else if (ofd) {
             goto unlock; /* found ofd for id; return */
         }
     }
@@ -229,6 +256,8 @@ unlock:
 err_ofd_ref_or_set_up:
 err_append_empty_ofd:
 err_search_by_id:
+err_find_by_id_2:
+err_find_by_id_1:
     unlock_ofdtab();
     return NULL;
 }

@@ -121,24 +121,31 @@ ofd_unref(struct ofd* self);
  * \param       self        The open file description.
  * \param       id          The id to compare to.
  * \param       fildes      A file descriptor for the setup.
+ * \param       ne_fildes   True to request non-equal file descriptors, false
+ *                          otherwise.
  * \param[out]  error       Returns an error ot the caller.
  * \returns A value less than, equal to, or greater than if the ofd's id is
  *          less than, equal to, or greater than the given id.
  */
 int
 ofd_cmp_and_ref_or_set_up(struct ofd* self, const struct ofd_id* id,
-                          int fildes, struct picotm_error* error);
+                          int fildes, bool ne_fildes,
+                          struct picotm_error* error);
 
 /**
  * \brief Compares the open file description's id to a reference id and
  *        acquires a reference if both id's are equal.
- * \param   self    The open file description.
- * \param   id      The id to compare to.
+ * \param       self        The open file description.
+ * \param       id          The id to compare to.
+ * \param       ne_fildes   True to request non-equal file descriptors, false
+ *                          otherwise.
+ * \param[out]  error       Returns an error ot the caller.
  * \returns A value less than, equal to, or greater than if the ofd's id is
  *          less than, equal to, or greater than the given id.
  */
 int
-ofd_cmp_and_ref(struct ofd* self, const struct ofd_id* id);
+ofd_cmp_and_ref(struct ofd* self, const struct ofd_id* id, bool ne_fildes,
+                struct picotm_error* error);
 
 /**
  * \brief Tries to acquire a reader lock on an open file description.

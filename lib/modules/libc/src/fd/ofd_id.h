@@ -99,3 +99,17 @@ ofd_id_clear(struct ofd_id* self);
  */
 int
 ofd_id_cmp(const struct ofd_id* lhs, const struct ofd_id* rhs);
+
+/**
+ * \brief Compares two open-file-description ids with different file
+ *        descriptors.
+ * \param       lhs     An open-file-description id.
+ * \param       rhs     An open-file-description id.
+ * \param[out]  error   Returns an error to the caller.
+ * \returns A value less than, equal to, or greater than 0 if the file id
+ *          of lhs is less than, equal to, or greater than the file id of
+ *          rhs.
+ */
+int
+ofd_id_cmp_ne_fildes(const struct ofd_id* lhs, const struct ofd_id* rhs,
+                     struct picotm_error* error);
