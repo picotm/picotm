@@ -203,15 +203,27 @@ unlock:
     ofd_unlock(self);
 }
 
+static int
+cmp_ofd_id(const struct ofd_id* lhs, const struct ofd_id* rhs,
+           bool ne_fildes, struct picotm_error* error)
+{
+    if (ne_fildes) {
+        return ofd_id_cmp_ne_fildes(lhs, rhs, error);
+    } else {
+        return ofd_id_cmp(lhs, rhs);
+    }
+}
+
 int
 ofd_cmp_and_ref_or_set_up(struct ofd* self, const struct ofd_id* id,
-                          int fildes, struct picotm_error* error)
+                          int fildes, bool ne_fildes,
+                          struct picotm_error* error)
 {
     assert(self);
 
     ofd_wrlock(self);
 
-    int cmp = ofd_id_cmp(&self->id, id);
+    int cmp = cmp_ofd_id(&self->id, id, ne_fildes, error);
     if (cmp) {
         goto unlock; /* ids are not equal; only return */
     }
@@ -232,13 +244,14 @@ err_ref_or_set_up:
 }
 
 int
-ofd_cmp_and_ref(struct ofd* self, const struct ofd_id* id)
+ofd_cmp_and_ref(struct ofd* self, const struct ofd_id* id, bool ne_fildes,
+                struct picotm_error* error)
 {
     assert(self);
 
     ofd_rdlock(self);
 
-    int cmp = ofd_id_cmp(&self->id, id);
+    int cmp = cmp_ofd_id(&self->id, id, ne_fildes, error);
     if (!cmp) {
         ofd_ref(self);
     }

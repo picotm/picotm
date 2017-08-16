@@ -42,6 +42,20 @@ struct ofd;
  * \param[out]  error           Returns an error.
  * \returns A referenced instance of `struct ofd` that refers to the file
  *          descriptor's open file description.
+ *
+ * We cannot distiguish between open file descriptions. Two
+ * file descriptors refering to the same buffer might share
+ * the same open file description, or not.
+ *
+ * As a workaround, we only allow one file descriptor per file
+ * buffer at the same time. If we see a second file descriptor
+ * refering to a buffer that is already in use, the look-up
+ * fails.
+ *
+ * For a solution, Linux (or any other Unix) has to provide a
+ * unique id for each open file description, or at least give
+ * us a way of figuring out the relationship between file descriptors
+ * and open file descriptions.
  */
 struct ofd*
 ofdtab_ref_fildes(int fildes, bool newly_created, struct picotm_error* error);

@@ -76,17 +76,47 @@ ofd_id_clear(struct ofd_id* self)
     set_ofd_id(self, -1, 0, 0);
 }
 
+static int
+fildes_cmp(int lhs, int rhs)
+{
+    return (lhs < rhs) - (lhs > rhs);
+}
+
 int
 ofd_id_cmp(const struct ofd_id* lhs, const struct ofd_id* rhs)
 {
     assert(lhs);
     assert(rhs);
 
-    int diff_fildes = lhs->fildes - rhs->fildes;
+    int cmp_file_id = file_id_cmp(&lhs->file_id, &rhs->file_id);
 
-    if (diff_fildes) {
-        return (diff_fildes > 0) - (diff_fildes < 0);
+    if (cmp_file_id) {
+        return cmp_file_id; /* file ids are different; early out */
     }
 
-    return file_id_cmp(&lhs->file_id, &rhs->file_id);
+    return fildes_cmp(lhs->fildes, rhs->fildes);
+}
+
+int
+ofd_id_cmp_ne_fildes(const struct ofd_id* lhs, const struct ofd_id* rhs,
+                     struct picotm_error* error)
+{
+    assert(lhs);
+    assert(rhs);
+
+    int cmp_file_id = file_id_cmp(&lhs->file_id, &rhs->file_id);
+
+    if (cmp_file_id) {
+        return cmp_file_id; /* file ids are different; early out */
+    }
+
+    int cmp_fildes = fildes_cmp(lhs->fildes, rhs->fildes);
+
+    if (cmp_fildes) {
+        /* file descriptors are different; return error */
+        picotm_error_set_errno(error, EBADF);
+        return cmp_fildes;
+    }
+
+    return 0;
 }
