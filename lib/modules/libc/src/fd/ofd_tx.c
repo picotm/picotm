@@ -179,7 +179,7 @@ ofd_tx_ref_or_set_up(struct ofd_tx* self, struct ofd* ofd,
     self->ofd = ofd;
     self->file_tx = file_tx;
 
-    self->offset = ofd_get_offset(ofd);
+    self->offset = 0;
 
     self->seektablen = 0;
 }

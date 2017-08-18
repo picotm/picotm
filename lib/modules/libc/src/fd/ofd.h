@@ -61,9 +61,6 @@ struct ofd {
 
     /** Reader/writer state locks. */
     struct picotm_rwlock  rwlock[NUMBER_OF_OFD_FIELDS];
-
-    /** \brief Current file offset. */
-    off_t offset;
 };
 
 /**
@@ -80,14 +77,6 @@ ofd_init(struct ofd* self, struct picotm_error* error);
  */
 void
 ofd_uninit(struct ofd* self);
-
-/**
- * \brief Returns the current file offset of a open file description.
- * \param   self    The open file description.
- * \returns The open file description's current file offset.
- */
-off_t
-ofd_get_offset(struct ofd* self);
 
 /**
  * \brief Acquires a reference on an open file description.
