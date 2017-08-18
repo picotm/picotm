@@ -23,7 +23,6 @@
 #include <picotm/picotm-lib-rwlock.h>
 #include <pthread.h>
 #include "fileid.h"
-#include "picotm/picotm-libc.h"
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -58,9 +57,6 @@ struct chrdev {
 
     /** The character device's unique id. */
     struct file_id id;
-
-    /** Concurrency-control mode for the character device. */
-    enum picotm_libc_cc_mode cc_mode;
 
     /** Reader/writer state locks. */
     struct picotm_rwlock rwlock[NUMBER_OF_CHRDEV_FIELDS];
@@ -131,15 +127,6 @@ chrdev_cmp_and_ref_or_set_up(struct chrdev* self, const struct file_id* id,
  */
 void
 chrdev_unref(struct chrdev* self);
-
-/**
- * \brief Returns the current concurrency-control mode of a chrdev
- *        instance.
- * \param   self    The chrdev instance.
- * \returns The current concurrency-control mode of the given chrdev.
- */
-enum picotm_libc_cc_mode
-chrdev_get_cc_mode(struct chrdev* self);
 
 /**
  * \brief Tries to acquire a reader lock on a character device.

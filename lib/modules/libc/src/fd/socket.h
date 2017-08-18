@@ -23,7 +23,6 @@
 #include <picotm/picotm-lib-rwlock.h>
 #include <pthread.h>
 #include "fileid.h"
-#include "picotm/picotm-libc.h"
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -59,9 +58,6 @@ struct socket {
 
     /** The socket's unique id. */
     struct file_id id;
-
-    /** Concurrency-control mode for the socket. */
-    enum picotm_libc_cc_mode cc_mode;
 
     /** Reader/writer state locks. */
     struct picotm_rwlock rwlock[NUMBER_OF_SOCKET_FIELDS];
@@ -132,15 +128,6 @@ socket_cmp_and_ref_or_set_up(struct socket* self, const struct file_id* id,
  */
 void
 socket_unref(struct socket* self);
-
-/**
- * \brief Returns the current concurrency-control mode of a socket
- *        instance.
- * \param   self    The socket instance.
- * \returns The current concurrency-control mode of the given socket.
- */
-enum picotm_libc_cc_mode
-socket_get_cc_mode(struct socket* self);
 
 /**
  * \brief Tries to acquire a reader lock on a socket.

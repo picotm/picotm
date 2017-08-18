@@ -23,7 +23,6 @@
 #include <picotm/picotm-lib-rwlock.h>
 #include <pthread.h>
 #include "fileid.h"
-#include "picotm/picotm-libc.h"
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -59,9 +58,6 @@ struct fifo {
 
     /** The FIFO's unique id. */
     struct file_id id;
-
-    /** Concurrency-control mode for the FIFO. */
-    enum picotm_libc_cc_mode cc_mode;
 
     /** Reader/writer state locks. */
     struct picotm_rwlock  rwlock[NUMBER_OF_FIFO_FIELDS];
@@ -131,15 +127,6 @@ fifo_cmp_and_ref_or_set_up(struct fifo* self, const struct file_id* id,
  */
 void
 fifo_unref(struct fifo* self);
-
-/**
- * \brief Returns the current concurrency-control mode of a FIFO
- *        instance.
- * \param   self    The FIFO instance.
- * \returns The current concurrency-control mode of the given FIFO.
- */
-enum picotm_libc_cc_mode
-fifo_get_cc_mode(struct fifo* self);
 
 /**
  * \brief Tries to acquire a reader lock on a FIFO.
