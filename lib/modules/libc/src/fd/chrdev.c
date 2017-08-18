@@ -56,8 +56,6 @@ chrdev_init(struct chrdev* self, struct picotm_error* error)
     picotm_ref_init(&self->ref, 0);
     file_id_clear(&self->id);
 
-    self->cc_mode = PICOTM_LIBC_CC_MODE_NOUNDO;
-
     init_rwlocks(picotm_arraybeg(self->rwlock),
                  picotm_arrayend(self->rwlock));
 }
@@ -104,18 +102,6 @@ chrdev_unlock(struct chrdev* self)
     }
 }
 
-enum picotm_libc_cc_mode
-chrdev_get_cc_mode(struct chrdev* self)
-{
-    assert(self);
-
-    chrdev_rdlock(self);
-    enum picotm_libc_cc_mode cc_mode = self->cc_mode;
-    chrdev_unlock(self);
-
-    return cc_mode;
-}
-
 /*
  * Referencing
  */
@@ -136,9 +122,6 @@ ref_or_set_up(struct chrdev* self, int fildes, struct picotm_error* error)
     if (picotm_error_is_set(error)) {
         goto err_file_id_init_from_fildes;
     }
-
-    self->cc_mode =
-        picotm_libc_get_file_type_cc_mode(PICOTM_LIBC_FILE_TYPE_CHRDEV);
 
     return;
 

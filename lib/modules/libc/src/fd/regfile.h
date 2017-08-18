@@ -24,7 +24,6 @@
 #include <pthread.h>
 #include <stdbool.h>
 #include "fileid.h"
-#include "picotm/picotm-libc.h"
 #include "rwlockmap.h"
 
 /**
@@ -61,9 +60,6 @@ struct regfile {
 
     /** The file's unique id. */
     struct file_id id;
-
-    /** Concurrency-control mode for the file. */
-    enum picotm_libc_cc_mode cc_mode;
 
     /** Reader/writer state locks. */
     struct picotm_rwlock  rwlock[NUMBER_OF_REGFILE_FIELDS];
@@ -137,15 +133,6 @@ regfile_cmp_and_ref_or_set_up(struct regfile* self, const struct file_id* id,
  */
 void
 regfile_unref(struct regfile* self);
-
-/**
- * \brief Returns the current concurrency-control mode of a file
- *        instance.
- * \param   self    The file instance.
- * \returns The current concurrency-control mode of the given file.
- */
-enum picotm_libc_cc_mode
-regfile_get_cc_mode(struct regfile* self);
 
 /**
  * \brief Tries to acquire a reader lock on a file.

@@ -23,7 +23,6 @@
 #include <picotm/picotm-lib-rwlock.h>
 #include <pthread.h>
 #include "fileid.h"
-#include "picotm/picotm-libc.h"
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -57,9 +56,6 @@ struct dir {
 
     /** The directory's unique id. */
     struct file_id id;
-
-    /** Concurrency-control mode for the directory. */
-    enum picotm_libc_cc_mode cc_mode;
 
     /** Reader/writer state locks. */
     struct picotm_rwlock rwlock[NUMBER_OF_DIR_FIELDS];
@@ -129,15 +125,6 @@ dir_cmp_and_ref_or_set_up(struct dir* self, const struct file_id* id,
  */
 void
 dir_unref(struct dir* self);
-
-/**
- * \brief Returns the current concurrency-control mode of a dir
- *        instance.
- * \param   self    The dir instance.
- * \returns The current concurrency-control mode of the given dir.
- */
-enum picotm_libc_cc_mode
-dir_get_cc_mode(struct dir* self);
 
 /**
  * \brief Tries to acquire a reader lock on a directory.
