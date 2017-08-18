@@ -60,8 +60,6 @@ ofd_init(struct ofd* self, struct picotm_error* error)
 
     init_rwlocks(picotm_arraybeg(self->rwlock),
                  picotm_arrayend(self->rwlock));
-
-    self->offset = 0;
 }
 
 void
@@ -108,18 +106,6 @@ ofd_unlock(struct ofd* self)
     }
 }
 
-off_t
-ofd_get_offset(struct ofd* self)
-{
-    assert(self);
-
-    ofd_rdlock(self);
-    off_t offset = self->offset;
-    ofd_unlock(self);
-
-    return offset;
-}
-
 /*
  * Referencing
  */
@@ -141,19 +127,8 @@ ref_or_set_up(struct ofd* self, int fildes, struct picotm_error* error)
         goto err_ofdid_init_from_fildes;
     }
 
-    off_t res = lseek(fildes, 0, SEEK_CUR);
-    if (res != (off_t)-1) {
-        /* seekable file; store offset */
-        self->offset = res;
-    } else if (errno != ESPIPE) {
-        /* error other than 'not seekable' */
-        picotm_error_set_errno(error, errno);
-        goto err_lseek;
-    }
-
     return;
 
-err_lseek:
 err_ofdid_init_from_fildes:
     ofd_unref(self);
 }
