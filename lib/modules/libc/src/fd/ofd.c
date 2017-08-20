@@ -19,12 +19,18 @@
 
 #include "ofd.h"
 #include <assert.h>
-#include <errno.h>
 #include <picotm/picotm-error.h>
 #include <picotm/picotm-lib-array.h>
+#include <picotm/picotm-lib-ptr.h>
 #include <picotm/picotm-lib-rwstate.h>
 #include <stdlib.h>
 #include <unistd.h>
+
+static struct ofd*
+ofd_of_picotm_shared_ref16_obj(struct picotm_shared_ref16_obj* ref_obj)
+{
+    return picotm_containerof(ref_obj, struct ofd, ref_obj);
+}
 
 static void
 init_rwlocks(struct picotm_rwlock* beg, const struct picotm_rwlock* end)
@@ -49,13 +55,11 @@ ofd_init(struct ofd* self, struct picotm_error* error)
 {
     assert(self);
 
-    int err = pthread_rwlock_init(&self->lock, NULL);
-    if (err) {
-        picotm_error_set_errno(error, err);
+    picotm_shared_ref16_obj_init(&self->ref_obj, error);
+    if (picotm_error_is_set(error)) {
         return;
     }
 
-    picotm_ref_init(&self->ref, 0);
     ofd_id_init(&self->id);
 
     init_rwlocks(picotm_arraybeg(self->rwlock),
@@ -70,38 +74,10 @@ ofd_uninit(struct ofd* self)
 
     ofd_id_uninit(&self->id);
 
-    pthread_rwlock_destroy(&self->lock);
-}
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-static void
-ofd_rdlock(struct ofd* self)
-{
-    assert(self);
-
-    int err = pthread_rwlock_rdlock(&self->lock);
-    if (err) {
-        abort();
-    }
-}
-
-static void
-ofd_wrlock(struct ofd* self)
-{
-    assert(self);
-
-    int err = pthread_rwlock_wrlock(&self->lock);
-    if (err) {
-        abort();
-    }
-}
-
-static void
-ofd_unlock(struct ofd* self)
-{
-    assert(self);
-
-    int err = pthread_rwlock_unlock(&self->lock);
-    if (err) {
+    picotm_shared_ref16_obj_uninit(&self->ref_obj, &error);
+    if (picotm_error_is_set(&error)) {
         abort();
     }
 }
@@ -110,51 +86,69 @@ ofd_unlock(struct ofd* self)
  * Referencing
  */
 
-/* requires internal writer lock */
+struct ref_obj_data {
+    const struct ofd_id* id;
+    int fildes;
+    bool ne_fildes;
+    int cmp;
+};
+
 static void
-ref_or_set_up(struct ofd* self, int fildes, struct picotm_error* error)
+first_ref(struct picotm_shared_ref16_obj* ref_obj, void* data,
+          struct picotm_error* error)
 {
+    struct ofd* self = ofd_of_picotm_shared_ref16_obj(ref_obj);
     assert(self);
 
-    bool first_ref = picotm_ref_up(&self->ref);
-    if (!first_ref) {
-        /* we got a set-up instance; signal success */
+    const struct ref_obj_data* ref_obj_data = data;
+    assert(ref_obj_data);
+
+    ofd_id_set_from_fildes(&self->id, ref_obj_data->fildes, error);
+    if (picotm_error_is_set(error)) {
         return;
     }
-
-    ofd_id_set_from_fildes(&self->id, fildes, error);
-    if (picotm_error_is_set(error)) {
-        goto err_ofdid_init_from_fildes;
-    }
-
-    return;
-
-err_ofdid_init_from_fildes:
-    ofd_unref(self);
 }
 
 void
 ofd_ref_or_set_up(struct ofd* self, int fildes, struct picotm_error* error)
 {
-    ofd_wrlock(self);
+    struct ref_obj_data data = {
+        NULL,
+        fildes,
+        false,
+        0
+    };
 
-    ref_or_set_up(self, fildes, error);
+    picotm_shared_ref16_obj_up(&self->ref_obj, &data, NULL, first_ref,
+                               error);
     if (picotm_error_is_set(error)) {
-        goto err_ref_or_set_up;
+        return;
     }
-
-    ofd_unlock(self);
-
-    return;
-
-err_ref_or_set_up:
-    ofd_unlock(self);
 }
 
 void
 ofd_ref(struct ofd* self)
 {
-    picotm_ref_up(&self->ref);
+    assert(self);
+
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+    picotm_shared_ref16_obj_up(&self->ref_obj, NULL, NULL, NULL, &error);
+    if (picotm_error_is_set(&error)) {
+        abort();
+    }
+}
+
+static void
+final_ref(struct picotm_shared_ref16_obj* ref_obj, void* data,
+          struct picotm_error* error)
+{
+    struct ofd* self = ofd_of_picotm_shared_ref16_obj(ref_obj);
+
+    /* We clear the file on releasing the final reference. This
+     * instance remains initialized, but is available for later
+     * use. */
+    ofd_id_clear(&self->id);
 }
 
 void
@@ -162,20 +156,13 @@ ofd_unref(struct ofd* self)
 {
     assert(self);
 
-    ofd_wrlock(self);
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    bool final_ref = picotm_ref_down(&self->ref);
-    if (!final_ref) {
-        goto unlock;
+    picotm_shared_ref16_obj_down(&self->ref_obj, NULL, NULL, final_ref,
+                                 &error);
+    if (picotm_error_is_set(&error)) {
+        abort();
     }
-
-    /* We clear the file on releasing the final reference. This
-     * instance remains initialized, but is available for later
-     * use. */
-    ofd_id_clear(&self->id);
-
-unlock:
-    ofd_unlock(self);
 }
 
 static int
@@ -189,6 +176,23 @@ cmp_ofd_id(const struct ofd_id* lhs, const struct ofd_id* rhs,
     }
 }
 
+static bool
+cond_ref(struct picotm_shared_ref16_obj* ref_obj, void* data,
+         struct picotm_error* error)
+{
+    struct ofd* self = ofd_of_picotm_shared_ref16_obj(ref_obj);
+    assert(self);
+
+    struct ref_obj_data* ref_obj_data = data;
+    assert(ref_obj_data);
+
+    ref_obj_data->cmp = cmp_ofd_id(&self->id,
+                                   ref_obj_data->id,
+                                   ref_obj_data->ne_fildes,
+                                   error);
+    return !ref_obj_data->cmp;
+}
+
 int
 ofd_cmp_and_ref_or_set_up(struct ofd* self, const struct ofd_id* id,
                           int fildes, bool ne_fildes,
@@ -196,26 +200,20 @@ ofd_cmp_and_ref_or_set_up(struct ofd* self, const struct ofd_id* id,
 {
     assert(self);
 
-    ofd_wrlock(self);
+    struct ref_obj_data data = {
+        id,
+        fildes,
+        ne_fildes,
+        0
+    };
 
-    int cmp = cmp_ofd_id(&self->id, id, ne_fildes, error);
-    if (cmp) {
-        goto unlock; /* ids are not equal; only return */
-    }
-
-    ref_or_set_up(self, fildes, error);
+    picotm_shared_ref16_obj_up(&self->ref_obj, &data, cond_ref, first_ref,
+                               error);
     if (picotm_error_is_set(error)) {
-        goto err_ref_or_set_up;
+        return 0;
     }
 
-unlock:
-    ofd_unlock(self);
-
-    return cmp;
-
-err_ref_or_set_up:
-    ofd_unlock(self);
-    return cmp;
+    return data.cmp;
 }
 
 int
@@ -224,16 +222,19 @@ ofd_cmp_and_ref(struct ofd* self, const struct ofd_id* id, bool ne_fildes,
 {
     assert(self);
 
-    ofd_rdlock(self);
+    struct ref_obj_data data = {
+        id,
+        -1,
+        ne_fildes,
+        0
+    };
 
-    int cmp = cmp_ofd_id(&self->id, id, ne_fildes, error);
-    if (!cmp) {
-        ofd_ref(self);
+    picotm_shared_ref16_obj_up(&self->ref_obj, &data, cond_ref, NULL, error);
+    if (picotm_error_is_set(error)) {
+        return 0;
     }
 
-    ofd_unlock(self);
-
-    return cmp;
+    return data.cmp;
 }
 
 /*

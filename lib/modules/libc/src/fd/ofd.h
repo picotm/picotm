@@ -19,9 +19,8 @@
 
 #pragma once
 
-#include <picotm/picotm-lib-ref.h>
 #include <picotm/picotm-lib-rwlock.h>
-#include <pthread.h>
+#include <picotm/picotm-lib-shared-ref-obj.h>
 #include <stdbool.h>
 #include <sys/types.h>
 #include "ofd_id.h"
@@ -50,11 +49,8 @@ enum ofd_field {
  */
 struct ofd {
 
-    /** Internal lock. */
-    pthread_rwlock_t lock;
-
-    /** The reference counter. */
-    struct picotm_shared_ref16 ref;
+    /** Reference-counting base object. */
+    struct picotm_shared_ref16_obj ref_obj;
 
     /** The open file description's unique id. */
     struct ofd_id id;
