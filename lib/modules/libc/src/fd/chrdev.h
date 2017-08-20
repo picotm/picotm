@@ -19,9 +19,8 @@
 
 #pragma once
 
-#include <picotm/picotm-lib-ref.h>
 #include <picotm/picotm-lib-rwlock.h>
-#include <pthread.h>
+#include <picotm/picotm-lib-shared-ref-obj.h>
 #include "fileid.h"
 
 /**
@@ -49,11 +48,8 @@ enum chrdev_field {
  */
 struct chrdev {
 
-    /** Internal lock. */
-    pthread_rwlock_t lock;
-
-    /** The reference counter. */
-    struct picotm_shared_ref16 ref;
+    /** Reference-counting base object. */
+    struct picotm_shared_ref16_obj ref_obj;
 
     /** The character device's unique id. */
     struct file_id id;
