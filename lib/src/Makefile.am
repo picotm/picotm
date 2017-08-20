@@ -27,6 +27,7 @@ libpicotm_la_SOURCES = log.c \
                        picotm-error.c \
                        picotm-lib-rwlock.c \
                        picotm-lib-rwstate.c \
+                       picotm-lib-shared-ref-obj.c \
                        picotm-lib-shared-treemap.c \
                        picotm-lib-tab.c \
                        picotm-lib-treemap.c \
