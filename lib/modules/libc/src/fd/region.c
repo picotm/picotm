@@ -37,14 +37,3 @@ region_uninit(struct region *region)
     return;
 }
 
-#include <stdio.h>
-
-void
-region_dump(const struct region *region)
-{
-    assert(region);
-
-    fprintf(stderr, "region %ld %ld", (long)region->nbyte,
-                                      (long)region->offset);
-}
-

@@ -44,8 +44,5 @@ fcntloptab_append(struct fcntlop** tab, size_t* nelems, int command,
 void
 fcntloptab_clear(struct fcntlop **tab, size_t *nelems);
 
-void
-fcntloptab_dump(struct fcntlop *tab, size_t nelems);
-
 #endif
 

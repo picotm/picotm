@@ -46,8 +46,5 @@ regiontab_clear(struct region **tab, size_t *nelems);
 int
 regiontab_sort(struct region *tab, size_t nelems);
 
-void
-regiontab_dump(struct region *tab, size_t nelems);
-
 #endif
 

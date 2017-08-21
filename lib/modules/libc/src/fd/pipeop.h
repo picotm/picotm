@@ -36,8 +36,5 @@ struct pipeop
 void
 pipeop_init(struct pipeop *pipeop, int pipefd[2]);
 
-void
-pipeop_dump(struct pipeop *pipeop);
-
 #endif
 

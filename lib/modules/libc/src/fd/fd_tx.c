@@ -22,7 +22,6 @@
 #include <errno.h>
 #include <picotm/picotm-error.h>
 #include <picotm/picotm-lib-array.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -178,15 +177,6 @@ fd_tx_signal_close(struct fd_tx* self)
     assert(self);
 
     fd_close(self->fd);
-}
-
-void
-fd_tx_dump(const struct fd_tx* self)
-{
-    fprintf(stderr, "%p: %p %p %zu\n", (void*)self,
-                                       (void*)self->fd,
-                                       (void*)self->fcntltab,
-                                              self->fcntltablen);
 }
 
 /*

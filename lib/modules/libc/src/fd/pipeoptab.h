@@ -40,8 +40,5 @@ pipeoptab_append(struct pipeop **tab, size_t *nelems, int pipefd[2],
 void
 pipeoptab_clear(struct pipeop **tab, size_t *nelems);
 
-void
-pipeoptab_dump(struct pipeop *tab, size_t nelems);
-
 #endif
 

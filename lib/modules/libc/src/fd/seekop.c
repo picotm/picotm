@@ -19,7 +19,6 @@
 
 #include "seekop.h"
 #include <assert.h>
-#include <stdio.h>
 
 void
 seekop_init(struct seekop *seekop, off_t from, off_t offset, int whence)
@@ -29,13 +28,5 @@ seekop_init(struct seekop *seekop, off_t from, off_t offset, int whence)
     seekop->from = from;
     seekop->offset = offset;
     seekop->whence = whence;
-}
-
-void
-seekop_dump(struct seekop *seekop)
-{
-    fprintf(stderr, "seekop %p %ld %ld %d", (void*)seekop, (long)seekop->from,
-                                                           (long)seekop->offset,
-                                                                 seekop->whence);
 }
 

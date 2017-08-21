@@ -40,8 +40,5 @@ struct seekop
 void
 seekop_init(struct seekop *seekop, off_t from, off_t offset, int whence);
 
-void
-seekop_dump(struct seekop *seekop);
-
 #endif
 

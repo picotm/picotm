@@ -132,10 +132,6 @@ fd_is_open_nl(const struct fd *fd);
 void
 fd_close(struct fd *fd);
 
-/** \brief Dump file-descriptor state to stderr */
-void
-fd_dump(const struct fd *fd);
-
 /** Set file-descriptor flags. */
 int
 fd_setfd(struct fd* fd, int arg, struct picotm_error* error);

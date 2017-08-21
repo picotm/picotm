@@ -99,19 +99,3 @@ regiontab_sort(struct region *tab, size_t nelems)
     return 0;
 }
 
-#include <stdio.h>
-
-void
-regiontab_dump(struct region *tab, size_t nelems)
-{
-    struct region *ent;
-
-    assert(tab || !nelems);
-
-    for (ent = tab; ent < tab+nelems; ++ent) {
-        fprintf(stderr, "%ld: ", (long)(ent-tab));
-        region_dump(ent);
-        fprintf(stderr, "\n");
-    }
-}
-

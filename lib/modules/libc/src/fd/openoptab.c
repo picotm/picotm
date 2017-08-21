@@ -54,19 +54,3 @@ openoptab_clear(struct openop **tab, size_t *nelems)
     *nelems = 0;
 }
 
-#include <stdio.h>
-
-void
-openoptab_dump(struct openop *tab, size_t nelems)
-{
-    struct openop *ent;
-
-    assert(tab || !nelems);
-
-    for (ent = tab; ent < tab+nelems; ++ent) {
-        fprintf(stderr, "%ld: ", (long)(ent-tab));
-        openop_dump(ent);
-        fprintf(stderr, "\n");
-    }
-}
-

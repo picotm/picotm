@@ -19,7 +19,6 @@
 
 #include "fcntlop.h"
 #include <assert.h>
-#include <stdio.h>
 #include <string.h>
 
 void
@@ -37,12 +36,4 @@ fcntlop_init(struct fcntlop* fcntlop, int command,
     if (oldvalue) {
         memcpy(&fcntlop->oldvalue, oldvalue, sizeof(fcntlop->oldvalue));
     }
-}
-
-void
-fcntlop_dump(struct fcntlop *fcntlop)
-{
-    fprintf(stderr, "fcntlop %p %d %d %d", (void*)fcntlop, fcntlop->command,
-                                                           fcntlop->value.arg0,
-                                                           fcntlop->oldvalue.arg0);
 }
