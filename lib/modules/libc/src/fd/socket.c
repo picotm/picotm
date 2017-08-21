@@ -21,8 +21,15 @@
 #include <assert.h>
 #include <picotm/picotm-error.h>
 #include <picotm/picotm-lib-array.h>
+#include <picotm/picotm-lib-ptr.h>
 #include <picotm/picotm-lib-rwstate.h>
 #include <stdlib.h>
+
+static struct socket*
+socket_of_picotm_shared_ref16_obj(struct picotm_shared_ref16_obj* ref_obj)
+{
+    return picotm_containerof(ref_obj, struct socket, ref_obj);
+}
 
 static void
 init_rwlocks(struct picotm_rwlock* beg, const struct picotm_rwlock* end)
@@ -47,13 +54,11 @@ socket_init(struct socket* self, struct picotm_error* error)
 {
     assert(self);
 
-    int err = pthread_rwlock_init(&self->lock, NULL);
-    if (err) {
-        picotm_error_set_errno(error, err);
+    picotm_shared_ref16_obj_init(&self->ref_obj, error);
+    if (picotm_error_is_set(error)) {
         return;
     }
 
-    picotm_ref_init(&self->ref, 0);
     file_id_clear(&self->id);
 
     init_rwlocks(picotm_arraybeg(self->rwlock),
@@ -66,38 +71,10 @@ socket_uninit(struct socket* self)
     uninit_rwlocks(picotm_arraybeg(self->rwlock),
                    picotm_arrayend(self->rwlock));
 
-    pthread_rwlock_destroy(&self->lock);
-}
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-static void
-socket_rdlock(struct socket* self)
-{
-    assert(self);
-
-    int err = pthread_rwlock_rdlock(&self->lock);
-    if (err) {
-        abort();
-    }
-}
-
-static void
-socket_wrlock(struct socket* self)
-{
-    assert(self);
-
-    int err = pthread_rwlock_wrlock(&self->lock);
-    if (err) {
-        abort();
-    }
-}
-
-static void
-socket_unlock(struct socket* self)
-{
-    assert(self);
-
-    int err = pthread_rwlock_unlock(&self->lock);
-    if (err) {
+    picotm_shared_ref16_obj_uninit(&self->ref_obj, &error);
+    if (picotm_error_is_set(&error)) {
         abort();
     }
 }
@@ -106,52 +83,71 @@ socket_unlock(struct socket* self)
  * Referencing
  */
 
-/* requires internal writer lock */
+struct ref_obj_data {
+    const struct file_id* id;
+    int fildes;
+    int cmp;
+};
+
 static void
-ref_or_set_up(struct socket* self, int fildes, struct picotm_error* error)
+first_ref(struct picotm_shared_ref16_obj* ref_obj, void* data,
+          struct picotm_error* error)
 {
+    struct socket* self = socket_of_picotm_shared_ref16_obj(ref_obj);
     assert(self);
 
-    bool first_ref = picotm_ref_up(&self->ref);
-    if (!first_ref) {
-        /* we got a set-up instance; signal success */
+    const struct ref_obj_data* ref_obj_data = data;
+    assert(ref_obj_data);
+
+    file_id_init_from_fildes(&self->id, ref_obj_data->fildes, error);
+    if (picotm_error_is_set(error)) {
         return;
     }
-
-    file_id_init_from_fildes(&self->id, fildes, error);
-    if (picotm_error_is_set(error)) {
-        goto err_file_id_init_from_fildes;
-    }
-
-    return;
-
-err_file_id_init_from_fildes:
-    socket_unref(self);
 }
 
 void
 socket_ref_or_set_up(struct socket* self, int fildes,
                      struct picotm_error* error)
 {
-    socket_wrlock(self);
+    assert(self);
 
-    ref_or_set_up(self, fildes, error);
+    struct ref_obj_data data = {
+        NULL,
+        fildes,
+        0
+    };
+
+    picotm_shared_ref16_obj_up(&self->ref_obj, &data, NULL, first_ref,
+                               error);
     if (picotm_error_is_set(error)) {
-        goto err_ref_or_set_up;
+        return;
     }
-
-    socket_unlock(self);
-
-    return;
-
-err_ref_or_set_up:
-    socket_unlock(self);
 }
 
 void
 socket_ref(struct socket* self)
 {
-    picotm_ref_up(&self->ref);
+    assert(self);
+
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+    picotm_shared_ref16_obj_up(&self->ref_obj, NULL, NULL, NULL, &error);
+    if (picotm_error_is_set(&error)) {
+        abort();
+    }
+}
+
+static void
+final_ref(struct picotm_shared_ref16_obj* ref_obj, void* data,
+          struct picotm_error* error)
+{
+    struct socket* self = socket_of_picotm_shared_ref16_obj(ref_obj);
+    assert(self);
+
+    /* We clear the id on releasing the final reference. This
+     * instance remains initialized, but is available for later
+     * use. */
+    file_id_clear(&self->id);
 }
 
 void
@@ -159,20 +155,28 @@ socket_unref(struct socket* self)
 {
     assert(self);
 
-    socket_wrlock(self);
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    bool final_ref = picotm_ref_down(&self->ref);
-    if (!final_ref) {
-        goto unlock;
+    picotm_shared_ref16_obj_down(&self->ref_obj, NULL, NULL, final_ref,
+                                 &error);
+    if (picotm_error_is_set(&error)) {
+        abort();
     }
+}
 
-    /* We clear the id on releasing the final reference. This
-     * instance remains initialized, but is available for later
-     * use. */
-    file_id_clear(&self->id);
+static bool
+cond_ref(struct picotm_shared_ref16_obj* ref_obj, void* data,
+         struct picotm_error* error)
+{
+    struct socket* self = socket_of_picotm_shared_ref16_obj(ref_obj);
+    assert(self);
 
-unlock:
-    socket_unlock(self);
+    struct ref_obj_data* ref_obj_data = data;
+    assert(ref_obj_data);
+
+    ref_obj_data->cmp = file_id_cmp(&self->id, ref_obj_data->id);
+
+    return !ref_obj_data->cmp;
 }
 
 int
@@ -181,26 +185,19 @@ socket_cmp_and_ref_or_set_up(struct socket* self, const struct file_id* id,
 {
     assert(self);
 
-    socket_wrlock(self);
+    struct ref_obj_data data = {
+        id,
+        fildes,
+        0
+    };
 
-    int cmp = file_id_cmp(&self->id, id);
-    if (cmp) {
-        goto unlock; /* ids are not equal; only return */
-    }
-
-    ref_or_set_up(self, fildes, error);
+    picotm_shared_ref16_obj_up(&self->ref_obj, &data, cond_ref, first_ref,
+                               error);
     if (picotm_error_is_set(error)) {
-        goto err_ref_or_set_up;
+        return 0;
     }
 
-unlock:
-    socket_unlock(self);
-
-    return cmp;
-
-err_ref_or_set_up:
-    socket_unlock(self);
-    return cmp;
+    return data.cmp;
 }
 
 int
@@ -208,16 +205,20 @@ socket_cmp_and_ref(struct socket* self, const struct file_id* id)
 {
     assert(self);
 
-    socket_rdlock(self);
+    struct ref_obj_data data = {
+        id,
+        -1,
+        0
+    };
 
-    int cmp = file_id_cmp(&self->id, id);
-    if (!cmp) {
-        socket_ref(self);
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+    picotm_shared_ref16_obj_up(&self->ref_obj, &data, cond_ref, NULL, &error);
+    if (picotm_error_is_set(&error)) {
+        return 0;
     }
 
-    socket_unlock(self);
-
-    return cmp;
+    return data.cmp;
 }
 
 void
