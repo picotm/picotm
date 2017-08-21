@@ -23,26 +23,15 @@
 #include <fcntl.h>
 #include <picotm/picotm-error.h>
 #include <picotm/picotm-lib-array.h>
+#include <picotm/picotm-lib-ptr.h>
 #include <picotm/picotm-lib-rwstate.h>
 #include <stdlib.h>
 #include <unistd.h>
 
-static void
-lock_fd(struct fd* fd)
+static struct fd*
+fd_of_picotm_shared_ref16_obj(struct picotm_shared_ref16_obj* ref_obj)
 {
-    int err = pthread_mutex_lock(&fd->lock);
-    if (err) {
-        abort();
-    }
-}
-
-static void
-unlock_fd(struct fd* fd)
-{
-    int err = pthread_mutex_unlock(&fd->lock);
-    if (err) {
-        abort();
-    }
+    return picotm_containerof(ref_obj, struct fd, ref_obj);
 }
 
 static void
@@ -68,13 +57,10 @@ fd_init(struct fd *fd, struct picotm_error* error)
 {
     assert(fd);
 
-    int err = pthread_mutex_init(&fd->lock, NULL);
-    if (err) {
-        picotm_error_set_errno(error, err);
+    picotm_shared_ref16_obj_init(&fd->ref_obj, error);
+    if (picotm_error_is_set(error)) {
         return;
     }
-
-    picotm_ref_init(&fd->ref, 0);
 
     fd->fildes = -1;
     fd->state = FD_ST_UNUSED;
@@ -86,13 +72,17 @@ fd_init(struct fd *fd, struct picotm_error* error)
 void
 fd_uninit(struct fd *fd)
 {
-    int err = pthread_mutex_destroy(&fd->lock);
-    if (err) {
-        abort();
-    }
+    assert(fd);
 
     uninit_rwlocks(picotm_arraybeg(fd->rwlock),
                    picotm_arrayend(fd->rwlock));
+
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+    picotm_shared_ref16_obj_uninit(&fd->ref_obj, &error);
+    if (picotm_error_is_set(&error)) {
+        abort();
+    }
 }
 
 void
@@ -144,64 +134,96 @@ fd_validate(struct fd* fd, struct picotm_error* error)
     assert(fd);
 }
 
-static bool
-incr_ref_count(struct fd *fd, struct picotm_error* error)
-{
-    bool first_ref;
+/*
+ * Referencing
+ */
 
-    switch (fd->state) {
-        case FD_ST_UNUSED:
-            /* fall through */
-        case FD_ST_INUSE:
-            first_ref = picotm_ref_up(&fd->ref);
-            break;
-        case FD_ST_CLOSING:
-            /* fd is about to be closed; abort here */
-            picotm_error_set_conflicting(error, NULL);
-            return false;
-        default:
-            abort();
+struct ref_obj_data {
+    int fildes;
+};
+
+static bool
+cond_ref(struct picotm_shared_ref16_obj* ref_obj, void* data,
+         struct picotm_error* error)
+{
+    struct fd* self = fd_of_picotm_shared_ref16_obj(ref_obj);
+    assert(self);
+
+    if (self->state == FD_ST_CLOSING) {
+        /* fd is about to be closed; don't allow new references */
+        picotm_error_set_conflicting(error, NULL);
+        return false;
     }
 
-    return first_ref;
+    return true;
+}
+
+static void
+first_ref(struct picotm_shared_ref16_obj* ref_obj, void* data,
+          struct picotm_error* error)
+{
+    struct fd* self = fd_of_picotm_shared_ref16_obj(ref_obj);
+    assert(self);
+
+    const struct ref_obj_data* ref_obj_data = data;
+    assert(ref_obj_data);
+
+    /* set up instance */
+    self->fildes = ref_obj_data->fildes;
+    self->state = FD_ST_INUSE;
 }
 
 void
 fd_ref(struct fd *fd, struct picotm_error* error)
 {
-    incr_ref_count(fd, error);
+    assert(fd);
+
+    struct ref_obj_data data = {
+        -1
+    };
+
+    picotm_shared_ref16_obj_up(&fd->ref_obj, &data, cond_ref, NULL, error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
 }
 
 void
 fd_ref_or_set_up(struct fd *fd, int fildes, struct picotm_error* error)
 {
-    lock_fd(fd);
+    assert(fd);
 
-    bool first_ref = incr_ref_count(fd, error);
+    struct ref_obj_data data = {
+        fildes
+    };
+
+    picotm_shared_ref16_obj_up(&fd->ref_obj, &data, cond_ref, first_ref, error);
     if (picotm_error_is_set(error)) {
         return;
     }
-
-    if (!first_ref) {
-        /* we got a set-up instance; signal success */
-        goto unlock;
-    }
-
-    /* set up instance */
-    fd->fildes = fildes;
-    fd->state = FD_ST_INUSE;
-
-unlock:
-    unlock_fd(fd);
 }
 
 static void
-fd_cleanup(struct fd *fd)
+final_ref(struct picotm_shared_ref16_obj* ref_obj, void* data,
+          struct picotm_error* error)
 {
-    assert(fd);
+    struct fd* self = fd_of_picotm_shared_ref16_obj(ref_obj);
+    assert(self);
 
-    fd->fildes = -1;
-    fd->state = FD_ST_UNUSED;
+    if (self->state == FD_ST_CLOSING) {
+        /* Close fildes if we released the final reference of
+         * a file descriptor that has been closed from within
+         * a transaction. */
+        int res = TEMP_FAILURE_RETRY(close(self->fildes));
+        if (res < 0) {
+            picotm_error_set_errno(error, errno);
+            picotm_error_mark_as_non_recoverable(error);
+            return;
+        }
+    }
+
+    self->fildes = -1;
+    self->state = FD_ST_UNUSED;
 }
 
 void
@@ -209,35 +231,12 @@ fd_unref(struct fd *fd)
 {
     assert(fd);
 
-    lock_fd(fd);
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    bool final_ref = picotm_ref_down(&fd->ref);
-    if (!final_ref) {
-        goto unlock;
+    picotm_shared_ref16_obj_down(&fd->ref_obj, NULL, NULL, final_ref, &error);
+    if (picotm_error_is_set(&error)) {
+        abort();
     }
-
-    switch (fd->state) {
-        case FD_ST_UNUSED:
-        case FD_ST_INUSE: {
-            fd_cleanup(fd);
-            break;
-        }
-        case FD_ST_CLOSING: {
-            /* close fildes if we released the final reference */
-            int res = TEMP_FAILURE_RETRY(close(fd->fildes));
-            if (res < 0) {
-                abort(); /* FIXME: Raise error flag */
-            }
-
-            fd_cleanup(fd);
-            break;
-        }
-        default:
-            abort(); /* should never happen */
-    }
-
-unlock:
-    unlock_fd(fd);
 }
 
 void

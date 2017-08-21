@@ -20,10 +20,8 @@
 #ifndef FD_H
 #define FD_H
 
-#include <picotm/picotm-lib-ref.h>
 #include <picotm/picotm-lib-rwlock.h>
-#include <pthread.h>
-#include <stdbool.h>
+#include <picotm/picotm-lib-shared-ref-obj.h>
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -53,11 +51,10 @@ enum fd_field {
     NUMBER_OF_FD_FIELDS
 };
 
-struct fd
-{
-    struct picotm_shared_ref16 ref;
+struct fd {
 
-    pthread_mutex_t lock;
+    /** Reference-counting base object. */
+    struct picotm_shared_ref16_obj ref_obj;
 
     int fildes;
     enum fd_state state;
