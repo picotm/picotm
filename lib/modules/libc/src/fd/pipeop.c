@@ -19,7 +19,6 @@
 
 #include "pipeop.h"
 #include <assert.h>
-#include <stdio.h>
 #include <string.h>
 
 void
@@ -28,12 +27,5 @@ pipeop_init(struct pipeop *pipeop, int pipefd[2])
     assert(pipeop);
 
     memcpy(pipeop->pipefd, pipefd, sizeof(pipeop->pipefd));
-}
-
-void
-pipeop_dump(struct pipeop *pipeop)
-{
-    fprintf(stderr, "pipeop %p %d %d", (void*)pipeop, pipeop->pipefd[0],
-                                                      pipeop->pipefd[1]);
 }
 

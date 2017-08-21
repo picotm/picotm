@@ -28,11 +28,3 @@ openop_init(struct openop *openop, int unlink)
     openop->unlink = unlink;
 }
 
-#include <stdio.h>
-
-void
-openop_dump(struct openop *openop)
-{
-    fprintf(stderr, "openop %p %d\n", (void*)openop, (int)openop->unlink);
-}
-

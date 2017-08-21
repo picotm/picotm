@@ -129,12 +129,6 @@ fd_tx_unlock(struct fd_tx* self);
 void
 fd_tx_signal_close(struct fd_tx* self);
 
-/**
- * Dump file-descriptor state
- */
-void
-fd_tx_dump(const struct fd_tx* self);
-
 /*
  * accept()
  */

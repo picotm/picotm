@@ -54,8 +54,5 @@ iooptab_sort(const struct ioop * restrict tab, size_t nelems,
                    struct ioop * restrict * restrict sorted,
              struct picotm_error* error);
 
-void
-iooptab_dump(struct ioop * restrict tab, size_t nelems);
-
 #endif
 

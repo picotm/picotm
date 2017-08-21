@@ -21,7 +21,6 @@
 #include <assert.h>
 #include <picotm/picotm-error.h>
 #include <picotm/picotm-lib-tab.h>
-#include <stdio.h>
 #include <string.h>
 #include "fcntlop.h"
 
@@ -56,18 +55,3 @@ fcntloptab_clear(struct fcntlop **tab, size_t *nelems)
     *tab = NULL;
     *nelems = 0;
 }
-
-void
-fcntloptab_dump(struct fcntlop *tab, size_t nelems)
-{
-    struct fcntlop *ent;
-
-    assert(tab || !nelems);
-
-    for (ent = tab; ent < tab+nelems; ++ent) {
-        fprintf(stderr, "%ld: ", (long)(ent-tab));
-        fcntlop_dump(ent);
-        fprintf(stderr, "\n");
-    }
-}
-

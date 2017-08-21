@@ -41,8 +41,5 @@ seekoptab_append(struct seekop **tab, size_t *nelems,
 void
 seekoptab_clear(struct seekop **tab, size_t *nelems);
 
-void
-seekoptab_dump(struct seekop *tab, size_t nelems);
-
 #endif
 

@@ -247,12 +247,6 @@ fd_close(struct fd *fd)
     fd->state = FD_ST_CLOSING;
 }
 
-void
-fd_dump(const struct fd *fd)
-{
-    return;
-}
-
 int
 fd_setfd(struct fd* fd, int arg, struct picotm_error* error)
 {

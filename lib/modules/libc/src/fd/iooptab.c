@@ -20,7 +20,6 @@
 #include "iooptab.h"
 #include <assert.h>
 #include <errno.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <picotm/picotm-error.h>
@@ -129,19 +128,5 @@ iooptab_sort(const struct ioop * restrict tab, size_t nelems,
     memcpy(*sorted, tab, nelems*sizeof(**sorted));
 
     qsort(*sorted, nelems, sizeof(**sorted), ioopcmp_compare);
-}
-
-void
-iooptab_dump(struct ioop * restrict tab, size_t nelems)
-{
-    struct ioop *ent;
-
-    assert(tab || !nelems);
-
-    for (ent = tab; ent < tab+nelems; ++ent) {
-        fprintf(stderr, "%ld: ", (long)(ent-tab));
-        ioop_dump(ent);
-        fprintf(stderr, "\n");
-    }
 }
 

@@ -40,8 +40,5 @@ openoptab_append(struct openop **tab, size_t *nelems, int unlink,
 void
 openoptab_clear(struct openop **tab, size_t *nelems);
 
-void
-openoptab_dump(struct openop *tab, size_t nelems);
-
 #endif
 

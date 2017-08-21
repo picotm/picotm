@@ -92,15 +92,3 @@ ioop_read(const struct ioop *ioop, void *buf, size_t nbyte,
 
     return len;
 }
-
-#include <stdio.h>
-
-void
-ioop_dump(const struct ioop *ioop)
-{
-    assert(ioop);
-
-    fprintf(stderr, "ioop %ld %ld %ld", (long)ioop->off,
-                                        (long)ioop->nbyte,
-                                        (long)ioop->bufoff);
-}

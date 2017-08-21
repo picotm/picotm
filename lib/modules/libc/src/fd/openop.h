@@ -36,8 +36,5 @@ struct openop
 void
 openop_init(struct openop *openop, int unlink);
 
-void
-openop_dump(struct openop *openop);
-
 #endif
 

@@ -50,8 +50,5 @@ ioop_uninit(struct ioop *ioop);
 ssize_t
 ioop_read(const struct ioop *ioop, void *buf, size_t nbyte, off_t offset, const void *iobuf);
 
-void
-ioop_dump(const struct ioop *ioop);
-
 #endif
 

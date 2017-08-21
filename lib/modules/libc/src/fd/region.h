@@ -42,8 +42,5 @@ region_init(struct region *region, size_t nbyte, off_t offset);
 void
 region_uninit(struct region *region);
 
-void
-region_dump(const struct region *region);
-
 #endif
 

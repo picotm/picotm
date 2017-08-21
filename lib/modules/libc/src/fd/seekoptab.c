@@ -19,7 +19,6 @@
 
 #include "seekoptab.h"
 #include <assert.h>
-#include <stdio.h>
 #include <picotm/picotm-error.h>
 #include <picotm/picotm-lib-tab.h>
 #include "seekop.h"
@@ -53,19 +52,5 @@ seekoptab_clear(struct seekop **tab, size_t *nelems)
     picotm_tabfree(*tab);
     *tab = NULL;
     *nelems = 0;
-}
-
-void
-seekoptab_dump(struct seekop *tab, size_t nelems)
-{
-    struct seekop *ent;
-
-    assert(tab || !nelems);
-
-    for (ent = tab; ent < tab+nelems; ++ent) {
-        fprintf(stderr, "%ld: ", (long)(ent-tab));
-        seekop_dump(ent);
-        fprintf(stderr, "\n");
-    }
 }
 

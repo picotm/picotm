@@ -21,7 +21,6 @@
 #include <assert.h>
 #include <picotm/picotm-error.h>
 #include <picotm/picotm-lib-tab.h>
-#include <stdio.h>
 #include "pipeop.h"
 
 unsigned long
@@ -52,19 +51,5 @@ pipeoptab_clear(struct pipeop **tab, size_t *nelems)
     picotm_tabfree(*tab);
     *tab = NULL;
     *nelems = 0;
-}
-
-void
-pipeoptab_dump(struct pipeop *tab, size_t nelems)
-{
-    struct pipeop *ent;
-
-    assert(tab || !nelems);
-
-    for (ent = tab; ent < tab+nelems; ++ent) {
-        fprintf(stderr, "%ld: ", (long)(ent-tab));
-        pipeop_dump(ent);
-        fprintf(stderr, "\n");
-    }
 }
 

@@ -48,8 +48,5 @@ fcntlop_init(struct fcntlop *fcntlop, int command,
              const union fcntl_arg *value,
              const union fcntl_arg *oldvalue);
 
-void
-fcntlop_dump(struct fcntlop *fcntlop);
-
 #endif
 
