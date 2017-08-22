@@ -17,9 +17,9 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef OPENOPTAB_H
-#define OPENOPTAB_H
+#pragma once
 
+#include <stdbool.h>
 #include <sys/types.h>
 
 /**
@@ -34,11 +34,8 @@ struct openop;
 struct picotm_error;
 
 unsigned long
-openoptab_append(struct openop **tab, size_t *nelems, int unlink,
+openoptab_append(struct openop** tab, size_t* nelems, bool unlink,
                  struct picotm_error* error);
 
 void
-openoptab_clear(struct openop **tab, size_t *nelems);
-
-#endif
-
+openoptab_clear(struct openop** tab, size_t* nelems);

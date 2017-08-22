@@ -17,8 +17,7 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PIPEOP_H
-#define PIPEOP_H
+#pragma once
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -28,13 +27,9 @@
  * \endcond
  */
 
-struct pipeop
-{
+struct pipeop {
     int pipefd[2];
 };
 
 void
-pipeop_init(struct pipeop *pipeop, int pipefd[2]);
-
-#endif
-
+pipeop_init(struct pipeop* self, int pipefd[2]);

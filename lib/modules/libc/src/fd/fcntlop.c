@@ -22,18 +22,18 @@
 #include <string.h>
 
 void
-fcntlop_init(struct fcntlop* fcntlop, int command,
+fcntlop_init(struct fcntlop* self, int command,
              const union fcntl_arg* value,
              const union fcntl_arg* oldvalue)
 {
-    assert(fcntlop);
+    assert(self);
 
-    fcntlop->command = command;
+    self->command = command;
 
     if (value) {
-        memcpy(&fcntlop->value, value, sizeof(fcntlop->value));
+        memcpy(&self->value, value, sizeof(self->value));
     }
     if (oldvalue) {
-        memcpy(&fcntlop->oldvalue, oldvalue, sizeof(fcntlop->oldvalue));
+        memcpy(&self->oldvalue, oldvalue, sizeof(self->oldvalue));
     }
 }

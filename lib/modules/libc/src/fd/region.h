@@ -17,8 +17,7 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef REGION_H
-#define REGION_H
+#pragma once
 
 #include <sys/types.h>
 
@@ -30,17 +29,13 @@
  * \endcond
  */
 
-struct region
-{
+struct region {
     size_t nbyte;
     off_t  offset;
 };
 
 void
-region_init(struct region *region, size_t nbyte, off_t offset);
+region_init(struct region* self, size_t nbyte, off_t offset);
 
 void
-region_uninit(struct region *region);
-
-#endif
-
+region_uninit(struct region* self);

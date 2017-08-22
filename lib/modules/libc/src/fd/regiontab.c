@@ -25,8 +25,8 @@
 #include "region.h"
 
 unsigned long
-regiontab_append(struct region **tab, size_t *nelems,
-                                      size_t *siz,
+regiontab_append(struct region** tab, size_t* nelems,
+                                      size_t* siz,
                                       size_t nbyte,
                                       off_t offset,
                                       struct picotm_error* error)
@@ -36,8 +36,8 @@ regiontab_append(struct region **tab, size_t *nelems,
 
     if (__builtin_expect(*nelems >= *siz, 0)) {
 
-        void *tmp = picotm_tabresize(*tab, *siz, (*siz)+1, sizeof((*tab)[0]),
-                                     error);
+        void *tmp = picotm_tabresize(*tab, *siz, (*siz) + 1,
+                                     sizeof((*tab)[0]), error);
         if (picotm_error_is_set(error)) {
             return (unsigned long)-1;
         }
@@ -46,7 +46,7 @@ regiontab_append(struct region **tab, size_t *nelems,
         ++(*siz);
     }
 
-    region_init((*tab)+(*nelems), nbyte, offset);
+    region_init((*tab) + (*nelems), nbyte, offset);
 
     return (*nelems)++;
 }
@@ -59,7 +59,7 @@ region_uninit_walk(void* region, struct picotm_error* error)
 }
 
 void
-regiontab_clear(struct region **tab, size_t *nelems)
+regiontab_clear(struct region** tab, size_t* nelems)
 {
     assert(tab);
     assert(nelems);
@@ -75,27 +75,24 @@ regiontab_clear(struct region **tab, size_t *nelems)
 }
 
 static int
-regioncmp(const struct region *lhs, const struct region *rhs)
+regioncmp(const struct region* lhs, const struct region* rhs)
 {
     assert(lhs);
     assert(rhs);
-
-//    return (lhs->off < rhs->offset) ? -1 : (lhs->off > rhs->offset ? 1 : 0)
 
     return ((long long)lhs->offset) - ((long long)rhs->offset);
 }
 
 static int
-regioncmp_compare(const void *lhs, const void *rhs)
+regioncmp_compare(const void* lhs, const void* rhs)
 {
     return regioncmp(lhs, rhs);
 }
 
 int
-regiontab_sort(struct region *tab, size_t nelems)
+regiontab_sort(struct region* tab, size_t nelems)
 {
     qsort(tab, nelems, sizeof(*tab), regioncmp_compare);
 
     return 0;
 }
-

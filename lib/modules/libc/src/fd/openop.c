@@ -21,10 +21,9 @@
 #include <assert.h>
 
 void
-openop_init(struct openop *openop, int unlink)
+openop_init(struct openop* self, bool unlink)
 {
-    assert(openop);
+    assert(self);
 
-    openop->unlink = unlink;
+    self->unlink = unlink;
 }
-

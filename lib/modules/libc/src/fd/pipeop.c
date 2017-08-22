@@ -22,10 +22,9 @@
 #include <string.h>
 
 void
-pipeop_init(struct pipeop *pipeop, int pipefd[2])
+pipeop_init(struct pipeop* self, int pipefd[2])
 {
-    assert(pipeop);
+    assert(self);
 
-    memcpy(pipeop->pipefd, pipefd, sizeof(pipeop->pipefd));
+    memcpy(self->pipefd, pipefd, sizeof(self->pipefd));
 }
-

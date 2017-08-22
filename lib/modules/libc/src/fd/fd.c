@@ -53,85 +53,85 @@ uninit_rwlocks(struct picotm_rwlock* beg, const struct picotm_rwlock* end)
 }
 
 void
-fd_init(struct fd *fd, struct picotm_error* error)
+fd_init(struct fd* self, struct picotm_error* error)
 {
-    assert(fd);
+    assert(self);
 
-    picotm_shared_ref16_obj_init(&fd->ref_obj, error);
+    picotm_shared_ref16_obj_init(&self->ref_obj, error);
     if (picotm_error_is_set(error)) {
         return;
     }
 
-    fd->fildes = -1;
-    fd->state = FD_ST_UNUSED;
+    self->fildes = -1;
+    self->state = FD_STATE_UNUSED;
 
-    init_rwlocks(picotm_arraybeg(fd->rwlock),
-                 picotm_arrayend(fd->rwlock));
+    init_rwlocks(picotm_arraybeg(self->rwlock),
+                 picotm_arrayend(self->rwlock));
 }
 
 void
-fd_uninit(struct fd *fd)
+fd_uninit(struct fd* self)
 {
-    assert(fd);
+    assert(self);
 
-    uninit_rwlocks(picotm_arraybeg(fd->rwlock),
-                   picotm_arrayend(fd->rwlock));
+    uninit_rwlocks(picotm_arraybeg(self->rwlock),
+                   picotm_arrayend(self->rwlock));
 
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    picotm_shared_ref16_obj_uninit(&fd->ref_obj, &error);
+    picotm_shared_ref16_obj_uninit(&self->ref_obj, &error);
     if (picotm_error_is_set(&error)) {
         abort();
     }
 }
 
 void
-fd_try_rdlock_field(struct fd *fd, enum fd_field field,
+fd_try_rdlock_field(struct fd* self, enum fd_field field,
                     struct picotm_rwstate* rwstate,
                     struct picotm_error* error)
 {
-    assert(fd);
+    assert(self);
 
-    picotm_rwstate_try_rdlock(rwstate, fd->rwlock + field, error);
+    picotm_rwstate_try_rdlock(rwstate, self->rwlock + field, error);
     if (picotm_error_is_set(error)) {
         return;
     }
 }
 
 void
-fd_try_wrlock_field(struct fd *fd, enum fd_field field,
+fd_try_wrlock_field(struct fd* self, enum fd_field field,
                     struct picotm_rwstate* rwstate,
                     struct picotm_error* error)
 {
-    assert(fd);
+    assert(self);
 
-    picotm_rwstate_try_wrlock(rwstate, fd->rwlock + field, error);
+    picotm_rwstate_try_wrlock(rwstate, self->rwlock + field, error);
     if (picotm_error_is_set(error)) {
         return;
     }
 }
 
 void
-fd_unlock_field(struct fd *fd, enum fd_field field,
+fd_unlock_field(struct fd* self, enum fd_field field,
                 struct picotm_rwstate* rwstate)
 {
-    assert(fd);
+    assert(self);
 
-    picotm_rwstate_unlock(rwstate, fd->rwlock + field);
+    picotm_rwstate_unlock(rwstate, self->rwlock + field);
 }
 
 int
-fd_is_open_nl(const struct fd *fd)
+fd_is_open_nl(const struct fd* self)
 {
-	assert(fd);
+	assert(self);
 
-	return fd->state == FD_ST_INUSE;
+	return self->state == FD_STATE_INUSE;
 }
 
 void
-fd_validate(struct fd* fd, struct picotm_error* error)
+fd_validate(struct fd* self, struct picotm_error* error)
 {
-    assert(fd);
+    assert(self);
 }
 
 /*
@@ -149,7 +149,7 @@ cond_ref(struct picotm_shared_ref16_obj* ref_obj, void* data,
     struct fd* self = fd_of_picotm_shared_ref16_obj(ref_obj);
     assert(self);
 
-    if (self->state == FD_ST_CLOSING) {
+    if (self->state == FD_STATE_CLOSING) {
         /* fd is about to be closed; don't allow new references */
         picotm_error_set_conflicting(error, NULL);
         return false;
@@ -170,34 +170,34 @@ first_ref(struct picotm_shared_ref16_obj* ref_obj, void* data,
 
     /* set up instance */
     self->fildes = ref_obj_data->fildes;
-    self->state = FD_ST_INUSE;
+    self->state = FD_STATE_INUSE;
 }
 
 void
-fd_ref(struct fd *fd, struct picotm_error* error)
+fd_ref(struct fd* self, struct picotm_error* error)
 {
-    assert(fd);
+    assert(self);
 
     struct ref_obj_data data = {
         -1
     };
 
-    picotm_shared_ref16_obj_up(&fd->ref_obj, &data, cond_ref, NULL, error);
+    picotm_shared_ref16_obj_up(&self->ref_obj, &data, cond_ref, NULL, error);
     if (picotm_error_is_set(error)) {
         return;
     }
 }
 
 void
-fd_ref_or_set_up(struct fd *fd, int fildes, struct picotm_error* error)
+fd_ref_or_set_up(struct fd* self, int fildes, struct picotm_error* error)
 {
-    assert(fd);
+    assert(self);
 
     struct ref_obj_data data = {
         fildes
     };
 
-    picotm_shared_ref16_obj_up(&fd->ref_obj, &data, cond_ref, first_ref, error);
+    picotm_shared_ref16_obj_up(&self->ref_obj, &data, cond_ref, first_ref, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -210,7 +210,7 @@ final_ref(struct picotm_shared_ref16_obj* ref_obj, void* data,
     struct fd* self = fd_of_picotm_shared_ref16_obj(ref_obj);
     assert(self);
 
-    if (self->state == FD_ST_CLOSING) {
+    if (self->state == FD_STATE_CLOSING) {
         /* Close fildes if we released the final reference of
          * a file descriptor that has been closed from within
          * a transaction. */
@@ -223,36 +223,36 @@ final_ref(struct picotm_shared_ref16_obj* ref_obj, void* data,
     }
 
     self->fildes = -1;
-    self->state = FD_ST_UNUSED;
+    self->state = FD_STATE_UNUSED;
 }
 
 void
-fd_unref(struct fd *fd)
+fd_unref(struct fd* self)
 {
-    assert(fd);
+    assert(self);
 
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    picotm_shared_ref16_obj_down(&fd->ref_obj, NULL, NULL, final_ref, &error);
+    picotm_shared_ref16_obj_down(&self->ref_obj, NULL, NULL, final_ref, &error);
     if (picotm_error_is_set(&error)) {
         abort();
     }
 }
 
 void
-fd_close(struct fd *fd)
+fd_close(struct fd* self)
 {
-    assert(fd);
+    assert(self);
 
-    fd->state = FD_ST_CLOSING;
+    self->state = FD_STATE_CLOSING;
 }
 
 int
-fd_setfd(struct fd* fd, int arg, struct picotm_error* error)
+fd_setfd(struct fd* self, int arg, struct picotm_error* error)
 {
-    assert(fd);
+    assert(self);
 
-    int res = TEMP_FAILURE_RETRY(fcntl(fd->fildes, F_SETFD, arg));
+    int res = TEMP_FAILURE_RETRY(fcntl(self->fildes, F_SETFD, arg));
     if (res < 0) {
         picotm_error_set_errno(error, errno);
         return res;
@@ -261,11 +261,11 @@ fd_setfd(struct fd* fd, int arg, struct picotm_error* error)
 }
 
 int
-fd_getfd(struct fd* fd, struct picotm_error* error)
+fd_getfd(struct fd* self, struct picotm_error* error)
 {
-    assert(fd);
+    assert(self);
 
-    int res = TEMP_FAILURE_RETRY(fcntl(fd->fildes, F_GETFD));
+    int res = TEMP_FAILURE_RETRY(fcntl(self->fildes, F_GETFD));
     if (res < 0) {
         picotm_error_set_errno(error, errno);
         return res;

@@ -21,12 +21,11 @@
 #include <assert.h>
 
 void
-seekop_init(struct seekop *seekop, off_t from, off_t offset, int whence)
+seekop_init(struct seekop* self, off_t from, off_t offset, int whence)
 {
-    assert(seekop);
+    assert(self);
 
-    seekop->from = from;
-    seekop->offset = offset;
-    seekop->whence = whence;
+    self->from = from;
+    self->offset = offset;
+    self->whence = whence;
 }
-
