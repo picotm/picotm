@@ -28,10 +28,8 @@
 #include "ioop.h"
 
 unsigned long
-iooptab_append(struct ioop * restrict * restrict tab,
-               size_t * restrict nelems, size_t * restrict siz,
-               size_t nbyte, off_t offset, size_t bufoff,
-               struct picotm_error* error)
+iooptab_append(struct ioop** tab, size_t* nelems, size_t* siz, size_t nbyte,
+               off_t offset, size_t bufoff, struct picotm_error* error)
 {
     assert(tab);
     assert(nelems);
@@ -54,14 +52,14 @@ iooptab_append(struct ioop * restrict * restrict tab,
 }
 
 static size_t
-ioop_uninit_walk(void *ioop, struct picotm_error* error)
+ioop_uninit_walk(void* ioop, struct picotm_error* error)
 {
     ioop_uninit(ioop);
     return 1;
 }
 
 void
-iooptab_clear(struct ioop * restrict * restrict tab, size_t * restrict nelems)
+iooptab_clear(struct ioop** tab, size_t* nelems)
 {
     assert(tab);
     assert(nelems);
@@ -77,56 +75,48 @@ iooptab_clear(struct ioop * restrict * restrict tab, size_t * restrict nelems)
 }
 
 ssize_t
-iooptab_read(struct ioop * restrict tab, size_t nelems,
-                                         void * restrict buf,
-                                         size_t nbyte,
-                                         off_t offset,
-                                         void * restrict iobuf)
+iooptab_read(struct ioop* tab, size_t nelems, void* buf, size_t nbyte,
+             off_t offset, void* iobuf)
 {
-    struct ioop *ioop;
     ssize_t len = 0;
 
-    for (ioop = tab; ioop < tab+nelems; ++ioop) {
+    for (struct ioop* ioop = tab; ioop < tab+nelems; ++ioop) {
         len = llmax(len, ioop_read(ioop, buf, nbyte, offset, iobuf));
     }
 
     return len;
 }
 
-int
-ioopcmp(const struct ioop *lhs, const struct ioop *rhs)
+static int
+ioopcmp(const struct ioop* lhs, const struct ioop* rhs)
 {
     assert(lhs);
     assert(rhs);
 
-//    return (lhs->off < rhs->offset) ? -1 : (lhs->off > rhs->offset ? 1 : 0)
-
     return ((long long)lhs->off) - ((long long)rhs->off);
 }
 
-int
-ioopcmp_compare(const void *lhs, const void *rhs)
+static int
+ioopcmp_compare(const void* lhs, const void* rhs)
 {
     return ioopcmp(lhs, rhs);
 }
 
 void
-iooptab_sort(const struct ioop * restrict tab, size_t nelems,
-                   struct ioop * restrict * restrict sorted,
-                   struct picotm_error* error)
+iooptab_sort(const struct ioop* tab, size_t nelems, struct ioop** sorted,
+             struct picotm_error* error)
 {
     assert(tab);
     assert(sorted);
 
-    void *tmp = realloc(*sorted, nelems*sizeof(**sorted));
+    void* tmp = realloc(*sorted, nelems * sizeof(**sorted));
     if (!tmp) {
         picotm_error_set_errno(error, errno);
         return;
     }
     *sorted = tmp;
 
-    memcpy(*sorted, tab, nelems*sizeof(**sorted));
+    memcpy(*sorted, tab, nelems * sizeof(**sorted));
 
     qsort(*sorted, nelems, sizeof(**sorted), ioopcmp_compare);
 }
-

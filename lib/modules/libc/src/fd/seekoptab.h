@@ -17,8 +17,7 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef SEEKOPTAB_H
-#define SEEKOPTAB_H
+#pragma once
 
 #include <sys/types.h>
 
@@ -34,12 +33,9 @@ struct picotm_error;
 struct seekop;
 
 unsigned long
-seekoptab_append(struct seekop **tab, size_t *nelems,
+seekoptab_append(struct seekop** tab, size_t* nelems,
                  off_t from, off_t offset, int whence,
                  struct picotm_error* error);
 
 void
-seekoptab_clear(struct seekop **tab, size_t *nelems);
-
-#endif
-
+seekoptab_clear(struct seekop** tab, size_t* nelems);

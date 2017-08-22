@@ -17,8 +17,9 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef OPENOP_H
-#define OPENOP_H
+#pragma once
+
+#include <stdbool.h>
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -28,13 +29,9 @@
  * \endcond
  */
 
-struct openop
-{
-    unsigned char unlink;
+struct openop {
+    bool unlink;
 };
 
 void
-openop_init(struct openop *openop, int unlink);
-
-#endif
-
+openop_init(struct openop* self, bool unlink);

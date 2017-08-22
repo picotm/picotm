@@ -21,19 +21,18 @@
 #include <assert.h>
 
 void
-region_init(struct region *region, size_t nbyte, off_t offset)
+region_init(struct region* self, size_t nbyte, off_t offset)
 {
-    assert(region);
+    assert(self);
 
-    region->nbyte = nbyte;
-    region->offset = offset;
+    self->nbyte = nbyte;
+    self->offset = offset;
 }
 
 void
-region_uninit(struct region *region)
+region_uninit(struct region* self)
 {
-    assert(region);
+    assert(self);
 
     return;
 }
-

@@ -17,8 +17,7 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef IOOP_H
-#define IOOP_H
+#pragma once
 
 #include <sys/types.h>
 
@@ -30,25 +29,23 @@
  * \endcond
  */
 
-struct ioop
-{
+struct ioop {
     off_t  off;
     size_t nbyte;
     size_t bufoff;
 };
 
 void
-ioop_init(struct ioop *ioop, off_t offset, size_t nbyte, size_t bufoff);
+ioop_init(struct ioop* self, off_t offset, size_t nbyte, size_t bufoff);
 
 void
-ioop_uninit(struct ioop *ioop);
+ioop_uninit(struct ioop* self);
 
-/* \brief Read an ioop into a buffer.
- * \param iobuf The ioop data buffer, can be NULL if no data has been written.
- * \return The number of bytes read.
+/**
+ * Reads an ioop into a buffer.
+ * \param   iobuf   The ioop data buffer, can be NULL if no data has been written.
+ * \returns The number of bytes read.
  */
 ssize_t
-ioop_read(const struct ioop *ioop, void *buf, size_t nbyte, off_t offset, const void *iobuf);
-
-#endif
-
+ioop_read(const struct ioop* self, void* buf, size_t nbyte, off_t offset,
+          const void* iobuf);

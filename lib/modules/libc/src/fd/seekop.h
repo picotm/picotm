@@ -17,8 +17,7 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef SEEKOP_H
-#define SEEKOP_H
+#pragma once
 
 #include <sys/types.h>
 
@@ -30,15 +29,11 @@
  * \endcond
  */
 
-struct seekop
-{
+struct seekop {
     off_t from;
     off_t offset;
     int   whence;
 };
 
 void
-seekop_init(struct seekop *seekop, off_t from, off_t offset, int whence);
-
-#endif
-
+seekop_init(struct seekop* self, off_t from, off_t offset, int whence);

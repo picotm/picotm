@@ -17,8 +17,7 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef FCNTLOPTAB_H
-#define FCNTLOPTAB_H
+#pragma once
 
 #include <stddef.h>
 
@@ -42,7 +41,4 @@ fcntloptab_append(struct fcntlop** tab, size_t* nelems, int command,
                   struct picotm_error* error);
 
 void
-fcntloptab_clear(struct fcntlop **tab, size_t *nelems);
-
-#endif
-
+fcntloptab_clear(struct fcntlop** tab, size_t* nelems);

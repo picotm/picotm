@@ -25,26 +25,26 @@
 #include "openop.h"
 
 unsigned long
-openoptab_append(struct openop **tab, size_t *nelems, int unlink,
+openoptab_append(struct openop** tab, size_t* nelems, bool unlink,
                  struct picotm_error* error)
 {
     assert(tab);
     assert(nelems);
 
-    void *tmp = picotm_tabresize(*tab, *nelems, (*nelems)+1,
+    void* tmp = picotm_tabresize(*tab, *nelems, (*nelems) + 1,
                                  sizeof((*tab)[0]), error);
     if (picotm_error_is_set(error)) {
         return (unsigned long)-1;
     }
     *tab = tmp;
 
-    openop_init((*tab)+(*nelems), unlink);
+    openop_init((*tab) + (*nelems), unlink);
 
     return (*nelems)++;
 }
 
 void
-openoptab_clear(struct openop **tab, size_t *nelems)
+openoptab_clear(struct openop** tab, size_t* nelems)
 {
     assert(tab);
     assert(nelems);
@@ -53,4 +53,3 @@ openoptab_clear(struct openop **tab, size_t *nelems)
     *tab = NULL;
     *nelems = 0;
 }
-

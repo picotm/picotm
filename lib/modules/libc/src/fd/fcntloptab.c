@@ -21,12 +21,11 @@
 #include <assert.h>
 #include <picotm/picotm-error.h>
 #include <picotm/picotm-lib-tab.h>
-#include <string.h>
 #include "fcntlop.h"
 
 unsigned long
 fcntloptab_append(struct fcntlop** tab, size_t* nelems, int command,
-                  const union fcntl_arg*value,
+                  const union fcntl_arg* value,
                   const union fcntl_arg* oldvalue,
                   struct picotm_error* error)
 {
@@ -46,7 +45,7 @@ fcntloptab_append(struct fcntlop** tab, size_t* nelems, int command,
 }
 
 void
-fcntloptab_clear(struct fcntlop **tab, size_t *nelems)
+fcntloptab_clear(struct fcntlop** tab, size_t* nelems)
 {
     assert(tab);
     assert(nelems);

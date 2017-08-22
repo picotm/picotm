@@ -24,26 +24,26 @@
 #include "pipeop.h"
 
 unsigned long
-pipeoptab_append(struct pipeop **tab, size_t *nelems, int pipefd[2],
+pipeoptab_append(struct pipeop** tab, size_t* nelems, int pipefd[2],
                  struct picotm_error* error)
 {
     assert(tab);
     assert(nelems);
 
-    void *tmp = picotm_tabresize(*tab, *nelems, (*nelems)+1,
+    void* tmp = picotm_tabresize(*tab, *nelems, (*nelems) + 1,
                                  sizeof((*tab)[0]), error);
     if (picotm_error_is_set(error)) {
         return (unsigned long)-1;
     }
     *tab = tmp;
 
-    pipeop_init((*tab)+(*nelems), pipefd);
+    pipeop_init((*tab) + (*nelems), pipefd);
 
     return (*nelems)++;
 }
 
 void
-pipeoptab_clear(struct pipeop **tab, size_t *nelems)
+pipeoptab_clear(struct pipeop** tab, size_t* nelems)
 {
     assert(tab);
     assert(nelems);
@@ -52,4 +52,3 @@ pipeoptab_clear(struct pipeop **tab, size_t *nelems)
     *tab = NULL;
     *nelems = 0;
 }
-

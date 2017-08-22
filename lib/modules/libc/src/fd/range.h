@@ -17,8 +17,7 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef RANGE_H
-#define RANGE_H
+#pragma once
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -54,6 +53,3 @@ lmin(long a, long b);
 
 long long
 llmin(long long a, long long b);
-
-#endif
-

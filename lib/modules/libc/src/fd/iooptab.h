@@ -17,8 +17,7 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef IOOPTAB_H_
-#define IOOPTAB_H_
+#pragma once
 
 #include <sys/types.h>
 
@@ -34,25 +33,17 @@ struct ioop;
 struct picotm_error;
 
 unsigned long
-iooptab_append(struct ioop * restrict * restrict tab,
-               size_t * restrict nelems, size_t * restrict siz,
+iooptab_append(struct ioop** restrict tab, size_t* nelems, size_t* siz,
                size_t nbyte, off_t offset, size_t bufoff,
                struct picotm_error* error);
 
 void
-iooptab_clear(struct ioop * restrict * restrict tab, size_t * restrict nelems);
+iooptab_clear(struct ioop** tab, size_t* nelems);
 
 ssize_t
-iooptab_read(struct ioop * restrict tab, size_t nelems,
-                                         void * restrict buf,
-                                         size_t nbyte,
-                                         off_t offset,
-                                         void * restrict iobuf);
+iooptab_read(struct ioop* tab, size_t nelems, void* buf, size_t nbyte,
+             off_t offset, void* iobuf);
 
 void
-iooptab_sort(const struct ioop * restrict tab, size_t nelems,
-                   struct ioop * restrict * restrict sorted,
+iooptab_sort(const struct ioop* tab, size_t nelems, struct ioop** sorted,
              struct picotm_error* error);
-
-#endif
-

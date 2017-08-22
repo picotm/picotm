@@ -17,8 +17,7 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef REGIONTAB_H
-#define REGIONTAB_H
+#pragma once
 
 #include <sys/types.h>
 
@@ -34,17 +33,14 @@ struct picotm_error;
 struct region;
 
 unsigned long
-regiontab_append(struct region **tab, size_t *nelems,
-                                      size_t *siz,
+regiontab_append(struct region** tab, size_t* nelems,
+                                      size_t* siz,
                                       size_t nbyte,
                                       off_t offset,
                                       struct picotm_error* error);
 
 void
-regiontab_clear(struct region **tab, size_t *nelems);
+regiontab_clear(struct region** tab, size_t* nelems);
 
 int
-regiontab_sort(struct region *tab, size_t nelems);
-
-#endif
-
+regiontab_sort(struct region* tab, size_t nelems);

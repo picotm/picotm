@@ -24,27 +24,27 @@
 #include "seekop.h"
 
 unsigned long
-seekoptab_append(struct seekop **tab, size_t *nelems,
+seekoptab_append(struct seekop** tab, size_t* nelems,
                  off_t from, off_t offset, int whence,
                  struct picotm_error* error)
 {
     assert(tab);
     assert(nelems);
 
-    void *tmp = picotm_tabresize(*tab, *nelems, (*nelems)+1,
+    void* tmp = picotm_tabresize(*tab, *nelems, (*nelems) + 1,
                                  sizeof((*tab)[0]), error);
     if (picotm_error_is_set(error)) {
         return (unsigned long)-1;
     }
     *tab = tmp;
 
-    seekop_init((*tab)+(*nelems), from, offset, whence);
+    seekop_init((*tab) + (*nelems), from, offset, whence);
 
     return (*nelems)++;
 }
 
 void
-seekoptab_clear(struct seekop **tab, size_t *nelems)
+seekoptab_clear(struct seekop** tab, size_t* nelems)
 {
     assert(tab);
     assert(nelems);
@@ -53,4 +53,3 @@ seekoptab_clear(struct seekop **tab, size_t *nelems)
     *tab = NULL;
     *nelems = 0;
 }
-
