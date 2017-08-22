@@ -22,7 +22,7 @@
 #include <picotm/picotm-module.h>
 #include <picotm/picotm-tm.h>
 #include "error/module.h"
-#include "fd/module.h"
+#include "fildes/module.h"
 #include "picotm/sys/socket-tm.h"
 
 PICOTM_EXPORT

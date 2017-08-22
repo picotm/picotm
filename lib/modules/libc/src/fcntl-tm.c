@@ -24,7 +24,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "error/module.h"
-#include "fd/module.h"
+#include "fildes/module.h"
 
 PICOTM_EXPORT
 int

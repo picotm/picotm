@@ -23,7 +23,7 @@
 #include <picotm/picotm-module.h>
 #include "cwd/module.h"
 #include "error/module.h"
-#include "fd/module.h"
+#include "fildes/module.h"
 
 static bool
 perform_recovery(int errno_hint)
