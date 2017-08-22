@@ -192,15 +192,10 @@ regfile_tx_append_to_readset(struct regfile_tx* self, size_t nbyte, off_t offset
 {
     assert(self);
 
-    off_t bufoffset = append_to_iobuffer(self, nbyte, buf, error);
-    if (picotm_error_is_set(error)) {
-        return -1;
-    }
-
     unsigned long res = iooptab_append(&self->rdtab,
                                        &self->rdtablen,
                                        &self->rdtabsiz,
-                                       nbyte, offset, bufoffset,
+                                       nbyte, offset, 0,
                                        error);
     if (picotm_error_is_set(error)) {
         return -1;
