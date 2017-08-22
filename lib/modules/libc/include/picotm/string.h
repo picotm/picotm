@@ -211,13 +211,33 @@ strdup_tx(const char* s);
 
 PICOTM_NOTHROW
 /**
+ * A transaction-safe implementation of [strerror_r()][gnu::strerror_r].
+ *
+ * \warning This is an internal interface. Call strerror_r_tx() instead.
+ *
+ * [gnu::strerror_r]:
+ *  https://www.gnu.org/software/libc/manual/html_node/Error-Messages.html#index-strerror_005fr
+ */
+char*
+__strerror_r_gnu_tx(int errnum, char* buf, size_t buflen);
+
+PICOTM_NOTHROW
+/**
  * A transaction-safe implementation of [strerror_r()][posix::strerror_r].
+ *
+ * \warning This is an internal interface. Call strerror_r_tx() instead.
  *
  * [posix::strerror_r]:
  *  http://pubs.opengroup.org/onlinepubs/9699919799/functions/strerror_r.html
  */
 int
-strerror_r_tx(int errnum, char* buf, size_t buflen);
+__strerror_r_posix_tx(int errnum, char* buf, size_t buflen);
+
+#if (_POSIX_C_SOURCE >= 200112L) && !_GNU_SOURCE
+#define strerror_r_tx   __strerror_r_posix_tx
+#else
+#define strerror_r_tx   __strerror_r_gnu_tx
+#endif
 
 PICOTM_NOTHROW
 /**

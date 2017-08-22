@@ -158,32 +158,43 @@ strdup_tm(const char* s)
 }
 
 PICOTM_EXPORT
-int
-strerror_r_tm(int errnum, char* buf, size_t buflen)
+char*
+__strerror_r_gnu_tm(int errnum, char* buf, size_t buflen)
 {
     error_module_save_errno();
 
-    int res;
-
 #if (_POSIX_C_SOURCE >= 200112L) && !_GNU_SOURCE
+    int res;
     do {
         res = strerror_r(errnum, buf, buflen);
         if (res < 0) {
+            /* glibc 2.12 and earlier return the error code in errno. */
             picotm_recover_from_errno(errno);
+        } else if (res > 0) {
+            /* glibc 2.13 and later return the error code as result. */
+            picotm_recover_from_errno(res);
         }
-    } while (res < 0);
+    } while (res); // error if res != 0 handled older and newer glibc
+    char* str = buf;
 #else
-    const char* str;
+    char* str;
     do {
         str = strerror_r(errnum, buf, buflen);
         if (!str) {
             picotm_recover_from_errno(errno);
         }
     } while (!str);
-    res = 0;
 #endif
 
-    return res;
+    return str;
+}
+
+PICOTM_EXPORT
+int
+__strerror_r_posix_tm(int errnum, char* buf, size_t buflen)
+{
+    __strerror_r_gnu_tm(errnum, buf, buflen);
+    return 0;
 }
 
 PICOTM_EXPORT

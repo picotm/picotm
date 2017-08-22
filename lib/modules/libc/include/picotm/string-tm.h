@@ -152,10 +152,27 @@ strdup_tm(const char* s);
 
 PICOTM_NOTHROW
 /**
- * Variant of strerror_r_tx() that operates on transactional memory.
+ * Variant of __strerror_r_gnu_tx() that operates on transactional memory.
+ *
+ * \warning This is an internal interface. Call strerror_r_tm() instead.
+ */
+char*
+__strerror_r_gnu_tm(int errnum, char* buf, size_t buflen);
+
+PICOTM_NOTHROW
+/**
+ * Variant of __strerror_r_posix_tx() that operates on transactional memory.
+ *
+ * \warning This is an internal interface. Call strerror_r_tm() instead.
  */
 int
-strerror_r_tm(int errnum, char* buf, size_t buflen);
+__strerror_r_posix_tm(int errnum, char* buf, size_t buflen);
+
+#if (_POSIX_C_SOURCE >= 200112L) && !_GNU_SOURCE
+#define strerror_r_tm   __strerror_r_posix_tm
+#else
+#define strerror_r_tm   __strerror_r_gnu_tm
+#endif
 
 PICOTM_NOTHROW
 /**
