@@ -61,7 +61,7 @@ mkstemp_tm(char* template)
     int res;
 
     do {
-        res = fd_module_mkstemp(template);
+        res = fildes_module_mkstemp(template);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }

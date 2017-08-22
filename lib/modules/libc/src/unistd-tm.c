@@ -81,7 +81,7 @@ link_tm(const char* path1, const char* path2)
     int res;
 
     do {
-        res = fd_module_link(path1, path2);
+        res = fildes_module_link(path1, path2);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }
@@ -99,7 +99,7 @@ pipe_tm(int fildes[2])
     int res;
 
     do {
-        res = fd_module_pipe(fildes);
+        res = fildes_module_pipe(fildes);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }
@@ -117,7 +117,7 @@ pread_tm(int fildes, void* buf, size_t nbyte, off_t offset)
     ssize_t res;
 
     do {
-        res = fd_module_pread(fildes, buf, nbyte, offset);
+        res = fildes_module_pread(fildes, buf, nbyte, offset);
         if (res < 0) {
             if (perform_recovery(errno)) {
                 picotm_recover_from_errno(errno);
@@ -139,7 +139,7 @@ pwrite_tm(int fildes, const void* buf, size_t nbyte, off_t offset)
     ssize_t res;
 
     do {
-        res = fd_module_pwrite(fildes, buf, nbyte, offset);
+        res = fildes_module_pwrite(fildes, buf, nbyte, offset);
         if (res < 0) {
             if (perform_recovery(errno)) {
                 picotm_recover_from_errno(errno);
@@ -161,7 +161,7 @@ read_tm(int fildes, void* buf, size_t nbyte)
     ssize_t res;
 
     do {
-        res = fd_module_read(fildes, buf, nbyte);
+        res = fildes_module_read(fildes, buf, nbyte);
         if (res < 0) {
             if (perform_recovery(errno)) {
                 picotm_recover_from_errno(errno);
@@ -183,7 +183,7 @@ unlink_tm(const char* path)
     int res;
 
     do {
-        res = fd_module_unlink(path);
+        res = fildes_module_unlink(path);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }
@@ -201,7 +201,7 @@ write_tm(int fildes, const void* buf, size_t nbyte)
     int res;
 
     do {
-        res = fd_module_write(fildes, buf, nbyte);
+        res = fildes_module_write(fildes, buf, nbyte);
         if (res < 0) {
             if (perform_recovery(errno)) {
                 picotm_recover_from_errno(errno);

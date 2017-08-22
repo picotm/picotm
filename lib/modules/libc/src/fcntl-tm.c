@@ -45,11 +45,11 @@ fcntl_tm(int fildes, int cmd, ...)
         switch (cmd) {
             case F_DUPFD:
                 /* Handle like dup() */
-                res = fd_module_dup_internal(fildes, false);
+                res = fildes_module_dup_internal(fildes, false);
                 break;
             case F_DUPFD_CLOEXEC:
                 /* Handle like dup() with CLOEXEC */
-                res = fd_module_dup_internal(fildes, true);
+                res = fildes_module_dup_internal(fildes, true);
                 break;
             case F_SETFD:
             case F_SETFL:
@@ -60,7 +60,7 @@ fcntl_tm(int fildes, int cmd, ...)
                 val.arg0 = va_arg(arg, int);
                 va_end(arg);
 
-                res = fd_module_fcntl(fildes, cmd, &val);
+                res = fildes_module_fcntl(fildes, cmd, &val);
                 break;
             }
             case F_GETLK:
@@ -75,11 +75,11 @@ fcntl_tm(int fildes, int cmd, ...)
 
                 memcpy(&val.arg1, f, sizeof(val.arg1));
 
-                res = fd_module_fcntl(fildes, cmd, &val);
+                res = fildes_module_fcntl(fildes, cmd, &val);
                 break;
             }
             default:
-                res = fd_module_fcntl(fildes, cmd, NULL);
+                res = fildes_module_fcntl(fildes, cmd, NULL);
                 break;
         }
         if (res < 0) {
@@ -110,7 +110,7 @@ open_tm(const char* path, int oflag, ...)
     int res;
 
     do {
-        res = fd_module_open(path, oflag, mode);
+        res = fildes_module_open(path, oflag, mode);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }

@@ -159,7 +159,8 @@ get_non_null_fildes_tx(void)
 }
 
 int
-fd_module_accept(int sockfd, struct sockaddr* address, socklen_t* address_len)
+fildes_module_accept(int sockfd, struct sockaddr* address,
+                     socklen_t* address_len)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
@@ -179,8 +180,8 @@ fd_module_accept(int sockfd, struct sockaddr* address, socklen_t* address_len)
 }
 
 int
-fd_module_bind(int sockfd, const struct sockaddr* address,
-                socklen_t address_len)
+fildes_module_bind(int sockfd, const struct sockaddr* address,
+                   socklen_t address_len)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
@@ -199,7 +200,7 @@ fd_module_bind(int sockfd, const struct sockaddr* address,
 }
 
 int
-fd_module_chmod(const char* path, mode_t mode)
+fildes_module_chmod(const char* path, mode_t mode)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
@@ -217,7 +218,7 @@ fd_module_chmod(const char* path, mode_t mode)
 }
 
 int
-fd_module_close(int fildes)
+fildes_module_close(int fildes)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
@@ -237,8 +238,8 @@ fd_module_close(int fildes)
 }
 
 int
-fd_module_connect(int sockfd, const struct sockaddr* serv_addr,
-                  socklen_t addr_len)
+fildes_module_connect(int sockfd, const struct sockaddr* serv_addr,
+                      socklen_t addr_len)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
@@ -258,7 +259,7 @@ fd_module_connect(int sockfd, const struct sockaddr* serv_addr,
 }
 
 int
-fd_module_dup_internal(int fildes, int cloexec)
+fildes_module_dup_internal(int fildes, int cloexec)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
@@ -277,13 +278,13 @@ fd_module_dup_internal(int fildes, int cloexec)
 }
 
 int
-fd_module_dup(int fildes)
+fildes_module_dup(int fildes)
 {
-    return fd_module_dup_internal(fildes, 0);
+    return fildes_module_dup_internal(fildes, 0);
 }
 
 int
-fd_module_fchdir(int fildes)
+fildes_module_fchdir(int fildes)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
@@ -301,7 +302,7 @@ fd_module_fchdir(int fildes)
 }
 
 int
-fd_module_fchmod(int fildes, mode_t mode)
+fildes_module_fchmod(int fildes, mode_t mode)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
@@ -321,7 +322,7 @@ fd_module_fchmod(int fildes, mode_t mode)
 }
 
 int
-fd_module_fcntl(int fildes, int cmd, union fcntl_arg* arg)
+fildes_module_fcntl(int fildes, int cmd, union fcntl_arg* arg)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
@@ -340,7 +341,7 @@ fd_module_fcntl(int fildes, int cmd, union fcntl_arg* arg)
 }
 
 int
-fd_module_fstat(int fildes, struct stat* buf)
+fildes_module_fstat(int fildes, struct stat* buf)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
@@ -359,7 +360,7 @@ fd_module_fstat(int fildes, struct stat* buf)
 }
 
 int
-fd_module_fsync(int fildes)
+fildes_module_fsync(int fildes)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
@@ -378,7 +379,7 @@ fd_module_fsync(int fildes)
 }
 
 int
-fd_module_link(const char* path1, const char* path2)
+fildes_module_link(const char* path1, const char* path2)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
@@ -396,7 +397,7 @@ fd_module_link(const char* path1, const char* path2)
 }
 
 int
-fd_module_listen(int sockfd, int backlog)
+fildes_module_listen(int sockfd, int backlog)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
@@ -415,7 +416,7 @@ fd_module_listen(int sockfd, int backlog)
 }
 
 off_t
-fd_module_lseek(int fildes, off_t offset, int whence)
+fildes_module_lseek(int fildes, off_t offset, int whence)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
@@ -434,7 +435,7 @@ fd_module_lseek(int fildes, off_t offset, int whence)
 }
 
 int
-fd_module_lstat(const char* path, struct stat* buf)
+fildes_module_lstat(const char* path, struct stat* buf)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
@@ -452,7 +453,7 @@ fd_module_lstat(const char* path, struct stat* buf)
 }
 
 int
-fd_module_mkdir(const char* path, mode_t mode)
+fildes_module_mkdir(const char* path, mode_t mode)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
@@ -470,7 +471,7 @@ fd_module_mkdir(const char* path, mode_t mode)
 }
 
 int
-fd_module_mkfifo(const char* path, mode_t mode)
+fildes_module_mkfifo(const char* path, mode_t mode)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
@@ -488,7 +489,7 @@ fd_module_mkfifo(const char* path, mode_t mode)
 }
 
 int
-fd_module_mknod(const char* path, mode_t mode, dev_t dev)
+fildes_module_mknod(const char* path, mode_t mode, dev_t dev)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
@@ -506,7 +507,7 @@ fd_module_mknod(const char* path, mode_t mode, dev_t dev)
 }
 
 int
-fd_module_mkstemp(char* template)
+fildes_module_mkstemp(char* template)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
@@ -524,7 +525,7 @@ fd_module_mkstemp(char* template)
 }
 
 int
-fd_module_open(const char* path, int oflag, mode_t mode)
+fildes_module_open(const char* path, int oflag, mode_t mode)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
@@ -543,7 +544,7 @@ fd_module_open(const char* path, int oflag, mode_t mode)
 }
 
 int
-fd_module_pipe(int pipefd[2])
+fildes_module_pipe(int pipefd[2])
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
@@ -561,7 +562,7 @@ fd_module_pipe(int pipefd[2])
 }
 
 ssize_t
-fd_module_pread(int fildes, void* buf, size_t nbyte, off_t off)
+fildes_module_pread(int fildes, void* buf, size_t nbyte, off_t off)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
@@ -580,7 +581,7 @@ fd_module_pread(int fildes, void* buf, size_t nbyte, off_t off)
 }
 
 ssize_t
-fd_module_pwrite(int fildes, const void* buf, size_t nbyte, off_t off)
+fildes_module_pwrite(int fildes, const void* buf, size_t nbyte, off_t off)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
@@ -600,7 +601,7 @@ fd_module_pwrite(int fildes, const void* buf, size_t nbyte, off_t off)
 }
 
 ssize_t
-fd_module_read(int fildes, void* buf, size_t nbyte)
+fildes_module_read(int fildes, void* buf, size_t nbyte)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
@@ -619,7 +620,7 @@ fd_module_read(int fildes, void* buf, size_t nbyte)
 }
 
 ssize_t
-fd_module_recv(int sockfd, void* buffer, size_t length, int flags)
+fildes_module_recv(int sockfd, void* buffer, size_t length, int flags)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
@@ -639,8 +640,8 @@ fd_module_recv(int sockfd, void* buffer, size_t length, int flags)
 }
 
 int
-fd_module_select(int nfds, fd_set* readfds, fd_set* writefds,
-                 fd_set* errorfds, struct timeval* timeout)
+fildes_module_select(int nfds, fd_set* readfds, fd_set* writefds,
+                     fd_set* errorfds, struct timeval* timeout)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
@@ -660,7 +661,7 @@ fd_module_select(int nfds, fd_set* readfds, fd_set* writefds,
 }
 
 ssize_t
-fd_module_send(int fildes, const void* buffer, size_t length, int flags)
+fildes_module_send(int fildes, const void* buffer, size_t length, int flags)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
@@ -680,7 +681,7 @@ fd_module_send(int fildes, const void* buffer, size_t length, int flags)
 }
 
 int
-fd_module_shutdown(int sockfd, int how)
+fildes_module_shutdown(int sockfd, int how)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
@@ -700,7 +701,7 @@ fd_module_shutdown(int sockfd, int how)
 }
 
 int
-fd_module_socket(int domain, int type, int protocol)
+fildes_module_socket(int domain, int type, int protocol)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
@@ -719,7 +720,7 @@ fd_module_socket(int domain, int type, int protocol)
 }
 
 int
-fd_module_stat(const char* path, struct stat* buf)
+fildes_module_stat(const char* path, struct stat* buf)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
@@ -737,7 +738,7 @@ fd_module_stat(const char* path, struct stat* buf)
 }
 
 void
-fd_module_sync()
+fildes_module_sync()
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
@@ -755,7 +756,7 @@ fd_module_sync()
 }
 
 int
-fd_module_unlink(const char* path)
+fildes_module_unlink(const char* path)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
@@ -773,7 +774,7 @@ fd_module_unlink(const char* path)
 }
 
 ssize_t
-fd_module_write(int fildes, const void* buf, size_t nbyte)
+fildes_module_write(int fildes, const void* buf, size_t nbyte)
 {
     struct fildes_tx* fildes_tx = get_non_null_fildes_tx();
 
