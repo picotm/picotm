@@ -23,7 +23,7 @@
 #include <stdlib.h>
 #include "fildes_tx.h"
 
-struct fd_module {
+struct fildes_module {
     bool          is_initialized;
     struct fildes_tx tx;
 };
@@ -31,7 +31,7 @@ struct fd_module {
 static void
 lock_cb(void* data, struct picotm_error* error)
 {
-    struct fd_module* module = data;
+    struct fildes_module* module = data;
 
     fildes_tx_lock(&module->tx, error);
 }
@@ -39,7 +39,7 @@ lock_cb(void* data, struct picotm_error* error)
 static void
 unlock_cb(void* data, struct picotm_error* error)
 {
-    struct fd_module* module = data;
+    struct fildes_module* module = data;
 
     fildes_tx_unlock(&module->tx);
 }
@@ -47,7 +47,7 @@ unlock_cb(void* data, struct picotm_error* error)
 static bool
 is_valid_cb(void* data, int noundo, struct picotm_error* error)
 {
-    struct fd_module* module = data;
+    struct fildes_module* module = data;
 
     fildes_tx_validate(&module->tx, noundo, error);
     if (picotm_error_is_set(error)) {
@@ -60,7 +60,7 @@ static void
 apply_event_cb(const struct picotm_event* event, void* data,
                struct picotm_error* error)
 {
-    struct fd_module* module = data;
+    struct fildes_module* module = data;
 
     fildes_tx_apply_event(&module->tx, event, error);
 }
@@ -69,7 +69,7 @@ static void
 undo_event_cb(const struct picotm_event* event, void *data,
               struct picotm_error* error)
 {
-    struct fd_module* module = data;
+    struct fildes_module* module = data;
 
     fildes_tx_undo_event(&module->tx, event, error);
 }
@@ -77,7 +77,7 @@ undo_event_cb(const struct picotm_event* event, void *data,
 static void
 update_cc_cb(void* data, int noundo, struct picotm_error* error)
 {
-    struct fd_module* module = data;
+    struct fildes_module* module = data;
 
     fildes_tx_update_cc(&module->tx, noundo, error);
 }
@@ -85,7 +85,7 @@ update_cc_cb(void* data, int noundo, struct picotm_error* error)
 static void
 clear_cc_cb(void* data, int noundo, struct picotm_error* error)
 {
-    struct fd_module* module = data;
+    struct fildes_module* module = data;
 
     fildes_tx_clear_cc(&module->tx, noundo, error);
 }
@@ -93,7 +93,7 @@ clear_cc_cb(void* data, int noundo, struct picotm_error* error)
 static void
 finish_cb(void* data, struct picotm_error* error)
 {
-    struct fd_module* module = data;
+    struct fildes_module* module = data;
 
     fildes_tx_finish(&module->tx, error);
 }
@@ -101,7 +101,7 @@ finish_cb(void* data, struct picotm_error* error)
 static void
 uninit_cb(void* data)
 {
-    struct fd_module* module = data;
+    struct fildes_module* module = data;
 
     fildes_tx_uninit(&module->tx);
     module->is_initialized = false;
@@ -110,7 +110,7 @@ uninit_cb(void* data)
 static struct fildes_tx*
 get_fildes_tx(bool initialize, struct picotm_error* error)
 {
-    static __thread struct fd_module t_module;
+    static __thread struct fildes_module t_module;
 
     if (t_module.is_initialized) {
         return &t_module.tx;
