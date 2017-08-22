@@ -61,7 +61,7 @@ listen_tx(int socket, int backlog)
     int res;
 
     do {
-        res = fd_module_listen(socket, backlog);
+        res = fildes_module_listen(socket, backlog);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }
@@ -87,7 +87,7 @@ shutdown_tx(int socket, int how)
     int res;
 
     do {
-        res = fd_module_shutdown(socket, how);
+        res = fildes_module_shutdown(socket, how);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }
@@ -105,7 +105,7 @@ socket_tx(int domain, int type, int protocol)
     int res;
 
     do {
-        res = fd_module_socket(domain, type, protocol);
+        res = fildes_module_socket(domain, type, protocol);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }

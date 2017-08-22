@@ -51,7 +51,7 @@ close_tx(int fildes)
     int res;
 
     do {
-        res = fd_module_close(fildes);
+        res = fildes_module_close(fildes);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }
@@ -69,7 +69,7 @@ dup_tx(int fildes)
     int res;
 
     do {
-        res = fd_module_dup(fildes);
+        res = fildes_module_dup(fildes);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }
@@ -106,7 +106,7 @@ fchdir_tx(int fildes)
     int res;
 
     do {
-        res = fd_module_fchdir(fildes);
+        res = fildes_module_fchdir(fildes);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }
@@ -124,7 +124,7 @@ fsync_tx(int fildes)
     int res;
 
     do {
-        res = fd_module_fsync(fildes);
+        res = fildes_module_fsync(fildes);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }
@@ -159,7 +159,7 @@ lseek_tx(int fildes, off_t offset, int whence)
     off_t res;
 
     do {
-        res = fd_module_lseek(fildes, offset, whence);
+        res = fildes_module_lseek(fildes, offset, whence);
         if (res == (off_t)-1) {
             picotm_recover_from_errno(errno);
         }
@@ -214,7 +214,7 @@ PICOTM_EXPORT
 void
 sync_tx()
 {
-    fd_module_sync();
+    fildes_module_sync();
 }
 
 PICOTM_EXPORT

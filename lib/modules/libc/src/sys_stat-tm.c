@@ -32,7 +32,7 @@ chmod_tm(const char* path, mode_t mode)
     int res;
 
     do {
-        res = fd_module_chmod(path, mode);
+        res = fildes_module_chmod(path, mode);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }
@@ -50,7 +50,7 @@ fstat_tm(int fildes, struct stat* buf)
     int res;
 
     do {
-        res = fd_module_fstat(fildes, buf);
+        res = fildes_module_fstat(fildes, buf);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }
@@ -68,7 +68,7 @@ lstat_tm(const char* path, struct stat* buf)
     int res;
 
     do {
-        res = fd_module_lstat(path, buf);
+        res = fildes_module_lstat(path, buf);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }
@@ -86,7 +86,7 @@ mkdir_tm(const char* path, mode_t mode)
     int res;
 
     do {
-        res = fd_module_mkdir(path, mode);
+        res = fildes_module_mkdir(path, mode);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }
@@ -104,7 +104,7 @@ mkfifo_tm(const char* path, mode_t mode)
     int res;
 
     do {
-        res = fd_module_mkfifo(path, mode);
+        res = fildes_module_mkfifo(path, mode);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }
@@ -123,7 +123,7 @@ mknod_tm(const char* path, mode_t mode, dev_t dev)
     int res;
 
     do {
-        res = fd_module_mknod(path, mode, dev);
+        res = fildes_module_mknod(path, mode, dev);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }
@@ -142,7 +142,7 @@ stat_tm(const char* path, struct stat* buf)
     int res;
 
     do {
-        res = fd_module_stat(path, buf);
+        res = fildes_module_stat(path, buf);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }

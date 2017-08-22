@@ -42,7 +42,7 @@ fchmod_tx(int fildes, mode_t mode)
     int res;
 
     do {
-        res = fd_module_fchmod(fildes, mode);
+        res = fildes_module_fchmod(fildes, mode);
         if (res < 0) {
             picotm_recover_from_errno(errno);
         }
