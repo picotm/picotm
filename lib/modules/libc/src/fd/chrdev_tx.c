@@ -552,10 +552,6 @@ chrdev_tx_init(struct chrdev_tx* self)
     self->wrtablen = 0;
     self->wrtabsiz = 0;
 
-    self->rdtab = NULL;
-    self->rdtablen = 0;
-    self->rdtabsiz = 0;
-
     self->fcntltab = NULL;
     self->fcntltablen = 0;
 
@@ -570,7 +566,6 @@ chrdev_tx_uninit(struct chrdev_tx* self)
 
     fcntloptab_clear(&self->fcntltab, &self->fcntltablen);
     iooptab_clear(&self->wrtab, &self->wrtablen);
-    iooptab_clear(&self->rdtab, &self->rdtablen);
     free(self->wrbuf);
 
     uninit_rwstates(picotm_arraybeg(self->rwstate),
@@ -603,7 +598,6 @@ chrdev_tx_ref_or_set_up(struct chrdev_tx* self, struct chrdev* chrdev,
     self->wrmode = PICOTM_LIBC_WRITE_BACK;
 
     self->fcntltablen = 0;
-    self->rdtablen = 0;
     self->wrtablen = 0;
     self->wrbuflen = 0;
 }
