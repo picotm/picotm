@@ -57,10 +57,6 @@ struct fifo_tx {
     size_t       wrtablen;
     size_t       wrtabsiz;
 
-    struct ioop* rdtab;
-    size_t       rdtablen;
-    size_t       rdtabsiz;
-
     struct fcntlop* fcntltab;
     size_t          fcntltablen;
 
