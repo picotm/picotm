@@ -25,7 +25,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "error/module.h"
-#include "fd/module.h"
+#include "fildes/module.h"
 #include "picotm/fcntl-tm.h"
 
 PICOTM_EXPORT

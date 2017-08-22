@@ -25,7 +25,7 @@
 #include <string.h>
 #include "allocator/module.h"
 #include "error/module.h"
-#include "fd/module.h"
+#include "fildes/module.h"
 
 PICOTM_EXPORT
 void
