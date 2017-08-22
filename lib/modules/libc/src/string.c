@@ -237,11 +237,19 @@ strdup_tx(const char* s)
 }
 
 PICOTM_EXPORT
-int
-strerror_r_tx(int errnum, char* buf, size_t buflen)
+char*
+__strerror_r_gnu_tx(int errnum, char* buf, size_t buflen)
 {
     privatize_tx(buf, buflen, PICOTM_TM_PRIVATIZE_STORE);
-    return strerror_r_tm(errnum, buf, buflen);
+    return __strerror_r_gnu_tm(errnum, buf, buflen);
+}
+
+PICOTM_EXPORT
+int
+__strerror_r_posix_tx(int errnum, char* buf, size_t buflen)
+{
+    privatize_tx(buf, buflen, PICOTM_TM_PRIVATIZE_STORE);
+    return __strerror_r_posix_tm(errnum, buf, buflen);
 }
 
 PICOTM_EXPORT
