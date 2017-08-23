@@ -65,7 +65,7 @@ unsigned long
 tx_register_module(struct tx* self,
                    void (*lock)(void*, struct picotm_error*),
                    void (*unlock)(void*, struct picotm_error*),
-                   bool (*is_valid)(void*, int, struct picotm_error*),
+                   void (*validate)(void*, int, struct picotm_error*),
                    void (*apply)(void*, struct picotm_error*),
                    void (*undo)(void*, struct picotm_error*),
                    void (*apply_event)(const struct picotm_event*,
@@ -86,7 +86,7 @@ tx_register_module(struct tx* self,
         return 0;
     }
 
-    module_init(self->module + module, lock, unlock, is_valid,
+    module_init(self->module + module, lock, unlock, validate,
                 apply, undo, apply_event, undo_event,
                 update_cc, clear_cc,
                 finish, uninit, data);
@@ -169,12 +169,8 @@ unlock_modules(struct module* module, unsigned long nmodules,
 static size_t
 validate_cb(void* module, void* is_irrevocable, struct picotm_error* error)
 {
-    bool is_valid = module_is_valid(module, *((bool*)is_irrevocable), error);
+    module_validate(module, *((bool*)is_irrevocable), error);
     if (picotm_error_is_set(error)) {
-        return 0;
-    }
-    if (!is_valid) {
-        picotm_error_set_conflicting(error, NULL);
         return 0;
     }
     return 1;

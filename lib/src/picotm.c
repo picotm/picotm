@@ -291,7 +291,7 @@ PICOTM_EXPORT
 unsigned long
 picotm_register_module(picotm_module_lock_function lock,
                        picotm_module_unlock_function unlock,
-                       picotm_module_is_valid_function is_valid,
+                       picotm_module_validate_function validate,
                        picotm_module_apply_function apply,
                        picotm_module_undo_function undo,
                        picotm_module_apply_event_function apply_event,
@@ -303,7 +303,7 @@ picotm_register_module(picotm_module_lock_function lock,
                        void* data,
                        struct picotm_error* error)
 {
-    return tx_register_module(get_non_null_tx(), lock, unlock, is_valid,
+    return tx_register_module(get_non_null_tx(), lock, unlock, validate,
                               apply, undo, apply_event, undo_event,
                               update_cc, clear_cc,
                               finish, uninit, data, error);

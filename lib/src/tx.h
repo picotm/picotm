@@ -65,7 +65,7 @@ unsigned long
 tx_register_module(struct tx* self,
                    void (*lock)(void*, struct picotm_error*),
                    void (*unlock)(void*, struct picotm_error*),
-                   bool (*is_valid)(void*, int, struct picotm_error*),
+                   void (*validate)(void*, int, struct picotm_error*),
                    void (*apply)(void*, struct picotm_error*),
                    void (*undo)(void*, struct picotm_error*),
                    void (*apply_event)(const struct picotm_event*,
