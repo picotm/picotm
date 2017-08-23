@@ -73,12 +73,7 @@ fifo_uninit(struct fifo* self)
     uninit_rwlocks(picotm_arraybeg(self->rwlock),
                    picotm_arrayend(self->rwlock));
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-    picotm_shared_ref16_obj_uninit(&self->ref_obj, &error);
-    if (picotm_error_is_set(&error)) {
-        abort();
-    }
+    picotm_shared_ref16_obj_uninit(&self->ref_obj);
 }
 
 /*
@@ -156,13 +151,7 @@ fifo_unref(struct fifo* self)
 {
     assert(self);
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-    picotm_shared_ref16_obj_down(&self->ref_obj, NULL, NULL, final_ref,
-                                 &error);
-    if (picotm_error_is_set(&error)) {
-        abort();
-    }
+    picotm_shared_ref16_obj_down(&self->ref_obj, NULL, NULL, final_ref);
 }
 
 static bool

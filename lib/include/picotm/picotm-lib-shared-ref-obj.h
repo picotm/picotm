@@ -49,9 +49,10 @@
  * An instance of `picotm_shared_ref16_obj` is initialized with a call
  * to `picotm_shared_ref16_obj_init()` and cleaned up with a call to
  * `picotm_shared_ref16_obj_uninit()`. These functions receive an instance
- * of `struct picotm_shared_ref16_obj` and an instance of
- * `struct picotm_error`, which returns error state. These functions are
- * called in the init and un-init functions of the parent class.
+ * of `struct picotm_shared_ref16_obj` and the init function also receives
+ * an instance of `struct picotm_error`, which returns error state. These
+ * functions are called in the init and un-init functions of the parent
+ * class.
  *
  * ~~~ c
  *      void
@@ -71,23 +72,20 @@
  *
  * ~~~ c
  *      void
- *      ref_counted_uninit(struct ref_counted* self, struct picotm_error* error)
+ *      ref_counted_uninit(struct ref_counted* self)
  *      {
  *          // additional clean-up code
  *
- *          picotm_shared_ref16_obj_uninit(&self->ref_obj, error);
+ *          picotm_shared_ref16_obj_uninit(&self->ref_obj);
  *          if (picotm_error_is_set(error)) {
  *              return;
  *          }
  *      }
  * ~~~
  *
- * The clean-up code may return an error in extreme situations, but such
- * errors are marked as non-recoverable.
- *
  * References to an object are acquired with a call to
  * `picotm_shared_ref16_obj_up()`. The parameters of the function consist
- * of and instance of `struc tpicotm_shared_ref16_obj`, additional user data,
+ * of and instance of `struct picotm_shared_ref16_obj`, additional user data,
  * an optional conditional function, and optional initializer function and
  * in instance of `struct picotm_error`, which returns an error state to the
  * caller.
@@ -166,10 +164,10 @@
  *      }
  *
  *      void
- *      ref_counted_down(struct ref_counted* self, struct picotm_error* error)
+ *      ref_counted_down(struct ref_counted* self)
  *      {
  *          picotm_shared_ref16_obj_down(&self->ref_obj, NULL, down_cond,
- *                                       final_ref, error);
+ *                                       final_ref);
  *      }
  * ~~~
  */
@@ -235,12 +233,10 @@ picotm_shared_ref16_obj_init(struct picotm_shared_ref16_obj* self,
 
 /**
  * Uninitializes a shared-ref16 object.
- * \param       self    The shared-ref16 object.
- * \param[out]  error   Returns an error to the caller.
+ * \param   self    The shared-ref16 object.
  */
 void
-picotm_shared_ref16_obj_uninit(struct picotm_shared_ref16_obj* self,
-                               struct picotm_error* error);
+picotm_shared_ref16_obj_uninit(struct picotm_shared_ref16_obj* self);
 
 /**
  * Acquires a reference on the shared-ref16 object.
@@ -264,13 +260,12 @@ picotm_shared_ref16_obj_up(struct picotm_shared_ref16_obj* self, void* data,
 
 /**
  * Releases a reference on the shared-ref16 object.
- * \param       self        The shared-ref16 object.
- * \param       data        User data.
- * \param       cond        An optional condition to test if the reference should
- *                          be released.
- * \param       final_ref   An optional function to finalize the object when
- *                          the final reference gets released.
- * \param[out]  error       Returns an error to the caller.
+ * \param   self        The shared-ref16 object.
+ * \param   data        User data.
+ * \param   cond        An optional condition to test if the reference should
+ *                      be released.
+ * \param   final_ref   An optional function to finalize the object when
+ *                      the final reference gets released.
  *
  * The conditional and finalizer functions are synchronized with the
  * reference counter. The down function internally locks the shared-ref16
@@ -279,7 +274,6 @@ picotm_shared_ref16_obj_up(struct picotm_shared_ref16_obj* self, void* data,
 void
 picotm_shared_ref16_obj_down(struct picotm_shared_ref16_obj* self, void* data,
                              picotm_shared_ref16_obj_condition_function cond,
-                             picotm_shared_ref16_obj_final_ref_function final_ref,
-                             struct picotm_error* error);
+                             picotm_shared_ref16_obj_final_ref_function final_ref);
 
 PICOTM_END_DECLS
