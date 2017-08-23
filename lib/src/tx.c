@@ -26,22 +26,17 @@
 #include "table.h"
 #include "tx_shared.h"
 
-int
+void
 tx_init(struct tx* self, struct tx_shared* tx_shared)
 {
     assert(self);
 
-    int res = log_init(&self->log);
-    if (res < 0) {
-        return res;
-    }
+    log_init(&self->log);
 
     self->shared = tx_shared;
     self->mode = TX_MODE_REVOCABLE;
     self->nmodules = 0;
     self->is_initialized = true;
-
-    return 0;
 }
 
 void
@@ -114,33 +109,28 @@ tx_append_event(struct tx* self, unsigned long module, unsigned long op,
     log_append_event(&self->log, module, op, cookie, error);
 }
 
-
-int
-tx_begin(struct tx* self, enum tx_mode mode)
+void
+tx_begin(struct tx* self, enum tx_mode mode, struct picotm_error* error)
 {
     assert(self);
-
-    int res;
 
     switch (mode) {
         case TX_MODE_IRREVOCABLE:
             /* If we're supposed to run exclusively, we wait
              * for the other transactions to finish. */
-            res = tx_shared_make_irrevocable(self->shared, self);
+            tx_shared_make_irrevocable(self->shared, self, error);
             break;
         default:
             /* If we're not the exclusive transaction, we wait
              * for a possible exclusive transaction to finish. */
-            res = tx_shared_wait_irrevocable(self->shared);
+            tx_shared_wait_irrevocable(self->shared, error);
             break;
     }
-    if (res < 0) {
-        return res;
+    if (picotm_error_is_set(error)) {
+        return;
     }
 
     self->mode = mode;
-
-    return 0;
 }
 
 static size_t
@@ -150,15 +140,14 @@ lock_cb(void* module, struct picotm_error* error)
     return picotm_error_is_set(error) ? 0 : 1;
 }
 
-static int
+static void
 lock_modules(struct module* module, unsigned long nmodules,
              struct picotm_error* error)
 {
     tabwalk_1(module, nmodules, sizeof(*module), lock_cb, error);
     if (picotm_error_is_set(error)) {
-        return -1;
+        return;
     }
-    return 0;
 }
 
 static size_t
@@ -168,15 +157,14 @@ unlock_cb(void* module, struct picotm_error* error)
     return picotm_error_is_set(error) ? 0 : 1;
 }
 
-static int
+static void
 unlock_modules(struct module* module, unsigned long nmodules,
                struct picotm_error* error)
 {
     tabrwalk_1(module, nmodules, sizeof(*module), unlock_cb, error);
     if (picotm_error_is_set(error)) {
-        return -1;
+        return;
     }
-    return 0;
 }
 
 static size_t
@@ -191,16 +179,15 @@ validate_cb(void* module, void* is_irrevocable, struct picotm_error* error)
     return 1;
 }
 
-static int
+static void
 validate_modules(struct module* module, unsigned long nmodules,
                  bool is_irrevocable, struct picotm_error* error)
 {
     tabwalk_2(module, nmodules, sizeof(*module), validate_cb, &is_irrevocable,
               error);
     if (picotm_error_is_set(error)) {
-        return -1;
+        return;
     }
-    return 0;
 }
 
 static size_t
@@ -213,15 +200,14 @@ apply_cb(void* module, struct picotm_error* error)
     return 1;
 }
 
-static int
+static void
 apply_modules(struct module* module, unsigned long nmodules,
               struct picotm_error* error)
 {
     tabwalk_1(module, nmodules, sizeof(*module), apply_cb, error);
     if (picotm_error_is_set(error)) {
-        return -1;
+        return;
     }
-    return 0;
 }
 
 static size_t
@@ -234,15 +220,14 @@ undo_cb(void* module, struct picotm_error* error)
     return 1;
 }
 
-static int
+static void
 undo_modules(struct module* module, unsigned long nmodules,
              struct picotm_error* error)
 {
     tabwalk_1(module, nmodules, sizeof(*module), undo_cb, error);
     if (picotm_error_is_set(error)) {
-        return -1;
+        return;
     }
-    return 0;
 }
 
 static size_t
@@ -257,16 +242,15 @@ update_cc_cb(void* module, void* is_irrevocable, struct picotm_error* error)
     return 1;
 }
 
-static int
+static void
 update_modules_cc(struct module* module, unsigned long nmodules,
                   bool is_irrevocable, struct picotm_error* error)
 {
     tabwalk_2(module, nmodules, sizeof(*module), update_cc_cb,
               &is_irrevocable, error);
     if (picotm_error_is_set(error)) {
-        return -1;
+        return;
     }
-    return 0;
 }
 
 static size_t
@@ -281,16 +265,15 @@ clear_cc_cb(void* module, void* is_irrevocable, struct picotm_error* error)
     return 1;
 }
 
-static int
+static void
 clear_modules_cc(struct module* module, unsigned long nmodules,
                  bool is_irrevocable, struct picotm_error* error)
 {
     tabwalk_2(module, nmodules, sizeof(*module), clear_cc_cb, &is_irrevocable,
               error);
     if (picotm_error_is_set(error)) {
-        return -1;
+        return;
     }
-    return 0;
 }
 
 static size_t
@@ -303,18 +286,17 @@ log_finish_cb(void* module, struct picotm_error* error)
     return 1;
 }
 
-static int
+static void
 finish_modules(struct module* module, unsigned long nmodules,
                struct picotm_error* error)
 {
     tabwalk_1(module, nmodules, sizeof(*module), log_finish_cb, error);
     if (picotm_error_is_set(error)) {
-        return -1;
+        return;
     }
-    return 0;
 }
 
-int
+void
 tx_commit(struct tx* self, struct picotm_error* error)
 {
     assert(self);
@@ -322,14 +304,13 @@ tx_commit(struct tx* self, struct picotm_error* error)
     bool is_irrevocable = tx_is_irrevocable(self);
     bool is_non_recoverable = false;
 
-    int res = lock_modules(self->module, self->nmodules, error);
-    if (res < 0) {
+    lock_modules(self->module, self->nmodules, error);
+    if (picotm_error_is_set(error)) {
         goto err_lock_modules;
     }
 
-    res = validate_modules(self->module, self->nmodules, is_irrevocable,
-                           error);
-    if (res < 0) {
+    validate_modules(self->module, self->nmodules, is_irrevocable, error);
+    if (picotm_error_is_set(error)) {
         goto err_validate_modules;
     }
 
@@ -339,35 +320,37 @@ tx_commit(struct tx* self, struct picotm_error* error)
 
     is_non_recoverable = true;
 
-    res = apply_modules(self->module, self->nmodules, error);
-    if (res < 0) {
+    apply_modules(self->module, self->nmodules, error);
+    if (picotm_error_is_set(error)) {
         goto err_apply_modules;
     }
 
-    res = log_apply_events(&self->log, self->module, is_irrevocable, error);
-    if (res < 0) {
+    log_apply_events(&self->log, self->module, is_irrevocable, error);
+    if (picotm_error_is_set(error)) {
         goto err_log_apply_events;
     }
 
-    res = update_modules_cc(self->module, self->nmodules, is_irrevocable,
-                            error);
-    if (res < 0) {
+    update_modules_cc(self->module, self->nmodules, is_irrevocable, error);
+    if (picotm_error_is_set(error)) {
         goto err_update_modules_cc;
     }
 
-    res = unlock_modules(self->module, self->nmodules, error);
-    if (res < 0) {
+    unlock_modules(self->module, self->nmodules, error);
+    if (picotm_error_is_set(error)) {
         goto err;
     }
 
-    res = finish_modules(self->module, self->nmodules, error);
-    if (res < 0) {
+    finish_modules(self->module, self->nmodules, error);
+    if (picotm_error_is_set(error)) {
         goto err;
     }
 
-    tx_shared_release_irrevocability(self->shared);
+    tx_shared_release_irrevocability(self->shared, error);
+    if (picotm_error_is_set(error)) {
+        goto err_out;
+    }
 
-    return 0;
+    return;
 
 err_update_modules_cc:
 err_log_apply_events:
@@ -382,46 +365,56 @@ err:
     if (is_non_recoverable) {
         picotm_error_mark_as_non_recoverable(error);
     }
-    tx_shared_release_irrevocability(self->shared);
-    return -1;
+    {
+        struct picotm_error err_error = PICOTM_ERROR_INITIALIZER;
+        tx_shared_release_irrevocability(self->shared, &err_error);
+    }
+err_out:
+    return;
 }
 
-int
+void
 tx_rollback(struct tx* self, struct picotm_error* error)
 {
     assert(self);
 
     bool is_irrevocable = tx_is_irrevocable(self);
 
-    int res = undo_modules(self->module, self->nmodules, error);
-    if (res < 0) {
+    undo_modules(self->module, self->nmodules, error);
+    if (picotm_error_is_set(error)) {
         goto err;
     }
 
-    res = log_undo_events(&self->log, self->module, is_irrevocable, error);
-    if (res < 0) {
+    log_undo_events(&self->log, self->module, is_irrevocable, error);
+    if (picotm_error_is_set(error)) {
         goto err;
     }
 
-    res = clear_modules_cc(self->module, self->nmodules, is_irrevocable,
-                           error);
-    if (res < 0) {
+    clear_modules_cc(self->module, self->nmodules, is_irrevocable, error);
+    if (picotm_error_is_set(error)) {
         goto err;
     }
 
-    res = finish_modules(self->module, self->nmodules, error);
-    if (res < 0) {
+    finish_modules(self->module, self->nmodules, error);
+    if (picotm_error_is_set(error)) {
         goto err;
     }
 
-    tx_shared_release_irrevocability(self->shared);
+    tx_shared_release_irrevocability(self->shared, error);
+    if (picotm_error_is_set(error)) {
+        goto err_out;
+    }
 
-    return 0;
+    return;
 
 err:
     picotm_error_mark_as_non_recoverable(error);
-    tx_shared_release_irrevocability(self->shared);
-    return -1;
+    {
+        struct picotm_error err_error = PICOTM_ERROR_INITIALIZER;
+        tx_shared_release_irrevocability(self->shared, &err_error);
+    }
+err_out:
+    return;
 }
 
 bool
@@ -430,9 +423,9 @@ tx_is_valid(struct tx* self)
     assert(self);
 
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    int res = validate_modules(self->module, self->nmodules,
-                               tx_is_irrevocable(self), &error);
-    if (res < 0) {
+    validate_modules(self->module, self->nmodules, tx_is_irrevocable(self),
+                     &error);
+    if (picotm_error_is_set(&error)) {
         return false;
     }
     return true;

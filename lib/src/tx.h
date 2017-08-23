@@ -33,6 +33,7 @@
 
 #define MAX_NMODULES    (256)
 
+struct picotm_error;
 struct tx_shared;
 
 enum tx_mode {
@@ -52,7 +53,7 @@ struct tx {
     bool is_initialized;
 };
 
-int
+void
 tx_init(struct tx* self, struct tx_shared* tx_shared);
 
 void
@@ -83,13 +84,13 @@ void
 tx_append_event(struct tx* self, unsigned long module, unsigned long op,
                 uintptr_t cookie, struct picotm_error* error);
 
-int
-tx_begin(struct tx* self, enum tx_mode mode);
+void
+tx_begin(struct tx* self, enum tx_mode mode, struct picotm_error* error);
 
-int
+void
 tx_commit(struct tx* self, struct picotm_error* error);
 
-int
+void
 tx_rollback(struct tx* self, struct picotm_error* error);
 
 bool

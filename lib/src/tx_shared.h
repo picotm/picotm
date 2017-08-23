@@ -29,6 +29,7 @@
  */
 
 struct tx;
+struct picotm_error;
 
 struct tx_shared {
     /**
@@ -43,17 +44,20 @@ struct tx_shared {
     struct tx*       exclusive_tx;
 };
 
-int
-tx_shared_init(struct tx_shared* self);
+void
+tx_shared_init(struct tx_shared* self, struct picotm_error* error);
 
 void
-tx_shared_uninit(struct tx_shared* self);
-
-int
-tx_shared_make_irrevocable(struct tx_shared* self, struct tx* exclusive_tx);
-
-int
-tx_shared_wait_irrevocable(struct tx_shared* self);
+tx_shared_uninit(struct tx_shared* self, struct picotm_error* error);
 
 void
-tx_shared_release_irrevocability(struct tx_shared* self);
+tx_shared_make_irrevocable(struct tx_shared* self, struct tx* exclusive_tx,
+                           struct picotm_error* error);
+
+void
+tx_shared_wait_irrevocable(struct tx_shared* self,
+                           struct picotm_error* error);
+
+void
+tx_shared_release_irrevocability(struct tx_shared* self,
+                                 struct picotm_error* error);

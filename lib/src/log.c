@@ -24,7 +24,7 @@
 #include "module.h"
 #include "table.h"
 
-int
+void
 log_init(struct log* self)
 {
     assert(self);
@@ -32,8 +32,6 @@ log_init(struct log* self)
     self->eventtab = NULL;
     self->eventtablen = 0;
     self->eventtabsiz = 0;
-
-    return 0;
 }
 
 void
@@ -74,7 +72,7 @@ log_append_event(struct log* self, unsigned long module, unsigned long call,
     ++self->eventtablen;
 }
 
-int
+void
 log_apply_events(struct log* self, const struct module* module, bool noundo,
                  struct picotm_error* error)
 {
@@ -88,17 +86,15 @@ log_apply_events(struct log* self, const struct module* module, bool noundo,
     while (beg < end) {
         module_apply_event(module + beg->module, beg, error);
         if (picotm_error_is_set(error)) {
-            return -1;
+            return;
         }
         ++beg;
     }
 
     self->eventtablen = 0;
-
-    return 0;
 }
 
-int
+void
 log_undo_events(struct log* self, const struct module* module, bool noundo,
                 struct picotm_error* error)
 {
@@ -113,11 +109,9 @@ log_undo_events(struct log* self, const struct module* module, bool noundo,
         --beg;
         module_undo_event(module + beg->module, beg, error);
         if (picotm_error_is_set(error)) {
-            return -1;
+            return;
         }
     }
 
     self->eventtablen = 0;
-
-    return 0;
 }
