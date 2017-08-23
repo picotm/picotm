@@ -44,16 +44,12 @@ unlock_cb(void* data, struct picotm_error* error)
     fildes_tx_unlock(&module->tx);
 }
 
-static bool
-is_valid_cb(void* data, int noundo, struct picotm_error* error)
+static void
+validate_cb(void* data, int noundo, struct picotm_error* error)
 {
     struct fildes_module* module = data;
 
     fildes_tx_validate(&module->tx, noundo, error);
-    if (picotm_error_is_set(error)) {
-        return false;
-    }
-    return true;
 }
 
 static void
@@ -120,7 +116,7 @@ get_fildes_tx(bool initialize, struct picotm_error* error)
 
     unsigned long module = picotm_register_module(lock_cb,
                                                   unlock_cb,
-                                                  is_valid_cb,
+                                                  validate_cb,
                                                   NULL, NULL,
                                                   apply_event_cb,
                                                   undo_event_cb,

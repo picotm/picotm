@@ -70,9 +70,8 @@ typedef void (*picotm_module_unlock_function)(void* data,
  * \param       data            The pointer to module-specific data.
  * \param       is_irrevocable  True if the transaction is irrevocable, false otherwise.
  * \param[out]  error           Returns an error from the module.
- * \returns True if valid, or flase otherwise.
  */
-typedef bool (*picotm_module_is_valid_function)(void* data,
+typedef void (*picotm_module_validate_function)(void* data,
                                                 int is_irrevocable,
                                                 struct picotm_error* error);
 
@@ -156,7 +155,7 @@ PICOTM_NOTHROW
  * Registers a new module with the transaction management system.
  * \param       lock            The lock call-back function.
  * \param       unlock          The unlock call-back function.
- * \param       is_valid        The is-valid call-back function.
+ * \param       validate        The validate call-back function.
  * \param       apply           The apply call-back function.
  * \param       undo            The undo call-back function.
  * \param       apply_event     The apply-event call-back function.
@@ -172,7 +171,7 @@ PICOTM_NOTHROW
 unsigned long
 picotm_register_module(picotm_module_lock_function lock,
                        picotm_module_unlock_function unlock,
-                       picotm_module_is_valid_function is_valid,
+                       picotm_module_validate_function validate,
                        picotm_module_apply_function apply,
                        picotm_module_undo_function undo,
                        picotm_module_apply_event_function apply_event,

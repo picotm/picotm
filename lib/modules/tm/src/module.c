@@ -150,14 +150,10 @@ unlock_cb(void* data, struct picotm_error* error)
     unlock(data, error);
 }
 
-static bool
-is_valid_cb(void* data, int eotx, struct picotm_error* error)
+static void
+validate_cb(void* data, int eotx, struct picotm_error* error)
 {
     validate(data, !!eotx, error);
-    if (picotm_error_is_set(error)) {
-        return false;
-    }
-    return true;
 }
 
 static void
@@ -196,7 +192,7 @@ get_vmem_tx(bool initialize, struct picotm_error* error)
     }
 
     unsigned long module = picotm_register_module(lock_cb, unlock_cb,
-                                                  is_valid_cb,
+                                                  validate_cb,
                                                   apply_cb, undo_cb,
                                                   NULL, NULL,
                                                   NULL, NULL,

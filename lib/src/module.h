@@ -35,7 +35,7 @@ struct picotm_event;
 struct module {
     void (*lock)(void*, struct picotm_error*);
     void (*unlock)(void*, struct picotm_error*);
-    bool (*is_valid)(void*, int, struct picotm_error*);
+    void (*validate)(void*, int, struct picotm_error*);
     void (*apply)(void*, struct picotm_error*);
     void (*undo)(void*, struct picotm_error*);
     void (*apply_event)(const struct picotm_event*,
@@ -53,7 +53,7 @@ void
 module_init(struct module* self,
             void (*lock)(void*, struct picotm_error*),
             void (*unlock)(void*, struct picotm_error*),
-            bool (*is_valid)(void*, int, struct picotm_error*),
+            void (*validate)(void*, int, struct picotm_error*),
             void (*apply)(void*, struct picotm_error*),
             void (*undo)(void*, struct picotm_error*),
             void (*apply_event)(const struct picotm_event*,
@@ -78,8 +78,8 @@ module_lock(const struct module* self, struct picotm_error* error);
 void
 module_unlock(const struct module* self, struct picotm_error* error);
 
-bool
-module_is_valid(const struct module* self, bool noundo,
+void
+module_validate(const struct module* self, bool noundo,
                 struct picotm_error* error);
 
 void
