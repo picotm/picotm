@@ -50,11 +50,11 @@ picotm_rwlock_try_rdlock(struct picotm_rwlock* self,
 
         if (n == UINT8_MAX) {
             /* writer present; cannot read-lock */
-            picotm_error_set_conflicting(error, NULL);
+            picotm_error_set_conflicting(error, self);
             return;
         } else if (n == (UINT8_MAX - 1)) {
             /* maximum number of readers reached; cannot read-lock */
-            picotm_error_set_conflicting(error, NULL);
+            picotm_error_set_conflicting(error, self);
             return;
         }
 
@@ -86,7 +86,7 @@ picotm_rwlock_try_wrlock(struct picotm_rwlock* self, bool upgrade,
                                                         memory_order_relaxed,
                                                         memory_order_relaxed);
     if (!succ) {
-        picotm_error_set_conflicting(error, NULL);
+        picotm_error_set_conflicting(error, self);
         return;
     }
 }
