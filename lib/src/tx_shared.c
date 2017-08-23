@@ -18,10 +18,13 @@
  */
 
 #include "tx_shared.h"
+#include <assert.h>
 
 int
 tx_shared_init(struct tx_shared* self)
 {
+    assert(self);
+
     int res = pthread_rwlock_init(&self->exclusive_tx_lock, NULL);
     if (res) {
         return -res;
@@ -33,12 +36,17 @@ tx_shared_init(struct tx_shared* self)
 void
 tx_shared_uninit(struct tx_shared* self)
 {
+    assert(self);
+
     pthread_rwlock_destroy(&self->exclusive_tx_lock);
 }
 
 int
 tx_shared_make_irrevocable(struct tx_shared* self, struct tx* exclusive_tx)
 {
+    assert(self);
+    assert(exclusive_tx);
+
     int res = pthread_rwlock_wrlock(&self->exclusive_tx_lock);
     if (res) {
         return -res;
@@ -50,6 +58,8 @@ tx_shared_make_irrevocable(struct tx_shared* self, struct tx* exclusive_tx)
 int
 tx_shared_wait_irrevocable(struct tx_shared* self)
 {
+    assert(self);
+
     int res = pthread_rwlock_rdlock(&self->exclusive_tx_lock);
     if (res) {
         return -res;
@@ -60,6 +70,8 @@ tx_shared_wait_irrevocable(struct tx_shared* self)
 void
 tx_shared_release_irrevocability(struct tx_shared* self)
 {
+    assert(self);
+
     self->exclusive_tx = NULL;
     pthread_rwlock_unlock(&self->exclusive_tx_lock);
 }

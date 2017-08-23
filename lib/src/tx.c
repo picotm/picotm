@@ -18,6 +18,7 @@
  */
 
 #include "tx.h"
+#include <assert.h>
 #include <errno.h>
 #include <stdlib.h>
 #include "picotm/picotm-error.h"
@@ -28,6 +29,8 @@
 int
 tx_init(struct tx* self, struct tx_shared* tx_shared)
 {
+    assert(self);
+
     int res = log_init(&self->log);
     if (res < 0) {
         return res;
@@ -44,6 +47,8 @@ tx_init(struct tx* self, struct tx_shared* tx_shared)
 void
 tx_release(struct tx* self)
 {
+    assert(self);
+
     log_uninit(&self->log);
 
     struct module* module = self->module;
@@ -58,6 +63,8 @@ tx_release(struct tx* self)
 bool
 tx_is_irrevocable(const struct tx* self)
 {
+    assert(self);
+
     return self->mode == TX_MODE_IRREVOCABLE;
 }
 
@@ -79,6 +86,8 @@ tx_register_module(struct tx* self,
                    void* data,
                    struct picotm_error* error)
 {
+    assert(self);
+
     unsigned long module = self->nmodules;
 
     if (module >= picotm_arraylen(self->module)) {
@@ -100,6 +109,8 @@ void
 tx_append_event(struct tx* self, unsigned long module, unsigned long op,
                 uintptr_t cookie, struct picotm_error* error)
 {
+    assert(self);
+
     log_append_event(&self->log, module, op, cookie, error);
 }
 
@@ -107,6 +118,8 @@ tx_append_event(struct tx* self, unsigned long module, unsigned long op,
 int
 tx_begin(struct tx* self, enum tx_mode mode)
 {
+    assert(self);
+
     int res;
 
     switch (mode) {
@@ -169,6 +182,8 @@ unlock_modules(struct module* module, unsigned long nmodules,
 static size_t
 validate_cb(void* module, void* is_irrevocable, struct picotm_error* error)
 {
+    assert(is_irrevocable);
+
     module_validate(module, *((bool*)is_irrevocable), error);
     if (picotm_error_is_set(error)) {
         return 0;
@@ -233,6 +248,8 @@ undo_modules(struct module* module, unsigned long nmodules,
 static size_t
 update_cc_cb(void* module, void* is_irrevocable, struct picotm_error* error)
 {
+    assert(is_irrevocable);
+
     module_update_cc(module, *((bool*)is_irrevocable), error);
     if (picotm_error_is_set(error)) {
         return 0;
@@ -255,6 +272,8 @@ update_modules_cc(struct module* module, unsigned long nmodules,
 static size_t
 clear_cc_cb(void* module, void* is_irrevocable, struct picotm_error* error)
 {
+    assert(is_irrevocable);
+
     module_clear_cc(module, *((bool*)is_irrevocable), error);
     if (picotm_error_is_set(error)) {
         return 0;
@@ -298,6 +317,8 @@ finish_modules(struct module* module, unsigned long nmodules,
 int
 tx_commit(struct tx* self, struct picotm_error* error)
 {
+    assert(self);
+
     bool is_irrevocable = tx_is_irrevocable(self);
     bool is_non_recoverable = false;
 
@@ -368,6 +389,8 @@ err:
 int
 tx_rollback(struct tx* self, struct picotm_error* error)
 {
+    assert(self);
+
     bool is_irrevocable = tx_is_irrevocable(self);
 
     int res = undo_modules(self->module, self->nmodules, error);
@@ -404,6 +427,8 @@ err:
 bool
 tx_is_valid(struct tx* self)
 {
+    assert(self);
+
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
     int res = validate_modules(self->module, self->nmodules,
                                tx_is_irrevocable(self), &error);
