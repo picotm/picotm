@@ -319,9 +319,9 @@ picotm_append_event(unsigned long module, unsigned long op, uintptr_t cookie,
 
 PICOTM_EXPORT
 void
-picotm_resolve_conflict(struct picotm_tx* conflicting_tx)
+picotm_resolve_conflict(struct picotm_rwlock* conflicting_lock)
 {
-    picotm_error_set_conflicting(get_non_null_error(), conflicting_tx);
+    picotm_error_set_conflicting(get_non_null_error(), conflicting_lock);
 
     restart_tx(get_non_null_tx(), PICOTM_MODE_RETRY);
 }
