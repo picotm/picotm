@@ -18,6 +18,7 @@
  */
 
 #include "module.h"
+#include <assert.h>
 
 void
 module_init(struct module* self,
@@ -36,6 +37,8 @@ module_init(struct module* self,
             void (*uninit)(void*),
             void *data)
 {
+    assert(self);
+
     self->lock = lock;
     self->unlock = unlock;
     self->validate = validate;
@@ -53,6 +56,8 @@ module_init(struct module* self,
 void
 module_uninit(struct module* self)
 {
+    assert(self);
+
     if (self->uninit) {
         self->uninit(self->data);
     }
@@ -61,12 +66,16 @@ module_uninit(struct module* self)
 void*
 module_get_data(const struct module* self)
 {
+    assert(self);
+
     return self->data;
 }
 
 void
 module_lock(const struct module* self, struct picotm_error* error)
 {
+    assert(self);
+
     if (!self->lock) {
         return;
     }
@@ -76,6 +85,8 @@ module_lock(const struct module* self, struct picotm_error* error)
 void
 module_unlock(const struct module* self, struct picotm_error* error)
 {
+    assert(self);
+
     if (!self->unlock) {
         return;
     }
@@ -86,6 +97,8 @@ void
 module_validate(const struct module* self, bool noundo,
                 struct picotm_error* error)
 {
+    assert(self);
+
     if (!self->validate) {
         return;
     }
@@ -95,6 +108,8 @@ module_validate(const struct module* self, bool noundo,
 void
 module_apply(const struct module* self, struct picotm_error* error)
 {
+    assert(self);
+
     if (!self->apply) {
         return;
     }
@@ -104,6 +119,8 @@ module_apply(const struct module* self, struct picotm_error* error)
 void
 module_undo(const struct module* self, struct picotm_error* error)
 {
+    assert(self);
+
     if (!self->undo) {
         return;
     }
@@ -114,6 +131,8 @@ void
 module_apply_event(const struct module* self, const struct picotm_event* event,
                    struct picotm_error* error)
 {
+    assert(self);
+
     if (!self->apply_event) {
         return;
     }
@@ -124,6 +143,8 @@ void
 module_undo_event(const struct module* self, const struct picotm_event* event,
                   struct picotm_error* error)
 {
+    assert(self);
+
     if (!self->undo_event) {
         return;
     }
@@ -134,6 +155,8 @@ void
 module_update_cc(const struct module* self, bool noundo,
                  struct picotm_error* error)
 {
+    assert(self);
+
     if (!self->update_cc) {
         return;
     }
@@ -144,6 +167,8 @@ void
 module_clear_cc(const struct module* self, bool noundo,
                 struct picotm_error* error)
 {
+    assert(self);
+
     if (!self->clear_cc) {
         return;
     }
@@ -153,6 +178,8 @@ module_clear_cc(const struct module* self, bool noundo,
 void
 module_finish(const struct module* self, struct picotm_error* error)
 {
+    assert(self);
+
     if (!self->finish) {
         return;
     }

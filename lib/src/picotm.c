@@ -18,6 +18,7 @@
  */
 
 #include "picotm.h"
+#include <assert.h>
 #include <errno.h>
 #include <stdatomic.h>
 #include <stdbool.h>
@@ -168,6 +169,8 @@ __picotm_begin(enum __picotm_mode mode)
 static void
 restart_tx(struct tx* tx, enum __picotm_mode mode)
 {
+    assert(tx);
+
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
     int res = tx_rollback(tx, &error);
     if (res < 0) {
@@ -350,6 +353,8 @@ PICOTM_EXPORT
 void
 picotm_recover_from_error(const struct picotm_error* error)
 {
+    assert(error);
+
     memcpy(get_non_null_error(), error, sizeof(*error));
 
     switch (error->status) {

@@ -18,6 +18,7 @@
  */
 
 #include "log.h"
+#include <assert.h>
 #include <stdlib.h>
 #include <picotm/picotm-module.h>
 #include "module.h"
@@ -26,6 +27,8 @@
 int
 log_init(struct log* self)
 {
+    assert(self);
+
     self->eventtab = NULL;
     self->eventtablen = 0;
     self->eventtabsiz = 0;
@@ -36,6 +39,8 @@ log_init(struct log* self)
 void
 log_uninit(struct log* self)
 {
+    assert(self);
+
     free(self->eventtab);
 }
 
@@ -43,6 +48,8 @@ void
 log_append_event(struct log* self, unsigned long module, unsigned long call,
                  uintptr_t cookie, struct picotm_error* error)
 {
+    assert(self);
+
     if (self->eventtablen >= self->eventtabsiz) {
 
         size_t eventtabsiz = self->eventtabsiz + 1;
@@ -71,6 +78,8 @@ int
 log_apply_events(struct log* self, const struct module* module, bool noundo,
                  struct picotm_error* error)
 {
+    assert(self);
+
     /* Apply events in chronological order */
 
     const struct picotm_event* beg = self->eventtab;
@@ -93,6 +102,8 @@ int
 log_undo_events(struct log* self, const struct module* module, bool noundo,
                 struct picotm_error* error)
 {
+    assert(self);
+
     /* Undo events in reversed-chronological order */
 
     const struct picotm_event* beg = self->eventtab + self->eventtablen;
