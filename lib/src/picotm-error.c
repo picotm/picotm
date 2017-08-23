@@ -30,12 +30,13 @@ picotm_error_clear(struct picotm_error* error)
 
 PICOTM_EXPORT
 void
-picotm_error_set_conflicting(struct picotm_error* error, void* conflicting_tx)
+picotm_error_set_conflicting(struct picotm_error* error,
+                             struct picotm_rwlock* conflicting_lock)
 {
     error->status = PICOTM_CONFLICTING;
     error->is_non_recoverable = false;
     error->description = NULL;
-    error->value.conflicting_tx = conflicting_tx;
+    error->value.conflicting_lock = conflicting_lock;
 }
 
 PICOTM_EXPORT

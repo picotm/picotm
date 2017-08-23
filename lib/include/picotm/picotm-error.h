@@ -33,6 +33,8 @@
 
 PICOTM_BEGIN_DECLS
 
+struct picotm_rwlock;
+
 /**
  * Signals detected errors to picotm.
  *
@@ -78,12 +80,23 @@ struct picotm_error {
     const char* description;
 
     union {
-        /** The conflicting transaction for PICOTM_CONFLICTING if known, or NULL otherwise. */
-        void*                  conflicting_tx;
-        /** The picotm error code for PICOTM_ERROR_CODE if known, or PICOTM_GENERAL_ERROR otherwise. */
+        /**
+         * The conflicting lock for PICOTM_CONFLICTING if known, or
+         * NULL otherwise.
+         */
+        struct picotm_rwlock* conflicting_lock;
+
+        /**
+         * The picotm error code for PICOTM_ERROR_CODE if known, or
+         * PICOTM_GENERAL_ERROR otherwise.
+         */
         enum picotm_error_code error_hint;
-        /** The picotm errno for PICOTM_ERRNO if known, or 0 otherwise. */
-        int                    errno_hint;
+
+        /**
+         * The picotm errno for PICOTM_ERRNO if known, or 0 otherwise.
+         */
+        int errno_hint;
+
     } value;
 };
 
@@ -108,11 +121,12 @@ PICOTM_NOTHROW
  * Sets an error of type PICOTM_CONFLICTING.
  *
  * \param error             The error to set.
- * \param conflicting_tx    The conflicting transaction if known, or NULL
+ * \param conflicting_lock  The conflicting lock if known, or NULL
  *                          otherwise.
  */
 void
-picotm_error_set_conflicting(struct picotm_error* error, void* conflicting_tx);
+picotm_error_set_conflicting(struct picotm_error* error,
+                             struct picotm_rwlock* conflicting_lock);
 
 PICOTM_NOTHROW
 /**

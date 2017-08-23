@@ -198,16 +198,17 @@ picotm_append_event(unsigned long module, unsigned long op, uintptr_t cookie,
 
 PICOTM_NOTHROW
 /**
- * Instructs the transaction management system to resolve a
- * conflict with another transaction.
- * \param   conflicting_tx  The conflicting transaction, or NULL if unknown.
+ * Instructs the transaction management system to resolve a conflict between
+ * transactions.
+ *
+ * \param   conflicting_lock  The conflicting lock, or NULL if unknown.
  *
  * \attention   This function will not return if picotm aborts the
  *              transaction. If the function returns, the caller shall restart
  *              the operation that triggered the conflict.
  */
 void
-picotm_resolve_conflict(struct picotm_tx* conflicting_tx);
+picotm_resolve_conflict(struct picotm_rwlock* conflicting_lock);
 
 PICOTM_NOTHROW
 /**
