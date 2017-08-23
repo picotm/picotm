@@ -19,59 +19,70 @@
 
 #include "tx_shared.h"
 #include <assert.h>
+#include "picotm/picotm-error.h"
 
-int
-tx_shared_init(struct tx_shared* self)
+void
+tx_shared_init(struct tx_shared* self, struct picotm_error* error)
 {
     assert(self);
 
-    int res = pthread_rwlock_init(&self->exclusive_tx_lock, NULL);
-    if (res) {
-        return -res;
+    int err = pthread_rwlock_init(&self->exclusive_tx_lock, NULL);
+    if (err) {
+        picotm_error_set_errno(error, err);
+        return;
     }
     self->exclusive_tx = NULL;
-    return 0;
 }
 
 void
-tx_shared_uninit(struct tx_shared* self)
+tx_shared_uninit(struct tx_shared* self, struct picotm_error* error)
 {
     assert(self);
 
-    pthread_rwlock_destroy(&self->exclusive_tx_lock);
+    int err = pthread_rwlock_destroy(&self->exclusive_tx_lock);
+    if (err) {
+        picotm_error_set_errno(error, err);
+        return;
+    }
 }
 
-int
-tx_shared_make_irrevocable(struct tx_shared* self, struct tx* exclusive_tx)
+void
+tx_shared_make_irrevocable(struct tx_shared* self, struct tx* exclusive_tx,
+                           struct picotm_error* error)
 {
     assert(self);
     assert(exclusive_tx);
 
-    int res = pthread_rwlock_wrlock(&self->exclusive_tx_lock);
-    if (res) {
-        return -res;
+    int err = pthread_rwlock_wrlock(&self->exclusive_tx_lock);
+    if (err) {
+        picotm_error_set_errno(error, err);
+        return;
     }
     self->exclusive_tx = exclusive_tx;
-    return 0;
-}
-
-int
-tx_shared_wait_irrevocable(struct tx_shared* self)
-{
-    assert(self);
-
-    int res = pthread_rwlock_rdlock(&self->exclusive_tx_lock);
-    if (res) {
-        return -res;
-    }
-    return 0;
 }
 
 void
-tx_shared_release_irrevocability(struct tx_shared* self)
+tx_shared_wait_irrevocable(struct tx_shared* self, struct picotm_error* error)
 {
     assert(self);
 
+    int err = pthread_rwlock_rdlock(&self->exclusive_tx_lock);
+    if (err) {
+        picotm_error_set_errno(error, err);
+        return;
+    }
+}
+
+void
+tx_shared_release_irrevocability(struct tx_shared* self,
+                                 struct picotm_error* error)
+{
+    assert(self);
+
+    int err = pthread_rwlock_unlock(&self->exclusive_tx_lock);
+    if (err) {
+        picotm_error_set_errno(error, err);
+        return;
+    }
     self->exclusive_tx = NULL;
-    pthread_rwlock_unlock(&self->exclusive_tx_lock);
 }

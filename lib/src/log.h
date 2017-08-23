@@ -52,7 +52,7 @@ struct log {
 /**
  * Init log.
  */
-int
+void
 log_init(struct log* self);
 
 /**
@@ -75,9 +75,8 @@ log_append_event(struct log* self, unsigned long module, unsigned long call,
  * \param module        The table of registered modules.
  * \param noundo        True if the transaction is irrevokable, or false otherwise.
  * \param[out] error    An error returned by an apply operation.
- * \returns             0 on success, or a negative value otherwise.
  */
-int
+void
 log_apply_events(struct log* self, const struct module* module, bool noundo,
                  struct picotm_error* error);
 
@@ -88,8 +87,7 @@ log_apply_events(struct log* self, const struct module* module, bool noundo,
  * \param module        The table of registered modules.
  * \param noundo        True if the transaction is irrevokable, or false otherwise.
  * \param[out] error    An error returned by an undo operation.
- * \returns             0 on success, or a negative otherwise.
  */
-int
+void
 log_undo_events(struct log* self, const struct module* module, bool noundo,
                 struct picotm_error* error);

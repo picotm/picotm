@@ -55,8 +55,10 @@ get_tx_shared(void)
         goto out;
     }
 
-    res = tx_shared_init(&g_tx_shared);
-    if (res < 0) {
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+    tx_shared_init(&g_tx_shared, &error);
+    if (picotm_error_is_set(&error)) {
         goto err_tx_shared_init;
     }
 
@@ -91,10 +93,8 @@ get_tx(bool do_init)
         return NULL;
     }
 
-    int res = tx_init(&t_tx, tx_shared);
-    if (res < 0) {
-        return NULL;
-    }
+    tx_init(&t_tx, tx_shared);
+
     return &t_tx;
 }
 
@@ -154,13 +154,12 @@ __picotm_begin(enum __picotm_mode mode)
 
     struct tx* tx = get_tx(true);
     if (!tx) {
-        return false;
+        return false; /* Enter recovery mode. */
     }
 
-    int res = tx_begin(tx, tx_mode[mode]);
-    if (res < 0) {
-        /* TODO: error handling */
-        return false;
+    tx_begin(tx, tx_mode[mode], error);
+    if (picotm_error_is_set(error)) {
+        return false; /* Enter recovery mode. */
     }
 
     return true;
@@ -172,8 +171,8 @@ restart_tx(struct tx* tx, enum __picotm_mode mode)
     assert(tx);
 
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    int res = tx_rollback(tx, &error);
-    if (res < 0) {
+    tx_rollback(tx, &error);
+    if (picotm_error_is_set(&error)) {
         switch (error.status) {
         case PICOTM_CONFLICTING:
             /* Should be avoided, but no problem per se. */
@@ -202,8 +201,8 @@ __picotm_commit()
     struct tx* tx = get_non_null_tx();
 
     struct picotm_error* error = get_non_null_error();
-    int res = tx_commit(tx, error);
-    if (res < 0) {
+    tx_commit(tx, error);
+    if (picotm_error_is_set(error)) {
         switch (error->status) {
         case PICOTM_CONFLICTING:
             restart_tx(tx, PICOTM_MODE_RETRY);
