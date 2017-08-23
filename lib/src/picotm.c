@@ -23,7 +23,6 @@
 #include <stdatomic.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdlib.h>
 #include <string.h>
 #include "tx.h"
 #include "tx_shared.h"
@@ -33,43 +32,53 @@
  */
 
 static struct tx_shared*
-get_tx_shared(void)
+get_tx_shared(struct picotm_error* error)
 {
     static struct tx_shared g_tx_shared;
     static atomic_bool      g_tx_shared_is_initialized;
 
-    if (atomic_load_explicit(&g_tx_shared_is_initialized, memory_order_acquire)) {
+    bool is_initialized = atomic_load_explicit(&g_tx_shared_is_initialized,
+                                               memory_order_acquire);
+    if (is_initialized) {
         return &g_tx_shared;
     }
 
     static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
-    int res = pthread_mutex_lock(&lock);
-    if (res) {
+    int err = pthread_mutex_lock(&lock);
+    if (err) {
+        picotm_error_set_errno(error, err);
         return NULL;
     }
 
-    if (atomic_load_explicit(&g_tx_shared_is_initialized, memory_order_acquire)) {
+    is_initialized = atomic_load_explicit(&g_tx_shared_is_initialized,
+                                          memory_order_acquire);
+    if (is_initialized) {
         /* Another transaction initialized the tx_state structure
          * concurrently; we're done. */
         goto out;
     }
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-    tx_shared_init(&g_tx_shared, &error);
-    if (picotm_error_is_set(&error)) {
+    tx_shared_init(&g_tx_shared, error);
+    if (picotm_error_is_set(error)) {
         goto err_tx_shared_init;
     }
 
-    atomic_store_explicit(&g_tx_shared_is_initialized, true, memory_order_release);
+    atomic_store_explicit(&g_tx_shared_is_initialized, true,
+                          memory_order_release);
 
 out:
-    pthread_mutex_unlock(&lock);
+    err = pthread_mutex_unlock(&lock);
+    if (err) {
+        picotm_error_set_errno(error, err);
+        picotm_error_mark_as_non_recoverable(error);
+        goto err_out;
+    }
     return &g_tx_shared;
 
 err_tx_shared_init:
     pthread_mutex_unlock(&lock);
+err_out:
     return NULL;
 }
 
@@ -78,7 +87,7 @@ err_tx_shared_init:
  */
 
 static struct tx*
-get_tx(bool do_init)
+get_tx(bool do_init, struct picotm_error* error)
 {
     static __thread struct tx t_tx;
 
@@ -88,8 +97,8 @@ get_tx(bool do_init)
         return NULL;
     }
 
-    struct tx_shared* tx_shared = get_tx_shared();
-    if (!tx_shared) {
+    struct tx_shared* tx_shared = get_tx_shared(error);
+    if (picotm_error_is_set(error)) {
         return NULL;
     }
 
@@ -101,12 +110,17 @@ get_tx(bool do_init)
 static struct tx*
 get_non_null_tx(void)
 {
-    struct tx* tx = get_tx(true);
-    if (!tx) {
-        /* abort here as there's no legal way that tx could be NULL */
-        abort();
-    }
-    return tx;
+    while (true) {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+        struct tx* tx = get_tx(true, &error);
+        if (picotm_error_is_set(&error)) {
+            picotm_recover_from_error(&error);
+            continue;
+        }
+        assert(tx);
+        return tx;
+    };
 }
 
 static struct picotm_error*
@@ -125,10 +139,9 @@ PICOTM_EXPORT
 struct __picotm_tx*
 __picotm_get_tx()
 {
-    struct tx* tx = get_tx(true);
-    if (!tx) {
-        return NULL;
-    }
+    struct tx* tx = get_non_null_tx();
+    assert(tx);
+
     return &tx->public_state;
 }
 
@@ -152,8 +165,8 @@ __picotm_begin(enum __picotm_mode mode)
     struct picotm_error* error = get_non_null_error();
     memset(error, 0, sizeof(*error));
 
-    struct tx* tx = get_tx(true);
-    if (!tx) {
+    struct tx* tx = get_tx(true, error);
+    if (picotm_error_is_set(error)) {
         return false; /* Enter recovery mode. */
     }
 
@@ -250,9 +263,13 @@ PICOTM_EXPORT
 void
 picotm_release()
 {
-    struct tx* tx = get_tx(false);
-    if (!tx) {
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+    struct tx* tx = get_tx(false, &error);
+    if (picotm_error_is_set(&error)) {
         return;
+    } else if (!tx) {
+        return; /* thread executed no transaction; not an error */
     }
     tx_release(tx);
 }

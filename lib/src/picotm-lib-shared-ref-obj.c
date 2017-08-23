@@ -20,6 +20,7 @@
 #include "picotm/picotm-lib-shared-ref-obj.h"
 #include <stdlib.h>
 #include "picotm/picotm-error.h"
+#include "picotm/picotm-module.h"
 
 static void
 lock_obj(struct picotm_shared_ref16_obj* self, struct picotm_error* error)
@@ -34,16 +35,21 @@ lock_obj(struct picotm_shared_ref16_obj* self, struct picotm_error* error)
 }
 
 static void
-unlock_obj(struct picotm_shared_ref16_obj* self, struct picotm_error* error)
+unlock_obj(struct picotm_shared_ref16_obj* self)
 {
     assert(self);
 
-    int err = pthread_spin_unlock(&self->lock);
-    if (err) {
-        picotm_error_set_errno(error, err);
-        picotm_error_mark_as_non_recoverable(error);
-        return;
-    }
+    do {
+        int err = pthread_spin_unlock(&self->lock);
+        if (err) {
+            struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+            picotm_error_set_errno(&error, err);
+            picotm_error_mark_as_non_recoverable(&error);
+            picotm_recover_from_error(&error);
+            continue;
+        }
+        break;
+    } while (true);
 }
 
 PICOTM_EXPORT
@@ -64,17 +70,23 @@ picotm_shared_ref16_obj_init(struct picotm_shared_ref16_obj* self,
 
 PICOTM_EXPORT
 void
-picotm_shared_ref16_obj_uninit(struct picotm_shared_ref16_obj* self,
-                               struct picotm_error* error)
+picotm_shared_ref16_obj_uninit(struct picotm_shared_ref16_obj* self)
 {
     assert(self);
 
-    int err = pthread_spin_destroy(&self->lock);
-    if (err) {
-        picotm_error_set_errno(error, err);
-        picotm_error_mark_as_non_recoverable(error);
-        return;
-    }
+    do {
+        int err = pthread_spin_destroy(&self->lock);
+        if (err) {
+            /* Error during cleanup: this is a programming error. We cannot
+             * roll-back here, so we jump straig to recovery. */
+            struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+            picotm_error_set_errno(&error, err);
+            picotm_error_mark_as_non_recoverable(&error);
+            picotm_recover_from_error(&error);
+            continue;
+        }
+        break;
+    } while (true);
 }
 
 PICOTM_EXPORT
@@ -120,40 +132,48 @@ picotm_shared_ref16_obj_up(struct picotm_shared_ref16_obj* self, void* data,
     }
 
 unlock:
-    unlock_obj(self, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
+    unlock_obj(self);
 
     return;
 
 err_first_ref:
     picotm_ref_down(&self->ref);
 err_cond:
-    unlock_obj(self, error);
+    unlock_obj(self);
 }
 
 PICOTM_EXPORT
 void
 picotm_shared_ref16_obj_down(struct picotm_shared_ref16_obj* self, void* data,
                              picotm_shared_ref16_obj_condition_function cond,
-                             picotm_shared_ref16_obj_final_ref_function final_ref,
-                             struct picotm_error* error)
+                             picotm_shared_ref16_obj_final_ref_function final_ref)
 {
     assert(self);
 
-    lock_obj(self, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        lock_obj(self, &error);
+        if (picotm_error_is_set(&error)) {
+            picotm_error_mark_as_non_recoverable(&error);
+            picotm_recover_from_error(&error);
+            continue;
+        }
+        break;
+    } while (true);
 
     if (cond) {
-        bool succ = cond(self, data, error);
-        if (picotm_error_is_set(error)) {
-            goto err_cond;
-        } else if (!succ) {
-            goto unlock;
-        }
+        do {
+            struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+            bool succ = cond(self, data, &error);
+            if (picotm_error_is_set(&error)) {
+                picotm_error_mark_as_non_recoverable(&error);
+                picotm_recover_from_error(&error);
+                continue;
+            } else if (!succ) {
+                goto unlock;
+            }
+            break;
+        } while (true);
     }
 
     bool is_final_ref = picotm_ref_down(&self->ref);
@@ -162,20 +182,18 @@ picotm_shared_ref16_obj_down(struct picotm_shared_ref16_obj* self, void* data,
     }
 
     if (final_ref) {
-        final_ref(self, data, error);
-        if (picotm_error_is_set(error)) {
-            goto err_final_ref;
-        }
+        do {
+            struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+            final_ref(self, data, &error);
+            if (picotm_error_is_set(&error)) {
+                picotm_error_mark_as_non_recoverable(&error);
+                picotm_recover_from_error(&error);
+                continue;
+            }
+            break;
+        } while (true);
     }
 
 unlock:
-    unlock_obj(self, error);
-
-    return;
-
-err_final_ref:
-    /* failed in clean-up code; no way to recover */
-    picotm_error_mark_as_non_recoverable(error);
-err_cond:
-    unlock_obj(self, error);
+    unlock_obj(self);
 }
