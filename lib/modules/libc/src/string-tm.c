@@ -157,16 +157,19 @@ strdup_tm(const char* s)
     return memcpy(mem, s, len);
 }
 
+#define STRERROR_MAXLEN 64 /* must be large enough to hold any error string */
+
 PICOTM_EXPORT
 char*
 __strerror_r_gnu_tm(int errnum, char* buf, size_t buflen)
 {
+#if (_POSIX_C_SOURCE >= 200112L) && !_GNU_SOURCE
     error_module_save_errno();
 
-#if (_POSIX_C_SOURCE >= 200112L) && !_GNU_SOURCE
+    char tmpbuf[STRERROR_MAXLEN];
     int res;
     do {
-        res = strerror_r(errnum, buf, buflen);
+        res = strerror_r(errnum, tmpbuf, sizeof(tmplen));
         if (res < 0) {
             /* glibc 2.12 and earlier return the error code in errno. */
             picotm_recover_from_errno(errno);
@@ -175,6 +178,13 @@ __strerror_r_gnu_tm(int errnum, char* buf, size_t buflen)
             picotm_recover_from_errno(res);
         }
     } while (res); // error if res != 0 handled older and newer glibc
+    if (buflen) {
+        size_t tlen = strlen(tmpbuf);
+        size_t blen = buflen - 1;
+        size_t slen = blen < tlen ? blen : tlen;
+        memcpy(buf, tmpbuf, slen);
+        buf[slen] = '\0';
+    }
     char* str = buf;
 #else
     char* str;
