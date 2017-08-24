@@ -80,53 +80,55 @@ tm_page_buffer(struct tm_page* page)
     return page->buf; /* write-back is default mode */
 }
 
-static int
-tm_page_ld(struct tm_page* page, struct tm_vmem* vmem)
+static void
+tm_page_ld(struct tm_page* page, struct tm_vmem* vmem,
+           struct picotm_error* error)
 {
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
     struct tm_frame* frame =
         tm_vmem_acquire_frame_by_block(vmem, tm_page_block_index(page),
-                                       &error);
-    if (picotm_error_is_set(&error)) {
-        abort(); /* There's no legal way we should end up here! */
+                                       error);
+    if (picotm_error_is_set(error)) {
+        /* There's no legal way we should end up here! */
+        picotm_error_mark_as_non_recoverable(error);
+        return;
     }
 
     void* mem = tm_frame_buffer(frame);
     memcpy(page->buf, mem, sizeof(page->buf));
 
     tm_vmem_release_frame(vmem, frame);
-
-    return 0;
 }
 
-static int
-tm_page_st(struct tm_page* page, struct tm_vmem* vmem)
+static void
+tm_page_st(struct tm_page* page, struct tm_vmem* vmem,
+           struct picotm_error* error)
 {
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
     struct tm_frame* frame =
         tm_vmem_acquire_frame_by_block(vmem, tm_page_block_index(page),
-                                       &error);
-    if (picotm_error_is_set(&error)) {
-        abort(); /* There's no legal way we should end up here! */
+                                       error);
+    if (picotm_error_is_set(error)) {
+        /* There's no legal way we should end up here! */
+        picotm_error_mark_as_non_recoverable(error);
+        return;
     }
 
     void* buf = tm_frame_buffer(frame);
     memcpy(buf, page->buf, sizeof(page->buf));
 
     tm_vmem_release_frame(vmem, frame);
-
-    return 0;
 }
 
 static void
-tm_page_xchg(struct tm_page* page, struct tm_vmem* vmem)
+tm_page_xchg(struct tm_page* page, struct tm_vmem* vmem,
+             struct picotm_error* error)
 {
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
     struct tm_frame* frame =
         tm_vmem_acquire_frame_by_block(vmem, tm_page_block_index(page),
-                                       &error);
-    if (picotm_error_is_set(&error)) {
-        abort(); /* There's no legal way we should end up here! */
+                                       error);
+    if (picotm_error_is_set(error)) {
+        /* There's no legal way we should end up here! */
+        picotm_error_mark_as_non_recoverable(error);
+        return;
     }
 
     uint8_t buf[TM_BLOCK_SIZE];
@@ -165,14 +167,16 @@ err_tm_frame_lock:
 }
 
 static void
-tm_page_unlock_frame(struct tm_page* page, struct tm_vmem* vmem)
+tm_page_unlock_frame(struct tm_page* page, struct tm_vmem* vmem,
+                     struct picotm_error* error)
 {
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
     struct tm_frame* frame =
         tm_vmem_acquire_frame_by_block(vmem, tm_page_block_index(page),
-                                       &error);
-    if (picotm_error_is_set(&error)) {
-        abort(); /* There's no legal way we should end up here! */
+                                       error);
+    if (picotm_error_is_set(error)) {
+        /* There's no legal way we should end up here! */
+        picotm_error_mark_as_non_recoverable(error);
+        return;
     }
 
     tm_frame_unlock(frame);
@@ -287,10 +291,14 @@ acquire_page_by_address(struct tm_vmem_tx* vmem_tx, uintptr_t addr,
 }
 
 static void
-release_page(struct tm_vmem_tx* vmem_tx, struct tm_page* page)
+release_page(struct tm_vmem_tx* vmem_tx, struct tm_page* page,
+             struct picotm_error* error)
 {
     if (page->flags & TM_PAGE_FLAG_OWNING_FRAME) {
-        tm_page_unlock_frame(page, vmem_tx->vmem);
+        tm_page_unlock_frame(page, vmem_tx->vmem, error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
     }
     SLIST_REMOVE(&vmem_tx->active_pages, page, tm_page, list);
     free_page(vmem_tx, page);
@@ -315,7 +323,10 @@ tm_vmem_tx_ld(struct tm_vmem_tx* vmem_tx, uintptr_t addr, void* buf,
             if (picotm_error_is_set(error)) {
                 return;
             }
-            tm_page_ld(page, vmem_tx->vmem);
+            tm_page_ld(page, vmem_tx->vmem, error);
+            if (picotm_error_is_set(error)) {
+                return;
+            }
         }
 
         uintptr_t page_addr = tm_page_address(page);
@@ -351,7 +362,10 @@ tm_vmem_tx_st(struct tm_vmem_tx* vmem_tx, uintptr_t addr, const void* buf,
             if (picotm_error_is_set(error)) {
                 return;
             }
-            tm_page_ld(page, vmem_tx->vmem);
+            tm_page_ld(page, vmem_tx->vmem, error);
+            if (picotm_error_is_set(error)) {
+                return;
+            }
         }
 
         uintptr_t page_addr = tm_page_address(page);
@@ -387,7 +401,10 @@ tm_vmem_tx_ldst(struct tm_vmem_tx* vmem_tx, uintptr_t laddr, uintptr_t saddr,
             if (picotm_error_is_set(error)) {
                 return;
             }
-            tm_page_ld(lpage, vmem_tx->vmem);
+            tm_page_ld(lpage, vmem_tx->vmem, error);
+            if (picotm_error_is_set(error)) {
+                return;
+            }
         }
 
         uintptr_t lpage_addr = tm_page_address(lpage);
@@ -406,7 +423,10 @@ tm_vmem_tx_ldst(struct tm_vmem_tx* vmem_tx, uintptr_t laddr, uintptr_t saddr,
             if (picotm_error_is_set(error)) {
                 return;
             }
-            tm_page_ld(spage, vmem_tx->vmem);
+            tm_page_ld(spage, vmem_tx->vmem, error);
+            if (picotm_error_is_set(error)) {
+                return;
+            }
         }
 
         uintptr_t spage_addr = tm_page_address(spage);
@@ -443,12 +463,18 @@ tm_vmem_tx_privatize(struct tm_vmem_tx* vmem_tx, uintptr_t addr, size_t siz,
             if (picotm_error_is_set(error)) {
                 return;
             }
-            tm_page_ld(page, vmem_tx->vmem);
+            tm_page_ld(page, vmem_tx->vmem, error);
+            if (picotm_error_is_set(error)) {
+                return;
+            }
             page->flags |= TM_PAGE_FLAG_WRITE_THROUGH;
 
         } else if (!(page->flags & TM_PAGE_FLAG_WRITE_THROUGH)) {
             if (page->flags & TM_PAGE_FLAG_WRITTEN) {
-                tm_page_xchg(page, vmem_tx->vmem);
+                tm_page_xchg(page, vmem_tx->vmem, error);
+                if (picotm_error_is_set(error)) {
+                    return;
+                }
             }
             page->flags |= TM_PAGE_FLAG_WRITE_THROUGH;
         }
@@ -484,7 +510,10 @@ tm_vmem_tx_privatize_c(struct tm_vmem_tx* vmem_tx, uintptr_t addr, int c,
             if (picotm_error_is_set(error)) {
                 return;
             }
-            tm_page_ld(page, vmem_tx->vmem);
+            tm_page_ld(page, vmem_tx->vmem, error);
+            if (picotm_error_is_set(error)) {
+                return;
+            }
             page->flags |= TM_PAGE_FLAG_WRITE_THROUGH;
 
         } else if (!(page->flags & TM_PAGE_FLAG_WRITE_THROUGH)) {
@@ -492,7 +521,10 @@ tm_vmem_tx_privatize_c(struct tm_vmem_tx* vmem_tx, uintptr_t addr, int c,
              * so that all stores are immediately visible in the
              * region's memory. */
             if (page->flags & TM_PAGE_FLAG_WRITTEN) {
-                tm_page_xchg(page, vmem_tx->vmem);
+                tm_page_xchg(page, vmem_tx->vmem, error);
+                if (picotm_error_is_set(error)) {
+                    return;
+                }
             }
             page->flags |= TM_PAGE_FLAG_WRITE_THROUGH;
         }
@@ -543,7 +575,10 @@ tm_vmem_tx_apply(struct tm_vmem_tx* vmem_tx, struct picotm_error* error)
     SLIST_FOREACH(page, &vmem_tx->active_pages, list) {
         if ((page->flags & TM_PAGE_FLAG_WRITTEN) &&
             !(page->flags & TM_PAGE_FLAG_WRITE_THROUGH)) {
-            tm_page_st(page, vmem_tx->vmem);
+            tm_page_st(page, vmem_tx->vmem, error);
+            if (picotm_error_is_set(error)) {
+                return;
+            }
         }
     }
 }
@@ -555,7 +590,10 @@ tm_vmem_tx_undo(struct tm_vmem_tx* vmem_tx, struct picotm_error* error)
     SLIST_FOREACH(page, &vmem_tx->active_pages, list) {
         if ((page->flags & TM_PAGE_FLAG_WRITTEN) &&
             (page->flags & TM_PAGE_FLAG_WRITE_THROUGH)) {
-            tm_page_st(page, vmem_tx->vmem);
+            tm_page_st(page, vmem_tx->vmem, error);
+            if (picotm_error_is_set(error)) {
+                return;
+            }
         }
     }
 }
@@ -565,6 +603,9 @@ tm_vmem_tx_finish(struct tm_vmem_tx* vmem_tx, struct picotm_error* error)
 {
     while (!SLIST_EMPTY(&vmem_tx->active_pages)) {
         /* release_page() will remove page from queue */
-        release_page(vmem_tx, SLIST_FIRST(&vmem_tx->active_pages));
+        release_page(vmem_tx, SLIST_FIRST(&vmem_tx->active_pages), error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
     }
 }
