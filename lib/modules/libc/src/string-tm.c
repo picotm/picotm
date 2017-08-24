@@ -203,31 +203,53 @@ PICOTM_EXPORT
 int
 __strerror_r_posix_tm(int errnum, char* buf, size_t buflen)
 {
-    error_module_save_errno();
+    /* ERANGE is not an error, but signals a too-small buffer. We
+     * return it as status code to the transaction's execution phase.
+     */
 
     int res = 0;
 
 #if (_POSIX_C_SOURCE >= 200112L) && !_GNU_SOURCE
+    error_module_save_errno();
+
     do {
         res = strerror_r(errnum, buf, buflen);
         if (res < 0) {
             /* glibc 2.12 and earlier return the error code in errno. */
+            if (errno == ERANGE) {
+                return res;
+            }
             picotm_recover_from_errno(errno);
             return
         } else if (res > 0) {
             /* glibc 2.13 and later return the error code as result. */
+            if (res == ERANGE) {
+                return res;
+            }
             picotm_recover_from_errno(res);
         }
     } while (res); // error if res != 0 handled older and newer glibc
     char* str = buf;
 #else
+    char tmpbuf[STRERROR_MAXLEN];
     char* str;
     do {
-        str = strerror_r(errnum, buf, buflen);
+        str = strerror_r(errnum, tmpbuf, sizeof(tmpbuf));
         if (!str) {
             picotm_recover_from_errno(errno);
         }
-    } while (!str);
+        if (str == tmpbuf) {
+            /* GNU's strerror_l only uses the buffer if an unknown
+             * error code was given. */
+            picotm_recover_from_errno(EINVAL);
+        }
+    } while (str == buf);
+    size_t slen = strlen(str);
+    if (slen >= buflen) {
+        return ERANGE; /* output buffer is too small */
+    }
+    memcpy(buf, str, slen);
+    buf[slen] = '\0';
 #endif
 
     return res;
