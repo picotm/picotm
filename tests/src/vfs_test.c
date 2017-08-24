@@ -42,21 +42,31 @@ vfs_test_1(unsigned int tid)
 
 	picotm_begin
 
-        char cwdbuf[PATH_MAX];
-
         privatize_c_tx(path, '\0', PICOTM_TM_PRIVATIZE_LOAD);
-
-        char* cwd = getcwd_tx(cwdbuf, sizeof(cwdbuf));
-        printf("%d %s\n", tid, cwd);
-
         chdir_tx(path);
 
         sched_yield_tx();
 
         for (int i = 0; i < 5; ++i) {
 
-            cwd = getcwd_tx(cwdbuf, sizeof(cwdbuf));
-            printf("%d %s\n", tid, cwd);
+            char cwdbuf[PATH_MAX];
+            char* cwd = getcwd_tx(cwdbuf, sizeof(cwdbuf));
+
+            /* running non-tx code for testing purposes **only** */
+            unsigned int cwd_tid;
+            int res = sscanf(cwd, "/tmp/vfs_test_1-%u.test", &cwd_tid);
+            if (res < 0) {
+                perror("sscanf");
+                abort();
+            } if ((size_t)res < 1) {
+                fprintf(stderr, "thread id did not match for CWD '%s'\n", cwd);
+                abort();
+            }
+
+            if (cwd_tid != tid) {
+                fprintf(stderr, "incorrect working directory\n");
+                abort();
+            }
 
             sleep_tx(1);
         }
