@@ -88,7 +88,7 @@ unlock_fdtab(void)
 static struct fd*
 find_by_id(int fildes, struct picotm_error* error)
 {
-    if ((ssize_t)fdtab_len <= fildes) {
+    if (fdtab_len <= (size_t)fildes) {
         return NULL;
     }
 
