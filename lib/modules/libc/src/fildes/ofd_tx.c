@@ -199,7 +199,7 @@ err_ofd_ref:
 }
 
 void
-ofd_tx_ref(struct ofd_tx* self)
+ofd_tx_ref(struct ofd_tx* self, struct picotm_error* error)
 {
     picotm_ref_up(&self->ref);
 }
