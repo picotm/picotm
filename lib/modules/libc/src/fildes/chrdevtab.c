@@ -24,7 +24,6 @@
 #include <picotm/picotm-lib-tab.h>
 #include <picotm/picotm-module.h>
 #include <pthread.h>
-#include <stdlib.h>
 #include "chrdev.h"
 #include "range.h"
 
@@ -50,14 +49,8 @@ chrdevtab_uninit(void)
 
     picotm_tabwalk_1(chrdevtab, chrdevtab_len, sizeof(chrdevtab[0]),
                      chrdevtab_chrdev_uninit_walk, &error);
-    if (picotm_error_is_set(&error)) {
-        abort();
-    }
 
-    int err = pthread_rwlock_destroy(&chrdevtab_rwlock);
-    if (err) {
-        abort();
-    }
+    pthread_rwlock_destroy(&chrdevtab_rwlock);
 }
 
 /* End of destructor */

@@ -25,7 +25,6 @@
 #include <picotm/picotm-lib-tab.h>
 #include <picotm/picotm-module.h>
 #include <pthread.h>
-#include <stdlib.h>
 #include "fd.h"
 
 static struct fd                fdtab[MAXNUMFD];
@@ -51,9 +50,8 @@ fdtab_uninit(void)
 
     picotm_tabwalk_1(fdtab, sizeof(fdtab)/sizeof(fdtab[0]), sizeof(fdtab[0]),
                      fdtab_fd_uninit_walk, &error);
-    if (picotm_error_is_set(&error)) {
-        abort();
-    }
+
+    pthread_rwlock_destroy(&fdtab_rwlock);
 }
 
 /* End of destructor */

@@ -24,7 +24,6 @@
 #include <picotm/picotm-lib-tab.h>
 #include <picotm/picotm-module.h>
 #include <pthread.h>
-#include <stdlib.h>
 #include <string.h>
 #include "range.h"
 #include "ofd.h"
@@ -51,14 +50,8 @@ ofdtab_uninit(void)
 
     picotm_tabwalk_1(ofdtab, ofdtab_len, sizeof(ofdtab[0]),
                      ofdtab_ofd_uninit_walk, &error);
-    if (picotm_error_is_set(&error)) {
-        abort();
-    }
 
-    int err = pthread_rwlock_destroy(&ofdtab_rwlock);
-    if (err) {
-        abort();
-    }
+    pthread_rwlock_destroy(&ofdtab_rwlock);
 }
 
 /* End of destructor */

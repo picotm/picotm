@@ -24,7 +24,6 @@
 #include <picotm/picotm-lib-tab.h>
 #include <picotm/picotm-module.h>
 #include <pthread.h>
-#include <stdlib.h>
 #include "fifo.h"
 #include "range.h"
 
@@ -50,14 +49,8 @@ fifotab_uninit(void)
 
     picotm_tabwalk_1(fifotab, fifotab_len, sizeof(fifotab[0]),
                      fifotab_fifo_uninit_walk, &error);
-    if (picotm_error_is_set(&error)) {
-        abort();
-    }
 
-    int err = pthread_rwlock_destroy(&fifotab_rwlock);
-    if (err) {
-        abort();
-    }
+    pthread_rwlock_destroy(&fifotab_rwlock);
 }
 
 /* End of destructor */

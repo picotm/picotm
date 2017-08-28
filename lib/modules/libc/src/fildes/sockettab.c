@@ -24,7 +24,6 @@
 #include <picotm/picotm-lib-tab.h>
 #include <picotm/picotm-module.h>
 #include <pthread.h>
-#include <stdlib.h>
 #include "range.h"
 #include "socket.h"
 
@@ -50,14 +49,8 @@ sockettab_uninit(void)
 
     picotm_tabwalk_1(sockettab, sockettab_len, sizeof(sockettab[0]),
                      sockettab_socket_uninit_walk, &error);
-    if (picotm_error_is_set(&error)) {
-        abort();
-    }
 
-    int err = pthread_rwlock_destroy(&sockettab_rwlock);
-    if (err) {
-        abort();
-    }
+    pthread_rwlock_destroy(&sockettab_rwlock);
 }
 
 /* End of destructor */
