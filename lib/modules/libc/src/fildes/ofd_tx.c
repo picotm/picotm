@@ -172,7 +172,10 @@ ofd_tx_ref_or_set_up(struct ofd_tx* self, struct ofd* ofd,
     /* get references */
 
     ofd_ref(ofd);
-    file_tx_ref(file_tx);
+    file_tx_ref(file_tx, error);
+    if (picotm_error_is_set(error)) {
+        goto err_file_tx_ref;
+    }
 
     /* setup fields */
 
@@ -182,6 +185,12 @@ ofd_tx_ref_or_set_up(struct ofd_tx* self, struct ofd* ofd,
     self->offset = 0;
 
     self->seektablen = 0;
+
+    return;
+
+err_file_tx_ref:
+    ofd_unref(ofd);
+    picotm_ref_down(&self->ref);
 }
 
 void

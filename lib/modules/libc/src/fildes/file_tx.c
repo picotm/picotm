@@ -46,11 +46,11 @@ file_tx_file_type(const struct file_tx* self)
 }
 
 void
-file_tx_ref(struct file_tx* self)
+file_tx_ref(struct file_tx* self, struct picotm_error* error)
 {
     assert(self);
 
-    self->ops->ref(self);
+    self->ops->ref(self, error);
 }
 
 void

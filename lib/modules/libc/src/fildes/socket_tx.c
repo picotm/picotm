@@ -44,9 +44,9 @@ socket_tx_of_file_tx(struct file_tx* file_tx)
 }
 
 static void
-ref(struct file_tx* file_tx)
+ref(struct file_tx* file_tx, struct picotm_error* error)
 {
-    socket_tx_ref(socket_tx_of_file_tx(file_tx));
+    socket_tx_ref(socket_tx_of_file_tx(file_tx), error);
 }
 
 static void
@@ -867,7 +867,7 @@ socket_tx_ref_or_set_up(struct socket_tx* self, struct socket* socket,
 }
 
 void
-socket_tx_ref(struct socket_tx* self)
+socket_tx_ref(struct socket_tx* self, struct picotm_error* error)
 {
     picotm_ref_up(&self->ref);
 }

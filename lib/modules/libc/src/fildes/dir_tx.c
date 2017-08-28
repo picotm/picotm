@@ -63,9 +63,9 @@ dir_tx_try_wrlock_field(struct dir_tx* self, enum dir_field field,
 }
 
 static void
-ref(struct file_tx* file_tx)
+ref(struct file_tx* file_tx, struct picotm_error* error)
 {
-    dir_tx_ref(dir_tx_of_file_tx(file_tx));
+    dir_tx_ref(dir_tx_of_file_tx(file_tx), error);
 }
 
 static void
@@ -494,7 +494,7 @@ dir_tx_ref_or_set_up(struct dir_tx* self, struct dir* dir,
 }
 
 void
-dir_tx_ref(struct dir_tx* self)
+dir_tx_ref(struct dir_tx* self, struct picotm_error* error)
 {
     picotm_ref_up(&self->ref);
 }

@@ -88,7 +88,7 @@ socket_tx_ref_or_set_up(struct socket_tx* self, struct socket* socket,
  * Acquire a reference on the open file description
  */
 void
-socket_tx_ref(struct socket_tx* self);
+socket_tx_ref(struct socket_tx* self, struct picotm_error* error);
 
 /**
  * Release reference
