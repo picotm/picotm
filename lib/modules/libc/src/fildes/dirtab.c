@@ -24,7 +24,6 @@
 #include <picotm/picotm-lib-tab.h>
 #include <picotm/picotm-module.h>
 #include <pthread.h>
-#include <stdlib.h>
 #include "dir.h"
 #include "range.h"
 
@@ -50,14 +49,8 @@ dirtab_uninit(void)
 
     picotm_tabwalk_1(dirtab, dirtab_len, sizeof(dirtab[0]),
                      dirtab_dir_uninit_walk, &error);
-    if (picotm_error_is_set(&error)) {
-        abort();
-    }
 
-    int err = pthread_rwlock_destroy(&dirtab_rwlock);
-    if (err) {
-        abort();
-    }
+    pthread_rwlock_destroy(&dirtab_rwlock);
 }
 
 /* End of destructor */

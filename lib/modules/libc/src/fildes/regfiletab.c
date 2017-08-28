@@ -24,7 +24,6 @@
 #include <picotm/picotm-lib-tab.h>
 #include <picotm/picotm-module.h>
 #include <pthread.h>
-#include <stdlib.h>
 #include "range.h"
 #include "regfile.h"
 
@@ -50,14 +49,8 @@ regfiletab_uninit(void)
 
     picotm_tabwalk_1(regfiletab, regfiletab_len, sizeof(regfiletab[0]),
                      regfiletab_regfile_uninit_walk, &error);
-    if (picotm_error_is_set(&error)) {
-        abort();
-    }
 
-    int err = pthread_rwlock_destroy(&regfiletab_rwlock);
-    if (err) {
-        abort();
-    }
+    pthread_rwlock_destroy(&regfiletab_rwlock);
 }
 
 /* End of destructor */
