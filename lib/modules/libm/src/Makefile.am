@@ -16,6 +16,10 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+current = 0
+revision = 0
+age = 0
+
 lib_LTLIBRARIES = libpicotm-m.la
 
 libpicotm_m_la_SOURCES = complex.c \
@@ -28,6 +32,8 @@ libpicotm_m_la_SOURCES = complex.c \
                          math-tm.c \
                          module.c \
                          module.h
+
+libpicotm_m_la_LDFLAGS = -version-info $(current):$(revision):$(age)
 
 AM_CPPFLAGS = -I$(top_srcdir)/modules/libm/include \
               -I$(top_srcdir)/modules/libc/include \

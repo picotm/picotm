@@ -16,6 +16,10 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+current = 1
+revision = 0
+age = 0
+
 lib_LTLIBRARIES = libpicotm.la
 
 libpicotm_la_SOURCES = log.c \
@@ -37,5 +41,7 @@ libpicotm_la_SOURCES = log.c \
                        tx.h \
                        tx_shared.c \
                        tx_shared.h
+
+libpicotm_la_LDFLAGS = -version-info $(current):$(revision):$(age)
 
 AM_CPPFLAGS = -I$(srcdir)/../include

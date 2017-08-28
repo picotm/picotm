@@ -16,9 +16,15 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+current = 0
+revision = 0
+age = 0
+
 lib_LTLIBRARIES = libpicotm-pthread.la
 
 libpicotm_pthread_la_SOURCES = pthread.c
+
+libpicotm_pthread_la_LDFLAGS = -version-info $(current):$(revision):$(age)
 
 AM_CPPFLAGS = -I$(top_srcdir)/modules/libpthread/include \
               -I$(top_srcdir)/modules/tm/include \
