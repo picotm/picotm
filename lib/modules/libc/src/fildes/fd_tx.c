@@ -558,7 +558,7 @@ fd_tx_fcntl_exec(struct fd_tx* self, int fildes, int cmd,
                                     &self->fcntltablen, cmd, arg, &oldvalue,
                                     error);
         if (picotm_error_is_set(error)) {
-            abort();
+            goto err_cmd;
         }
     }
 
