@@ -122,15 +122,13 @@ chrdev_ref_or_set_up(struct chrdev* self, int fildes,
 }
 
 void
-chrdev_ref(struct chrdev* self)
+chrdev_ref(struct chrdev* self, struct picotm_error* error)
 {
     assert(self);
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-    picotm_shared_ref16_obj_up(&self->ref_obj, NULL, NULL, NULL, &error);
-    if (picotm_error_is_set(&error)) {
-        abort();
+    picotm_shared_ref16_obj_up(&self->ref_obj, NULL, NULL, NULL, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 }
 

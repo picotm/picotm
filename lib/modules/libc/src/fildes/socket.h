@@ -31,6 +31,7 @@
  * \endcond
  */
 
+struct picotm_error;
 struct picotm_rwstate;
 
 /**
@@ -87,10 +88,11 @@ socket_ref_or_set_up(struct socket* self, int fildes,
 
 /**
  * \brief Acquires a reference on an instance of `struct socket`.
- * \param   self    The socket instance.
+ * \param       self    The socket instance.
+ * \param[out]  error   Returns an error to the caller.
  */
 void
-socket_ref(struct socket* self);
+socket_ref(struct socket* self, struct picotm_error* error);
 
 /**
  * \brief Compares the socket's id to an id and acquires a reference if both

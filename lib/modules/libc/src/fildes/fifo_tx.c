@@ -588,7 +588,10 @@ fifo_tx_ref_or_set_up(struct fifo_tx* self, struct fifo* fifo,
     }
 
     /* get reference on FIFO */
-    fifo_ref(fifo);
+    fifo_ref(fifo, error);
+    if (picotm_error_is_set(error)) {
+        goto err_fifo_ref;
+    }
 
     /* setup fields */
 
@@ -599,6 +602,11 @@ fifo_tx_ref_or_set_up(struct fifo_tx* self, struct fifo* fifo,
     self->fcntltablen = 0;
     self->wrtablen = 0;
     self->wrbuflen = 0;
+
+    return;
+
+err_fifo_ref:
+    picotm_ref_down(&self->ref);
 }
 
 void

@@ -1287,7 +1287,10 @@ regfile_tx_ref_or_set_up(struct regfile_tx* self, struct regfile* regfile,
     }
 
     /* get reference on file */
-    regfile_ref(regfile);
+    regfile_ref(regfile, error);
+    if (picotm_error_is_set(error)) {
+        goto err_regfile_ref;
+    }
 
     /* setup fields */
 
@@ -1304,6 +1307,11 @@ regfile_tx_ref_or_set_up(struct regfile_tx* self, struct regfile* regfile,
     self->wrbuflen = 0;
 
     self->locktablen = 0;
+
+    return;
+
+err_regfile_ref:
+    picotm_ref_down(&self->ref);
 }
 
 void

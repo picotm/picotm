@@ -477,7 +477,10 @@ dir_tx_ref_or_set_up(struct dir_tx* self, struct dir* dir,
     }
 
     /* acquire reference on directory */
-    dir_ref(dir);
+    dir_ref(dir, error);
+    if (picotm_error_is_set(error)) {
+        goto err_dir_ref;
+    }
 
     /* setup fields */
 
@@ -491,6 +494,11 @@ dir_tx_ref_or_set_up(struct dir_tx* self, struct dir* dir,
 
     self->fchmodtablen = 0;
     self->fcntltablen = 0;
+
+    return;
+
+err_dir_ref:
+    picotm_ref_down(&self->ref);
 }
 
 void
