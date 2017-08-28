@@ -32,6 +32,7 @@
  * \endcond
  */
 
+struct picotm_error;
 struct picotm_rwstate;
 struct rwcountermap;
 
@@ -91,10 +92,11 @@ regfile_ref_or_set_up(struct regfile* self, int fildes,
 
 /**
  * \brief Acquires a reference on an instance of `struct regfile`.
- * \param   self    The file instance.
+ * \param       self    The file instance.
+ * \param[out]  error   Returns an error to the caller.
  */
 void
-regfile_ref(struct regfile* self);
+regfile_ref(struct regfile* self, struct picotm_error* error);
 
 /**
  * \brief Compares the file's id to an id and acquires a reference if both

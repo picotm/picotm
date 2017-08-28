@@ -33,6 +33,7 @@
  * \endcond
  */
 
+struct picotm_error;
 struct picotm_rwstate;
 
 /**
@@ -76,10 +77,11 @@ ofd_uninit(struct ofd* self);
 
 /**
  * \brief Acquires a reference on an open file description.
- * \param   self    The open file description.
+ * \param       self    The open file description.
+ * \param[out]  error   Returns an error to the caller.
  */
 void
-ofd_ref(struct ofd* self);
+ofd_ref(struct ofd* self, struct picotm_error* error);
 
 /**
  * \brief Sets up an open file description or acquires a reference

@@ -171,7 +171,11 @@ ofd_tx_ref_or_set_up(struct ofd_tx* self, struct ofd* ofd,
 
     /* get references */
 
-    ofd_ref(ofd);
+    ofd_ref(ofd, error);
+    if (picotm_error_is_set(error)) {
+        goto err_ofd_ref;
+    }
+
     file_tx_ref(file_tx, error);
     if (picotm_error_is_set(error)) {
         goto err_file_tx_ref;
@@ -190,6 +194,7 @@ ofd_tx_ref_or_set_up(struct ofd_tx* self, struct ofd* ofd,
 
 err_file_tx_ref:
     ofd_unref(ofd);
+err_ofd_ref:
     picotm_ref_down(&self->ref);
 }
 

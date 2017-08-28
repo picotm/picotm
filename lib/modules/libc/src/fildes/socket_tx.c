@@ -854,7 +854,10 @@ socket_tx_ref_or_set_up(struct socket_tx* self, struct socket* socket,
     }
 
     /* get reference on socket */
-    socket_ref(socket);
+    socket_ref(socket, error);
+    if (picotm_error_is_set(error)) {
+        goto err_socket_ref;
+    }
 
     /* setup fields */
 
@@ -864,6 +867,11 @@ socket_tx_ref_or_set_up(struct socket_tx* self, struct socket* socket,
     self->fcntltablen = 0;
     self->wrtablen = 0;
     self->wrbuflen = 0;
+
+    return;
+
+err_socket_ref:
+    picotm_ref_down(&self->ref);
 }
 
 void

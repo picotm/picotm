@@ -31,6 +31,7 @@
  * \endcond
  */
 
+struct picotm_error;
 struct picotm_rwstate;
 
 /**
@@ -86,10 +87,11 @@ fifo_ref_or_set_up(struct fifo* self, int fildes, struct picotm_error* error);
 
 /**
  * \brief Acquires a reference on an instance of `struct fifo`.
- * \param   self    The FIFO instance.
+ * \param       self    The FIFO instance.
+ * \param[out]  error   Returns an error to the caller.
  */
 void
-fifo_ref(struct fifo* self);
+fifo_ref(struct fifo* self, struct picotm_error* error);
 
 /**
  * \brief Compares the FIFO's id to an id and acquires a reference if both

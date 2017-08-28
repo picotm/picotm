@@ -31,6 +31,7 @@
  * \endcond
  */
 
+struct picotm_error;
 struct picotm_rwstate;
 
 /**
@@ -84,10 +85,11 @@ dir_ref_or_set_up(struct dir* self, int fildes, struct picotm_error* error);
 
 /**
  * \brief Acquires a reference on an instance of `struct dir`.
- * \param   self    The dir instance.
+ * \param       self    The dir instance.
+ * \param[out]  error   Returns an error to the caller.
  */
 void
-dir_ref(struct dir* self);
+dir_ref(struct dir* self, struct picotm_error* error);
 
 /**
  * \brief Compares the dir's id to an id and acquires a reference if both

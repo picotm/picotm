@@ -31,6 +31,7 @@
  * \endcond
  */
 
+struct picotm_error;
 struct picotm_rwstate;
 
 /**
@@ -86,10 +87,11 @@ chrdev_ref_or_set_up(struct chrdev* self, int fildes,
 
 /**
  * \brief Acquires a reference on an instance of `struct chrdev`.
- * \param   self    The chrdev instance.
+ * \param       self    The chrdev instance.
+ * \param[out]  error   Returns an error to the caller.
  */
 void
-chrdev_ref(struct chrdev* self);
+chrdev_ref(struct chrdev* self, struct picotm_error* error);
 
 /**
  * \brief Compares the chrdev's id to an id and acquires a reference if both
