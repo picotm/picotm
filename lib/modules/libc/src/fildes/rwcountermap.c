@@ -23,6 +23,7 @@
 #include <picotm/picotm-error.h>
 #include <picotm/picotm-lib-array.h>
 #include <picotm/picotm-lib-ptr.h>
+#include <picotm/picotm-module.h>
 #include <stdlib.h>
 #include "range.h"
 #include "rwcounter.h"
@@ -266,14 +267,21 @@ void
 rwcountermap_unlock(struct rwcountermap* self,
                     unsigned long long record_length,
                     unsigned long long record_offset,
-                    struct rwlockmap* rwlockmap,
-                    struct picotm_error* error)
+                    struct rwlockmap* rwlockmap)
 {
-    rwcountermap_for_each_record_in_range(self, record_length, record_offset,
-                                          rwlockmap, unlock_record, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+        rwcountermap_for_each_record_in_range(self, record_length,
+                                              record_offset, rwlockmap,
+                                              unlock_record, &error);
+        if (picotm_error_is_set(&error)) {
+            picotm_error_mark_as_non_recoverable(&error);
+            picotm_recover_from_error(&error);
+            continue;
+        }
+        break;
+    } while (true);
 }
 
 static void
