@@ -59,5 +59,4 @@ void
 rwcountermap_unlock(struct rwcountermap* self,
                     unsigned long long record_length,
                     unsigned long long record_offset,
-                    struct rwlockmap *rwlockmap,
-                    struct picotm_error* error);
+                    struct rwlockmap *rwlockmap);

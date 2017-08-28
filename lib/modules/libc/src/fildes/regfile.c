@@ -23,7 +23,6 @@
 #include <picotm/picotm-lib-array.h>
 #include <picotm/picotm-lib-ptr.h>
 #include <picotm/picotm-lib-rwstate.h>
-#include <stdlib.h>
 #include "rwcountermap.h"
 
 #define RECSIZE (1ul << RECBITS)
@@ -290,14 +289,8 @@ regfile_unlock_region(struct regfile* self, off_t off, size_t nbyte,
 {
     assert(self);
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
     rwcountermap_unlock(rwcountermap,
                         reccount(nbyte),
                         recoffset(off),
-                        &self->rwlockmap,
-                        &error);
-    if (picotm_error_is_set(&error)) {
-        abort();
-    }
+                        &self->rwlockmap);
 }
