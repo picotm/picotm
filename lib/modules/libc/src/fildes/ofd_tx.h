@@ -168,10 +168,11 @@ ofd_tx_ref_or_set_up(struct ofd_tx* self, struct ofd* ofd,
 
 /**
  * \brief Acquires a reference on the transaction-local open file description.
- * \param   self    The transaction-local open file description.
+ * \param       self    The transaction-local open file description.
+ * \param[out]  error   Returns an error to the caller.
  */
 void
-ofd_tx_ref(struct ofd_tx* self);
+ofd_tx_ref(struct ofd_tx* self, struct picotm_error* error);
 
 /**
  * \brief Releases a reference on the transaction-local open file description.

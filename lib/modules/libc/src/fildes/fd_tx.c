@@ -130,13 +130,18 @@ fd_tx_ref_or_set_up(struct fd_tx* self, struct fd* fd, struct ofd_tx* ofd_tx,
         goto err_fd_ref;
     }
 
-    ofd_tx_ref(ofd_tx);
+    ofd_tx_ref(ofd_tx, error);
+    if (picotm_error_is_set(error)) {
+        goto err_ofd_tx_ref;
+    }
 
     self->fd = fd;
     self->ofd_tx = ofd_tx;
 
     return;
 
+err_ofd_tx_ref:
+    fd_unref(fd);
 err_fd_ref:
     picotm_ref_down(&self->ref);
 }
