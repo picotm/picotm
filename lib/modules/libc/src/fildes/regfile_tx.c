@@ -567,7 +567,7 @@ lseek_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
                                     from, offset, whence,
                                     error);
         if (picotm_error_is_set(error)) {
-            abort();
+            return (off_t)-1;
         }
     }
 
