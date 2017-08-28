@@ -22,6 +22,7 @@
 #include <picotm/picotm-error.h>
 #include <picotm/picotm-lib-array.h>
 #include <picotm/picotm-lib-tab.h>
+#include <picotm/picotm-module.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
@@ -63,30 +64,39 @@ ofdtab_uninit(void)
 /* End of destructor */
 
 static void
-rdlock_ofdtab(void)
+rdlock_ofdtab(struct picotm_error* error)
 {
     int err = pthread_rwlock_rdlock(&ofdtab_rwlock);
     if (err) {
-        abort();
+        picotm_error_set_errno(error, err);
+        return;
     }
 }
 
 static void
-wrlock_ofdtab(void)
+wrlock_ofdtab(struct picotm_error* error)
 {
     int err = pthread_rwlock_wrlock(&ofdtab_rwlock);
     if (err) {
-        abort();
+        picotm_error_set_errno(error, err);
+        return;
     }
 }
 
 static void
 unlock_ofdtab(void)
 {
-    int err = pthread_rwlock_unlock(&ofdtab_rwlock);
-    if (err) {
-        abort();
-    }
+    do {
+        int err = pthread_rwlock_unlock(&ofdtab_rwlock);
+        if (err) {
+            struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+            picotm_error_set_errno(&error, err);
+            picotm_error_mark_as_non_recoverable(&error);
+            picotm_recover_from_error(&error);
+            continue;
+        }
+        break;
+    } while (true);
 }
 
 /* requires a writer lock */
@@ -192,7 +202,10 @@ ofdtab_ref_fildes(int fildes, bool newly_created, struct picotm_error* error)
      */
 
     if (!newly_created) {
-        rdlock_ofdtab();
+        rdlock_ofdtab(error);
+        if (picotm_error_is_set(error)) {
+            return NULL;
+        }
 
         ofd = find_by_id(&id, error_ne_fildes(newly_created), error);
         if (picotm_error_is_set(error)) {
@@ -206,7 +219,10 @@ ofdtab_ref_fildes(int fildes, bool newly_created, struct picotm_error* error)
 
     /* Not found or new entry is requested; acquire writer lock to
      * create a new entry in the ofd table. */
-    wrlock_ofdtab();
+    wrlock_ofdtab(error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
 
     if (!newly_created) {
         /* Re-try find operation; maybe element was added meanwhile. */

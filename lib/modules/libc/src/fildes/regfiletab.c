@@ -22,6 +22,7 @@
 #include <picotm/picotm-error.h>
 #include <picotm/picotm-lib-array.h>
 #include <picotm/picotm-lib-tab.h>
+#include <picotm/picotm-module.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include "range.h"
@@ -62,30 +63,39 @@ regfiletab_uninit(void)
 /* End of destructor */
 
 static void
-rdlock_regfiletab(void)
+rdlock_regfiletab(struct picotm_error* error)
 {
     int err = pthread_rwlock_rdlock(&regfiletab_rwlock);
     if (err) {
-        abort();
+        picotm_error_set_errno(error, err);
+        return;
     }
 }
 
 static void
-wrlock_regfiletab(void)
+wrlock_regfiletab(struct picotm_error* error)
 {
     int err = pthread_rwlock_wrlock(&regfiletab_rwlock);
     if (err) {
-        abort();
+        picotm_error_set_errno(error, err);
+        return;
     }
 }
 
 static void
 unlock_regfiletab(void)
 {
-    int err = pthread_rwlock_unlock(&regfiletab_rwlock);
-    if (err) {
-        abort();
-    }
+    do {
+        int err = pthread_rwlock_unlock(&regfiletab_rwlock);
+        if (err) {
+            struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+            picotm_error_set_errno(&error, err);
+            picotm_error_mark_as_non_recoverable(&error);
+            picotm_recover_from_error(&error);
+            continue;
+        }
+        break;
+    } while (true);
 }
 
 /* requires a writer lock */
@@ -165,12 +175,14 @@ regfiletab_ref_fildes(int fildes, struct picotm_error* error)
         return NULL;
     }
 
-
     /* Try to find an existing regfile structure with the given id; iff
      * a new element was not explicitly requested.
      */
 
-    rdlock_regfiletab();
+    rdlock_regfiletab(error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
 
     struct regfile* regfile = find_by_id(&id);
     if (regfile) {
@@ -183,7 +195,10 @@ regfiletab_ref_fildes(int fildes, struct picotm_error* error)
      * the regfile table.
      */
 
-    wrlock_regfiletab();
+    wrlock_regfiletab(error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
 
     /* Re-try find operation; maybe element was added meanwhile. */
     regfile = find_by_id(&id);

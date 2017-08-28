@@ -22,6 +22,7 @@
 #include <picotm/picotm-error.h>
 #include <picotm/picotm-lib-array.h>
 #include <picotm/picotm-lib-tab.h>
+#include <picotm/picotm-module.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include "range.h"
@@ -62,30 +63,39 @@ sockettab_uninit(void)
 /* End of destructor */
 
 static void
-rdlock_sockettab(void)
+rdlock_sockettab(struct picotm_error* error)
 {
     int err = pthread_rwlock_rdlock(&sockettab_rwlock);
     if (err) {
-        abort();
+        picotm_error_set_errno(error, err);
+        return;
     }
 }
 
 static void
-wrlock_sockettab(void)
+wrlock_sockettab(struct picotm_error* error)
 {
     int err = pthread_rwlock_wrlock(&sockettab_rwlock);
     if (err) {
-        abort();
+        picotm_error_set_errno(error, err);
+        return;
     }
 }
 
 static void
 unlock_sockettab(void)
 {
-    int err = pthread_rwlock_unlock(&sockettab_rwlock);
-    if (err) {
-        abort();
-    }
+    do {
+        int err = pthread_rwlock_unlock(&sockettab_rwlock);
+        if (err) {
+            struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+            picotm_error_set_errno(&error, err);
+            picotm_error_mark_as_non_recoverable(&error);
+            picotm_recover_from_error(&error);
+            continue;
+        }
+        break;
+    } while (true);
 }
 
 /* requires a writer lock */
@@ -168,7 +178,10 @@ sockettab_ref_fildes(int fildes, struct picotm_error* error)
     /* Try to find an existing socket structure with the given id.
      */
 
-    rdlock_sockettab();
+    rdlock_sockettab(error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
 
     struct socket* socket = find_by_id(&id);
     if (socket) {
@@ -181,7 +194,10 @@ sockettab_ref_fildes(int fildes, struct picotm_error* error)
      * the socket table.
      */
 
-    wrlock_sockettab();
+    wrlock_sockettab(error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
 
     /* Re-try find operation; maybe element was added meanwhile. */
     socket = find_by_id(&id);
