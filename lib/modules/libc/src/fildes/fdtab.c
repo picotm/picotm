@@ -23,6 +23,7 @@
 #include <picotm/picotm-lib-rwlock.h>
 #include <picotm/picotm-lib-rwstate.h>
 #include <picotm/picotm-lib-tab.h>
+#include <picotm/picotm-module.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include "fd.h"
@@ -58,30 +59,39 @@ fdtab_uninit(void)
 /* End of destructor */
 
 static void
-rdlock_fdtab(void)
+rdlock_fdtab(struct picotm_error* error)
 {
     int err = pthread_rwlock_rdlock(&fdtab_rwlock);
     if (err) {
-        abort();
+        picotm_error_set_errno(error, err);
+        return;
     }
 }
 
 static void
-wrlock_fdtab(void)
+wrlock_fdtab(struct picotm_error* error)
 {
     int err = pthread_rwlock_wrlock(&fdtab_rwlock);
     if (err) {
-        abort();
+        picotm_error_set_errno(error, err);
+        return;
     }
 }
 
 static void
 unlock_fdtab(void)
 {
-    int err = pthread_rwlock_unlock(&fdtab_rwlock);
-    if (err) {
-        abort();
-    }
+    do {
+        int err = pthread_rwlock_unlock(&fdtab_rwlock);
+        if (err) {
+            struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+            picotm_error_set_errno(&error, err);
+            picotm_error_mark_as_non_recoverable(&error);
+            picotm_recover_from_error(&error);
+            continue;
+        }
+        break;
+    } while (true);
 }
 
 /* requires reader lock */
@@ -138,7 +148,10 @@ fdtab_ref_fildes(int fildes, struct picotm_rwstate* lock_state,
      * descriptor.
      */
 
-    rdlock_fdtab();
+    rdlock_fdtab(error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
 
     struct fd* fd = find_by_id(fildes, error);
     if (picotm_error_is_set(error)) {
@@ -153,7 +166,10 @@ fdtab_ref_fildes(int fildes, struct picotm_rwstate* lock_state,
      * in the file-descriptor table.
      */
 
-    wrlock_fdtab();
+    wrlock_fdtab(error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
 
     fd = search_by_id(fildes, error);
     if (picotm_error_is_set(error)) {

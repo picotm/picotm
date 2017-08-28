@@ -22,6 +22,7 @@
 #include <picotm/picotm-error.h>
 #include <picotm/picotm-lib-array.h>
 #include <picotm/picotm-lib-tab.h>
+#include <picotm/picotm-module.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include "chrdev.h"
@@ -62,30 +63,39 @@ chrdevtab_uninit(void)
 /* End of destructor */
 
 static void
-rdlock_chrdevtab(void)
+rdlock_chrdevtab(struct picotm_error* error)
 {
     int err = pthread_rwlock_rdlock(&chrdevtab_rwlock);
     if (err) {
-        abort();
+        picotm_error_set_errno(error, err);
+        return;
     }
 }
 
 static void
-wrlock_chrdevtab(void)
+wrlock_chrdevtab(struct picotm_error* error)
 {
     int err = pthread_rwlock_wrlock(&chrdevtab_rwlock);
     if (err) {
-        abort();
+        picotm_error_set_errno(error, err);
+        return;
     }
 }
 
 static void
 unlock_chrdevtab(void)
 {
-    int err = pthread_rwlock_unlock(&chrdevtab_rwlock);
-    if (err) {
-        abort();
-    }
+    do {
+        int err = pthread_rwlock_unlock(&chrdevtab_rwlock);
+        if (err) {
+            struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+            picotm_error_set_errno(&error, err);
+            picotm_error_mark_as_non_recoverable(&error);
+            picotm_recover_from_error(&error);
+            continue;
+        }
+        break;
+    } while (true);
 }
 
 /* requires a writer lock */
@@ -166,7 +176,10 @@ chrdevtab_ref_fildes(int fildes, struct picotm_error* error)
     /* Try to find an existing chrdev structure with the given id.
      */
 
-    rdlock_chrdevtab();
+    rdlock_chrdevtab(error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
 
     struct chrdev* chrdev = find_by_id(&id);
     if (chrdev) {
@@ -179,7 +192,10 @@ chrdevtab_ref_fildes(int fildes, struct picotm_error* error)
      * the chrdev table.
      */
 
-    wrlock_chrdevtab();
+    wrlock_chrdevtab(error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
 
     /* Re-try find operation; maybe element was added meanwhile. */
     chrdev = find_by_id(&id);

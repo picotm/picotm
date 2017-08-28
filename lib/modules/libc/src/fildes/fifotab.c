@@ -22,6 +22,7 @@
 #include <picotm/picotm-error.h>
 #include <picotm/picotm-lib-array.h>
 #include <picotm/picotm-lib-tab.h>
+#include <picotm/picotm-module.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include "fifo.h"
@@ -62,30 +63,39 @@ fifotab_uninit(void)
 /* End of destructor */
 
 static void
-rdlock_fifotab(void)
+rdlock_fifotab(struct picotm_error* error)
 {
     int err = pthread_rwlock_rdlock(&fifotab_rwlock);
     if (err) {
-        abort();
+        picotm_error_set_errno(error, err);
+        return;
     }
 }
 
 static void
-wrlock_fifotab(void)
+wrlock_fifotab(struct picotm_error* error)
 {
     int err = pthread_rwlock_wrlock(&fifotab_rwlock);
     if (err) {
-        abort();
+        picotm_error_set_errno(error, err);
+        return;
     }
 }
 
 static void
 unlock_fifotab(void)
 {
-    int err = pthread_rwlock_unlock(&fifotab_rwlock);
-    if (err) {
-        abort();
-    }
+    do {
+        int err = pthread_rwlock_unlock(&fifotab_rwlock);
+        if (err) {
+            struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+            picotm_error_set_errno(&error, err);
+            picotm_error_mark_as_non_recoverable(&error);
+            picotm_recover_from_error(&error);
+            continue;
+        }
+        break;
+    } while (true);
 }
 
 /* requires a writer lock */
@@ -167,7 +177,10 @@ fifotab_ref_fildes(int fildes, struct picotm_error* error)
     /* Try to find an existing fifo structure with the given id.
      */
 
-    rdlock_fifotab();
+    rdlock_fifotab(error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
 
     struct fifo* fifo = find_by_id(&id);
     if (fifo) {
@@ -180,7 +193,10 @@ fifotab_ref_fildes(int fildes, struct picotm_error* error)
      * the fifo table.
      */
 
-    wrlock_fifotab();
+    wrlock_fifotab(error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
 
     /* Re-try find operation; maybe element was added meanwhile. */
     fifo = find_by_id(&id);
