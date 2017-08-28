@@ -66,14 +66,16 @@ file_tx_file_type(const struct file_tx* self);
 
 /**
  * Acquire a reference on a file transaction.
- * \param   self    A file transaction.
+ * \param       self    A file transaction.
+ * \param[out]  error   Returns an error to the caller.
  */
 void
-file_tx_ref(struct file_tx* self);
+file_tx_ref(struct file_tx* self, struct picotm_error* error);
 
 /**
  * Release a reference on a file transaction.
- * \param   self    A file transaction.
+ * \param       self    A file transaction.
+ * \param[out]  error   Returns an error to the caller.
  */
 void
 file_tx_unref(struct file_tx* self);

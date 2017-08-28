@@ -85,7 +85,7 @@ dir_tx_ref_or_set_up(struct dir_tx* self, struct dir* dir,
  * Acquire a reference on the open file description
  */
 void
-dir_tx_ref(struct dir_tx* self);
+dir_tx_ref(struct dir_tx* self, struct picotm_error* error);
 
 /**
  * Release reference

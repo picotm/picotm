@@ -122,9 +122,9 @@ regfile_tx_of_file_tx(struct file_tx* file_tx)
 }
 
 static void
-ref(struct file_tx* file_tx)
+ref(struct file_tx* file_tx, struct picotm_error* error)
 {
-    regfile_tx_ref(regfile_tx_of_file_tx(file_tx));
+    regfile_tx_ref(regfile_tx_of_file_tx(file_tx), error);
 }
 
 static void
@@ -1307,7 +1307,7 @@ regfile_tx_ref_or_set_up(struct regfile_tx* self, struct regfile* regfile,
 }
 
 void
-regfile_tx_ref(struct regfile_tx* self)
+regfile_tx_ref(struct regfile_tx* self, struct picotm_error* error)
 {
     picotm_ref_up(&self->ref);
 }

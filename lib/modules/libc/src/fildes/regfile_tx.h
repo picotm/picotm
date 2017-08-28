@@ -128,7 +128,7 @@ regfile_tx_ref_or_set_up(struct regfile_tx* self, struct regfile* regfile,
  * Acquire a reference on the open file description
  */
 void
-regfile_tx_ref(struct regfile_tx* self);
+regfile_tx_ref(struct regfile_tx* self, struct picotm_error* error);
 
 /**
  * Release reference

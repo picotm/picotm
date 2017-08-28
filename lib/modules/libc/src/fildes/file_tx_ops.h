@@ -49,7 +49,7 @@ struct file_tx_ops {
      * Reference counting
      */
 
-    void (*ref)(struct file_tx*);
+    void (*ref)(struct file_tx*, struct picotm_error*);
     void (*unref)(struct file_tx*);
 
     /*

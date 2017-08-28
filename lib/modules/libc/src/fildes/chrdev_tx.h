@@ -89,7 +89,7 @@ chrdev_tx_ref_or_set_up(struct chrdev_tx* self, struct chrdev* chrdev,
  * Acquire a reference on the open file description
  */
 void
-chrdev_tx_ref(struct chrdev_tx* self);
+chrdev_tx_ref(struct chrdev_tx* self, struct picotm_error* error);
 
 /**
  * Release reference

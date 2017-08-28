@@ -45,9 +45,9 @@ chrdev_tx_of_file_tx(struct file_tx* file_tx)
 }
 
 static void
-ref(struct file_tx* file_tx)
+ref(struct file_tx* file_tx, struct picotm_error* error)
 {
-    chrdev_tx_ref(chrdev_tx_of_file_tx(file_tx));
+    chrdev_tx_ref(chrdev_tx_of_file_tx(file_tx), error);
 }
 
 static void
@@ -603,7 +603,7 @@ chrdev_tx_ref_or_set_up(struct chrdev_tx* self, struct chrdev* chrdev,
 }
 
 void
-chrdev_tx_ref(struct chrdev_tx* self)
+chrdev_tx_ref(struct chrdev_tx* self, struct picotm_error* error)
 {
     picotm_ref_up(&self->ref);
 }

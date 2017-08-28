@@ -87,7 +87,7 @@ fifo_tx_ref_or_set_up(struct fifo_tx* self, struct fifo* fifo,
  * Acquire a reference on the open file description
  */
 void
-fifo_tx_ref(struct fifo_tx* self);
+fifo_tx_ref(struct fifo_tx* self, struct picotm_error* error);
 
 /**
  * Release reference
