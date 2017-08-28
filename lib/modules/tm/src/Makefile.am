@@ -16,6 +16,10 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+current = 0
+revision = 1
+age = 0
+
 lib_LTLIBRARIES = libpicotm-tm.la
 
 libpicotm_tm_la_SOURCES = frame.c \
@@ -30,6 +34,8 @@ libpicotm_tm_la_SOURCES = frame.c \
                           vmem.h \
                           vmem_tx.c \
                           vmem_tx.h
+
+libpicotm_tm_la_LDFLAGS = -version-info $(current):$(revision):$(age)
 
 AM_CPPFLAGS = -I$(top_srcdir)/modules/tm/include \
               -I$(top_srcdir)/include

@@ -16,6 +16,10 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+current = 1
+revision = 0
+age = 0
+
 lib_LTLIBRARIES = libpicotm-c.la
 
 libpicotm_c_la_SOURCES = allocator/allocator_tx.c \
@@ -141,6 +145,8 @@ libpicotm_c_la_SOURCES = allocator/allocator_tx.c \
                          sys_stat-tm.c \
                          unistd.c \
                          unistd-tm.c
+
+libpicotm_c_la_LDFLAGS = -version-info $(current):$(revision):$(age)
 
 AM_CPPFLAGS = -I$(top_srcdir)/modules/libc/include \
               -I$(top_srcdir)/modules/tm/include \
