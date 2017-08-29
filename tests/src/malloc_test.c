@@ -29,7 +29,7 @@
 /**
  * Allocate and free within transaction.
  */
-void
+static void
 malloc_test_1(unsigned int tid)
 {
     picotm_begin
@@ -67,7 +67,7 @@ malloc_test_1(unsigned int tid)
 /**
  * Allocate outside of transaction; free within transaction.
  */
-void
+static void
 malloc_test_2(unsigned int tid)
 {
     char* buf[10];
@@ -114,7 +114,7 @@ malloc_test_2(unsigned int tid)
 /**
  * Allocate within transaction; free outside of transaction.
  */
-void
+static void
 malloc_test_3(unsigned int tid)
 {
     char* buf[10];
@@ -158,7 +158,7 @@ malloc_test_3(unsigned int tid)
 /**
  * Allocate, realloc and free within transaction.
  */
-void
+static void
 malloc_test_4(unsigned int tid)
 {
     picotm_begin
@@ -195,7 +195,7 @@ malloc_test_4(unsigned int tid)
 /**
  * Allocate outside of transaction; realloc and free within transaction.
  */
-void
+static void
 malloc_test_5(unsigned int tid)
 {
     uint8_t* buf = malloc(30 * sizeof(buf[0]));
@@ -247,7 +247,7 @@ malloc_test_5(unsigned int tid)
  * Allocate outside of transaction; realloc within transaction; free
  * outside of transaction.
  */
-void
+static void
 malloc_test_6(unsigned int tid)
 {
     uint8_t* buf = malloc(30 * sizeof(buf[0]));
@@ -295,7 +295,7 @@ malloc_test_6(unsigned int tid)
 
 static unsigned long long g_test_7_cycles;
 
-void
+static void
 malloc_test_7_pre(unsigned long nthreads, enum loop_mode loop,
                   enum boundary_type btype, unsigned long long bound,
                   int (*logmsg)(const char*, ...))
@@ -312,7 +312,7 @@ malloc_test_7_pre(unsigned long nthreads, enum loop_mode loop,
 /**
  * Multiple allocations and frees within transaction.
  */
-void
+static void
 malloc_test_7(unsigned int tid)
 {
     const size_t tid_min32 = tid < 32 ? 32 : tid;
@@ -337,7 +337,7 @@ malloc_test_7(unsigned int tid)
 
 static unsigned long long g_test_8_cycles;
 
-void
+static void
 malloc_test_8_pre(unsigned long nthreads, enum loop_mode loop,
                   enum boundary_type btype, unsigned long long bound,
                   int (*logmsg)(const char*, ...))
@@ -355,7 +355,7 @@ malloc_test_8_pre(unsigned long nthreads, enum loop_mode loop,
  * Multiple allocations and frees outside of transaction. Gives
  * non-transactional base line for comparing with malloc_test_9().
  */
-void
+static void
 malloc_test_8(unsigned int tid)
 {
     for (unsigned long long i = 0; i < g_test_8_cycles; ++i) {
@@ -367,7 +367,7 @@ malloc_test_8(unsigned int tid)
 
 static unsigned long long g_test_9_cycles;
 
-void
+static void
 malloc_test_9_pre(unsigned long nthreads, enum loop_mode loop,
                   enum boundary_type btype, unsigned long long bound,
                   int (*logmsg)(const char*, ...))
@@ -384,7 +384,7 @@ malloc_test_9_pre(unsigned long nthreads, enum loop_mode loop,
 /**
  * Multiple allocations ands frees within transaction.
  */
-void
+static void
 malloc_test_9(unsigned int tid)
 {
     picotm_begin
@@ -402,4 +402,22 @@ malloc_test_9(unsigned int tid)
         abort_transaction_on_error(__func__);
 
     picotm_end
+}
+
+const struct test_func malloc_test[] = {
+    {"malloc_test_1", malloc_test_1, NULL, NULL},
+    {"malloc_test_2", malloc_test_2, NULL, NULL},
+    {"malloc_test_3", malloc_test_3, NULL, NULL},
+    {"malloc_test_4", malloc_test_4, NULL, NULL},
+    {"malloc_test_5", malloc_test_5, NULL, NULL},
+    {"malloc_test_6", malloc_test_6, NULL, NULL},
+    {"malloc_test_7", malloc_test_7, malloc_test_7_pre, NULL},
+    {"malloc_test_8", malloc_test_8, malloc_test_8_pre, NULL},
+    {"malloc_test_9", malloc_test_9, malloc_test_9_pre, NULL}
+};
+
+size_t
+number_of_malloc_tests()
+{
+    return arraylen(malloc_test);
 }

@@ -21,11 +21,13 @@
 #include <stdlib.h>
 #include <picotm/picotm.h>
 #include <picotm/picotm-tm.h>
+#include "ptr.h"
+#include "test.h"
 #include "testhlp.h"
 
 static unsigned long g_value;
 
-void
+static void
 tm_test_1_pre(unsigned long nthreads, enum loop_mode loop,
               enum boundary_type btype, unsigned long long bound,
               int (*logmsg)(const char*, ...))
@@ -33,7 +35,7 @@ tm_test_1_pre(unsigned long nthreads, enum loop_mode loop,
     g_value = 0;
 }
 
-void
+static void
 tm_test_1(unsigned int tid)
 {
     picotm_begin
@@ -49,7 +51,7 @@ tm_test_1(unsigned int tid)
     picotm_end
 }
 
-void
+static void
 tm_test_1_post(unsigned long nthreads, enum loop_mode loop,
                enum boundary_type btype, unsigned long long bound,
                int (*logmsg)(const char*, ...))
@@ -64,4 +66,14 @@ tm_test_1_post(unsigned long nthreads, enum loop_mode loop,
         default:
             break;
     }
+}
+
+const struct test_func tm_test[] = {
+    {"tm_test_1", tm_test_1, tm_test_1_pre, tm_test_1_post}
+};
+
+size_t
+number_of_tm_tests()
+{
+    return arraylen(tm_test);
 }

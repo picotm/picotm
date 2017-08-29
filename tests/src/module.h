@@ -20,9 +20,21 @@
 #pragma once
 
 #include <stddef.h>
-#include "test.h"
 
-extern const struct test_func vfs_test[];
+struct test_func;
+
+struct module {
+
+    /* Name of the tested module. */
+    const char* name;
+
+    /* Test functions */
+    const struct test_func* test;
+
+    size_t (*number_of_tests)(void);
+};
 
 size_t
-number_of_vfs_tests(void);
+number_of_modules(void);
+
+extern const struct module module_list[];

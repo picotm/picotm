@@ -28,9 +28,11 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include "ptr.h"
+#include "test.h"
 #include "testhlp.h"
 
-void
+static void
 vfs_test_1(unsigned int tid)
 {
     char path[64];
@@ -78,7 +80,7 @@ vfs_test_1(unsigned int tid)
 	picotm_end
 }
 
-void
+static void
 vfs_test_1_pre(unsigned long nthreads, enum loop_mode loop,
                enum boundary_type btype, unsigned long long bound,
                int (*logmsg)(const char*, ...))
@@ -100,7 +102,7 @@ vfs_test_1_pre(unsigned long nthreads, enum loop_mode loop,
     }
 }
 
-void
+static void
 vfs_test_1_post(unsigned long nthreads, enum loop_mode loop,
                 enum boundary_type btype, unsigned long long bound,
                 int (*logmsg)(const char*, ...))
@@ -120,4 +122,14 @@ vfs_test_1_post(unsigned long nthreads, enum loop_mode loop,
             abort();
         }
     }
+}
+
+const struct test_func vfs_test[] = {
+    {"vfs_test_1", vfs_test_1, vfs_test_1_pre, vfs_test_1_post},
+};
+
+size_t
+number_of_vfs_tests()
+{
+    return arraylen(vfs_test);
 }

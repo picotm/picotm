@@ -19,16 +19,10 @@
 
 #pragma once
 
+#include <stddef.h>
 #include "test.h"
 
-void
-tm_test_1_pre(unsigned long nthreads, enum loop_mode loop,
-              enum boundary_type btype, unsigned long long bound,
-              int (*logmsg)(const char*, ...));
-void
-tm_test_1(unsigned int tid);
+extern const struct test_func tm_test[];
 
-void
-tm_test_1_post(unsigned long nthreads, enum loop_mode loop,
-               enum boundary_type btype, unsigned long long bound,
-               int (*logmsg)(const char*, ...));
+size_t
+number_of_tm_tests(void);

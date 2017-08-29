@@ -19,26 +19,10 @@
 
 #pragma once
 
+#include <stddef.h>
 #include "test.h"
 
-void malloc_test_1(unsigned int tid);
-void malloc_test_2(unsigned int tid);
-void malloc_test_3(unsigned int tid);
-void malloc_test_4(unsigned int tid);
-void malloc_test_5(unsigned int tid);
-void malloc_test_6(unsigned int tid);
+extern const struct test_func malloc_test[];
 
-void malloc_test_7_pre(unsigned long nthreads, enum loop_mode loop,
-                       enum boundary_type btype, unsigned long long bound,
-                       int (*logmsg)(const char*, ...));
-void malloc_test_7(unsigned int tid);
-
-void malloc_test_8_pre(unsigned long nthreads, enum loop_mode loop,
-                       enum boundary_type btype, unsigned long long bound,
-                       int (*logmsg)(const char*, ...));
-void malloc_test_8(unsigned int tid);
-
-void malloc_test_9_pre(unsigned long nthreads, enum loop_mode loop,
-                       enum boundary_type btype, unsigned long long bound,
-                       int (*logmsg)(const char*, ...));
-void malloc_test_9(unsigned int tid);
+size_t
+number_of_malloc_tests(void);
