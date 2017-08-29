@@ -25,6 +25,8 @@ AC_CONFIG_MACRO_DIR([m4])
 
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 
+AC_REQUIRE_AUX_FILE([tap-driver.sh])
+
 
 dnl
 dnl Compiler support
@@ -64,6 +66,7 @@ dnl Output
 dnl
 
 AC_CONFIG_FILES([Makefile
+                 scripts/Makefile
                  src/Makefile])
 AC_OUTPUT
 
