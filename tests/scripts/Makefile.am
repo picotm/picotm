@@ -16,8 +16,16 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-SUBDIRS = scripts src
+TESTS = module-tm-t1.test \
+        module-tm-t4.test \
+        module-malloc-t1.test \
+        module-malloc-t4.test \
+        module-fildes-t1.test \
+        module-fildes-t4.test \
+        module-vfs-t1.test \
+        module-vfs-t4.test
 
-ACLOCAL_AMFLAGS = -I m4
+EXTRA_DIST = $(TESTS)
 
-EXTRA_DIST = COPYING
+TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
+                  $(top_srcdir)/build-aux/tap-driver.sh
