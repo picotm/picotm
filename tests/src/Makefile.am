@@ -18,8 +18,8 @@
 
 bin_PROGRAMS = picotm-test
 
-picotm_test_SOURCES = fdio_test.c \
-                      fdio_test.h \
+picotm_test_SOURCES = fildes_test.c \
+                      fildes_test.h \
                       main.c \
                       malloc_test.c \
                       malloc_test.h \
