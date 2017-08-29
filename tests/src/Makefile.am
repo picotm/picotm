@@ -30,6 +30,8 @@ picotm_test_SOURCES = fildes_test.c \
                       test.h \
                       testhlp.c \
                       testhlp.h \
+                      tempfile.c \
+                      tempfile.h \
                       tm_test.c \
                       tm_test.h \
                       vfs_test.c \

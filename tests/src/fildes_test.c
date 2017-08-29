@@ -40,6 +40,7 @@
 #include <picotm/unistd.h>
 #include <unistd.h>
 #include "ptr.h"
+#include "tempfile.h"
 #include "testhlp.h"
 
 static size_t
@@ -53,18 +54,34 @@ static const char g_test_str[] = "Hello world!\n";
 static char g_filename[PATH_MAX];
 static int  g_fildes = -1;
 
+void
+test_file_format_string(char format[PATH_MAX], unsigned long testnum)
+{
+    int res = snprintf(format, PATH_MAX, "%s/fildes_test_%lu-%%lu-XXXXXX",
+                       temp_path(), testnum);
+    if (res < 0) {
+        perror("snprintf");
+        abort();
+    } else if (res >= PATH_MAX) {
+        fprintf(stderr, "snprintf output truncated\n");
+        abort();
+    }
+}
+
 static const char*
 temp_filename(unsigned long testnum, unsigned long filenum)
 {
-    int res = snprintf(g_filename, sizeof(g_filename),
-                       "/tmp/fildes-test-%lu-%lu-XXXXXX",
-                       testnum, filenum);
+    char format[PATH_MAX];
+    test_file_format_string(format, testnum);
+
+    int res = snprintf(g_filename, sizeof(g_filename), format, filenum);
     if (res < 0) {
         perror("snprintf");
         abort();
     }
+
     const char* filename = mktemp(g_filename);
-    if (!filename) {
+    if (!strcmp(filename, "")) {
         perror("mktemp");
         abort();
     }
@@ -104,9 +121,10 @@ set_file_status_flags(int fildes, int flags)
 static int
 temp_fildes(unsigned long testnum, unsigned long filenum, int flags)
 {
-    int res = snprintf(g_filename, sizeof(g_filename),
-                       "/tmp/fildes-test-%lu-%lu-XXXXXX",
-                       testnum, filenum);
+    char format[PATH_MAX];
+    test_file_format_string(format, testnum);
+
+    int res = snprintf(g_filename, sizeof(g_filename), format, filenum);
     if (res < 0) {
         perror("snprintf");
         abort();
@@ -544,8 +562,11 @@ fildes_test_7_post(unsigned long nthreads, enum loop_mode loop,
 static void
 fildes_test_8(unsigned int tid)
 {
-    char filename[32];
-    int res = snprintf(filename, sizeof(filename), "/tmp/fildes-%u.test", tid);
+    char format[PATH_MAX];
+    test_file_format_string(format, 8);
+
+    char filename[PATH_MAX];
+    int res = snprintf(filename, sizeof(filename), format, tid);
     if (res < 0) {
         perror("snprintf");
         abort();
@@ -645,11 +666,13 @@ fildes_test_8_post(unsigned long nthreads, enum loop_mode loop,
                    enum boundary_type btype, unsigned long long bound,
                    int (*logmsg)(const char*, ...))
 {
+    char format[PATH_MAX];
+    test_file_format_string(format, 8);
+
     for (unsigned long tid = 0; tid < nthreads; ++tid) {
 
-        char filename[32];
-        int res = snprintf(filename, sizeof(filename),
-                           "/tmp/fildes-%lu.test", tid);
+        char filename[PATH_MAX];
+        int res = snprintf(filename, sizeof(filename), format, tid);
         if (res < 0) {
             perror("snprintf");
             abort();
