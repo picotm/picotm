@@ -17,12 +17,38 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#pragma once
+#include "module.h"
+#include "fdio_test.h"
+#include "malloc_test.h"
+#include "ptr.h"
+#include "tm_test.h"
+#include "vfs_test.h"
 
-#include <stddef.h>
-#include "test.h"
-
-extern const struct test_func vfs_test[];
+const struct module module_list[] = {
+    {
+        "tm",
+        tm_test,
+        number_of_tm_tests
+    },
+    {
+        "malloc",
+        malloc_test,
+        number_of_malloc_tests
+    },
+    {
+        "fdio",
+        fdio_test,
+        number_of_fdio_tests
+    },
+    {
+        "vfs",
+        vfs_test,
+        number_of_vfs_tests
+    }
+};
 
 size_t
-number_of_vfs_tests(void);
+number_of_modules()
+{
+    return arraylen(module_list);
+}

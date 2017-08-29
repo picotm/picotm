@@ -23,6 +23,8 @@ picotm_test_SOURCES = fdio_test.c \
                       main.c \
                       malloc_test.c \
                       malloc_test.h \
+                      module.c \
+                      module.h \
                       ptr.h \
                       test.c \
                       test.h \
