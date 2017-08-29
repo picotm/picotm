@@ -29,20 +29,39 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include "ptr.h"
+#include "tempfile.h"
 #include "test.h"
 #include "testhlp.h"
+
+void
+test_dir_format_string(char format[PATH_MAX], unsigned long test)
+{
+    int res = snprintf(format, PATH_MAX, "%s/vfs_test_%lu-%%lu.test", temp_path(), test);
+    if (res < 0) {
+        perror("snprintf");
+        abort();
+    } else if (res >= PATH_MAX) {
+        fprintf(stderr, "snprintf output truncated\n");
+        abort();
+    }
+}
 
 static void
 vfs_test_1(unsigned int tid)
 {
-    char path[64];
-    int res = snprintf(path, sizeof(path), "/tmp/vfs_test_1-%u.test", tid);
+    char format[PATH_MAX];
+    test_dir_format_string(format, 1);
+
+    char path[PATH_MAX];
+    int res = snprintf(path, sizeof(path), format, tid);
     if (res < 0) {
         perror("snprintf");
         abort();
     }
 
 	picotm_begin
+
+        privatize_c_tx(format, '\0', PICOTM_TM_PRIVATIZE_LOAD);
 
         privatize_c_tx(path, '\0', PICOTM_TM_PRIVATIZE_LOAD);
         chdir_tx(path);
@@ -55,8 +74,8 @@ vfs_test_1(unsigned int tid)
             char* cwd = getcwd_tx(cwdbuf, sizeof(cwdbuf));
 
             /* running non-tx code for testing purposes **only** */
-            unsigned int cwd_tid;
-            int res = sscanf(cwd, "/tmp/vfs_test_1-%u.test", &cwd_tid);
+            unsigned long cwd_tid;
+            int res = sscanf(cwd, format, &cwd_tid);
             if (res < 0) {
                 perror("sscanf");
                 abort();
@@ -85,10 +104,13 @@ vfs_test_1_pre(unsigned long nthreads, enum loop_mode loop,
                enum boundary_type btype, unsigned long long bound,
                int (*logmsg)(const char*, ...))
 {
+    char format[PATH_MAX];
+    test_dir_format_string(format, 1);
+
     for (unsigned long tid = 0; tid < nthreads; ++tid) {
 
-        char path[64];
-        int res = snprintf(path, sizeof(path), "/tmp/vfs_test_1-%lu.test", tid);
+        char path[PATH_MAX];
+        int res = snprintf(path, sizeof(path), format, tid);
         if (res < 0) {
             perror("snprintf");
             abort();
@@ -107,10 +129,13 @@ vfs_test_1_post(unsigned long nthreads, enum loop_mode loop,
                 enum boundary_type btype, unsigned long long bound,
                 int (*logmsg)(const char*, ...))
 {
+    char format[PATH_MAX];
+    test_dir_format_string(format, 1);
+
     for (unsigned long tid = 0; tid < nthreads; ++tid) {
 
-        char path[64];
-        int res = snprintf(path, sizeof(path), "/tmp/vfs_test_1-%lu.test", tid);
+        char path[PATH_MAX];
+        int res = snprintf(path, sizeof(path), format, tid);
         if (res < 0) {
             perror("snprintf");
             abort();
