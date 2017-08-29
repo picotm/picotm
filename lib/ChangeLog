@@ -1,4 +1,24 @@
 
+picotm 0.5.0 (2017-08-29)
+------------
+
+    * Library versioning is now supported by libpicotm.so and its
+      modules.
+
+    * Improved internal error handling. All calls to abort() have been
+      replaced with (non-)recoverable error handling; resulting in better
+      support for fail-safe systems.
+
+    * File-descriptor support has been reworked and cleaned up. There are
+      now seprarate data structures for different file types and open file
+      descriptions. Non-transactional corner cases are detected and reported.
+
+    * A data structure for shared reference-counted objects has been added
+      to the module library.
+
+    * The GNU and POSIX variants of strerror_r() are now supported.
+
+
 picotm 0.4.0 (2017-07-31)
 ------------
 

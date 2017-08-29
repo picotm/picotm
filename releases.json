@@ -7,6 +7,14 @@
     "tags": "c, concurrency, development, distributedsystems, embedded, errorhandling, failsafe, framework, linux, lockless, manufacturing, multicore, multithreading, softwaretransactionalmemory, transactions",
     "releases": [
         {
+            "version": "0.5.0",
+            "state": "beta",
+            "scope": "minor",
+            "changes": "Library versioning; Distinct file buffers; Internal error handling without abort(); strerror_r(); Shared ref-count object.",
+            "download": "https://github.com/picotm/picotm/releases/download/v0.5.0/picotm-0.5.0.tar.gz",
+            "published": "2017-08-29T06:59:23+00:00"
+        },
+        {
             "version": "0.4.0",
             "state": "beta",
             "scope": "minor",
