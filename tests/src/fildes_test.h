@@ -22,7 +22,7 @@
 #include <stddef.h>
 #include "test.h"
 
-extern const struct test_func fdio_test[];
+extern const struct test_func fildes_test[];
 
 size_t
-number_of_fdio_tests(void);
+number_of_fildes_tests(void);

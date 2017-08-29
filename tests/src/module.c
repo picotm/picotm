@@ -18,7 +18,7 @@
  */
 
 #include "module.h"
-#include "fdio_test.h"
+#include "fildes_test.h"
 #include "malloc_test.h"
 #include "ptr.h"
 #include "tm_test.h"
@@ -36,9 +36,9 @@ const struct module module_list[] = {
         number_of_malloc_tests
     },
     {
-        "fdio",
-        fdio_test,
-        number_of_fdio_tests
+        "fildes",
+        fildes_test,
+        number_of_fildes_tests
     },
     {
         "vfs",
