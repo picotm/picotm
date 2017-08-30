@@ -18,9 +18,11 @@
  */
 
 #include "tempfile.h"
+#include <errno.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "taputils.h"
 
 static char        g_path_template[] = "/tmp/picotm-XXXXXX";
 static const char* g_path = NULL;
@@ -32,12 +34,14 @@ temp_path()
 
     int err = pthread_mutex_lock(&lock);
     if (err) {
+        tap_error_errno("pthread_mutex_lock()", err);
         abort();
     }
 
     if (g_path) {
         err = pthread_mutex_unlock(&lock);
         if (err) {
+            tap_error_errno("pthread_mutex_unlock()", err);
             abort();
         }
         return g_path;
@@ -45,13 +49,14 @@ temp_path()
 
     char* path = mkdtemp(g_path_template);
     if (!path) {
-        perror("snprintf");
+        tap_error_errno("snprintf()", errno);
         abort();
     }
     g_path = path;
 
     err = pthread_mutex_unlock(&lock);
     if (err) {
+        tap_error_errno("pthread_mutex_unlock()", err);
         abort();
     }
 

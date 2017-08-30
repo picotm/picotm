@@ -18,6 +18,7 @@
  */
 
 #include "vfs_test.h"
+#include <errno.h>
 #include <limits.h>
 #include <picotm/picotm.h>
 #include <picotm/picotm-tm.h>
@@ -29,6 +30,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include "ptr.h"
+#include "taputils.h"
 #include "tempfile.h"
 #include "test.h"
 #include "testhlp.h"
@@ -38,10 +40,10 @@ test_dir_format_string(char format[PATH_MAX], unsigned long test)
 {
     int res = snprintf(format, PATH_MAX, "%s/vfs_test_%lu-%%lu.test", temp_path(), test);
     if (res < 0) {
-        perror("snprintf");
+        tap_error_errno("snprintf()", errno);
         abort();
     } else if (res >= PATH_MAX) {
-        fprintf(stderr, "snprintf output truncated\n");
+        tap_error("snprintf() output truncated\n");
         abort();
     }
 }
@@ -55,7 +57,7 @@ vfs_test_1(unsigned int tid)
     char path[PATH_MAX];
     int res = snprintf(path, sizeof(path), format, tid);
     if (res < 0) {
-        perror("snprintf");
+        tap_error_errno("snprintf()", errno);
         abort();
     }
 
@@ -77,15 +79,15 @@ vfs_test_1(unsigned int tid)
             unsigned long cwd_tid;
             int res = sscanf(cwd, format, &cwd_tid);
             if (res < 0) {
-                perror("sscanf");
+                tap_error_errno("sscanf()", errno);
                 abort();
             } if ((size_t)res < 1) {
-                fprintf(stderr, "thread id did not match for CWD '%s'\n", cwd);
+                tap_error("thread id did not match for CWD '%s'\n", cwd);
                 abort();
             }
 
             if (cwd_tid != tid) {
-                fprintf(stderr, "incorrect working directory\n");
+                tap_error("incorrect working directory\n");
                 abort();
             }
 
@@ -101,8 +103,7 @@ vfs_test_1(unsigned int tid)
 
 static void
 vfs_test_1_pre(unsigned long nthreads, enum loop_mode loop,
-               enum boundary_type btype, unsigned long long bound,
-               int (*logmsg)(const char*, ...))
+               enum boundary_type btype, unsigned long long bound)
 {
     char format[PATH_MAX];
     test_dir_format_string(format, 1);
@@ -112,13 +113,13 @@ vfs_test_1_pre(unsigned long nthreads, enum loop_mode loop,
         char path[PATH_MAX];
         int res = snprintf(path, sizeof(path), format, tid);
         if (res < 0) {
-            perror("snprintf");
+            tap_error_errno("snprintf()", errno);
             abort();
         }
 
         res = mkdir(path, S_IRWXU);
         if (res < 0) {
-            perror("mkdir");
+            tap_error_errno("mkdir()", errno);
             abort();
         }
     }
@@ -126,8 +127,7 @@ vfs_test_1_pre(unsigned long nthreads, enum loop_mode loop,
 
 static void
 vfs_test_1_post(unsigned long nthreads, enum loop_mode loop,
-                enum boundary_type btype, unsigned long long bound,
-                int (*logmsg)(const char*, ...))
+                enum boundary_type btype, unsigned long long bound)
 {
     char format[PATH_MAX];
     test_dir_format_string(format, 1);
@@ -137,13 +137,13 @@ vfs_test_1_post(unsigned long nthreads, enum loop_mode loop,
         char path[PATH_MAX];
         int res = snprintf(path, sizeof(path), format, tid);
         if (res < 0) {
-            perror("snprintf");
+            tap_error_errno("snprintf()", errno);
             abort();
         }
 
         res = rmdir(path);
         if (res < 0) {
-            perror("rmdir");
+            tap_error_errno("rmdir()", errno);
             abort();
         }
     }

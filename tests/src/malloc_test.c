@@ -297,8 +297,7 @@ static unsigned long long g_test_7_cycles;
 
 static void
 malloc_test_7_pre(unsigned long nthreads, enum loop_mode loop,
-                  enum boundary_type btype, unsigned long long bound,
-                  int (*logmsg)(const char*, ...))
+                  enum boundary_type btype, unsigned long long bound)
 {
     switch (btype) {
         case BOUND_CYCLES:
@@ -339,8 +338,7 @@ static unsigned long long g_test_8_cycles;
 
 static void
 malloc_test_8_pre(unsigned long nthreads, enum loop_mode loop,
-                  enum boundary_type btype, unsigned long long bound,
-                  int (*logmsg)(const char*, ...))
+                  enum boundary_type btype, unsigned long long bound)
 {
     switch (btype) {
         case BOUND_CYCLES:
@@ -369,8 +367,7 @@ static unsigned long long g_test_9_cycles;
 
 static void
 malloc_test_9_pre(unsigned long nthreads, enum loop_mode loop,
-                  enum boundary_type btype, unsigned long long bound,
-                  int (*logmsg)(const char*, ...))
+                  enum boundary_type btype, unsigned long long bound)
 {
     switch (btype) {
         case BOUND_CYCLES:

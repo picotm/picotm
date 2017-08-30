@@ -22,6 +22,7 @@
 #include <picotm/picotm.h>
 #include <picotm/picotm-tm.h>
 #include "ptr.h"
+#include "taputils.h"
 #include "test.h"
 #include "testhlp.h"
 
@@ -29,8 +30,7 @@ static unsigned long g_value;
 
 static void
 tm_test_1_pre(unsigned long nthreads, enum loop_mode loop,
-              enum boundary_type btype, unsigned long long bound,
-              int (*logmsg)(const char*, ...))
+              enum boundary_type btype, unsigned long long bound)
 {
     g_value = 0;
 }
@@ -53,13 +53,12 @@ tm_test_1(unsigned int tid)
 
 static void
 tm_test_1_post(unsigned long nthreads, enum loop_mode loop,
-               enum boundary_type btype, unsigned long long bound,
-               int (*logmsg)(const char*, ...))
+               enum boundary_type btype, unsigned long long bound)
 {
     switch (btype) {
         case BOUND_CYCLES:
             if (g_value != (nthreads * bound)) {
-                logmsg("post-condition failed: g_value != (nthreads * bound)\n");
+                tap_error("post-condition failed: g_value != (nthreads * bound)");
                 abort();
             }
             break;
