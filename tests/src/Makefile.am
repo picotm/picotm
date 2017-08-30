@@ -26,6 +26,10 @@ picotm_test_SOURCES = fildes_test.c \
                       module.c \
                       module.h \
                       ptr.h \
+                      tap.c \
+                      tap.h \
+                      taputils.c \
+                      taputils.h \
                       test.c \
                       test.h \
                       testhlp.c \
