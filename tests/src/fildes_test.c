@@ -40,6 +40,7 @@
 #include <picotm/unistd.h>
 #include <unistd.h>
 #include "ptr.h"
+#include "taputils.h"
 #include "tempfile.h"
 #include "testhlp.h"
 
@@ -60,10 +61,10 @@ test_file_format_string(char format[PATH_MAX], unsigned long testnum)
     int res = snprintf(format, PATH_MAX, "%s/fildes_test_%lu-%%lu-XXXXXX",
                        temp_path(), testnum);
     if (res < 0) {
-        perror("snprintf");
+        tap_error_errno("snprintf()", errno);
         abort();
     } else if (res >= PATH_MAX) {
-        fprintf(stderr, "snprintf output truncated\n");
+        tap_error("snprintf() output truncated\n");
         abort();
     }
 }
@@ -76,13 +77,13 @@ temp_filename(unsigned long testnum, unsigned long filenum)
 
     int res = snprintf(g_filename, sizeof(g_filename), format, filenum);
     if (res < 0) {
-        perror("snprintf");
+        tap_error_errno("snprintf()", errno);
         abort();
     }
 
     const char* filename = mktemp(g_filename);
     if (!strcmp(filename, "")) {
-        perror("mktemp");
+        tap_error_errno("mktemp()", errno);
         abort();
     }
     return filename;
@@ -93,7 +94,7 @@ set_flags(int fildes, int flags, int get_cmd, int set_cmd)
 {
     int current_flags = TEMP_FAILURE_RETRY(fcntl(fildes, get_cmd));
     if (current_flags < 0) {
-        perror("fcntl");
+        tap_error_errno("fcntl()", errno);
         abort();
     }
     if (current_flags == flags) {
@@ -101,7 +102,7 @@ set_flags(int fildes, int flags, int get_cmd, int set_cmd)
     }
     int res = TEMP_FAILURE_RETRY(fcntl(fildes, set_cmd, flags));
     if (res < 0) {
-        perror("fcntl");
+        tap_error_errno("fcntl()", errno);
         abort();
     }
 }
@@ -126,12 +127,12 @@ temp_fildes(unsigned long testnum, unsigned long filenum, int flags)
 
     int res = snprintf(g_filename, sizeof(g_filename), format, filenum);
     if (res < 0) {
-        perror("snprintf");
+        tap_error_errno("snprintf()", errno);
         abort();
     }
     int fildes = mkstemp(g_filename);
     if (fildes < 0) {
-        perror("mkstemp");
+        tap_error_errno("mkstemp()", errno);
         abort();
     }
     if (flags) {
@@ -146,7 +147,7 @@ close_fildes(int fildes)
 {
     int res = TEMP_FAILURE_RETRY(close(fildes));
     if (res < 0) {
-        perror("close");
+        tap_error_errno("close()", errno);
         abort();
     }
 }
@@ -163,7 +164,7 @@ temp_fildes_gen(unsigned long testnum, unsigned long filenum, int flags,
 
         ssize_t res = TEMP_FAILURE_RETRY(write(fildes, &val, count));
         if (res < 0) {
-            perror("write");
+            tap_error_errno("write()", errno);
             abort();
         }
         filsiz -= res;
@@ -209,7 +210,7 @@ remove_file(const char* filename)
 {
     int res = unlink(filename);
     if (res < 0) {
-        perror("unlink");
+        tap_error_errno("unlink()", errno);
         abort();
     }
 }
@@ -239,16 +240,14 @@ fildes_test_1(unsigned int tid)
 
 static void
 fildes_test_1_pre(unsigned long nthreads, enum loop_mode loop,
-                  enum boundary_type btype, unsigned long long bound,
-                  int (*logmsg)(const char*, ...))
+                  enum boundary_type btype, unsigned long long bound)
 {
     temp_filename(1, 0);
 }
 
 static void
 fildes_test_1_post(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     remove_file(g_filename);
 }
@@ -282,16 +281,14 @@ fildes_test_2(unsigned int tid)
 
 static void
 fildes_test_2_pre(unsigned long nthreads, enum loop_mode loop,
-                  enum boundary_type btype, unsigned long long bound,
-                  int (*logmsg)(const char*, ...))
+                  enum boundary_type btype, unsigned long long bound)
 {
     temp_filename(2, 0);
 }
 
 static void
 fildes_test_2_post(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     remove_file(g_filename);
 }
@@ -325,16 +322,14 @@ fildes_test_3(unsigned int tid)
 
 static void
 fildes_test_3_pre(unsigned long nthreads, enum loop_mode loop,
-                  enum boundary_type btype, unsigned long long bound,
-                  int (*logmsg)(const char*, ...))
+                  enum boundary_type btype, unsigned long long bound)
 {
     temp_filename(3, 0);
 }
 
 static void
 fildes_test_3_post(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     remove_file(g_filename);
 }
@@ -369,16 +364,14 @@ fildes_test_4(unsigned int tid)
 
 static void
 fildes_test_4_pre(unsigned long nthreads, enum loop_mode loop,
-                  enum boundary_type btype, unsigned long long bound,
-                  int (*logmsg)(const char*, ...))
+                  enum boundary_type btype, unsigned long long bound)
 {
     temp_filename(4, 0);
 }
 
 static void
 fildes_test_4_post(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     remove_file(g_filename);
 }
@@ -426,16 +419,14 @@ fildes_test_5(unsigned int tid)
 
 static void
 fildes_test_5_pre(unsigned long nthreads, enum loop_mode loop,
-                  enum boundary_type btype, unsigned long long bound,
-                  int (*logmsg)(const char*, ...))
+                  enum boundary_type btype, unsigned long long bound)
 {
     temp_filename(5, 0);
 }
 
 static void
 fildes_test_5_post(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     remove_file(g_filename);
 }
@@ -478,16 +469,14 @@ fildes_test_6(unsigned int tid)
 
 static void
 fildes_test_6_pre(unsigned long nthreads, enum loop_mode loop,
-                  enum boundary_type btype, unsigned long long bound,
-                  int (*logmsg)(const char*, ...))
+                  enum boundary_type btype, unsigned long long bound)
 {
     temp_filename(6, 0);
 }
 
 static void
 fildes_test_6_post(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     remove_file(g_filename);
 }
@@ -501,7 +490,7 @@ fildes_test_7(unsigned int tid)
     char teststr[16];
     int res = snprintf(teststr, sizeof(teststr), "%d\n", (int)tid);
     if (res < 0) {
-        perror("snprintf");
+        tap_error_errno("snprintf()", errno);
         abort();
     }
 
@@ -539,16 +528,14 @@ fildes_test_7(unsigned int tid)
 
 static void
 fildes_test_7_pre(unsigned long nthreads, enum loop_mode loop,
-                  enum boundary_type btype, unsigned long long bound,
-                  int (*logmsg)(const char*, ...))
+                  enum boundary_type btype, unsigned long long bound)
 {
     temp_filename(7, 0);
 }
 
 static void
 fildes_test_7_post(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     remove_file(g_filename);
 }
@@ -568,14 +555,14 @@ fildes_test_8(unsigned int tid)
     char filename[PATH_MAX];
     int res = snprintf(filename, sizeof(filename), format, tid);
     if (res < 0) {
-        perror("snprintf");
+        tap_error_errno("snprintf()", errno);
         abort();
     }
 
     int pfd[2];
     res = pipe(pfd);
     if (res < 0) {
-        perror("pipe");
+        tap_error_errno("pipe()", errno);
         abort();
     }
 
@@ -583,11 +570,11 @@ fildes_test_8(unsigned int tid)
     {
         int fl = TEMP_FAILURE_RETRY(fcntl(pfd[0], F_GETFL));
         if (fl < 0) {
-            perror("fcntl");
+            tap_error_errno("fcntl()", errno);
             abort();
         }
         if (TEMP_FAILURE_RETRY(fcntl(pfd[0], F_SETFL, fl | O_NONBLOCK)) < 0) {
-            perror("fcntl");
+            tap_error_errno("fcntl()", errno);
             abort();
         }
     }
@@ -599,14 +586,14 @@ fildes_test_8(unsigned int tid)
         char str[128];
         ssize_t res = snprintf(str, sizeof(str), "%d %s", i, g_test_str);
         if (res < 0) {
-            perror("snprintf");
+            tap_error_errno("snprintf()", errno);
             abort();
         }
         size_t len = res;
 
         res = TEMP_FAILURE_RETRY(write(pfd[1], str, len));
         if (res < 0) {
-            perror("write");
+            tap_error_errno("write()", errno);
             abort();
         }
     }
@@ -655,16 +642,14 @@ fildes_test_8(unsigned int tid)
 
 static void
 fildes_test_8_pre(unsigned long nthreads, enum loop_mode loop,
-                  enum boundary_type btype, unsigned long long bound,
-                  int (*logmsg)(const char*, ...))
+                  enum boundary_type btype, unsigned long long bound)
 {
     return;
 }
 
 static void
 fildes_test_8_post(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     char format[PATH_MAX];
     test_file_format_string(format, 8);
@@ -674,7 +659,7 @@ fildes_test_8_post(unsigned long nthreads, enum loop_mode loop,
         char filename[PATH_MAX];
         int res = snprintf(filename, sizeof(filename), format, tid);
         if (res < 0) {
-            perror("snprintf");
+            tap_error_errno("snprintf()", errno);
             abort();
         }
         remove_file(filename);
@@ -692,7 +677,7 @@ fildes_test_9(unsigned int tid)
 
     for (char (*s)[256] = str; s < str + arraylen(str); ++s) {
         if (sprintf(*s, "%d line %d\n", tid, (int)(s - str)) < 0) {
-            perror("snprintf");
+            tap_error_errno("snprintf()", errno);
             abort();
         }
     }
@@ -714,16 +699,14 @@ fildes_test_9(unsigned int tid)
 
 static void
 fildes_test_9_pre(unsigned long nthreads, enum loop_mode loop,
-                  enum boundary_type btype, unsigned long long bound,
-                  int (*logmsg)(const char*, ...))
+                  enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = temp_fildes(9, 0, O_CLOEXEC | O_WRONLY);
 }
 
 static void
 fildes_test_9_post(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     close_fildes(g_fildes);
     remove_file(g_filename);
@@ -756,16 +739,14 @@ fildes_test_10(unsigned int tid)
 
 static void
 fildes_test_10_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = temp_fildes(10, 0, O_CLOEXEC | O_RDWR);
 }
 
 static void
 fildes_test_10_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     close_fildes(g_fildes);
     remove_file(g_filename);
@@ -780,7 +761,7 @@ fildes_test_11(unsigned int tid)
     char teststr[16];
     int res = snprintf(teststr, 15, "%d\n", (int)tid);
     if (res < 0) {
-        perror("snprintf");
+        tap_error_errno("snprintf()", errno);
         abort();
     }
 
@@ -805,16 +786,14 @@ fildes_test_11(unsigned int tid)
 
 static void
 fildes_test_11_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = temp_fildes(11, 0, O_CLOEXEC | O_WRONLY);
 }
 
 static void
 fildes_test_11_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     close_fildes(g_fildes);
     remove_file(g_filename);
@@ -829,7 +808,7 @@ fildes_test_12(unsigned int tid)
     char teststr[16];
     int res = snprintf(teststr, 15, "%d\n", (int)tid);
     if (res < 0) {
-        perror("snprintf");
+        tap_error_errno("snprintf()", errno);
         abort();
     }
 
@@ -860,16 +839,14 @@ fildes_test_12(unsigned int tid)
 
 static void
 fildes_test_12_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = temp_fildes(12, 0, O_CLOEXEC | O_RDWR);
 }
 
 static void
 fildes_test_12_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     close_fildes(g_fildes);
     remove_file(g_filename);
@@ -887,7 +864,7 @@ fildes_test_13(unsigned int tid)
         int res = snprintf(str[i], sizeof(str[i]), "%u %zu %s",
                            tid, i, g_test_str);
         if (res < 0) {
-            perror("snprintf");
+            tap_error_errno("snprintf()", errno);
             abort();
         }
     }
@@ -920,7 +897,7 @@ fildes_test_14(unsigned int tid)
         int res = snprintf(*s, sizeof(*s), "%u line %lu\n", tid,
                            (unsigned long)(s - str));
         if (res < 0) {
-            perror("snprintf");
+            tap_error_errno("snprintf()", errno);
             abort();
         }
     }
@@ -942,16 +919,14 @@ fildes_test_14(unsigned int tid)
 
 static void
 fildes_test_14_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = temp_fildes(14, 0, O_CLOEXEC | O_WRONLY);
 }
 
 static void
 fildes_test_14_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     close_fildes(g_fildes);
     remove_file(g_filename);
@@ -980,16 +955,14 @@ fildes_test_15(unsigned int tid)
 
 static void
 fildes_test_15_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = temp_fildes(14, 0, O_CLOEXEC | O_WRONLY);
 }
 
 static void
 fildes_test_15_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     close_fildes(g_fildes);
     remove_file(g_filename);
@@ -1026,16 +999,14 @@ fildes_test_16(unsigned int tid)
 
 static void
 fildes_test_16_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     temp_filename(16, 0);
 }
 
 static void
 fildes_test_16_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     remove_file(g_filename);
 }
@@ -1055,7 +1026,7 @@ fildes_test_17(unsigned int tid)
         int res = snprintf(*s, sizeof(str[0]), "%u %lu %s", tid,
                            (unsigned long)(s - str), g_test_str);
         if (res < 0) {
-            perror("snprintf");
+            tap_error_errno("snprintf()", errno);
             abort();
         }
     }
@@ -1085,16 +1056,14 @@ fildes_test_17(unsigned int tid)
 
 static void
 fildes_test_17_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     temp_filename(17, 0);
 }
 
 static void
 fildes_test_17_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     remove_file(g_filename);
 }
@@ -1114,7 +1083,7 @@ fildes_test_18(unsigned int tid)
         int res = snprintf(*s, sizeof(str[0]), "%u %lu %s", tid,
                            (unsigned long)(s - str), g_test_str);
         if (res < 0) {
-            perror("snprintf");
+            tap_error_errno("snprintf()", errno);
             abort();
         }
     }
@@ -1139,16 +1108,14 @@ fildes_test_18(unsigned int tid)
 
 static void
 fildes_test_18_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = temp_fildes(18, 0, O_CLOEXEC);
 }
 
 static void
 fildes_test_18_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     close_fildes(g_fildes);
     remove_file(g_filename);
@@ -1168,7 +1135,7 @@ fildes_test_19(unsigned int tid)
     if (pfd[0] < 0) {
 
         if (pipe(pfd) < 0) {
-            perror("pipe");
+            tap_error_errno("pipe()", errno);
             abort();
         }
 
@@ -1181,12 +1148,12 @@ fildes_test_19(unsigned int tid)
             int res = snprintf(str, sizeof(str), "%u %d %s", tid, i,
                                g_test_str);
             if (res < 0) {
-                perror("snprintf");
+                tap_error_errno("snprintf()", errno);
                 abort();
             }
 
             if (TEMP_FAILURE_RETRY(write(pfd[1], str, strlen(str))) < 0) {
-                perror("write");
+                tap_error_errno("write()", errno);
                 abort();
             }
         }
@@ -1195,12 +1162,12 @@ fildes_test_19(unsigned int tid)
 
         int fl = TEMP_FAILURE_RETRY(fcntl(pfd[0], F_GETFL));
         if (fl < 0) {
-            perror("fcntl");
+            tap_error_errno("fcntl()", errno);
             abort();
         }
 
         if (TEMP_FAILURE_RETRY(fcntl(pfd[0], F_SETFL, fl|O_NONBLOCK)) < 0) {
-            perror("fcntl");
+            tap_error_errno("fcntl()", errno);
             abort();
         }
     }
@@ -1241,7 +1208,7 @@ fildes_test_19(unsigned int tid)
     /* Close pipe */
     /*for (i = 0; i < sizeof(pfd)/sizeof(pfd[0]); ++i) {
         if (TEMP_FAILURE_RETRY(close(pfd[i])) < 0) {
-            perror("close");
+            tap_error_errno("close");
             abort();
         }
     }*/
@@ -1249,8 +1216,7 @@ fildes_test_19(unsigned int tid)
 
 static void
 fildes_test_20_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     extern enum picotm_libc_cc_mode g_cc_mode;
     picotm_libc_set_file_type_cc_mode(PICOTM_LIBC_FILE_TYPE_REGULAR, g_cc_mode);
@@ -1260,8 +1226,7 @@ fildes_test_20_pre(unsigned long nthreads, enum loop_mode loop,
 
 static void
 fildes_test_20_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     remove_file(g_filename);
     close_fildes(g_fildes);
@@ -1369,7 +1334,7 @@ locked_random_rw(pthread_mutex_t* lock, int fildes, unsigned int* seed,
                                              sizeof(buf),
                                              offset));
             if (res < 0) {
-                perror("pread");
+                tap_error_errno("pread()", errno);
                 abort();
             }
             count = res;
@@ -1377,7 +1342,7 @@ locked_random_rw(pthread_mutex_t* lock, int fildes, unsigned int* seed,
 
         ssize_t res = TEMP_FAILURE_RETRY(pwrite(g_fildes, buf, count, offset));
         if (res < 0) {
-            perror("pwrite");
+            tap_error_errno("pwrite()", errno);
             abort();
         }
     }
@@ -1398,16 +1363,14 @@ random_rw_post(int fildes)
 
 static void
 fildes_test_21_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = tx_random_rw_pre(21, 0, MiB_to_bytes(1));
 }
 
 static void
 fildes_test_21_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     random_rw_post(g_fildes);
 }
@@ -1428,16 +1391,14 @@ fildes_test_21(unsigned int tid)
 
 static void
 fildes_test_22_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = locked_random_rw_pre(22, 0, MiB_to_bytes(1));
 }
 
 static void
 fildes_test_22_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     random_rw_post(g_fildes);
 }
@@ -1463,16 +1424,14 @@ fildes_test_22(unsigned int tid)
 
 static void
 fildes_test_23_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = tx_random_rw_pre(23, 0, MiB_to_bytes(1));
 }
 
 static void
 fildes_test_23_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     random_rw_post(g_fildes);
 }
@@ -1493,16 +1452,14 @@ fildes_test_23(unsigned int tid)
 
 static void
 fildes_test_24_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = locked_random_rw_pre(24, 0, MiB_to_bytes(1));
 }
 
 static void
 fildes_test_24_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     random_rw_post(g_fildes);
 }
@@ -1528,16 +1485,14 @@ fildes_test_24(unsigned int tid)
 
 static void
 fildes_test_25_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = tx_random_rw_pre(25, 0, MiB_to_bytes(1));
 }
 
 static void
 fildes_test_25_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     random_rw_post(g_fildes);
 }
@@ -1558,16 +1513,14 @@ fildes_test_25(unsigned int tid)
 
 static void
 fildes_test_26_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = locked_random_rw_pre(26, 0, MiB_to_bytes(1));
 }
 
 static void
 fildes_test_26_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     random_rw_post(g_fildes);
 }
@@ -1593,16 +1546,14 @@ fildes_test_26(unsigned int tid)
 
 static void
 fildes_test_27_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = tx_random_rw_pre(27, 0, MiB_to_bytes(1));
 }
 
 static void
 fildes_test_27_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     random_rw_post(g_fildes);
 }
@@ -1623,16 +1574,14 @@ fildes_test_27(unsigned int tid)
 
 static void
 fildes_test_28_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = locked_random_rw_pre(28, 0, MiB_to_bytes(1));
 }
 
 static void
 fildes_test_28_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     random_rw_post(g_fildes);
 }
@@ -1712,7 +1661,7 @@ locked_random_read(pthread_mutex_t* lock, int fildes, unsigned int* seed,
                                                sizeof(buf),
                                                offset));
         if (res < 0) {
-            perror("pread");
+            tap_error_errno("pread()", errno);
             abort();
         }
     }
@@ -1729,16 +1678,14 @@ random_read_post(int fildes)
 
 static void
 fildes_test_29_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = tx_random_read_pre(29, 0, MiB_to_bytes(1));
 }
 
 static void
 fildes_test_29_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     random_read_post(g_fildes);
 }
@@ -1759,16 +1706,14 @@ fildes_test_29(unsigned int tid)
 
 static void
 fildes_test_30_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = locked_random_read_pre(30, 0, MiB_to_bytes(1));
 }
 
 static void
 fildes_test_30_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     random_read_post(g_fildes);
 }
@@ -1849,7 +1794,7 @@ locked_random_write(pthread_mutex_t* lock, int fildes, unsigned int* seed,
         ssize_t res = TEMP_FAILURE_RETRY(pwrite(fildes, buf, sizeof(buf),
                                                 offset));
         if (res < 0) {
-            perror("pwrite");
+            tap_error_errno("pwrite()", errno);
             abort();
         }
     }
@@ -1867,8 +1812,7 @@ random_write_post(int fildes)
 
 static void
 fildes_test_31_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = tx_random_write_pre(31, 0, MiB_to_bytes(1));
 }
@@ -1889,16 +1833,14 @@ fildes_test_31(unsigned int tid)
 
 static void
 fildes_test_31_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     random_read_post(g_fildes);
 }
 
 static void
 fildes_test_32_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = locked_random_write_pre(32, 0, MiB_to_bytes(1));
 }
@@ -1920,8 +1862,7 @@ fildes_test_32(unsigned int tid)
 
 static void
 fildes_test_32_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     random_write_post(g_fildes);
 }
@@ -1983,7 +1924,7 @@ locked_seq_read(pthread_mutex_t* lock, int fildes, unsigned int* seed,
         ssize_t res = TEMP_FAILURE_RETRY(pread(fildes, buf, sizeof(buf),
                                                offset));
         if (res < 0) {
-            perror("pread");
+            tap_error_errno("pread()", errno);
             abort();
         }
 
@@ -2002,8 +1943,7 @@ seq_read_post(int fildes)
 
 static void
 fildes_test_33_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = tx_seq_read_pre(33, 0, MiB_to_bytes(1));
 }
@@ -2024,16 +1964,14 @@ fildes_test_33(unsigned int tid)
 
 static void
 fildes_test_33_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     seq_read_post(g_fildes);
 }
 
 static void
 fildes_test_34_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = locked_seq_read_pre(34, 0, MiB_to_bytes(1));
 }
@@ -2055,8 +1993,7 @@ fildes_test_34(unsigned int tid)
 
 static void
 fildes_test_34_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     seq_read_post(g_fildes);
 }
@@ -2122,7 +2059,7 @@ locked_seq_write(pthread_mutex_t* lock, int fildes, unsigned int* seed,
         ssize_t res = TEMP_FAILURE_RETRY(pwrite(fildes, buf, sizeof(buf),
                                                 offset));
         if (res < 0) {
-            perror("pwrite");
+            tap_error_errno("pwrite()", errno);
             abort();
         }
 
@@ -2141,8 +2078,7 @@ seq_write_post(int fildes)
 
 static void
 fildes_test_35_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = tx_seq_write_pre(35, 0, MiB_to_bytes(1));
 }
@@ -2163,16 +2099,14 @@ fildes_test_35(unsigned int tid)
 
 static void
 fildes_test_35_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     seq_write_post(g_fildes);
 }
 
 static void
 fildes_test_36_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     locked_seq_write_pre(36, 0, MiB_to_bytes(1));
 }
@@ -2194,8 +2128,7 @@ fildes_test_36(unsigned int tid)
 
 static void
 fildes_test_36_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     seq_write_post(g_fildes);
 }
@@ -2214,16 +2147,14 @@ long long fildes_test_37_count = 0;
 
 static void
 fildes_test_37_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = tx_random_rw_pre(37, 0, MiB_to_bytes(100));
 }
 
 static void
 fildes_test_37_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     random_rw_post(g_fildes);
 }
@@ -2244,16 +2175,14 @@ fildes_test_37(unsigned int tid)
 
 static void
 fildes_test_38_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = locked_random_rw_pre(38, 0, MiB_to_bytes(100));
 }
 
 static void
 fildes_test_38_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     random_rw_post(g_fildes);
 }
@@ -2280,16 +2209,14 @@ fildes_test_38(unsigned int tid)
 
 static void
 fildes_test_39_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = tx_random_rw_pre(39, 0, MiB_to_bytes(100));
 }
 
 static void
 fildes_test_39_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     random_rw_post(g_fildes);
 }
@@ -2310,16 +2237,14 @@ fildes_test_39(unsigned int tid)
 
 static void
 fildes_test_40_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = locked_random_rw_pre(40, 0, MiB_to_bytes(100));
 }
 
 static void
 fildes_test_40_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     random_rw_post(g_fildes);
 }
@@ -2346,16 +2271,14 @@ fildes_test_40(unsigned int tid)
 
 static void
 fildes_test_41_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = tx_random_rw_pre(41, 0, MiB_to_bytes(100));
 }
 
 static void
 fildes_test_41_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     random_rw_post(g_fildes);
 }
@@ -2376,16 +2299,14 @@ fildes_test_41(unsigned int tid)
 
 static void
 fildes_test_42_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = locked_random_rw_pre(42, 0, MiB_to_bytes(100));
 }
 
 static void
 fildes_test_42_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     random_rw_post(g_fildes);
 }
@@ -2412,16 +2333,14 @@ fildes_test_42(unsigned int tid)
 
 static void
 fildes_test_43_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = tx_random_rw_pre(43, 0, MiB_to_bytes(100));
 }
 
 static void
 fildes_test_43_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     random_rw_post(g_fildes);
 }
@@ -2442,16 +2361,14 @@ fildes_test_43(unsigned int tid)
 
 static void
 fildes_test_44_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = locked_random_rw_pre(43, 0, MiB_to_bytes(100));
 }
 
 static void
 fildes_test_44_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     random_rw_post(g_fildes);
 }
@@ -2478,16 +2395,14 @@ fildes_test_44(unsigned int tid)
 
 static void
 fildes_test_45_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = tx_random_read_pre(45, 0, MiB_to_bytes(100));
 }
 
 static void
 fildes_test_45_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     random_read_post(g_fildes);
 }
@@ -2508,16 +2423,14 @@ fildes_test_45(unsigned int tid)
 
 static void
 fildes_test_46_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = locked_random_read_pre(46, 0, MiB_to_bytes(100));
 }
 
 static void
 fildes_test_46_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     random_read_post(g_fildes);
 }
@@ -2544,8 +2457,7 @@ fildes_test_46(unsigned int tid)
 
 static void
 fildes_test_47_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = tx_random_write_pre(47, 0, MiB_to_bytes(100));
 }
@@ -2566,16 +2478,14 @@ fildes_test_47(unsigned int tid)
 
 static void
 fildes_test_47_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     random_write_post(g_fildes);
 }
 
 static void
 fildes_test_48_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = locked_random_write_pre(48, 0, MiB_to_bytes(100));
 }
@@ -2597,8 +2507,7 @@ fildes_test_48(unsigned int tid)
 
 static void
 fildes_test_48_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     random_write_post(g_fildes);
 }
@@ -2609,8 +2518,7 @@ fildes_test_48_post(unsigned long nthreads, enum loop_mode loop,
 
 static void
 fildes_test_49_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = tx_seq_read_pre(49, 0, MiB_to_bytes(100));
 }
@@ -2631,16 +2539,14 @@ fildes_test_49(unsigned int tid)
 
 static void
 fildes_test_49_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     seq_read_post(g_fildes);
 }
 
 static void
 fildes_test_50_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = locked_seq_read_pre(50, 0, MiB_to_bytes(100));
 }
@@ -2662,8 +2568,7 @@ fildes_test_50(unsigned int tid)
 
 static void
 fildes_test_50_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     seq_read_post(g_fildes);
 }
@@ -2674,8 +2579,7 @@ fildes_test_50_post(unsigned long nthreads, enum loop_mode loop,
 
 static void
 fildes_test_51_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = tx_seq_write_pre(51, 0, MiB_to_bytes(100));
 }
@@ -2696,16 +2600,14 @@ fildes_test_51(unsigned int tid)
 
 static void
 fildes_test_51_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     seq_write_post(g_fildes);
 }
 
 static void
 fildes_test_52_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound,
-                   int (*logmsg)(const char*, ...))
+                   enum boundary_type btype, unsigned long long bound)
 {
     g_fildes = locked_seq_write_pre(52, 0, MiB_to_bytes(100));
 }
@@ -2727,8 +2629,7 @@ fildes_test_52(unsigned int tid)
 
 static void
 fildes_test_52_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound,
-                    int (*logmsg)(const char*, ...))
+                    enum boundary_type btype, unsigned long long bound)
 {
     seq_write_post(g_fildes);
 }

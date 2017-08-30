@@ -20,10 +20,10 @@
 #include "test.h"
 #include <errno.h>
 #include <pthread.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
 #include <picotm/picotm.h>
+#include "taputils.h"
 
 struct thread_state {
 
@@ -71,8 +71,7 @@ run_loop_iteration(const struct test_func *test,
     pthread_barrier_t sync_begin;
     int err = pthread_barrier_init(&sync_begin, NULL, nthreads);
     if (err) {
-        errno = err;
-        perror("pthread_barrier_init");
+        tap_error_errno("pthread_barrier_init()", err);
         return -err;
     }
 
@@ -87,8 +86,7 @@ run_loop_iteration(const struct test_func *test,
 
         int err = pthread_create(&s->thread, NULL, thread_func, s);
         if (err) {
-            errno = err;
-            perror("pthread_create");
+            tap_error_errno("pthread_create()", err);
             abort();
         }
     }
@@ -98,8 +96,7 @@ run_loop_iteration(const struct test_func *test,
     for (struct thread_state* s = state; s < state + nthreads; ++s) {
         int err = pthread_join(s->thread, NULL);
         if (err) {
-            errno = err;
-            perror("pthread_join");
+            tap_error_errno("pthread_join()", err);
             abort();
         }
         ntx += s->ntx;
@@ -107,8 +104,8 @@ run_loop_iteration(const struct test_func *test,
 
     err = pthread_barrier_destroy(&sync_begin);
     if (err) {
-        errno = err;
-        perror("pthread_barrier_destroy");
+        tap_error_errno("pthread_barrier_destroy()", err);
+        abort();
     }
 
     return ntx;
@@ -159,11 +156,10 @@ inner_loop_func(struct thread_state* state)
 
     pthread_cleanup_push(cleanup_picotm_cb, NULL);
 
-        res = pthread_barrier_wait(state->sync_begin);
-        if (res && res != PTHREAD_BARRIER_SERIAL_THREAD) {
-            errno = res;
-            perror("pthread_barrier_wait");
-            return -res;
+        int err = pthread_barrier_wait(state->sync_begin);
+        if (err && err != PTHREAD_BARRIER_SERIAL_THREAD) {
+            tap_error_errno("pthread_barrier_wait()", err);
+            return -err;
         }
 
         res = btype_func[state->btype](state);
@@ -186,9 +182,9 @@ inner_loop_func_cb(void* arg)
 static long long
 run_inner_loop(const struct test_func *test, enum boundary_type btype,
                unsigned long long bound, struct thread_state* state,
-               unsigned long nthreads, int (*logmsg)(const char*, ...))
+               unsigned long nthreads)
 {
-    logmsg("Running test %s...\n", test->name);
+    tap_info("Running test %s...", test->name);
 
     long long res = run_loop_iteration(test, btype, bound, state,
                                        nthreads, inner_loop_func_cb);
@@ -211,11 +207,10 @@ outer_loop_func(struct thread_state* state)
 {
     pthread_cleanup_push(cleanup_picotm_cb, NULL);
 
-        int res = pthread_barrier_wait(state->sync_begin);
-        if (res && res != PTHREAD_BARRIER_SERIAL_THREAD) {
-            errno = res;
-            perror("pthread_barrier_wait");
-            return -res;
+        int err = pthread_barrier_wait(state->sync_begin);
+        if (err && err != PTHREAD_BARRIER_SERIAL_THREAD) {
+            tap_error_errno("pthread_barrier_wait()", err);
+            return -err;
         }
 
         state->test->call(state->tid);
@@ -247,14 +242,13 @@ run_outer_loop_iteration(const struct test_func *test,
 
 static long
 run_outer_loop_cycles(const struct test_func *test, unsigned long long cycles,
-                      struct thread_state* state, unsigned long nthreads,
-                      int (*logmsg)(const char*, ...))
+                      struct thread_state* state, unsigned long nthreads)
 {
     long long ntx = 0;
 
     for (unsigned long long i = 0; i < cycles; ++i) {
 
-        logmsg("Running test %s [%llu of %llu]...\n", test->name, 1 + i, cycles);
+        tap_info("Running test %s [%llu of %llu]...", test->name, 1 + i, cycles);
 
         long long res = run_outer_loop_iteration(test, BOUND_CYCLES, cycles,
                                                  state, nthreads);
@@ -269,10 +263,9 @@ run_outer_loop_cycles(const struct test_func *test, unsigned long long cycles,
 
 static long
 run_outer_loop_time(const struct test_func *test, unsigned long long ival_ms,
-                    struct thread_state* state, unsigned long nthreads,
-                    int (*logmsg)(const char*, ...))
+                    struct thread_state* state, unsigned long nthreads)
 {
-    logmsg("Running test %s [for next %d ms]...\n", test->name, ival_ms);
+    tap_info("Running test %s [for next %d ms]...", test->name, ival_ms);
 
     long long ntx = 0;
 
@@ -296,54 +289,51 @@ run_outer_loop_time(const struct test_func *test, unsigned long long ival_ms,
 static long long
 run_outer_loop(const struct test_func* test, enum boundary_type btype,
                unsigned long long bound,  struct thread_state* state,
-               unsigned long nthreads, int (*logmsg)(const char*, ...))
+               unsigned long nthreads)
 {
     static long (* const btype_func[])(const struct test_func*,
                                        unsigned long long,
                                        struct thread_state*,
-                                       unsigned long,
-                                       int (*)(const char*, ...)) = {
+                                       unsigned long) = {
         run_outer_loop_cycles,
         run_outer_loop_time
     };
 
-    return btype_func[btype](test, bound, state, nthreads, logmsg);
+    return btype_func[btype](test, bound, state, nthreads);
 }
 
 long long
 run_test(const struct test_func* test, unsigned long nthreads,
          enum loop_mode loop, enum boundary_type btype,
-         unsigned long long bound, int (*logmsg)(const char*, ...))
+         unsigned long long bound)
 {
     static long long (* const loop_func[])(const struct test_func*,
                                            enum boundary_type,
                                            unsigned long long,
                                            struct thread_state*,
-                                           unsigned long,
-                                           int (*)(const char*, ...)) = {
+                                           unsigned long) = {
         run_inner_loop,
         run_outer_loop
     };
 
     struct thread_state* state = malloc(nthreads * sizeof(state[0]));
     if (!state) {
-        perror("malloc");
+        tap_error_errno("malloc()", errno);
         return -errno;
     }
 
     if (test->pre) {
-        test->pre(nthreads, loop, btype, bound, logmsg);
+        test->pre(nthreads, loop, btype, bound);
     }
 
-    long long res = loop_func[loop](test, btype, bound, state, nthreads,
-                                    logmsg);
+    long long res = loop_func[loop](test, btype, bound, state, nthreads);
     if (res < 0) {
         goto err_loop_func;
     }
     long long ntx = res;
 
     if (test->post) {
-        test->post(nthreads, loop, btype, bound, logmsg);
+        test->post(nthreads, loop, btype, bound);
     }
 
     free(state);

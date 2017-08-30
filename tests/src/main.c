@@ -26,6 +26,8 @@
 #include <unistd.h>
 #include "module.h"
 #include "ptr.h"
+#include "tap.h"
+#include "taputils.h"
 #include "test.h"
 
 static enum boundary_type   g_btype = BOUND_CYCLES;
@@ -35,7 +37,6 @@ static const struct module* g_module = NULL;
 static unsigned int         g_num = 0;
 static unsigned int         g_cycles = 10;
 static unsigned int         g_nthreads = 1;
-static unsigned int         g_verbose = 0;
 static unsigned int         g_normalize = 0;
 
 enum picotm_libc_cc_mode g_cc_mode = PICOTM_LIBC_CC_MODE_2PL;
@@ -63,7 +64,7 @@ opt_cycles(const char *optarg)
     g_cycles = strtoul(optarg, NULL, 0);
 
     if (errno) {
-        perror("strtoul");
+        perror("strtoul()");
         return -1;
     }
 
@@ -105,7 +106,7 @@ opt_nthreads(const char *optarg)
     g_nthreads = strtoul(optarg, NULL, 0);
 
     if (errno) {
-        perror("strtoul");
+        perror("strtoul()");
         return -1;
     }
 
@@ -120,7 +121,7 @@ opt_num(const char *optarg)
     g_num = strtoul(optarg, NULL, 0);
 
     if (errno) {
-        perror("strtoul");
+        perror("strtoul()");
         return -1;
     }
 
@@ -135,7 +136,7 @@ opt_off(const char *optarg)
     g_off = strtoul(optarg, NULL, 0);
 
     if (errno) {
-        perror("strtoul");
+        perror("strtoul()");
         return -1;
     }
 
@@ -179,7 +180,7 @@ opt_tx_cycles(const char *optarg)
     g_txcycles = strtoul(optarg, NULL, 0);
 
     if (errno) {
-        perror("strtoul");
+        perror("strtoul()");
         return -1;
     }
 
@@ -191,10 +192,10 @@ opt_verbose(const char *optarg)
 {
     errno = 0;
 
-    g_verbose = strtoul(optarg, NULL, 0);
+    g_tap_verbosity = strtoul(optarg, NULL, 0);
 
     if (errno) {
-        perror("strtoul");
+        perror("strtoul()");
         return -1;
     }
 
@@ -285,37 +286,6 @@ parse_opts(int argc, char *argv[])
     return 0;
 }
 
-static int
-logmsg(unsigned int verbose, const char* format, va_list ap)
-{
-    if (g_verbose < verbose) {
-        return 0;
-    }
-    return vprintf(format, ap);
-}
-
-static int
-logmsg_result(const char* format, ...)
-{
-    va_list ap;
-    va_start(ap, format);
-    int res = logmsg(1, format, ap);
-    va_end(ap);
-
-    return res;
-}
-
-static int
-logmsg_debug(const char* format, ...)
-{
-    va_list ap;
-    va_start(ap, format);
-    int res = logmsg(2, format, ap);
-    va_end(ap);
-
-    return res;
-}
-
 /* TODO: export this value from picotm */
 long long abort_count;
 
@@ -381,6 +351,8 @@ main(int argc, char **argv)
             return EXIT_FAILURE;
     }
 
+    tap_version(12);
+
     long long ntx = 0;
 
     const struct module* mod_beg;
@@ -418,11 +390,21 @@ main(int argc, char **argv)
         const struct test_func* test_beg = mod_beg->test + off;
         const struct test_func* test_end = mod_beg->test + off + num;
 
+        tap_plan((test_end - test_beg));
+
+        unsigned long testnum = 1;
+
         while (test_beg < test_end) {
-            ntx = run_test(test_beg, g_nthreads, g_loop, g_btype, g_cycles, logmsg_debug);
+            ntx = run_test(test_beg, g_nthreads, g_loop, g_btype, g_cycles);
             if (ntx < 0) {
+                tap_not_ok(testnum, test_beg->name);
                 abort();
             }
+
+            tap_ok(testnum, test_beg->name);
+
+            ++testnum;
+
             ++test_beg;
         }
 
@@ -432,7 +414,7 @@ main(int argc, char **argv)
     /* print results */
 
     if (g_normalize) {
-        logmsg_result("%d %lld %lld\n", g_nthreads, (long long)((ntx*1000)/g_cycles), abort_count);
+        tap_diag("%d %lld %lld", g_nthreads, (long long)((ntx*1000)/g_cycles), abort_count);
 
             /*printf("fdio21_ticks=%lld fdio21_count=%lld, average=%lld\n", fdio_test_21_ticks,
                                                                           fdio_test_21_count,
@@ -511,7 +493,7 @@ main(int argc, char **argv)
                                                                                         pgtree_lookup_count,
                                                                                         pgtree_lookup_count ? (pgtree_lookup_ticks/pgtree_lookup_count): 0);*/
     } else {
-        logmsg_result("%d %lld %lld\n", g_nthreads, ntx, abort_count);
+        tap_diag("%d %lld %lld", g_nthreads, ntx, abort_count);
     }
 
     return EXIT_SUCCESS;
