@@ -30,6 +30,7 @@
 #include <sys/types.h>
 #include "ptr.h"
 #include "safe_stdio.h"
+#include "safe_unistd.h"
 #include "taputils.h"
 #include "tempfile.h"
 #include "test.h"
@@ -119,12 +120,7 @@ vfs_test_1_post(unsigned long nthreads, enum loop_mode loop,
 
         char path[PATH_MAX];
         safe_snprintf(path, sizeof(path), format, tid);
-
-        int res = rmdir(path);
-        if (res < 0) {
-            tap_error_errno("rmdir()", errno);
-            abort();
-        }
+        safe_rmdir(path);
     }
 }
 
