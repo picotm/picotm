@@ -17,31 +17,21 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include "tempfile.h"
-#include <errno.h>
-#include <stdio.h>
-#include "safe_pthread.h"
-#include "safe_stdlib.h"
-#include "taputils.h"
+#pragma once
 
-static char        g_path_template[] = "/tmp/picotm-XXXXXX";
-static const char* g_path = NULL;
+#include <stddef.h>
 
-const char*
-temp_path()
-{
-    static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+void*
+safe_calloc(size_t nmemb, size_t size);
 
-    safe_pthread_mutex_lock(&lock);
+void*
+safe_malloc(size_t size);
 
-    if (g_path) {
-        safe_pthread_mutex_unlock(&lock);
-        return g_path;
-    }
+char*
+safe_mkdtemp(char* tmplate);
 
-    g_path = safe_mkdtemp(g_path_template);
+int
+safe_mkstemp(char* tmplate);
 
-    safe_pthread_mutex_unlock(&lock);
-
-    return g_path;
-}
+char*
+safe_mktemp(char* tmplate);

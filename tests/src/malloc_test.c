@@ -24,6 +24,7 @@
 #include <picotm/picotm.h>
 #include <picotm/picotm-tm.h>
 #include "ptr.h"
+#include "safe_stdlib.h"
 #include "testhlp.h"
 
 /**
@@ -73,10 +74,7 @@ malloc_test_2(unsigned int tid)
     char* buf[10];
 
     for (char** ptr = buf; ptr < buf + arraylen(buf); ++ptr) {
-        *ptr = calloc(15, 34);
-    	if (!*ptr) {
-    	    abort();
-    	}
+        *ptr = safe_calloc(15, 34);
     }
 
     picotm_begin
@@ -198,10 +196,7 @@ malloc_test_4(unsigned int tid)
 static void
 malloc_test_5(unsigned int tid)
 {
-    uint8_t* buf = malloc(30 * sizeof(buf[0]));
-	if (!buf) {
-	    abort();
-	}
+    uint8_t* buf = safe_malloc(30 * sizeof(buf[0]));
 
 	for (uint8_t i = 0; i < 30; ++i) {
 	    buf[i] = i;
@@ -250,10 +245,8 @@ malloc_test_5(unsigned int tid)
 static void
 malloc_test_6(unsigned int tid)
 {
-    uint8_t* buf = malloc(30 * sizeof(buf[0]));
-	if (!buf) {
-	    abort();
-	}
+    uint8_t* buf = safe_malloc(30 * sizeof(buf[0]));
+
 	for (uint8_t i = 0; i < 30; ++i) {
 	    buf[i] = i;
     }
@@ -357,7 +350,7 @@ static void
 malloc_test_8(unsigned int tid)
 {
     for (unsigned long long i = 0; i < g_test_8_cycles; ++i) {
-        uint8_t* mem = malloc(32);
+        uint8_t* mem = safe_malloc(32);
         mem[tid] = 1;   /* touch memory to prevent optimization */
         free(mem);
     }
