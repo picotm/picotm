@@ -17,36 +17,30 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include "tempfile.h"
-#include <errno.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include "safe_pthread.h"
-#include "taputils.h"
+#pragma once
 
-static char        g_path_template[] = "/tmp/picotm-XXXXXX";
-static const char* g_path = NULL;
+#include <pthread.h>
 
-const char*
-temp_path()
-{
-    static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+int
+safe_pthread_barrier_destroy(pthread_barrier_t* barrier);
 
-    safe_pthread_mutex_lock(&lock);
+int
+safe_pthread_barrier_init(pthread_barrier_t* restrict barrier,
+                          const pthread_barrierattr_t* restrict attr,
+                          unsigned count);
 
-    if (g_path) {
-        safe_pthread_mutex_unlock(&lock);
-        return g_path;
-    }
+int
+safe_pthread_barrier_wait(pthread_barrier_t* barrier);
 
-    char* path = mkdtemp(g_path_template);
-    if (!path) {
-        tap_error_errno("snprintf()", errno);
-        abort();
-    }
-    g_path = path;
+int
+safe_pthread_create(pthread_t* thread, const pthread_attr_t* attr,
+                    void* (*start_routine)(void*), void* arg);
 
-    safe_pthread_mutex_unlock(&lock);
+int
+safe_pthread_join(pthread_t thread, void** retval);
 
-    return g_path;
-}
+int
+safe_pthread_mutex_lock(pthread_mutex_t* mutex);
+
+int
+safe_pthread_mutex_unlock(pthread_mutex_t* mutex);

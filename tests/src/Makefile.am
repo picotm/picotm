@@ -28,6 +28,8 @@ picotm_test_SOURCES = fildes_test.c \
                       ptr.h \
                       safe_fcntl.c \
                       safe_fcntl.h \
+                      safe_pthread.c \
+                      safe_pthread.h \
                       tap.c \
                       tap.h \
                       taputils.c \
