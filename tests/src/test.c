@@ -19,12 +19,12 @@
 
 #include "test.h"
 #include <errno.h>
-#include <pthread.h>
 #include <stdlib.h>
 #include <sys/time.h>
 #include <picotm/picotm.h>
 #include "taputils.h"
 #include "test_state.h"
+#include "safe_pthread.h"
 
 struct thread_state {
 
@@ -78,11 +78,7 @@ run_threads(struct thread_state* state, unsigned long nthreads,
     while (beg < end) {
         beg->ntx = 0;
         beg->test_aborted = 0;
-        int err = pthread_create(&beg->thread, NULL, thread_func, beg);
-        if (err) {
-            tap_error_errno("pthread_create()", err);
-            test_abort();
-        }
+        safe_pthread_create(&beg->thread, NULL, thread_func, beg);
         ++beg;
     }
 
@@ -93,11 +89,7 @@ run_threads(struct thread_state* state, unsigned long nthreads,
     end = state + nthreads;
 
     while (beg < end) {
-        int err = pthread_join(beg->thread, NULL);
-        if (err) {
-            tap_error_errno("pthread_join()", err);
-            test_abort();
-        }
+        safe_pthread_join(beg->thread, NULL);
         ntx += beg->ntx;
         test_aborted |= beg->test_aborted;
         ++beg;
@@ -149,12 +141,7 @@ inner_loop_func(struct thread_state* state)
 
     test_begin_on_thread(state->test_aborted)
 
-        int err = pthread_barrier_wait(state->sync_begin);
-        if (err && err != PTHREAD_BARRIER_SERIAL_THREAD) {
-            tap_error_errno("pthread_barrier_wait()", err);
-            test_abort();
-        }
-
+        safe_pthread_barrier_wait(state->sync_begin);
         btype_func[state->btype](state);
 
     test_end_on_thread
@@ -192,12 +179,7 @@ outer_loop_func(struct thread_state* state)
 
     test_begin_on_thread(state->test_aborted)
 
-        int err = pthread_barrier_wait(state->sync_begin);
-        if (err && err != PTHREAD_BARRIER_SERIAL_THREAD) {
-            tap_error_errno("pthread_barrier_wait()", err);
-            test_abort();
-        }
-
+        safe_pthread_barrier_wait(state->sync_begin);
         state->test->call(state->tid);
         state->ntx = 1;
 
@@ -281,11 +263,7 @@ run_test(const struct test_func* test, unsigned long nthreads,
     /* Helgrind 3.3 does not support barriers, so you might
      * get a warning here. */
     pthread_barrier_t sync_begin;
-    int err = pthread_barrier_init(&sync_begin, NULL, nthreads);
-    if (err) {
-        tap_error_errno("pthread_barrier_init()", err);
-        test_abort();
-    }
+    safe_pthread_barrier_init(&sync_begin, NULL, nthreads);
 
     struct thread_state* state = malloc(nthreads * sizeof(state[0]));
     if (!state) {
@@ -315,12 +293,7 @@ run_test(const struct test_func* test, unsigned long nthreads,
     }
 
     free(state);
-
-    err = pthread_barrier_destroy(&sync_begin);
-    if (err) {
-        tap_error_errno("pthread_barrier_destroy()", err);
-        test_abort();
-    }
+    safe_pthread_barrier_destroy(&sync_begin);
 
     return ntx;
 }

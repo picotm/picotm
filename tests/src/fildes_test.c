@@ -20,7 +20,6 @@
 #include "fildes_test.h"
 #include <errno.h>
 #include <limits.h>
-#include <pthread.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,6 +39,7 @@
 #include <unistd.h>
 #include "ptr.h"
 #include "safe_fcntl.h"
+#include "safe_pthread.h"
 #include "taputils.h"
 #include "tempfile.h"
 #include "testhlp.h"
@@ -1115,7 +1115,7 @@ fildes_test_19(unsigned int tid)
     static int pfd[2] = {-1, -1};
     static pthread_mutex_t fd_lock = PTHREAD_MUTEX_INITIALIZER;
 
-    pthread_mutex_lock(&fd_lock);
+    safe_pthread_mutex_lock(&fd_lock);
 
     if (pfd[0] < 0) {
 
@@ -1149,7 +1149,7 @@ fildes_test_19(unsigned int tid)
         safe_fcntl(pfd[0], F_SETFL, fl|O_NONBLOCK);
     }
 
-    pthread_mutex_unlock(&fd_lock);
+    safe_pthread_mutex_unlock(&fd_lock);
 
     size_t rlen;
 
@@ -1294,7 +1294,7 @@ static void
 locked_random_rw(pthread_mutex_t* lock, int fildes, unsigned int* seed,
                  off_t size, unsigned long ncycles, unsigned long nreads)
 {
-    pthread_mutex_lock(lock);
+    safe_pthread_mutex_lock(lock);
 
     for (unsigned long i = 0; i < ncycles; ++i) {
 
@@ -1324,7 +1324,7 @@ locked_random_rw(pthread_mutex_t* lock, int fildes, unsigned int* seed,
         }
     }
 
-    pthread_mutex_unlock(lock);
+    safe_pthread_mutex_unlock(lock);
 }
 
 static void
@@ -1626,7 +1626,7 @@ static void
 locked_random_read(pthread_mutex_t* lock, int fildes, unsigned int* seed,
                    off_t size, unsigned long ncycles)
 {
-    pthread_mutex_lock(lock);
+    safe_pthread_mutex_lock(lock);
 
     for (unsigned long i = 0; i < ncycles; ++i) {
 
@@ -1643,7 +1643,7 @@ locked_random_read(pthread_mutex_t* lock, int fildes, unsigned int* seed,
         }
     }
 
-    pthread_mutex_unlock(lock);
+    safe_pthread_mutex_unlock(lock);
 }
 
 static void
@@ -1762,7 +1762,7 @@ locked_random_write(pthread_mutex_t* lock, int fildes, unsigned int* seed,
     unsigned char buf[24];
     memset(buf, 0, sizeof(buf));
 
-    pthread_mutex_lock(lock);
+    safe_pthread_mutex_lock(lock);
 
     for (unsigned long i = 0; i < ncycles; ++i) {
 
@@ -1776,7 +1776,7 @@ locked_random_write(pthread_mutex_t* lock, int fildes, unsigned int* seed,
         }
     }
 
-    pthread_mutex_unlock(lock);
+    safe_pthread_mutex_unlock(lock);
 }
 
 
@@ -1893,7 +1893,7 @@ locked_seq_read(pthread_mutex_t* lock, int fildes, unsigned int* seed,
 {
     off_t offset = rand_r(seed) % size;
 
-    pthread_mutex_lock(lock);
+    safe_pthread_mutex_lock(lock);
 
     for (unsigned long i = 0; i < ncycles; ++i) {
 
@@ -1908,7 +1908,7 @@ locked_seq_read(pthread_mutex_t* lock, int fildes, unsigned int* seed,
         offset += res;
     }
 
-    pthread_mutex_unlock(lock);
+    safe_pthread_mutex_unlock(lock);
 }
 
 static void
@@ -2029,7 +2029,7 @@ locked_seq_write(pthread_mutex_t* lock, int fildes, unsigned int* seed,
 
     off_t offset = rand_r(seed) % size;
 
-    pthread_mutex_lock(lock);
+    safe_pthread_mutex_lock(lock);
 
     for (unsigned long i = 0; i < ncycles; ++i) {
 
@@ -2043,7 +2043,7 @@ locked_seq_write(pthread_mutex_t* lock, int fildes, unsigned int* seed,
         offset += res;
     }
 
-    pthread_mutex_unlock(lock);
+    safe_pthread_mutex_unlock(lock);
 }
 
 static void
