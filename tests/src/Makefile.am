@@ -36,6 +36,8 @@ picotm_test_SOURCES = fildes_test.c \
                       safe_stdlib.h \
                       safe_sys_time.c \
                       safe_sys_time.h \
+                      safe_unistd.c \
+                      safe_unistd.h \
                       tap.c \
                       tap.h \
                       taputils.c \

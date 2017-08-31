@@ -34,12 +34,12 @@
 #include <picotm/picotm-libc.h>
 #include <picotm/picotm-tm.h>
 #include <picotm/unistd.h>
-#include <unistd.h>
 #include "ptr.h"
 #include "safe_fcntl.h"
 #include "safe_pthread.h"
 #include "safe_stdio.h"
 #include "safe_stdlib.h"
+#include "safe_unistd.h"
 #include "taputils.h"
 #include "tempfile.h"
 #include "testhlp.h"
@@ -115,11 +115,7 @@ temp_fildes(unsigned long testnum, unsigned long filenum, int flags)
 static void
 close_fildes(int fildes)
 {
-    int res = TEMP_FAILURE_RETRY(close(fildes));
-    if (res < 0) {
-        tap_error_errno("close()", errno);
-        abort();
-    }
+    safe_close(fildes);
 }
 
 static int
@@ -132,12 +128,7 @@ temp_fildes_gen(unsigned long testnum, unsigned long filenum, int flags,
         int32_t val = gen_i32();
         size_t count = filsiz > sizeof(val) ? sizeof(val) : filsiz;
 
-        ssize_t res = TEMP_FAILURE_RETRY(write(fildes, &val, count));
-        if (res < 0) {
-            tap_error_errno("write()", errno);
-            abort();
-        }
-        filsiz -= res;
+        filsiz -= safe_write(fildes, &val, count);
     }
 
     if (flags) {
@@ -178,11 +169,7 @@ temp_fildes_zero(unsigned long testnum, unsigned long filenum, int flags,
 static void
 remove_file(const char* filename)
 {
-    int res = unlink(filename);
-    if (res < 0) {
-        tap_error_errno("unlink()", errno);
-        abort();
-    }
+    safe_unlink(filename);
 }
 
 /**
@@ -522,11 +509,7 @@ fildes_test_8(unsigned int tid)
     safe_snprintf(filename, sizeof(filename), format, tid);
 
     int pfd[2];
-    int res = pipe(pfd);
-    if (res < 0) {
-        tap_error_errno("pipe()", errno);
-        abort();
-    }
+    safe_pipe(pfd);
 
     /* Set pipe's read end to non-blocking mode */
     {
@@ -586,7 +569,7 @@ fildes_test_8(unsigned int tid)
     /* Close pipe */
 
     for (size_t i = 0; i < arraylen(pfd); ++i) {
-        close(pfd[i]);
+        safe_close(pfd[i]);
     }
 }
 
@@ -1053,23 +1036,14 @@ fildes_test_19(unsigned int tid)
 
     if (pfd[0] < 0) {
 
-        if (pipe(pfd) < 0) {
-            tap_error_errno("pipe()", errno);
-            abort();
-        }
+        safe_pipe(pfd);
 
         /* Fill pipe */
 
         for (int i = 0; i < 10; ++i) {
-
             char str[128];
-
             safe_snprintf(str, sizeof(str), "%u %d %s", tid, i, g_test_str);
-
-            if (TEMP_FAILURE_RETRY(write(pfd[1], str, strlen(str))) < 0) {
-                tap_error_errno("write()", errno);
-                abort();
-            }
+            safe_write(pfd[1], str, strlen(str));
         }
 
         /* Set pipe's read end to non-blocking mode */
@@ -1232,25 +1206,11 @@ locked_random_rw(pthread_mutex_t* lock, int fildes, unsigned int* seed,
         size_t count;
 
         for (unsigned long j = 0; j < nreads; ++j) {
-
             offset = rand_r(seed) % size;
-
-            ssize_t res = TEMP_FAILURE_RETRY(pread(g_fildes,
-                                             buf,
-                                             sizeof(buf),
-                                             offset));
-            if (res < 0) {
-                tap_error_errno("pread()", errno);
-                abort();
-            }
-            count = res;
+            count = safe_pread(g_fildes, buf, sizeof(buf), offset);
         }
 
-        ssize_t res = TEMP_FAILURE_RETRY(pwrite(g_fildes, buf, count, offset));
-        if (res < 0) {
-            tap_error_errno("pwrite()", errno);
-            abort();
-        }
+        safe_pwrite(g_fildes, buf, count, offset);
     }
 
     safe_pthread_mutex_unlock(lock);
@@ -1558,18 +1518,9 @@ locked_random_read(pthread_mutex_t* lock, int fildes, unsigned int* seed,
     safe_pthread_mutex_lock(lock);
 
     for (unsigned long i = 0; i < ncycles; ++i) {
-
         off_t offset = rand_r(seed) % size;
-
         unsigned char buf[24];
-        ssize_t res = TEMP_FAILURE_RETRY(pread(fildes,
-                                               buf,
-                                               sizeof(buf),
-                                               offset));
-        if (res < 0) {
-            tap_error_errno("pread()", errno);
-            abort();
-        }
+        safe_pread(fildes, buf, sizeof(buf), offset);
     }
 
     safe_pthread_mutex_unlock(lock);
@@ -1694,15 +1645,8 @@ locked_random_write(pthread_mutex_t* lock, int fildes, unsigned int* seed,
     safe_pthread_mutex_lock(lock);
 
     for (unsigned long i = 0; i < ncycles; ++i) {
-
         off_t offset = rand_r(seed) % size;
-
-        ssize_t res = TEMP_FAILURE_RETRY(pwrite(fildes, buf, sizeof(buf),
-                                                offset));
-        if (res < 0) {
-            tap_error_errno("pwrite()", errno);
-            abort();
-        }
+        safe_pwrite(fildes, buf, sizeof(buf), offset);
     }
 
     safe_pthread_mutex_unlock(lock);
@@ -1827,14 +1771,7 @@ locked_seq_read(pthread_mutex_t* lock, int fildes, unsigned int* seed,
     for (unsigned long i = 0; i < ncycles; ++i) {
 
         unsigned char buf[24];
-        ssize_t res = TEMP_FAILURE_RETRY(pread(fildes, buf, sizeof(buf),
-                                               offset));
-        if (res < 0) {
-            tap_error_errno("pread()", errno);
-            abort();
-        }
-
-        offset += res;
+        offset += safe_pread(fildes, buf, sizeof(buf), offset);
     }
 
     safe_pthread_mutex_unlock(lock);
@@ -1961,15 +1898,7 @@ locked_seq_write(pthread_mutex_t* lock, int fildes, unsigned int* seed,
     safe_pthread_mutex_lock(lock);
 
     for (unsigned long i = 0; i < ncycles; ++i) {
-
-        ssize_t res = TEMP_FAILURE_RETRY(pwrite(fildes, buf, sizeof(buf),
-                                                offset));
-        if (res < 0) {
-            tap_error_errno("pwrite()", errno);
-            abort();
-        }
-
-        offset += res;
+        offset += safe_pwrite(fildes, buf, sizeof(buf), offset);
     }
 
     safe_pthread_mutex_unlock(lock);
