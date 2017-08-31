@@ -21,7 +21,6 @@
 #include <errno.h>
 #include <limits.h>
 #include <stdbool.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <sys/sendfile.h>
 #include <sys/stat.h>
@@ -40,6 +39,7 @@
 #include "ptr.h"
 #include "safe_fcntl.h"
 #include "safe_pthread.h"
+#include "safe_stdio.h"
 #include "taputils.h"
 #include "tempfile.h"
 #include "testhlp.h"
@@ -58,15 +58,8 @@ static int  g_fildes = -1;
 void
 test_file_format_string(char format[PATH_MAX], unsigned long testnum)
 {
-    int res = snprintf(format, PATH_MAX, "%s/fildes_test_%lu-%%lu-XXXXXX",
-                       temp_path(), testnum);
-    if (res < 0) {
-        tap_error_errno("snprintf()", errno);
-        abort();
-    } else if (res >= PATH_MAX) {
-        tap_error("snprintf() output truncated\n");
-        abort();
-    }
+    safe_snprintf(format, PATH_MAX, "%s/fildes_test_%lu-%%lu-XXXXXX",
+                  temp_path(), testnum);
 }
 
 static const char*
@@ -75,11 +68,7 @@ temp_filename(unsigned long testnum, unsigned long filenum)
     char format[PATH_MAX];
     test_file_format_string(format, testnum);
 
-    int res = snprintf(g_filename, sizeof(g_filename), format, filenum);
-    if (res < 0) {
-        tap_error_errno("snprintf()", errno);
-        abort();
-    }
+    safe_snprintf(g_filename, sizeof(g_filename), format, filenum);
 
     const char* filename = mktemp(g_filename);
     if (!strcmp(filename, "")) {
@@ -117,11 +106,8 @@ temp_fildes(unsigned long testnum, unsigned long filenum, int flags)
     char format[PATH_MAX];
     test_file_format_string(format, testnum);
 
-    int res = snprintf(g_filename, sizeof(g_filename), format, filenum);
-    if (res < 0) {
-        tap_error_errno("snprintf()", errno);
-        abort();
-    }
+    safe_snprintf(g_filename, sizeof(g_filename), format, filenum);
+
     int fildes = mkstemp(g_filename);
     if (fildes < 0) {
         tap_error_errno("mkstemp()", errno);
@@ -381,7 +367,7 @@ fildes_test_5(unsigned int tid)
     memcpy(str, g_test_str, strlen(g_test_str)+1);
 
     char tidstr[32];
-    snprintf(tidstr, sizeof(tidstr), "%d", (int)tid);
+    safe_snprintf(tidstr, sizeof(tidstr), "%d", (int)tid);
     memcpy(str, tidstr, strlen(tidstr));
 
     picotm_begin
@@ -432,7 +418,7 @@ static void
 fildes_test_6(unsigned int tid)
 {
     char teststr[16];
-    snprintf(teststr, 15, "%d\n", (int)tid);
+    safe_snprintf(teststr, 15, "%d\n", (int)tid);
 
     picotm_begin
 
@@ -480,11 +466,7 @@ static void
 fildes_test_7(unsigned int tid)
 {
     char teststr[16];
-    int res = snprintf(teststr, sizeof(teststr), "%d\n", (int)tid);
-    if (res < 0) {
-        tap_error_errno("snprintf()", errno);
-        abort();
-    }
+    safe_snprintf(teststr, sizeof(teststr), "%d\n", (int)tid);
 
     picotm_begin
 
@@ -545,14 +527,10 @@ fildes_test_8(unsigned int tid)
     test_file_format_string(format, 8);
 
     char filename[PATH_MAX];
-    int res = snprintf(filename, sizeof(filename), format, tid);
-    if (res < 0) {
-        tap_error_errno("snprintf()", errno);
-        abort();
-    }
+    safe_snprintf(filename, sizeof(filename), format, tid);
 
     int pfd[2];
-    res = pipe(pfd);
+    int res = pipe(pfd);
     if (res < 0) {
         tap_error_errno("pipe()", errno);
         abort();
@@ -569,14 +547,9 @@ fildes_test_8(unsigned int tid)
     for (int i = 0; i < 1000; ++i) {
 
         char str[128];
-        ssize_t res = snprintf(str, sizeof(str), "%d %s", i, g_test_str);
-        if (res < 0) {
-            tap_error_errno("snprintf()", errno);
-            abort();
-        }
-        size_t len = res;
+        size_t len = safe_snprintf(str, sizeof(str), "%d %s", i, g_test_str);
 
-        res = TEMP_FAILURE_RETRY(write(pfd[1], str, len));
+        int res = TEMP_FAILURE_RETRY(write(pfd[1], str, len));
         if (res < 0) {
             tap_error_errno("write()", errno);
             abort();
@@ -642,11 +615,7 @@ fildes_test_8_post(unsigned long nthreads, enum loop_mode loop,
     for (unsigned long tid = 0; tid < nthreads; ++tid) {
 
         char filename[PATH_MAX];
-        int res = snprintf(filename, sizeof(filename), format, tid);
-        if (res < 0) {
-            tap_error_errno("snprintf()", errno);
-            abort();
-        }
+        safe_snprintf(filename, sizeof(filename), format, tid);
         remove_file(filename);
     }
 }
@@ -661,10 +630,7 @@ fildes_test_9(unsigned int tid)
     char str[100][256];
 
     for (char (*s)[256] = str; s < str + arraylen(str); ++s) {
-        if (sprintf(*s, "%d line %d\n", tid, (int)(s - str)) < 0) {
-            tap_error_errno("snprintf()", errno);
-            abort();
-        }
+        safe_snprintf(*s, sizeof(str[0]), "%d line %d\n", tid, (int)(s - str));
     }
 
     picotm_begin
@@ -744,11 +710,7 @@ static void
 fildes_test_11(unsigned int tid)
 {
     char teststr[16];
-    int res = snprintf(teststr, 15, "%d\n", (int)tid);
-    if (res < 0) {
-        tap_error_errno("snprintf()", errno);
-        abort();
-    }
+    safe_snprintf(teststr, 15, "%d\n", (int)tid);
 
     picotm_begin
 
@@ -791,11 +753,7 @@ static void
 fildes_test_12(unsigned int tid)
 {
     char teststr[16];
-    int res = snprintf(teststr, 15, "%d\n", (int)tid);
-    if (res < 0) {
-        tap_error_errno("snprintf()", errno);
-        abort();
-    }
+    safe_snprintf(teststr, 15, "%d\n", (int)tid);
 
     picotm_begin
 
@@ -846,12 +804,8 @@ fildes_test_13(unsigned int tid)
     char str[20][128];
 
     for (size_t i = 0; i < arraylen(str); ++i) {
-        int res = snprintf(str[i], sizeof(str[i]), "%u %zu %s",
-                           tid, i, g_test_str);
-        if (res < 0) {
-            tap_error_errno("snprintf()", errno);
-            abort();
-        }
+        safe_snprintf(str[i], sizeof(str[i]), "%u %zu %s", tid, i,
+                      g_test_str);
     }
 
     picotm_begin
@@ -879,12 +833,8 @@ fildes_test_14(unsigned int tid)
     char (*s)[256];
 
     for (s = str; s < str+sizeof(str)/sizeof(str[0]); ++s) {
-        int res = snprintf(*s, sizeof(*s), "%u line %lu\n", tid,
-                           (unsigned long)(s - str));
-        if (res < 0) {
-            tap_error_errno("snprintf()", errno);
-            abort();
-        }
+        safe_snprintf(*s, sizeof(*s), "%u line %lu\n", tid,
+                      (unsigned long)(s - str));
     }
 
     picotm_begin
@@ -1008,12 +958,8 @@ fildes_test_17(unsigned int tid)
     char str[2][128];
 
     for (char (*s)[128] = str; s < str + arraylen(str); ++s) {
-        int res = snprintf(*s, sizeof(str[0]), "%u %lu %s", tid,
-                           (unsigned long)(s - str), g_test_str);
-        if (res < 0) {
-            tap_error_errno("snprintf()", errno);
-            abort();
-        }
+        safe_snprintf(*s, sizeof(str[0]), "%u %lu %s", tid,
+                      (unsigned long)(s - str), g_test_str);
     }
 
     picotm_begin
@@ -1065,12 +1011,8 @@ fildes_test_18(unsigned int tid)
     char str[2][128];
 
     for (char (*s)[128] = str; s < str + arraylen(str); ++s) {
-        int res = snprintf(*s, sizeof(str[0]), "%u %lu %s", tid,
-                           (unsigned long)(s - str), g_test_str);
-        if (res < 0) {
-            tap_error_errno("snprintf()", errno);
-            abort();
-        }
+        safe_snprintf(*s, sizeof(str[0]), "%u %lu %s", tid,
+                      (unsigned long)(s - str), g_test_str);
     }
 
     picotm_begin
@@ -1130,12 +1072,7 @@ fildes_test_19(unsigned int tid)
 
             char str[128];
 
-            int res = snprintf(str, sizeof(str), "%u %d %s", tid, i,
-                               g_test_str);
-            if (res < 0) {
-                tap_error_errno("snprintf()", errno);
-                abort();
-            }
+            safe_snprintf(str, sizeof(str), "%u %d %s", tid, i, g_test_str);
 
             if (TEMP_FAILURE_RETRY(write(pfd[1], str, strlen(str))) < 0) {
                 tap_error_errno("write()", errno);
