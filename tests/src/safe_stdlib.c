@@ -17,31 +17,70 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include "tempfile.h"
-#include <errno.h>
-#include <stdio.h>
-#include "safe_pthread.h"
 #include "safe_stdlib.h"
+#include <errno.h>
+#include <stdbool.h>
+#include <stdlib.h>
 #include "taputils.h"
+#include "test_state.h"
 
-static char        g_path_template[] = "/tmp/picotm-XXXXXX";
-static const char* g_path = NULL;
-
-const char*
-temp_path()
+void*
+safe_calloc(size_t nmemb, size_t size)
 {
-    static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
-
-    safe_pthread_mutex_lock(&lock);
-
-    if (g_path) {
-        safe_pthread_mutex_unlock(&lock);
-        return g_path;
+    void* mem = calloc(nmemb, size);
+    if (size && !mem) {
+        tap_error_errno("calloc()", size);
+        test_abort();
     }
+    return mem;
+}
 
-    g_path = safe_mkdtemp(g_path_template);
+void*
+safe_malloc(size_t size)
+{
+    void* mem = malloc(size);
+    if (size && !mem) {
+        tap_error_errno("malloc()", size);
+        test_abort();
+    }
+    return mem;
+}
 
-    safe_pthread_mutex_unlock(&lock);
+char*
+safe_mkdtemp(char* tmplate)
+{
+    char* path = mkdtemp(tmplate);
+    if (!path) {
+        tap_error_errno("mkdtemp()", errno);
+        test_abort();
+    }
+    return path;
+}
 
-    return g_path;
+int
+safe_mkstemp(char* tmplate)
+{
+    int res = mkstemp(tmplate);
+    if (res < 0) {
+        tap_error_errno("mkstemp()", errno);
+        test_abort();
+    }
+    return res;
+}
+
+static bool
+string_is_empty(const char* str)
+{
+    return !(*str);
+}
+
+char*
+safe_mktemp(char* tmplate)
+{
+    char* filename = mktemp(tmplate);
+    if (string_is_empty(filename)) {
+        tap_error_errno("mktemp()", errno);
+        test_abort();
+    }
+    return filename;
 }

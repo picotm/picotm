@@ -21,7 +21,6 @@
 #include <errno.h>
 #include <limits.h>
 #include <stdbool.h>
-#include <stdlib.h>
 #include <sys/sendfile.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -40,6 +39,7 @@
 #include "safe_fcntl.h"
 #include "safe_pthread.h"
 #include "safe_stdio.h"
+#include "safe_stdlib.h"
 #include "taputils.h"
 #include "tempfile.h"
 #include "testhlp.h"
@@ -70,12 +70,7 @@ temp_filename(unsigned long testnum, unsigned long filenum)
 
     safe_snprintf(g_filename, sizeof(g_filename), format, filenum);
 
-    const char* filename = mktemp(g_filename);
-    if (!strcmp(filename, "")) {
-        tap_error_errno("mktemp()", errno);
-        abort();
-    }
-    return filename;
+    return safe_mktemp(g_filename);
 }
 
 static void
@@ -108,11 +103,8 @@ temp_fildes(unsigned long testnum, unsigned long filenum, int flags)
 
     safe_snprintf(g_filename, sizeof(g_filename), format, filenum);
 
-    int fildes = mkstemp(g_filename);
-    if (fildes < 0) {
-        tap_error_errno("mkstemp()", errno);
-        abort();
-    }
+    int fildes = safe_mkstemp(g_filename);
+
     if (flags) {
         set_fildes_flags(fildes, flags);
         set_file_status_flags(fildes, flags);

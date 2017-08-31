@@ -25,6 +25,7 @@
 #include "taputils.h"
 #include "test_state.h"
 #include "safe_pthread.h"
+#include "safe_stdlib.h"
 
 struct thread_state {
 
@@ -265,11 +266,7 @@ run_test(const struct test_func* test, unsigned long nthreads,
     pthread_barrier_t sync_begin;
     safe_pthread_barrier_init(&sync_begin, NULL, nthreads);
 
-    struct thread_state* state = malloc(nthreads * sizeof(state[0]));
-    if (!state) {
-        tap_error_errno("malloc()", errno);
-        test_abort();
-    }
+    struct thread_state* state = safe_malloc(nthreads * sizeof(state[0]));
 
     for (struct thread_state* s = state; s < state + nthreads; ++s) {
         s->sync_begin = &sync_begin;
