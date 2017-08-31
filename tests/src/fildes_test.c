@@ -19,7 +19,6 @@
 
 #include "fildes_test.h"
 #include <errno.h>
-#include <fcntl.h>
 #include <limits.h>
 #include <pthread.h>
 #include <stdbool.h>
@@ -40,6 +39,7 @@
 #include <picotm/unistd.h>
 #include <unistd.h>
 #include "ptr.h"
+#include "safe_fcntl.h"
 #include "taputils.h"
 #include "tempfile.h"
 #include "testhlp.h"
@@ -92,19 +92,11 @@ temp_filename(unsigned long testnum, unsigned long filenum)
 static void
 set_flags(int fildes, int flags, int get_cmd, int set_cmd)
 {
-    int current_flags = TEMP_FAILURE_RETRY(fcntl(fildes, get_cmd));
-    if (current_flags < 0) {
-        tap_error_errno("fcntl()", errno);
-        abort();
-    }
+    int current_flags = safe_fcntl(fildes, get_cmd);
     if (current_flags == flags) {
         return;
     }
-    int res = TEMP_FAILURE_RETRY(fcntl(fildes, set_cmd, flags));
-    if (res < 0) {
-        tap_error_errno("fcntl()", errno);
-        abort();
-    }
+    safe_fcntl(fildes, set_cmd, flags);
 }
 
 static void
@@ -568,15 +560,8 @@ fildes_test_8(unsigned int tid)
 
     /* Set pipe's read end to non-blocking mode */
     {
-        int fl = TEMP_FAILURE_RETRY(fcntl(pfd[0], F_GETFL));
-        if (fl < 0) {
-            tap_error_errno("fcntl()", errno);
-            abort();
-        }
-        if (TEMP_FAILURE_RETRY(fcntl(pfd[0], F_SETFL, fl | O_NONBLOCK)) < 0) {
-            tap_error_errno("fcntl()", errno);
-            abort();
-        }
+        int fl = safe_fcntl(pfd[0], F_GETFL);
+        safe_fcntl(pfd[0], F_SETFL, fl | O_NONBLOCK);
     }
 
     /* Fill pipe */
@@ -1160,16 +1145,8 @@ fildes_test_19(unsigned int tid)
 
         /* Set pipe's read end to non-blocking mode */
 
-        int fl = TEMP_FAILURE_RETRY(fcntl(pfd[0], F_GETFL));
-        if (fl < 0) {
-            tap_error_errno("fcntl()", errno);
-            abort();
-        }
-
-        if (TEMP_FAILURE_RETRY(fcntl(pfd[0], F_SETFL, fl|O_NONBLOCK)) < 0) {
-            tap_error_errno("fcntl()", errno);
-            abort();
-        }
+        int fl = safe_fcntl(pfd[0], F_GETFL);
+        safe_fcntl(pfd[0], F_SETFL, fl|O_NONBLOCK);
     }
 
     pthread_mutex_unlock(&fd_lock);
