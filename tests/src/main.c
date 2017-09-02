@@ -29,6 +29,7 @@
 #include "tap.h"
 #include "taputils.h"
 #include "test.h"
+#include "test_state.h"
 
 static enum boundary_type   g_btype = BOUND_CYCLES;
 static enum loop_mode       g_loop = LOOP_INNER;
@@ -395,13 +396,20 @@ main(int argc, char **argv)
         unsigned long testnum = 1;
 
         while (test_beg < test_end) {
-            ntx = run_test(test_beg, g_nthreads, g_loop, g_btype, g_cycles);
-            if (ntx < 0) {
-                tap_not_ok(testnum, test_beg->name);
-                abort();
-            }
 
-            tap_ok(testnum, test_beg->name);
+            int test_aborted = 0;
+
+            test_begin_on_thread(test_aborted)
+
+                ntx = run_test(test_beg, g_nthreads, g_loop, g_btype, g_cycles);
+
+            test_end_on_thread;
+
+            if (test_aborted) {
+                tap_not_ok(testnum, test_beg->name);
+            } else {
+                tap_ok(testnum, test_beg->name);
+            }
 
             ++testnum;
 

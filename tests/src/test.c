@@ -24,6 +24,7 @@
 #include <sys/time.h>
 #include <picotm/picotm.h>
 #include "taputils.h"
+#include "test_state.h"
 
 struct thread_state {
 
@@ -42,6 +43,9 @@ struct thread_state {
     enum boundary_type btype; /* Boundary type */
     unsigned long      bound; /* Time (ms) or Cycles to run */
     unsigned long long ntx; /* Number of succesful transactions, return value */
+
+    /* Test result */
+    int test_aborted;
 };
 
 /* Returns the number of milliseconds since the epoch */
@@ -49,7 +53,11 @@ static unsigned long long
 getmsofday(void* tzp)
 {
     struct timeval t;
-    gettimeofday(&t, tzp);
+    int res = gettimeofday(&t, tzp);
+    if (res < 0) {
+        tap_error_errno("gettimeofday()", errno);
+        test_abort();
+    }
 
     return t.tv_sec * 1000 + t.tv_usec / 1000;
 }
@@ -60,52 +68,43 @@ cleanup_picotm_cb(void* data)
     picotm_release();
 }
 
-static long long
-run_loop_iteration(const struct test_func *test,
-                   enum boundary_type btype, int bound,
-                   struct thread_state* state, unsigned long nthreads,
-                   void* (*thread_func)(void*))
+static unsigned long long
+run_threads(struct thread_state* state, unsigned long nthreads,
+            void* (*thread_func)(void*))
 {
-    /* Helgrind 3.3 does not support barriers, so you might
-     * get a warning here. */
-    pthread_barrier_t sync_begin;
-    int err = pthread_barrier_init(&sync_begin, NULL, nthreads);
-    if (err) {
-        tap_error_errno("pthread_barrier_init()", err);
-        return -err;
-    }
+    struct thread_state*       beg = state;
+    const struct thread_state* end = state + nthreads;
 
-    for (struct thread_state* s = state; s < state + nthreads; ++s) {
-
-        s->sync_begin = &sync_begin;
-        s->test = test;
-        s->tid = s - state;
-        s->btype = btype;
-        s->bound = bound;
-        s->ntx = 0;
-
-        int err = pthread_create(&s->thread, NULL, thread_func, s);
+    while (beg < end) {
+        beg->ntx = 0;
+        beg->test_aborted = 0;
+        int err = pthread_create(&beg->thread, NULL, thread_func, beg);
         if (err) {
             tap_error_errno("pthread_create()", err);
-            abort();
+            test_abort();
         }
+        ++beg;
     }
 
-    long long ntx = 0;
+    unsigned long long ntx = 0;
+    int test_aborted = 0;
 
-    for (struct thread_state* s = state; s < state + nthreads; ++s) {
-        int err = pthread_join(s->thread, NULL);
+    beg = state;
+    end = state + nthreads;
+
+    while (beg < end) {
+        int err = pthread_join(beg->thread, NULL);
         if (err) {
             tap_error_errno("pthread_join()", err);
-            abort();
+            test_abort();
         }
-        ntx += s->ntx;
+        ntx += beg->ntx;
+        test_aborted |= beg->test_aborted;
+        ++beg;
     }
 
-    err = pthread_barrier_destroy(&sync_begin);
-    if (err) {
-        tap_error_errno("pthread_barrier_destroy()", err);
-        abort();
+    if (test_aborted) {
+        test_abort();
     }
 
     return ntx;
@@ -117,21 +116,17 @@ run_loop_iteration(const struct test_func *test,
  * running n iterations of the transaction.
  */
 
-static int
+static void
 inner_loop_func_cycles(struct thread_state* state)
 {
-    for (state->ntx = 0; state->ntx < state->bound; ++state->ntx) {
+    for (; state->ntx < state->bound; ++state->ntx) {
         state->test->call(state->tid);
     }
-
-    return 0;
 }
 
-static int
+static void
 inner_loop_func_time(struct thread_state* state)
 {
-    state->ntx = 0;
-
     const unsigned long long beg_ms = getmsofday(NULL);
 
     for (unsigned long long ms = 0;
@@ -140,60 +135,48 @@ inner_loop_func_time(struct thread_state* state)
         state->test->call(state->tid);
         ++state->ntx;
     }
-
-    return 0;
 }
 
-static int
+static void
 inner_loop_func(struct thread_state* state)
 {
-    static int (* const btype_func[])(struct thread_state* state) = {
+    static void (* const btype_func[])(struct thread_state*) = {
         inner_loop_func_cycles,
         inner_loop_func_time
     };
 
-    int res;
-
     pthread_cleanup_push(cleanup_picotm_cb, NULL);
+
+    test_begin_on_thread(state->test_aborted)
 
         int err = pthread_barrier_wait(state->sync_begin);
         if (err && err != PTHREAD_BARRIER_SERIAL_THREAD) {
             tap_error_errno("pthread_barrier_wait()", err);
-            return -err;
+            test_abort();
         }
 
-        res = btype_func[state->btype](state);
+        btype_func[state->btype](state);
+
+    test_end_on_thread
 
     pthread_cleanup_pop(1);
-
-    return res;
 }
 
 static void*
 inner_loop_func_cb(void* arg)
 {
-    int res = inner_loop_func(arg);
-    if (res < 0) {
-        abort();
-    }
+    inner_loop_func(arg);
     return NULL;
 }
 
-static long long
+static unsigned long long
 run_inner_loop(const struct test_func *test, enum boundary_type btype,
                unsigned long long bound, struct thread_state* state,
                unsigned long nthreads)
 {
     tap_info("Running test %s...", test->name);
 
-    long long res = run_loop_iteration(test, btype, bound, state,
-                                       nthreads, inner_loop_func_cb);
-    if (res < 0) {
-        abort();
-    }
-    long long ntx = res;
-
-    return ntx;
+    return run_threads(state, nthreads, inner_loop_func_cb);
 }
 
 /* Outer loops
@@ -202,99 +185,78 @@ run_inner_loop(const struct test_func *test, enum boundary_type btype,
  * iteration of the transaction.
  */
 
-static int
+static void
 outer_loop_func(struct thread_state* state)
 {
     pthread_cleanup_push(cleanup_picotm_cb, NULL);
 
+    test_begin_on_thread(state->test_aborted)
+
         int err = pthread_barrier_wait(state->sync_begin);
         if (err && err != PTHREAD_BARRIER_SERIAL_THREAD) {
             tap_error_errno("pthread_barrier_wait()", err);
-            return -err;
+            test_abort();
         }
 
         state->test->call(state->tid);
         state->ntx = 1;
 
-    pthread_cleanup_pop(1);
+    test_end_on_thread
 
-    return 0;
+    pthread_cleanup_pop(1);
 }
 
 static void*
 outer_loop_func_cb(void* arg)
 {
-    int res = outer_loop_func(arg);
-    if (res < 0) {
-        abort();
-    }
+    outer_loop_func(arg);
     return NULL;
 }
 
-static long long
-run_outer_loop_iteration(const struct test_func *test,
-                         enum boundary_type btype, int bound,
-                         struct thread_state* state, unsigned long nthreads)
-{
-    return run_loop_iteration(test, btype, bound, state, nthreads,
-                              outer_loop_func_cb);
-}
-
-static long
+static unsigned long long
 run_outer_loop_cycles(const struct test_func *test, unsigned long long cycles,
                       struct thread_state* state, unsigned long nthreads)
 {
-    long long ntx = 0;
+    unsigned long long ntx = 0;
 
     for (unsigned long long i = 0; i < cycles; ++i) {
 
         tap_info("Running test %s [%llu of %llu]...", test->name, 1 + i, cycles);
 
-        long long res = run_outer_loop_iteration(test, BOUND_CYCLES, cycles,
-                                                 state, nthreads);
-        if (res < 0) {
-            abort();
-        }
-        ntx += res;
+        ntx += run_threads(state, nthreads, outer_loop_func_cb);
     }
 
     return ntx;
 }
 
-static long
+static unsigned long long
 run_outer_loop_time(const struct test_func *test, unsigned long long ival_ms,
                     struct thread_state* state, unsigned long nthreads)
 {
     tap_info("Running test %s [for next %d ms]...", test->name, ival_ms);
 
-    long long ntx = 0;
+    unsigned long long ntx = 0;
 
     const unsigned long long beg_ms = getmsofday(NULL);
 
     for (unsigned long long ms = 0;
                             ms < ival_ms;
                             ms = getmsofday(NULL) - beg_ms) {
-
-        long long res = run_outer_loop_iteration(test, BOUND_TIME, ival_ms,
-                                                 state, nthreads);
-        if (res < 0) {
-            abort();
-        }
-        ntx += res;
+        ntx += run_threads(state, nthreads, outer_loop_func_cb);
     }
 
     return ntx;
 }
 
-static long long
+static unsigned long long
 run_outer_loop(const struct test_func* test, enum boundary_type btype,
                unsigned long long bound,  struct thread_state* state,
                unsigned long nthreads)
 {
-    static long (* const btype_func[])(const struct test_func*,
-                                       unsigned long long,
-                                       struct thread_state*,
-                                       unsigned long) = {
+    static unsigned long long (* const btype_func[])(const struct test_func*,
+                                                     unsigned long long,
+                                                     struct thread_state*,
+                                                     unsigned long) = {
         run_outer_loop_cycles,
         run_outer_loop_time
     };
@@ -307,30 +269,46 @@ run_test(const struct test_func* test, unsigned long nthreads,
          enum loop_mode loop, enum boundary_type btype,
          unsigned long long bound)
 {
-    static long long (* const loop_func[])(const struct test_func*,
-                                           enum boundary_type,
-                                           unsigned long long,
-                                           struct thread_state*,
-                                           unsigned long) = {
+    static unsigned long long (* const loop_func[])(const struct test_func*,
+                                                    enum boundary_type,
+                                                    unsigned long long,
+                                                    struct thread_state*,
+                                                    unsigned long) = {
         run_inner_loop,
         run_outer_loop
     };
 
+    /* Helgrind 3.3 does not support barriers, so you might
+     * get a warning here. */
+    pthread_barrier_t sync_begin;
+    int err = pthread_barrier_init(&sync_begin, NULL, nthreads);
+    if (err) {
+        tap_error_errno("pthread_barrier_init()", err);
+        test_abort();
+    }
+
     struct thread_state* state = malloc(nthreads * sizeof(state[0]));
     if (!state) {
         tap_error_errno("malloc()", errno);
-        return -errno;
+        test_abort();
+    }
+
+    for (struct thread_state* s = state; s < state + nthreads; ++s) {
+        s->sync_begin = &sync_begin;
+        s->test = test;
+        s->tid = s - state;
+        s->btype = btype;
+        s->bound = bound;
+        s->ntx = 0;
+        s->test_aborted = 0;
     }
 
     if (test->pre) {
         test->pre(nthreads, loop, btype, bound);
     }
 
-    long long res = loop_func[loop](test, btype, bound, state, nthreads);
-    if (res < 0) {
-        goto err_loop_func;
-    }
-    long long ntx = res;
+    unsigned long long ntx = loop_func[loop](test, btype, bound, state,
+                                             nthreads);
 
     if (test->post) {
         test->post(nthreads, loop, btype, bound);
@@ -338,9 +316,11 @@ run_test(const struct test_func* test, unsigned long nthreads,
 
     free(state);
 
-    return ntx;
+    err = pthread_barrier_destroy(&sync_begin);
+    if (err) {
+        tap_error_errno("pthread_barrier_destroy()", err);
+        test_abort();
+    }
 
-err_loop_func:
-    free(state);
-    return res;
+    return ntx;
 }
