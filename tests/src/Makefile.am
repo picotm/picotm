@@ -30,12 +30,14 @@ picotm_test_SOURCES = fildes_test.c \
                       tap.h \
                       taputils.c \
                       taputils.h \
+                      tempfile.c \
+                      tempfile.h \
                       test.c \
                       test.h \
                       testhlp.c \
                       testhlp.h \
-                      tempfile.c \
-                      tempfile.h \
+                      test_state.c \
+                      test_state.h \
                       tm_test.c \
                       tm_test.h \
                       vfs_test.c \
