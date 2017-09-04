@@ -18,14 +18,13 @@
  */
 
 #include "test.h"
-#include <errno.h>
 #include <stdlib.h>
-#include <sys/time.h>
 #include <picotm/picotm.h>
 #include "taputils.h"
 #include "test_state.h"
 #include "safe_pthread.h"
 #include "safe_stdlib.h"
+#include "safe_sys_time.h"
 
 struct thread_state {
 
@@ -54,11 +53,7 @@ static unsigned long long
 getmsofday(void* tzp)
 {
     struct timeval t;
-    int res = gettimeofday(&t, tzp);
-    if (res < 0) {
-        tap_error_errno("gettimeofday()", errno);
-        test_abort();
-    }
+    safe_gettimeofday(&t, tzp);
 
     return t.tv_sec * 1000 + t.tv_usec / 1000;
 }
