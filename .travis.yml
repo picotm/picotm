@@ -62,8 +62,19 @@ install:
     - sudo apt-get install -y autoconf-archive doxygen graphviz realpath
 
 before_script:
-    - cd lib
-    - tools/bootstrap.sh
+    - ( cd lib &&
+        tools/bootstrap.sh &&
+        ./configure &&
+        make &&
+        make html &&
+        sudo make install ) &&
+      ( cd tests &&
+        tools/bootstrap.sh &&
+        ./configure &&
+        make &&
+        sudo make install )
 
 script:
-    - ./configure && make && make html
+    - ( export LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH}" &&
+        cd tests &&
+        make -j1 check )
