@@ -59,7 +59,7 @@ before_install:
     - eval "${MATRIX_EVAL}"
 
 install:
-    - sudo apt-get install -y autoconf-archive doxygen graphviz
+    - sudo apt-get install -y autoconf-archive doxygen graphviz realpath
 
 before_script:
     - cd lib
