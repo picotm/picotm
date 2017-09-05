@@ -30,6 +30,40 @@
 static unsigned long g_value;
 
 /**
+ * Load a shared value.
+ */
+static void
+tm_test_1(unsigned int tid)
+{
+    picotm_begin
+
+        unsigned long value = load_ulong_tx(&g_value);
+
+    picotm_commit
+
+        abort_transaction_on_error(__func__);
+
+    picotm_end
+}
+
+static void
+tm_test_1_pre(unsigned long nthreads, enum loop_mode loop,
+              enum boundary_type btype, unsigned long long bound)
+{
+    g_value = 0;
+}
+
+static void
+tm_test_1_post(unsigned long nthreads, enum loop_mode loop,
+               enum boundary_type btype, unsigned long long bound)
+{
+    if (!(g_value == 0)) {
+        tap_error("post-condition failed: g_value == 0");
+        test_abort();
+    }
+}
+
+/**
  * Load, add and store a shared value.
  */
 static void
@@ -72,6 +106,7 @@ tm_test_3_post(unsigned long nthreads, enum loop_mode loop,
 }
 
 const struct test_func tm_test[] = {
+    {"tm_test_1", tm_test_1, tm_test_1_pre, tm_test_1_post},
     {"tm_test_3", tm_test_3, tm_test_3_pre, tm_test_3_post}
 };
 
