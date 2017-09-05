@@ -64,6 +64,40 @@ tm_test_1_post(unsigned long nthreads, enum loop_mode loop,
 }
 
 /**
+ * Store to a shared value.
+ */
+static void
+tm_test_2(unsigned int tid)
+{
+    picotm_begin
+
+        store_ulong_tx(&g_value, tid);
+
+    picotm_commit
+
+        abort_transaction_on_error(__func__);
+
+    picotm_end
+}
+
+static void
+tm_test_2_pre(unsigned long nthreads, enum loop_mode loop,
+              enum boundary_type btype, unsigned long long bound)
+{
+    g_value = nthreads;
+}
+
+static void
+tm_test_2_post(unsigned long nthreads, enum loop_mode loop,
+               enum boundary_type btype, unsigned long long bound)
+{
+    if (!(g_value < nthreads)) {
+        tap_error("post-condition failed: g_value < nthreads");
+        test_abort();
+    }
+}
+
+/**
  * Load, add and store a shared value.
  */
 static void
@@ -107,6 +141,7 @@ tm_test_3_post(unsigned long nthreads, enum loop_mode loop,
 
 const struct test_func tm_test[] = {
     {"tm_test_1", tm_test_1, tm_test_1_pre, tm_test_1_post},
+    {"tm_test_2", tm_test_2, tm_test_2_pre, tm_test_2_post},
     {"tm_test_3", tm_test_3, tm_test_3_pre, tm_test_3_post}
 };
 
