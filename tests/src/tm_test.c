@@ -25,18 +25,15 @@
 #include "taputils.h"
 #include "test.h"
 #include "testhlp.h"
+#include "test_state.h"
 
 static unsigned long g_value;
 
+/**
+ * Load, add and store a shared value.
+ */
 static void
-tm_test_1_pre(unsigned long nthreads, enum loop_mode loop,
-              enum boundary_type btype, unsigned long long bound)
-{
-    g_value = 0;
-}
-
-static void
-tm_test_1(unsigned int tid)
+tm_test_3(unsigned int tid)
 {
     picotm_begin
 
@@ -52,14 +49,21 @@ tm_test_1(unsigned int tid)
 }
 
 static void
-tm_test_1_post(unsigned long nthreads, enum loop_mode loop,
+tm_test_3_pre(unsigned long nthreads, enum loop_mode loop,
+              enum boundary_type btype, unsigned long long bound)
+{
+    g_value = 0;
+}
+
+static void
+tm_test_3_post(unsigned long nthreads, enum loop_mode loop,
                enum boundary_type btype, unsigned long long bound)
 {
     switch (btype) {
         case BOUND_CYCLES:
-            if (g_value != (nthreads * bound)) {
-                tap_error("post-condition failed: g_value != (nthreads * bound)");
-                abort();
+            if (!(g_value == (nthreads * bound))) {
+                tap_error("post-condition failed: g_value == (nthreads * bound)");
+                test_abort();
             }
             break;
         default:
@@ -68,7 +72,7 @@ tm_test_1_post(unsigned long nthreads, enum loop_mode loop,
 }
 
 const struct test_func tm_test[] = {
-    {"tm_test_1", tm_test_1, tm_test_1_pre, tm_test_1_post}
+    {"tm_test_3", tm_test_3, tm_test_3_pre, tm_test_3_post}
 };
 
 size_t
