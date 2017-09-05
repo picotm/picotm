@@ -21,8 +21,11 @@
 #include <errno.h>
 #include <limits.h>
 #include <picotm/picotm.h>
+#include <picotm/picotm-error.h>
+#include <picotm/picotm-module.h>
 #include <picotm/picotm-tm.h>
 #include <picotm/sched.h>
+#include <picotm/stdio.h>
 #include <picotm/unistd.h>
 #include <stdlib.h>
 #include <string.h>
@@ -35,6 +38,7 @@
 #include "tempfile.h"
 #include "test.h"
 #include "testhlp.h"
+#include "test_state.h"
 
 void
 test_dir_format_string(char format[PATH_MAX], unsigned long test)
@@ -66,17 +70,21 @@ vfs_test_1(unsigned int tid)
             char cwdbuf[PATH_MAX];
             char* cwd = getcwd_tx(cwdbuf, sizeof(cwdbuf));
 
-            /* running non-tx code for testing purposes **only** */
+            /* FIXME: Issue #119: running non-tx code for testing
+             * purposes **only** */
             unsigned long cwd_tid;
-            int res = safe_sscanf(cwd, format, &cwd_tid);
+            int res = sscanf_tx(cwd, format, &cwd_tid);
             if (res < 1l) {
                 tap_error("thread id did not match for CWD '%s'\n", cwd);
-                abort();
+                test_abort();
             }
 
             if (cwd_tid != tid) {
                 tap_error("incorrect working directory\n");
-                abort();
+                struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+                picotm_error_set_error_code(&error, PICOTM_GENERAL_ERROR);
+                picotm_error_mark_as_non_recoverable(&error);
+                picotm_recover_from_error(&error);
             }
 
             sleep_tx(1);
@@ -104,7 +112,7 @@ vfs_test_1_pre(unsigned long nthreads, enum loop_mode loop,
         int res = mkdir(path, S_IRWXU);
         if (res < 0) {
             tap_error_errno("mkdir()", errno);
-            abort();
+            test_abort();
         }
     }
 }
