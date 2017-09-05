@@ -55,6 +55,8 @@ static const char g_test_str[] = "Hello world!\n";
 static char g_filename[PATH_MAX];
 static int  g_fildes = -1;
 
+static int  g_pipefd[2] = {-1, -1};
+
 void
 test_file_format_string(char format[PATH_MAX], unsigned long testnum)
 {
@@ -1024,31 +1026,6 @@ fildes_test_18_post(unsigned long nthreads, enum loop_mode loop,
 static void
 fildes_test_19(unsigned int tid)
 {
-    static int pfd[2] = {-1, -1};
-    static pthread_mutex_t fd_lock = PTHREAD_MUTEX_INITIALIZER;
-
-    safe_pthread_mutex_lock(&fd_lock);
-
-    if (pfd[0] < 0) {
-
-        safe_pipe(pfd);
-
-        /* Fill pipe */
-
-        for (int i = 0; i < 10; ++i) {
-            char str[128];
-            safe_snprintf(str, sizeof(str), "%u %d %s", tid, i, g_test_str);
-            safe_write(pfd[1], str, strlen(str));
-        }
-
-        /* Set pipe's read end to non-blocking mode */
-
-        int fl = safe_fcntl(pfd[0], F_GETFL);
-        safe_fcntl(pfd[0], F_SETFL, fl|O_NONBLOCK);
-    }
-
-    safe_pthread_mutex_unlock(&fd_lock);
-
     size_t rlen;
 
     do {
@@ -1058,7 +1035,7 @@ fildes_test_19(unsigned int tid)
             memset_tm(rbuf, 0, sizeof(rbuf)); /* Work around valgrind */
 
             /* Read from pipe */
-            ssize_t res = read_tx(pfd[0], rbuf, sizeof(rbuf));
+            ssize_t res = read_tx(g_pipefd[0], rbuf, sizeof(rbuf));
             if (res < 0) {
                 if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
                     /* Pipe empty */
@@ -1079,14 +1056,34 @@ fildes_test_19(unsigned int tid)
         picotm_end
 
     } while (rlen);
+}
 
+static void
+fildes_test_19_pre(unsigned long nthreads, enum loop_mode loop,
+                   enum boundary_type btype, unsigned long long bound)
+{
+    safe_pipe(g_pipefd);
+
+    /* Fill pipe (stay below 1 MiB to avoid blocking!) */
+    for (int i = 0; i < 10; ++i) {
+        char str[128];
+        safe_snprintf(str, sizeof(str), "%lu %d %s", nthreads, i, g_test_str);
+        safe_write(g_pipefd[1], str, strlen(str));
+    }
+
+    /* Set pipe's read end to non-blocking mode */
+    int fl = safe_fcntl(g_pipefd[0], F_GETFL);
+    safe_fcntl(g_pipefd[0], F_SETFL, fl | O_NONBLOCK);
+}
+
+static void
+fildes_test_19_post(unsigned long nthreads, enum loop_mode loop,
+                    enum boundary_type btype, unsigned long long bound)
+{
     /* Close pipe */
-    /*for (i = 0; i < sizeof(pfd)/sizeof(pfd[0]); ++i) {
-        if (TEMP_FAILURE_RETRY(close(pfd[i])) < 0) {
-            tap_error_errno("close");
-            abort();
-        }
-    }*/
+    for (size_t i = 0; i < arraylen(g_pipefd); ++i) {
+        safe_close(g_pipefd[i]);
+    }
 }
 
 static void
@@ -2483,7 +2480,7 @@ const struct test_func fildes_test[] = {
     {"fildes_test_16", fildes_test_16, fildes_test_16_pre, fildes_test_16_post},
     {"fildes_test_17", fildes_test_17, fildes_test_17_pre, fildes_test_17_post},
     {"fildes_test_18", fildes_test_18, fildes_test_18_pre, fildes_test_18_post},
-    {"fildes_test_19", fildes_test_19, NULL, NULL},
+    {"fildes_test_19", fildes_test_19, fildes_test_19_pre, fildes_test_19_post},
     {"fildes_test_20", fildes_test_20, fildes_test_20_pre, fildes_test_20_post},
     {"fildes_test_21", fildes_test_21, fildes_test_21_pre, fildes_test_21_post},
     {"fildes_test_22", fildes_test_22, fildes_test_22_pre, fildes_test_22_post},
