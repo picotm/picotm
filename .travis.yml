@@ -66,6 +66,53 @@ matrix:
       env:
         - MATRIX_EVAL="CC=gcc-7"
 
+    # clang 3.6
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - clang-3.6
+      env:
+        - MATRIX_EVAL="CC=clang-3.6 && SKIP_MAKE_CHECK=1"
+
+    # clang 3.7 not available
+
+    # clang 3.8
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - clang-3.8
+      env:
+        - MATRIX_EVAL="CC=clang-3.8 && SKIP_MAKE_CHECK=1"
+
+    # clang 3.9
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - clang-3.9
+      env:
+        - MATRIX_EVAL="CC=clang-3.9 && SKIP_MAKE_CHECK=1"
+
+    # clang 4.0
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-4.0
+          packages:
+            - clang-4.0
+      env:
+        - MATRIX_EVAL="CC=clang-4.0 && SKIP_MAKE_CHECK=1"
+
 before_install:
     - eval "${MATRIX_EVAL}"
 
