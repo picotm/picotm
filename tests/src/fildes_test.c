@@ -523,12 +523,7 @@ fildes_test_8(unsigned int tid)
 
         char str[128];
         size_t len = safe_snprintf(str, sizeof(str), "%d %s", i, g_test_str);
-
-        int res = TEMP_FAILURE_RETRY(write(pfd[1], str, len));
-        if (res < 0) {
-            tap_error_errno("write()", errno);
-            abort();
-        }
+        safe_write(pfd[1], str, len);
     }
 
     picotm_begin
