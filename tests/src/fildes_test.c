@@ -1067,7 +1067,7 @@ fildes_test_19_pre(unsigned long nthreads, enum loop_mode loop,
     /* Fill pipe (stay below 1 MiB to avoid blocking!) */
     for (int i = 0; i < 10; ++i) {
         char str[128];
-        safe_snprintf(str, sizeof(str), "%lu %d %s", nthreads, i, g_test_str);
+        safe_snprintf(str, sizeof(str), "# %lu %d %s", nthreads, i, g_test_str);
         safe_write(g_pipefd[1], str, strlen(str));
     }
 
