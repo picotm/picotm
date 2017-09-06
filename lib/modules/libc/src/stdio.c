@@ -25,6 +25,19 @@
 #include "error/module.h"
 #include "picotm/stdio-tm.h"
 
+PICOTM_EXPORT
+int
+sscanf_tx(const char* s, const char* format, ...)
+{
+    va_list arg;
+
+    va_start(arg, format);
+    int res = vsscanf_tx(s, format, arg);
+    va_end(arg);
+
+    return res;
+}
+
 static void
 privatize_scanf_args(const char* format, va_list arg)
 {

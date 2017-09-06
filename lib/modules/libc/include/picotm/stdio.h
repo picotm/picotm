@@ -34,6 +34,16 @@ PICOTM_BEGIN_DECLS
 
 PICOTM_NOTHROW
 /**
+ * A transaction-safe implementation of [sscanf()][posix::sscanf].
+ *
+ * [posix::sscanf]:
+ *  http://pubs.opengroup.org/onlinepubs/9699919799/functions/sscanf.html
+ */
+int
+sscanf_tx(const char* restrict s, const char* restrict format, ...);
+
+PICOTM_NOTHROW
+/**
  * A transaction-safe implementation of [vsscanf()][posix::vsscanf].
  *
  * [posix::vsscanf]:
