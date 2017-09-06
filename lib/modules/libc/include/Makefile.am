@@ -21,6 +21,8 @@ nobase_include_HEADERS = picotm/errno.h \
                          picotm/fcntl.h \
                          picotm/sched.h \
                          picotm/stddef.h \
+                         picotm/stdio-tm.h \
+                         picotm/stdio.h \
                          picotm/stdlib-tm.h \
                          picotm/stdlib.h \
                          picotm/string-tm.h \
