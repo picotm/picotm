@@ -27,6 +27,19 @@
 
 PICOTM_EXPORT
 int
+snprintf_tx(char* s, size_t n, const char* format, ...)
+{
+    va_list arg;
+
+    va_start(arg, format);
+    int res = vsnprintf_tx(s, n, format, arg);
+    va_end(arg);
+
+    return res;
+}
+
+PICOTM_EXPORT
+int
 sscanf_tx(const char* s, const char* format, ...)
 {
     va_list arg;
