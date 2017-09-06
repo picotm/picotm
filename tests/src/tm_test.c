@@ -174,11 +174,47 @@ tm_test_4_pre(unsigned long nthreads, enum loop_mode loop,
     g_value = nthreads;
 }
 
+/**
+ * Privatize, store, load and compare a shared value.
+ */
+static void
+tm_test_5(unsigned int tid)
+{
+    picotm_begin
+
+        privatize_ulong_tx(&g_value, PICOTM_TM_PRIVATIZE_LOADSTORE);
+
+        g_value = tid;
+        unsigned long value = g_value;
+
+        if (!(value == tid)) {
+            tap_error("condition failed: value == tid");
+            struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+            picotm_error_set_error_code(&error, PICOTM_GENERAL_ERROR);
+            picotm_error_mark_as_non_recoverable(&error);
+            picotm_recover_from_error(&error);
+        }
+
+    picotm_commit
+
+        abort_transaction_on_error(__func__);
+
+    picotm_end
+}
+
+static void
+tm_test_5_pre(unsigned long nthreads, enum loop_mode loop,
+              enum boundary_type btype, unsigned long long bound)
+{
+    g_value = nthreads;
+}
+
 const struct test_func tm_test[] = {
     {"tm_test_1", tm_test_1, tm_test_1_pre, tm_test_1_post},
     {"tm_test_2", tm_test_2, tm_test_2_pre, tm_test_2_post},
     {"tm_test_3", tm_test_3, tm_test_3_pre, tm_test_3_post},
-    {"tm_test_4", tm_test_4, tm_test_4_pre, NULL}
+    {"tm_test_4", tm_test_4, tm_test_4_pre, NULL},
+    {"tm_test_5", tm_test_5, tm_test_5_pre, NULL}
 };
 
 size_t
