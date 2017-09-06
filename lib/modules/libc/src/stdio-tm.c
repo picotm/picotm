@@ -37,6 +37,22 @@ sscanf_tm(const char* s, const char* format, ...)
 
 PICOTM_EXPORT
 int
+vsnprintf_tm(char* s, size_t n, const char* format, va_list ap)
+{
+    error_module_save_errno();
+
+    do {
+        int res = vsnprintf(s, n, format, ap);
+        if (res < 0) {
+            picotm_recover_from_errno(errno);
+            continue;
+        }
+        return res;
+    } while (true);
+}
+
+PICOTM_EXPORT
+int
 vsscanf_tm(const char* s, const char* format, va_list arg)
 {
     error_module_save_errno();

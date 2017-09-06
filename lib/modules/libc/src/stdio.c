@@ -39,11 +39,134 @@ sscanf_tx(const char* s, const char* format, ...)
 }
 
 static void
+privatize_printf_args(const char* format, va_list arg)
+{
+    while (format) {
+
+        const char* pos = strchr(format, '%');
+        if (!pos) {
+            return;
+        }
+
+        switch (pos[1]) {
+
+            case '%':
+                break;
+
+            /*
+             * Conversion specifiers
+             */
+
+            case 'd': case 'i': case 'o': case 'u':
+            case 'x': case 'a': case 'e': case 'f':
+            case 'g':
+                break;
+            case 's':
+                privatize_c_tx(va_arg(arg, void**), '\0',
+                               PICOTM_TM_PRIVATIZE_LOAD);
+                break;
+            case 'n':
+                privatize_tx(va_arg(arg, int*), sizeof(int),
+                             PICOTM_TM_PRIVATIZE_STORE);
+                break;
+
+            /*
+             * Length modifiers
+             */
+
+            case 'l':
+                switch (pos[2]) {
+                    case 'd': case 'i': case 'o': case 'u':
+                    case 'x': case 'X': case 'n': case 'a':
+                    case 'A': case 'e': case 'E': case 'f':
+                    case 'F': case 'g': case 'G': case 'c':
+                    case '[': case 'm':
+                        break;
+                    default:
+                        picotm_recover_from_errno(EINVAL);
+                        continue;
+                }
+                ++pos;
+                break;
+
+            case 'j':
+                switch (pos[2]) {
+                    case 'd': case 'i': case 'o': case 'u':
+                    case 'x': case 'X': case 'n':
+                        break;
+                    default:
+                        picotm_recover_from_errno(EINVAL);
+                        continue;
+                }
+                ++pos;
+                break;
+
+            case 'z':
+                switch (pos[2]) {
+                    case 'd': case 'i': case 'o': case 'u':
+                    case 'x': case 'X': case 'n':
+                        break;
+                    default:
+                        picotm_recover_from_errno(EINVAL);
+                        continue;
+                }
+                ++pos;
+                break;
+
+            case 't':
+                switch (pos[2]) {
+                    case 'd': case 'i': case 'o': case 'u':
+                    case 'x': case 'X': case 'n':
+                        break;
+                    default:
+                        picotm_recover_from_errno(EINVAL);
+                        continue;
+                }
+                ++pos;
+                break;
+
+            case 'L':
+                switch (pos[2]) {
+                    case 'a': case 'A': case 'e': case 'E':
+                    case 'f': case 'F': case 'g': case 'G':
+                        break;
+                    default:
+                        picotm_recover_from_errno(EINVAL);
+                        continue;
+                }
+                ++pos;
+                break;
+
+            default:
+                picotm_recover_from_errno(EINVAL);
+                continue;
+        }
+
+        format = pos + 2;
+    }
+}
+
+PICOTM_EXPORT
+int
+vsnprintf_tx(char* s, size_t n, const char* format, va_list ap)
+{
+    privatize_c_tx(s, n, PICOTM_TM_PRIVATIZE_STORE);
+    privatize_c_tx(format, '\0', PICOTM_TM_PRIVATIZE_LOAD);
+
+    va_list ap_copy;
+    va_copy(ap_copy, ap);
+    privatize_printf_args(format, ap_copy);
+
+    return vsnprintf_tm(s, n, format, ap);
+
+}
+
+static void
 privatize_scanf_args(const char* format, va_list arg)
 {
     while (format) {
 
-        char* pos = strchr(format, '%');
+        const char* pos = strchr(format, '%');
         if (!pos) {
             return;
         }
@@ -197,7 +320,9 @@ vsscanf_tx(const char* s, const char* format, va_list arg)
     privatize_c_tx(s, '\0', PICOTM_TM_PRIVATIZE_LOAD);
     privatize_c_tx(format, '\0', PICOTM_TM_PRIVATIZE_LOAD);
 
-    privatize_scanf_args(format, arg);
+    va_list arg_copy;
+    va_copy(arg_copy, arg);
+    privatize_scanf_args(format, arg_copy);
 
     return vsscanf_tm(s, format, arg);
 }
