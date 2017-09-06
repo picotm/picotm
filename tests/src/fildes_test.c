@@ -774,7 +774,7 @@ fildes_test_13(unsigned int tid)
     char str[20][128];
 
     for (size_t i = 0; i < arraylen(str); ++i) {
-        safe_snprintf(str[i], sizeof(str[i]), "%u %zu %s", tid, i,
+        safe_snprintf(str[i], sizeof(str[i]), "# %u %zu %s", tid, i,
                       g_test_str);
     }
 
