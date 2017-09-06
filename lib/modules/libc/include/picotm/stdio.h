@@ -44,6 +44,17 @@ sscanf_tx(const char* restrict s, const char* restrict format, ...);
 
 PICOTM_NOTHROW
 /**
+ * A transaction-safe implementation of [vsnprintf()][posix::vsnprintf].
+ *
+ * [posix::vsnprintf]:
+ *  http://pubs.opengroup.org/onlinepubs/9699919799/functions/vsnprintf.html
+ */
+int
+vsnprintf_tx(char* restrict s, size_t n, const char* restrict format,
+             va_list ap);
+
+PICOTM_NOTHROW
+/**
  * A transaction-safe implementation of [vsscanf()][posix::vsscanf].
  *
  * [posix::vsscanf]:
