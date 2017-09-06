@@ -24,6 +24,19 @@
 
 PICOTM_EXPORT
 int
+sscanf_tm(const char* s, const char* format, ...)
+{
+    va_list arg;
+
+    va_start(arg, format);
+    int res = vsscanf_tm(s, format, arg);
+    va_end(arg);
+
+    return res;
+}
+
+PICOTM_EXPORT
+int
 vsscanf_tm(const char* s, const char* format, va_list arg)
 {
     error_module_save_errno();
