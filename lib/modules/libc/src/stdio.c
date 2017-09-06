@@ -1,0 +1,190 @@
+/* Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ */
+
+#include "picotm/stdio.h"
+#include <errno.h>
+#include <picotm/picotm-module.h>
+#include <picotm/picotm-tm.h>
+#include <string.h>
+#include "error/module.h"
+#include "picotm/stdio-tm.h"
+
+static void
+privatize_scanf_args(const char* format, va_list arg)
+{
+    while (format) {
+
+        char* pos = strchr(format, '%');
+        if (!pos) {
+            return;
+        }
+
+        switch (pos[1]) {
+
+            case '%':
+                break;
+
+            /*
+             * Conversion specifiers
+             */
+
+            case 'd':
+                privatize_tx(va_arg(arg, int*), sizeof(int),
+                             PICOTM_TM_PRIVATIZE_STORE);
+                break;
+            case 'i':
+                privatize_tx(va_arg(arg, int*), sizeof(int),
+                             PICOTM_TM_PRIVATIZE_STORE);
+                break;
+            case 'o':
+                privatize_tx(va_arg(arg, unsigned*), sizeof(unsigned),
+                             PICOTM_TM_PRIVATIZE_STORE);
+                break;
+            case 'u':
+                privatize_tx(va_arg(arg, unsigned*), sizeof(unsigned),
+                             PICOTM_TM_PRIVATIZE_STORE);
+                break;
+            case 'x':
+                privatize_tx(va_arg(arg, unsigned*), sizeof(unsigned),
+                             PICOTM_TM_PRIVATIZE_STORE);
+                break;
+            case 'a': case 'e': case 'f':
+                /* fall through */
+            case 'g':
+                privatize_tx(va_arg(arg, float*), sizeof(float),
+                             PICOTM_TM_PRIVATIZE_STORE);
+                break;
+            case 'p':
+                privatize_tx(va_arg(arg, void**), sizeof(void*),
+                             PICOTM_TM_PRIVATIZE_STORE);
+                break;
+            case 'n':
+                privatize_tx(va_arg(arg, int*), sizeof(int),
+                             PICOTM_TM_PRIVATIZE_STORE);
+                break;
+
+            /*
+             * Length modifiers
+             */
+
+            case 'l':
+                switch (pos[2]) {
+                    case 'd': case 'i': case 'o': case 'u':
+                    case 'x': case 'X': case 'n':
+                        privatize_tx(va_arg(arg, long*), sizeof(long),
+                                     PICOTM_TM_PRIVATIZE_STORE);
+                        break;
+                    case 'a': case 'A': case 'e': case 'E':
+                    case 'f': case 'F': case 'g': case 'G':
+                        privatize_tx(va_arg(arg, double*), sizeof(double),
+                                     PICOTM_TM_PRIVATIZE_STORE);
+                        break;
+                    case 'c': case 's': case '[':
+                        privatize_tx(va_arg(arg, wchar_t*), sizeof(wchar_t),
+                                     PICOTM_TM_PRIVATIZE_STORE);
+                        break;
+                    case 'm':
+                        privatize_tx(va_arg(arg, wchar_t**), sizeof(wchar_t*),
+                                     PICOTM_TM_PRIVATIZE_STORE);
+                        break;
+                    default:
+                        picotm_recover_from_errno(EINVAL);
+                        continue;
+                }
+                ++pos;
+                break;
+
+            case 'j':
+                switch (pos[2]) {
+                    case 'd': case 'i': case 'o': case 'u':
+                    case 'x': case 'X': case 'n':
+                        privatize_tx(va_arg(arg, intmax_t*), sizeof(intmax_t),
+                                     PICOTM_TM_PRIVATIZE_STORE);
+                        break;
+                    default:
+                        picotm_recover_from_errno(EINVAL);
+                        continue;
+                }
+                ++pos;
+                break;
+
+            case 'z':
+                switch (pos[2]) {
+                    case 'd': case 'i': case 'o': case 'u':
+                    case 'x': case 'X': case 'n':
+                        privatize_tx(va_arg(arg, size_t*), sizeof(size_t),
+                                     PICOTM_TM_PRIVATIZE_STORE);
+                        break;
+                    default:
+                        picotm_recover_from_errno(EINVAL);
+                        continue;
+                }
+                ++pos;
+                break;
+
+            case 't':
+                switch (pos[2]) {
+                    case 'd': case 'i': case 'o': case 'u':
+                    case 'x': case 'X': case 'n':
+                        privatize_tx(va_arg(arg, ptrdiff_t*),
+                                     sizeof(ptrdiff_t),
+                                     PICOTM_TM_PRIVATIZE_STORE);
+                        break;
+                    default:
+                        picotm_recover_from_errno(EINVAL);
+                        continue;
+                }
+                ++pos;
+                break;
+
+            case 'L':
+                switch (pos[2]) {
+                    case 'a': case 'A': case 'e': case 'E':
+                    case 'f': case 'F': case 'g': case 'G':
+                        privatize_tx(va_arg(arg, long double*),
+                                     sizeof(long double),
+                                     PICOTM_TM_PRIVATIZE_STORE);
+                        break;
+                    default:
+                        picotm_recover_from_errno(EINVAL);
+                        continue;
+                }
+                ++pos;
+                break;
+
+            default:
+                picotm_recover_from_errno(EINVAL);
+                continue;
+        }
+
+        format = pos + 2;
+    }
+}
+
+PICOTM_EXPORT
+int
+vsscanf_tx(const char* s, const char* format, va_list arg)
+{
+    privatize_c_tx(s, '\0', PICOTM_TM_PRIVATIZE_LOAD);
+    privatize_c_tx(format, '\0', PICOTM_TM_PRIVATIZE_LOAD);
+
+    privatize_scanf_args(format, arg);
+
+    return vsscanf_tm(s, format, arg);
+}

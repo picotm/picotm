@@ -135,6 +135,8 @@ libpicotm_c_la_SOURCES = allocator/allocator_tx.c \
                          libc.c \
                          libc.h \
                          sched.c \
+                         stdio-tm.c \
+                         stdio.c \
                          stdlib-tm.c \
                          stdlib.c \
                          string-tm.c \
