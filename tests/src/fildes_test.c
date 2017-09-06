@@ -1178,36 +1178,6 @@ tx_random_rw(int fildes, unsigned int* seed, off_t size,
     picotm_end
 }
 
-int
-locked_random_rw_pre(unsigned long testnum, unsigned long filenum,
-                     size_t filsiz)
-{
-    return temp_fildes_rand(testnum, filenum, O_CLOEXEC | O_RDWR, filsiz);
-}
-
-static void
-locked_random_rw(pthread_mutex_t* lock, int fildes, unsigned int* seed,
-                 off_t size, unsigned long ncycles, unsigned long nreads)
-{
-    safe_pthread_mutex_lock(lock);
-
-    for (unsigned long i = 0; i < ncycles; ++i) {
-
-        unsigned char buf[24];
-        off_t offset;
-        size_t count;
-
-        for (unsigned long j = 0; j < nreads; ++j) {
-            offset = rand_r(seed) % size;
-            count = safe_pread(g_fildes, buf, sizeof(buf), offset);
-        }
-
-        safe_pwrite(g_fildes, buf, count, offset);
-    }
-
-    safe_pthread_mutex_unlock(lock);
-}
-
 static void
 random_rw_post(int fildes)
 {
@@ -1247,35 +1217,6 @@ fildes_test_21(unsigned int tid)
     tx_random_rw(g_fildes, &t_seed, 1024 * 1024, g_txcycles, 1);
 }
 
-static void
-fildes_test_22_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound)
-{
-    g_fildes = locked_random_rw_pre(22, 0, MiB_to_bytes(1));
-}
-
-static void
-fildes_test_22_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound)
-{
-    random_rw_post(g_fildes);
-}
-
-static void
-fildes_test_22(unsigned int tid)
-{
-    extern size_t g_txcycles;
-
-    static pthread_mutex_t s_lock = PTHREAD_MUTEX_INITIALIZER;
-    static __thread unsigned int t_seed = 0; /* Thread-local seed value */
-
-    if (!t_seed) {
-        t_seed = tid + 1;
-    }
-
-    locked_random_rw(&s_lock, g_fildes, &t_seed, 1024 * 1024, g_txcycles, 1);
-}
-
 /*
  * Random read/write, ratio 2:1
  */
@@ -1306,35 +1247,6 @@ fildes_test_23(unsigned int tid)
     }
 
     tx_random_rw(g_fildes, &t_seed, 1024 * 1024, g_txcycles, 2);
-}
-
-static void
-fildes_test_24_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound)
-{
-    g_fildes = locked_random_rw_pre(24, 0, MiB_to_bytes(1));
-}
-
-static void
-fildes_test_24_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound)
-{
-    random_rw_post(g_fildes);
-}
-
-static void
-fildes_test_24(unsigned int tid)
-{
-    extern size_t g_txcycles;
-
-    static pthread_mutex_t s_lock = PTHREAD_MUTEX_INITIALIZER;
-    static __thread unsigned int t_seed = 0; /* Thread-local seed value */
-
-    if (!t_seed) {
-        t_seed = tid + 1;
-    }
-
-    locked_random_rw(&s_lock, g_fildes, &t_seed, 1024 * 1024, g_txcycles, 2);
 }
 
 /*
@@ -1369,35 +1281,6 @@ fildes_test_25(unsigned int tid)
     tx_random_rw(g_fildes, &t_seed, 1024 * 1024, g_txcycles, 4);
 }
 
-static void
-fildes_test_26_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound)
-{
-    g_fildes = locked_random_rw_pre(26, 0, MiB_to_bytes(1));
-}
-
-static void
-fildes_test_26_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound)
-{
-    random_rw_post(g_fildes);
-}
-
-static void
-fildes_test_26(unsigned int tid)
-{
-    extern size_t g_txcycles;
-
-    static pthread_mutex_t g_lock = PTHREAD_MUTEX_INITIALIZER;
-    static __thread unsigned int t_seed = 0; /* Thread-local seed value */
-
-    if (!t_seed) {
-        t_seed = tid + 1;
-    }
-
-    locked_random_rw(&g_lock, g_fildes, &t_seed, 1024 * 1024, g_txcycles, 4);
-}
-
 /*
  * Random read/write, ratio 8:1
  */
@@ -1428,35 +1311,6 @@ fildes_test_27(unsigned int tid)
     }
 
     tx_random_rw(g_fildes, &t_seed, 1024 * 1024, g_txcycles, 8);
-}
-
-static void
-fildes_test_28_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound)
-{
-    g_fildes = locked_random_rw_pre(28, 0, MiB_to_bytes(1));
-}
-
-static void
-fildes_test_28_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound)
-{
-    random_rw_post(g_fildes);
-}
-
-static void
-fildes_test_28(unsigned int tid)
-{
-    extern size_t g_txcycles;
-
-    static pthread_mutex_t s_lock = PTHREAD_MUTEX_INITIALIZER;
-    static __thread unsigned int t_seed = 0; /* Thread-local seed value */
-
-    if (!t_seed) {
-        t_seed = tid + 1;
-    }
-
-    locked_random_rw(&s_lock, g_fildes, &t_seed, 1024 * 1024, g_txcycles, 8);
 }
 
 /*
@@ -1496,28 +1350,6 @@ tx_random_read(int fildes, unsigned int* seed, off_t size,
     picotm_end
 }
 
-static int
-locked_random_read_pre(unsigned long testnum, unsigned long filenum,
-                       size_t filsiz)
-{
-    return temp_fildes_rand(testnum, filenum, O_CLOEXEC | O_RDONLY, filsiz);
-}
-
-static void
-locked_random_read(pthread_mutex_t* lock, int fildes, unsigned int* seed,
-                   off_t size, unsigned long ncycles)
-{
-    safe_pthread_mutex_lock(lock);
-
-    for (unsigned long i = 0; i < ncycles; ++i) {
-        off_t offset = rand_r(seed) % size;
-        unsigned char buf[24];
-        safe_pread(fildes, buf, sizeof(buf), offset);
-    }
-
-    safe_pthread_mutex_unlock(lock);
-}
-
 static void
 random_read_post(int fildes)
 {
@@ -1551,35 +1383,6 @@ fildes_test_29(unsigned int tid)
     }
 
     tx_random_read(g_fildes, &t_seed, 1024 * 1024, g_txcycles);
-}
-
-static void
-fildes_test_30_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound)
-{
-    g_fildes = locked_random_read_pre(30, 0, MiB_to_bytes(1));
-}
-
-static void
-fildes_test_30_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound)
-{
-    random_read_post(g_fildes);
-}
-
-static void
-fildes_test_30(unsigned int tid)
-{
-    extern size_t g_txcycles;
-
-    static pthread_mutex_t s_lock = PTHREAD_MUTEX_INITIALIZER;
-    static __thread unsigned int t_seed = 0; /* Thread-local seed value */
-
-    if (!t_seed) {
-        t_seed = tid + 1;
-    }
-
-    locked_random_read(&s_lock, g_fildes, &t_seed, 1024 * 1024, g_txcycles);
 }
 
 /*
@@ -1620,31 +1423,6 @@ tx_random_write(int fildes, unsigned int* seed, off_t size, unsigned long ncycle
     picotm_end
 }
 
-static int
-locked_random_write_pre(unsigned long testnum, unsigned long filenum,
-                        size_t filsiz)
-{
-    return temp_fildes_zero(testnum, filenum, O_CLOEXEC | O_WRONLY, filsiz);
-}
-
-static void
-locked_random_write(pthread_mutex_t* lock, int fildes, unsigned int* seed,
-                    off_t size, unsigned long ncycles)
-{
-    unsigned char buf[24];
-    memset(buf, 0, sizeof(buf));
-
-    safe_pthread_mutex_lock(lock);
-
-    for (unsigned long i = 0; i < ncycles; ++i) {
-        off_t offset = rand_r(seed) % size;
-        safe_pwrite(fildes, buf, sizeof(buf), offset);
-    }
-
-    safe_pthread_mutex_unlock(lock);
-}
-
-
 static void
 random_write_post(int fildes)
 {
@@ -1678,35 +1456,6 @@ fildes_test_31_post(unsigned long nthreads, enum loop_mode loop,
                     enum boundary_type btype, unsigned long long bound)
 {
     random_read_post(g_fildes);
-}
-
-static void
-fildes_test_32_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound)
-{
-    g_fildes = locked_random_write_pre(32, 0, MiB_to_bytes(1));
-}
-
-static void
-fildes_test_32(unsigned int tid)
-{
-    extern size_t g_txcycles;
-
-    static pthread_mutex_t s_lock = PTHREAD_MUTEX_INITIALIZER;
-    static __thread unsigned int t_seed = 0; /* Thread-local seed value */
-
-    if (!t_seed) {
-        t_seed = tid + 1;
-    }
-
-    locked_random_write(&s_lock, g_fildes, &t_seed, 1024 * 1024, g_txcycles);
-}
-
-static void
-fildes_test_32_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound)
-{
-    random_write_post(g_fildes);
 }
 
 /*
@@ -1745,30 +1494,6 @@ tx_seq_read(int fildes, unsigned int* seed, off_t size, unsigned long ncycles)
     picotm_end
 }
 
-static int
-locked_seq_read_pre(unsigned long testnum, unsigned long filenum,
-                    size_t filsiz)
-{
-    return temp_fildes_rand(testnum, filenum, O_CLOEXEC | O_RDONLY, filsiz);
-}
-
-static void
-locked_seq_read(pthread_mutex_t* lock, int fildes, unsigned int* seed,
-                off_t size, unsigned long ncycles)
-{
-    off_t offset = rand_r(seed) % size;
-
-    safe_pthread_mutex_lock(lock);
-
-    for (unsigned long i = 0; i < ncycles; ++i) {
-
-        unsigned char buf[24];
-        offset += safe_pread(fildes, buf, sizeof(buf), offset);
-    }
-
-    safe_pthread_mutex_unlock(lock);
-}
-
 static void
 seq_read_post(int fildes)
 {
@@ -1799,35 +1524,6 @@ fildes_test_33(unsigned int tid)
 
 static void
 fildes_test_33_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound)
-{
-    seq_read_post(g_fildes);
-}
-
-static void
-fildes_test_34_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound)
-{
-    g_fildes = locked_seq_read_pre(34, 0, MiB_to_bytes(1));
-}
-
-static void
-fildes_test_34(unsigned int tid)
-{
-    extern size_t g_txcycles;
-
-    static pthread_mutex_t s_lock = PTHREAD_MUTEX_INITIALIZER;
-    static __thread unsigned int t_seed = 0; /* Thread-local seed value */
-
-    if (!t_seed) {
-        t_seed = tid + 1;
-    }
-
-    locked_seq_read(&s_lock, g_fildes, &t_seed, 1024 * 1024, g_txcycles);
-}
-
-static void
-fildes_test_34_post(unsigned long nthreads, enum loop_mode loop,
                     enum boundary_type btype, unsigned long long bound)
 {
     seq_read_post(g_fildes);
@@ -1871,31 +1567,6 @@ tx_seq_write(int fildes, unsigned int* seed, off_t size, unsigned long ncycles)
     picotm_end
 }
 
-static int
-locked_seq_write_pre(unsigned long testnum, unsigned long filenum,
-                     size_t filsiz)
-{
-    return temp_fildes_zero(testnum, filenum, O_CLOEXEC | O_WRONLY, filsiz);
-}
-
-static void
-locked_seq_write(pthread_mutex_t* lock, int fildes, unsigned int* seed,
-                 off_t size, unsigned long ncycles)
-{
-    unsigned char buf[24];
-    memset(buf, 0, sizeof(buf));
-
-    off_t offset = rand_r(seed) % size;
-
-    safe_pthread_mutex_lock(lock);
-
-    for (unsigned long i = 0; i < ncycles; ++i) {
-        offset += safe_pwrite(fildes, buf, sizeof(buf), offset);
-    }
-
-    safe_pthread_mutex_unlock(lock);
-}
-
 static void
 seq_write_post(int fildes)
 {
@@ -1931,39 +1602,9 @@ fildes_test_35_post(unsigned long nthreads, enum loop_mode loop,
     seq_write_post(g_fildes);
 }
 
-static void
-fildes_test_36_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound)
-{
-    locked_seq_write_pre(36, 0, MiB_to_bytes(1));
-}
-
-static void
-fildes_test_36(unsigned int tid)
-{
-    extern size_t g_txcycles;
-
-    static pthread_mutex_t s_lock = PTHREAD_MUTEX_INITIALIZER;
-    static __thread unsigned int t_seed = 0; /* Thread-local seed value */
-
-    if (!t_seed) {
-        t_seed = tid + 1;
-    }
-
-    locked_seq_write(&s_lock, g_fildes, &t_seed, 1024 * 1024, g_txcycles);
-}
-
-static void
-fildes_test_36_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound)
-{
-    seq_write_post(g_fildes);
-}
-
 /*
  * 100 MB file
  */
-
 
 /*
  * Random read/write, ratio 1:1
@@ -2000,36 +1641,6 @@ fildes_test_37(unsigned int tid)
     tx_random_rw(g_fildes, &t_seed, 100 * 1024 * 1024, g_txcycles, 1);
 }
 
-static void
-fildes_test_38_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound)
-{
-    g_fildes = locked_random_rw_pre(38, 0, MiB_to_bytes(100));
-}
-
-static void
-fildes_test_38_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound)
-{
-    random_rw_post(g_fildes);
-}
-
-static void
-fildes_test_38(unsigned int tid)
-{
-    extern size_t g_txcycles;
-
-    static pthread_mutex_t s_lock = PTHREAD_MUTEX_INITIALIZER;
-    static __thread unsigned int t_seed = 0; /* Thread-local seed value */
-
-    if (!t_seed) {
-        t_seed = tid + 1;
-    }
-
-    locked_random_rw(&s_lock, g_fildes, &t_seed, 100 * 1024 * 1024,
-                     g_txcycles, 1);
-}
-
 /*
  * Random read/write, ratio 2:1
  */
@@ -2060,36 +1671,6 @@ fildes_test_39(unsigned int tid)
     }
 
     tx_random_rw(g_fildes, &t_seed, 100 * 1024 * 1024, g_txcycles, 2);
-}
-
-static void
-fildes_test_40_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound)
-{
-    g_fildes = locked_random_rw_pre(40, 0, MiB_to_bytes(100));
-}
-
-static void
-fildes_test_40_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound)
-{
-    random_rw_post(g_fildes);
-}
-
-static void
-fildes_test_40(unsigned int tid)
-{
-    extern size_t g_txcycles;
-
-    static pthread_mutex_t s_lock = PTHREAD_MUTEX_INITIALIZER;
-    static __thread unsigned int t_seed = 0; /* Thread-local seed value */
-
-    if (!t_seed) {
-        t_seed = tid + 1;
-    }
-
-    locked_random_rw(&s_lock, g_fildes, &t_seed, 100 * 1024 * 1024,
-                     g_txcycles, 2);
 }
 
 /*
@@ -2124,36 +1705,6 @@ fildes_test_41(unsigned int tid)
     tx_random_rw(g_fildes, &t_seed, 100 * 1024 * 1024, g_txcycles, 4);
 }
 
-static void
-fildes_test_42_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound)
-{
-    g_fildes = locked_random_rw_pre(42, 0, MiB_to_bytes(100));
-}
-
-static void
-fildes_test_42_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound)
-{
-    random_rw_post(g_fildes);
-}
-
-static void
-fildes_test_42(unsigned int tid)
-{
-    extern size_t g_txcycles;
-
-    static pthread_mutex_t s_lock = PTHREAD_MUTEX_INITIALIZER;
-    static __thread unsigned int t_seed = 0; /* Thread-local seed value */
-
-    if (!t_seed) {
-        t_seed = tid + 1;
-    }
-
-    locked_random_rw(&s_lock, g_fildes, &t_seed, 100 * 1024 * 1024,
-                     g_txcycles, 4);
-}
-
 /*
  * Random read/write, ratio 8:1
  */
@@ -2184,36 +1735,6 @@ fildes_test_43(unsigned int tid)
     }
 
     tx_random_rw(g_fildes, &t_seed, 100 * 1024 * 1024, g_txcycles, 8);
-}
-
-static void
-fildes_test_44_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound)
-{
-    g_fildes = locked_random_rw_pre(43, 0, MiB_to_bytes(100));
-}
-
-static void
-fildes_test_44_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound)
-{
-    random_rw_post(g_fildes);
-}
-
-static void
-fildes_test_44(unsigned int tid)
-{
-    extern size_t g_txcycles;
-
-    static pthread_mutex_t s_lock = PTHREAD_MUTEX_INITIALIZER;
-    static __thread unsigned int t_seed = 0; /* Thread-local seed value */
-
-    if (!t_seed) {
-        t_seed = tid + 1;
-    }
-
-    locked_random_rw(&s_lock, g_fildes, &t_seed, 100 * 1024 * 1024,
-                     g_txcycles, 8);
 }
 
 /*
@@ -2248,36 +1769,6 @@ fildes_test_45(unsigned int tid)
     tx_random_read(g_fildes, &t_seed, 100 * 1024 * 1024, g_txcycles);
 }
 
-static void
-fildes_test_46_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound)
-{
-    g_fildes = locked_random_read_pre(46, 0, MiB_to_bytes(100));
-}
-
-static void
-fildes_test_46_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound)
-{
-    random_read_post(g_fildes);
-}
-
-static void
-fildes_test_46(unsigned int tid)
-{
-    extern size_t g_txcycles;
-
-    static pthread_mutex_t s_lock = PTHREAD_MUTEX_INITIALIZER;
-    static __thread unsigned int t_seed = 0; /* Thread-local seed value */
-
-    if (!t_seed) {
-        t_seed = tid + 1;
-    }
-
-    locked_random_read(&s_lock, g_fildes, &t_seed, 100 * 1024 * 1024,
-                       g_txcycles);
-}
-
 /*
  * Random writes
  */
@@ -2305,35 +1796,6 @@ fildes_test_47(unsigned int tid)
 
 static void
 fildes_test_47_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound)
-{
-    random_write_post(g_fildes);
-}
-
-static void
-fildes_test_48_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound)
-{
-    g_fildes = locked_random_write_pre(48, 0, MiB_to_bytes(100));
-}
-
-static void
-fildes_test_48(unsigned int tid)
-{
-    extern size_t g_txcycles;
-
-    static pthread_mutex_t s_lock = PTHREAD_MUTEX_INITIALIZER;
-    static __thread unsigned int t_seed = 0; /* Thread-local seed value */
-
-    if (!t_seed) {
-        t_seed = tid + 1;
-    }
-
-    locked_random_write(&s_lock, g_fildes, &t_seed, 100 * 1024 * 1024, g_txcycles);
-}
-
-static void
-fildes_test_48_post(unsigned long nthreads, enum loop_mode loop,
                     enum boundary_type btype, unsigned long long bound)
 {
     random_write_post(g_fildes);
@@ -2371,35 +1833,6 @@ fildes_test_49_post(unsigned long nthreads, enum loop_mode loop,
     seq_read_post(g_fildes);
 }
 
-static void
-fildes_test_50_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound)
-{
-    g_fildes = locked_seq_read_pre(50, 0, MiB_to_bytes(100));
-}
-
-static void
-fildes_test_50(unsigned int tid)
-{
-    extern size_t g_txcycles;
-
-    static pthread_mutex_t s_lock = PTHREAD_MUTEX_INITIALIZER;
-    static __thread unsigned int t_seed = 0; /* Thread-local seed value */
-
-    if (!t_seed) {
-        t_seed = tid + 1;
-    }
-
-    locked_seq_read(&s_lock, g_fildes, &t_seed, 100 * 1024 * 1024, g_txcycles);
-}
-
-static void
-fildes_test_50_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound)
-{
-    seq_read_post(g_fildes);
-}
-
 /*
  * Sequential writes
  */
@@ -2432,35 +1865,6 @@ fildes_test_51_post(unsigned long nthreads, enum loop_mode loop,
     seq_write_post(g_fildes);
 }
 
-static void
-fildes_test_52_pre(unsigned long nthreads, enum loop_mode loop,
-                   enum boundary_type btype, unsigned long long bound)
-{
-    g_fildes = locked_seq_write_pre(52, 0, MiB_to_bytes(100));
-}
-
-static void
-fildes_test_52(unsigned int tid)
-{
-    extern size_t g_txcycles;
-
-    static pthread_mutex_t s_lock = PTHREAD_MUTEX_INITIALIZER;
-    static __thread unsigned int t_seed = 0; /* Thread-local seed value */
-
-    if (!t_seed) {
-        t_seed = tid + 1;
-    }
-
-    locked_seq_write(&s_lock, g_fildes, &t_seed, 100 * 1024 * 1024, g_txcycles);
-}
-
-static void
-fildes_test_52_post(unsigned long nthreads, enum loop_mode loop,
-                    enum boundary_type btype, unsigned long long bound)
-{
-    seq_write_post(g_fildes);
-}
-
 const struct test_func fildes_test[] = {
     {"fildes_test_1", fildes_test_1, fildes_test_1_pre, fildes_test_1_post},
     {"fildes_test_2", fildes_test_2, fildes_test_2_pre, fildes_test_2_post},
@@ -2483,37 +1887,21 @@ const struct test_func fildes_test[] = {
     {"fildes_test_19", fildes_test_19, fildes_test_19_pre, fildes_test_19_post},
     {"fildes_test_20", fildes_test_20, fildes_test_20_pre, fildes_test_20_post},
     {"fildes_test_21", fildes_test_21, fildes_test_21_pre, fildes_test_21_post},
-    {"fildes_test_22", fildes_test_22, fildes_test_22_pre, fildes_test_22_post},
     {"fildes_test_23", fildes_test_23, fildes_test_23_pre, fildes_test_23_post},
-    {"fildes_test_24", fildes_test_24, fildes_test_24_pre, fildes_test_24_post},
     {"fildes_test_25", fildes_test_25, fildes_test_25_pre, fildes_test_25_post},
-    {"fildes_test_26", fildes_test_26, fildes_test_26_pre, fildes_test_26_post},
     {"fildes_test_27", fildes_test_27, fildes_test_27_pre, fildes_test_27_post},
-    {"fildes_test_28", fildes_test_28, fildes_test_28_pre, fildes_test_28_post},
     {"fildes_test_29", fildes_test_29, fildes_test_29_pre, fildes_test_29_post},
-    {"fildes_test_30", fildes_test_30, fildes_test_30_pre, fildes_test_30_post},
     {"fildes_test_31", fildes_test_31, fildes_test_31_pre, fildes_test_31_post},
-    {"fildes_test_32", fildes_test_32, fildes_test_32_pre, fildes_test_32_post},
     {"fildes_test_33", fildes_test_33, fildes_test_33_pre, fildes_test_33_post},
-    {"fildes_test_34", fildes_test_34, fildes_test_34_pre, fildes_test_34_post},
     {"fildes_test_35", fildes_test_35, fildes_test_35_pre, fildes_test_35_post},
-    {"fildes_test_36", fildes_test_36, fildes_test_36_pre, fildes_test_36_post},
     {"fildes_test_37", fildes_test_37, fildes_test_37_pre, fildes_test_37_post},
-    {"fildes_test_38", fildes_test_38, fildes_test_38_pre, fildes_test_38_post},
     {"fildes_test_39", fildes_test_39, fildes_test_39_pre, fildes_test_39_post},
-    {"fildes_test_40", fildes_test_40, fildes_test_40_pre, fildes_test_40_post},
     {"fildes_test_41", fildes_test_41, fildes_test_41_pre, fildes_test_41_post},
-    {"fildes_test_42", fildes_test_42, fildes_test_42_pre, fildes_test_42_post},
     {"fildes_test_43", fildes_test_43, fildes_test_43_pre, fildes_test_43_post},
-    {"fildes_test_44", fildes_test_44, fildes_test_44_pre, fildes_test_44_post},
     {"fildes_test_45", fildes_test_45, fildes_test_45_pre, fildes_test_45_post},
-    {"fildes_test_46", fildes_test_46, fildes_test_46_pre, fildes_test_46_post},
     {"fildes_test_47", fildes_test_47, fildes_test_47_pre, fildes_test_47_post},
-    {"fildes_test_48", fildes_test_48, fildes_test_48_pre, fildes_test_48_post},
     {"fildes_test_49", fildes_test_49, fildes_test_49_pre, fildes_test_49_post},
-    {"fildes_test_50", fildes_test_50, fildes_test_50_pre, fildes_test_50_post},
-    {"fildes_test_51", fildes_test_51, fildes_test_51_pre, fildes_test_51_post},
-    {"fildes_test_52", fildes_test_52, fildes_test_52_pre, fildes_test_52_post}
+    {"fildes_test_51", fildes_test_51, fildes_test_51_pre, fildes_test_51_post}
 };
 
 size_t
