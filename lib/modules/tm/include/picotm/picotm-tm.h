@@ -227,7 +227,7 @@ privatize_tx(const void* addr, size_t siz, unsigned long flags)
  * Privatizes the memory region starting at address, ending
  * at character 'c'.
  * \param   addr    The address to privatize.
- * \param   c       The number of bytes to privatize.
+ * \param   c       The region's terminating character.
  * \param   flags   Privatizes for loading and/or storing.
  */
 static inline void
