@@ -1179,7 +1179,7 @@ tx_random_rw(int fildes, unsigned int* seed, off_t size,
 }
 
 static void
-random_rw_post(int fildes)
+tx_random_rw_post(int fildes)
 {
     remove_file(g_filename);
     close_fildes(fildes);
@@ -1200,7 +1200,7 @@ static void
 fildes_test_21_post(unsigned long nthreads, enum loop_mode loop,
                     enum boundary_type btype, unsigned long long bound)
 {
-    random_rw_post(g_fildes);
+    tx_random_rw_post(g_fildes);
 }
 
 static void
@@ -1222,21 +1222,21 @@ fildes_test_21(unsigned int tid)
  */
 
 static void
-fildes_test_23_pre(unsigned long nthreads, enum loop_mode loop,
+fildes_test_22_pre(unsigned long nthreads, enum loop_mode loop,
                    enum boundary_type btype, unsigned long long bound)
 {
-    g_fildes = tx_random_rw_pre(23, 0, MiB_to_bytes(1));
+    g_fildes = tx_random_rw_pre(22, 0, MiB_to_bytes(1));
 }
 
 static void
-fildes_test_23_post(unsigned long nthreads, enum loop_mode loop,
+fildes_test_22_post(unsigned long nthreads, enum loop_mode loop,
                     enum boundary_type btype, unsigned long long bound)
 {
-    random_rw_post(g_fildes);
+    tx_random_rw_post(g_fildes);
 }
 
 static void
-fildes_test_23(unsigned int tid)
+fildes_test_22(unsigned int tid)
 {
     extern size_t g_txcycles;
 
@@ -1254,21 +1254,21 @@ fildes_test_23(unsigned int tid)
  */
 
 static void
-fildes_test_25_pre(unsigned long nthreads, enum loop_mode loop,
+fildes_test_23_pre(unsigned long nthreads, enum loop_mode loop,
                    enum boundary_type btype, unsigned long long bound)
 {
-    g_fildes = tx_random_rw_pre(25, 0, MiB_to_bytes(1));
+    g_fildes = tx_random_rw_pre(23, 0, MiB_to_bytes(1));
 }
 
 static void
-fildes_test_25_post(unsigned long nthreads, enum loop_mode loop,
+fildes_test_23_post(unsigned long nthreads, enum loop_mode loop,
                     enum boundary_type btype, unsigned long long bound)
 {
-    random_rw_post(g_fildes);
+    tx_random_rw_post(g_fildes);
 }
 
 static void
-fildes_test_25(unsigned int tid)
+fildes_test_23(unsigned int tid)
 {
     extern size_t g_txcycles;
 
@@ -1286,21 +1286,21 @@ fildes_test_25(unsigned int tid)
  */
 
 static void
-fildes_test_27_pre(unsigned long nthreads, enum loop_mode loop,
+fildes_test_24_pre(unsigned long nthreads, enum loop_mode loop,
                    enum boundary_type btype, unsigned long long bound)
 {
-    g_fildes = tx_random_rw_pre(27, 0, MiB_to_bytes(1));
+    g_fildes = tx_random_rw_pre(24, 0, MiB_to_bytes(1));
 }
 
 static void
-fildes_test_27_post(unsigned long nthreads, enum loop_mode loop,
+fildes_test_24_post(unsigned long nthreads, enum loop_mode loop,
                     enum boundary_type btype, unsigned long long bound)
 {
-    random_rw_post(g_fildes);
+    tx_random_rw_post(g_fildes);
 }
 
 static void
-fildes_test_27(unsigned int tid)
+fildes_test_24(unsigned int tid)
 {
     extern size_t g_txcycles;
 
@@ -1351,28 +1351,28 @@ tx_random_read(int fildes, unsigned int* seed, off_t size,
 }
 
 static void
-random_read_post(int fildes)
+tx_random_read_post(int fildes)
 {
     close_fildes(fildes);
     remove_file(g_filename);
 }
 
 static void
-fildes_test_29_pre(unsigned long nthreads, enum loop_mode loop,
+fildes_test_25_pre(unsigned long nthreads, enum loop_mode loop,
                    enum boundary_type btype, unsigned long long bound)
 {
-    g_fildes = tx_random_read_pre(29, 0, MiB_to_bytes(1));
+    g_fildes = tx_random_read_pre(25, 0, MiB_to_bytes(1));
 }
 
 static void
-fildes_test_29_post(unsigned long nthreads, enum loop_mode loop,
+fildes_test_25_post(unsigned long nthreads, enum loop_mode loop,
                     enum boundary_type btype, unsigned long long bound)
 {
-    random_read_post(g_fildes);
+    tx_random_read_post(g_fildes);
 }
 
 static void
-fildes_test_29(unsigned int tid)
+fildes_test_25(unsigned int tid)
 {
     extern size_t g_txcycles;
 
@@ -1424,21 +1424,21 @@ tx_random_write(int fildes, unsigned int* seed, off_t size, unsigned long ncycle
 }
 
 static void
-random_write_post(int fildes)
+tx_random_write_post(int fildes)
 {
     close_fildes(fildes);
     remove_file(g_filename);
 }
 
 static void
-fildes_test_31_pre(unsigned long nthreads, enum loop_mode loop,
+fildes_test_26_pre(unsigned long nthreads, enum loop_mode loop,
                    enum boundary_type btype, unsigned long long bound)
 {
-    g_fildes = tx_random_write_pre(31, 0, MiB_to_bytes(1));
+    g_fildes = tx_random_write_pre(26, 0, MiB_to_bytes(1));
 }
 
 static void
-fildes_test_31(unsigned int tid)
+fildes_test_26(unsigned int tid)
 {
     extern size_t g_txcycles;
 
@@ -1452,10 +1452,10 @@ fildes_test_31(unsigned int tid)
 }
 
 static void
-fildes_test_31_post(unsigned long nthreads, enum loop_mode loop,
+fildes_test_26_post(unsigned long nthreads, enum loop_mode loop,
                     enum boundary_type btype, unsigned long long bound)
 {
-    random_read_post(g_fildes);
+    tx_random_write_post(g_fildes);
 }
 
 /*
@@ -1495,21 +1495,21 @@ tx_seq_read(int fildes, unsigned int* seed, off_t size, unsigned long ncycles)
 }
 
 static void
-seq_read_post(int fildes)
+tx_seq_read_post(int fildes)
 {
     close_fildes(fildes);
     remove_file(g_filename);
 }
 
 static void
-fildes_test_33_pre(unsigned long nthreads, enum loop_mode loop,
+fildes_test_27_pre(unsigned long nthreads, enum loop_mode loop,
                    enum boundary_type btype, unsigned long long bound)
 {
-    g_fildes = tx_seq_read_pre(33, 0, MiB_to_bytes(1));
+    g_fildes = tx_seq_read_pre(27, 0, MiB_to_bytes(1));
 }
 
 static void
-fildes_test_33(unsigned int tid)
+fildes_test_27(unsigned int tid)
 {
     extern size_t g_txcycles;
 
@@ -1523,10 +1523,10 @@ fildes_test_33(unsigned int tid)
 }
 
 static void
-fildes_test_33_post(unsigned long nthreads, enum loop_mode loop,
+fildes_test_27_post(unsigned long nthreads, enum loop_mode loop,
                     enum boundary_type btype, unsigned long long bound)
 {
-    seq_read_post(g_fildes);
+    tx_seq_read_post(g_fildes);
 }
 
 /*
@@ -1568,21 +1568,21 @@ tx_seq_write(int fildes, unsigned int* seed, off_t size, unsigned long ncycles)
 }
 
 static void
-seq_write_post(int fildes)
+tx_seq_write_post(int fildes)
 {
     close_fildes(fildes);
     remove_file(g_filename);
 }
 
 static void
-fildes_test_35_pre(unsigned long nthreads, enum loop_mode loop,
+fildes_test_28_pre(unsigned long nthreads, enum loop_mode loop,
                    enum boundary_type btype, unsigned long long bound)
 {
-    g_fildes = tx_seq_write_pre(35, 0, MiB_to_bytes(1));
+    g_fildes = tx_seq_write_pre(28, 0, MiB_to_bytes(1));
 }
 
 static void
-fildes_test_35(unsigned int tid)
+fildes_test_28(unsigned int tid)
 {
     extern size_t g_txcycles;
 
@@ -1596,10 +1596,10 @@ fildes_test_35(unsigned int tid)
 }
 
 static void
-fildes_test_35_post(unsigned long nthreads, enum loop_mode loop,
+fildes_test_28_post(unsigned long nthreads, enum loop_mode loop,
                     enum boundary_type btype, unsigned long long bound)
 {
-    seq_write_post(g_fildes);
+    tx_seq_write_post(g_fildes);
 }
 
 /*
@@ -1610,25 +1610,22 @@ fildes_test_35_post(unsigned long nthreads, enum loop_mode loop,
  * Random read/write, ratio 1:1
  */
 
-long long fildes_test_37_ticks = 0;
-long long fildes_test_37_count = 0;
-
 static void
-fildes_test_37_pre(unsigned long nthreads, enum loop_mode loop,
+fildes_test_29_pre(unsigned long nthreads, enum loop_mode loop,
                    enum boundary_type btype, unsigned long long bound)
 {
-    g_fildes = tx_random_rw_pre(37, 0, MiB_to_bytes(100));
+    g_fildes = tx_random_rw_pre(29, 0, MiB_to_bytes(100));
 }
 
 static void
-fildes_test_37_post(unsigned long nthreads, enum loop_mode loop,
+fildes_test_29_post(unsigned long nthreads, enum loop_mode loop,
                     enum boundary_type btype, unsigned long long bound)
 {
-    random_rw_post(g_fildes);
+    tx_random_rw_post(g_fildes);
 }
 
 static void
-fildes_test_37(unsigned int tid)
+fildes_test_29(unsigned int tid)
 {
     extern size_t g_txcycles;
 
@@ -1646,21 +1643,21 @@ fildes_test_37(unsigned int tid)
  */
 
 static void
-fildes_test_39_pre(unsigned long nthreads, enum loop_mode loop,
+fildes_test_30_pre(unsigned long nthreads, enum loop_mode loop,
                    enum boundary_type btype, unsigned long long bound)
 {
-    g_fildes = tx_random_rw_pre(39, 0, MiB_to_bytes(100));
+    g_fildes = tx_random_rw_pre(30, 0, MiB_to_bytes(100));
 }
 
 static void
-fildes_test_39_post(unsigned long nthreads, enum loop_mode loop,
+fildes_test_30_post(unsigned long nthreads, enum loop_mode loop,
                     enum boundary_type btype, unsigned long long bound)
 {
-    random_rw_post(g_fildes);
+    tx_random_rw_post(g_fildes);
 }
 
 static void
-fildes_test_39(unsigned int tid)
+fildes_test_30(unsigned int tid)
 {
     extern size_t g_txcycles;
 
@@ -1678,21 +1675,21 @@ fildes_test_39(unsigned int tid)
  */
 
 static void
-fildes_test_41_pre(unsigned long nthreads, enum loop_mode loop,
+fildes_test_31_pre(unsigned long nthreads, enum loop_mode loop,
                    enum boundary_type btype, unsigned long long bound)
 {
-    g_fildes = tx_random_rw_pre(41, 0, MiB_to_bytes(100));
+    g_fildes = tx_random_rw_pre(31, 0, MiB_to_bytes(100));
 }
 
 static void
-fildes_test_41_post(unsigned long nthreads, enum loop_mode loop,
+fildes_test_31_post(unsigned long nthreads, enum loop_mode loop,
                     enum boundary_type btype, unsigned long long bound)
 {
-    random_rw_post(g_fildes);
+    tx_random_rw_post(g_fildes);
 }
 
 static void
-fildes_test_41(unsigned int tid)
+fildes_test_31(unsigned int tid)
 {
     extern size_t g_txcycles;
 
@@ -1710,21 +1707,21 @@ fildes_test_41(unsigned int tid)
  */
 
 static void
-fildes_test_43_pre(unsigned long nthreads, enum loop_mode loop,
+fildes_test_32_pre(unsigned long nthreads, enum loop_mode loop,
                    enum boundary_type btype, unsigned long long bound)
 {
-    g_fildes = tx_random_rw_pre(43, 0, MiB_to_bytes(100));
+    g_fildes = tx_random_rw_pre(32, 0, MiB_to_bytes(100));
 }
 
 static void
-fildes_test_43_post(unsigned long nthreads, enum loop_mode loop,
+fildes_test_32_post(unsigned long nthreads, enum loop_mode loop,
                     enum boundary_type btype, unsigned long long bound)
 {
-    random_rw_post(g_fildes);
+    tx_random_rw_post(g_fildes);
 }
 
 static void
-fildes_test_43(unsigned int tid)
+fildes_test_32(unsigned int tid)
 {
     extern size_t g_txcycles;
 
@@ -1742,21 +1739,21 @@ fildes_test_43(unsigned int tid)
  */
 
 static void
-fildes_test_45_pre(unsigned long nthreads, enum loop_mode loop,
+fildes_test_33_pre(unsigned long nthreads, enum loop_mode loop,
                    enum boundary_type btype, unsigned long long bound)
 {
-    g_fildes = tx_random_read_pre(45, 0, MiB_to_bytes(100));
+    g_fildes = tx_random_read_pre(33, 0, MiB_to_bytes(100));
 }
 
 static void
-fildes_test_45_post(unsigned long nthreads, enum loop_mode loop,
+fildes_test_33_post(unsigned long nthreads, enum loop_mode loop,
                     enum boundary_type btype, unsigned long long bound)
 {
-    random_read_post(g_fildes);
+    tx_random_read_post(g_fildes);
 }
 
 static void
-fildes_test_45(unsigned int tid)
+fildes_test_33(unsigned int tid)
 {
     extern size_t g_txcycles;
 
@@ -1774,14 +1771,14 @@ fildes_test_45(unsigned int tid)
  */
 
 static void
-fildes_test_47_pre(unsigned long nthreads, enum loop_mode loop,
+fildes_test_34_pre(unsigned long nthreads, enum loop_mode loop,
                    enum boundary_type btype, unsigned long long bound)
 {
-    g_fildes = tx_random_write_pre(47, 0, MiB_to_bytes(100));
+    g_fildes = tx_random_write_pre(34, 0, MiB_to_bytes(100));
 }
 
 static void
-fildes_test_47(unsigned int tid)
+fildes_test_34(unsigned int tid)
 {
     extern size_t g_txcycles;
 
@@ -1795,10 +1792,10 @@ fildes_test_47(unsigned int tid)
 }
 
 static void
-fildes_test_47_post(unsigned long nthreads, enum loop_mode loop,
+fildes_test_34_post(unsigned long nthreads, enum loop_mode loop,
                     enum boundary_type btype, unsigned long long bound)
 {
-    random_write_post(g_fildes);
+    tx_random_write_post(g_fildes);
 }
 
 /*
@@ -1806,14 +1803,14 @@ fildes_test_47_post(unsigned long nthreads, enum loop_mode loop,
  */
 
 static void
-fildes_test_49_pre(unsigned long nthreads, enum loop_mode loop,
+fildes_test_35_pre(unsigned long nthreads, enum loop_mode loop,
                    enum boundary_type btype, unsigned long long bound)
 {
-    g_fildes = tx_seq_read_pre(49, 0, MiB_to_bytes(100));
+    g_fildes = tx_seq_read_pre(35, 0, MiB_to_bytes(100));
 }
 
 static void
-fildes_test_49(unsigned int tid)
+fildes_test_35(unsigned int tid)
 {
     extern size_t g_txcycles;
 
@@ -1827,10 +1824,10 @@ fildes_test_49(unsigned int tid)
 }
 
 static void
-fildes_test_49_post(unsigned long nthreads, enum loop_mode loop,
+fildes_test_35_post(unsigned long nthreads, enum loop_mode loop,
                     enum boundary_type btype, unsigned long long bound)
 {
-    seq_read_post(g_fildes);
+    tx_seq_read_post(g_fildes);
 }
 
 /*
@@ -1838,14 +1835,14 @@ fildes_test_49_post(unsigned long nthreads, enum loop_mode loop,
  */
 
 static void
-fildes_test_51_pre(unsigned long nthreads, enum loop_mode loop,
+fildes_test_36_pre(unsigned long nthreads, enum loop_mode loop,
                    enum boundary_type btype, unsigned long long bound)
 {
-    g_fildes = tx_seq_write_pre(51, 0, MiB_to_bytes(100));
+    g_fildes = tx_seq_write_pre(36, 0, MiB_to_bytes(100));
 }
 
 static void
-fildes_test_51(unsigned int tid)
+fildes_test_36(unsigned int tid)
 {
     extern size_t g_txcycles;
 
@@ -1859,10 +1856,10 @@ fildes_test_51(unsigned int tid)
 }
 
 static void
-fildes_test_51_post(unsigned long nthreads, enum loop_mode loop,
+fildes_test_36_post(unsigned long nthreads, enum loop_mode loop,
                     enum boundary_type btype, unsigned long long bound)
 {
-    seq_write_post(g_fildes);
+    tx_seq_write_post(g_fildes);
 }
 
 const struct test_func fildes_test[] = {
@@ -1887,21 +1884,21 @@ const struct test_func fildes_test[] = {
     {"fildes_test_19", fildes_test_19, fildes_test_19_pre, fildes_test_19_post},
     {"fildes_test_20", fildes_test_20, fildes_test_20_pre, fildes_test_20_post},
     {"fildes_test_21", fildes_test_21, fildes_test_21_pre, fildes_test_21_post},
+    {"fildes_test_22", fildes_test_22, fildes_test_22_pre, fildes_test_22_post},
     {"fildes_test_23", fildes_test_23, fildes_test_23_pre, fildes_test_23_post},
+    {"fildes_test_24", fildes_test_24, fildes_test_24_pre, fildes_test_24_post},
     {"fildes_test_25", fildes_test_25, fildes_test_25_pre, fildes_test_25_post},
+    {"fildes_test_26", fildes_test_26, fildes_test_26_pre, fildes_test_26_post},
     {"fildes_test_27", fildes_test_27, fildes_test_27_pre, fildes_test_27_post},
+    {"fildes_test_28", fildes_test_28, fildes_test_28_pre, fildes_test_28_post},
     {"fildes_test_29", fildes_test_29, fildes_test_29_pre, fildes_test_29_post},
+    {"fildes_test_30", fildes_test_30, fildes_test_30_pre, fildes_test_30_post},
     {"fildes_test_31", fildes_test_31, fildes_test_31_pre, fildes_test_31_post},
+    {"fildes_test_32", fildes_test_32, fildes_test_32_pre, fildes_test_32_post},
     {"fildes_test_33", fildes_test_33, fildes_test_33_pre, fildes_test_33_post},
+    {"fildes_test_34", fildes_test_34, fildes_test_34_pre, fildes_test_34_post},
     {"fildes_test_35", fildes_test_35, fildes_test_35_pre, fildes_test_35_post},
-    {"fildes_test_37", fildes_test_37, fildes_test_37_pre, fildes_test_37_post},
-    {"fildes_test_39", fildes_test_39, fildes_test_39_pre, fildes_test_39_post},
-    {"fildes_test_41", fildes_test_41, fildes_test_41_pre, fildes_test_41_post},
-    {"fildes_test_43", fildes_test_43, fildes_test_43_pre, fildes_test_43_post},
-    {"fildes_test_45", fildes_test_45, fildes_test_45_pre, fildes_test_45_post},
-    {"fildes_test_47", fildes_test_47, fildes_test_47_pre, fildes_test_47_post},
-    {"fildes_test_49", fildes_test_49, fildes_test_49_pre, fildes_test_49_post},
-    {"fildes_test_51", fildes_test_51, fildes_test_51_pre, fildes_test_51_post}
+    {"fildes_test_36", fildes_test_36, fildes_test_36_pre, fildes_test_36_post}
 };
 
 size_t
