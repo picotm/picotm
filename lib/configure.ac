@@ -25,6 +25,8 @@ AC_CONFIG_MACRO_DIR([m4])
 
 AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
 
+AC_REQUIRE_AUX_FILE([tap-driver.sh])
+
 
 dnl
 dnl Compiler support
@@ -65,6 +67,8 @@ AC_HEADER_ASSERT
 AC_CHECK_HEADERS([sys/cdefs.h])
 
 AC_FUNC_ALLOCA
+
+CHECK_LIBM
 
 
 dnl
@@ -119,7 +123,9 @@ AC_CONFIG_FILES([Makefile
                  modules/tm/Makefile
                  modules/tm/include/Makefile
                  modules/tm/src/Makefile
-                 src/Makefile])
+                 src/Makefile
+                 tests/Makefile
+                 tests/modules/Makefile])
 AC_OUTPUT
 
 AC_MSG_RESULT([])
