@@ -496,10 +496,9 @@ sub createPackages {
     say "builddir: $builddir";
     say "installdir: $installdir";
 
-    mkdir "$builddir/lib";
-    createSourcePackage("$package-$major.$minor.$micro", 'lib/', "$builddir/lib", $installdir);
+    createSourcePackage("$package-$major.$minor.$micro", './', "$builddir", $installdir);
 
-    createDocPackage("$package-doc-$major.$minor.$micro", 'lib/', "$builddir/lib", $installdir);
+    createDocPackage("$package-doc-$major.$minor.$micro", './', "$builddir", $installdir);
 }
 
 
@@ -524,7 +523,7 @@ sub updateVersionNumber {
 #
 
 my ($package, $cur_major, $cur_minor, $cur_micro) =
-    parseConfigureAc('lib/configure.ac');
+    parseConfigureAc('./configure.ac');
 
 say "Package $package";
 say "Current release: $cur_major.$cur_minor.$cur_micro";
@@ -541,9 +540,9 @@ my $new_package_string = "$package $new_major.$new_minor.$new_micro";
 # Update and commit files for release
 #
 
-updateChangeLog('lib/ChangeLog', $package, $new_major, $new_minor, $new_micro);
-updateReleasesJson('releases.json', $release_type, $new_major, $new_minor, $new_micro);
-updateConfigureAc('lib/configure.ac', $new_major, $new_minor, $new_micro);
+updateChangeLog('./ChangeLog', $package, $new_major, $new_minor, $new_micro);
+updateReleasesJson('./releases.json', $release_type, $new_major, $new_minor, $new_micro);
+updateConfigureAc('./configure.ac', $new_major, $new_minor, $new_micro);
 
 commitChanges($new_package_string);
 
