@@ -16,13 +16,6 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-SUBDIRS = doc \
-          extras \
-          include \
-          modules \
-          src \
-          tests
-
-ACLOCAL_AMFLAGS = -I m4
-
-EXTRA_DIST = COPYING
+EXTRA_DIST = check_picotm.m4 \
+             check_picotm_c.m4 \
+             check_picotm_tm.m4
