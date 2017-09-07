@@ -25,18 +25,6 @@ Downloads and Contact
   For IRC real-time communication, join #picotm on freenode.net.
 
 
-About this Repository
-=====================
-
-  This repository contains picotm, its modules and test cases.
-
-    lib/        picotm library and modules
-    tests/      Test cases
-
-  For the tests, first build and install picotm and its modules, then
-  build the test cases.
-
-
 License
 =======
 

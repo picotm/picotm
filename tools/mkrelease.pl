@@ -499,9 +499,6 @@ sub createPackages {
     mkdir "$builddir/lib";
     createSourcePackage("$package-$major.$minor.$micro", 'lib/', "$builddir/lib", $installdir);
 
-    mkdir "$builddir/tests";
-    createSourcePackage("$package-tests-$major.$minor.$micro", 'tests/', "$builddir/tests", $installdir);
-
     createDocPackage("$package-doc-$major.$minor.$micro", 'lib/', "$builddir/lib", $installdir);
 }
 
@@ -545,12 +542,8 @@ my $new_package_string = "$package $new_major.$new_minor.$new_micro";
 #
 
 updateChangeLog('lib/ChangeLog', $package, $new_major, $new_minor, $new_micro);
-updateChangeLog('tests/ChangeLog', "$package-tests", $new_major, $new_minor, $new_micro);
-
 updateReleasesJson('releases.json', $release_type, $new_major, $new_minor, $new_micro);
-
 updateConfigureAc('lib/configure.ac', $new_major, $new_minor, $new_micro);
-updateConfigureAc('tests/configure.ac', $new_major, $new_minor, $new_micro);
 
 commitChanges($new_package_string);
 
