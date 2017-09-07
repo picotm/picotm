@@ -197,7 +197,13 @@ cwd_tx_chdir_exec(struct cwd_tx* self, const char* path,
     return res;
 
 err_append_event:
-    chdir(cwd);
+    res = chdir(cwd);
+    if (res < 0) {
+        /* We keep the original error code. We mark the error
+         * as non-recoverable, because the function's clean-up
+         * block failed. */
+        picotm_error_mark_as_non_recoverable(error);
+    }
 err_chdir:
     free(cwd);
     return -1;
@@ -216,12 +222,15 @@ void
 undo_chdir(struct cwd_tx* self, const struct cwdop* cwdop,
            struct picotm_error* error)
 {
-    assert(self);
+    assert(cwdop);
 
-    /* TODO: Should we report errors here? Probably not, as the old
-     *       CWD might have been deleted by an external process. Or
-     *       should we maybe filter out the 'real' errors? */
-    chdir(cwdop->data.chdir.old_cwd);
+    /* The old working directory might have been deleted by an external
+     * process. We cannot do much about it, but signal a transaction error.
+     */
+    int res = chdir(cwdop->data.chdir.old_cwd);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+    }
 }
 
 /*
