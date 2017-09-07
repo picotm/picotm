@@ -16,12 +16,4 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-SUBDIRS = doc \
-          include \
-          modules \
-          src \
-          tests
-
-ACLOCAL_AMFLAGS = -I m4
-
-EXTRA_DIST = COPYING
+SUBDIRS = modules
