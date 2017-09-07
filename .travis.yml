@@ -120,8 +120,7 @@ before_script:
     - eval "${MATRIX_EVAL}"
 
 script:
-    - ( cd lib &&
-        tools/bootstrap.sh &&
+    - ( tools/bootstrap.sh &&
         ./configure &&
         make &&
         make html &&

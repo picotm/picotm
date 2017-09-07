@@ -19,14 +19,14 @@ of picotm. If any of these steps fails, stop the release process.
 
   2) Update
 
-        * the Changelog files in lib/, and
+        * the ChangeLog file, and
 
-        * the package version in configure.ac in lib/.
+        * the package version in configure.ac.
 
   3) Commit your changes to the branch 'vx.y'.
 
-  4) Generate packages by running 'make dist' for lib/. This
-     should produce the package files picotm-x.y.z.tar.gz.
+  4) Generate packages by running 'make dist'. This should produce
+     the package files picotm-x.y.z.tar.gz.
 
   5) Test generated packages by unpacking and building the content
      of the package file. You can merge steps 4) and 5) by running
@@ -34,8 +34,8 @@ of picotm. If any of these steps fails, stop the release process.
 
   6a) If you are making a major or minor release:
 
-        Generate documentation by running 'make html' for lib/. Create
-        a new documentation package by packing the resulting directory
+        Generate documentation by running 'make html'. Create a new
+        documentation package by packing the resulting directory
         doc/html in the package 'picotm-doc-x.y.tar.gz'.
 
   6b) If you are making a bug-fix release:
