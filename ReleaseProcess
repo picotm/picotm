@@ -19,18 +19,17 @@ of picotm. If any of these steps fails, stop the release process.
 
   2) Update
 
-        * the Changelog files in lib/ and tests/, and
+        * the Changelog files in lib/, and
 
-        * the package version in configure.ac in lib/ and tests/.
+        * the package version in configure.ac in lib/.
 
   3) Commit your changes to the branch 'vx.y'.
 
-  4) Generate packages by running 'make dist' for lib/ and test/. This
-     should produce the package files picotm-x.y.z.tar.gz and
-     picotm-tests-x.y.z.tar.gz.
+  4) Generate packages by running 'make dist' for lib/. This
+     should produce the package files picotm-x.y.z.tar.gz.
 
   5) Test generated packages by unpacking and building the content
-     of both package files. You can merge steps 4) and 5) by running
+     of the package file. You can merge steps 4) and 5) by running
      'make distcheck', instead of 'make dist'.
 
   6a) If you are making a major or minor release:
