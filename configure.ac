@@ -109,6 +109,8 @@ dnl
 AC_CONFIG_FILES([Makefile
                  doc/Doxyfile
                  doc/Makefile
+                 extras/Makefile
+                 extras/autoconf/Makefile
                  include/Makefile
                  modules/Makefile
                  modules/libc/Makefile
