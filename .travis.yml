@@ -113,27 +113,16 @@ matrix:
       env:
         - MATRIX_EVAL="CC=clang-4.0 && SKIP_MAKE_CHECK=1"
 
-before_install:
-    - eval "${MATRIX_EVAL}"
-
 install:
     - sudo apt-get install -y autoconf-archive doxygen graphviz realpath
 
 before_script:
+    - eval "${MATRIX_EVAL}"
+
+script:
     - ( cd lib &&
         tools/bootstrap.sh &&
         ./configure &&
         make &&
         make html &&
-        sudo make install ) &&
-      ( cd tests &&
-        tools/bootstrap.sh &&
-        ./configure &&
-        make &&
-        sudo make install )
-
-script:
-    - ( [ -n "${SKIP_MAKE_CHECK}" ] ||
-        ( export LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH}" &&
-          cd tests &&
-          make -j1 check ) )
+        ( [ -n "${SKIP_MAKE_CHECK}" ] || ( make -j1 check ) ) )
