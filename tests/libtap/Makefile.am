@@ -24,4 +24,5 @@ libpicotm_tap_la_SOURCES = tap.c \
                            taputils.h
 
 AM_CPPFLAGS = -I$(top_builddir)/include \
-              -I$(top_srcdir)/include
+              -I$(top_srcdir)/include \
+              -include picotm/config.h
