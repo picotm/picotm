@@ -29,6 +29,7 @@ test -e ChangeLog || touch ChangeLog || exit $?
 # TODO: pass '-Wall -Werror' to libtool after upgrading CI to libtool >= 2.4.3
 libtoolize -c || exit $?
 aclocal -Wall -Werror -I m4/ || exit $?
+autoheader -Wall -Werror || exit $?
 automake -Wall -Werror -ac || exit $?
 autoconf -Wall -Werror || exit $?
 

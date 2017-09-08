@@ -19,6 +19,9 @@ dnl DEALINGS IN THE SOFTWARE.
 AC_PREREQ([2.69])
 AC_INIT([picotm], [0.8.0], [bugs@picotm.org], [], [http://picotm.org])
 
+dnl Internal configuration header
+AC_CONFIG_HEADERS([include/picotm/config.h])
+
 AC_CONFIG_SRCDIR([src/Makefile.am])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
