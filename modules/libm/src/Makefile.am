@@ -35,7 +35,11 @@ libpicotm_m_la_SOURCES = complex.c \
 
 libpicotm_m_la_LDFLAGS = -version-info $(current):$(revision):$(age)
 
-AM_CPPFLAGS = -I$(top_srcdir)/modules/libm/include \
+AM_CPPFLAGS = -I$(top_builddir)/modules/libm/include \
+              -I$(top_srcdir)/modules/libm/include \
+              -I$(top_builddir)/modules/libc/include \
               -I$(top_srcdir)/modules/libc/include \
+              -I$(top_builddir)/modules/tm/include \
               -I$(top_srcdir)/modules/tm/include \
+              -I$(top_builddir)/include \
               -I$(top_srcdir)/include
