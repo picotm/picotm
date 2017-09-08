@@ -57,4 +57,5 @@ libpicotm_la_SOURCES = log.c \
 
 libpicotm_la_LDFLAGS = -version-info $(current):$(revision):$(age)
 
-AM_CPPFLAGS = -I$(srcdir)/../include
+AM_CPPFLAGS = -I$(top_builddir)/include \
+              -I$(top_srcdir)/include

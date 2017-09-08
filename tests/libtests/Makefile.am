@@ -46,5 +46,7 @@ libpicotm_tests_la_SOURCES = opts.c \
                              thread.c \
                              thread.h
 
-AM_CPPFLAGS = -I$(top_srcdir)/tests/libtap \
+AM_CPPFLAGS = -I$(top_builddir)/tests/libtap \
+              -I$(top_srcdir)/tests/libtap \
+              -I$(top_builddir)/include \
               -I$(top_srcdir)/include
