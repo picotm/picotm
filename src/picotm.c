@@ -170,7 +170,7 @@ __picotm_begin(enum __picotm_mode mode)
         return false; /* Enter recovery mode. */
     }
 
-    tx_begin(tx, tx_mode[mode], error);
+    tx_begin(tx, tx_mode[mode], mode == PICOTM_MODE_RETRY, error);
     if (picotm_error_is_set(error)) {
         return false; /* Enter recovery mode. */
     }
@@ -257,6 +257,21 @@ bool
 picotm_is_irrevocable()
 {
     return tx_is_irrevocable(get_non_null_tx());
+}
+
+PICOTM_EXPORT
+unsigned long
+picotm_number_of_restarts()
+{
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+    struct tx* tx = get_tx(false, &error);
+    if (picotm_error_is_set(&error)) {
+        return 0;
+    } else if (!tx) {
+        return 0; /* thread executed no transaction; not an error */
+    }
+    return tx->nretries;
 }
 
 PICOTM_EXPORT
