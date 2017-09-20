@@ -150,6 +150,13 @@ void
 picotm_restart(void);
 
 PICOTM_NOTHROW
+/**
+ * Returns the number of restarts of the thread's most recent transaction.
+ */
+unsigned long
+picotm_number_of_restarts(void);
+
+PICOTM_NOTHROW
 void
 /**
  * Releases all resources of picotm on the current thread.

@@ -35,6 +35,7 @@ tx_init(struct tx* self, struct tx_shared* tx_shared)
 
     self->shared = tx_shared;
     self->mode = TX_MODE_REVOCABLE;
+    self->nretries = 0;
     self->nmodules = 0;
     self->is_initialized = true;
 }
@@ -110,7 +111,8 @@ tx_append_event(struct tx* self, unsigned long module, unsigned long op,
 }
 
 void
-tx_begin(struct tx* self, enum tx_mode mode, struct picotm_error* error)
+tx_begin(struct tx* self, enum tx_mode mode, bool is_retry,
+         struct picotm_error* error)
 {
     assert(self);
 
@@ -128,6 +130,12 @@ tx_begin(struct tx* self, enum tx_mode mode, struct picotm_error* error)
     }
     if (picotm_error_is_set(error)) {
         return;
+    }
+
+    if (is_retry) {
+        ++self->nretries;
+    } else {
+        self->nretries = 0;
     }
 
     self->mode = mode;

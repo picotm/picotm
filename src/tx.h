@@ -46,6 +46,7 @@ struct tx {
     struct log        log;
     struct tx_shared *shared;
     enum tx_mode      mode;
+    unsigned long     nretries;
 
     unsigned long nmodules; /**< \brief Number allocated modules */
     struct module module[MAX_NMODULES]; /** \brief Registered modules */
@@ -85,7 +86,8 @@ tx_append_event(struct tx* self, unsigned long module, unsigned long op,
                 uintptr_t cookie, struct picotm_error* error);
 
 void
-tx_begin(struct tx* self, enum tx_mode mode, struct picotm_error* error);
+tx_begin(struct tx* self, enum tx_mode mode, bool is_retry,
+         struct picotm_error* error);
 
 void
 tx_commit(struct tx* self, struct picotm_error* error);
