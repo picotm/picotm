@@ -36,7 +36,8 @@ struct thread_state {
 
     /* Test */
 
-    const struct test_func* test;
+    void (*func)(unsigned int, void*);
+    void* data;
 
     /* Test arguments */
 
@@ -109,7 +110,7 @@ static void
 inner_loop_func_cycles(struct thread_state* state)
 {
     for (; state->ntx < state->bound; ++state->ntx) {
-        state->test->call(state->tid);
+        state->func(state->tid, state->data);
     }
 }
 
@@ -121,7 +122,7 @@ inner_loop_func_time(struct thread_state* state)
     for (unsigned long long ms = 0;
                             ms < state->bound;
                             ms = getmsofday(NULL) - beg_ms) {
-        state->test->call(state->tid);
+        state->func(state->tid, state->data);
         ++state->ntx;
     }
 }
@@ -174,7 +175,7 @@ outer_loop_func(struct thread_state* state)
     test_begin_on_thread(state->test_aborted)
 
         safe_pthread_barrier_wait(state->sync_begin);
-        state->test->call(state->tid);
+        state->func(state->tid, state->data);
         state->ntx = 1;
 
     test_end_on_thread
@@ -233,6 +234,15 @@ run_outer_loop(enum boundary_type btype, unsigned long long bound,
     return btype_func[btype](bound, state, nthreads);
 }
 
+static void
+call(unsigned int tid, void* data)
+{
+    struct test_func* test = data;
+    assert(test);
+
+    test->call(tid);
+}
+
 long long
 run_test(const struct test_func* test, unsigned long nthreads,
          enum loop_mode loop, enum boundary_type btype,
@@ -257,7 +267,8 @@ run_test(const struct test_func* test, unsigned long nthreads,
 
     for (struct thread_state* s = state; s < state + nthreads; ++s) {
         s->sync_begin = &sync_begin;
-        s->test = test;
+        s->func = call;
+        s->data = (void*)test;
         s->tid = s - state;
         s->btype = btype;
         s->bound = bound;
