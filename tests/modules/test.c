@@ -18,6 +18,7 @@
  */
 
 #include "test.h"
+#include <assert.h>
 #include <stdlib.h>
 #include <picotm/picotm.h>
 #include "taputils.h"
@@ -153,12 +154,9 @@ inner_loop_func_cb(void* arg)
 }
 
 static unsigned long long
-run_inner_loop(const struct test_func *test, enum boundary_type btype,
-               unsigned long long bound, struct thread_state* state,
-               unsigned long nthreads)
+run_inner_loop(enum boundary_type btype, unsigned long long bound,
+               struct thread_state* state, unsigned long nthreads)
 {
-    tap_info("Running test %s...", test->name);
-
     return run_threads(state, nthreads, inner_loop_func_cb);
 }
 
@@ -192,15 +190,12 @@ outer_loop_func_cb(void* arg)
 }
 
 static unsigned long long
-run_outer_loop_cycles(const struct test_func *test, unsigned long long cycles,
-                      struct thread_state* state, unsigned long nthreads)
+run_outer_loop_cycles(unsigned long long cycles, struct thread_state* state,
+                      unsigned long nthreads)
 {
     unsigned long long ntx = 0;
 
     for (unsigned long long i = 0; i < cycles; ++i) {
-
-        tap_info("Running test %s [%llu of %llu]...", test->name, 1 + i, cycles);
-
         ntx += run_threads(state, nthreads, outer_loop_func_cb);
     }
 
@@ -208,11 +203,9 @@ run_outer_loop_cycles(const struct test_func *test, unsigned long long cycles,
 }
 
 static unsigned long long
-run_outer_loop_time(const struct test_func *test, unsigned long long ival_ms,
-                    struct thread_state* state, unsigned long nthreads)
+run_outer_loop_time(unsigned long long ival_ms, struct thread_state* state,
+                    unsigned long nthreads)
 {
-    tap_info("Running test %s [for next %d ms]...", test->name, ival_ms);
-
     unsigned long long ntx = 0;
 
     const unsigned long long beg_ms = getmsofday(NULL);
@@ -227,19 +220,17 @@ run_outer_loop_time(const struct test_func *test, unsigned long long ival_ms,
 }
 
 static unsigned long long
-run_outer_loop(const struct test_func* test, enum boundary_type btype,
-               unsigned long long bound,  struct thread_state* state,
-               unsigned long nthreads)
+run_outer_loop(enum boundary_type btype, unsigned long long bound,
+               struct thread_state* state, unsigned long nthreads)
 {
-    static unsigned long long (* const btype_func[])(const struct test_func*,
-                                                     unsigned long long,
+    static unsigned long long (* const btype_func[])(unsigned long long,
                                                      struct thread_state*,
                                                      unsigned long) = {
         run_outer_loop_cycles,
         run_outer_loop_time
     };
 
-    return btype_func[btype](test, bound, state, nthreads);
+    return btype_func[btype](bound, state, nthreads);
 }
 
 long long
@@ -247,14 +238,15 @@ run_test(const struct test_func* test, unsigned long nthreads,
          enum loop_mode loop, enum boundary_type btype,
          unsigned long long bound)
 {
-    static unsigned long long (* const loop_func[])(const struct test_func*,
-                                                    enum boundary_type,
+    static unsigned long long (* const loop_func[])(enum boundary_type,
                                                     unsigned long long,
                                                     struct thread_state*,
                                                     unsigned long) = {
         run_inner_loop,
         run_outer_loop
     };
+
+    assert(test);
 
     /* Helgrind 3.3 does not support barriers, so you might
      * get a warning here. */
@@ -273,12 +265,13 @@ run_test(const struct test_func* test, unsigned long nthreads,
         s->test_aborted = 0;
     }
 
+    tap_info("Running test %s...", test->name);
+
     if (test->pre) {
         test->pre(nthreads, loop, btype, bound);
     }
 
-    unsigned long long ntx = loop_func[loop](test, btype, bound, state,
-                                             nthreads);
+    unsigned long long ntx = loop_func[loop](btype, bound, state, nthreads);
 
     if (test->post) {
         test->post(nthreads, loop, btype, bound);
