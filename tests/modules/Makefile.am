@@ -39,6 +39,8 @@ picotm_test_SOURCES = fildes_test.c \
                       malloc_test.h \
                       module.c \
                       module.h \
+                      opts.c \
+                      opts.h \
                       ptr.h \
                       safe_fcntl.c \
                       safe_fcntl.h \
