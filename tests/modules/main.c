@@ -287,57 +287,6 @@ parse_opts(int argc, char *argv[])
     return 0;
 }
 
-/* TODO: export this value from picotm */
-long long abort_count;
-
-extern long long fdio_test_21_ticks;
-extern long long fdio_test_21_count;
-
-extern long long pwrite_ticks;
-extern long long pwrite_count;
-extern long long pread_ticks;
-extern long long pread_count;
-
-extern long long lock_ticks;
-extern long long lock_count;
-extern long long unlock_ticks;
-extern long long unlock_count;
-extern long long validate_ticks;
-extern long long validate_count;
-extern long long apply_ticks;
-extern long long apply_count;
-extern long long updatecc_ticks;
-extern long long updatecc_count;
-extern long long undo_ticks;
-extern long long undo_count;
-extern long long finish_ticks;
-extern long long finish_count;
-
-/*extern long long pgtreess_lookup_ticks;
-extern long long pgtreess_lookup_count;
-
-extern long long ofdtx_updatecc_ticks_0;
-extern long long ofdtx_updatecc_ticks_1;
-extern long long ofdtx_updatecc_count;
-
-extern long long ofdtx_pre_commit_ticks_0;
-extern long long ofdtx_pre_commit_ticks_1;
-extern long long ofdtx_pre_commit_count;
-
-extern long long ofdtx_post_commit_ticks_0;
-extern long long ofdtx_post_commit_count;
-*/
-/*extern long long cmapss_unlock_region_ticks_0;
-extern long long cmapss_unlock_region_ticks_1;
-extern long long cmapss_unlock_region_count;*/
-/*
-extern long long com_fd_finish_ticks_0;
-extern long long com_fd_finish_ticks_1;
-extern long long com_fd_finish_count;*/
-
-/*extern long long pgtree_lookup_ticks;
-extern long long pgtree_lookup_count;*/
-
 int
 main(int argc, char **argv)
 {
@@ -353,8 +302,6 @@ main(int argc, char **argv)
     }
 
     tap_version(12);
-
-    long long ntx = 0;
 
     const struct module* mod_beg;
     const struct module* mod_end;
@@ -401,7 +348,7 @@ main(int argc, char **argv)
 
             test_begin_on_thread(test_aborted)
 
-                ntx = run_test(test_beg, g_nthreads, g_loop, g_btype, g_cycles);
+                run_test(test_beg, g_nthreads, g_loop, g_btype, g_cycles);
 
             test_end_on_thread;
 
@@ -419,91 +366,5 @@ main(int argc, char **argv)
         ++mod_beg;
     }
 
-    /* print results */
-
-    if (g_normalize) {
-        tap_diag("%d %lld %lld", g_nthreads, (long long)((ntx*1000)/g_cycles), abort_count);
-
-            /*printf("fdio21_ticks=%lld fdio21_count=%lld, average=%lld\n", fdio_test_21_ticks,
-                                                                          fdio_test_21_count,
-                                                                          fdio_test_21_count ? (fdio_test_21_ticks/fdio_test_21_count) : 0);
-
-            printf("pread_ticks=%lld pread_count=%lld, average=%lld\n", pread_ticks,
-                                                                        pread_count,
-                                                                        pread_count ? (pread_ticks/pread_count) : 0);
-
-            printf("pwrite_ticks=%lld pwrite_count=%lld, average=%lld\n", pwrite_ticks,
-                                                                          pwrite_count,
-                                                                          pwrite_count ? (pwrite_ticks/pwrite_count) : 0);
-
-            printf("lock_ticks=%lld lock_count=%lld, average=%lld\n", lock_ticks,
-                                                                      lock_count,
-                                                                      lock_count ? (lock_ticks/lock_count) : 0);
-
-            printf("unlock_ticks=%lld unlock_count=%lld, average=%lld\n", unlock_ticks,
-                                                                          unlock_count,
-                                                                          unlock_count ? (unlock_ticks/validate_count) : 0);
-
-            printf("validate_ticks=%lld validate_count=%lld, average=%lld\n", validate_ticks,
-                                                                              validate_count,
-                                                                              validate_count ? (validate_ticks/validate_count) : 0);
-
-            printf("apply_ticks=%lld apply_count=%lld, average=%lld\n", apply_ticks,
-                                                                        apply_count,
-                                                                        apply_count ? (apply_ticks/apply_count) : 0);
-
-            printf("updatecc_ticks=%lld updatecc_count=%lld, average=%lld\n", updatecc_ticks,
-                                                                              updatecc_count,
-                                                                              updatecc_count ? (updatecc_ticks/updatecc_count) : 0);
-
-            printf("undo_ticks=%lld undo_count=%lld, average=%lld\n", undo_ticks,
-                                                                      undo_count,
-                                                                      undo_count ? (undo_ticks/undo_count): 0);
-
-            printf("finish_ticks=%lld finish_count=%lld, average=%lld\n", finish_ticks,
-                                                                          finish_count,
-                                                                          finish_count ? (finish_ticks/finish_count): 0);*/
-
-/*            printf("pgtreess_lookup_ticks=%lld pgtreess_lookup_count=%lld, average=%lld\n", pgtreess_lookup_ticks,
-                                                                                            pgtreess_lookup_count,
-                                                                                            pgtreess_lookup_count ? (pgtreess_lookup_ticks/pgtreess_lookup_count): 0);
-
-            printf("ofdtx_pre_commit_ticks_0=%lld ofdtx_pre_commit_ticks_1=%lld ofdtx_pre_commit_count=%lld, average0=%lld, average1=%lld\n", ofdtx_pre_commit_ticks_0,
-                                                                                                                                              ofdtx_pre_commit_ticks_1,
-                                                                                                                                              ofdtx_pre_commit_count,
-                                                                                                                                              ofdtx_pre_commit_count ? (ofdtx_pre_commit_ticks_0/ofdtx_pre_commit_count): 0,
-                                                                                                                                              ofdtx_pre_commit_count ? (ofdtx_pre_commit_ticks_1/ofdtx_pre_commit_count): 0);
-
-            printf("ofdtx_post_commit_ticks_0=%lld ofdtx_post_commit_count=%lld, average0=%lld\n", ofdtx_post_commit_ticks_0,
-                                                                                                   ofdtx_post_commit_count,
-                                                                                                   ofdtx_post_commit_count ? (ofdtx_post_commit_ticks_0/ofdtx_post_commit_count): 0);
-*/
-/*            printf("cmapss_unlock_region_ticks_0=%lld cmapss_unlock_region_ticks_1=%lld cmapss_unlock_region_count=%lld, average0=%lld, average1=%lld\n", cmapss_unlock_region_ticks_0,
-                                                                                                                                                          cmapss_unlock_region_ticks_1,
-                                                                                                                                                          cmapss_unlock_region_count,
-                                                                                                                                                          cmapss_unlock_region_count ? (cmapss_unlock_region_ticks_0/cmapss_unlock_region_count): 0,
-                                                                                                                                                          cmapss_unlock_region_count ? (cmapss_unlock_region_ticks_1/cmapss_unlock_region_count): 0);
-*/
-/*            printf("com_fd_finish_ticks_0=%lld com_fd_finish_ticks_1=%lld com_fd_finish_count=%lld, average0=%lld, average1=%lld\n", com_fd_finish_ticks_0,
-                                                                                                                                     com_fd_finish_ticks_1,
-                                                                                                                                     com_fd_finish_count,
-                                                                                                                                     com_fd_finish_count ? (com_fd_finish_ticks_0/com_fd_finish_count): 0,
-                                                                                                                                     com_fd_finish_count ? (com_fd_finish_ticks_1/com_fd_finish_count): 0);
-
-            printf("ofdtx_updatecc_ticks_0=%lld ofdtx_updatecc_ticks_1=%lld ofdtx_updatecc_count=%lld, average0=%lld, average1=%lld\n", ofdtx_updatecc_ticks_0,
-                                                                                                                                        ofdtx_updatecc_ticks_1,
-                                                                                                                                        ofdtx_updatecc_count,
-                                                                                                                                        ofdtx_updatecc_count ? (ofdtx_updatecc_ticks_0/ofdtx_updatecc_count): 0,
-                                                                                                                                        ofdtx_updatecc_count ? (ofdtx_updatecc_ticks_1/ofdtx_updatecc_count): 0);
-*/
-
-/*            printf("pgtree_lookup_ticks=%lld pgtree_lookup_count=%lld, average=%lld\n", pgtree_lookup_ticks,
-                                                                                        pgtree_lookup_count,
-                                                                                        pgtree_lookup_count ? (pgtree_lookup_ticks/pgtree_lookup_count): 0);*/
-    } else {
-        tap_diag("%d %lld %lld", g_nthreads, ntx, abort_count);
-    }
-
     return EXIT_SUCCESS;
 }
-
