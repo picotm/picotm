@@ -19,17 +19,24 @@
 
 #pragma once
 
-int
-test_save_state(void);
+#include <setjmp.h>
 
 void
-test_abort(void);
+_safe_block_set_jmpbuf(sigjmp_buf* jmpbuf, sigjmp_buf** old_jmpbuf);
 
-#define test_begin_on_thread(test_aborted)  \
-    {                                       \
-        test_aborted = test_save_state();   \
-        if (!test_aborted) {
+#define begin_safe_block(_aborted)                          \
+    {                                                       \
+        sigjmp_buf _jmpbuf;                                 \
+        sigjmp_buf* _old_jmpbuf;                            \
+        _safe_block_set_jmpbuf(&_jmpbuf, &_old_jmpbuf);     \
+        int _jmpval = sigsetjmp(_jmpbuf, 1);                \
+        _aborted = !!_jmpval;                               \
+        if (!_aborted) {
 
-#define test_end_on_thread  \
-        }                   \
+#define end_safe_block                              \
+        }                                           \
+        _safe_block_set_jmpbuf(_old_jmpbuf, NULL);  \
     }
+
+void
+abort_safe_block(void);

@@ -18,8 +18,8 @@
  */
 
 #include "safe_pthread.h"
+#include "safeblk.h"
 #include "taputils.h"
-#include "test_state.h"
 
 int
 safe_pthread_barrier_destroy(pthread_barrier_t* barrier)
@@ -27,7 +27,7 @@ safe_pthread_barrier_destroy(pthread_barrier_t* barrier)
     int err = pthread_barrier_destroy(barrier);
     if (err) {
         tap_error_errno("pthread_barrier_destroy()", err);
-        test_abort();
+        abort_safe_block();
     }
     return err;
 }
@@ -40,7 +40,7 @@ safe_pthread_barrier_init(pthread_barrier_t* restrict barrier,
     int err = pthread_barrier_init(barrier, attr, count);
     if (err) {
         tap_error_errno("pthread_barrier_init()", err);
-        test_abort();
+        abort_safe_block();
     }
     return err;
 }
@@ -51,7 +51,7 @@ safe_pthread_barrier_wait(pthread_barrier_t* barrier)
     int err = pthread_barrier_wait(barrier);
     if (err && err != PTHREAD_BARRIER_SERIAL_THREAD) {
         tap_error_errno("pthread_barrier_wait()", err);
-        test_abort();
+        abort_safe_block();
     }
     return err;
 }
@@ -63,7 +63,7 @@ safe_pthread_create(pthread_t* thread, const pthread_attr_t* attr,
     int err = pthread_create(thread, attr, start_routine, arg);
     if (err) {
         tap_error_errno("pthread_create()", err);
-        test_abort();
+        abort_safe_block();
     }
     return err;
 }
@@ -74,7 +74,7 @@ safe_pthread_join(pthread_t thread, void** retval)
     int err = pthread_join(thread, retval);
     if (err) {
         tap_error_errno("pthread_join()", err);
-        test_abort();
+        abort_safe_block();
     }
     return err;
 }
@@ -85,7 +85,7 @@ safe_pthread_mutex_lock(pthread_mutex_t* mutex)
     int err = pthread_mutex_lock(mutex);
     if (err) {
         tap_error_errno("pthread_mutex_lock()", err);
-        test_abort();
+        abort_safe_block();
     }
     return err;
 }
@@ -96,7 +96,7 @@ safe_pthread_mutex_unlock(pthread_mutex_t* mutex)
     int err = pthread_mutex_unlock(mutex);
     if (err) {
         tap_error_errno("pthread_mutex_unlock()", err);
-        test_abort();
+        abort_safe_block();
     }
     return err;
 }

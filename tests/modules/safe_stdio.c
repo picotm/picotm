@@ -20,8 +20,8 @@
 #include "safe_stdio.h"
 #include <errno.h>
 #include <stdio.h>
+#include "safeblk.h"
 #include "taputils.h"
-#include "test_state.h"
 
 /*
  * Interfaces with variable number of arguments
@@ -59,10 +59,10 @@ safe_vsnprintf(char* str, size_t size, const char* format, va_list ap)
     int res = vsnprintf(str, size, format, ap);
     if (res < 0) {
         tap_error_errno("vsnprintf()", errno);
-        test_abort();
+        abort_safe_block();
     } else if ((size_t)res >= size) {
         tap_error("vsnprintf() output truncated\n");
-        test_abort();
+        abort_safe_block();
     }
     return res;
 }
@@ -73,7 +73,7 @@ safe_vsscanf(const char* str, const char* format, va_list ap)
     int res = vsscanf(str, format, ap);
     if (res < 0) {
         tap_error_errno("vsscanf()", errno);
-        test_abort();
+        abort_safe_block();
     }
     return res;
 }

@@ -23,8 +23,8 @@
 #include <picotm/stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include "safeblk.h"
 #include "taputils.h"
-#include "test_state.h"
 
 void
 delay_transaction(unsigned int tid)
@@ -67,5 +67,5 @@ abort_transaction_on_error(const char* origin)
             tap_error("%s, No error detected.", origin);
     }
 
-    test_abort();
+    abort_safe_block();
 }

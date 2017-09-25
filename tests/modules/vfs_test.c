@@ -31,6 +31,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include "ptr.h"
+#include "safeblk.h"
 #include "safe_stdio.h"
 #include "safe_sys_stat.h"
 #include "safe_unistd.h"
@@ -38,7 +39,6 @@
 #include "tempfile.h"
 #include "test.h"
 #include "testhlp.h"
-#include "test_state.h"
 
 void
 test_dir_format_string(char format[PATH_MAX], unsigned long test)
@@ -76,7 +76,7 @@ vfs_test_1(unsigned int tid)
             int res = sscanf_tx(cwd, format, &cwd_tid);
             if (res < 1l) {
                 tap_error("thread id did not match for CWD '%s'\n", cwd);
-                test_abort();
+                abort_safe_block();
             }
 
             if (cwd_tid != tid) {

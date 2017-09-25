@@ -19,15 +19,15 @@
 
 #include "safe_fcntl.h"
 #include <errno.h>
+#include "safeblk.h"
 #include "taputils.h"
-#include "test_state.h"
 
 int
 handle_fcntl_res(int res, const char* filename, int line)
 {
     if (res < 0) {
         tap_error_errno_at("fcntl()", errno, filename, line);
-        test_abort();
+        abort_safe_block();
     }
     return res;
 }
