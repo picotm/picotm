@@ -46,7 +46,8 @@ struct thread_state {
     unsigned long      bound; /* Time (ms) or Cycles to run */
 
     /* Test result */
-    int test_aborted;
+
+    bool test_aborted;
 };
 
 /* Returns the number of milliseconds since the epoch */
@@ -73,12 +74,12 @@ run_threads(struct thread_state* state, unsigned long nthreads,
     const struct thread_state* end = state + nthreads;
 
     while (beg < end) {
-        beg->test_aborted = 0;
+        beg->test_aborted = false;
         safe_pthread_create(&beg->thread, NULL, thread_func, beg);
         ++beg;
     }
 
-    int test_aborted = 0;
+    bool test_aborted = false;
 
     beg = state;
     end = state + nthreads;
@@ -245,7 +246,7 @@ run_on_threads(void (*func)(unsigned int, void*), void* data,
         s->tid = s - state;
         s->btype = btype;
         s->bound = bound;
-        s->test_aborted = 0;
+        s->test_aborted = false;
     }
 
     loop_func[loop](btype, bound, state, nthreads);
