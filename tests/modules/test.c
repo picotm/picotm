@@ -234,6 +234,45 @@ run_outer_loop(enum boundary_type btype, unsigned long long bound,
     return btype_func[btype](bound, state, nthreads);
 }
 
+static long long
+run_on_threads(void (*func)(unsigned int, void*), void* data,
+               unsigned long nthreads, enum loop_mode loop,
+               enum boundary_type btype, unsigned long long bound)
+{
+    static unsigned long long (* const loop_func[])(enum boundary_type,
+                                                    unsigned long long,
+                                                    struct thread_state*,
+                                                    unsigned long) = {
+        run_inner_loop,
+        run_outer_loop
+    };
+
+    /* Helgrind 3.3 does not support barriers, so you might
+     * get a warning here. */
+    pthread_barrier_t sync_begin;
+    safe_pthread_barrier_init(&sync_begin, NULL, nthreads);
+
+    struct thread_state* state = safe_malloc(nthreads * sizeof(state[0]));
+
+    for (struct thread_state* s = state; s < state + nthreads; ++s) {
+        s->sync_begin = &sync_begin;
+        s->func = func;
+        s->data = data;
+        s->tid = s - state;
+        s->btype = btype;
+        s->bound = bound;
+        s->ntx = 0;
+        s->test_aborted = 0;
+    }
+
+    unsigned long long ntx = loop_func[loop](btype, bound, state, nthreads);
+
+    free(state);
+    safe_pthread_barrier_destroy(&sync_begin);
+
+    return ntx;
+}
+
 static void
 call(unsigned int tid, void* data)
 {
@@ -258,38 +297,18 @@ run_test(const struct test_func* test, unsigned long nthreads,
 
     assert(test);
 
-    /* Helgrind 3.3 does not support barriers, so you might
-     * get a warning here. */
-    pthread_barrier_t sync_begin;
-    safe_pthread_barrier_init(&sync_begin, NULL, nthreads);
-
-    struct thread_state* state = safe_malloc(nthreads * sizeof(state[0]));
-
-    for (struct thread_state* s = state; s < state + nthreads; ++s) {
-        s->sync_begin = &sync_begin;
-        s->func = call;
-        s->data = (void*)test;
-        s->tid = s - state;
-        s->btype = btype;
-        s->bound = bound;
-        s->ntx = 0;
-        s->test_aborted = 0;
-    }
-
     tap_info("Running test %s...", test->name);
 
     if (test->pre) {
         test->pre(nthreads, loop, btype, bound);
     }
 
-    unsigned long long ntx = loop_func[loop](btype, bound, state, nthreads);
+    unsigned long long ntx = run_on_threads(call, (void*)test, nthreads, loop,
+                                            btype, bound);
 
     if (test->post) {
         test->post(nthreads, loop, btype, bound);
     }
-
-    free(state);
-    safe_pthread_barrier_destroy(&sync_begin);
 
     return ntx;
 }

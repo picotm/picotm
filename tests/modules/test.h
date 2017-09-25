@@ -44,7 +44,7 @@ struct test_func
     post_func post;
 };
 
-long long
+void
 run_test(const struct test_func* test, unsigned long nthreads,
          enum loop_mode loop, enum boundary_type btype,
          unsigned long long bound);
