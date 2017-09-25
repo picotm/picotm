@@ -44,7 +44,6 @@ struct thread_state {
     unsigned int       tid; /* Logical thread ID*/
     enum boundary_type btype; /* Boundary type */
     unsigned long      bound; /* Time (ms) or Cycles to run */
-    unsigned long long ntx; /* Number of succesful transactions, return value */
 
     /* Test result */
     int test_aborted;
@@ -66,7 +65,7 @@ cleanup_picotm_cb(void* data)
     picotm_release();
 }
 
-static unsigned long long
+static void
 run_threads(struct thread_state* state, unsigned long nthreads,
             void* (*thread_func)(void*))
 {
@@ -74,13 +73,11 @@ run_threads(struct thread_state* state, unsigned long nthreads,
     const struct thread_state* end = state + nthreads;
 
     while (beg < end) {
-        beg->ntx = 0;
         beg->test_aborted = 0;
         safe_pthread_create(&beg->thread, NULL, thread_func, beg);
         ++beg;
     }
 
-    unsigned long long ntx = 0;
     int test_aborted = 0;
 
     beg = state;
@@ -88,7 +85,6 @@ run_threads(struct thread_state* state, unsigned long nthreads,
 
     while (beg < end) {
         safe_pthread_join(beg->thread, NULL);
-        ntx += beg->ntx;
         test_aborted |= beg->test_aborted;
         ++beg;
     }
@@ -96,8 +92,6 @@ run_threads(struct thread_state* state, unsigned long nthreads,
     if (test_aborted) {
         test_abort();
     }
-
-    return ntx;
 }
 
 /* Inner loops
@@ -109,7 +103,7 @@ run_threads(struct thread_state* state, unsigned long nthreads,
 static void
 inner_loop_func_cycles(struct thread_state* state)
 {
-    for (; state->ntx < state->bound; ++state->ntx) {
+    for (unsigned long long i = 0; i < state->bound; ++i) {
         state->func(state->tid, state->data);
     }
 }
@@ -123,7 +117,6 @@ inner_loop_func_time(struct thread_state* state)
                             ms < state->bound;
                             ms = getmsofday(NULL) - beg_ms) {
         state->func(state->tid, state->data);
-        ++state->ntx;
     }
 }
 
@@ -154,11 +147,11 @@ inner_loop_func_cb(void* arg)
     return NULL;
 }
 
-static unsigned long long
+static void
 run_inner_loop(enum boundary_type btype, unsigned long long bound,
                struct thread_state* state, unsigned long nthreads)
 {
-    return run_threads(state, nthreads, inner_loop_func_cb);
+    run_threads(state, nthreads, inner_loop_func_cb);
 }
 
 /* Outer loops
@@ -176,7 +169,6 @@ outer_loop_func(struct thread_state* state)
 
         safe_pthread_barrier_wait(state->sync_begin);
         state->func(state->tid, state->data);
-        state->ntx = 1;
 
     test_end_on_thread
 
@@ -190,59 +182,51 @@ outer_loop_func_cb(void* arg)
     return NULL;
 }
 
-static unsigned long long
+static void
 run_outer_loop_cycles(unsigned long long cycles, struct thread_state* state,
                       unsigned long nthreads)
 {
-    unsigned long long ntx = 0;
-
     for (unsigned long long i = 0; i < cycles; ++i) {
-        ntx += run_threads(state, nthreads, outer_loop_func_cb);
+        run_threads(state, nthreads, outer_loop_func_cb);
     }
-
-    return ntx;
 }
 
-static unsigned long long
+static void
 run_outer_loop_time(unsigned long long ival_ms, struct thread_state* state,
                     unsigned long nthreads)
 {
-    unsigned long long ntx = 0;
-
     const unsigned long long beg_ms = getmsofday(NULL);
 
     for (unsigned long long ms = 0;
                             ms < ival_ms;
                             ms = getmsofday(NULL) - beg_ms) {
-        ntx += run_threads(state, nthreads, outer_loop_func_cb);
+        run_threads(state, nthreads, outer_loop_func_cb);
     }
-
-    return ntx;
 }
 
-static unsigned long long
+static void
 run_outer_loop(enum boundary_type btype, unsigned long long bound,
                struct thread_state* state, unsigned long nthreads)
 {
-    static unsigned long long (* const btype_func[])(unsigned long long,
-                                                     struct thread_state*,
-                                                     unsigned long) = {
+    static void (* const btype_func[])(unsigned long long,
+                                       struct thread_state*,
+                                       unsigned long) = {
         run_outer_loop_cycles,
         run_outer_loop_time
     };
 
-    return btype_func[btype](bound, state, nthreads);
+    btype_func[btype](bound, state, nthreads);
 }
 
-static long long
+static void
 run_on_threads(void (*func)(unsigned int, void*), void* data,
                unsigned long nthreads, enum loop_mode loop,
                enum boundary_type btype, unsigned long long bound)
 {
-    static unsigned long long (* const loop_func[])(enum boundary_type,
-                                                    unsigned long long,
-                                                    struct thread_state*,
-                                                    unsigned long) = {
+    static void (* const loop_func[])(enum boundary_type,
+                                      unsigned long long,
+                                      struct thread_state*,
+                                      unsigned long) = {
         run_inner_loop,
         run_outer_loop
     };
@@ -261,16 +245,13 @@ run_on_threads(void (*func)(unsigned int, void*), void* data,
         s->tid = s - state;
         s->btype = btype;
         s->bound = bound;
-        s->ntx = 0;
         s->test_aborted = 0;
     }
 
-    unsigned long long ntx = loop_func[loop](btype, bound, state, nthreads);
+    loop_func[loop](btype, bound, state, nthreads);
 
     free(state);
     safe_pthread_barrier_destroy(&sync_begin);
-
-    return ntx;
 }
 
 static void
@@ -282,15 +263,15 @@ call(unsigned int tid, void* data)
     test->call(tid);
 }
 
-long long
+void
 run_test(const struct test_func* test, unsigned long nthreads,
          enum loop_mode loop, enum boundary_type btype,
          unsigned long long bound)
 {
-    static unsigned long long (* const loop_func[])(enum boundary_type,
-                                                    unsigned long long,
-                                                    struct thread_state*,
-                                                    unsigned long) = {
+    static void (* const loop_func[])(enum boundary_type,
+                                      unsigned long long,
+                                      struct thread_state*,
+                                      unsigned long) = {
         run_inner_loop,
         run_outer_loop
     };
@@ -303,12 +284,9 @@ run_test(const struct test_func* test, unsigned long nthreads,
         test->pre(nthreads, loop, btype, bound);
     }
 
-    unsigned long long ntx = run_on_threads(call, (void*)test, nthreads, loop,
-                                            btype, bound);
+    run_on_threads(call, (void*)test, nthreads, loop, btype, bound);
 
     if (test->post) {
         test->post(nthreads, loop, btype, bound);
     }
-
-    return ntx;
 }
