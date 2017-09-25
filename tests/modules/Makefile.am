@@ -48,6 +48,8 @@ picotm_test_SOURCES = fildes_test.c \
                       safe_stdio.h \
                       safe_stdlib.c \
                       safe_stdlib.h \
+                      safe_sys_stat.c \
+                      safe_sys_stat.h \
                       safe_sys_time.c \
                       safe_sys_time.h \
                       safe_unistd.c \

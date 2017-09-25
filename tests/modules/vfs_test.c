@@ -29,10 +29,10 @@
 #include <picotm/unistd.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <sys/types.h>
 #include "ptr.h"
 #include "safe_stdio.h"
+#include "safe_sys_stat.h"
 #include "safe_unistd.h"
 #include "taputils.h"
 #include "tempfile.h"
@@ -108,12 +108,7 @@ vfs_test_1_pre(unsigned long nthreads, enum loop_mode loop,
 
         char path[PATH_MAX];
         safe_snprintf(path, sizeof(path), format, tid);
-
-        int res = mkdir(path, S_IRWXU);
-        if (res < 0) {
-            tap_error_errno("mkdir()", errno);
-            test_abort();
-        }
+        safe_mkdir(path, S_IRWXU);
     }
 }
 
