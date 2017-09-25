@@ -142,13 +142,13 @@ tm_test_3_post(unsigned long nthreads, enum loop_mode loop,
                enum boundary_type btype, unsigned long long bound)
 {
     switch (btype) {
-        case BOUND_CYCLES:
+        case CYCLE_BOUND:
             if (!(g_value == (nthreads * bound))) {
                 tap_error("post-condition failed: g_value == (nthreads * bound)");
                 test_abort();
             }
             break;
-        default:
+        case TIME_BOUND:
             break;
     }
 }

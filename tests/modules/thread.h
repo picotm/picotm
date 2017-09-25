@@ -17,43 +17,20 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include "test.h"
-#include <assert.h>
-/*
-#include <stdlib.h>
-#include <picotm/picotm.h>*/
-#include "taputils.h"
-/*
-#include "test_state.h"
-#include "safe_pthread.h"
-#include "safe_stdlib.h"
-#include "safe_sys_time.h"*/
+#pragma once
 
-static void
-call(unsigned int tid, void* data)
-{
-    struct test_func* test = data;
-    assert(test);
+enum boundary_type {
+    CYCLE_BOUND,
+    TIME_BOUND
+};
 
-    test->call(tid);
-}
+enum loop_mode {
+    INNER_LOOP,
+    OUTER_LOOP
+};
 
 void
-run_test(const struct test_func* test, unsigned long nthreads,
-         enum loop_mode loop, enum boundary_type btype,
-         unsigned long long limit)
-{
-    assert(test);
-
-    tap_info("Running test %s...", test->name);
-
-    if (test->pre) {
-        test->pre(nthreads, loop, btype, limit);
-    }
-
-    spawn_threads(nthreads, call, (void*)test, loop, btype, limit);
-
-    if (test->post) {
-        test->post(nthreads, loop, btype, limit);
-    }
-}
+spawn_threads(unsigned long nthreads,
+              void (*func)(unsigned int, void*), void* data,
+              enum loop_mode loop,
+              enum boundary_type btype, unsigned long long limit);

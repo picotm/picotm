@@ -27,8 +27,8 @@
 #include "ptr.h"
 #include "taputils.h"
 
-enum boundary_type       g_btype = BOUND_CYCLES;
-enum loop_mode           g_loop = LOOP_INNER;
+enum boundary_type       g_btype = CYCLE_BOUND;
+enum loop_mode           g_loop = INNER_LOOP;
 unsigned int             g_off = 0;
 const struct module*     g_module = NULL;
 unsigned int             g_num = 0;
@@ -42,9 +42,9 @@ static enum parse_opts_result
 opt_btype(const char* optarg)
 {
     if (!strcmp("cycles", optarg)) {
-        g_btype = BOUND_CYCLES;
+        g_btype = CYCLE_BOUND;
     } else if (!strcmp("time", optarg)) {
-        g_btype = BOUND_TIME;
+        g_btype = TIME_BOUND;
     } else {
         return PARSE_OPTS_ERROR;
     }
@@ -161,9 +161,9 @@ static enum parse_opts_result
 opt_loop(const char* optarg)
 {
     if (!strcmp("inner", optarg)) {
-        g_loop = LOOP_INNER;
+        g_loop = INNER_LOOP;
     } else if (!strcmp("time", optarg)) {
-        g_loop = LOOP_OUTER;
+        g_loop = OUTER_LOOP;
     } else {
         return PARSE_OPTS_ERROR;
     }
