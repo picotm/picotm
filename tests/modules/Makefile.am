@@ -68,6 +68,8 @@ picotm_test_SOURCES = fildes_test.c \
                       testhlp.h \
                       test_state.c \
                       test_state.h \
+                      thread.c \
+                      thread.h \
                       tm_test.c \
                       tm_test.h \
                       vfs_test.c \

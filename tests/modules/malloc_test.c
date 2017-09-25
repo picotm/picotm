@@ -293,11 +293,12 @@ malloc_test_7_pre(unsigned long nthreads, enum loop_mode loop,
                   enum boundary_type btype, unsigned long long bound)
 {
     switch (btype) {
-        case BOUND_CYCLES:
+        case CYCLE_BOUND:
             g_test_7_cycles = bound;
             break;
-        default:
+        case TIME_BOUND:
             g_test_7_cycles = 10;
+            break;
     }
 }
 
@@ -334,11 +335,12 @@ malloc_test_8_pre(unsigned long nthreads, enum loop_mode loop,
                   enum boundary_type btype, unsigned long long bound)
 {
     switch (btype) {
-        case BOUND_CYCLES:
+        case CYCLE_BOUND:
             g_test_8_cycles = bound;
             break;
-        default:
+        case TIME_BOUND:
             g_test_8_cycles = 10;
+            break;
     }
 }
 
@@ -363,11 +365,12 @@ malloc_test_9_pre(unsigned long nthreads, enum loop_mode loop,
                   enum boundary_type btype, unsigned long long bound)
 {
     switch (btype) {
-        case BOUND_CYCLES:
+        case CYCLE_BOUND:
             g_test_9_cycles = bound;
             break;
-        default:
+        case TIME_BOUND:
             g_test_9_cycles = 10;
+            break;
     }
 }
 

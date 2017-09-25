@@ -19,15 +19,7 @@
 
 #pragma once
 
-enum boundary_type {
-    BOUND_CYCLES = 0,
-    BOUND_TIME
-};
-
-enum loop_mode {
-    LOOP_INNER = 0,
-    LOOP_OUTER
-};
+#include "thread.h"
 
 typedef void (* const pre_func)(unsigned long, enum loop_mode,
                                 enum boundary_type, unsigned long long);
@@ -35,8 +27,8 @@ typedef void (* const post_func)(unsigned long, enum loop_mode,
                                  enum boundary_type, unsigned long long);
 typedef void (* const call_func)(unsigned int);
 
-struct test_func
-{
+struct test_func {
+
     const char* name;
 
     call_func call;
@@ -47,4 +39,4 @@ struct test_func
 void
 run_test(const struct test_func* test, unsigned long nthreads,
          enum loop_mode loop, enum boundary_type btype,
-         unsigned long long bound);
+         unsigned long long limit);
