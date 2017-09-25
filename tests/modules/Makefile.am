@@ -42,6 +42,8 @@ picotm_test_SOURCES = fildes_test.c \
                       opts.c \
                       opts.h \
                       ptr.h \
+                      safeblk.c \
+                      safeblk.h \
                       safe_fcntl.c \
                       safe_fcntl.h \
                       safe_pthread.c \
@@ -66,8 +68,6 @@ picotm_test_SOURCES = fildes_test.c \
                       test.h \
                       testhlp.c \
                       testhlp.h \
-                      test_state.c \
-                      test_state.h \
                       thread.c \
                       thread.h \
                       tm_test.c \

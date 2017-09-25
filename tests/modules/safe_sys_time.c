@@ -20,8 +20,8 @@
 #include "safe_sys_time.h"
 #include <errno.h>
 #include <sys/time.h>
+#include "safeblk.h"
 #include "taputils.h"
-#include "test_state.h"
 
 int
 safe_gettimeofday(struct timeval* restrict tv, struct timezone* tz)
@@ -29,7 +29,7 @@ safe_gettimeofday(struct timeval* restrict tv, struct timezone* tz)
     int res = gettimeofday(tv, tz);
     if (res < 0) {
         tap_error_errno("gettimeofday()", errno);
-        test_abort();
+        abort_safe_block();
     }
     return res;
 }

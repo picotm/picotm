@@ -21,8 +21,8 @@
 #include <errno.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include "safeblk.h"
 #include "taputils.h"
-#include "test_state.h"
 
 void*
 safe_calloc(size_t nmemb, size_t size)
@@ -30,7 +30,7 @@ safe_calloc(size_t nmemb, size_t size)
     void* mem = calloc(nmemb, size);
     if (size && !mem) {
         tap_error_errno("calloc()", size);
-        test_abort();
+        abort_safe_block();
     }
     return mem;
 }
@@ -41,7 +41,7 @@ safe_malloc(size_t size)
     void* mem = malloc(size);
     if (size && !mem) {
         tap_error_errno("malloc()", size);
-        test_abort();
+        abort_safe_block();
     }
     return mem;
 }
@@ -52,7 +52,7 @@ safe_mkdtemp(char* tmplate)
     char* path = mkdtemp(tmplate);
     if (!path) {
         tap_error_errno("mkdtemp()", errno);
-        test_abort();
+        abort_safe_block();
     }
     return path;
 }
@@ -63,7 +63,7 @@ safe_mkstemp(char* tmplate)
     int res = mkstemp(tmplate);
     if (res < 0) {
         tap_error_errno("mkstemp()", errno);
-        test_abort();
+        abort_safe_block();
     }
     return res;
 }
@@ -80,7 +80,7 @@ safe_mktemp(char* tmplate)
     char* filename = mktemp(tmplate);
     if (string_is_empty(filename)) {
         tap_error_errno("mktemp()", errno);
-        test_abort();
+        abort_safe_block();
     }
     return filename;
 }

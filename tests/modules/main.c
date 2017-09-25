@@ -21,8 +21,8 @@
 #include <stdlib.h>
 #include "module.h"
 #include "opts.h"
+#include "safeblk.h"
 #include "tap.h"
-#include "test_state.h"
 
 int
 main(int argc, char **argv)
@@ -81,11 +81,11 @@ main(int argc, char **argv)
 
             int test_aborted = 0;
 
-            test_begin_on_thread(test_aborted)
+            begin_safe_block(test_aborted)
 
                 run_test(test_beg, g_nthreads, g_loop, g_btype, g_cycles);
 
-            test_end_on_thread;
+            end_safe_block
 
             if (test_aborted) {
                 tap_not_ok(testnum, test_beg->name);

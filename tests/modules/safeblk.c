@@ -17,19 +17,24 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include "test_state.h"
-#include <setjmp.h>
+#include "safeblk.h"
+#include <assert.h>
 
-static __thread sigjmp_buf g_thread_state;
+static __thread sigjmp_buf* g_thread_jmpbuf;
 
-int
-test_save_state()
+void
+_safe_block_set_jmpbuf(sigjmp_buf* jmpbuf, sigjmp_buf** old_jmpbuf)
 {
-    return sigsetjmp(g_thread_state, 1);
+    if (old_jmpbuf) {
+        *old_jmpbuf = g_thread_jmpbuf;
+    }
+    g_thread_jmpbuf = jmpbuf;
 }
 
 void
-test_abort()
+abort_safe_block()
 {
-    siglongjmp(g_thread_state, 1);
+    assert(g_thread_jmpbuf);
+
+    siglongjmp(*g_thread_jmpbuf, 1);
 }

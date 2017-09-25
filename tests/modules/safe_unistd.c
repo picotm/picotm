@@ -20,8 +20,8 @@
 #include "safe_unistd.h"
 #include <errno.h>
 #include <unistd.h>
+#include "safeblk.h"
 #include "taputils.h"
-#include "test_state.h"
 
 int
 safe_close(int fd)
@@ -29,7 +29,7 @@ safe_close(int fd)
     int res = TEMP_FAILURE_RETRY(close(fd));
     if (res < 0) {
         tap_error_errno("close()", errno);
-        test_abort();
+        abort_safe_block();
     }
     return res;
 }
@@ -40,7 +40,7 @@ safe_pipe(int pipefd[2])
     int res = pipe(pipefd);
     if (res < 0) {
         tap_error_errno("pipe()", errno);
-        test_abort();
+        abort_safe_block();
     }
     return res;
 }
@@ -57,7 +57,7 @@ safe_pread(int fd, void* buf, size_t count, off_t offset)
                                                    offset + len));
         if (res < 0) {
             tap_error_errno("pread()", errno);
-            test_abort();
+            abort_safe_block();
         }
         buf8 += res;
         len += res;
@@ -78,7 +78,7 @@ safe_pwrite(int fd, const void* buf, size_t count, off_t offset)
                                                 offset + len));
         if (res < 0) {
             tap_error_errno("pwrite()", errno);
-            test_abort();
+            abort_safe_block();
         }
         buf8 += res;
         len += res;
@@ -93,7 +93,7 @@ safe_rmdir(const char* path)
     int res = rmdir(path);
     if (res < 0) {
         tap_error_errno("rmdir()", errno);
-        test_abort();
+        abort_safe_block();
     }
     return res;
 }
@@ -104,7 +104,7 @@ safe_unlink(const char* pathname)
     int res = unlink(pathname);
     if (res < 0) {
         tap_error_errno("unlink()", errno);
-        test_abort();
+        abort_safe_block();
     }
     return res;
 }
@@ -120,7 +120,7 @@ safe_write(int fd, const void* buf, size_t count)
         ssize_t res = TEMP_FAILURE_RETRY(write(fd, buf8, count - len));
         if (res < 0) {
             tap_error_errno("write()", errno);
-            test_abort();
+            abort_safe_block();
         }
         buf8 += res;
         len += res;

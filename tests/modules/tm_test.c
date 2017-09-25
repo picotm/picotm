@@ -25,11 +25,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include "ptr.h"
+#include "safeblk.h"
 #include "safe_stdio.h"
 #include "taputils.h"
 #include "test.h"
 #include "testhlp.h"
-#include "test_state.h"
 
 #define STRSIZE 128
 
@@ -73,7 +73,7 @@ tm_test_1_post(unsigned long nthreads, enum loop_mode loop,
 {
     if (!(g_value == 0)) {
         tap_error("post-condition failed: g_value == 0");
-        test_abort();
+        abort_safe_block();
     }
 }
 
@@ -107,7 +107,7 @@ tm_test_2_post(unsigned long nthreads, enum loop_mode loop,
 {
     if (!(g_value < nthreads)) {
         tap_error("post-condition failed: g_value < nthreads");
-        test_abort();
+        abort_safe_block();
     }
 }
 
@@ -145,7 +145,7 @@ tm_test_3_post(unsigned long nthreads, enum loop_mode loop,
         case CYCLE_BOUND:
             if (!(g_value == (nthreads * bound))) {
                 tap_error("post-condition failed: g_value == (nthreads * bound)");
-                test_abort();
+                abort_safe_block();
             }
             break;
         case TIME_BOUND:
@@ -265,12 +265,12 @@ tm_test_6(unsigned int tid)
 
     if (!(len == 1)) {
         tap_error("condition failed: len == 1");
-        test_abort();
+        abort_safe_block();
     }
 
     if (!(value == tid)) {
         tap_error("condition failed: value == tid");
-        test_abort();
+        abort_safe_block();
     }
 }
 

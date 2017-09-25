@@ -19,8 +19,8 @@
 
 #include "safe_sys_stat.h"
 #include <errno.h>
+#include "safeblk.h"
 #include "taputils.h"
-#include "test_state.h"
 
 int
 safe_mkdir(const char* path, mode_t mode)
@@ -28,7 +28,7 @@ safe_mkdir(const char* path, mode_t mode)
     int res = mkdir(path, mode);
     if (res < 0) {
         tap_error_errno("mkdir()", errno);
-        test_abort();
+        abort_safe_block();
     }
     return res;
 }
