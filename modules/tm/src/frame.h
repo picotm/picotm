@@ -19,11 +19,13 @@
 
 #pragma once
 
+#include <picotm/picotm-lib-rwlock.h>
 #include <stdatomic.h>
 #include <stddef.h>
 #include <stdint.h>
 
 struct picotm_error;
+struct picotm_rwstate;
 
 /**
  * \cond impl || tm_impl
@@ -37,7 +39,7 @@ struct picotm_error;
  * of main memory.
  */
 struct tm_frame {
-    atomic_uintptr_t owner; /* address of owning vmem_tx, or 0 */
+    struct picotm_rwlock rwlock; /* R/W lock */
     uintptr_t flags; /* address + flags */
 };
 
@@ -60,8 +62,12 @@ unsigned long
 tm_frame_flags(const struct tm_frame* frame);
 
 void
-tm_frame_try_lock(struct tm_frame* frame, const void* owner,
-                  struct picotm_error* error);
+tm_frame_try_rdlock(struct tm_frame* frame, struct picotm_rwstate* rwstate,
+                    struct picotm_error* error);
 
 void
-tm_frame_unlock(struct tm_frame* frame);
+tm_frame_try_wrlock(struct tm_frame* frame, struct picotm_rwstate* rwstate,
+                    struct picotm_error* error);
+
+void
+tm_frame_unlock(struct tm_frame* frame, struct picotm_rwstate* rwstate);

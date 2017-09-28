@@ -20,6 +20,7 @@
 #include "vmem_tx.h"
 #include <errno.h>
 #include <picotm/picotm-error.h>
+#include <picotm/picotm-lib-rwstate.h>
 #include <stdlib.h>
 #include <string.h>
 #include "block.h"
@@ -32,9 +33,8 @@
  */
 
 enum {
-    TM_PAGE_FLAG_OWNING_FRAME  = 1 << 0,
-    TM_PAGE_FLAG_WRITTEN       = 1 << 1,
-    TM_PAGE_FLAG_WRITE_THROUGH = 1 << 2
+    TM_PAGE_FLAG_WRITTEN       = 1 << 0,
+    TM_PAGE_FLAG_WRITE_THROUGH = 1 << 1
 };
 
 /**
@@ -44,6 +44,9 @@ enum {
 struct tm_page {
     /** Block index and flag bits */
     uintptr_t flags;
+
+    /** Lock state wrt. to frame lock */
+    struct picotm_rwstate rwstate;
 
     /** Transaction-local buffer */
     uint8_t buf[TM_BLOCK_SIZE];
@@ -56,12 +59,15 @@ static void
 tm_page_init(struct tm_page* page, struct tm_vmem* vmem, size_t block_index)
 {
     page->flags = block_index << TM_BLOCK_SIZE_BITS;
+    picotm_rwstate_init(&page->rwstate);
     memset(&page->list, 0, sizeof(page->list));
 }
 
 static void
 tm_page_uninit(struct tm_page* page)
-{ }
+{
+    picotm_rwstate_uninit(&page->rwstate);
+}
 
 static size_t
 tm_page_block_index(const struct tm_page* page)
@@ -146,9 +152,28 @@ tm_page_xchg(struct tm_page* page, struct tm_vmem* vmem,
     tm_vmem_release_frame(vmem, frame);
 }
 
+static bool
+tm_page_has_locked_frame(const struct tm_page* page)
+{
+    return picotm_rwstate_get_status(&page->rwstate) != PICOTM_RWSTATE_UNLOCKED;
+}
+
+static bool
+tm_page_has_rdlocked_frame(const struct tm_page* page)
+{
+    /* writer lock counts as implicit reader lock */
+    return picotm_rwstate_get_status(&page->rwstate) != PICOTM_RWSTATE_UNLOCKED;
+}
+
+static bool
+tm_page_has_wrlocked_frame(struct tm_page* page)
+{
+    return picotm_rwstate_get_status(&page->rwstate) == PICOTM_RWSTATE_WRLOCKED;
+}
+
 static void
-tm_page_try_lock_frame(struct tm_page* page, struct tm_vmem* vmem,
-                       struct picotm_error* error)
+tm_page_try_rdlock_frame(struct tm_page* page, struct tm_vmem* vmem,
+                         struct picotm_error* error)
 {
     struct tm_frame* frame =
         tm_vmem_acquire_frame_by_block(vmem, tm_page_block_index(page),
@@ -156,13 +181,33 @@ tm_page_try_lock_frame(struct tm_page* page, struct tm_vmem* vmem,
     if (picotm_error_is_set(error)) {
         return;
     }
-    tm_frame_try_lock(frame, page, error);
+    tm_frame_try_rdlock(frame, &page->rwstate, error);
     if (picotm_error_is_set(error)) {
         goto err_tm_frame_lock;
     }
     tm_vmem_release_frame(vmem, frame);
 
-    page->flags |= TM_PAGE_FLAG_OWNING_FRAME;
+    return;
+
+err_tm_frame_lock:
+    tm_vmem_release_frame(vmem, frame);
+}
+
+static void
+tm_page_try_wrlock_frame(struct tm_page* page, struct tm_vmem* vmem,
+                         struct picotm_error* error)
+{
+    struct tm_frame* frame =
+        tm_vmem_acquire_frame_by_block(vmem, tm_page_block_index(page),
+                                       error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
+    tm_frame_try_wrlock(frame, &page->rwstate, error);
+    if (picotm_error_is_set(error)) {
+        goto err_tm_frame_lock;
+    }
+    tm_vmem_release_frame(vmem, frame);
 
     return;
 
@@ -183,10 +228,8 @@ tm_page_unlock_frame(struct tm_page* page, struct tm_vmem* vmem,
         return;
     }
 
-    tm_frame_unlock(frame);
+    tm_frame_unlock(frame, &page->rwstate);
     tm_vmem_release_frame(vmem, frame);
-
-    page->flags &= ~TM_PAGE_FLAG_OWNING_FRAME;
 }
 
 /*
@@ -298,7 +341,7 @@ static void
 release_page(struct tm_vmem_tx* vmem_tx, struct tm_page* page,
              struct picotm_error* error)
 {
-    if (page->flags & TM_PAGE_FLAG_OWNING_FRAME) {
+    if (tm_page_has_locked_frame(page)) {
         tm_page_unlock_frame(page, vmem_tx->vmem, error);
         if (picotm_error_is_set(error)) {
             return;
@@ -323,8 +366,8 @@ tm_vmem_tx_ld(struct tm_vmem_tx* vmem_tx, uintptr_t addr, void* buf,
             return;
         }
 
-        if (!(page->flags & TM_PAGE_FLAG_OWNING_FRAME)) {
-            tm_page_try_lock_frame(page, vmem_tx->vmem, error);
+        if (!tm_page_has_rdlocked_frame(page)) {
+            tm_page_try_rdlock_frame(page, vmem_tx->vmem, error);
             if (picotm_error_is_set(error)) {
                 return;
             }
@@ -362,8 +405,8 @@ tm_vmem_tx_st(struct tm_vmem_tx* vmem_tx, uintptr_t addr, const void* buf,
             return;
         }
 
-        if (!(page->flags & TM_PAGE_FLAG_OWNING_FRAME)) {
-            tm_page_try_lock_frame(page, vmem_tx->vmem, error);
+        if (!tm_page_has_wrlocked_frame(page)) {
+            tm_page_try_wrlock_frame(page, vmem_tx->vmem, error);
             if (picotm_error_is_set(error)) {
                 return;
             }
@@ -401,8 +444,8 @@ tm_vmem_tx_ldst(struct tm_vmem_tx* vmem_tx, uintptr_t laddr, uintptr_t saddr,
             return;
         }
 
-        if (!(lpage->flags & TM_PAGE_FLAG_OWNING_FRAME)) {
-            tm_page_try_lock_frame(lpage, vmem_tx->vmem, error);
+        if (!tm_page_has_rdlocked_frame(lpage)) {
+            tm_page_try_rdlock_frame(lpage, vmem_tx->vmem, error);
             if (picotm_error_is_set(error)) {
                 return;
             }
@@ -423,8 +466,8 @@ tm_vmem_tx_ldst(struct tm_vmem_tx* vmem_tx, uintptr_t laddr, uintptr_t saddr,
             return;
         }
 
-        if (!(spage->flags & TM_PAGE_FLAG_OWNING_FRAME)) {
-            tm_page_try_lock_frame(spage, vmem_tx->vmem, error);
+        if (!tm_page_has_wrlocked_frame(lpage)) {
+            tm_page_try_wrlock_frame(spage, vmem_tx->vmem, error);
             if (picotm_error_is_set(error)) {
                 return;
             }
@@ -463,8 +506,8 @@ tm_vmem_tx_privatize(struct tm_vmem_tx* vmem_tx, uintptr_t addr, size_t siz,
             return;
         }
 
-        if (!(page->flags & TM_PAGE_FLAG_OWNING_FRAME)) {
-            tm_page_try_lock_frame(page, vmem_tx->vmem, error);
+        if (!tm_page_has_wrlocked_frame(page)) {
+            tm_page_try_wrlock_frame(page, vmem_tx->vmem, error);
             if (picotm_error_is_set(error)) {
                 return;
             }
@@ -510,8 +553,8 @@ tm_vmem_tx_privatize_c(struct tm_vmem_tx* vmem_tx, uintptr_t addr, int c,
             return;
         }
 
-        if (!(page->flags & TM_PAGE_FLAG_OWNING_FRAME)) {
-            tm_page_try_lock_frame(page, vmem_tx->vmem, error);
+        if (!tm_page_has_wrlocked_frame(page)) {
+            tm_page_try_wrlock_frame(page, vmem_tx->vmem, error);
             if (picotm_error_is_set(error)) {
                 return;
             }
