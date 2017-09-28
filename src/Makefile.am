@@ -35,6 +35,8 @@ libpicotm_la_SOURCES = log.c \
                        picotm-lib-shared-treemap.c \
                        picotm-lib-tab.c \
                        picotm-lib-treemap.c \
+                       picotm_lock_manager.c \
+                       picotm_lock_manager.h \
                        picotm_lock_owner.c \
                        picotm_lock_owner.h \
                        picotm_os_cond.c \
