@@ -28,6 +28,8 @@ libpicotm_tm_la_SOURCES = frame.c \
                           framemap.h \
                           module.c \
                           module.h \
+                          page.c \
+                          page.h \
                           tm.c \
                           tm.h \
                           vmem.c \

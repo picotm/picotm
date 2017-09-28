@@ -38,10 +38,6 @@ struct tm_vmem_tx;
 
 SLIST_HEAD(tm_page_list, tm_page);
 
-/*
- * |struct tm_vmem_tx|
- */
-
 /**
  * |struct tm_vmem_tx| represents a memory transaction.
  */
