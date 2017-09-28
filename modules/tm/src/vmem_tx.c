@@ -59,6 +59,10 @@ tm_page_init(struct tm_page* page, struct tm_vmem* vmem, size_t block_index)
     memset(&page->list, 0, sizeof(page->list));
 }
 
+static void
+tm_page_uninit(struct tm_page* page)
+{ }
+
 static size_t
 tm_page_block_index(const struct tm_page* page)
 {
@@ -301,6 +305,7 @@ release_page(struct tm_vmem_tx* vmem_tx, struct tm_page* page,
         }
     }
     SLIST_REMOVE(&vmem_tx->active_pages, page, tm_page, list);
+    tm_page_uninit(page);
     free_page(vmem_tx, page);
 }
 
