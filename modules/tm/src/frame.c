@@ -31,6 +31,10 @@ tm_frame_init(struct tm_frame* frame, size_t block_index)
     frame->flags = block_index << TM_BLOCK_SIZE_BITS;
 }
 
+void
+tm_frame_uninit(struct tm_frame* frame)
+{ }
+
 size_t
 tm_frame_block_index(const struct tm_frame* frame)
 {

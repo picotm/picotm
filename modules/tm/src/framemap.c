@@ -51,7 +51,14 @@ tm_frame_tbl_init(struct tm_frame_tbl* self, size_t first_block_index)
 
 static void
 tm_frame_tbl_uninit(struct tm_frame_tbl* self)
-{ }
+{
+    struct tm_frame* beg = picotm_arraybeg(self->frame);
+    const struct tm_frame* end = picotm_arrayend(self->frame);
+
+    while (beg < end) {
+        tm_frame_uninit(beg++);
+    }
+}
 
 static uintptr_t
 tm_frame_tbl_create(unsigned long long key,
