@@ -16,9 +16,9 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-current = 1
+current = 2
 revision = 0
-age = 0
+age = 1
 
 lib_LTLIBRARIES = libpicotm.la
 
