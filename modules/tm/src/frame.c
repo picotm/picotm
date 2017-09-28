@@ -20,6 +20,7 @@
 #include "frame.h"
 #include <errno.h>
 #include <picotm/picotm-error.h>
+#include <picotm/picotm-lib-rwstate.h>
 #include <stdatomic.h>
 #include <stdbool.h>
 #include "block.h"
@@ -27,13 +28,16 @@
 void
 tm_frame_init(struct tm_frame* frame, size_t block_index)
 {
-    frame->owner = 0;
+    picotm_rwlock_init(&frame->rwlock);
     frame->flags = block_index << TM_BLOCK_SIZE_BITS;
+
 }
 
 void
 tm_frame_uninit(struct tm_frame* frame)
-{ }
+{
+    picotm_rwlock_uninit(&frame->rwlock);
+}
 
 size_t
 tm_frame_block_index(const struct tm_frame* frame)
@@ -60,32 +64,27 @@ tm_frame_flags(const struct tm_frame* frame)
 }
 
 void
-tm_frame_try_lock(struct tm_frame* frame, const void* owner,
-                  struct picotm_error* error)
+tm_frame_try_rdlock(struct tm_frame* frame, struct picotm_rwstate* rwstate,
+                    struct picotm_error* error)
 {
-    /* test-and-test-and-set */
-    if (frame->owner) {
-        picotm_error_set_conflicting(error, NULL);
-        return;
-    }
-
-    uintptr_t expected = 0;
-    bool succ = atomic_compare_exchange_strong_explicit(&frame->owner,
-                                                        &expected,
-                                                        (uintptr_t)owner,
-                                                        memory_order_seq_cst,
-                                                        memory_order_acquire);
-    if (!succ) {
-        picotm_error_set_conflicting(error, NULL);
+    picotm_rwstate_try_rdlock(rwstate, &frame->rwlock, error);
+    if (picotm_error_is_set(error)) {
         return;
     }
 }
 
 void
-tm_frame_unlock(struct tm_frame* frame)
+tm_frame_try_wrlock(struct tm_frame* frame, struct picotm_rwstate* rwstate,
+                    struct picotm_error* error)
 {
-    /* test-and-test-and-set */
-    if (frame->owner) {
-        atomic_store_explicit(&frame->owner, 0, memory_order_seq_cst);
+    picotm_rwstate_try_wrlock(rwstate, &frame->rwlock, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
+}
+
+void
+tm_frame_unlock(struct tm_frame* frame, struct picotm_rwstate* rwstate)
+{
+    picotm_rwstate_unlock(rwstate, &frame->rwlock);
 }
