@@ -140,6 +140,24 @@ release_page(struct tm_vmem_tx* vmem_tx, struct tm_page* page,
     free_page(vmem_tx, page);
 }
 
+static void
+prepare_page_ld(struct tm_page* page, struct tm_vmem* vmem,
+                struct picotm_error* error)
+{
+    if (tm_page_has_rdlocked_frame(page)) {
+        return;
+    }
+
+    tm_page_try_rdlock_frame(page, vmem, error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
+    tm_page_ld(page, vmem, error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
+}
+
 void
 tm_vmem_tx_ld(struct tm_vmem_tx* vmem_tx, uintptr_t addr, void* buf,
               size_t siz, struct picotm_error* error)
@@ -153,16 +171,9 @@ tm_vmem_tx_ld(struct tm_vmem_tx* vmem_tx, uintptr_t addr, void* buf,
         if (picotm_error_is_set(error)) {
             return;
         }
-
-        if (!tm_page_has_rdlocked_frame(page)) {
-            tm_page_try_rdlock_frame(page, vmem_tx->vmem, error);
-            if (picotm_error_is_set(error)) {
-                return;
-            }
-            tm_page_ld(page, vmem_tx->vmem, error);
-            if (picotm_error_is_set(error)) {
-                return;
-            }
+        prepare_page_ld(page, vmem_tx->vmem, error);
+        if (picotm_error_is_set(error)) {
+            return;
         }
 
         uintptr_t page_addr = tm_page_address(page);
@@ -179,6 +190,24 @@ tm_vmem_tx_ld(struct tm_vmem_tx* vmem_tx, uintptr_t addr, void* buf,
     }
 }
 
+static void
+prepare_page_st(struct tm_page* page, struct tm_vmem* vmem,
+                struct picotm_error* error)
+{
+    if (tm_page_has_wrlocked_frame(page)) {
+        return;
+    }
+
+    tm_page_try_wrlock_frame(page, vmem, error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
+    tm_page_ld(page, vmem, error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
+}
+
 void
 tm_vmem_tx_st(struct tm_vmem_tx* vmem_tx, uintptr_t addr, const void* buf,
               size_t siz, struct picotm_error* error)
@@ -192,16 +221,9 @@ tm_vmem_tx_st(struct tm_vmem_tx* vmem_tx, uintptr_t addr, const void* buf,
         if (picotm_error_is_set(error)) {
             return;
         }
-
-        if (!tm_page_has_wrlocked_frame(page)) {
-            tm_page_try_wrlock_frame(page, vmem_tx->vmem, error);
-            if (picotm_error_is_set(error)) {
-                return;
-            }
-            tm_page_ld(page, vmem_tx->vmem, error);
-            if (picotm_error_is_set(error)) {
-                return;
-            }
+        prepare_page_st(page, vmem_tx->vmem, error);
+        if (picotm_error_is_set(error)) {
+            return;
         }
 
         uintptr_t page_addr = tm_page_address(page);
@@ -229,16 +251,9 @@ tm_vmem_tx_ldst(struct tm_vmem_tx* vmem_tx, uintptr_t laddr, uintptr_t saddr,
         if (picotm_error_is_set(error)) {
             return;
         }
-
-        if (!tm_page_has_rdlocked_frame(lpage)) {
-            tm_page_try_rdlock_frame(lpage, vmem_tx->vmem, error);
-            if (picotm_error_is_set(error)) {
-                return;
-            }
-            tm_page_ld(lpage, vmem_tx->vmem, error);
-            if (picotm_error_is_set(error)) {
-                return;
-            }
+        prepare_page_ld(lpage, vmem_tx->vmem, error);
+        if (picotm_error_is_set(error)) {
+            return;
         }
 
         uintptr_t lpage_addr = tm_page_address(lpage);
@@ -251,16 +266,9 @@ tm_vmem_tx_ldst(struct tm_vmem_tx* vmem_tx, uintptr_t laddr, uintptr_t saddr,
         if (picotm_error_is_set(error)) {
             return;
         }
-
-        if (!tm_page_has_wrlocked_frame(lpage)) {
-            tm_page_try_wrlock_frame(spage, vmem_tx->vmem, error);
-            if (picotm_error_is_set(error)) {
-                return;
-            }
-            tm_page_ld(spage, vmem_tx->vmem, error);
-            if (picotm_error_is_set(error)) {
-                return;
-            }
+        prepare_page_st(spage, vmem_tx->vmem, error);
+        if (picotm_error_is_set(error)) {
+            return;
         }
 
         uintptr_t spage_addr = tm_page_address(spage);
@@ -278,6 +286,57 @@ tm_vmem_tx_ldst(struct tm_vmem_tx* vmem_tx, uintptr_t laddr, uintptr_t saddr,
     }
 }
 
+static void
+prepare_page_privatize(struct tm_page* page, struct tm_vmem* vmem,
+                       unsigned long flags, struct picotm_error* error)
+{
+    if ((flags & PICOTM_TM_PRIVATIZE_STORE) &&
+            !tm_page_has_wrlocked_frame(page)) {
+
+        /* Page requires a writer lock. */
+
+        tm_page_try_wrlock_frame(page, vmem, error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
+        tm_page_ld(page, vmem, error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
+        page->flags |= TM_PAGE_FLAG_WRITE_THROUGH;
+
+    } else if (!tm_page_has_rdlocked_frame(page)) {
+
+        /* Page requires a reader lock. */
+
+        tm_page_try_rdlock_frame(page, vmem, error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
+        tm_page_ld(page, vmem, error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
+        page->flags |= TM_PAGE_FLAG_WRITE_THROUGH;
+
+    } else if (!(page->flags & TM_PAGE_FLAG_WRITE_THROUGH)) {
+
+        /* Page holds correct lock, but requires write-through
+         * mode. Privatized pages use write-through semantics,
+         * so that all stores are immediately visible in the
+         * region's memory.
+         */
+
+        if (tm_page_has_wrlocked_frame(page)) {
+            tm_page_xchg(page, vmem, error);
+            if (picotm_error_is_set(error)) {
+                return;
+            }
+        }
+        page->flags |= TM_PAGE_FLAG_WRITE_THROUGH;
+    }
+}
+
 void
 tm_vmem_tx_privatize(struct tm_vmem_tx* vmem_tx, uintptr_t addr, size_t siz,
                      unsigned long flags, struct picotm_error* error)
@@ -289,38 +348,9 @@ tm_vmem_tx_privatize(struct tm_vmem_tx* vmem_tx, uintptr_t addr, size_t siz,
         if (picotm_error_is_set(error)) {
             return;
         }
-
-        if ((flags & PICOTM_TM_PRIVATIZE_STORE) &&
-                !tm_page_has_wrlocked_frame(page)) {
-            tm_page_try_wrlock_frame(page, vmem_tx->vmem, error);
-            if (picotm_error_is_set(error)) {
-                return;
-            }
-            tm_page_ld(page, vmem_tx->vmem, error);
-            if (picotm_error_is_set(error)) {
-                return;
-            }
-            page->flags |= TM_PAGE_FLAG_WRITE_THROUGH;
-
-        } else if (!tm_page_has_rdlocked_frame(page)) {
-            tm_page_try_rdlock_frame(page, vmem_tx->vmem, error);
-            if (picotm_error_is_set(error)) {
-                return;
-            }
-            tm_page_ld(page, vmem_tx->vmem, error);
-            if (picotm_error_is_set(error)) {
-                return;
-            }
-            page->flags |= TM_PAGE_FLAG_WRITE_THROUGH;
-
-        } else if (!(page->flags & TM_PAGE_FLAG_WRITE_THROUGH)) {
-            if (tm_page_has_wrlocked_frame(page)) {
-                tm_page_xchg(page, vmem_tx->vmem, error);
-                if (picotm_error_is_set(error)) {
-                    return;
-                }
-            }
-            page->flags |= TM_PAGE_FLAG_WRITE_THROUGH;
+        prepare_page_privatize(page, vmem_tx->vmem, flags, error);
+        if (picotm_error_is_set(error)) {
+            return;
         }
 
         uintptr_t page_addr = tm_page_address(page);
@@ -344,41 +374,9 @@ tm_vmem_tx_privatize_c(struct tm_vmem_tx* vmem_tx, uintptr_t addr, int c,
         if (picotm_error_is_set(error)) {
             return;
         }
-
-        if ((flags & PICOTM_TM_PRIVATIZE_STORE) &&
-                !tm_page_has_wrlocked_frame(page)) {
-            tm_page_try_wrlock_frame(page, vmem_tx->vmem, error);
-            if (picotm_error_is_set(error)) {
-                return;
-            }
-            tm_page_ld(page, vmem_tx->vmem, error);
-            if (picotm_error_is_set(error)) {
-                return;
-            }
-            page->flags |= TM_PAGE_FLAG_WRITE_THROUGH;
-
-        } else if (!tm_page_has_rdlocked_frame(page)) {
-            tm_page_try_rdlock_frame(page, vmem_tx->vmem, error);
-            if (picotm_error_is_set(error)) {
-                return;
-            }
-            tm_page_ld(page, vmem_tx->vmem, error);
-            if (picotm_error_is_set(error)) {
-                return;
-            }
-            page->flags |= TM_PAGE_FLAG_WRITE_THROUGH;
-
-        } else if (!(page->flags & TM_PAGE_FLAG_WRITE_THROUGH)) {
-            /* Privatized pages require write-through semantics,
-             * so that all stores are immediately visible in the
-             * region's memory. */
-            if (tm_page_has_wrlocked_frame(page)) {
-                tm_page_xchg(page, vmem_tx->vmem, error);
-                if (picotm_error_is_set(error)) {
-                    return;
-                }
-            }
-            page->flags |= TM_PAGE_FLAG_WRITE_THROUGH;
+        prepare_page_privatize(page, vmem_tx->vmem, flags, error);
+        if (picotm_error_is_set(error)) {
+            return;
         }
 
         uintptr_t page_addr = tm_page_address(page);
