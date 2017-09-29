@@ -1,4 +1,23 @@
 
+picotm 0.6.0 (2017-09-29)
+------------
+
+    * Added transactional sprintf() and sscanf() functions.
+
+    * chdir_tx() now reports errors during roll-backs.
+
+    * Added restart statistics. Call picotm_number_of_restarts() to
+      retrieve the number of restarts performed by the local thread's
+      last transaction. This functionality is helpful for benchmarking
+      and performance analysis.
+
+    * Added, reworked and cleaned up module tests. The tests result are
+      returned in TAP format for easy integration into test harnesses.
+
+    * Merge module tests into picotm package. Type `make check' to run
+      all tests on your local machine.
+
+
 picotm 0.5.0 (2017-08-29)
 ------------
 

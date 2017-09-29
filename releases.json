@@ -7,6 +7,14 @@
     "tags": "c, concurrency, development, distributedsystems, embedded, errorhandling, failsafe, framework, linux, lockless, manufacturing, multicore, multithreading, softwaretransactionalmemory, transactions",
     "releases": [
         {
+            "version": "0.6.0",
+            "state": "beta",
+            "scope": "minor",
+            "changes": "Added transactional snprintf(), sscanf(); Added restart statistics; Added module tests and `make check'.",
+            "download": "https://github.com/picotm/picotm/releases/download/v0.6.0/picotm-0.6.0.tar.gz",
+            "published": "2017-09-29T07:39:12+00:00"
+        },
+        {
             "version": "0.5.0",
             "state": "beta",
             "scope": "minor",
