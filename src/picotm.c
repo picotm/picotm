@@ -24,6 +24,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
+#include "picotm/picotm-lib-ptr.h"
 #include "picotm/picotm-lib-spinlock.h"
 #include "tx.h"
 #include "tx_shared.h"
@@ -94,7 +95,10 @@ get_tx(bool do_init, struct picotm_error* error)
         return NULL;
     }
 
-    tx_init(&t_tx, tx_shared);
+    tx_init(&t_tx, tx_shared, error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
 
     return &t_tx;
 }
@@ -121,6 +125,28 @@ get_non_null_error(void)
     static __thread struct picotm_error t_error = PICOTM_ERROR_INITIALIZER;
 
     return &t_error;
+}
+
+/*
+ * Lock-owner look-up functions
+ */
+
+struct picotm_lock_owner*
+picotm_lock_owner_get_thread_local_instance()
+{
+    struct tx* tx = get_non_null_tx();
+
+    return &tx->lo;
+}
+
+struct picotm_lock_manager*
+picotm_lock_owner_get_lock_manager(struct picotm_lock_owner* lo)
+{
+    assert(lo);
+
+    const struct tx* tx = picotm_containerof(lo, struct tx, lo);
+
+    return &tx->shared->lm;
 }
 
 /*
