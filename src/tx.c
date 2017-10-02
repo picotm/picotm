@@ -34,7 +34,8 @@
 static const unsigned long TX_NRETRIES_LIMIT = 10;
 
 void
-tx_init(struct tx* self, struct tx_shared* tx_shared)
+tx_init(struct tx* self, struct tx_shared* tx_shared,
+        struct picotm_error* error)
 {
     assert(self);
 
@@ -45,6 +46,23 @@ tx_init(struct tx* self, struct tx_shared* tx_shared)
     self->nretries = 0;
     self->nmodules = 0;
     self->is_initialized = true;
+
+    picotm_lock_owner_init(&self->lo, error);
+    if (picotm_error_is_set(error)) {
+        goto err_picotm_lock_owner_init;
+    }
+
+    picotm_lock_manager_register_owner(&self->shared->lm, &self->lo, error);
+    if (picotm_error_is_set(error)) {
+        goto err_lock_manager_register_owner;
+    }
+
+    return;
+
+err_lock_manager_register_owner:
+    picotm_lock_owner_uninit(&self->lo);
+err_picotm_lock_owner_init:
+    log_uninit(&self->log);
 }
 
 void
@@ -52,6 +70,8 @@ tx_release(struct tx* self)
 {
     assert(self);
 
+    picotm_lock_manager_unregister_owner(&self->shared->lm, &self->lo);
+    picotm_lock_owner_uninit(&self->lo);
     log_uninit(&self->log);
 
     struct module* module = self->module;
@@ -145,8 +165,22 @@ tx_begin(struct tx* self, enum tx_mode mode, bool is_retry,
         return;
     }
 
+    /* Reset the timestamp *after* selecting the (ir-)revocability
+     * mode. Otherwise the waiting time, and thus the time of a
+     * running irrevocable transaction, would be accounted to this
+     * transaction as well. */
+    picotm_lock_owner_reset_timestamp(&self->lo, error);
+    if (picotm_error_is_set(error)) {
+        goto err_picotm_lock_owner_reset_timestamp;
+    }
+
     self->nretries = nretries;
     self->mode = mode;
+
+    return;
+
+err_picotm_lock_owner_reset_timestamp:
+    tx_shared_release_irrevocability(self->shared);
 }
 
 static size_t

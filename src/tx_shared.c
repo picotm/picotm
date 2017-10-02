@@ -20,6 +20,7 @@
 #include "tx_shared.h"
 #include <assert.h>
 #include "picotm/picotm-error.h"
+#include "picotm/picotm-module.h"
 
 void
 tx_shared_init(struct tx_shared* self, struct picotm_error* error)
@@ -32,6 +33,16 @@ tx_shared_init(struct tx_shared* self, struct picotm_error* error)
     }
 
     self->exclusive_tx = NULL;
+
+    picotm_lock_manager_init(&self->lm, error);
+    if (picotm_error_is_set(error)) {
+        goto err_lock_manager_init;
+    }
+
+    return;
+
+err_lock_manager_init:
+    picotm_os_rwlock_uninit(&self->exclusive_tx_lock);
 }
 
 void
@@ -39,6 +50,7 @@ tx_shared_uninit(struct tx_shared* self)
 {
     assert(self);
 
+    picotm_lock_manager_uninit(&self->lm);
     picotm_os_rwlock_uninit(&self->exclusive_tx_lock);
 }
 

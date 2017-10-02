@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include "picotm_lock_manager.h"
 #include "picotm_os_rwlock.h"
 
 /**
@@ -42,6 +43,12 @@ struct tx_shared {
      */
     struct picotm_os_rwlock exclusive_tx_lock;
     struct tx*              exclusive_tx;
+
+    /**
+     * The global lock manager for all transactional locks. Register your
+     * transaction's lock-owner instance with this object.
+     */
+    struct picotm_lock_manager lm;
 };
 
 void

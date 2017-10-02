@@ -23,6 +23,7 @@
 #include "log.h"
 #include "module.h"
 #include "picotm/picotm.h"
+#include "picotm_lock_owner.h"
 
 /**
  * \cond impl || lib_impl
@@ -48,6 +49,9 @@ struct tx {
     enum tx_mode      mode;
     unsigned long     nretries;
 
+    /** The transaction's lock-owner instance. */
+    struct picotm_lock_owner lo;
+
     unsigned long nmodules; /**< \brief Number allocated modules */
     struct module module[MAX_NMODULES]; /** \brief Registered modules */
 
@@ -55,7 +59,8 @@ struct tx {
 };
 
 void
-tx_init(struct tx* self, struct tx_shared* tx_shared);
+tx_init(struct tx* self, struct tx_shared* tx_shared,
+        struct picotm_error* error);
 
 void
 tx_release(struct tx* self);
