@@ -88,7 +88,7 @@ struct picotm_error;
  * ~~~
  */
 struct picotm_rwlock {
-    /** counter variable; UINT8_T means 'exclusive writer present' */
+    /** counter variable */
     atomic_uint_least8_t  n;
 };
 

@@ -30,6 +30,7 @@ libpicotm_la_SOURCES = log.c \
                        picotm.h \
                        picotm-error.c \
                        picotm-lib-rwlock.c \
+                       picotm-lib-rwlock.h \
                        picotm-lib-rwstate.c \
                        picotm-lib-shared-ref-obj.c \
                        picotm-lib-shared-treemap.c \
