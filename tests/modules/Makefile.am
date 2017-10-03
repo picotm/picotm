@@ -75,6 +75,8 @@ picotm_test_SOURCES = fildes_test.c \
                       vfs_test.c \
                       vfs_test.h
 
+picotm_test_LDFLAGS = -static
+
 picotm_test_LDADD = $(top_builddir)/modules/libpthread/src/libpicotm-pthread.la \
                     $(top_builddir)/modules/libm/src/libpicotm-m.la \
                     $(top_builddir)/modules/libc/src/libpicotm-c.la \
