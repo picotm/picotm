@@ -19,9 +19,9 @@
 
 #pragma once
 
-#include <pthread.h>
 #include "compiler.h"
 #include "picotm-lib-ref.h"
+#include "picotm-lib-spinlock.h"
 
 /**
  * \ingroup group_modules
@@ -179,7 +179,7 @@ struct picotm_error;
 struct picotm_shared_ref16_obj {
 
     /** Internal lock. */
-    pthread_spinlock_t lock;
+    struct picotm_spinlock lock;
 
     /** Reference counter */
     struct picotm_shared_ref16 ref;
