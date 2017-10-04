@@ -20,10 +20,10 @@
 #include "module.h"
 #include <assert.h>
 #include <errno.h>
-#include <pthread.h>
+#include <picotm/picotm-lib-spinlock.h>
+#include <picotm/picotm-module.h>
 #include <stdatomic.h>
 #include <stdlib.h>
-#include <picotm/picotm-module.h>
 #include "cwd.h"
 #include "cwd_tx.h"
 
@@ -51,13 +51,9 @@ get_cwd(struct picotm_error* error)
         return &g_cwd;
     }
 
-    static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+    static struct picotm_spinlock lock = PICOTM_SPINLOCK_INITIALIZER;
 
-    int res = pthread_mutex_lock(&lock);
-    if (res) {
-        picotm_error_set_errno(error, res);
-        return NULL;
-    }
+    picotm_spinlock_lock(&lock);
 
     if (atomic_load_explicit(&g_cwd_is_initialized, memory_order_acquire)) {
         /* Another transaction initialized the cwd structure
@@ -72,11 +68,8 @@ get_cwd(struct picotm_error* error)
     atomic_store_explicit(&g_cwd_is_initialized, true, memory_order_release);
 
 out:
-    res = pthread_mutex_unlock(&lock);
-    if (res) {
-        picotm_error_set_errno(error, res);
-        return NULL;
-    }
+    picotm_spinlock_unlock(&lock);
+
     return &g_cwd;
 };
 
