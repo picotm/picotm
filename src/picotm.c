@@ -24,6 +24,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
+#include "picotm/picotm-lib-spinlock.h"
 #include "tx.h"
 #include "tx_shared.h"
 
@@ -43,13 +44,9 @@ get_tx_shared(struct picotm_error* error)
         return &g_tx_shared;
     }
 
-    static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+    static struct picotm_spinlock lock = PICOTM_SPINLOCK_INITIALIZER;
 
-    int err = pthread_mutex_lock(&lock);
-    if (err) {
-        picotm_error_set_errno(error, err);
-        return NULL;
-    }
+    picotm_spinlock_lock(&lock);
 
     is_initialized = atomic_load_explicit(&g_tx_shared_is_initialized,
                                           memory_order_acquire);
@@ -68,17 +65,12 @@ get_tx_shared(struct picotm_error* error)
                           memory_order_release);
 
 out:
-    err = pthread_mutex_unlock(&lock);
-    if (err) {
-        picotm_error_set_errno(error, err);
-        picotm_error_mark_as_non_recoverable(error);
-        goto err_out;
-    }
+    picotm_spinlock_unlock(&lock);
+
     return &g_tx_shared;
 
 err_tx_shared_init:
-    pthread_mutex_unlock(&lock);
-err_out:
+    picotm_spinlock_unlock(&lock);
     return NULL;
 }
 
