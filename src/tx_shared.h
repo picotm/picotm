@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <pthread.h>
+#include "picotm_os_rwlock.h"
 
 /**
  * \cond impl || lib_impl
@@ -34,21 +34,21 @@ struct picotm_error;
 struct tx_shared {
     /**
      * Locks the transaction system for either one exclusive transactions,
-     * or mutliple non-exclusive transactions.
+     * or multiple non-exclusive transactions.
      *
      * \todo This lock implements irrevocability. Replace this lock with a
      * more fine-grained system that allows recovable transactions while an
      * irrevocable transaction is present.
      */
-    pthread_rwlock_t exclusive_tx_lock;
-    struct tx*       exclusive_tx;
+    struct picotm_os_rwlock exclusive_tx_lock;
+    struct tx*              exclusive_tx;
 };
 
 void
 tx_shared_init(struct tx_shared* self, struct picotm_error* error);
 
 void
-tx_shared_uninit(struct tx_shared* self, struct picotm_error* error);
+tx_shared_uninit(struct tx_shared* self);
 
 void
 tx_shared_make_irrevocable(struct tx_shared* self, struct tx* exclusive_tx,
@@ -59,5 +59,4 @@ tx_shared_wait_irrevocable(struct tx_shared* self,
                            struct picotm_error* error);
 
 void
-tx_shared_release_irrevocability(struct tx_shared* self,
-                                 struct picotm_error* error);
+tx_shared_release_irrevocability(struct tx_shared* self);
