@@ -361,10 +361,7 @@ tx_commit(struct tx* self, struct picotm_error* error)
         goto err;
     }
 
-    tx_shared_release_irrevocability(self->shared, error);
-    if (picotm_error_is_set(error)) {
-        goto err_out;
-    }
+    tx_shared_release_irrevocability(self->shared);
 
     return;
 
@@ -381,12 +378,7 @@ err:
     if (is_non_recoverable) {
         picotm_error_mark_as_non_recoverable(error);
     }
-    {
-        struct picotm_error err_error = PICOTM_ERROR_INITIALIZER;
-        tx_shared_release_irrevocability(self->shared, &err_error);
-    }
-err_out:
-    return;
+    tx_shared_release_irrevocability(self->shared);
 }
 
 void
@@ -416,21 +408,13 @@ tx_rollback(struct tx* self, struct picotm_error* error)
         goto err;
     }
 
-    tx_shared_release_irrevocability(self->shared, error);
-    if (picotm_error_is_set(error)) {
-        goto err_out;
-    }
+    tx_shared_release_irrevocability(self->shared);
 
     return;
 
 err:
     picotm_error_mark_as_non_recoverable(error);
-    {
-        struct picotm_error err_error = PICOTM_ERROR_INITIALIZER;
-        tx_shared_release_irrevocability(self->shared, &err_error);
-    }
-err_out:
-    return;
+    tx_shared_release_irrevocability(self->shared);
 }
 
 bool
