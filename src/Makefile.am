@@ -37,6 +37,8 @@ libpicotm_la_SOURCES = log.c \
                        picotm-lib-treemap.c \
                        picotm_os_rwlock.c \
                        picotm_os_rwlock.h \
+                       picotm_os_timespec.c \
+                       picotm_os_timespec.h \
                        table.c \
                        table.h \
                        tx.c \
