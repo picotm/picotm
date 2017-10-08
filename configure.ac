@@ -127,6 +127,8 @@ AC_CONFIG_FILES([Makefile
                  modules/tm/src/Makefile
                  src/Makefile
                  tests/Makefile
+                 tests/libtap/Makefile
+                 tests/libtests/Makefile
                  tests/modules/Makefile])
 AC_OUTPUT
 
