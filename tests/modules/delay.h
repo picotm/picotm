@@ -20,7 +20,7 @@
 #pragma once
 
 /**
- * Aborts a transaction if a error occured.
+ * Delays a transaction while generating potential conflicts.
  */
 void
-abort_transaction_on_error(const char* origin);
+delay_transaction(unsigned int tid);

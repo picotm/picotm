@@ -19,27 +19,10 @@
 
 #include "testhlp.h"
 #include <picotm/picotm.h>
-#include <picotm/picotm-tm.h>
-#include <picotm/stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include "safeblk.h"
 #include "taputils.h"
-
-void
-delay_transaction(unsigned int tid)
-{
-    static unsigned int g_curtid;
-
-	store_uint_tx(&g_curtid, tid);
-
-	for (int i = 0; i < 10000; ++i) {
-		unsigned int curtid = load_uint_tx(&g_curtid);
-        if (curtid != tid) {
-		    abort_tx();
-		}
-	}
-}
 
 void
 abort_transaction_on_error(const char* origin)

@@ -34,6 +34,7 @@
 #include <picotm/picotm-libc.h>
 #include <picotm/picotm-tm.h>
 #include <picotm/unistd.h>
+#include "delay.h"
 #include "ptr.h"
 #include "safe_fcntl.h"
 #include "safe_pthread.h"

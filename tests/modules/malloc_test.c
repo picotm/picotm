@@ -23,6 +23,7 @@
 #include <picotm/stdlib-tm.h>
 #include <picotm/picotm.h>
 #include <picotm/picotm-tm.h>
+#include "delay.h"
 #include "ptr.h"
 #include "safe_stdlib.h"
 #include "testhlp.h"
