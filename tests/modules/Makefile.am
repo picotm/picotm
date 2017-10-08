@@ -43,35 +43,6 @@ picotm_test_SOURCES = delay.c \
                       module.h \
                       opts.c \
                       opts.h \
-                      ptr.h \
-                      safeblk.c \
-                      safeblk.h \
-                      safe_fcntl.c \
-                      safe_fcntl.h \
-                      safe_pthread.c \
-                      safe_pthread.h \
-                      safe_stdio.c \
-                      safe_stdio.h \
-                      safe_stdlib.c \
-                      safe_stdlib.h \
-                      safe_sys_stat.c \
-                      safe_sys_stat.h \
-                      safe_sys_time.c \
-                      safe_sys_time.h \
-                      safe_unistd.c \
-                      safe_unistd.h \
-                      tap.c \
-                      tap.h \
-                      taputils.c \
-                      taputils.h \
-                      tempfile.c \
-                      tempfile.h \
-                      test.c \
-                      test.h \
-                      testhlp.c \
-                      testhlp.h \
-                      thread.c \
-                      thread.h \
                       tm_test.c \
                       tm_test.h \
                       vfs_test.c \
@@ -79,13 +50,17 @@ picotm_test_SOURCES = delay.c \
 
 picotm_test_LDFLAGS = -static
 
-picotm_test_LDADD = $(top_builddir)/modules/libpthread/src/libpicotm-pthread.la \
+picotm_test_LDADD = $(top_builddir)/tests/libtests/libpicotm_tests.la \
+                    $(top_builddir)/tests/libtap/libpicotm_tap.la \
+                    $(top_builddir)/modules/libpthread/src/libpicotm-pthread.la \
                     $(top_builddir)/modules/libm/src/libpicotm-m.la \
                     $(top_builddir)/modules/libc/src/libpicotm-c.la \
                     $(top_builddir)/modules/tm/src/libpicotm-tm.la \
                     $(top_builddir)/src/libpicotm.la
 
-AM_CPPFLAGS = -I$(top_srcdir)/modules/libpthread/include \
+AM_CPPFLAGS = -I$(top_srcdir)/tests/libtests \
+              -I$(top_srcdir)/tests/libtap \
+              -I$(top_srcdir)/modules/libpthread/include \
               -I$(top_srcdir)/modules/libm/include \
               -I$(top_srcdir)/modules/libc/include \
               -I$(top_srcdir)/modules/tm/include \

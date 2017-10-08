@@ -16,20 +16,11 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-# The dependency chain between the directories is
-#
-#   tests-> include -> src -> modules
-#
-# The `tests' directory only contains helpers for `make check'. It does not
-# contain artifacts for building the regular code.
-#
-SUBDIRS = tests \
-          doc \
-          extras \
-          include \
-          modules \
-          src
+check_LTLIBRARIES = libpicotm_tap.la
 
-ACLOCAL_AMFLAGS = -I m4
+libpicotm_tap_la_SOURCES = tap.c \
+                           tap.h \
+                           taputils.c \
+                           taputils.h
 
-EXTRA_DIST = LICENSE
+AM_CPPFLAGS = -I$(top_srcdir)/include
