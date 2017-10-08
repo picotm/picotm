@@ -32,7 +32,9 @@ TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
 
 check_PROGRAMS = picotm-test
 
-picotm_test_SOURCES = fildes_test.c \
+picotm_test_SOURCES = delay.c \
+                      delay.h \
+                      fildes_test.c \
                       fildes_test.h \
                       main.c \
                       malloc_test.c \
