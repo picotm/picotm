@@ -46,7 +46,7 @@ abort_transaction_on_error(const char* origin)
 {
     switch (picotm_error_status()) {
         case PICOTM_CONFLICTING:
-            tap_error("%s: Conficting transactions\n", origin);
+            tap_error("%s: Conflicting transactions\n", origin);
             break;
         case PICOTM_REVOCABLE:
             tap_error("%s: Irrevocability required\n", origin);
