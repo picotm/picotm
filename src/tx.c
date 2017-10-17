@@ -26,6 +26,13 @@
 #include "table.h"
 #include "tx_shared.h"
 
+/* The maximum number of retries per transaction. If a transacion reaches
+ * this limit it switches to irrevocable mode. The actual limit depends on
+ * the system's access pattern. The more conflicts, the lower the limit
+ * should be. The current value has been choosen arbitrarily and requires
+ * further optimization! */
+static const unsigned long TX_NRETRIES_LIMIT = 10;
+
 void
 tx_init(struct tx* self, struct tx_shared* tx_shared)
 {
@@ -116,28 +123,29 @@ tx_begin(struct tx* self, enum tx_mode mode, bool is_retry,
 {
     assert(self);
 
+    unsigned long nretries = is_retry ? self->nretries + 1 : 0;
+
+    if (nretries == TX_NRETRIES_LIMIT) {
+        mode = TX_MODE_IRREVOCABLE;
+    }
+
     switch (mode) {
+        case TX_MODE_REVOCABLE:
+            /* If we're not the exclusive transaction, we wait
+             * for a possible exclusive transaction to finish. */
+            tx_shared_wait_irrevocable(self->shared, error);
+            break;
         case TX_MODE_IRREVOCABLE:
             /* If we're supposed to run exclusively, we wait
              * for the other transactions to finish. */
             tx_shared_make_irrevocable(self->shared, self, error);
-            break;
-        default:
-            /* If we're not the exclusive transaction, we wait
-             * for a possible exclusive transaction to finish. */
-            tx_shared_wait_irrevocable(self->shared, error);
             break;
     }
     if (picotm_error_is_set(error)) {
         return;
     }
 
-    if (is_retry) {
-        ++self->nretries;
-    } else {
-        self->nretries = 0;
-    }
-
+    self->nretries = nretries;
     self->mode = mode;
 }
 
