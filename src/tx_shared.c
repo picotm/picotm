@@ -20,29 +20,16 @@
 #include "tx_shared.h"
 #include <assert.h>
 #include "picotm/picotm-error.h"
-#include "picotm/picotm-module.h"
 
 void
 tx_shared_init(struct tx_shared* self, struct picotm_error* error)
 {
     assert(self);
 
-    picotm_os_rwlock_init(&self->exclusive_tx_lock, error);
+    picotm_lock_manager_init(&self->lm, error);
     if (picotm_error_is_set(error)) {
         return;
     }
-
-    self->exclusive_tx = NULL;
-
-    picotm_lock_manager_init(&self->lm, error);
-    if (picotm_error_is_set(error)) {
-        goto err_lock_manager_init;
-    }
-
-    return;
-
-err_lock_manager_init:
-    picotm_os_rwlock_uninit(&self->exclusive_tx_lock);
 }
 
 void
@@ -51,40 +38,4 @@ tx_shared_uninit(struct tx_shared* self)
     assert(self);
 
     picotm_lock_manager_uninit(&self->lm);
-    picotm_os_rwlock_uninit(&self->exclusive_tx_lock);
-}
-
-void
-tx_shared_make_irrevocable(struct tx_shared* self, struct tx* exclusive_tx,
-                           struct picotm_error* error)
-{
-    assert(self);
-    assert(exclusive_tx);
-
-    picotm_os_rwlock_wrlock(&self->exclusive_tx_lock, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
-
-    self->exclusive_tx = exclusive_tx;
-}
-
-void
-tx_shared_wait_irrevocable(struct tx_shared* self, struct picotm_error* error)
-{
-    assert(self);
-
-    picotm_os_rwlock_rdlock(&self->exclusive_tx_lock, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
-}
-
-void
-tx_shared_release_irrevocability(struct tx_shared* self)
-{
-    assert(self);
-
-    self->exclusive_tx = NULL;
-    picotm_os_rwlock_unlock(&self->exclusive_tx_lock);
 }
