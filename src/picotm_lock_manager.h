@@ -51,6 +51,17 @@ struct picotm_lock_manager {
     struct picotm_os_rwlock    lo_rwlock;
     struct picotm_lock_owner** lo;
     size_t                     nlos;
+
+    /**
+     * Locks the transaction system for either one exclusive lock owner,
+     * or multiple non-exclusive lock owners.
+     *
+     * \todo This lock implements irrevocability. Replace this lock with a
+     * more fine-grained system that allows recovable transactions while an
+     * irrevocable transaction is present.
+     */
+    struct picotm_os_rwlock   exclusive_lo_lock;
+    struct picotm_lock_owner* exclusive_lo;
 };
 
 /**
@@ -96,6 +107,33 @@ picotm_lock_manager_register_owner(struct picotm_lock_manager* self,
 void
 picotm_lock_manager_unregister_owner(struct picotm_lock_manager* self,
                                      struct picotm_lock_owner* lo);
+
+/**
+ * \brief Sets irrevocability for a lock owner.
+ * \param self The lock manager.
+ * \param exclusive_lo The lock owner that is to become irrevocable.
+ * \param[out] error Returns an error to the caller.
+ */
+void
+picotm_lock_manager_make_irrevocable(struct picotm_lock_manager* self,
+                                     struct picotm_lock_owner* exclusive_lo,
+                                     struct picotm_error* error);
+
+/**
+ * \brief Waits for an irrevocable lock owner to complete.
+ * \param self The lock manager.
+ * \param[out] error Returns an error to the caller.
+ */
+void
+picotm_lock_manager_wait_irrevocable(struct picotm_lock_manager* self,
+                                     struct picotm_error* error);
+
+/**
+ * \brief Unblocks irrevocability for other lock owners.
+ * \param self The lock manager.
+ */
+void
+picotm_lock_manager_release_irrevocability(struct picotm_lock_manager* self);
 
 /**
  * \brief Instructs a lock manager to setup a lock owner for waiting.

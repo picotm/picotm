@@ -41,6 +41,18 @@ picotm_lock_manager_init(struct picotm_lock_manager* self,
 
     self->lo = NULL;
     self->nlos = 0;
+
+    picotm_os_rwlock_init(&self->exclusive_lo_lock, error);
+    if (picotm_error_is_set(error)) {
+        goto err_picotm_os_rwlock_init;
+    }
+
+    self->exclusive_lo = NULL;
+
+    return;
+
+err_picotm_os_rwlock_init:
+    picotm_os_rwlock_uninit(&self->lo_rwlock);
 }
 
 void
@@ -50,6 +62,7 @@ picotm_lock_manager_uninit(struct picotm_lock_manager* self)
 
     tabfree(self->lo);
 
+    picotm_os_rwlock_uninit(&self->exclusive_lo_lock);
     picotm_os_rwlock_uninit(&self->lo_rwlock);
 }
 
@@ -178,6 +191,47 @@ picotm_lock_manager_unregister_owner(struct picotm_lock_manager* self,
     self->lo[picotm_lock_owner_get_index(lo)] = NULL;
 
     picotm_os_rwlock_unlock(&self->lo_rwlock);
+}
+
+/*
+ * Irrevocability
+ */
+
+void
+picotm_lock_manager_make_irrevocable(struct picotm_lock_manager* self,
+                                     struct picotm_lock_owner* exclusive_lo,
+                                     struct picotm_error* error)
+{
+    assert(self);
+    assert(exclusive_lo);
+
+    picotm_os_rwlock_wrlock(&self->exclusive_lo_lock, error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
+
+    self->exclusive_lo = exclusive_lo;
+}
+
+void
+picotm_lock_manager_wait_irrevocable(struct picotm_lock_manager* self,
+                                     struct picotm_error* error)
+{
+    assert(self);
+
+    picotm_os_rwlock_rdlock(&self->exclusive_lo_lock, error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
+}
+
+void
+picotm_lock_manager_release_irrevocability(struct picotm_lock_manager* self)
+{
+    assert(self);
+
+    self->exclusive_lo = NULL;
+    picotm_os_rwlock_unlock(&self->exclusive_lo_lock);
 }
 
 /*

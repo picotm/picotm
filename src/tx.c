@@ -153,12 +153,13 @@ tx_begin(struct tx* self, enum tx_mode mode, bool is_retry,
         case TX_MODE_REVOCABLE:
             /* If we're not the exclusive transaction, we wait
              * for a possible exclusive transaction to finish. */
-            tx_shared_wait_irrevocable(self->shared, error);
+            picotm_lock_manager_wait_irrevocable(&self->shared->lm, error);
             break;
         case TX_MODE_IRREVOCABLE:
             /* If we're supposed to run exclusively, we wait
              * for the other transactions to finish. */
-            tx_shared_make_irrevocable(self->shared, self, error);
+            picotm_lock_manager_make_irrevocable(&self->shared->lm, &self->lo,
+                                                 error);
             break;
     }
     if (picotm_error_is_set(error)) {
@@ -180,7 +181,7 @@ tx_begin(struct tx* self, enum tx_mode mode, bool is_retry,
     return;
 
 err_picotm_lock_owner_reset_timestamp:
-    tx_shared_release_irrevocability(self->shared);
+    picotm_lock_manager_release_irrevocability(&self->shared->lm);
 }
 
 static size_t
@@ -395,7 +396,7 @@ tx_commit(struct tx* self, struct picotm_error* error)
         goto err;
     }
 
-    tx_shared_release_irrevocability(self->shared);
+    picotm_lock_manager_release_irrevocability(&self->shared->lm);
 
     return;
 
@@ -412,7 +413,7 @@ err:
     if (is_non_recoverable) {
         picotm_error_mark_as_non_recoverable(error);
     }
-    tx_shared_release_irrevocability(self->shared);
+    picotm_lock_manager_release_irrevocability(&self->shared->lm);
 }
 
 void
@@ -442,13 +443,13 @@ tx_rollback(struct tx* self, struct picotm_error* error)
         goto err;
     }
 
-    tx_shared_release_irrevocability(self->shared);
+    picotm_lock_manager_release_irrevocability(&self->shared->lm);
 
     return;
 
 err:
     picotm_error_mark_as_non_recoverable(error);
-    tx_shared_release_irrevocability(self->shared);
+    picotm_lock_manager_release_irrevocability(&self->shared->lm);
 }
 
 bool
