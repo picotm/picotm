@@ -71,6 +71,27 @@ picotm_os_sub_timespec(struct timespec* lhs,
     assert(lhs->tv_nsec <= MAX_NSEC);
 }
 
+static int
+ulonglong_cmp(unsigned long long lhs, unsigned long long rhs)
+{
+    return (lhs > rhs) - (lhs < rhs);
+}
+
+int
+picotm_os_timespec_compare(const struct timespec* restrict lhs,
+                           const struct timespec* restrict rhs)
+{
+    assert(lhs);
+    assert(rhs);
+
+    int cmp = ulonglong_cmp(lhs->tv_sec, rhs->tv_sec);
+    if (cmp) {
+        return cmp;
+    }
+
+    return ulonglong_cmp(lhs->tv_nsec, rhs->tv_nsec);
+}
+
 void
 picotm_os_nanosleep(const struct timespec* sleep_time,
                     struct picotm_error* error)

@@ -71,6 +71,18 @@ picotm_os_sub_timespec(struct timespec* restrict lhs,
                  const struct timespec* restrict rhs);
 
 /**
+ * \brief Compares two timespec values.
+ * \param lhs Left-hand-side operator.
+ * \param rhs Right-hand-side operator.
+ * \returns Returns a value less than, equal to, or larger than 0 if the
+ *          value of lhs is less than, equal to, or larger than the value
+ *          of rhs.
+ */
+int
+picotm_os_timespec_compare(const struct timespec* restrict lhs,
+                           const struct timespec* restrict rhs);
+
+/**
  * \brief Suspends the thread for a short period of time.
  * \param sleep_time The time to sleep.
  * \param[out] error Returns an error to the caller.

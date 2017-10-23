@@ -651,6 +651,17 @@ compare_longest_waiting(const struct picotm_lock_owner* old_waiter,
     return 1;
 }
 
+static int
+compare_longest_running(const struct picotm_lock_owner* old_waiter,
+                        const struct picotm_lock_owner* new_waiter)
+{
+    assert(old_waiter);
+    assert(new_waiter);
+
+    return picotm_os_timespec_compare(picotm_lock_owner_get_timestamp(old_waiter),
+                                      picotm_lock_owner_get_timestamp(new_waiter));
+}
+
 void
 picotm_lock_manager_wake_up(struct picotm_lock_manager* self,
                             bool concurrent_readers_supported,
@@ -659,7 +670,8 @@ picotm_lock_manager_wake_up(struct picotm_lock_manager* self,
 {
     static int (* const compare_waiters[])(const struct picotm_lock_owner*,
                                            const struct picotm_lock_owner*) = {
-        compare_longest_waiting
+        compare_longest_waiting,
+        compare_longest_running
     };
 
     assert(self);
