@@ -577,7 +577,7 @@ err_compute_timeout:
 
 /**
  * This is the function that decides about which lock owner to schedule
- * next for a lock. Reimplement with different strategies if necessary.
+ * next for a lock. Run with different strategies if necessary.
  *
  * When entering this function, 'first_waiter' has to be locked
  * already. Except for 'first_waiter' and the returned lock owner,
@@ -585,8 +585,10 @@ err_compute_timeout:
  * function returned.
  */
 static struct picotm_lock_owner*
-pick_longest_waiting(struct picotm_lock_owner* first_waiter,
-                     struct picotm_error* error)
+pick_waiter(struct picotm_lock_owner* first_waiter,
+            int (*compare_waiters)(const struct picotm_lock_owner*,
+                                   const struct picotm_lock_owner*),
+            struct picotm_error* error)
 {
     /* pick longest waiting */
 
@@ -597,10 +599,18 @@ pick_longest_waiting(struct picotm_lock_owner* first_waiter,
     while (waiter) {
 
         if (waiter->flags & LOCK_OWNER_WT) {
-            if (picked_waiter && (picked_waiter != first_waiter)) {
-                picotm_lock_owner_unlock(picked_waiter);
+            if (!picked_waiter) {
+                picked_waiter = waiter;
+
+            } else {
+                int cmp = compare_waiters(picked_waiter, waiter);
+                if (cmp > 0) {
+                    if (picked_waiter != first_waiter) {
+                        picotm_lock_owner_unlock(picked_waiter);
+                    }
+                    picked_waiter = waiter;
+                }
             }
-            picked_waiter = waiter;
         }
 
         struct picotm_lock_owner* next_waiter = waiter->next;
@@ -631,12 +641,27 @@ pick_longest_waiting(struct picotm_lock_owner* first_waiter,
     return picked_waiter;
 }
 
+static int
+compare_longest_waiting(const struct picotm_lock_owner* old_waiter,
+                        const struct picotm_lock_owner* new_waiter)
+{
+    assert(old_waiter);
+    assert(new_waiter);
+
+    return 1;
+}
+
 void
 picotm_lock_manager_wake_up(struct picotm_lock_manager* self,
                             bool concurrent_readers_supported,
                             const struct picotm_lock_slist_funcs* slist_funcs,
                             void* slist, struct picotm_error* error)
 {
+    static int (* const compare_waiters[])(const struct picotm_lock_owner*,
+                                           const struct picotm_lock_owner*) = {
+        compare_longest_waiting
+    };
+
     assert(self);
 
     picotm_os_rwlock_rdlock(&self->lo_rwlock, error);
@@ -656,8 +681,9 @@ picotm_lock_manager_wake_up(struct picotm_lock_manager* self,
         goto out;
     }
 
-    struct picotm_lock_owner* picked_waiter =
-        pick_longest_waiting(first_waiter, error);
+    struct picotm_lock_owner* picked_waiter = pick_waiter(first_waiter,
+                                                          compare_waiters[0],
+                                                          error);
     if (picotm_error_is_set(error)) {
         goto err_pick_next;
     }
