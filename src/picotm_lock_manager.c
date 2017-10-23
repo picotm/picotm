@@ -507,20 +507,37 @@ out:
  * Waiting
  */
 
-/* waits for another duration of the waiter transaction */
-static void
+static bool
 compute_timeout(struct picotm_lock_owner* waiter, struct timespec* timeout,
                 struct picotm_error* error)
 {
+    static const struct timespec one_second = {
+        1, 0
+    };
+
     picotm_os_get_timespec(timeout, error);
     if (picotm_error_is_set(error)) {
-        return;
+        return false;
     }
 
     struct timespec timediff;
+    memcpy(&timediff, timeout, sizeof(timediff));
+
+    picotm_os_sub_timespec(&timediff, picotm_lock_owner_get_timestamp(waiter));
+
+    int cmp = picotm_os_timespec_compare(&timediff, &one_second);
+    if (cmp < 0) {
+        /* We still have a very short transaction. Suspending would
+         * add a significant amound of overhead. We simple bail out
+         * here. */
+        return false;
+    }
+
     timediff.tv_sec = 0;
     timediff.tv_nsec = 1000;
     picotm_os_add_timespec(timeout, &timediff);
+
+    return true;
 }
 
 bool
@@ -529,6 +546,19 @@ picotm_lock_manager_wait(struct picotm_lock_manager* self,
                          const struct picotm_lock_slist_funcs* slist_funcs,
                          void* slist, struct picotm_error* error)
 {
+    /* The waiter's timestamp field doesn't require a lock on the waiter, so
+     * we can do the timeout computation *before* modifying the waiter list.
+     */
+
+    struct timespec timeout;
+    bool do_wait = compute_timeout(waiter, &timeout, error);
+    if (picotm_error_is_set(error)) {
+        return false;
+    } else if (!do_wait) {
+        /* We don't suspend. Just return and try again locking. */
+        return false;
+    }
+
     /* On success, we will have acquired a lock on 'waiter'. */
     lock_and_prepend_waiter(self, waiter, slist_funcs, slist, error);
     if (picotm_error_is_set(error)) {
@@ -536,12 +566,6 @@ picotm_lock_manager_wait(struct picotm_lock_manager* self,
     }
 
     waiter->flags |= wr ? LOCK_OWNER_WR : LOCK_OWNER_RD;
-
-    struct timespec timeout;
-    compute_timeout(waiter, &timeout, error);
-    if (picotm_error_is_set(error)) {
-        goto err_compute_timeout;
-    }
 
     bool woken_up = picotm_lock_owner_wait_until(waiter, &timeout, error);
     if (picotm_error_is_set(error)) {
@@ -565,7 +589,6 @@ err_picotm_lock_owner_locked_wait:
     if (prec_waiter) {
         picotm_lock_owner_unlock(prec_waiter);
     }
-err_compute_timeout:
     waiter->flags &= (wr ? ~LOCK_OWNER_WR : ~LOCK_OWNER_RD);
     picotm_lock_owner_unlock(waiter);
     return false;
