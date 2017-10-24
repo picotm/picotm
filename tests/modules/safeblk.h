@@ -20,6 +20,7 @@
 #pragma once
 
 #include <setjmp.h>
+#include <stddef.h>
 
 void
 _safe_block_set_jmpbuf(sigjmp_buf* jmpbuf, sigjmp_buf** old_jmpbuf);
