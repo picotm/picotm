@@ -19,15 +19,7 @@
 
 #include "test.h"
 #include <assert.h>
-/*
-#include <stdlib.h>
-#include <picotm/picotm.h>*/
 #include "taputils.h"
-/*
-#include "test_state.h"
-#include "safe_pthread.h"
-#include "safe_stdlib.h"
-#include "safe_sys_time.h"*/
 
 static void
 call(unsigned int tid, void* data)
