@@ -19,7 +19,9 @@
 
 #include "test.h"
 #include <assert.h>
+#include "safeblk.h"
 #include "taputils.h"
+#include "tap.h"
 
 static void
 call(unsigned int tid, void* data)
@@ -47,5 +49,31 @@ run_test(const struct test_func* test, unsigned long nthreads,
 
     if (test->post) {
         test->post(nthreads, loop, btype, limit);
+    }
+}
+
+void
+run_tests(const struct test_func* beg, const struct test_func* end,
+          unsigned long nthreads,
+          enum loop_mode loop, enum boundary_type btype,
+          unsigned long long limit)
+{
+    tap_plan(end - beg);
+
+    for (unsigned long testnum = 1; beg < end; ++testnum, ++beg) {
+
+        int test_aborted = 0;
+
+        begin_safe_block(test_aborted)
+
+            run_test(beg, nthreads, loop, btype, limit);
+
+        end_safe_block
+
+        if (test_aborted) {
+            tap_not_ok(testnum, beg->name);
+        } else {
+            tap_ok(testnum, beg->name);
+        }
     }
 }
