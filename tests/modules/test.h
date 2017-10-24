@@ -40,3 +40,8 @@ void
 run_test(const struct test_func* test, unsigned long nthreads,
          enum loop_mode loop, enum boundary_type btype,
          unsigned long long limit);
+
+void
+run_tests(const struct test_func* beg, const struct test_func* end,
+          unsigned long nthreads, enum loop_mode loop,
+          enum boundary_type btype, unsigned long long limit);

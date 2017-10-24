@@ -21,8 +21,38 @@
 #include <stdlib.h>
 #include "module.h"
 #include "opts.h"
-#include "safeblk.h"
 #include "tap.h"
+#include "test.h"
+
+static int
+run_module_tests(const struct module* mod, size_t off, size_t num,
+                 unsigned long nthreads,
+                 enum loop_mode loop, enum boundary_type btype,
+                 unsigned long long limit)
+{
+    if (mod->number_of_tests() <= off) {
+        fprintf(stderr, "Test index out of range\n");
+        return -1;
+    }
+
+    if (!num) {
+        num = mod->number_of_tests() - off;
+    }
+
+    if (mod->number_of_tests() < (off + num)) {
+        fprintf(stderr, "Test index out of range\n");
+        return -1;
+    }
+
+    /* run tests  */
+
+    const struct test_func* test_beg = mod->test + off;
+    const struct test_func* test_end = mod->test + off + num;
+
+    run_tests(test_beg, test_end, nthreads, loop, btype, limit);
+
+    return 0;
+}
 
 int
 main(int argc, char **argv)
@@ -51,51 +81,11 @@ main(int argc, char **argv)
 
     while (mod_beg < mod_end) {
 
-        if (mod_beg->number_of_tests() <= g_off) {
-            fprintf(stderr, "Test index out of range\n");
-            return -1;
-        }
-
-        size_t off = g_off;
-        size_t num;
-
-        if (!g_num) {
-            num = mod_beg->number_of_tests() - off;
-        } else if (mod_beg->number_of_tests() < (off + g_num)) {
-            fprintf(stderr, "Test index out of range\n");
-            abort();
-        } else {
-            num = g_num;
-        }
-
-        /* run tests  */
-
-        const struct test_func* test_beg = mod_beg->test + off;
-        const struct test_func* test_end = mod_beg->test + off + num;
-
-        tap_plan((test_end - test_beg));
-
-        unsigned long testnum = 1;
-
-        while (test_beg < test_end) {
-
-            int test_aborted = 0;
-
-            begin_safe_block(test_aborted)
-
-                run_test(test_beg, g_nthreads, g_loop, g_btype, g_cycles);
-
-            end_safe_block
-
-            if (test_aborted) {
-                tap_not_ok(testnum, test_beg->name);
-            } else {
-                tap_ok(testnum, test_beg->name);
-            }
-
-            ++testnum;
-
-            ++test_beg;
+        int res = run_module_tests(mod_beg, g_off, g_num, g_nthreads, g_loop, g_btype,
+                                   g_cycles);
+        if (res < 0) {
+            tap_bail_out("");
+            return EXIT_FAILURE;
         }
 
         ++mod_beg;
