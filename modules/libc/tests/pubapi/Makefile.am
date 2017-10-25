@@ -35,8 +35,8 @@ check_PROGRAMS = allocator-pubapi.test \
 allocator_pubapi_test_SOURCES = delay.c \
                                 delay.h \
                                 allocator_pubapi.c \
-                                malloc_test.c \
-                                malloc_test.h
+                                allocator_test.c \
+                                allocator_test.h
 
 fildes_pubapi_test_SOURCES = delay.c \
                              delay.h \

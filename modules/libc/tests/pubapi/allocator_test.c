@@ -17,7 +17,7 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include "malloc_test.h"
+#include "allocator_test.h"
 #include <picotm/stddef.h>
 #include <picotm/stdlib.h>
 #include <picotm/stdlib-tm.h>
@@ -32,7 +32,7 @@
  * Allocate and free within transaction.
  */
 static void
-malloc_test_1(unsigned int tid)
+allocator_test_1(unsigned int tid)
 {
     picotm_begin
 
@@ -70,7 +70,7 @@ malloc_test_1(unsigned int tid)
  * Allocate outside of transaction; free within transaction.
  */
 static void
-malloc_test_2(unsigned int tid)
+allocator_test_2(unsigned int tid)
 {
     char* buf[10];
 
@@ -114,7 +114,7 @@ malloc_test_2(unsigned int tid)
  * Allocate within transaction; free outside of transaction.
  */
 static void
-malloc_test_3(unsigned int tid)
+allocator_test_3(unsigned int tid)
 {
     char* buf[10];
 
@@ -158,7 +158,7 @@ malloc_test_3(unsigned int tid)
  * Allocate, realloc and free within transaction.
  */
 static void
-malloc_test_4(unsigned int tid)
+allocator_test_4(unsigned int tid)
 {
     picotm_begin
 
@@ -195,7 +195,7 @@ malloc_test_4(unsigned int tid)
  * Allocate outside of transaction; realloc and free within transaction.
  */
 static void
-malloc_test_5(unsigned int tid)
+allocator_test_5(unsigned int tid)
 {
     uint8_t* buf = safe_malloc(30 * sizeof(buf[0]));
 
@@ -244,7 +244,7 @@ malloc_test_5(unsigned int tid)
  * outside of transaction.
  */
 static void
-malloc_test_6(unsigned int tid)
+allocator_test_6(unsigned int tid)
 {
     uint8_t* buf = safe_malloc(30 * sizeof(buf[0]));
 
@@ -290,8 +290,8 @@ malloc_test_6(unsigned int tid)
 static unsigned long long g_test_7_cycles;
 
 static void
-malloc_test_7_pre(unsigned long nthreads, enum loop_mode loop,
-                  enum boundary_type btype, unsigned long long bound)
+allocator_test_7_pre(unsigned long nthreads, enum loop_mode loop,
+                     enum boundary_type btype, unsigned long long bound)
 {
     switch (btype) {
         case CYCLE_BOUND:
@@ -307,7 +307,7 @@ malloc_test_7_pre(unsigned long nthreads, enum loop_mode loop,
  * Multiple allocations and frees within transaction.
  */
 static void
-malloc_test_7(unsigned int tid)
+allocator_test_7(unsigned int tid)
 {
     const size_t tid_min32 = tid < 32 ? 32 : tid;
 
@@ -332,8 +332,8 @@ malloc_test_7(unsigned int tid)
 static unsigned long long g_test_8_cycles;
 
 static void
-malloc_test_8_pre(unsigned long nthreads, enum loop_mode loop,
-                  enum boundary_type btype, unsigned long long bound)
+allocator_test_8_pre(unsigned long nthreads, enum loop_mode loop,
+                     enum boundary_type btype, unsigned long long bound)
 {
     switch (btype) {
         case CYCLE_BOUND:
@@ -347,10 +347,10 @@ malloc_test_8_pre(unsigned long nthreads, enum loop_mode loop,
 
 /**
  * Multiple allocations and frees outside of transaction. Gives
- * non-transactional base line for comparing with malloc_test_9().
+ * non-transactional base line for comparing with allocator_test_9().
  */
 static void
-malloc_test_8(unsigned int tid)
+allocator_test_8(unsigned int tid)
 {
     for (unsigned long long i = 0; i < g_test_8_cycles; ++i) {
         uint8_t* mem = safe_malloc(32);
@@ -362,8 +362,8 @@ malloc_test_8(unsigned int tid)
 static unsigned long long g_test_9_cycles;
 
 static void
-malloc_test_9_pre(unsigned long nthreads, enum loop_mode loop,
-                  enum boundary_type btype, unsigned long long bound)
+allocator_test_9_pre(unsigned long nthreads, enum loop_mode loop,
+                     enum boundary_type btype, unsigned long long bound)
 {
     switch (btype) {
         case CYCLE_BOUND:
@@ -379,7 +379,7 @@ malloc_test_9_pre(unsigned long nthreads, enum loop_mode loop,
  * Multiple allocations ands frees within transaction.
  */
 static void
-malloc_test_9(unsigned int tid)
+allocator_test_9(unsigned int tid)
 {
     picotm_begin
 
@@ -398,20 +398,20 @@ malloc_test_9(unsigned int tid)
     picotm_end
 }
 
-const struct test_func malloc_test[] = {
-    {"malloc_test_1", malloc_test_1, NULL, NULL},
-    {"malloc_test_2", malloc_test_2, NULL, NULL},
-    {"malloc_test_3", malloc_test_3, NULL, NULL},
-    {"malloc_test_4", malloc_test_4, NULL, NULL},
-    {"malloc_test_5", malloc_test_5, NULL, NULL},
-    {"malloc_test_6", malloc_test_6, NULL, NULL},
-    {"malloc_test_7", malloc_test_7, malloc_test_7_pre, NULL},
-    {"malloc_test_8", malloc_test_8, malloc_test_8_pre, NULL},
-    {"malloc_test_9", malloc_test_9, malloc_test_9_pre, NULL}
+const struct test_func allocator_test[] = {
+    {"allocator_test_1", allocator_test_1, NULL, NULL},
+    {"allocator_test_2", allocator_test_2, NULL, NULL},
+    {"allocator_test_3", allocator_test_3, NULL, NULL},
+    {"allocator_test_4", allocator_test_4, NULL, NULL},
+    {"allocator_test_5", allocator_test_5, NULL, NULL},
+    {"allocator_test_6", allocator_test_6, NULL, NULL},
+    {"allocator_test_7", allocator_test_7, allocator_test_7_pre, NULL},
+    {"allocator_test_8", allocator_test_8, allocator_test_8_pre, NULL},
+    {"allocator_test_9", allocator_test_9, allocator_test_9_pre, NULL}
 };
 
 size_t
-number_of_malloc_tests()
+number_of_allocator_tests()
 {
-    return arraylen(malloc_test);
+    return arraylen(allocator_test);
 }

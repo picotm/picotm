@@ -22,7 +22,7 @@
 #include <stddef.h>
 #include "test.h"
 
-extern const struct test_func malloc_test[];
+extern const struct test_func allocator_test[];
 
 size_t
-number_of_malloc_tests(void);
+number_of_allocator_tests(void);
