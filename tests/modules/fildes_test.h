@@ -20,7 +20,10 @@
 #pragma once
 
 #include <stddef.h>
+#include "picotm/picotm-libc.h"
 #include "test.h"
+
+extern enum picotm_libc_cc_mode g_cc_mode;
 
 extern const struct test_func fildes_test[];
 

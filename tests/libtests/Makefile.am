@@ -18,7 +18,9 @@
 
 check_LTLIBRARIES = libpicotm_tests.la
 
-libpicotm_tests_la_SOURCES = ptr.h \
+libpicotm_tests_la_SOURCES = opts.c \
+                             opts.h \
+                             ptr.h \
                              safeblk.c \
                              safeblk.h \
                              safe_fcntl.c \
