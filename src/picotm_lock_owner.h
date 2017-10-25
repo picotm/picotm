@@ -138,7 +138,7 @@ picotm_lock_owner_get_timestamp(const struct picotm_lock_owner* self);
 /**
  * \brief Acquires an exclusive lock on a lock owner.
  * \param self The lock owner.
- * \param[out] Returns an error to the caller.
+ * \param[out] error Returns an error to the caller.
  *
  * After successfully acquiring a lock on a lock owner, the caller is
  * responsible to release the lock afterwards with a call to

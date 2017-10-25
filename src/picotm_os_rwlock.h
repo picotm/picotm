@@ -61,7 +61,7 @@ picotm_os_rwlock_uninit(struct picotm_os_rwlock* self);
 
 /**
  * \brief Acquires a reader lock.
- * \param The R/W-lock instance to acquire.
+ * \param self The R/W-lock instance to acquire.
  * \param[out] error Returns an error to the caller.
  */
 void
@@ -70,7 +70,7 @@ picotm_os_rwlock_rdlock(struct picotm_os_rwlock* self,
 
 /**
  * \brief Acquires a writer lock.
- * \param The R/W-lock instance to acquire.
+ * \param self The R/W-lock instance to acquire.
  * \param[out] error Returns an error to the caller.
  */
 void
@@ -79,8 +79,7 @@ picotm_os_rwlock_wrlock(struct picotm_os_rwlock* self,
 
 /**
  * \brief Releases an R/W lock.
- * \param The R/W-lock instance to release.
- * \param[out] error Returns an error to the caller.
+ * \param self The R/W-lock instance to release.
  */
 void
 picotm_os_rwlock_unlock(struct picotm_os_rwlock* self);
