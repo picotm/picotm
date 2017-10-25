@@ -116,6 +116,8 @@ AC_CONFIG_FILES([Makefile
                  modules/libc/Makefile
                  modules/libc/include/Makefile
                  modules/libc/src/Makefile
+                 modules/libc/tests/Makefile
+                 modules/libc/tests/pubapi/Makefile
                  modules/libm/Makefile
                  modules/libm/include/Makefile
                  modules/libm/src/Makefile
@@ -125,11 +127,12 @@ AC_CONFIG_FILES([Makefile
                  modules/tm/Makefile
                  modules/tm/include/Makefile
                  modules/tm/src/Makefile
+                 modules/tm/tests/Makefile
+                 modules/tm/tests/pubapi/Makefile
                  src/Makefile
                  tests/Makefile
                  tests/libtap/Makefile
-                 tests/libtests/Makefile
-                 tests/modules/Makefile])
+                 tests/libtests/Makefile])
 AC_OUTPUT
 
 AC_MSG_RESULT([])

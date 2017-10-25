@@ -17,5 +17,4 @@
 # DEALINGS IN THE SOFTWARE.
 
 SUBDIRS = libtap \
-          libtests \
-          modules
+          libtests
