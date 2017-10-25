@@ -35,6 +35,9 @@ struct picotm_rwstate;
 
 union fcntl_arg;
 
+/**
+ * \brief Enumerates the file-descriptor state.
+ */
 enum fd_state {
     /** File descriptor is currenty not in use */
     FD_STATE_UNUSED,
@@ -83,7 +86,7 @@ fd_uninit(struct fd* self);
  * Tries to acquires a reader lock on a file descriptor.
  * \param       self    The file-descriptor structure.
  * \param       field   The reader lock's field.
- * \param       rwstate The transaction's reader-writer state.
+ * \param       state   The transaction's reader-writer state.
  * \param[out]  error   Returns an error.
  */
 void
@@ -95,7 +98,7 @@ fd_try_rdlock_field(struct fd* self, enum fd_field field,
  * Tries to acquires a writer lock on a file descriptor.
  * \param       self    The file-descriptor structure.
  * \param       field   The writer lock's field.
- * \param       rwstate The transaction's reader-writer state.
+ * \param       state   The transaction's reader-writer state.
  * \param[out]  error   Returns an error.
  */
 void
@@ -105,9 +108,9 @@ fd_try_wrlock_field(struct fd* self, enum fd_field field,
 
 /**
  * Releases a reader/writer lock.
- * \param   fd      The file-descriptor structure
+ * \param   self    The file-descriptor structure.
  * \param   field   The reader/writer lock's field.
- * \param   rwstate The transaction's reader-writer state.
+ * \param   state   The transaction's reader-writer state.
  */
 void
 fd_unlock_field(struct fd* self, enum fd_field field,

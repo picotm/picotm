@@ -121,17 +121,17 @@ ofd_tx_set_file_offset(struct ofd_tx* self, off_t offset,
                                                   __VA_ARGS__)
 
 /**
- * \brief Invokes to an exec() operation.
+ * \brief Invokes an exec() operation.
  * \param   _op     The name of the operation.
- * \param   _ofx_tx The transaction-local open file description.
+ * \param   _ofd_tx The transaction-local open file description.
  */
 #define ofd_tx_exec(_op, _ofd_tx, ...) \
     _ofd_tx_file_op(_op, exec, (_ofd_tx), __VA_ARGS__)
 
 /**
- * \brief Invokes to an apply() operation.
+ * \brief Invokes an apply() operation.
  * \param       _op     The name of the operation.
- * \param       _ofx_tx The transaction-local open file description.
+ * \param       _ofd_tx The transaction-local open file description.
  * \param       _fildes The file descriptor.
  * \param       _cookie Invocation-specific user data.
  * \param[out]  _error  Returns an error to the caller.
@@ -140,9 +140,9 @@ ofd_tx_set_file_offset(struct ofd_tx* self, off_t offset,
     _ofd_tx_file_op(_op, apply, (_ofd_tx), (_fildes), (_cookie), (_error))
 
 /**
- * \brief Invokes to an undo() operation.
+ * \brief Invokes an undo() operation.
  * \param       _op     The name of the operation.
- * \param       _ofx_tx The transaction-local open file description.
+ * \param       _ofd_tx The transaction-local open file description.
  * \param       _fildes The file descriptor.
  * \param       _cookie Invocation-specific user data.
  * \param[out]  _error  Returns an error to the caller.
