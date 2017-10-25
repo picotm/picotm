@@ -43,6 +43,10 @@ ioop_uninit(struct ioop* self);
 
 /**
  * Reads an ioop into a buffer.
+ * \param   self    The I/O operation.
+ * \param   buf     The output buffer.
+ * \param   nbyte   The output-buffer length.
+ * \param   offset  The read offset.
  * \param   iobuf   The ioop data buffer, can be NULL if no data has been written.
  * \returns The number of bytes read.
  */
