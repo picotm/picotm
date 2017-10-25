@@ -319,13 +319,13 @@ PICOTM_END_DECLS
  * ~~~
  *
  * As with all transactional modifications, the store will not be executed
- * immediately, but only become permament after the transaction successfully
+ * immediately, but only become permanent after the transaction successfully
  * committed.
  *
  * You don't have to deal with all these addresses yourself. The TM module
  * comes with helper functions for various basic C types are provided. With
- * `load_int_tx()` and `store_int_tx()` we can rewrite the example tranactions
- * as shown below.
+ * `load_int_tx()` and `store_int_tx()` we can rewrite the example
+ * transactions as shown below.
  *
  * ~~~{.c}
  *  int x;
@@ -366,7 +366,7 @@ PICOTM_END_DECLS
  *  picotm_end
  * ~~~
  *
- * Loads and stores always copy value into or out of a transaction. There
+ * Loads and stores always copy values into or out of a transaction. There
  * are cases where you don't want a copy, but the exact memory location
  * of a value. This is called *privatization*. For example, the function
  * `memcpy()` loads and stores an indefinite amount of data between memory
@@ -424,7 +424,7 @@ PICOTM_END_DECLS
  *  picotm_end
  * ~~~
  *
- * Using private_c_tx() with strings is the most common use case, but
+ * Using privatize_c_tx() with strings is the most common use case, but
  * arbitrary characters are possible.
  *
  * Finally, there is loadstore_tx(). Even through the name suggests
@@ -447,4 +447,7 @@ PICOTM_END_DECLS
  *  picotm_end
  * ~~~
  *
+ * A call to loadstore_tx() is like a call to `memcpy()` that privatizes
+ * its input buffers. It's an optimization for platform without transactional
+ * C library.
  */
