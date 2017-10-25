@@ -344,6 +344,24 @@ PICOTM_END_DECLS
  *  picotm_end
  * ~~~
  *
+ * Besides `load_int_tx()` and `store_int_tx()`, the Transactional Memory
+ * module provides similar functions for the basic C types. Each is defined
+ * via the macros PICOTM_TM_LOAD_TX() and PICOTM_TM_STORE_TX(). You can
+ * use these macros to define load and store functions for your application's
+ * data types. Both macros expand to inline C functions, so you don't loose
+ * performance compared to load_tx() and store_tx().
+ *
+ * ~~~{.c}
+ *  // An application-specific type
+ *  typedef unsigned int    my_int_type;
+ *
+ *  // Define load_my_int_type_tx()
+ *  PICOTM_TM_LOAD_TX(my_int_type, my_int_type);
+ *
+ *  // Define store_my_int_type_tx()
+ *  PICOTM_TM_STORE_TX(my_int_type, my_int_type);
+ * ~~~
+ *
  * Since address and pointer handling can be tricky, there are also helpers
  * for loading and storing pointers. Note that these functions load and store
  * the address stored in a pointer variable, but not the value stored at that
