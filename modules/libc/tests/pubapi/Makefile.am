@@ -16,50 +16,48 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-TESTS = module-tm-t1.test \
-        module-tm-t4.test \
-        module-malloc-t1.test \
-        module-malloc-t4.test \
-        module-fildes-t1.test \
-        module-fildes-t4.test \
-        module-vfs-t1.test \
-        module-vfs-t4.test
+TESTS = allocator-pubapi-t1.test \
+        allocator-pubapi-t4.test \
+        fildes-pubapi-t1.test \
+        fildes-pubapi-t4.test \
+        vfs-pubapi-t1.test \
+        vfs-pubapi-t4.test
 
 EXTRA_DIST = $(TESTS)
 
 TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
                   $(top_srcdir)/build-aux/tap-driver.sh
 
-check_PROGRAMS = picotm-test
+check_PROGRAMS = allocator-pubapi.test \
+                 fildes-pubapi.test \
+                 vfs-pubapi.test
 
-picotm_test_SOURCES = delay.c \
-                      delay.h \
-                      fildes_test.c \
-                      fildes_test.h \
-                      main.c \
-                      malloc_test.c \
-                      malloc_test.h \
-                      module.c \
-                      module.h \
-                      tm_test.c \
-                      tm_test.h \
-                      vfs_test.c \
-                      vfs_test.h
+allocator_pubapi_test_SOURCES = delay.c \
+                                delay.h \
+                                allocator_pubapi.c \
+                                malloc_test.c \
+                                malloc_test.h
 
-picotm_test_LDFLAGS = -static
+fildes_pubapi_test_SOURCES = delay.c \
+                             delay.h \
+                             fildes_pubapi.c \
+                             fildes_test.c \
+                             fildes_test.h
 
-picotm_test_LDADD = $(top_builddir)/tests/libtests/libpicotm_tests.la \
-                    $(top_builddir)/tests/libtap/libpicotm_tap.la \
-                    $(top_builddir)/modules/libpthread/src/libpicotm-pthread.la \
-                    $(top_builddir)/modules/libm/src/libpicotm-m.la \
-                    $(top_builddir)/modules/libc/src/libpicotm-c.la \
-                    $(top_builddir)/modules/tm/src/libpicotm-tm.la \
-                    $(top_builddir)/src/libpicotm.la
+vfs_pubapi_test_SOURCES = vfs_pubapi.c \
+                          vfs_test.c \
+                          vfs_test.h
+
+AM_LDFLAGS = -static
+
+LDADD = $(top_builddir)/tests/libtests/libpicotm_tests.la \
+        $(top_builddir)/tests/libtap/libpicotm_tap.la \
+        $(top_builddir)/modules/libc/src/libpicotm-c.la \
+        $(top_builddir)/modules/tm/src/libpicotm-tm.la \
+        $(top_builddir)/src/libpicotm.la
 
 AM_CPPFLAGS = -I$(top_srcdir)/tests/libtests \
               -I$(top_srcdir)/tests/libtap \
-              -I$(top_srcdir)/modules/libpthread/include \
-              -I$(top_srcdir)/modules/libm/include \
               -I$(top_srcdir)/modules/libc/include \
               -I$(top_srcdir)/modules/tm/include \
               -I$(top_srcdir)/include

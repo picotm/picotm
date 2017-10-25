@@ -17,4 +17,5 @@
 # DEALINGS IN THE SOFTWARE.
 
 SUBDIRS = include \
-          src
+          src \
+          tests

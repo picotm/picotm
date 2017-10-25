@@ -18,6 +18,6 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-./picotm-test -t1 -mtm
+./vfs-pubapi.test -t1
 
 echo $?

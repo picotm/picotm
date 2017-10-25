@@ -1,5 +1,3 @@
-#!/bin/sh
-
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
 # to deal in the Software without restriction, including without limitation
@@ -18,6 +16,28 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-./picotm-test -t1 -mvfs
+TESTS = tm-pubapi-t1.test \
+        tm-pubapi-t4.test
 
-echo $?
+EXTRA_DIST = $(TESTS)
+
+TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
+                  $(top_srcdir)/build-aux/tap-driver.sh
+
+check_PROGRAMS = tm-pubapi.test
+
+tm_pubapi_test_SOURCES = tm_pubapi.c \
+                         tm_test.c \
+                         tm_test.h
+
+AM_LDFLAGS = -static
+
+LDADD = $(top_builddir)/tests/libtests/libpicotm_tests.la \
+        $(top_builddir)/tests/libtap/libpicotm_tap.la \
+        $(top_builddir)/modules/tm/src/libpicotm-tm.la \
+        $(top_builddir)/src/libpicotm.la
+
+AM_CPPFLAGS = -I$(top_srcdir)/tests/libtests \
+              -I$(top_srcdir)/tests/libtap \
+              -I$(top_srcdir)/modules/tm/include \
+              -I$(top_srcdir)/include
