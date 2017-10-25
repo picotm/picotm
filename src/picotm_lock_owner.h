@@ -54,7 +54,7 @@ struct picotm_lock_owner {
      * \brief Encodes information about the owner of a lock.
      *
      * | 31 | 30 | 29 | 19    ...     10 | 9 .. 0 |
-     * | WR | RD | WT |     <empty>      | index  |
+     * | WR | RD | WT |    < empty >     | index  |
      */
     unsigned long flags;
 
