@@ -19,20 +19,18 @@
 
 #pragma once
 
-#include <picotm/picotm-libc.h>
+#include <assert.h>
 #include <stddef.h>
 #include "test.h"
 
-extern enum boundary_type       g_btype;
-extern enum loop_mode           g_loop;
-extern unsigned int             g_off;
-extern const struct module*     g_module;
-extern unsigned int             g_num;
-extern unsigned int             g_cycles;
-extern unsigned int             g_nthreads;
-extern unsigned int             g_normalize;
-extern enum picotm_libc_cc_mode g_cc_mode;
-extern size_t                   g_txcycles;
+extern enum boundary_type   g_btype;
+extern enum loop_mode       g_loop;
+extern unsigned int         g_off;
+extern unsigned int         g_num;
+extern unsigned int         g_cycles;
+extern unsigned int         g_nthreads;
+extern unsigned int         g_normalize;
+extern size_t               g_txcycles;
 
 enum parse_opts_result {
     PARSE_OPTS_OK,
@@ -40,5 +38,16 @@ enum parse_opts_result {
     PARSE_OPTS_ERROR
 };
 
+extern enum parse_opts_result (*parse_opt[256])(const char*);
+
+#define PARSE_OPT(_opt, _parse_opt_func)        \
+    {                                           \
+        assert(!(parse_opt[(_opt)]));           \
+        parse_opt[(_opt)] = (_parse_opt_func);  \
+    }
+
+#define PARSE_OPTS_STRING(_optstring)   \
+    ("I:L:Nb:c:n:o:t:v:" _optstring)
+
 enum parse_opts_result
-parse_opts(int argc, char* argv[]);
+parse_opts(int argc, char* argv[], const char* optstring);

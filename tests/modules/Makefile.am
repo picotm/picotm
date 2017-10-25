@@ -41,8 +41,6 @@ picotm_test_SOURCES = delay.c \
                       malloc_test.h \
                       module.c \
                       module.h \
-                      opts.c \
-                      opts.h \
                       tm_test.c \
                       tm_test.h \
                       vfs_test.c \
