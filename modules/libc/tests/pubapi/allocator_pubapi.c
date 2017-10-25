@@ -20,7 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "malloc_test.h"
+#include "allocator_test.h"
 #include "opts.h"
 #include "tap.h"
 #include "test.h"
@@ -37,7 +37,7 @@ main(int argc, char** argv)
             break;
     }
 
-    if (number_of_malloc_tests() <= g_off) {
+    if (number_of_allocator_tests() <= g_off) {
         fprintf(stderr, "Test index out of range\n");
         return EXIT_FAILURE;
     }
@@ -46,12 +46,12 @@ main(int argc, char** argv)
     size_t num;
 
     if (!g_num) {
-        num = number_of_malloc_tests() - off;
+        num = number_of_allocator_tests() - off;
     } else {
         num = g_num;
     }
 
-    if (number_of_malloc_tests() < (off + g_num)) {
+    if (number_of_allocator_tests() < (off + g_num)) {
         fprintf(stderr, "Test index out of range\n");
         return EXIT_FAILURE;
     }
@@ -60,8 +60,8 @@ main(int argc, char** argv)
 
     tap_version(12);
 
-    const struct test_func* test_beg = malloc_test + off;
-    const struct test_func* test_end = malloc_test + off + num;
+    const struct test_func* test_beg = allocator_test + off;
+    const struct test_func* test_end = allocator_test + off + num;
 
     run_tests(test_beg, test_end, g_nthreads, g_loop, g_btype, g_cycles);
 
