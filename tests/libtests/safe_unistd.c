@@ -24,6 +24,17 @@
 #include "taputils.h"
 
 int
+safe_chdir(const char* path)
+{
+    int res = TEMP_FAILURE_RETRY(chdir(path));
+    if (res < 0) {
+        tap_error_errno("chdir()", errno);
+        abort_safe_block();
+    }
+    return res;
+}
+
+int
 safe_close(int fd)
 {
     int res = TEMP_FAILURE_RETRY(close(fd));
