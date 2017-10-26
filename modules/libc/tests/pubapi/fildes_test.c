@@ -55,6 +55,7 @@ MiB_to_bytes(unsigned short MiB)
 
 static const char g_test_str[] = "Hello world!\n";
 
+static char g_cwd[PATH_MAX];
 static char g_filename[PATH_MAX];
 static int  g_fildes = -1;
 
@@ -1865,6 +1866,51 @@ fildes_test_36_post(unsigned long nthreads, enum loop_mode loop,
     tx_seq_write_post(g_fildes);
 }
 
+/**
+ * Open and close a file with a relative path.
+ */
+static void
+fildes_test_37(unsigned int tid)
+{
+    char template[] = "./picotm-XXXXXX";
+
+    const char* filename = safe_mktemp(template);
+
+    picotm_begin
+
+        int fildes = open_tx(filename,
+                             O_WRONLY | O_CREAT | O_EXCL,
+                             S_IRWXU | S_IRWXG | S_IRWXO);
+
+        delay_transaction(tid);
+
+        close_tx(fildes);
+
+    picotm_commit
+
+        abort_transaction_on_error(__func__);
+
+    picotm_end
+
+    safe_unlink(filename);
+}
+
+static void
+fildes_test_37_pre(unsigned long nthreads, enum loop_mode loop,
+                   enum boundary_type btype, unsigned long long bound)
+{
+    safe_getcwd(g_cwd, sizeof(g_cwd));
+    safe_chdir("/tmp");
+}
+
+static void
+fildes_test_37_post(unsigned long nthreads, enum loop_mode loop,
+                    enum boundary_type btype, unsigned long long bound)
+{
+    safe_chdir(g_cwd);
+}
+
+
 const struct test_func fildes_test[] = {
     {"fildes_test_1", fildes_test_1, fildes_test_1_pre, fildes_test_1_post},
     {"fildes_test_2", fildes_test_2, fildes_test_2_pre, fildes_test_2_post},
@@ -1901,7 +1947,8 @@ const struct test_func fildes_test[] = {
     {"fildes_test_33", fildes_test_33, fildes_test_33_pre, fildes_test_33_post},
     {"fildes_test_34", fildes_test_34, fildes_test_34_pre, fildes_test_34_post},
     {"fildes_test_35", fildes_test_35, fildes_test_35_pre, fildes_test_35_post},
-    {"fildes_test_36", fildes_test_36, fildes_test_36_pre, fildes_test_36_post}
+    {"fildes_test_36", fildes_test_36, fildes_test_36_pre, fildes_test_36_post},
+    {"fildes_test_37", fildes_test_37, fildes_test_37_pre, fildes_test_37_post}
 };
 
 size_t
