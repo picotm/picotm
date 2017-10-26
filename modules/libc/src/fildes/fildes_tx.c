@@ -763,18 +763,20 @@ absolute_path(const char* path, struct picotm_error* error)
     size_t pathlen = strlen(path);
     size_t cwdlen = strlen(cwd);
 
-    char* abs_path = malloc(pathlen + cwdlen + 2 * sizeof(*abs_path));
+    size_t len = cwdlen + 1 + pathlen + 1;
+
+    char* abs_path = malloc(len * sizeof(*abs_path));
     if (!abs_path) {
         picotm_error_set_errno(error, errno);
         goto err_malloc;
     }
 
-    memcpy(abs_path, path, pathlen);
-    abs_path[pathlen] = '/';
-    memcpy(abs_path + pathlen + 1, cwd, cwdlen);
-    abs_path[pathlen + 1 + cwdlen] = '\0';
+    memcpy(abs_path, cwd, cwdlen);
+    abs_path[cwdlen] = '/';
+    memcpy(abs_path + cwdlen + 1, path, pathlen);
+    abs_path[cwdlen + 1 + pathlen] = '\0';
 
-    allocator_module_free(cwd, strlen(cwd));
+    allocator_module_free(cwd, cwdlen);
 
     return abs_path;
 
