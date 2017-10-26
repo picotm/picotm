@@ -18,6 +18,8 @@
 
 TESTS = allocator-pubapi-t1.test \
         allocator-pubapi-t4.test \
+        cwd-pubapi-t1.test \
+        cwd-pubapi-t4.test \
         fildes-pubapi-t1.test \
         fildes-pubapi-t4.test \
         vfs-pubapi-t1.test \
@@ -29,6 +31,7 @@ TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
                   $(top_srcdir)/build-aux/tap-driver.sh
 
 check_PROGRAMS = allocator-pubapi.test \
+                 cwd-pubapi.test \
                  fildes-pubapi.test \
                  vfs-pubapi.test
 
@@ -37,6 +40,12 @@ allocator_pubapi_test_SOURCES = delay.c \
                                 allocator_pubapi.c \
                                 allocator_test.c \
                                 allocator_test.h
+
+cwd_pubapi_test_SOURCES = cwd_pubapi.c \
+                          cwd_test.c \
+                          cwd_test.h \
+                          delay.c \
+                          delay.h
 
 fildes_pubapi_test_SOURCES = delay.c \
                              delay.h \
