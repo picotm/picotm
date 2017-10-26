@@ -34,6 +34,17 @@ safe_close(int fd)
     return res;
 }
 
+char*
+safe_getcwd(char* buf, size_t size)
+{
+    char* cwd = getcwd(buf, size);;
+    if (!cwd) {
+        tap_error_errno("getcwd()", errno);
+        abort_safe_block();
+    }
+    return cwd;
+}
+
 int
 safe_pipe(int pipefd[2])
 {
