@@ -24,6 +24,9 @@
 int
 safe_close(int fd);
 
+char*
+safe_getcwd(char* buf, size_t size);
+
 int
 safe_pipe(int pipefd[2]);
 
