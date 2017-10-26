@@ -269,7 +269,7 @@ cwd_tx_getcwd_exec(struct cwd_tx* self, char* buf, size_t size,
         cwdop->data.getcwd.alloced_cwd = NULL;
     }
 
-    append_event(self, CMD_CHDIR, cwdop, error);
+    append_event(self, CMD_GETCWD, cwdop, error);
     if (picotm_error_is_set(error)) {
         goto err_append_event;
     }
