@@ -22,6 +22,9 @@
 #include <sys/types.h>
 
 int
+safe_chdir(const char* path);
+
+int
 safe_close(int fd);
 
 char*
