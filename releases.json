@@ -7,6 +7,14 @@
     "tags": "c, concurrency, development, distributedsystems, embedded, errorhandling, failsafe, framework, linux, lockless, manufacturing, multicore, multithreading, softwaretransactionalmemory, transactions",
     "releases": [
         {
+            "version": "0.7.0",
+            "state": "beta",
+            "scope": "minor",
+            "changes": "Added lock manager; R/W locks for transactional memory; Fixed getcwd_tx() and open_tx().",
+            "download": "https://github.com/picotm/picotm/releases/download/v0.7.0/picotm-0.7.0.tar.gz",
+            "published": "2017-10-27T10:03:19+00:00"
+        },
+        {
             "version": "0.6.0",
             "state": "beta",
             "scope": "minor",

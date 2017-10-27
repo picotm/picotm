@@ -1,4 +1,28 @@
 
+picotm 0.7.0 (2017-10-27)
+------------
+
+    * Added lock manager. The lock manager maintains R/W locks, resolves
+      conflicts and schedules locks to transactions. Different scheduling
+      strategies and irrevocability are supported.
+
+    * The number of retries per transaction is now limited. This change
+      results in more predictable transaction scheduling and higher
+      throughput.
+
+    * Transactional Memory module now uses picotm's R/W lock. This change
+      integrates TM into the overall locking code
+
+    * Individual test cases for each module. The test cases have been split
+      up and moved to their respective module. Test infrstructure is shared
+      among them.
+
+    * Bug fix: getcwd_tx() now appends the correct command to the transaction
+      log. (#150)
+
+    * Bug fix: open_tx() now works correctly with relative paths (#151)
+
+
 picotm 0.6.0 (2017-09-29)
 ------------
 
