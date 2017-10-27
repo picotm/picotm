@@ -21,9 +21,7 @@ TESTS = allocator-pubapi-t1.test \
         cwd-pubapi-t1.test \
         cwd-pubapi-t4.test \
         fildes-pubapi-t1.test \
-        fildes-pubapi-t4.test \
-        vfs-pubapi-t1.test \
-        vfs-pubapi-t4.test
+        fildes-pubapi-t4.test
 
 EXTRA_DIST = $(TESTS)
 
@@ -32,8 +30,7 @@ TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
 
 check_PROGRAMS = allocator-pubapi.test \
                  cwd-pubapi.test \
-                 fildes-pubapi.test \
-                 vfs-pubapi.test
+                 fildes-pubapi.test
 
 allocator_pubapi_test_SOURCES = delay.c \
                                 delay.h \
@@ -52,10 +49,6 @@ fildes_pubapi_test_SOURCES = delay.c \
                              fildes_pubapi.c \
                              fildes_test.c \
                              fildes_test.h
-
-vfs_pubapi_test_SOURCES = vfs_pubapi.c \
-                          vfs_test.c \
-                          vfs_test.h
 
 AM_LDFLAGS = -static
 

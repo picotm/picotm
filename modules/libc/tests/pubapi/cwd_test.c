@@ -18,18 +18,33 @@
  */
 
 #include "cwd_test.h"
+#include <limits.h>
 #include <picotm/picotm.h>
+#include <picotm/picotm-module.h>
 #include <picotm/picotm-tm.h>
+#include <picotm/sched.h>
+#include <picotm/stdio-tm.h>
 #include <picotm/unistd.h>
+#include <picotm/unistd-tm.h>
 #include <string.h>
 #include "delay.h"
 #include "ptr.h"
 #include "safeblk.h"
+#include "safe_stdio.h"
+#include "safe_sys_stat.h"
 #include "safe_unistd.h"
+#include "tempfile.h"
 #include "taputils.h"
 #include "testhlp.h"
 
-/**
+void
+test_dir_format_string(char format[PATH_MAX], unsigned long test)
+{
+    safe_snprintf(format, PATH_MAX, "%s/vfs_test_%lu-%%lu.test", temp_path(),
+                  test);
+}
+
+/*
  * Test getcwd()
  */
 
@@ -59,8 +74,91 @@ cwd_test_1(unsigned int tid)
 	picotm_end
 }
 
+/*
+ * chdir()
+ */
+
+static void
+cwd_test_2(unsigned int tid)
+{
+    char format[PATH_MAX];
+    test_dir_format_string(format, 1);
+
+    char path[PATH_MAX];
+    safe_snprintf(path, sizeof(path), format, tid);
+
+	picotm_begin
+
+        privatize_c_tx(format, '\0', PICOTM_TM_PRIVATIZE_LOAD);
+
+        privatize_c_tx(path, '\0', PICOTM_TM_PRIVATIZE_LOAD);
+        chdir_tx(path);
+
+        sched_yield_tx();
+
+        for (int i = 0; i < 5; ++i) {
+
+            char cwdbuf[PATH_MAX];
+            char* cwd = getcwd_tm(cwdbuf, sizeof(cwdbuf));
+
+            unsigned long cwd_tid;
+            int res = sscanf_tm(cwd, format, &cwd_tid);
+            if (res < 1l) {
+                tap_error("thread id did not match for CWD '%s'\n", cwd);
+                abort_safe_block();
+            }
+
+            if (cwd_tid != tid) {
+                tap_error("incorrect working directory\n");
+                struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+                picotm_error_set_error_code(&error, PICOTM_GENERAL_ERROR);
+                picotm_error_mark_as_non_recoverable(&error);
+                picotm_recover_from_error(&error);
+            }
+
+            sleep_tx(1);
+        }
+
+    picotm_commit
+
+        abort_transaction_on_error(__func__);
+
+	picotm_end
+}
+
+static void
+cwd_test_2_pre(unsigned long nthreads, enum loop_mode loop,
+               enum boundary_type btype, unsigned long long bound)
+{
+    char format[PATH_MAX];
+    test_dir_format_string(format, 1);
+
+    for (unsigned long tid = 0; tid < nthreads; ++tid) {
+
+        char path[PATH_MAX];
+        safe_snprintf(path, sizeof(path), format, tid);
+        safe_mkdir(path, S_IRWXU);
+    }
+}
+
+static void
+cwd_test_2_post(unsigned long nthreads, enum loop_mode loop,
+                enum boundary_type btype, unsigned long long bound)
+{
+    char format[PATH_MAX];
+    test_dir_format_string(format, 1);
+
+    for (unsigned long tid = 0; tid < nthreads; ++tid) {
+
+        char path[PATH_MAX];
+        safe_snprintf(path, sizeof(path), format, tid);
+        safe_rmdir(path);
+    }
+}
+
 const struct test_func cwd_test[] = {
-    {"cwd_test_1", cwd_test_1, NULL, NULL},
+    {"cwd_test_1", cwd_test_1, NULL,           NULL},
+    {"cwd_test_2", cwd_test_2, cwd_test_2_pre, cwd_test_2_post},
 };
 
 size_t
