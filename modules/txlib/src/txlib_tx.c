@@ -19,11 +19,15 @@
 
 #include "txlib_tx.h"
 #include <assert.h>
+#include <errno.h>
 #include <picotm/picotm-error.h>
 #include <picotm/picotm-lib-array.h>
 #include <picotm/picotm-lib-tab.h>
 #include <picotm/picotm-module.h>
+#include <stdlib.h>
+#include <string.h>
 #include "txlib_event.h"
+#include "txlist_tx.h"
 
 void
 txlib_tx_init(struct txlib_tx* self, unsigned long module)
@@ -31,6 +35,9 @@ txlib_tx_init(struct txlib_tx* self, unsigned long module)
     assert(self);
 
     self->module = module;
+
+    SLIST_INIT(&self->allocated_list_tx);
+    SLIST_INIT(&self->acquired_list_tx);
 
     self->event = NULL;
     self->nevents = 0;
@@ -41,7 +48,57 @@ txlib_tx_uninit(struct txlib_tx* self)
 {
     assert(self);
 
+    struct txlist_tx_entry* entry =
+        SLIST_FIRST(&self->allocated_list_tx);
+
+    while (entry) {
+        SLIST_REMOVE_HEAD(&self->allocated_list_tx, slist_entry);
+        txlist_tx_uninit(&entry->list_tx);
+        free(entry);
+        entry = SLIST_FIRST(&self->allocated_list_tx);
+    }
+
+    assert(SLIST_EMPTY(&self->acquired_list_tx));
+
     picotm_tabfree(self->event);
+}
+
+struct txlist_tx*
+txlib_tx_acquire_txlist_of_state(struct txlib_tx* self,
+                                 struct txlist_state* list_state,
+                                 struct picotm_error* error)
+{
+    assert(self);
+
+    struct txlist_tx_entry* entry =
+        SLIST_FIRST(&self->acquired_list_tx);
+
+    while (entry) {
+
+        if (entry->list_tx.list_state == list_state) {
+            return &entry->list_tx;
+        }
+
+        entry = SLIST_NEXT(entry, slist_entry);
+    }
+
+    entry = SLIST_FIRST(&self->allocated_list_tx);
+
+    if (entry) {
+        SLIST_REMOVE_HEAD(&self->allocated_list_tx, slist_entry);
+    } else {
+        entry = malloc(sizeof(*entry));
+        if (!entry) {
+            picotm_error_set_errno(error, errno);
+            return NULL;
+        }
+        memset(&entry->slist_entry, 0, sizeof(entry->slist_entry));
+    }
+
+    txlist_tx_init(&entry->list_tx, list_state, self);
+    SLIST_INSERT_HEAD(&self->acquired_list_tx, entry, slist_entry);
+
+    return &entry->list_tx;
 }
 
 void
@@ -198,4 +255,14 @@ txlib_tx_finish(struct txlib_tx* self)
     assert(self);
 
     self->nevents = 0;
+
+    struct txlist_tx_entry* entry = SLIST_FIRST(&self->acquired_list_tx);
+
+    while (entry) {
+        txlist_tx_finish(&entry->list_tx);
+        txlist_tx_uninit(&entry->list_tx);
+        SLIST_REMOVE_HEAD(&self->acquired_list_tx, slist_entry);
+        SLIST_INSERT_HEAD(&self->allocated_list_tx, entry, slist_entry);
+        entry = SLIST_FIRST(&self->acquired_list_tx);
+    }
 }

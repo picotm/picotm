@@ -24,6 +24,7 @@
 #include <picotm/picotm-module.h>
 #include <stdatomic.h>
 #include <stdlib.h>
+#include "txlist_tx.h"
 #include "txlib_tx.h"
 
 /*
@@ -149,8 +150,16 @@ get_non_null_txl_tx(void)
  * Public interface
  */
 
-void
-dummy_function(void)
+struct txlist_tx*
+txlib_module_acquire_txlist_of_state(struct txlist_state* list_state,
+                                     struct picotm_error* error)
 {
-    get_non_null_txl_tx();
+    struct txlib_tx* txl_tx = get_non_null_txl_tx();
+
+    struct txlist_tx* list_tx =
+        txlib_tx_acquire_txlist_of_state(txl_tx, list_state, error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+    return list_tx;
 }

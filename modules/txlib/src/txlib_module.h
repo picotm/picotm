@@ -25,3 +25,11 @@
  * \file
  * \endcond
  */
+
+struct picotm_error;
+struct txlist_state;
+struct txlist_tx;
+
+struct txlist_tx*
+txlib_module_acquire_txlist_of_state(struct txlist_state* list_state,
+                                     struct picotm_error* error);
