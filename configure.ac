@@ -141,6 +141,7 @@ AC_CONFIG_FILES([Makefile
                  modules/tm/tests/Makefile
                  modules/tm/tests/pubapi/Makefile
                  modules/txlib/Makefile
+                 modules/txlib/include/Makefile
                  modules/txlib/src/Makefile
                  src/Makefile
                  tests/Makefile

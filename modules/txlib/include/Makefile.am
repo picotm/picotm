@@ -16,24 +16,4 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-current = 0
-revision = 0
-age = 0
-
-lib_LTLIBRARIES = libpicotm-txlib.la
-
-libpicotm_txlib_la_SOURCES = txlib_event.c \
-                             txlib_event.h \
-                             txlib_module.c \
-                             txlib_module.h \
-                             txlib_tx.c \
-                             txlib_tx.h \
-                             txlist_entry.c \
-                             txlist_entry.h \
-                             txlist_state.c \
-                             txlist_state.h
-
-libpicotm_txlib_la_LDFLAGS = -version-info $(current):$(revision):$(age)
-
-AM_CPPFLAGS = -I$(top_srcdir)/modules/txlib/include \
-              -I$(top_srcdir)/include
+nobase_include_HEADERS = picotm/picotm-txlist-state.h
