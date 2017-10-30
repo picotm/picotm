@@ -35,15 +35,20 @@ use File::Temp qw/ tempdir tempfile /;
 use Getopt::Long;
 use IO::Handle;
 
+my $opt_release_abi_updated = undef;
 my $opt_package = 1;
 my $release_type = undef;
 my $opt_tag = 1;
 
-GetOptions('package!'       =>  \$opt_package,  # flag
-           'release-type=s' =>  \$release_type, # string: 'major', 'minor',
-                                                #         'micro'
-           'tag!'           =>  \$opt_tag)      # flag
+GetOptions('release-abi-updated!' => \$opt_release_abi_updated, # flag
+           'package!'             => \$opt_package,  # flag
+           'release-type=s'       => \$release_type, # string: 'major', 'minor',
+                                                    #         'micro'
+           'tag!'                 => \$opt_tag)      # flag
     or die;
+
+die('Set --release-abi-updated if you updated the ABI version')
+    unless defined $opt_release_abi_updated;
 
 die('Undefined release type') unless defined $release_type;
 
