@@ -27,12 +27,17 @@
  */
 
 struct picotm_error;
+struct txlist_entry;
+struct txlist_tx;
 
 /**
  * \brief Opcodes for operations on the data structures.
  */
 enum txlib_op {
-    TXLIB_NOP
+    /** \brief Represents an insert operation on a list. */
+    TXLIB_LIST_INSERT,
+    /** \brief Represents an erase operation on a list. */
+    TXLIB_LIST_ERASE
 };
 
 /**
@@ -42,6 +47,15 @@ struct txlib_event {
 
     /** \brief The arguments of each operation. */
     union {
+        struct {
+            struct txlist_tx* list_tx;
+            struct txlist_entry* entry;
+        } list_insert;
+        struct {
+            struct txlist_tx* list_tx;
+            struct txlist_entry* entry;
+            struct txlist_entry* position;
+        } list_erase;
     } arg;
 
     /** \brief The event's opcode. */

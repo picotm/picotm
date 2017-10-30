@@ -20,6 +20,8 @@
 #pragma once
 
 #include <stddef.h>
+#include <sys/queue.h>
+#include "txlist_tx.h"
 
 /**
  * \cond impl || txlib_impl
@@ -32,8 +34,18 @@ struct picotm_error;
 struct picotm_event;
 struct txlib_event;
 
+struct txlist_tx_entry {
+
+    SLIST_ENTRY(txlist_tx_entry) slist_entry;
+
+    struct txlist_tx list_tx;
+};
+
 struct txlib_tx {
     unsigned long module;
+
+    SLIST_HEAD(, txlist_tx_entry) allocated_list_tx;
+    SLIST_HEAD(, txlist_tx_entry) acquired_list_tx;
 
     struct txlib_event* event;
     size_t              nevents;
@@ -52,6 +64,18 @@ txlib_tx_init(struct txlib_tx* self, unsigned long module);
  */
 void
 txlib_tx_uninit(struct txlib_tx* self);
+
+/**
+ * \brief Acquires a list for use within a transaction.
+ * \param self The data-structure transaction.
+ * \param list_state The list state to acquire.
+ * \param[out] error Returns an error to the caller.
+ * \returns A pointer the new txlist transaction.
+ */
+struct txlist_tx*
+txlib_tx_acquire_txlist_of_state(struct txlib_tx* self,
+                                 struct txlist_state* list_state,
+                                 struct picotm_error* error);
 
 /**
  * \brief Appends new events to the data-structure transaction's event log.
