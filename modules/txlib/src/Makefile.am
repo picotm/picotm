@@ -28,6 +28,8 @@ libpicotm_txlib_la_SOURCES = txlib_event.c \
                              txlib_module.h \
                              txlib_tx.c \
                              txlib_tx.h \
+                             txlist.c \
+                             txlist.h \
                              txlist_entry.c \
                              txlist_entry.h \
                              txlist_state.c \

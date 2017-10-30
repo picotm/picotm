@@ -16,4 +16,5 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-nobase_include_HEADERS = picotm/picotm-txlist-state.h
+nobase_include_HEADERS = picotm/picotm-txlist.h \
+                         picotm/picotm-txlist-state.h
