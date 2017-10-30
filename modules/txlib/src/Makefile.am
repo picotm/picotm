@@ -16,8 +16,14 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-SUBDIRS = tm \
-          libc \
-          libm \
-          libpthread \
-          txlib
+current = 0
+revision = 0
+age = 0
+
+lib_LTLIBRARIES = libpicotm-txlib.la
+
+libpicotm_txlib_la_SOURCES =
+
+libpicotm_txlib_la_LDFLAGS = -version-info $(current):$(revision):$(age)
+
+AM_CPPFLAGS = -I$(top_srcdir)/include
