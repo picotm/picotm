@@ -160,48 +160,6 @@ txlib_tx_append_events3(struct txlib_tx* self, size_t nevents,
     }
 }
 
-struct txlib_event*
-txlib_tx_create_events(struct txlib_tx* self, size_t nevents,
-                       struct picotm_error* error)
-{
-    assert(self);
-
-    size_t newnevents = self->nevents + nevents;
-
-    void* newevents = picotm_tabresize(self->event, self->nevents,
-                                       newnevents, sizeof(*self->event),
-                                       error);
-    if (picotm_error_is_set(error)) {
-        return NULL;
-    }
-
-    self->event = newevents;
-
-    return self->event + self->nevents;
-}
-
-void
-txlib_tx_discard_events(struct txlib_tx* self, size_t nevents)
-{
-    assert(self);
-
-    /* placeholder function; nothing to do */
-}
-
-void
-txlib_tx_seal_events(struct txlib_tx* self, size_t nevents,
-                          struct picotm_error* error)
-{
-    assert(self);
-
-    picotm_append_event(self->module, self->nevents, (uintptr_t)NULL, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
-
-    self->nevents += nevents;
-}
-
 /*
  * Module interface
  */
