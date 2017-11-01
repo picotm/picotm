@@ -24,6 +24,8 @@ lib_LTLIBRARIES = libpicotm-txlib.la
 
 libpicotm_txlib_la_SOURCES = txlib_event.c \
                              txlib_event.h \
+                             txlib_module.c \
+                             txlib_module.h \
                              txlib_tx.c \
                              txlib_tx.h
 

@@ -54,7 +54,12 @@ void
 txlib_tx_uninit(struct txlib_tx* self);
 
 /**
- * \brief Appends a new event to the txlib tranacstion's event log.
+ * \brief Appends new events to the data-structure transaction's event log.
+ * \param self The data-structure transaction.
+ * \param nevents The number of events to append to the log.
+ * \param init The event initializer function.
+ * \param data1 The first data parameter.
+ * \param[out] error Returns an error to the caller.
  */
 void
 txlib_tx_append_events1(struct txlib_tx* self, size_t nevents,
@@ -63,7 +68,13 @@ txlib_tx_append_events1(struct txlib_tx* self, size_t nevents,
                         void* data1, struct picotm_error* error);
 
 /**
- * \brief Appends a new event to the txlib tranacstion's event log.
+ * \brief Appends new events to the data-structure transaction's event log.
+ * \param self The data-structure transaction.
+ * \param nevents The number of events to append to the log.
+ * \param init The event initializer function.
+ * \param data1 The first data parameter.
+ * \param data2 The second data parameter.
+ * \param[out] error Returns an error to the caller.
  */
 void
 txlib_tx_append_events2(struct txlib_tx* self, size_t nevents,
@@ -72,45 +83,22 @@ txlib_tx_append_events2(struct txlib_tx* self, size_t nevents,
                         void* data1, void* data2,
                         struct picotm_error* error);
 
+/**
+ * \brief Appends new events to the data-structure transaction's event log.
+ * \param self The data-structure transaction.
+ * \param nevents The number of events to append to the log.
+ * \param init The event initializer function.
+ * \param data1 The first data parameter.
+ * \param data2 The second data parameter.
+ * \param data3 The third data parameter.
+ * \param[out] error Returns an error to the caller.
+ */
 void
 txlib_tx_append_events3(struct txlib_tx* self, size_t nevents,
                         void (*init)(struct txlib_event*, void*, void*, void*,
                                      struct picotm_error*),
                         void* data1, void* data2, void* data3,
                         struct picotm_error* error);
-
-/**
- * \brief Allocates memory for a new event.
- * \param self The data-structure transaction.
- * \param[out] error Returns an error to the caller.
- * \returns The newly allocated event on success, or NULL on error.
- *
- * \attention A call to `txlib_tx_create_event()` allocates
- *            uninitialized memory. The caller is responsible for
- *            filling in the event fields and afterwards calling
- *            `txlib_tx_seal_event()` to activate the event.
- */
-struct txlib_event*
-txlib_tx_create_events(struct txlib_tx* self, size_t nevents,
-                       struct picotm_error* error);
-
-/**
- * \brief Discards the current events.
- * \param self The data-structure transaction.
- * \param nevents The number of events to discard.
- */
-void
-txlib_tx_discard_events(struct txlib_tx* self, size_t nevents);
-
-/**
- * \brief Finishes and activates the current events.
- * \param[out] error Returns an error to the caller.
- * \param nevents The number of events to finish.
- * \param self The data-structure transaction.
- */
-void
-txlib_tx_seal_events(struct txlib_tx* self, size_t nevents,
-                     struct picotm_error* error);
 
 /*
  * Module interface
