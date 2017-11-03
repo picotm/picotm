@@ -49,6 +49,17 @@ dnl exported explicitly.
 AX_CHECK_COMPILE_FLAG([-fvisibility=hidden],
                       [CFLAGS="$CFLAGS -fvisibility=hidden"])
 
+dnl Garbage-collect unused functions and data. This is mostly
+dnl useful for reducing the size of statically linked binaries.
+AX_CHECK_LINK_FLAG([-Wl,--gc-sections],
+                   [LDFLAGS="$LDFLAGS -Wl,--gc-sections"]
+                   [AX_CHECK_COMPILE_FLAG(
+                        [-ffunction-sections],
+                        [CFLAGS="$CFLAGS -ffunction-sections"])]
+                   [AX_CHECK_COMPILE_FLAG(
+                        [-fdata-sections],
+                        [CFLAGS="$CFLAGS -fdata-sections"])])
+
 
 dnl
 dnl Build toolchain
