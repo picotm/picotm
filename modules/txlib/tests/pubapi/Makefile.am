@@ -16,6 +16,28 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-SUBDIRS = include \
-          src \
-          tests
+TESTS = txlist-pubapi-t1.test \
+        txlist-pubapi-t4.test
+
+EXTRA_DIST = $(TESTS)
+
+TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
+                  $(top_srcdir)/build-aux/tap-driver.sh
+
+check_PROGRAMS = txlist-pubapi.test
+
+txlist_pubapi_test_SOURCES = txlist_pubapi.c \
+                             txlist_test.c \
+                             txlist_test.h
+
+AM_LDFLAGS = -static
+
+LDADD = $(top_builddir)/tests/libtests/libpicotm_tests.la \
+        $(top_builddir)/tests/libtap/libpicotm_tap.la \
+        $(top_builddir)/modules/txlib/src/libpicotm-txlib.la \
+        $(top_builddir)/src/libpicotm.la
+
+AM_CPPFLAGS = -I$(top_srcdir)/tests/libtests \
+              -I$(top_srcdir)/tests/libtap \
+              -I$(top_srcdir)/modules/txlib/include \
+              -I$(top_srcdir)/include
