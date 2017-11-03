@@ -52,6 +52,14 @@ struct picotm_error;
  * The function `picotm_rwlock_init()` cannot fail. All fields of the
  * structure are private.
  *
+ * Alternatively, the macro `PICOTM_RWLOCK_INITIALIZER` initializes a
+ * static or stack-allocated R/W-lock variable. If both, function and
+ * macro initialization, is possible, the macro form is prefered.
+ *
+ * ~~~ c
+ *      struct picotm_rwlock rwlock = PICOTM_RWLOCK_INITIALIZER;
+ * ~~~
+ *
  * Likewise, uninitialize with `picotm_rwlock_uninit()` as shown below.
  *
  * ~~~ c
@@ -91,6 +99,14 @@ struct picotm_rwlock {
     /** counter variable */
     atomic_uint_least8_t  n;
 };
+
+/**
+ * \brief Initializer macro for R/W state variables.
+ */
+#define PICOTM_RWLOCK_INITIALIZER   \
+    {                               \
+        0                           \
+    }
 
 PICOTM_NOTHROW
 /**

@@ -51,6 +51,14 @@
  *      picotm_rwstate_init(&i_state);
  * ~~~
  *
+ * Alternatively, the macro `PICOTM_RWSTATE_INITIALIZER` initializes a
+ * static or stack-allocated R/W-state variable. If both, function and
+ * macro initialization, is possible, the macro form is prefered.
+ *
+ * ~~~ c
+ *      struct picotm_rwstate i_state = PICOTM_RWSTATE_INITIALIZER;
+ * ~~~
+ *
  * To safely read the value of resource `i`, a transaction has to acquire
  * the reader lock `i_lock`.
  *
@@ -153,6 +161,14 @@ struct picotm_rwstate {
      */
     unsigned char status;
 };
+
+/**
+ * \brief Initializer macro for R/W state variables.
+ */
+#define PICOTM_RWSTATE_INITIALIZER  \
+    {                               \
+        0                           \
+    }
 
 PICOTM_NOTHROW
 /**
