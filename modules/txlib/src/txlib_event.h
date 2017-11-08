@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <stdbool.h>
+
 /**
  * \cond impl || txlib_impl
  * \ingroup txlib_impl
@@ -29,6 +31,8 @@
 struct picotm_error;
 struct txlist_entry;
 struct txlist_tx;
+struct txqueue_entry;
+struct txqueue_tx;
 
 /**
  * \brief Opcodes for operations on the data structures.
@@ -37,7 +41,11 @@ enum txlib_op {
     /** \brief Represents an insert operation on a list. */
     TXLIB_LIST_INSERT,
     /** \brief Represents an erase operation on a list. */
-    TXLIB_LIST_ERASE
+    TXLIB_LIST_ERASE,
+    /** \brief Represents an insert operation on a queue. */
+    TXLIB_QUEUE_PUSH,
+    /** \brief Represents an erase operation on a queue. */
+    TXLIB_QUEUE_POP
 };
 
 /**
@@ -56,6 +64,15 @@ struct txlib_event {
             struct txlist_entry* entry;
             struct txlist_entry* position;
         } list_erase;
+        struct {
+            struct txqueue_tx* queue_tx;
+            struct txqueue_entry* entry;
+        } queue_push;
+        struct {
+            struct txqueue_tx* queue_tx;
+            struct txqueue_entry* entry;
+            bool use_local_queue;
+        } queue_pop;
     } arg;
 
     /** \brief The event's opcode. */

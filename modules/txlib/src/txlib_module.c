@@ -24,8 +24,9 @@
 #include <picotm/picotm-module.h>
 #include <stdatomic.h>
 #include <stdlib.h>
-#include "txlist_tx.h"
 #include "txlib_tx.h"
+#include "txlist_tx.h"
+#include "txqueue_tx.h"
 
 /*
  * Module interface
@@ -38,6 +39,12 @@ struct txlib_module {
     /* True if module structure has been initialized, false otherwise */
     bool is_initialized;
 };
+
+static void
+lock(struct txlib_module* module, struct picotm_error* error)
+{
+    txlib_tx_lock(&module->tx, error);
+}
 
 static void
 apply_event(struct txlib_module* module,
@@ -71,6 +78,12 @@ uninit(struct txlib_module* module)
 /*
  * Thread-local data
  */
+
+static void
+lock_cb(void* data, struct picotm_error* error)
+{
+    lock(data, error);
+}
 
 static void
 apply_event_cb(const struct picotm_event* event, void* data,
@@ -109,7 +122,7 @@ get_txl_tx(bool initialize, struct picotm_error* error)
         return NULL;
     }
 
-    unsigned long module = picotm_register_module(NULL, NULL,
+    unsigned long module = picotm_register_module(lock_cb, NULL,
                                                   NULL,
                                                   NULL, NULL,
                                                   apply_event_cb, undo_event_cb,
@@ -162,4 +175,18 @@ txlib_module_acquire_txlist_of_state(struct txlist_state* list_state,
         return NULL;
     }
     return list_tx;
+}
+
+struct txqueue_tx*
+txlib_module_acquire_txqueue_of_state(struct txqueue_state* queue_state,
+                                      struct picotm_error* error)
+{
+    struct txlib_tx* txl_tx = get_non_null_txl_tx();
+
+    struct txqueue_tx* queue_tx =
+        txlib_tx_acquire_txqueue_of_state(txl_tx, queue_state, error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+    return queue_tx;
 }
