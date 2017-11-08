@@ -35,7 +35,11 @@ libpicotm_txlib_la_SOURCES = txlib_event.c \
                              txlist_state.c \
                              txlist_state.h \
                              txlist_tx.c \
-                             txlist_tx.h
+                             txlist_tx.h \
+                             txqueue_entry.c \
+                             txqueue_entry.h \
+                             txqueue_state.c \
+                             txqueue_state.h
 
 libpicotm_txlib_la_LDFLAGS = -version-info $(current):$(revision):$(age)
 
