@@ -17,4 +17,5 @@
 # DEALINGS IN THE SOFTWARE.
 
 nobase_include_HEADERS = picotm/picotm-txlist.h \
-                         picotm/picotm-txlist-state.h
+                         picotm/picotm-txlist-state.h \
+                         picotm/picotm-txqueue-state.h
