@@ -37,6 +37,7 @@ txlib_tx_init(struct txlib_tx* self, unsigned long module)
 
     SLIST_INIT(&self->allocated_entries);
     SLIST_INIT(&self->acquired_list_tx);
+    SLIST_INIT(&self->acquired_queue_tx);
 
     self->event = NULL;
     self->nevents = 0;
@@ -61,6 +62,7 @@ txlib_tx_uninit(struct txlib_tx* self)
     free_allocated_txlib_tx_entries(self);
 
     assert(SLIST_EMPTY(&self->acquired_list_tx));
+    assert(SLIST_EMPTY(&self->acquired_queue_tx));
 
     picotm_tabfree(self->event);
 }
@@ -112,6 +114,32 @@ txlib_tx_acquire_txlist_of_state(struct txlib_tx* self,
     SLIST_INSERT_HEAD(&self->acquired_list_tx, entry, slist_entry);
 
     return &entry->data.list_tx;
+}
+
+struct txqueue_tx*
+txlib_tx_acquire_txqueue_of_state(struct txlib_tx* self,
+                                  struct txqueue_state* queue_state,
+                                  struct picotm_error* error)
+{
+    assert(self);
+
+    struct txlib_tx_entry* entry;
+
+    SLIST_FOREACH(entry, &self->acquired_queue_tx, slist_entry) {
+        if (entry->data.queue_tx.queue_state == queue_state) {
+            return &entry->data.queue_tx;
+        }
+    }
+
+    entry = allocate_txlib_tx_entry(self, error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+
+    txqueue_tx_init(&entry->data.queue_tx, queue_state, self);
+    SLIST_INSERT_HEAD(&self->acquired_queue_tx, entry, slist_entry);
+
+    return &entry->data.queue_tx;
 }
 
 void
@@ -194,6 +222,30 @@ txlib_tx_append_events1(struct txlib_tx* self, size_t nevents,
  * Module interface
  */
 
+static void
+lock_txqueue_tx_entries(struct txlib_tx* self, struct picotm_error* error)
+{
+    assert(self);
+
+    struct txlib_tx_entry* entry;
+
+    SLIST_FOREACH(entry, &self->acquired_queue_tx, slist_entry) {
+        txqueue_tx_lock(&entry->data.queue_tx, error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
+    }
+}
+
+void
+txlib_tx_lock(struct txlib_tx* self, struct picotm_error* error)
+{
+    lock_txqueue_tx_entries(self, error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
+}
+
 void
 txlib_tx_apply_event(struct txlib_tx* self, const struct picotm_event* event,
                      struct picotm_error* error)
@@ -236,6 +288,20 @@ finish_txlist_tx_entries(struct txlib_tx* self)
     }
 }
 
+static void
+finish_txqueue_tx_entries(struct txlib_tx* self)
+{
+    struct txlib_tx_entry* entry = SLIST_FIRST(&self->acquired_queue_tx);
+
+    for (; entry; entry = SLIST_FIRST(&self->acquired_queue_tx)) {
+        txqueue_tx_finish(&entry->data.queue_tx);
+        txqueue_tx_uninit(&entry->data.queue_tx);
+
+        SLIST_REMOVE_HEAD(&self->acquired_queue_tx, slist_entry);
+        SLIST_INSERT_HEAD(&self->allocated_entries, entry, slist_entry);
+    }
+}
+
 void
 txlib_tx_finish(struct txlib_tx* self)
 {
@@ -244,4 +310,5 @@ txlib_tx_finish(struct txlib_tx* self)
     self->nevents = 0;
 
     finish_txlist_tx_entries(self);
+    finish_txqueue_tx_entries(self);
 }

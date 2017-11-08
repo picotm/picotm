@@ -22,6 +22,7 @@
 #include <stddef.h>
 #include <sys/queue.h>
 #include "txlist_tx.h"
+#include "txqueue_tx.h"
 
 /**
  * \cond impl || txlib_impl
@@ -40,6 +41,7 @@ struct txlib_tx_entry {
 
     union {
         struct txlist_tx list_tx;
+        struct txqueue_tx queue_tx;
     } data;
 };
 
@@ -48,6 +50,7 @@ struct txlib_tx {
 
     SLIST_HEAD(, txlib_tx_entry) allocated_entries;
     SLIST_HEAD(, txlib_tx_entry) acquired_list_tx;
+    SLIST_HEAD(, txlib_tx_entry) acquired_queue_tx;
 
     struct txlib_event* event;
     size_t              nevents;
@@ -78,6 +81,18 @@ struct txlist_tx*
 txlib_tx_acquire_txlist_of_state(struct txlib_tx* self,
                                  struct txlist_state* list_state,
                                  struct picotm_error* error);
+
+/**
+ * \brief Acquires a queue for use within a transaction.
+ * \param self The data-structure transaction.
+ * \param queue_state The queue state to acquire.
+ * \param[out] error Returns an error to the caller.
+ * \returns A pointer the new txlist transaction.
+ */
+struct txqueue_tx*
+txlib_tx_acquire_txqueue_of_state(struct txlib_tx* self,
+                                  struct txqueue_state* queue_state,
+                                  struct picotm_error* error);
 
 /**
  * \brief Appends new events to the data-structure transaction's event log.
@@ -129,6 +144,9 @@ txlib_tx_append_events3(struct txlib_tx* self, size_t nevents,
 /*
  * Module interface
  */
+
+void
+txlib_tx_lock(struct txlib_tx* self, struct picotm_error* error);
 
 void
 txlib_tx_apply_event(struct txlib_tx* self,
