@@ -145,8 +145,7 @@ txlib_tx_append_events3(struct txlib_tx* self, size_t nevents,
             return;
         }
 
-        picotm_append_event(self->module, beg - self->event, (uintptr_t)NULL,
-                            error);
+        picotm_append_event(self->module, 0, beg - self->event, error);
         if (picotm_error_is_set(error)) {
             return;
         }
@@ -201,9 +200,9 @@ txlib_tx_apply_event(struct txlib_tx* self, const struct picotm_event* event,
 {
     assert(self);
     assert(event);
-    assert(event->call < self->nevents);
+    assert(event->cookie < self->nevents);
 
-    txlib_event_apply(self->event + event->call, error);
+    txlib_event_apply(self->event + event->cookie, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -215,9 +214,9 @@ txlib_tx_undo_event(struct txlib_tx* self, const struct picotm_event* event,
 {
     assert(self);
     assert(event);
-    assert(event->call < self->nevents);
+    assert(event->cookie < self->nevents);
 
-    txlib_event_undo(self->event + event->call, error);
+    txlib_event_undo(self->event + event->cookie, error);
     if (picotm_error_is_set(error)) {
         return;
     }
