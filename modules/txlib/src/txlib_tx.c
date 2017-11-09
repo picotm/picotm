@@ -115,83 +115,6 @@ txlib_tx_acquire_txlist_of_state(struct txlib_tx* self,
 }
 
 void
-txlib_tx_append_events1(struct txlib_tx* self, size_t nevents,
-                        void (*init)(struct txlib_event*, void*,
-                                     struct picotm_error*),
-                        void* data1, struct picotm_error* error)
-{
-    assert(self);
-    assert(init);
-
-    size_t newnevents = self->nevents + nevents;
-
-    void* newevent = picotm_tabresize(self->event, self->nevents,
-                                      newnevents, sizeof(*self->event),
-                                      error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
-
-    self->event = newevent;
-
-    struct txlib_event* beg = picotm_arrayat(self->event, self->nevents);
-    struct txlib_event* end = picotm_arrayat(self->event, newnevents);
-
-    for (; beg < end; ++beg, ++self->nevents) {
-
-        init(beg, data1, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-
-        picotm_append_event(self->module, beg - self->event, (uintptr_t)NULL,
-                            error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-    }
-}
-
-void
-txlib_tx_append_events2(struct txlib_tx* self, size_t nevents,
-                        void (*init)(struct txlib_event*, void*, void*,
-                                     struct picotm_error*),
-                        void* data1, void* data2,
-                        struct picotm_error* error)
-{
-    assert(self);
-    assert(init);
-
-    size_t newnevents = self->nevents + nevents;
-
-    void* newevent = picotm_tabresize(self->event, self->nevents,
-                                      newnevents, sizeof(*self->event),
-                                      error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
-
-    self->event = newevent;
-
-    struct txlib_event* beg = picotm_arrayat(self->event, self->nevents);
-    struct txlib_event* end = picotm_arrayat(self->event, newnevents);
-
-    for (; beg < end; ++beg, ++self->nevents) {
-
-        init(beg, data1, data2, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-
-        picotm_append_event(self->module, beg - self->event, (uintptr_t)NULL,
-                            error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-    }
-}
-
-void
 txlib_tx_append_events3(struct txlib_tx* self, size_t nevents,
                         void (*init)(struct txlib_event*, void*, void*, void*,
                                      struct picotm_error*),
@@ -228,6 +151,44 @@ txlib_tx_append_events3(struct txlib_tx* self, size_t nevents,
             return;
         }
     }
+}
+
+static void
+init2(struct txlib_event* event, void* data1, void* data2, void* data3,
+      struct picotm_error* error)
+{
+    void (*init)(struct txlib_event*, void*, void*, struct picotm_error*) =
+        data3;
+
+    init(event, data1, data2, error);
+}
+
+void
+txlib_tx_append_events2(struct txlib_tx* self, size_t nevents,
+                        void (*init)(struct txlib_event*, void*, void*,
+                                     struct picotm_error*),
+                        void* data1, void* data2,
+                        struct picotm_error* error)
+{
+    txlib_tx_append_events3(self, nevents, init2, data1, data2, init, error);
+}
+
+static void
+init1(struct txlib_event* event, void* data1, void* data2,
+      struct picotm_error* error)
+{
+    void (*init)(struct txlib_event*, void*, struct picotm_error*) = data2;
+
+    init(event, data1, error);
+}
+
+void
+txlib_tx_append_events1(struct txlib_tx* self, size_t nevents,
+                        void (*init)(struct txlib_event*, void*,
+                                     struct picotm_error*),
+                        void* data1, struct picotm_error* error)
+{
+    txlib_tx_append_events2(self, nevents, init1, data1, init, error);
 }
 
 /*
