@@ -34,18 +34,20 @@ struct picotm_error;
 struct picotm_event;
 struct txlib_event;
 
-struct txlist_tx_entry {
+struct txlib_tx_entry {
 
-    SLIST_ENTRY(txlist_tx_entry) slist_entry;
+    SLIST_ENTRY(txlib_tx_entry) slist_entry;
 
-    struct txlist_tx list_tx;
+    union {
+        struct txlist_tx list_tx;
+    } data;
 };
 
 struct txlib_tx {
     unsigned long module;
 
-    SLIST_HEAD(, txlist_tx_entry) allocated_list_tx;
-    SLIST_HEAD(, txlist_tx_entry) acquired_list_tx;
+    SLIST_HEAD(, txlib_tx_entry) allocated_entries;
+    SLIST_HEAD(, txlib_tx_entry) acquired_list_tx;
 
     struct txlib_event* event;
     size_t              nevents;
