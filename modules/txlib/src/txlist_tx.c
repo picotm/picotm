@@ -184,7 +184,7 @@ exec_list_erase(struct txlib_event* event, struct txlist_tx* list_tx,
     event->op = TXLIB_LIST_ERASE;
     event->arg.list_erase.list_tx = list_tx;
     event->arg.list_erase.entry = entry;
-    event->arg.list_erase.position = txlist_entry_next_tx(entry);
+    event->arg.list_erase.position = txlist_entry_next(entry);
 
     txlist_state_erase(list_tx->list_state, entry);
 }
@@ -279,8 +279,7 @@ exec_list_pop_back(struct txlib_event* event, struct txlist_tx* list_tx,
     assert(list_tx);
 
     exec_list_erase(event, list_tx,
-                    txlist_entry_prev_tx(
-                        txlist_state_end(list_tx->list_state)),
+                    txlist_entry_prev(txlist_state_end(list_tx->list_state)),
                     error);
 }
 
