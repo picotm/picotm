@@ -56,10 +56,9 @@ PICOTM_BEGIN_DECLS
  *      ulong_item_init(&item, 0);
  * ~~~
  *
- * This code initializes the list entry using `txlist_entry_init()`. As
- * for the list state, there's an initializer macro.
- * `TXLIST_ENTRY_INITIALIZER` initializes static or stack-allocated list
- * entries. The example below illustrates this.
+ * This code initializes the list entry using `txlist_entry_init()`. The
+ * macro `TXLIST_ENTRY_INITIALIZER` initializes static or stack-allocated
+ * list entries. The example below illustrates this.
  *
  * ~~~
  *      struct ulong_item {
@@ -77,7 +76,7 @@ PICOTM_BEGIN_DECLS
  *      struct ulong_item item = ULONG_ITEM_INITIALIZER(0);
  * ~~~
  *
- * When both, macro and function, initializers are possible, the macro
+ * When both, macro and function initialization, is possible, the macro
  * form is prefered. List entries are uninitialized with
  * `txlist_entry_uninit()`.
  *
@@ -114,9 +113,10 @@ PICOTM_BEGIN_DECLS
  *
  * List-state clean up is performed by `txlist_state_uninit()`. The list
  * state may not contain entries when the clean-up happens. This means that
- * entries have to be cleaned up from within a transaction. For many uses,
- * this requirement just imposes unnecessary overhead. A call to
- * `txlist_state_clear_and_uninit_entries()` provies a non-transactional
+ * entries have to be cleaned up from within a transaction.
+ *
+ * For many uses this requirement just imposes unnecessary overhead. A call
+ * to `txlist_state_clear_and_uninit_entries()` provies a non-transactional
  * way of clearing the list from its entries. It erases each element from
  * the list and calls a clean-up function on it. The example below shows
  * the clean-up code for a list of `struct ulong_item` entries.
@@ -184,12 +184,12 @@ PICOTM_BEGIN_DECLS
  * ~~~
  *
  * After this transaction committed, the ulong data item `item` will be
- * the final entry in `list_state`. If the transactions has to abort after
+ * the back-end entry in `list_state`. If the transactions has to abort after
  * the call to `txlist_push_back_tx()`, the transaction framework will
  * automatically remove the appended entry during the rollback; thus
  * restoring the original state.
  *
- * To remove an entry from the list, we can call `txlist_erase_tx()`,
+ * To remove an entry from the list, we can call `txlist_erase_tx()`, as
  * illustated in the example below.
  *
  * ~~~ c
@@ -425,7 +425,7 @@ txlist_empty_tx(struct txlist* self);
 
 PICOTM_NOTHROW
 /**
- * \brief Returns the numbr of entries in a transactional list.
+ * \brief Returns the number of entries in a transactional list.
  * \param self The transactional list.
  * \returns The number of entries in the transactional list.
  */
