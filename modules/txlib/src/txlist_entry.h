@@ -29,5 +29,11 @@
  * \endcond
  */
 
+struct txlist_entry*
+txlist_entry_next(const struct txlist_entry* self);
+
+struct txlist_entry*
+txlist_entry_prev(const struct txlist_entry* self);
+
 bool
 txlist_entry_is_enqueued(const struct txlist_entry* self);

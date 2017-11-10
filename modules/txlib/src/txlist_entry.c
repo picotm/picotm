@@ -44,6 +44,19 @@ PICOTM_EXPORT
 struct txlist_entry*
 txlist_entry_next_tx(const struct txlist_entry* self)
 {
+    return txlist_entry_next(self);
+}
+
+PICOTM_EXPORT
+struct txlist_entry*
+txlist_entry_prev_tx(const struct txlist_entry* self)
+{
+    return txlist_entry_prev(self);
+}
+
+struct txlist_entry*
+txlist_entry_next(const struct txlist_entry* self)
+{
     assert(self);
 
     struct txlist_entry* next = self->internal.next;
@@ -52,9 +65,8 @@ txlist_entry_next_tx(const struct txlist_entry* self)
     return next;
 }
 
-PICOTM_EXPORT
 struct txlist_entry*
-txlist_entry_prev_tx(const struct txlist_entry* self)
+txlist_entry_prev(const struct txlist_entry* self)
 {
     assert(self);
 

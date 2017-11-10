@@ -69,7 +69,7 @@ txlist_state_begin(const struct txlist_state* self)
 {
     assert(self);
 
-    return txlist_entry_next_tx(&self->internal.head);
+    return txlist_entry_next(&self->internal.head);
 }
 
 struct txlist_entry*
@@ -86,7 +86,7 @@ list_entry_distance(const struct txlist_entry* beg,
 {
     size_t n = 0;
 
-    for (; beg != end; beg = txlist_entry_next_tx(beg)) {
+    for (; beg != end; beg = txlist_entry_next(beg)) {
         ++n;
     }
 
