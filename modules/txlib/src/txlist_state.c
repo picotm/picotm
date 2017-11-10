@@ -107,6 +107,18 @@ txlist_state_is_empty(const struct txlist_state* self)
            txlist_state_end(self);
 }
 
+struct txlist_entry*
+txlist_state_front(struct txlist_state* self)
+{
+    return txlist_state_begin(self);
+}
+
+struct txlist_entry*
+txlist_state_back(struct txlist_state* self)
+{
+    return txlist_entry_prev(txlist_state_end(self));
+}
+
 static void
 insert_entry(struct txlist_entry* entry,
              struct txlist_entry* position)

@@ -263,6 +263,26 @@ PICOTM_BEGIN_DECLS
  *      picotm_end
  * ~~~
  *
+ * If we known that their are entries in the list, calls to
+ * `txlist_front_tx()` and `txlist_back_tx()` return the front-end, resp. the
+ * back-end entry.
+ *
+ * ~~~ c
+ *      // init and ulong code here
+ *
+ *      picotm_begin
+ *
+ *          if (!txlist_empty_tx(tx)) {
+ *
+ *              struct txlist_entry* entry = txlist_front_tx()
+ *
+ *              // more transactional code
+ *          }
+ *
+ *      picotm_commit
+ *      picotm_end
+ * ~~~
+ *
  * We can also iterate over the entries of a list. The first entry of the list
  * is returned by `txlist_begin_tx()`. The terminator entry *after* the final
  * entry is returned by `txlist_end_tx()`. The terminator entry is not a real
@@ -411,6 +431,30 @@ PICOTM_NOTHROW
  */
 size_t
 txlist_size_tx(struct txlist* self);
+
+/*
+ * Element access
+ */
+
+PICOTM_NOTHROW
+/**
+ * \brief Returns the front-end entry of a transactional list without
+ *        removing it.
+ * \param The transactional list.
+ * \returns The front entry.
+ */
+struct txlist_entry*
+txlist_front_tx(struct txlist* self);
+
+PICOTM_NOTHROW
+/**
+ * \brief Returns the back-end entry of a transactional list without
+ *        removing it.
+ * \param The transactional list.
+ * \returns The front entry.
+ */
+struct txlist_entry*
+txlist_back_tx(struct txlist* self);
 
 /*
  * Modfiers

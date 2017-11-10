@@ -116,6 +116,44 @@ txlist_tx_exec_size(struct txlist_tx* self, struct picotm_error* error)
 }
 
 /*
+ * Front-end entry
+ */
+
+struct txlist_entry*
+txlist_tx_exec_front(struct txlist_tx* self, struct picotm_error* error)
+{
+    assert(self);
+
+    picotm_rwstate_try_rdlock(&self->state,
+                              &self->list_state->internal.lock,
+                              error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+
+    return txlist_state_front(self->list_state);
+}
+
+/*
+ * Back-end entry
+ */
+
+struct txlist_entry*
+txlist_tx_exec_back(struct txlist_tx* self, struct picotm_error* error)
+{
+    assert(self);
+
+    picotm_rwstate_try_rdlock(&self->state,
+                              &self->list_state->internal.lock,
+                              error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+
+    return txlist_state_back(self->list_state);
+}
+
+/*
  * Insert into list
  */
 
@@ -237,8 +275,7 @@ exec_list_pop_front(struct txlib_event* event, struct txlist_tx* list_tx,
 {
     assert(list_tx);
 
-    exec_list_erase(event, list_tx,
-                    txlist_state_begin(list_tx->list_state),
+    exec_list_erase(event, list_tx, txlist_state_front(list_tx->list_state),
                     error);
 }
 
@@ -278,8 +315,7 @@ exec_list_pop_back(struct txlib_event* event, struct txlist_tx* list_tx,
 {
     assert(list_tx);
 
-    exec_list_erase(event, list_tx,
-                    txlist_entry_prev(txlist_state_end(list_tx->list_state)),
+    exec_list_erase(event, list_tx, txlist_state_back(list_tx->list_state),
                     error);
 }
 
@@ -406,7 +442,7 @@ exec_list_clear(struct txlib_event* event, struct txlist_tx* list_tx,
     assert(event);
 
     exec_list_erase(event, list_tx,
-                    txlist_state_begin(list_tx->list_state),
+                    txlist_state_front(list_tx->list_state),
                     error);
 }
 

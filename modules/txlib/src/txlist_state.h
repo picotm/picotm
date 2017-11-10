@@ -42,6 +42,12 @@ txlist_state_size(const struct txlist_state* self);
 bool
 txlist_state_is_empty(const struct txlist_state* self);
 
+struct txlist_entry*
+txlist_state_front(struct txlist_state* self);
+
+struct txlist_entry*
+txlist_state_back(struct txlist_state* self);
+
 void
 txlist_state_insert(struct txlist_state* self, struct txlist_entry* entry,
                     struct txlist_entry* position);
