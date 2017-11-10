@@ -80,6 +80,20 @@ size_t
 txlist_tx_exec_size(struct txlist_tx* self, struct picotm_error* error);
 
 /*
+ * Front-end entry
+ */
+
+struct txlist_entry*
+txlist_tx_exec_front(struct txlist_tx* self, struct picotm_error* error);
+
+/*
+ * Back-end entry
+ */
+
+struct txlist_entry*
+txlist_tx_exec_back(struct txlist_tx* self, struct picotm_error* error);
+
+/*
  * Insert into list
  */
 

@@ -83,6 +83,46 @@ txlist_end_tx(struct txlist* self)
 }
 
 /*
+ * Element access
+ */
+
+PICOTM_EXPORT
+struct txlist_entry*
+txlist_front_tx(struct txlist* self)
+{
+    struct txlist_tx* list_tx = list_tx_of_list(self);
+
+retry:
+    {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        struct txlist_entry* entry = txlist_tx_exec_front(list_tx, &error);
+        if (picotm_error_is_set(&error)) {
+            picotm_recover_from_error(&error);
+            goto retry;
+        }
+        return entry;
+    }
+}
+
+PICOTM_EXPORT
+struct txlist_entry*
+txlist_back_tx(struct txlist* self)
+{
+    struct txlist_tx* list_tx = list_tx_of_list(self);
+
+retry:
+    {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        struct txlist_entry* entry = txlist_tx_exec_back(list_tx, &error);
+        if (picotm_error_is_set(&error)) {
+            picotm_recover_from_error(&error);
+            goto retry;
+        }
+        return entry;
+    }
+}
+
+/*
  * Capacity
  */
 
