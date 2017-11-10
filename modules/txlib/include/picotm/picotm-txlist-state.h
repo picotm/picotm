@@ -78,6 +78,7 @@ PICOTM_NOTHROW
 /**
  * \brief Returns the next list entry.
  * \param self The current list entry.
+ * \returns The next list entry.
  */
 struct txlist_entry*
 txlist_entry_next_tx(const struct txlist_entry* self);
@@ -86,6 +87,7 @@ PICOTM_NOTHROW
 /**
  * \brief Returns the previous list entry.
  * \param self The current list entry.
+ * \returns The previous list entry.
  */
 struct txlist_entry*
 txlist_entry_prev_tx(const struct txlist_entry* self);
