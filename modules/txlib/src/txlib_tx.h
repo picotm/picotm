@@ -23,6 +23,7 @@
 #include <sys/queue.h>
 #include "txlist_tx.h"
 #include "txqueue_tx.h"
+#include "txstack_tx.h"
 
 /**
  * \cond impl || txlib_impl
@@ -42,6 +43,7 @@ struct txlib_tx_entry {
     union {
         struct txlist_tx list_tx;
         struct txqueue_tx queue_tx;
+        struct txstack_tx stack_tx;
     } data;
 };
 
@@ -51,6 +53,7 @@ struct txlib_tx {
     SLIST_HEAD(, txlib_tx_entry) allocated_entries;
     SLIST_HEAD(, txlib_tx_entry) acquired_list_tx;
     SLIST_HEAD(, txlib_tx_entry) acquired_queue_tx;
+    SLIST_HEAD(, txlib_tx_entry) acquired_stack_tx;
 
     struct txlib_event* event;
     size_t              nevents;
@@ -92,6 +95,18 @@ txlib_tx_acquire_txlist_of_state(struct txlib_tx* self,
 struct txqueue_tx*
 txlib_tx_acquire_txqueue_of_state(struct txlib_tx* self,
                                   struct txqueue_state* queue_state,
+                                  struct picotm_error* error);
+
+/**
+ * \brief Acquires a stack for use within a transaction.
+ * \param self The data-structure transaction.
+ * \param stack_state The stack state to acquire.
+ * \param[out] error Returns an error to the caller.
+ * \returns A pointer the new txstack transaction.
+ */
+struct txstack_tx*
+txlib_tx_acquire_txstack_of_state(struct txlib_tx* self,
+                                  struct txstack_state* stack_state,
                                   struct picotm_error* error);
 
 /**

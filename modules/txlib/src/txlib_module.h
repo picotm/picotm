@@ -31,6 +31,8 @@ struct txlist_state;
 struct txlist_tx;
 struct txqueue_state;
 struct txqueue_tx;
+struct txstack_state;
+struct txstack_tx;
 
 struct txlist_tx*
 txlib_module_acquire_txlist_of_state(struct txlist_state* list_state,
@@ -38,4 +40,8 @@ txlib_module_acquire_txlist_of_state(struct txlist_state* list_state,
 
 struct txqueue_tx*
 txlib_module_acquire_txqueue_of_state(struct txqueue_state* queue_state,
+                                      struct picotm_error* error);
+
+struct txstack_tx*
+txlib_module_acquire_txstack_of_state(struct txstack_state* stack_state,
                                       struct picotm_error* error);

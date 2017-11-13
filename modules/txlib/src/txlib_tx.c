@@ -38,6 +38,7 @@ txlib_tx_init(struct txlib_tx* self, unsigned long module)
     SLIST_INIT(&self->allocated_entries);
     SLIST_INIT(&self->acquired_list_tx);
     SLIST_INIT(&self->acquired_queue_tx);
+    SLIST_INIT(&self->acquired_stack_tx);
 
     self->event = NULL;
     self->nevents = 0;
@@ -63,6 +64,7 @@ txlib_tx_uninit(struct txlib_tx* self)
 
     assert(SLIST_EMPTY(&self->acquired_list_tx));
     assert(SLIST_EMPTY(&self->acquired_queue_tx));
+    assert(SLIST_EMPTY(&self->acquired_stack_tx));
 
     picotm_tabfree(self->event);
 }
@@ -140,6 +142,32 @@ txlib_tx_acquire_txqueue_of_state(struct txlib_tx* self,
     SLIST_INSERT_HEAD(&self->acquired_queue_tx, entry, slist_entry);
 
     return &entry->data.queue_tx;
+}
+
+struct txstack_tx*
+txlib_tx_acquire_txstack_of_state(struct txlib_tx* self,
+                                  struct txstack_state* stack_state,
+                                  struct picotm_error* error)
+{
+    assert(self);
+
+    struct txlib_tx_entry* entry;
+
+    SLIST_FOREACH(entry, &self->acquired_stack_tx, slist_entry) {
+        if (entry->data.stack_tx.stack_state == stack_state) {
+            return &entry->data.stack_tx;
+        }
+    }
+
+    entry = allocate_txlib_tx_entry(self, error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+
+    txstack_tx_init(&entry->data.stack_tx, stack_state, self);
+    SLIST_INSERT_HEAD(&self->acquired_stack_tx, entry, slist_entry);
+
+    return &entry->data.stack_tx;
 }
 
 void
@@ -237,10 +265,30 @@ lock_txqueue_tx_entries(struct txlib_tx* self, struct picotm_error* error)
     }
 }
 
+static void
+lock_txstack_tx_entries(struct txlib_tx* self, struct picotm_error* error)
+{
+    assert(self);
+
+    struct txlib_tx_entry* entry;
+
+    SLIST_FOREACH(entry, &self->acquired_stack_tx, slist_entry) {
+        txstack_tx_lock(&entry->data.stack_tx, error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
+    }
+}
+
 void
 txlib_tx_lock(struct txlib_tx* self, struct picotm_error* error)
 {
     lock_txqueue_tx_entries(self, error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
+
+    lock_txstack_tx_entries(self, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -302,6 +350,20 @@ finish_txqueue_tx_entries(struct txlib_tx* self)
     }
 }
 
+static void
+finish_txstack_tx_entries(struct txlib_tx* self)
+{
+    struct txlib_tx_entry* entry = SLIST_FIRST(&self->acquired_stack_tx);
+
+    for (; entry; entry = SLIST_FIRST(&self->acquired_stack_tx)) {
+        txstack_tx_finish(&entry->data.stack_tx);
+        txstack_tx_uninit(&entry->data.stack_tx);
+
+        SLIST_REMOVE_HEAD(&self->acquired_stack_tx, slist_entry);
+        SLIST_INSERT_HEAD(&self->allocated_entries, entry, slist_entry);
+    }
+}
+
 void
 txlib_tx_finish(struct txlib_tx* self)
 {
@@ -311,4 +373,5 @@ txlib_tx_finish(struct txlib_tx* self)
 
     finish_txlist_tx_entries(self);
     finish_txqueue_tx_entries(self);
+    finish_txstack_tx_entries(self);
 }

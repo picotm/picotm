@@ -47,7 +47,9 @@ libpicotm_txlib_la_SOURCES = txlib_event.c \
                              txstack_entry.c \
                              txstack_entry.h \
                              txstack_state.c \
-                             txstack_state.h
+                             txstack_state.h \
+                             txstack_tx.c \
+                             txstack_tx.h
 
 libpicotm_txlib_la_LDFLAGS = -version-info $(current):$(revision):$(age)
 

@@ -27,6 +27,7 @@
 #include "txlib_tx.h"
 #include "txlist_tx.h"
 #include "txqueue_tx.h"
+#include "txstack_tx.h"
 
 /*
  * Module interface
@@ -189,4 +190,18 @@ txlib_module_acquire_txqueue_of_state(struct txqueue_state* queue_state,
         return NULL;
     }
     return queue_tx;
+}
+
+struct txstack_tx*
+txlib_module_acquire_txstack_of_state(struct txstack_state* stack_state,
+                                      struct picotm_error* error)
+{
+    struct txlib_tx* txl_tx = get_non_null_txl_tx();
+
+    struct txstack_tx* stack_tx =
+        txlib_tx_acquire_txstack_of_state(txl_tx, stack_state, error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+    return stack_tx;
 }

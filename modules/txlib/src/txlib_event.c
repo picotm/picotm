@@ -22,6 +22,7 @@
 #include "picotm/picotm-error.h"
 #include "txlist_tx.h"
 #include "txqueue_tx.h"
+#include "txstack_tx.h"
 
 static void
 process_event(struct txlib_event* event,
@@ -60,6 +61,20 @@ apply_queue_push(struct txlib_event* event, struct picotm_error* error)
     }
 }
 
+static void
+apply_stack_push(struct txlib_event* event, struct picotm_error* error)
+{
+    assert(event);
+    assert(event->op == TXLIB_STACK_PUSH);
+
+    txstack_tx_apply_push(event->arg.stack_push.stack_tx,
+                          event->arg.stack_push.entry,
+                          error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
+}
+
 void
 txlib_event_apply(struct txlib_event* self, struct picotm_error* error)
 {
@@ -68,7 +83,9 @@ txlib_event_apply(struct txlib_event* self, struct picotm_error* error)
         [TXLIB_LIST_INSERT] = NULL,
         [TXLIB_LIST_ERASE] = NULL,
         [TXLIB_QUEUE_PUSH] = apply_queue_push,
-        [TXLIB_QUEUE_POP] = NULL
+        [TXLIB_QUEUE_POP] = NULL,
+        [TXLIB_STACK_PUSH] = apply_stack_push,
+        [TXLIB_STACK_POP] = NULL
     };
 
     process_event(self, apply, error);
@@ -136,6 +153,35 @@ undo_queue_pop(struct txlib_event* event, struct picotm_error* error)
     }
 }
 
+static void
+undo_stack_push(struct txlib_event* event, struct picotm_error* error)
+{
+    assert(event);
+    assert(event->op == TXLIB_STACK_PUSH);
+
+    txstack_tx_undo_push(event->arg.stack_push.stack_tx,
+                         event->arg.stack_push.entry,
+                         error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
+}
+
+static void
+undo_stack_pop(struct txlib_event* event, struct picotm_error* error)
+{
+    assert(event);
+    assert(event->op == TXLIB_STACK_POP);
+
+    txstack_tx_undo_pop(event->arg.stack_pop.stack_tx,
+                        event->arg.stack_pop.entry,
+                        event->arg.stack_pop.use_local_stack,
+                        error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
+}
+
 void
 txlib_event_undo(struct txlib_event* self, struct picotm_error* error)
 {
@@ -144,7 +190,9 @@ txlib_event_undo(struct txlib_event* self, struct picotm_error* error)
         [TXLIB_LIST_INSERT] = undo_list_insert,
         [TXLIB_LIST_ERASE] = undo_list_erase,
         [TXLIB_QUEUE_PUSH] = undo_queue_push,
-        [TXLIB_QUEUE_POP] = undo_queue_pop
+        [TXLIB_QUEUE_POP] = undo_queue_pop,
+        [TXLIB_STACK_PUSH] = undo_stack_push,
+        [TXLIB_STACK_POP] = undo_stack_pop
     };
 
     process_event(self, undo, error);
