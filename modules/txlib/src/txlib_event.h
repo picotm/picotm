@@ -33,6 +33,8 @@ struct txlist_entry;
 struct txlist_tx;
 struct txqueue_entry;
 struct txqueue_tx;
+struct txstack_entry;
+struct txstack_tx;
 
 /**
  * \brief Opcodes for operations on the data structures.
@@ -45,7 +47,11 @@ enum txlib_op {
     /** \brief Represents an insert operation on a queue. */
     TXLIB_QUEUE_PUSH,
     /** \brief Represents an erase operation on a queue. */
-    TXLIB_QUEUE_POP
+    TXLIB_QUEUE_POP,
+    /** \brief Represents an insert operation on a stack. */
+    TXLIB_STACK_PUSH,
+    /** \brief Represents an erase operation on a stack. */
+    TXLIB_STACK_POP
 };
 
 /**
@@ -73,6 +79,15 @@ struct txlib_event {
             struct txqueue_entry* entry;
             bool use_local_queue;
         } queue_pop;
+        struct {
+            struct txstack_tx* stack_tx;
+            struct txstack_entry* entry;
+        } stack_push;
+        struct {
+            struct txstack_tx* stack_tx;
+            struct txstack_entry* entry;
+            bool use_local_stack;
+        } stack_pop;
     } arg;
 
     /** \brief The event's opcode. */
