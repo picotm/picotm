@@ -19,7 +19,9 @@
 TESTS = txlist-pubapi-t1.test \
         txlist-pubapi-t4.test \
         txqueue-pubapi-t1.test \
-        txqueue-pubapi-t4.test
+        txqueue-pubapi-t4.test \
+        txstack-pubapi-t1.test \
+        txstack-pubapi-t4.test
 
 EXTRA_DIST = $(TESTS)
 
@@ -27,7 +29,8 @@ TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
                   $(top_srcdir)/build-aux/tap-driver.sh
 
 check_PROGRAMS = txlist-pubapi.test \
-                 txqueue-pubapi.test
+                 txqueue-pubapi.test \
+                 txstack-pubapi.test
 
 txlist_pubapi_test_SOURCES = txlist_pubapi.c \
                              txlist_test.c \
@@ -36,6 +39,10 @@ txlist_pubapi_test_SOURCES = txlist_pubapi.c \
 txqueue_pubapi_test_SOURCES = txqueue_pubapi.c \
                               txqueue_test.c \
                               txqueue_test.h
+
+txstack_pubapi_test_SOURCES = txstack_pubapi.c \
+                              txstack_test.c \
+                              txstack_test.h
 
 AM_LDFLAGS = -static
 
