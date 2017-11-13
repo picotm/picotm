@@ -413,7 +413,6 @@ err:
     if (is_non_recoverable) {
         picotm_error_mark_as_non_recoverable(error);
     }
-    picotm_lock_manager_release_irrevocability(&self->shared->lm);
 }
 
 void
