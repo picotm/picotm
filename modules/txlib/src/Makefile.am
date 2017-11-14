@@ -36,6 +36,10 @@ libpicotm_txlib_la_SOURCES = txlib_event.c \
                              txlist_state.h \
                              txlist_tx.c \
                              txlist_tx.h \
+                             txmultiset_entry.c \
+                             txmultiset_entry.h \
+                             txmultiset_state.c \
+                             txmultiset_state.h \
                              txqueue.c \
                              txqueue.h \
                              txqueue_entry.c \
