@@ -32,6 +32,8 @@ txlist_state_init(struct txlist_state* self)
     txlist_entry_init(&self->internal.head);
     self->internal.head.internal.next = &self->internal.head;
     self->internal.head.internal.prev = &self->internal.head;
+
+    picotm_rwlock_init(&self->internal.lock);
 }
 
 PICOTM_EXPORT
@@ -39,6 +41,8 @@ void
 txlist_state_uninit(struct txlist_state* self)
 {
     assert(self);
+
+    picotm_rwlock_uninit(&self->internal.lock);
 
     self->internal.head.internal.next = NULL;
     self->internal.head.internal.prev = NULL;
