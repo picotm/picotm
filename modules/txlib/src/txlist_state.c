@@ -28,11 +28,7 @@ txlist_state_init(struct txlist_state* self)
 {
     assert(self);
 
-    /* The list head is a special, empty entry that refers to itself. */
-    txlist_entry_init(&self->internal.head);
-    self->internal.head.internal.next = &self->internal.head;
-    self->internal.head.internal.prev = &self->internal.head;
-
+    txlist_entry_init_head(&self->internal.head);
     picotm_rwlock_init(&self->internal.lock);
 }
 
@@ -43,10 +39,7 @@ txlist_state_uninit(struct txlist_state* self)
     assert(self);
 
     picotm_rwlock_uninit(&self->internal.lock);
-
-    self->internal.head.internal.next = NULL;
-    self->internal.head.internal.prev = NULL;
-    txlist_entry_uninit(&self->internal.head);
+    txlist_entry_uninit_head(&self->internal.head);
 }
 
 PICOTM_EXPORT
@@ -84,24 +77,11 @@ txlist_state_end(const struct txlist_state* self)
     return (struct txlist_entry*)&self->internal.head;
 }
 
-static size_t
-list_entry_distance(const struct txlist_entry* beg,
-                    const struct txlist_entry* end)
-{
-    size_t n = 0;
-
-    for (; beg != end; beg = txlist_entry_next(beg)) {
-        ++n;
-    }
-
-    return n;
-}
-
 size_t
 txlist_state_size(const struct txlist_state* self)
 {
-    return list_entry_distance(txlist_state_begin(self),
-                               txlist_state_end(self));
+    return txlist_entry_distance(txlist_state_begin(self),
+                                 txlist_state_end(self));
 }
 
 bool
@@ -123,40 +103,11 @@ txlist_state_back(struct txlist_state* self)
     return txlist_entry_prev(txlist_state_end(self));
 }
 
-static void
-insert_entry(struct txlist_entry* entry,
-             struct txlist_entry* position)
-{
-    assert(entry);
-    assert(position);
-    assert(!txlist_entry_is_enqueued(entry));
-    assert(txlist_entry_is_enqueued(position));
-
-    entry->internal.next = position;
-    entry->internal.prev = position->internal.prev;
-
-    position->internal.prev->internal.next = entry;
-    position->internal.prev = entry;
-}
-
-static void
-erase_entry(struct txlist_entry* entry)
-{
-    assert(entry);
-    assert(txlist_entry_is_enqueued(entry));
-
-    entry->internal.next->internal.prev = entry->internal.prev;
-    entry->internal.prev->internal.next = entry->internal.next;
-
-    entry->internal.next = NULL;
-    entry->internal.prev = NULL;
-}
-
 void
 txlist_state_insert(struct txlist_state* self, struct txlist_entry* entry,
                     struct txlist_entry* position)
 {
-    insert_entry(entry, position);
+    txlist_entry_insert(entry, position);
 }
 
 void
@@ -164,5 +115,5 @@ txlist_state_erase(struct txlist_state* self, struct txlist_entry* entry)
 {
     assert(entry != txlist_state_end(self));
 
-    erase_entry(entry);
+    txlist_entry_erase(entry);
 }

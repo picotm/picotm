@@ -20,6 +20,7 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stddef.h>
 #include "picotm/picotm-txlist-state.h"
 
 /**
@@ -29,6 +30,12 @@
  * \endcond
  */
 
+void
+txlist_entry_init_head(struct txlist_entry* self);
+
+void
+txlist_entry_uninit_head(struct txlist_entry* self);
+
 struct txlist_entry*
 txlist_entry_next(const struct txlist_entry* self);
 
@@ -37,3 +44,17 @@ txlist_entry_prev(const struct txlist_entry* self);
 
 bool
 txlist_entry_is_enqueued(const struct txlist_entry* self);
+
+void
+txlist_entry_insert(struct txlist_entry* self, struct txlist_entry* next);
+
+void
+txlist_entry_erase(struct txlist_entry* self);
+
+/*
+ * List-entry helpers
+ */
+
+size_t
+txlist_entry_distance(const struct txlist_entry* beg,
+                      const struct txlist_entry* end);
