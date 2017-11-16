@@ -18,6 +18,8 @@
 
 TESTS = txlist-pubapi-t1.test \
         txlist-pubapi-t4.test \
+        txmultiset-pubapi-t1.test \
+        txmultiset-pubapi-t4.test \
         txqueue-pubapi-t1.test \
         txqueue-pubapi-t4.test \
         txstack-pubapi-t1.test \
@@ -29,12 +31,17 @@ TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
                   $(top_srcdir)/build-aux/tap-driver.sh
 
 check_PROGRAMS = txlist-pubapi.test \
+                 txmultiset-pubapi.test \
                  txqueue-pubapi.test \
                  txstack-pubapi.test
 
 txlist_pubapi_test_SOURCES = txlist_pubapi.c \
                              txlist_test.c \
                              txlist_test.h
+
+txmultiset_pubapi_test_SOURCES = txmultiset_pubapi.c \
+                                 txmultiset_test.c \
+                                 txmultiset_test.h
 
 txqueue_pubapi_test_SOURCES = txqueue_pubapi.c \
                               txqueue_test.c \
