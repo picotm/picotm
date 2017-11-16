@@ -22,6 +22,7 @@
 #include <stddef.h>
 #include <sys/queue.h>
 #include "txlist_tx.h"
+#include "txmultiset_tx.h"
 #include "txqueue_tx.h"
 #include "txstack_tx.h"
 
@@ -42,6 +43,7 @@ struct txlib_tx_entry {
 
     union {
         struct txlist_tx list_tx;
+        struct txmultiset_tx multiset_tx;
         struct txqueue_tx queue_tx;
         struct txstack_tx stack_tx;
     } data;
@@ -52,6 +54,7 @@ struct txlib_tx {
 
     SLIST_HEAD(, txlib_tx_entry) allocated_entries;
     SLIST_HEAD(, txlib_tx_entry) acquired_list_tx;
+    SLIST_HEAD(, txlib_tx_entry) acquired_multiset_tx;
     SLIST_HEAD(, txlib_tx_entry) acquired_queue_tx;
     SLIST_HEAD(, txlib_tx_entry) acquired_stack_tx;
 
@@ -84,6 +87,18 @@ struct txlist_tx*
 txlib_tx_acquire_txlist_of_state(struct txlib_tx* self,
                                  struct txlist_state* list_state,
                                  struct picotm_error* error);
+
+/**
+ * \brief Acquires a multiset for use within a transaction.
+ * \param self The data-structure transaction.
+ * \param multiset_state The multiset state to acquire.
+ * \param[out] error Returns an error to the caller.
+ * \returns A pointer to the new txmultiset transaction.
+ */
+struct txmultiset_tx*
+txlib_tx_acquire_txmultiset_of_state(struct txlib_tx* self,
+                                     struct txmultiset_state* multiset_state,
+                                     struct picotm_error* error);
 
 /**
  * \brief Acquires a queue for use within a transaction.

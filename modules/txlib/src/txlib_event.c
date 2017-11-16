@@ -21,6 +21,7 @@
 #include <assert.h>
 #include "picotm/picotm-error.h"
 #include "txlist_tx.h"
+#include "txmultiset_tx.h"
 #include "txqueue_tx.h"
 #include "txstack_tx.h"
 
@@ -82,6 +83,8 @@ txlib_event_apply(struct txlib_event* self, struct picotm_error* error)
                                   struct picotm_error*) = {
         [TXLIB_LIST_INSERT] = NULL,
         [TXLIB_LIST_ERASE] = NULL,
+        [TXLIB_MULTISET_INSERT] = NULL,
+        [TXLIB_MULTISET_ERASE] = NULL,
         [TXLIB_QUEUE_PUSH] = apply_queue_push,
         [TXLIB_QUEUE_POP] = NULL,
         [TXLIB_STACK_PUSH] = apply_stack_push,
@@ -119,6 +122,34 @@ undo_list_erase(struct txlib_event* event, struct picotm_error* error)
                          event->arg.list_erase.entry,
                          event->arg.list_erase.position,
                          error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
+}
+
+static void
+undo_multiset_insert(struct txlib_event* event, struct picotm_error* error)
+{
+    assert(event);
+    assert(event->op == TXLIB_MULTISET_INSERT);
+
+    txmultiset_tx_undo_insert(event->arg.multiset_insert.multiset_tx,
+                              event->arg.multiset_insert.entry,
+                              error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
+}
+
+static void
+undo_multiset_erase(struct txlib_event* event, struct picotm_error* error)
+{
+    assert(event);
+    assert(event->op == TXLIB_MULTISET_ERASE);
+
+    txmultiset_tx_undo_erase(event->arg.multiset_erase.multiset_tx,
+                             event->arg.multiset_erase.entry,
+                             error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -189,6 +220,8 @@ txlib_event_undo(struct txlib_event* self, struct picotm_error* error)
                                  struct picotm_error*) = {
         [TXLIB_LIST_INSERT] = undo_list_insert,
         [TXLIB_LIST_ERASE] = undo_list_erase,
+        [TXLIB_MULTISET_INSERT] = undo_multiset_insert,
+        [TXLIB_MULTISET_ERASE] = undo_multiset_erase,
         [TXLIB_QUEUE_PUSH] = undo_queue_push,
         [TXLIB_QUEUE_POP] = undo_queue_pop,
         [TXLIB_STACK_PUSH] = undo_stack_push,

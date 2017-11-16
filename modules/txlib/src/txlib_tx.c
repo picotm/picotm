@@ -37,6 +37,7 @@ txlib_tx_init(struct txlib_tx* self, unsigned long module)
 
     SLIST_INIT(&self->allocated_entries);
     SLIST_INIT(&self->acquired_list_tx);
+    SLIST_INIT(&self->acquired_multiset_tx);
     SLIST_INIT(&self->acquired_queue_tx);
     SLIST_INIT(&self->acquired_stack_tx);
 
@@ -63,6 +64,7 @@ txlib_tx_uninit(struct txlib_tx* self)
     free_allocated_txlib_tx_entries(self);
 
     assert(SLIST_EMPTY(&self->acquired_list_tx));
+    assert(SLIST_EMPTY(&self->acquired_multiset_tx));
     assert(SLIST_EMPTY(&self->acquired_queue_tx));
     assert(SLIST_EMPTY(&self->acquired_stack_tx));
 
@@ -116,6 +118,32 @@ txlib_tx_acquire_txlist_of_state(struct txlib_tx* self,
     SLIST_INSERT_HEAD(&self->acquired_list_tx, entry, slist_entry);
 
     return &entry->data.list_tx;
+}
+
+struct txmultiset_tx*
+txlib_tx_acquire_txmultiset_of_state(struct txlib_tx* self,
+                                     struct txmultiset_state* multiset_state,
+                                     struct picotm_error* error)
+{
+    assert(self);
+
+    struct txlib_tx_entry* entry;
+
+    SLIST_FOREACH(entry, &self->acquired_multiset_tx, slist_entry) {
+        if (entry->data.multiset_tx.multiset_state == multiset_state) {
+            return &entry->data.multiset_tx;
+        }
+    }
+
+    entry = allocate_txlib_tx_entry(self, error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+
+    txmultiset_tx_init(&entry->data.multiset_tx, multiset_state, self);
+    SLIST_INSERT_HEAD(&self->acquired_multiset_tx, entry, slist_entry);
+
+    return &entry->data.multiset_tx;
 }
 
 struct txqueue_tx*
@@ -337,6 +365,20 @@ finish_txlist_tx_entries(struct txlib_tx* self)
 }
 
 static void
+finish_txmultiset_tx_entries(struct txlib_tx* self)
+{
+    struct txlib_tx_entry* entry = SLIST_FIRST(&self->acquired_multiset_tx);
+
+    for (; entry; entry = SLIST_FIRST(&self->acquired_multiset_tx)) {
+        txmultiset_tx_finish(&entry->data.multiset_tx);
+        txmultiset_tx_uninit(&entry->data.multiset_tx);
+
+        SLIST_REMOVE_HEAD(&self->acquired_multiset_tx, slist_entry);
+        SLIST_INSERT_HEAD(&self->allocated_entries, entry, slist_entry);
+    }
+}
+
+static void
 finish_txqueue_tx_entries(struct txlib_tx* self)
 {
     struct txlib_tx_entry* entry = SLIST_FIRST(&self->acquired_queue_tx);
@@ -372,6 +414,7 @@ txlib_tx_finish(struct txlib_tx* self)
     self->nevents = 0;
 
     finish_txlist_tx_entries(self);
+    finish_txmultiset_tx_entries(self);
     finish_txqueue_tx_entries(self);
     finish_txstack_tx_entries(self);
 }

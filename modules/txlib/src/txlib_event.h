@@ -31,6 +31,8 @@
 struct picotm_error;
 struct txlist_entry;
 struct txlist_tx;
+struct txmultiset_entry;
+struct txmultiset_tx;
 struct txqueue_entry;
 struct txqueue_tx;
 struct txstack_entry;
@@ -44,6 +46,10 @@ enum txlib_op {
     TXLIB_LIST_INSERT,
     /** \brief Represents an erase operation on a list. */
     TXLIB_LIST_ERASE,
+    /** \brief Represents an insert operation on a multiset. */
+    TXLIB_MULTISET_INSERT,
+    /** \brief Represents an erase operation on a multiset. */
+    TXLIB_MULTISET_ERASE,
     /** \brief Represents an insert operation on a queue. */
     TXLIB_QUEUE_PUSH,
     /** \brief Represents an erase operation on a queue. */
@@ -70,6 +76,14 @@ struct txlib_event {
             struct txlist_entry* entry;
             struct txlist_entry* position;
         } list_erase;
+        struct {
+            struct txmultiset_tx* multiset_tx;
+            struct txmultiset_entry* entry;
+        } multiset_insert;
+        struct {
+            struct txmultiset_tx* multiset_tx;
+            struct txmultiset_entry* entry;
+        } multiset_erase;
         struct {
             struct txqueue_tx* queue_tx;
             struct txqueue_entry* entry;

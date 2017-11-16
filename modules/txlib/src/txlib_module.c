@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include "txlib_tx.h"
 #include "txlist_tx.h"
+#include "txmultiset_tx.h"
 #include "txqueue_tx.h"
 #include "txstack_tx.h"
 
@@ -176,6 +177,21 @@ txlib_module_acquire_txlist_of_state(struct txlist_state* list_state,
         return NULL;
     }
     return list_tx;
+}
+
+struct txmultiset_tx*
+txlib_module_acquire_txmultiset_of_state(
+    struct txmultiset_state* multiset_state,
+    struct picotm_error* error)
+{
+    struct txlib_tx* txl_tx = get_non_null_txl_tx();
+
+    struct txmultiset_tx* multiset_tx =
+        txlib_tx_acquire_txmultiset_of_state(txl_tx, multiset_state, error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+    return multiset_tx;
 }
 
 struct txqueue_tx*
