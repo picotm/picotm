@@ -46,9 +46,10 @@ struct ulong_list_item {
 };
 
 static struct ulong_list_item*
-ulong_list_item_of_list_item(struct txlist_entry* list_entry) {
+ulong_list_item_of_list_item(struct txlist_entry* list_entry)
+{
     return picotm_containerof(list_entry, struct ulong_list_item, list_entry);
-};
+}
 
 static void
 init_ulong_list_items(struct ulong_list_item* beg,
@@ -415,6 +416,10 @@ txlist_test_6(unsigned int tid)
     picotm_end
 }
 
+/*
+ * Insert items into shared list.
+ */
+
 static void
 txlist_test_7(unsigned int tid)
 {
@@ -540,7 +545,7 @@ const struct test_func txlist_test[] = {
     {"txlist_test_4", txlist_test_4, NULL,              NULL},
     {"txlist_test_5", txlist_test_5, NULL,              NULL},
     {"txlist_test_6", txlist_test_6, NULL,              NULL},
-    {"txlist_test_7", txlist_test_7, txlist_test_7_pre, txlist_test_7_post},
+    {"txlist_test_7", txlist_test_7, txlist_test_7_pre, txlist_test_7_post}
 };
 
 size_t
