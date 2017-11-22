@@ -440,7 +440,7 @@ PICOTM_NOTHROW
 /**
  * \brief Returns the front-end entry of a transactional list without
  *        removing it.
- * \param The transactional list.
+ * \param self The transactional list.
  * \returns The front entry.
  */
 struct txlist_entry*
@@ -450,7 +450,7 @@ PICOTM_NOTHROW
 /**
  * \brief Returns the back-end entry of a transactional list without
  *        removing it.
- * \param The transactional list.
+ * \param self The transactional list.
  * \returns The front entry.
  */
 struct txlist_entry*
