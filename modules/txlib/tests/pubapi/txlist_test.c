@@ -46,7 +46,7 @@ struct ulong_list_item {
 };
 
 static struct ulong_list_item*
-ulong_list_item_of_list_item(struct txlist_entry* list_entry)
+ulong_list_item_of_list_entry(struct txlist_entry* list_entry)
 {
     return picotm_containerof(list_entry, struct ulong_list_item, list_entry);
 }
@@ -135,7 +135,7 @@ txlist_test_2(unsigned int tid)
                 pos = txlist_entry_prev_tx(pos);
 
                 const struct ulong_list_item* item =
-                    ulong_list_item_of_list_item(pos);
+                    ulong_list_item_of_list_entry(pos);
 
                 if (item->value != value) {
                     tap_error("condition failed: value == item->value");
@@ -267,7 +267,7 @@ txlist_test_4(unsigned int tid)
             while (beg != end) {
 
                 const struct ulong_list_item* item =
-                    ulong_list_item_of_list_item(beg);
+                    ulong_list_item_of_list_entry(beg);
 
                 if (item->value != value) {
                     tap_error("condition failed: value == item->value");
@@ -330,7 +330,7 @@ txlist_test_5(unsigned int tid)
                 pos = txlist_entry_prev_tx(pos);
 
                 const struct ulong_list_item* item =
-                    ulong_list_item_of_list_item(pos);
+                    ulong_list_item_of_list_entry(pos);
 
                 if (item->value != value) {
                     tap_error("condition failed: value == item->value");
@@ -467,7 +467,7 @@ txlist_test_7(unsigned int tid)
         while (pos != end) {
 
             const struct ulong_list_item* item =
-                ulong_list_item_of_list_item(pos);
+                ulong_list_item_of_list_entry(pos);
 
             if (!i) {
                 i = picotm_arraylen(ulong_item);
@@ -508,7 +508,7 @@ txlist_test_7(unsigned int tid)
             struct txlist_entry* next = txlist_entry_next_tx(pos);
 
             const struct ulong_list_item* item =
-                ulong_list_item_of_list_item(pos);
+                ulong_list_item_of_list_entry(pos);
 
             if (item->value == tid) {
                 txlist_erase_tx(list, pos);
