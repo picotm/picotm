@@ -52,12 +52,26 @@ ulong_list_item_of_list_entry(struct txlist_entry* list_entry)
 }
 
 static void
+ulong_list_item_init_with_value(struct ulong_list_item* self,
+                                unsigned long value)
+{
+    txlist_entry_init(&self->list_entry);
+    self->value = value;
+}
+
+static void
+ulong_list_item_uninit(struct ulong_list_item* self)
+{
+    txlist_entry_uninit(&self->list_entry);
+}
+
+static void
 init_ulong_list_items(struct ulong_list_item* beg,
                 const struct ulong_list_item* end, unsigned long base_value)
 {
     for (struct ulong_list_item* pos = beg; pos < end; ++pos) {
-        txlist_entry_init(&pos->list_entry);
-        pos->value = base_value + (unsigned long)(pos - beg);
+        ulong_list_item_init_with_value(pos, base_value +
+                                            (unsigned long)(pos - beg));
     }
 }
 
@@ -69,7 +83,14 @@ init_ulong_list_items_with_value(struct ulong_list_item* beg,
     for (struct ulong_list_item* pos = beg; pos < end; ++pos) {
         txlist_entry_init(&pos->list_entry);
         pos->value = tid;
+        ulong_list_item_init_with_value(pos, tid);
     }
+}
+
+static void
+uninit_txlist_entry_cb(struct txlist_entry* entry, void* data)
+{
+    ulong_list_item_uninit(ulong_list_item_of_list_entry(entry));
 }
 
 /*
@@ -90,6 +111,8 @@ txlist_test_1(unsigned int tid)
         abort_transaction_on_error(__func__);
 
     picotm_end
+
+    txlist_state_uninit(&list_state);
 }
 
 /*
@@ -154,6 +177,11 @@ txlist_test_2(unsigned int tid)
         abort_transaction_on_error(__func__);
 
     picotm_end
+
+    txlist_state_clear_and_uninit_entries(&list_state,
+                                          uninit_txlist_entry_cb,
+                                          NULL);
+    txlist_state_uninit(&list_state);
 }
 
 /*
@@ -227,6 +255,8 @@ txlist_test_3(unsigned int tid)
         abort_transaction_on_error(__func__);
 
     picotm_end
+
+    txlist_state_uninit(&list_state);
 }
 
 /*
@@ -287,6 +317,11 @@ txlist_test_4(unsigned int tid)
         abort_transaction_on_error(__func__);
 
     picotm_end
+
+    txlist_state_clear_and_uninit_entries(&list_state,
+                                          uninit_txlist_entry_cb,
+                                          NULL);
+    txlist_state_uninit(&list_state);
 }
 
 /*
@@ -349,6 +384,11 @@ txlist_test_5(unsigned int tid)
         abort_transaction_on_error(__func__);
 
     picotm_end
+
+    txlist_state_clear_and_uninit_entries(&list_state,
+                                          uninit_txlist_entry_cb,
+                                          NULL);
+    txlist_state_uninit(&list_state);
 }
 
 /*
@@ -414,6 +454,8 @@ txlist_test_6(unsigned int tid)
         abort_transaction_on_error(__func__);
 
     picotm_end
+
+    txlist_state_uninit(&list_state);
 }
 
 /*
