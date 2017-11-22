@@ -125,8 +125,8 @@ txlist_test_2(unsigned int tid)
     struct txlist_state list_state = TXLIST_STATE_INITIALIZER(list_state);
 
     struct ulong_list_item ulong_item[LIST_MAXNITEMS];
-    init_ulong_list_items(ulong_item,
-                          ulong_item + picotm_arraylen(ulong_item),
+    init_ulong_list_items(picotm_arraybeg(ulong_item),
+                          picotm_arrayend(ulong_item),
                           LIST_BASE_VALUE);
 
     picotm_begin
@@ -135,8 +135,8 @@ txlist_test_2(unsigned int tid)
 
         /* Insert all ulong items to list */
         {
-            struct ulong_list_item* beg = ulong_item;
-            struct ulong_list_item* end = ulong_item + picotm_arraylen(ulong_item);
+            struct ulong_list_item* beg = picotm_arraybeg(ulong_item);
+            struct ulong_list_item* end = picotm_arrayend(ulong_item);
             struct txlist_entry* position = txlist_end_tx(list);
 
             for (struct ulong_list_item* pos = beg; pos < end; ++pos) {
@@ -194,8 +194,8 @@ txlist_test_3(unsigned int tid)
     struct txlist_state list_state = TXLIST_STATE_INITIALIZER(list_state);
 
     struct ulong_list_item ulong_item[LIST_MAXNITEMS];
-    init_ulong_list_items(ulong_item,
-                          ulong_item + picotm_arraylen(ulong_item),
+    init_ulong_list_items(picotm_arraybeg(ulong_item),
+                          picotm_arrayend(ulong_item),
                           LIST_BASE_VALUE);
 
     picotm_begin
@@ -204,8 +204,8 @@ txlist_test_3(unsigned int tid)
 
         /* Insert all ulong items to list */
         {
-            struct ulong_list_item* beg = ulong_item;
-            struct ulong_list_item* end = ulong_item + picotm_arraylen(ulong_item);
+            struct ulong_list_item* beg = picotm_arraybeg(ulong_item);
+            struct ulong_list_item* end = picotm_arrayend(ulong_item);
             struct txlist_entry* position = txlist_end_tx(list);
 
             for (struct ulong_list_item* pos = beg; pos < end; ++pos) {
@@ -234,8 +234,8 @@ txlist_test_3(unsigned int tid)
 
         /* Remove all items from list. */
         {
-            struct ulong_list_item* beg = ulong_item;
-            struct ulong_list_item* end = ulong_item + picotm_arraylen(ulong_item);
+            struct ulong_list_item* beg = picotm_arraybeg(ulong_item);
+            struct ulong_list_item* end = picotm_arrayend(ulong_item);
 
             for (struct ulong_list_item* pos = beg; pos < end; ++pos) {
                 txlist_erase_tx(list, &pos->list_entry);
@@ -269,8 +269,8 @@ txlist_test_4(unsigned int tid)
     struct txlist_state list_state = TXLIST_STATE_INITIALIZER(list_state);
 
     struct ulong_list_item ulong_item[LIST_MAXNITEMS];
-    init_ulong_list_items(ulong_item,
-                          ulong_item + picotm_arraylen(ulong_item),
+    init_ulong_list_items(picotm_arraybeg(ulong_item),
+                          picotm_arrayend(ulong_item),
                           LIST_BASE_VALUE);
 
     picotm_begin
@@ -279,8 +279,8 @@ txlist_test_4(unsigned int tid)
 
         /* Append all ulong items to list */
         {
-            struct ulong_list_item* beg = ulong_item;
-            struct ulong_list_item* end = ulong_item + picotm_arraylen(ulong_item);
+            struct ulong_list_item* beg = picotm_arraybeg(ulong_item);
+            struct ulong_list_item* end = picotm_arrayend(ulong_item);
 
             for (struct ulong_list_item* pos = beg; pos < end; ++pos) {
                 txlist_push_back_tx(list, &pos->list_entry);
@@ -334,8 +334,8 @@ txlist_test_5(unsigned int tid)
     struct txlist_state list_state = TXLIST_STATE_INITIALIZER(list_state);
 
     struct ulong_list_item ulong_item[LIST_MAXNITEMS];
-    init_ulong_list_items(ulong_item,
-                          ulong_item + picotm_arraylen(ulong_item),
+    init_ulong_list_items(picotm_arraybeg(ulong_item),
+                          picotm_arrayend(ulong_item),
                           LIST_BASE_VALUE);
 
     picotm_begin
@@ -344,8 +344,8 @@ txlist_test_5(unsigned int tid)
 
         /* Prepend all ulong items to list */
         {
-            struct ulong_list_item* beg = ulong_item;
-            struct ulong_list_item* end = ulong_item + picotm_arraylen(ulong_item);
+            struct ulong_list_item* beg = picotm_arraybeg(ulong_item);
+            struct ulong_list_item* end = picotm_arrayend(ulong_item);
 
             for (struct ulong_list_item* pos = beg; pos < end; ++pos) {
                 txlist_push_front_tx(list, &pos->list_entry);
@@ -401,8 +401,8 @@ txlist_test_6(unsigned int tid)
     struct txlist_state list_state = TXLIST_STATE_INITIALIZER(list_state);
 
     struct ulong_list_item ulong_item[LIST_MAXNITEMS];
-    init_ulong_list_items(ulong_item,
-                          ulong_item + picotm_arraylen(ulong_item),
+    init_ulong_list_items(picotm_arraybeg(ulong_item),
+                          picotm_arrayend(ulong_item),
                           LIST_BASE_VALUE);
 
     picotm_begin
@@ -411,8 +411,8 @@ txlist_test_6(unsigned int tid)
 
         /* Insert all ulong items to list */
         {
-            struct ulong_list_item* beg = ulong_item;
-            struct ulong_list_item* end = ulong_item + picotm_arraylen(ulong_item);
+            struct ulong_list_item* beg = picotm_arraybeg(ulong_item);
+            struct ulong_list_item* end = picotm_arrayend(ulong_item);
             struct txlist_entry* position = txlist_end_tx(list);
 
             for (struct ulong_list_item* pos = beg; pos < end; ++pos) {
@@ -466,8 +466,8 @@ static void
 txlist_test_7(unsigned int tid)
 {
     struct ulong_list_item ulong_item[LIST_MAXNITEMS];
-    init_ulong_list_items_with_value(ulong_item,
-                                     ulong_item + picotm_arraylen(ulong_item),
+    init_ulong_list_items_with_value(picotm_arraybeg(ulong_item),
+                                     picotm_arrayend(ulong_item),
                                      tid);
 
     /* Insert all ulong items to list */
@@ -476,8 +476,8 @@ txlist_test_7(unsigned int tid)
 
         struct txlist* list = txlist_of_state_tx(&g_list_state);
 
-        struct ulong_list_item* beg = ulong_item;
-        struct ulong_list_item* end = ulong_item + picotm_arraylen(ulong_item);
+        struct ulong_list_item* beg = picotm_arraybeg(ulong_item);
+        struct ulong_list_item* end = picotm_arrayend(ulong_item);
         struct txlist_entry* position = txlist_end_tx(list);
 
         for (struct ulong_list_item* pos = beg; pos < end; ++pos) {
