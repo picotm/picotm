@@ -51,7 +51,7 @@ ulong_stack_item_of_stack_entry(struct txstack_entry* stack_entry)
 {
     return picotm_containerof(stack_entry, struct ulong_stack_item,
                               stack_entry);
-};
+}
 
 static void
 ulong_stack_item_init_with_value(struct ulong_stack_item* self,
@@ -106,7 +106,7 @@ txstack_test_1(unsigned int tid)
 }
 
 /*
- * Push items into local stack.
+ * Push items onto local stack.
  */
 
 static void
@@ -262,6 +262,10 @@ txstack_test_3(unsigned int tid)
 
     txstack_state_uninit(&stack_state);
 }
+
+/*
+ * Push items onto shared stack.
+ */
 
 static void
 txstack_test_4(unsigned int tid)
