@@ -90,7 +90,7 @@ txlib_tx_acquire_txlist_of_state(struct txlib_tx* self,
  * \param self The data-structure transaction.
  * \param queue_state The queue state to acquire.
  * \param[out] error Returns an error to the caller.
- * \returns A pointer the new txlist transaction.
+ * \returns A pointer the new txqueue transaction.
  */
 struct txqueue_tx*
 txlib_tx_acquire_txqueue_of_state(struct txlib_tx* self,
