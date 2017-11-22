@@ -51,7 +51,7 @@ ulong_queue_item_of_queue_entry(struct txqueue_entry* queue_entry)
 {
     return picotm_containerof(queue_entry, struct ulong_queue_item,
                               queue_entry);
-};
+}
 
 static void
 ulong_queue_item_init_with_value(struct ulong_queue_item* self,
@@ -278,6 +278,10 @@ txqueue_test_3(unsigned int tid)
 
     txqueue_state_uninit(&queue_state);
 }
+
+/*
+ * Insert items into shared queue
+ */
 
 static void
 txqueue_test_4(unsigned int tid)
