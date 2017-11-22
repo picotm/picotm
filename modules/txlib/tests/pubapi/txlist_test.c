@@ -30,6 +30,7 @@
 #include "safeblk.h"
 #include "safe_pthread.h"
 #include "safe_stdio.h"
+#include "safe_stdlib.h"
 #include "taputils.h"
 #include "test.h"
 #include "testhlp.h"
@@ -72,18 +73,6 @@ init_ulong_list_items(struct ulong_list_item* beg,
     for (struct ulong_list_item* pos = beg; pos < end; ++pos) {
         ulong_list_item_init_with_value(pos, base_value +
                                             (unsigned long)(pos - beg));
-    }
-}
-
-static void
-init_ulong_list_items_with_value(struct ulong_list_item* beg,
-                           const struct ulong_list_item* end,
-                                 unsigned long tid)
-{
-    for (struct ulong_list_item* pos = beg; pos < end; ++pos) {
-        txlist_entry_init(&pos->list_entry);
-        pos->value = tid;
-        ulong_list_item_init_with_value(pos, tid);
     }
 }
 
@@ -465,10 +454,18 @@ txlist_test_6(unsigned int tid)
 static void
 txlist_test_7(unsigned int tid)
 {
-    struct ulong_list_item ulong_item[LIST_MAXNITEMS];
-    init_ulong_list_items_with_value(picotm_arraybeg(ulong_item),
-                                     picotm_arrayend(ulong_item),
-                                     tid);
+    struct ulong_list_item* ulong_item[LIST_MAXNITEMS];
+
+    {
+        struct ulong_list_item** beg = picotm_arraybeg(ulong_item);
+        struct ulong_list_item** end = picotm_arrayend(ulong_item);
+
+        for (struct ulong_list_item** pos = beg; pos != end; ++pos) {
+            struct ulong_list_item* item = safe_malloc(sizeof(*item));
+            ulong_list_item_init_with_value(item, tid);
+            *pos = item;
+        }
+    }
 
     /* Insert all ulong items to list */
 
@@ -476,13 +473,13 @@ txlist_test_7(unsigned int tid)
 
         struct txlist* list = txlist_of_state_tx(&g_list_state);
 
-        struct ulong_list_item* beg = picotm_arraybeg(ulong_item);
-        struct ulong_list_item* end = picotm_arrayend(ulong_item);
+        struct ulong_list_item** beg = picotm_arraybeg(ulong_item);
+        struct ulong_list_item** end = picotm_arrayend(ulong_item);
         struct txlist_entry* position = txlist_end_tx(list);
 
-        for (struct ulong_list_item* pos = beg; pos < end; ++pos) {
-            txlist_insert_tx(list, &pos->list_entry, position);
-            position = &pos->list_entry;
+        for (struct ulong_list_item** pos = beg; pos < end; ++pos) {
+            txlist_insert_tx(list, &(*pos)->list_entry, position);
+            position = &(*pos)->list_entry;
         }
 
     picotm_commit
@@ -564,6 +561,18 @@ txlist_test_7(unsigned int tid)
         abort_transaction_on_error(__func__);
 
     picotm_end
+
+    /* Free items */
+
+    {
+        struct ulong_list_item** beg = picotm_arraybeg(ulong_item);
+        struct ulong_list_item** end = picotm_arrayend(ulong_item);
+
+        for (struct ulong_list_item** pos = beg; pos != end; ++pos) {
+            ulong_list_item_uninit(*pos);
+            free(*pos);
+        }
+    }
 }
 
 static void
