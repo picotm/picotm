@@ -28,8 +28,100 @@ PICOTM_BEGIN_DECLS
 
 /**
  * \ingroup group_txlib
+ * \ingroup group_txlib_txqueue
  * \file
  * \brief Provides transactional queues
+ */
+
+/**
+ * \struct txqueue
+ * \brief A handle for operating on transaction-safe queues.
+ */
+struct txqueue;
+
+PICOTM_NOTHROW
+/**
+ * \brief Creates a transactional queue for a queue state.
+ * \param queue_state The queue state.
+ * \returns A transactional queue for the queue state.
+ */
+struct txqueue*
+txqueue_of_state_tx(struct txqueue_state* queue_state);
+
+/*
+ * Capacity
+ */
+
+PICOTM_NOTHROW
+/**
+ * \brief Tests a transactional queue for emptiness.
+ * \param self The transactional queue.
+ * \returns True if the queue is empty, false otherwise.
+ */
+bool
+txqueue_empty_tx(struct txqueue* self);
+
+PICOTM_NOTHROW
+/**
+ * \brief Returns the number of entries in a transactional queue.
+ * \param self The transactional queue.
+ * \returns The number of entries in the transactional queue.
+ */
+size_t
+txqueue_size_tx(struct txqueue* self);
+
+/*
+ * Access
+ */
+
+PICOTM_NOTHROW
+/**
+ * \brief Returns the front-end entry of a transactional queue.
+ * \param self The transactional queue.
+ * \returns The entry at the transactional queue's front end.
+ */
+struct txqueue_entry*
+txqueue_front_tx(struct txqueue* self);
+
+PICOTM_NOTHROW
+/**
+ * \brief Retruns the back-end entry of a transactional queue.
+ * \param self The transactional queue.
+ * \returns The entry at the transactional queue's back end.
+ */
+struct txqueue_entry*
+txqueue_back_tx(struct txqueue* self);
+
+/*
+ * Modfiers
+ */
+
+PICOTM_NOTHROW
+/**
+ * \brief Removes the last entry of a transactional queue.
+ * \param self The transactional queue.
+ */
+void
+txqueue_pop_tx(struct txqueue* self);
+
+PICOTM_NOTHROW
+/**
+ * \brief Inserts an entry at the front of a transactional queue.
+ * \param self The transactional queue.
+ * \param entry The queue entry to insert.
+ */
+void
+txqueue_push_tx(struct txqueue* self, struct txqueue_entry* entry);
+
+PICOTM_END_DECLS
+
+/**
+ * \defgroup group_txlib_txqueue Transactional Queues
+ *
+ * \brief The transactional queue provides a transaction-safe
+ *        implementation of a single-ended FIFO queue. Efficient insert
+ *        operations are supported on one end, efficient remove operations
+ *        are supported on the opposite end.
  *
  * Queue entries are represented by `struct txqueue_entry`. We can add an
  * instance of this data structure to any data value to turn it into a queue
@@ -265,85 +357,3 @@ PICOTM_BEGIN_DECLS
  *      picotm_end
  * ~~~
  */
-
-/**
- * \struct txqueue
- * \brief A handle for operating on transaction-safe queues.
- */
-struct txqueue;
-
-PICOTM_NOTHROW
-/**
- * \brief Creates a transactional queue for a queue state.
- * \param queue_state The queue state.
- * \returns A transactional queue for the queue state.
- */
-struct txqueue*
-txqueue_of_state_tx(struct txqueue_state* queue_state);
-
-/*
- * Capacity
- */
-
-PICOTM_NOTHROW
-/**
- * \brief Tests a transactional queue for emptiness.
- * \param self The transactional queue.
- * \returns True if the queue is empty, false otherwise.
- */
-bool
-txqueue_empty_tx(struct txqueue* self);
-
-PICOTM_NOTHROW
-/**
- * \brief Returns the number of entries in a transactional queue.
- * \param self The transactional queue.
- * \returns The number of entries in the transactional queue.
- */
-size_t
-txqueue_size_tx(struct txqueue* self);
-
-/*
- * Access
- */
-
-PICOTM_NOTHROW
-/**
- * \brief Returns the front-end entry of a transactional queue.
- * \param self The transactional queue.
- * \returns The entry at the transactional queue's front end.
- */
-struct txqueue_entry*
-txqueue_front_tx(struct txqueue* self);
-
-PICOTM_NOTHROW
-/**
- * \brief Retruns the back-end entry of a transactional queue.
- * \param self The transactional queue.
- * \returns The entry at the transactional queue's back end.
- */
-struct txqueue_entry*
-txqueue_back_tx(struct txqueue* self);
-
-/*
- * Modfiers
- */
-
-PICOTM_NOTHROW
-/**
- * \brief Removes the last entry of a transactional queue.
- * \param self The transactional queue.
- */
-void
-txqueue_pop_tx(struct txqueue* self);
-
-PICOTM_NOTHROW
-/**
- * \brief Inserts an entry at the front of a transactional queue.
- * \param self The transactional queue.
- * \param entry The queue entry to insert.
- */
-void
-txqueue_push_tx(struct txqueue* self, struct txqueue_entry* entry);
-
-PICOTM_END_DECLS

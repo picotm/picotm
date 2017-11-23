@@ -27,6 +27,7 @@ PICOTM_BEGIN_DECLS
 
 /**
  * \ingroup group_txlib
+ * \ingroup group_txlib_txstack
  * \file
  * \brief Provides non-transactional state and entries for transactional stacks
  */

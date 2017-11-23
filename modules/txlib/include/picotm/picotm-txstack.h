@@ -28,8 +28,17 @@ PICOTM_BEGIN_DECLS
 
 /**
  * \ingroup group_txlib
+ * \ingroup group_txlib_txstack
  * \file
  * \brief Provides transactional stacks
+ */
+
+/**
+ * \defgroup group_txlib_txstack Transactional Stacks
+ *
+ * \brief The transactional stack provides a transaction-safe
+ *        implementation of a single-ended LIFO stack. Efficient insert
+ *        and remove operations are supported on the same end.
  *
  * Stack entries are represented by `struct txstack_entry`. We can add an
  * instance of this data structure to any data value to turn it into a stack

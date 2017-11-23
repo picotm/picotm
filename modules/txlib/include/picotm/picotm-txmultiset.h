@@ -28,8 +28,154 @@ PICOTM_BEGIN_DECLS
 
 /**
  * \ingroup group_txlib
+ * \ingroup group_txlib_txmultiset
  * \file
  * \brief Provides transactional multisets
+ */
+
+/**
+ * \struct txmultiset
+ * \brief A handle for operating on transaction-safe multisets.
+ */
+struct txmultiset;
+
+PICOTM_NOTHROW
+/**
+ * \brief Creates a transactional multiset for a multiset state.
+ * \param multiset_state The multiset state.
+ * \returns A transactional multiset for the multiset state.
+ */
+struct txmultiset*
+txmultiset_of_state_tx(struct txmultiset_state* multiset_state);
+
+/*
+ * Entries
+ */
+
+PICOTM_NOTHROW
+/**
+ * \brief Returns the first entry of a transactional multiset.
+ * \param self The transactional multiset.
+ * \returns The transactional multiset's first entry.
+ */
+struct txmultiset_entry*
+txmultiset_begin_tx(struct txmultiset* self);
+
+PICOTM_NOTHROW
+/**
+ * \brief Returns the terminator of a transactional multiset.
+ * \param self The transactional multiset.
+ * \returns The transactional multiset's terminator entry.
+ */
+struct txmultiset_entry*
+txmultiset_end_tx(struct txmultiset* self);
+
+/*
+ * Capacity
+ */
+
+PICOTM_NOTHROW
+/**
+ * \brief Tests a transactional multiset for emptiness.
+ * \param self The transactional multiset.
+ * \returns True if the multiset is empty, false otherwise.
+ */
+bool
+txmultiset_empty_tx(struct txmultiset* self);
+
+PICOTM_NOTHROW
+/**
+ * \brief Returns the number of entries in a transactional multiset.
+ * \param self The transactional multiset.
+ * \returns The number of entries in the transactional multiset.
+ */
+size_t
+txmultiset_size_tx(struct txmultiset* self);
+
+/*
+ * Modfiers
+ */
+
+PICOTM_NOTHROW
+/**
+ * \brief Removes all entries from a transactional multiset.
+ * \param self The transactional multiset.
+ */
+void
+txmultiset_clear_tx(struct txmultiset* self);
+
+PICOTM_NOTHROW
+/**
+ * \brief Removes an entry from a transactional multiset.
+ * \param self The transactional multiset.
+ * \param entry The multiset entry to remove.
+ */
+void
+txmultiset_erase_tx(struct txmultiset* self, struct txmultiset_entry* entry);
+
+PICOTM_NOTHROW
+/**
+ * \brief Inserts an entry into a transactional multiset.
+ * \param self The transactional multiset.
+ * \param entry The multiset entry to insert.
+ */
+void
+txmultiset_insert_tx(struct txmultiset* self, struct txmultiset_entry* entry);
+
+PICOTM_NOTHROW
+/**
+ * \brief Finds an entry with a specific key in a transactional multiset.
+ * \param self The transactional multiset.
+ * \param key The multiset entry's key.
+ * \returns An entry with the given key on success, or the terminator entry
+ *          otherwise.
+ */
+struct txmultiset_entry*
+txmultiset_find_tx(struct txmultiset* self, const void* key);
+
+PICOTM_NOTHROW
+/**
+ * \brief Returns a transactional multiset's the first entry with a specific
+ *        key.
+ * \param self The transactional multiset.
+ * \param key The multiset entry's key.
+ * \returns The first entry with the given key on success, or the terminator
+ *          entry otherwise.
+ */
+struct txmultiset_entry*
+txmultiset_lower_bound_tx(struct txmultiset* self, const void* key);
+
+PICOTM_NOTHROW
+/**
+ * \brief Returns a transactional multiset's first entry with a key larger
+ *        than a specific key.
+ * \param self The transactional multiset.
+ * \param key The multiset entry's key.
+ * \returns The first entry with a key that is larger than the given key
+ *          on success, or the terminator entry otherwise.
+ */
+struct txmultiset_entry*
+txmultiset_upper_bound_tx(struct txmultiset* self, const void* key);
+
+PICOTM_NOTHROW
+/**
+ * \brief Returns the number of entries with a specfic key in a transactional
+ *        multiset.
+ * \param self The transactional multiset.
+ * \param key The multiset entry's key.
+ * \returns The number of entries with the given key.
+ */
+size_t
+txmultiset_count_tx(struct txmultiset* self, const void* key);
+
+PICOTM_END_DECLS
+
+/**
+ * \defgroup group_txlib_txmultiset Transactional Multisets
+ *
+ * \brief The transactional multiset provides a transaction-safe
+ *        implementation of a multiset. Multisets are sorted sets
+ *        of elements. Duplicate entries are supported.
  *
  * The `struct txmultiset` data structure represents a transactional
  * multiset (i.e., a set that can hold the same value multiple times). To
@@ -435,140 +581,3 @@ PICOTM_BEGIN_DECLS
  *      picotm_end
  * ~~~
  */
-
-/**
- * \struct txmultiset
- * \brief A handle for operating on transaction-safe multisets.
- */
-struct txmultiset;
-
-PICOTM_NOTHROW
-/**
- * \brief Creates a transactional multiset for a multiset state.
- * \param multiset_state The multiset state.
- * \returns A transactional multiset for the multiset state.
- */
-struct txmultiset*
-txmultiset_of_state_tx(struct txmultiset_state* multiset_state);
-
-/*
- * Entries
- */
-
-PICOTM_NOTHROW
-/**
- * \brief Returns the first entry of a transactional multiset.
- * \param self The transactional multiset.
- * \returns The transactional multiset's first entry.
- */
-struct txmultiset_entry*
-txmultiset_begin_tx(struct txmultiset* self);
-
-PICOTM_NOTHROW
-/**
- * \brief Returns the terminator of a transactional multiset.
- * \param self The transactional multiset.
- * \returns The transactional multiset's terminator entry.
- */
-struct txmultiset_entry*
-txmultiset_end_tx(struct txmultiset* self);
-
-/*
- * Capacity
- */
-
-PICOTM_NOTHROW
-/**
- * \brief Tests a transactional multiset for emptiness.
- * \param self The transactional multiset.
- * \returns True if the multiset is empty, false otherwise.
- */
-bool
-txmultiset_empty_tx(struct txmultiset* self);
-
-PICOTM_NOTHROW
-/**
- * \brief Returns the number of entries in a transactional multiset.
- * \param self The transactional multiset.
- * \returns The number of entries in the transactional multiset.
- */
-size_t
-txmultiset_size_tx(struct txmultiset* self);
-
-/*
- * Modfiers
- */
-
-PICOTM_NOTHROW
-/**
- * \brief Removes all entries from a transactional multiset.
- * \param self The transactional multiset.
- */
-void
-txmultiset_clear_tx(struct txmultiset* self);
-
-PICOTM_NOTHROW
-/**
- * \brief Removes an entry from a transactional multiset.
- * \param self The transactional multiset.
- * \param entry The multiset entry to remove.
- */
-void
-txmultiset_erase_tx(struct txmultiset* self, struct txmultiset_entry* entry);
-
-PICOTM_NOTHROW
-/**
- * \brief Inserts an entry into a transactional multiset.
- * \param self The transactional multiset.
- * \param entry The multiset entry to insert.
- */
-void
-txmultiset_insert_tx(struct txmultiset* self, struct txmultiset_entry* entry);
-
-PICOTM_NOTHROW
-/**
- * \brief Finds an entry with a specific key in a transactional multiset.
- * \param self The transactional multiset.
- * \param key The multiset entry's key.
- * \returns An entry with the given key on success, or the terminator entry
- *          otherwise.
- */
-struct txmultiset_entry*
-txmultiset_find_tx(struct txmultiset* self, const void* key);
-
-PICOTM_NOTHROW
-/**
- * \brief Returns a transactional multiset's the first entry with a specific
- *        key.
- * \param self The transactional multiset.
- * \param key The multiset entry's key.
- * \returns The first entry with the given key on success, or the terminator
- *          entry otherwise.
- */
-struct txmultiset_entry*
-txmultiset_lower_bound_tx(struct txmultiset* self, const void* key);
-
-PICOTM_NOTHROW
-/**
- * \brief Returns a transactional multiset's first entry with a key larger
- *        than a specific key.
- * \param self The transactional multiset.
- * \param key The multiset entry's key.
- * \returns The first entry with a key that is larger than the given key
- *          on success, or the terminator entry otherwise.
- */
-struct txmultiset_entry*
-txmultiset_upper_bound_tx(struct txmultiset* self, const void* key);
-
-PICOTM_NOTHROW
-/**
- * \brief Returns the number of entries with a specfic key in a transactional
- *        multiset.
- * \param self The transactional multiset.
- * \param key The multiset entry's key.
- * \returns The number of entries with the given key.
- */
-size_t
-txmultiset_count_tx(struct txmultiset* self, const void* key);
-
-PICOTM_END_DECLS

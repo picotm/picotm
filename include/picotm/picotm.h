@@ -327,6 +327,8 @@ PICOTM_END_DECLS
  *      \copybrief group_modules
  *  -# \ref group_tm \n
  *      \copybrief group_tm
+ *  -# \ref group_txlib \n
+ *      \copybrief group_txlib
  *  -# \ref group_libc \n
  *      \copybrief group_libc
  *  -# \ref group_libm \n
