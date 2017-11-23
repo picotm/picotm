@@ -26,6 +26,7 @@ PICOTM_BEGIN_DECLS
 
 /**
  * \ingroup group_txlib
+ * \ingroup group_txlib_txmultiset
  * \file
  * \brief Provides non-transactional state and entries for transactional
  *        multisets.

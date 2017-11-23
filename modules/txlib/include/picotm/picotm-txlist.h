@@ -28,8 +28,169 @@ PICOTM_BEGIN_DECLS
 
 /**
  * \ingroup group_txlib
+ * \ingroup group_txlib_txlist
  * \file
  * \brief Provides transactional lists
+ */
+
+/**
+ * \struct txlist
+ * \brief A handle for operating on transaction-safe lists.
+ */
+struct txlist;
+
+PICOTM_NOTHROW
+/**
+ * \brief Creates a transactional list for a list state.
+ * \param list_state The list state.
+ * \returns A transactional list for the list state.
+ */
+struct txlist*
+txlist_of_state_tx(struct txlist_state* list_state);
+
+/*
+ * Entries
+ */
+
+PICOTM_NOTHROW
+/**
+ * \brief Returns the first entry of a transactional list.
+ * \param self The transactional list.
+ * \returns The transactional list's first entry.
+ */
+struct txlist_entry*
+txlist_begin_tx(struct txlist* self);
+
+PICOTM_NOTHROW
+/**
+ * \brief Returns the terminator of a transactional list.
+ * \param self The transactional list.
+ * \returns The transactional list's terminator entry.
+ */
+struct txlist_entry*
+txlist_end_tx(struct txlist* self);
+
+/*
+ * Capacity
+ */
+
+PICOTM_NOTHROW
+/**
+ * \brief Tests a transactional list for emptiness.
+ * \param self The transactional list.
+ * \returns True if the list is empty, false otherwise.
+ */
+bool
+txlist_empty_tx(struct txlist* self);
+
+PICOTM_NOTHROW
+/**
+ * \brief Returns the number of entries in a transactional list.
+ * \param self The transactional list.
+ * \returns The number of entries in the transactional list.
+ */
+size_t
+txlist_size_tx(struct txlist* self);
+
+/*
+ * Element access
+ */
+
+PICOTM_NOTHROW
+/**
+ * \brief Returns the front-end entry of a transactional list without
+ *        removing it.
+ * \param self The transactional list.
+ * \returns The front entry.
+ */
+struct txlist_entry*
+txlist_front_tx(struct txlist* self);
+
+PICOTM_NOTHROW
+/**
+ * \brief Returns the back-end entry of a transactional list without
+ *        removing it.
+ * \param self The transactional list.
+ * \returns The front entry.
+ */
+struct txlist_entry*
+txlist_back_tx(struct txlist* self);
+
+/*
+ * Modfiers
+ */
+
+PICOTM_NOTHROW
+/**
+ * \brief Removes all entries from a transactional list.
+ * \param self The transactional list.
+ */
+void
+txlist_clear_tx(struct txlist* self);
+
+PICOTM_NOTHROW
+/**
+ * \brief Removes an entry from a transactional list.
+ * \param self The transactional list.
+ * \param entry The list entry to remove.
+ */
+void
+txlist_erase_tx(struct txlist* self, struct txlist_entry* entry);
+
+PICOTM_NOTHROW
+/**
+ * \brief Inserts an entry into a transactional list.
+ * \param self The transactional list.
+ * \param entry The list entry to insert.
+ * \param position The list entry before which the new entry is inserted.
+ */
+void
+txlist_insert_tx(struct txlist* self, struct txlist_entry* entry,
+                 struct txlist_entry* position);
+
+PICOTM_NOTHROW
+/**
+ * \brief Removes the last entry of a transactional list.
+ * \param self The transactional list.
+ */
+void
+txlist_pop_back_tx(struct txlist* self);
+
+PICOTM_NOTHROW
+/**
+ * \brief Removes the first entry of a transactional list.
+ * \param self The transactional list.
+ */
+void
+txlist_pop_front_tx(struct txlist* self);
+
+PICOTM_NOTHROW
+/**
+ * \brief Inserts an entry at the end of a transactional list.
+ * \param self The transactional list.
+ * \param entry The list entry to insert.
+ */
+void
+txlist_push_back_tx(struct txlist* self, struct txlist_entry* entry);
+
+PICOTM_NOTHROW
+/**
+ * \brief Inserts an entry at the beginning of a transactional list.
+ * \param self The transactional list.
+ * \param entry The list entry to insert.
+ */
+void
+txlist_push_front_tx(struct txlist* self, struct txlist_entry* entry);
+
+PICOTM_END_DECLS
+
+/**
+ * \defgroup group_txlib_txlist Transactional Lists
+ *
+ * \brief The transactional list provides a transaction-safe
+ *        implementation of a double-linked list. Efficient insert
+ *        and remove operations are supported anywhere within the
+ *        list.
  *
  * The `struct txlist` data structure represents a transactional
  * double-linked list. To create a list, we first need list entries. These
@@ -372,154 +533,3 @@ PICOTM_BEGIN_DECLS
  *      picotm_end
  * ~~~
  */
-
-/**
- * \struct txlist
- * \brief A handle for operating on transaction-safe lists.
- */
-struct txlist;
-
-PICOTM_NOTHROW
-/**
- * \brief Creates a transactional list for a list state.
- * \param list_state The list state.
- * \returns A transactional list for the list state.
- */
-struct txlist*
-txlist_of_state_tx(struct txlist_state* list_state);
-
-/*
- * Entries
- */
-
-PICOTM_NOTHROW
-/**
- * \brief Returns the first entry of a transactional list.
- * \param self The transactional list.
- * \returns The transactional list's first entry.
- */
-struct txlist_entry*
-txlist_begin_tx(struct txlist* self);
-
-PICOTM_NOTHROW
-/**
- * \brief Returns the terminator of a transactional list.
- * \param self The transactional list.
- * \returns The transactional list's terminator entry.
- */
-struct txlist_entry*
-txlist_end_tx(struct txlist* self);
-
-/*
- * Capacity
- */
-
-PICOTM_NOTHROW
-/**
- * \brief Tests a transactional list for emptiness.
- * \param self The transactional list.
- * \returns True if the list is empty, false otherwise.
- */
-bool
-txlist_empty_tx(struct txlist* self);
-
-PICOTM_NOTHROW
-/**
- * \brief Returns the number of entries in a transactional list.
- * \param self The transactional list.
- * \returns The number of entries in the transactional list.
- */
-size_t
-txlist_size_tx(struct txlist* self);
-
-/*
- * Element access
- */
-
-PICOTM_NOTHROW
-/**
- * \brief Returns the front-end entry of a transactional list without
- *        removing it.
- * \param self The transactional list.
- * \returns The front entry.
- */
-struct txlist_entry*
-txlist_front_tx(struct txlist* self);
-
-PICOTM_NOTHROW
-/**
- * \brief Returns the back-end entry of a transactional list without
- *        removing it.
- * \param self The transactional list.
- * \returns The front entry.
- */
-struct txlist_entry*
-txlist_back_tx(struct txlist* self);
-
-/*
- * Modfiers
- */
-
-PICOTM_NOTHROW
-/**
- * \brief Removes all entries from a transactional list.
- * \param self The transactional list.
- */
-void
-txlist_clear_tx(struct txlist* self);
-
-PICOTM_NOTHROW
-/**
- * \brief Removes an entry from a transactional list.
- * \param self The transactional list.
- * \param entry The list entry to remove.
- */
-void
-txlist_erase_tx(struct txlist* self, struct txlist_entry* entry);
-
-PICOTM_NOTHROW
-/**
- * \brief Inserts an entry into a transactional list.
- * \param self The transactional list.
- * \param entry The list entry to insert.
- * \param position The list entry before which the new entry is inserted.
- */
-void
-txlist_insert_tx(struct txlist* self, struct txlist_entry* entry,
-                 struct txlist_entry* position);
-
-PICOTM_NOTHROW
-/**
- * \brief Removes the last entry of a transactional list.
- * \param self The transactional list.
- */
-void
-txlist_pop_back_tx(struct txlist* self);
-
-PICOTM_NOTHROW
-/**
- * \brief Removes the first entry of a transactional list.
- * \param self The transactional list.
- */
-void
-txlist_pop_front_tx(struct txlist* self);
-
-PICOTM_NOTHROW
-/**
- * \brief Inserts an entry at the end of a transactional list.
- * \param self The transactional list.
- * \param entry The list entry to insert.
- */
-void
-txlist_push_back_tx(struct txlist* self, struct txlist_entry* entry);
-
-PICOTM_NOTHROW
-/**
- * \brief Inserts an entry at the beginning of a transactional list.
- * \param self The transactional list.
- * \param entry The list entry to insert.
- */
-void
-txlist_push_front_tx(struct txlist* self, struct txlist_entry* entry);
-
-PICOTM_END_DECLS
