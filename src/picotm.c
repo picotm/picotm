@@ -154,18 +154,8 @@ picotm_lock_owner_get_lock_manager(struct picotm_lock_owner* lo)
  */
 
 PICOTM_EXPORT
-struct __picotm_tx*
-__picotm_get_tx()
-{
-    struct tx* tx = get_non_null_tx();
-    assert(tx);
-
-    return &tx->public_state;
-}
-
-PICOTM_EXPORT
 _Bool
-__picotm_begin(enum __picotm_mode mode)
+__picotm_begin(enum __picotm_mode mode, jmp_buf* env)
 {
     static const unsigned char tx_mode[] = {
         TX_MODE_REVOCABLE,
@@ -188,7 +178,7 @@ __picotm_begin(enum __picotm_mode mode)
         return false; /* Enter recovery mode. */
     }
 
-    tx_begin(tx, tx_mode[mode], mode == PICOTM_MODE_RETRY, error);
+    tx_begin(tx, tx_mode[mode], mode == PICOTM_MODE_RETRY, env, error);
     if (picotm_error_is_set(error)) {
         return false; /* Enter recovery mode. */
     }
@@ -222,7 +212,7 @@ restart_tx(struct tx* tx, enum __picotm_mode mode)
 
     /* Restarting the transaction here transfers control
      * to __picotm_begin(). */
-    longjmp(tx->public_state.env, (int)mode);
+    longjmp(*(tx->env), (int)mode);
 }
 
 PICOTM_EXPORT
