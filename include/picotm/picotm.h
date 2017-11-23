@@ -80,26 +80,12 @@ enum __picotm_mode {
     PICOTM_MODE_RECOVERY
 };
 
-/* Internal transaction structure; touch this to mess up badly.
- * \warning This is an internal interface. Don't use it in application code.
- */
-struct __picotm_tx {
-    jmp_buf env;
-};
-
-PICOTM_NOTHROW
-/* Returns the internal transaction structure.
- * \warning This is an internal interface. Don't use it in application code.
- */
-struct __picotm_tx*
-__picotm_get_tx(void);
-
 PICOTM_NOTHROW
 /* Begins or restarts a transaction, or handles an error.
  * \warning This is an internal interface. Don't use it in application code.
  */
 _Bool
-__picotm_begin(enum __picotm_mode mode);
+__picotm_begin(enum __picotm_mode mode, jmp_buf* env);
 
 /**
  * Starts a new transaction.
@@ -109,9 +95,11 @@ __picotm_begin(enum __picotm_mode mode);
  * execution phase. If the transaction aborts, it will restart from where
  * the ::picotm_begin had been invoked.
  */
-#define picotm_begin                                                        \
-    if (__picotm_begin((enum __picotm_mode)setjmp(__picotm_get_tx()->env))) \
-    {
+#define picotm_begin                                                    \
+    {                                                                   \
+        jmp_buf __env;                                                  \
+        if (__picotm_begin((enum __picotm_mode)setjmp(__env), &__env))  \
+        {
 
 PICOTM_NOTHROW
 /*
@@ -132,14 +120,15 @@ __picotm_commit(void);
  * \attention Calling this macro is only valid *after* ::picotm_begin and
  *            *before* ::picotm_end.
  */
-#define picotm_commit       \
-        __picotm_commit();  \
-    } else {
+#define picotm_commit           \
+            __picotm_commit();  \
+        } else {
 
 /**
  * Ends the current transaction.
  */
 #define picotm_end  \
+        }           \
     }
 
 PICOTM_NOTHROW

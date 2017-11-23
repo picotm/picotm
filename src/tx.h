@@ -19,10 +19,10 @@
 
 #pragma once
 
+#include <setjmp.h>
 #include <stdbool.h>
 #include "log.h"
 #include "module.h"
-#include "picotm/picotm.h"
 #include "picotm_lock_owner.h"
 
 /**
@@ -43,7 +43,7 @@ enum tx_mode {
 };
 
 struct tx {
-    struct __picotm_tx public_state;
+    jmp_buf*          env;
     struct log        log;
     struct tx_shared *shared;
     enum tx_mode      mode;
@@ -91,7 +91,7 @@ tx_append_event(struct tx* self, unsigned long module, unsigned long op,
                 uintptr_t cookie, struct picotm_error* error);
 
 void
-tx_begin(struct tx* self, enum tx_mode mode, bool is_retry,
+tx_begin(struct tx* self, enum tx_mode mode, bool is_retry, jmp_buf* env,
          struct picotm_error* error);
 
 void
