@@ -207,7 +207,7 @@ PICOTM_END_DECLS
  * macro `TXMULTISET_ENTRY_INITIALIZER` initializes static or stack-allocated
  * multiset entries. The example below illustrates this.
  *
- * ~~~
+ * ~~~ c
  *      struct ulong_item {
  *          struct txmultiset_entry multiset_entry;
  *
@@ -280,13 +280,13 @@ PICOTM_END_DECLS
  *
  * The initializer function takes the multiset state and two additional
  * call-back functions, which are required for sorting the multiset's
- * entries. The key_cb() call-back function returns a pointer to the key
+ * entries. The `key_cb()` call-back function returns a pointer to the key
  * for a given entry. In the example above, it's the value itself. The
- * compare function compares two keys. It returns a value less than, equal
- * to, or greater than zero if the left-hand-side value is less than, equal
- * to, or greater than the right-hand-side value. Entries in a multisets are
- * sorted by their key in ascending order. These call-back functions provide
- * the key and the compare operation.
+ * `compare_cb()` call-back function compares two keys. It returns a value
+ * less than, equal to, or greater than zero if the left-hand-side value
+ * is less than, equal to, or greater than the right-hand-side value.
+ * Entries in a multiset are sorted by their key in ascending order. These
+ * call-back functions provide the key and the compare operation.
  *
  * The code uses the initializer function `txmultiset_state_init()`. For
  * static or stack-allocated multiset states, there's the initializer macro
@@ -369,6 +369,12 @@ PICOTM_END_DECLS
  * automatically remove the entry during the rollback; thus restoring the
  * original state.
  *
+ * The inserted entry will be sorted in ascending order into the multiset,
+ * using the key the compare call-back functions. The insert function compares
+ * the key of the new entry to the keys of existing entries to determines the
+ * new entry's position. The set is implemented as a tree, so inserting
+ * requires a compare operation with only a small fraction of existing items.
+ *
  * To remove an entry from the multiset, we can call `txmultiset_erase_tx()`, as
  * illustated in the example below.
  *
@@ -388,9 +394,10 @@ PICOTM_END_DECLS
  *      picotm_end
  * ~~~
  *
- * As usual, all errors are detected and handled by the transaction
- * framework. The benefits of transactional code show when we move
- * entries between multisets.
+ * Removing an entry keeps the entries sorted. The multiset's implementation
+ * re-arranges the entries automatically with very little overhead. As usual,
+ * all errors are detected and handled by the transaction framework. The
+ * benefits of transactional code show when we move entries between multisets.
  *
  * ~~~ c
  *      // init and ulong code here
@@ -411,8 +418,8 @@ PICOTM_END_DECLS
  *      picotm_end
  * ~~~
  *
- * In this example, we remove an entry from a source multiset and insert it to
- * a destination multiset. The transaction framework automatically isolates
+ * In this example, we removed an entry from a source multiset and inserted it
+ * into a destination multiset. The transaction framework automatically isolates
  * these operations from concurrent transactions until the transaction commits.
  * So concurrent transactions see the entry in *either* the source multiset
  * *or* the destination multiset, but never in both. If the transaction has to
@@ -448,7 +455,7 @@ PICOTM_END_DECLS
  * *after* the final entry is returned by `txmultiset_end_tx()`. The
  * terminator entry is not a real entry and should not be dereferenced. Calls
  * to `txmultiset_entry_next_tx()` and `txmultiset_entry_prev_tx()` return an
- * entry's successor or predecessor. Here's and example that iterates over a
+ * entry's successor or predecessor. Here's an example that iterates over a
  * multiset of values of type `unsigned long` and sums up the individual
  * values.
  *
@@ -488,6 +495,7 @@ PICOTM_END_DECLS
  *      picotm_end
  * ~~~
  *
+ * Being a sorted data structure, multisets offer efficient search operations.
  * A call to `txmultiset_find_tx()` looks-up an entry by a key. A multiset
  * can contain multiple entries with the same key. In this case
  * `txmultiset_find_tx()` returns one of them. The exact entry can vary
