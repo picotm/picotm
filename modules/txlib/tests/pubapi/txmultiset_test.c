@@ -29,7 +29,7 @@
 #include "picotm/picotm-txmultiset.h"
 #include "ptr.h"
 #include "safeblk.h"
-#include "safe_pthread.h"
+#include "safe_sched.h"
 #include "safe_stdio.h"
 #include "safe_stdlib.h"
 #include "taputils.h"
@@ -749,7 +749,7 @@ txmultiset_test_8(unsigned int tid)
 
     picotm_end
 
-    safe_pthread_yield();
+    safe_sched_yield();
 
     /* Compare values; consecutive items should have same value. */
 
@@ -791,7 +791,7 @@ txmultiset_test_8(unsigned int tid)
 
     picotm_end
 
-    safe_pthread_yield();
+    safe_sched_yield();
 
     /* Remove all items with local TID from shared multiset. */
 

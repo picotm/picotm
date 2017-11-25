@@ -100,14 +100,3 @@ safe_pthread_mutex_unlock(pthread_mutex_t* mutex)
     }
     return err;
 }
-
-int
-safe_pthread_yield()
-{
-    int err = pthread_yield();
-    if (err) {
-        tap_error_errno("pthread_mutex_yield()", err);
-        abort_safe_block();
-    }
-    return err;
-}
