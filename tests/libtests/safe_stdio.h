@@ -19,8 +19,7 @@
 
 #pragma once
 
-#include <stdarg.h>
-#include <stddef.h>
+#include <stdio.h>
 
 /*
  * Interfaces with variable number of arguments

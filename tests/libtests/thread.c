@@ -20,7 +20,6 @@
 #include "thread.h"
 #include <picotm/picotm.h>
 #include <stdbool.h>
-#include <stdlib.h>
 #include "safeblk.h"
 #include "safe_pthread.h"
 #include "safe_stdlib.h"

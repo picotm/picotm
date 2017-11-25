@@ -19,8 +19,7 @@
 
 #pragma once
 
-struct timeval;
-struct timezone;
+#include <sys/time.h>
 
 int
 safe_gettimeofday(struct timeval* restrict tv, struct timezone* tz);
