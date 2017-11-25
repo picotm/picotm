@@ -21,6 +21,7 @@
 
 #include <stdbool.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include "picotm/picotm-libc.h"
 
 /**

@@ -26,6 +26,7 @@
 #include <stddef.h>
 #include <sys/queue.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include "fd.h"
 #include "picotm/picotm-libc.h"
 
