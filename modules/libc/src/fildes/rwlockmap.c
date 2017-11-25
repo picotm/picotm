@@ -24,6 +24,7 @@
 #include <picotm/picotm-error.h>
 #include <picotm/picotm-lib-array.h>
 #include <stdlib.h>
+#include <sys/types.h>
 
 /*
  * rwlockmap pages
