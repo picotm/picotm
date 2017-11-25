@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <stddef.h>
+#include <stdlib.h>
 
 void*
 safe_calloc(size_t nmemb, size_t size);

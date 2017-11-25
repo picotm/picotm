@@ -19,7 +19,6 @@
 
 #include "safe_stdio.h"
 #include <errno.h>
-#include <stdio.h>
 #include "safeblk.h"
 #include "taputils.h"
 

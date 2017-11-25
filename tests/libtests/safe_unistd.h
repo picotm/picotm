@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <sys/types.h>
+#include <unistd.h>
 
 int
 safe_chdir(const char* path);

@@ -19,7 +19,6 @@
 
 #include "safe_sys_time.h"
 #include <errno.h>
-#include <sys/time.h>
 #include "safeblk.h"
 #include "taputils.h"
 

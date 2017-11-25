@@ -19,7 +19,6 @@
 
 #include "safe_unistd.h"
 #include <errno.h>
-#include <unistd.h>
 #include "safeblk.h"
 #include "taputils.h"
 

@@ -20,7 +20,6 @@
 #include "safe_stdlib.h"
 #include <errno.h>
 #include <stdbool.h>
-#include <stdlib.h>
 #include "safeblk.h"
 #include "taputils.h"
 
