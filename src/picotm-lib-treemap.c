@@ -18,7 +18,7 @@
  */
 
 #include "picotm/picotm-lib-treemap.h"
-#if defined HAVE_ALLOCA && HAVE_ALLOCA
+#if defined(HAVE_ALLOCA_H) && HAVE_ALLOCA_H
 #include <alloca.h>
 #endif
 #include <assert.h>
