@@ -19,7 +19,14 @@
 
 #include "picotm/stdlib-tm.h"
 #include <errno.h>
+/* We test and include <malloc_np.h> first, because FreeBSD provides
+ * <malloc_np.h>, but fails with an error if <malloc.h> is included.
+ */
+#if defined(HAVE_MALLOC_NP_H) && HAVE_MALLOC_NP_H
+#include <malloc_np.h>
+#elif defined (HAVE_MALLOC_H) && HAVE_MALLOC_H
 #include <malloc.h>
+#endif
 #include <picotm/picotm-module.h>
 #include <picotm/picotm.h>
 #include <string.h>
