@@ -346,7 +346,6 @@ fd_tx_close_exec(struct fd_tx* self, int fildes, bool isnoundo, int* cookie,
         close_exec_ts
     };
 
-    assert(self->cc_mode < sizeof(close_exec)/sizeof(close_exec[0]));
     assert(close_exec[self->cc_mode]);
 
     return close_exec[self->cc_mode](self, fildes, cookie, error);
@@ -378,7 +377,7 @@ fd_tx_close_apply(struct fd_tx* self, int fildes, int cookie,
         close_apply_ts
     };
 
-    assert(self->cc_mode < sizeof(close_apply)/sizeof(close_apply[0]));
+    assert(close_apply[self->cc_mode]);
 
     close_apply[self->cc_mode](self, fildes, cookie, error);
 }
@@ -400,7 +399,6 @@ fd_tx_close_undo(struct fd_tx* self, int fildes, int cookie,
         close_undo_ts
     };
 
-    assert(self->cc_mode < sizeof(close_undo)/sizeof(close_undo[0]));
     assert(close_undo[self->cc_mode]);
 
     close_undo[self->cc_mode](self, fildes, cookie, error);
