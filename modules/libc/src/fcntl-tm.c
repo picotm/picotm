@@ -18,6 +18,7 @@
  */
 
 #include "picotm/fcntl-tm.h"
+#include <assert.h>
 #include <errno.h>
 #include <picotm/picotm-module.h>
 #include <stdarg.h>
@@ -101,9 +102,17 @@ open_tm(const char* path, int oflag, ...)
     mode_t mode = 0;
 
     if (oflag & O_CREAT) {
+
+        /* The optional third argument is of type `mode_t`. It's
+         * decoded as `int`. If `mode_t` has a conversion rank
+         * larger than `int`, we have to adapt the call to
+         * va_arg(). */
+        static_assert(sizeof(mode_t) <= sizeof(int),
+                      "`mode_t` has incorrect size");
+
         va_list arg;
         va_start(arg, oflag);
-        mode = va_arg(arg, mode_t);
+        mode = va_arg(arg, int);
         va_end(arg);
     }
 
