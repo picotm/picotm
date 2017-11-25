@@ -20,6 +20,7 @@
 #pragma once
 
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include "fcntlop.h"
 
 /**
