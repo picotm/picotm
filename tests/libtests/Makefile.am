@@ -27,6 +27,8 @@ libpicotm_tests_la_SOURCES = opts.c \
                              safe_fcntl.h \
                              safe_pthread.c \
                              safe_pthread.h \
+                             safe_sched.c \
+                             safe_sched.h \
                              safe_stdio.c \
                              safe_stdio.h \
                              safe_stdlib.c \
