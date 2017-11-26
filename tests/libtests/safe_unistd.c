@@ -19,6 +19,7 @@
 
 #include "safe_unistd.h"
 #include <errno.h>
+#include "compat/temp_failure_retry.h"
 #include "safeblk.h"
 #include "taputils.h"
 

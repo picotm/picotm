@@ -18,7 +18,8 @@
 
 check_LTLIBRARIES = libpicotm_tests.la
 
-libpicotm_tests_la_SOURCES = opts.c \
+libpicotm_tests_la_SOURCES = compat/temp_failure_retry.h \
+                             opts.c \
                              opts.h \
                              ptr.h \
                              safeblk.c \
