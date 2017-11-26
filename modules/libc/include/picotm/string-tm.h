@@ -222,10 +222,11 @@ PICOTM_NOTHROW
 int
 __strerror_r_posix_tm(int errnum, char* buf, size_t buflen);
 
-#if (_POSIX_C_SOURCE >= 200112L) && !_GNU_SOURCE
-#define strerror_r_tm   __strerror_r_posix_tm
+#if defined(__GNU_LIBRARY__) && \
+    (defined(_GNU_SOURCE) || (_POSIX_C_SOURCE < 200112L))
+#define strerror_r_tx   __strerror_r_gnu_tx
 #else
-#define strerror_r_tm   __strerror_r_gnu_tm
+#define strerror_r_tx   __strerror_r_posix_tx
 #endif
 #endif
 
