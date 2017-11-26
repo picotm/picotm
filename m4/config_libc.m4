@@ -13,4 +13,11 @@
 #   without any warranty.
 
 AC_DEFUN([CONFIG_LIBC], [
+
+    #
+    # libc compile-time constants
+    #
+
+    AC_DEFINE([MAXNUMFD], [1024], [Maximum number of file descriptors])
+    AC_DEFINE([RECBITS], [5], [Bits per file record])
 ])
