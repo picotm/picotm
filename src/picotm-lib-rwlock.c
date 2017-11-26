@@ -291,7 +291,7 @@ void
 picotm_rwlock_try_wrlock(struct picotm_rwlock* self, bool upgrade,
                          struct picotm_error* error)
 {
-    static const bool (*try_lock[])(struct picotm_rwlock*) = {
+    static bool (* const try_lock[])(struct picotm_rwlock*) = {
         try_wrlock,
         try_uplock
     };
