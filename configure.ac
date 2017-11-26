@@ -82,6 +82,13 @@ AC_CHECK_HEADERS([sys/cdefs.h])
 
 AC_FUNC_ALLOCA
 
+
+dnl
+dnl Modules
+dnl
+
+CONFIG_LIBC
+
 CHECK_LIBM
 
 
