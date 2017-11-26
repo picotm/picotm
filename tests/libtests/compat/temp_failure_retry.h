@@ -19,12 +19,22 @@
 
 #pragma once
 
-#include <fcntl.h>
-#include "compat/temp_failure_retry.h"
+#include <unistd.h>
 
-int
-handle_fcntl_res(int res, const char* filename, int line);
+/**
+ * \brief Restarts a system call if it was interrupted by a signal.
+ *
+ * This interface was taken from GNU.
+ */
+#define __PICOTM_LIBC_TEMP_FAILURE_RETRY(expr)      \
+    (__extension__({                                \
+        long int res;                               \
+        do {                                        \
+            res = (long int)(expr);                 \
+        } while ((res < 0) && (errno == EINTR));    \
+        res;                                        \
+     }))
 
-#define safe_fcntl(fd, ...)                                         \
-    handle_fcntl_res(TEMP_FAILURE_RETRY(fcntl(fd, __VA_ARGS__)),    \
-                     __FILE__, __LINE__);
+#ifndef TEMP_FAILURE_RETRY
+#define TEMP_FAILURE_RETRY  __PICOTM_LIBC_TEMP_FAILURE_RETRY
+#endif
