@@ -26,6 +26,8 @@ libpicotm_c_la_SOURCES = allocator/allocator_tx.c \
                          allocator/allocator_tx.h \
                          allocator/module.c \
                          allocator/module.h \
+                         compat/get_current_dir_name.c \
+                         compat/get_current_dir_name.h \
                          cwd/cwd.c \
                          cwd/cwd.h \
                          cwd/cwd_tx.c \

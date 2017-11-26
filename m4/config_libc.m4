@@ -210,6 +210,12 @@ AC_DEFUN([_CHECK_LIBC_UNISTD_H], [
         _CHECK_MODULE_INTF([libc], [sync],   [[#include <unistd.h>]])
         _CHECK_MODULE_INTF([libc], [unlink], [[#include <unistd.h>]])
         _CHECK_MODULE_INTF([libc], [write],  [[#include <unistd.h>]])
+
+        #
+        # System interfaces
+        #
+
+        AC_CHECK_DECLS([get_current_dir_name],,,[[#include <unistd.h>]])
     fi
 ])
 

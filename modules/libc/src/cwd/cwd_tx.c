@@ -26,6 +26,7 @@
 #include <picotm/picotm-module.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include "compat/get_current_dir_name.h"
 
 enum cwd_tx_cmd {
     CMD_CHDIR,
