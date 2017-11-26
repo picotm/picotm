@@ -28,6 +28,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include "compat/temp_failure_retry.h"
 #include "fcntlop.h"
 #include "fcntloptab.h"
 #include "file_tx_ops.h"
