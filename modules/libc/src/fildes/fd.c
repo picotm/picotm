@@ -27,6 +27,7 @@
 #include <picotm/picotm-lib-rwstate.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include "compat/temp_failure_retry.h"
 
 static struct fd*
 fd_of_picotm_shared_ref16_obj(struct picotm_shared_ref16_obj* ref_obj)

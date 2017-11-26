@@ -31,6 +31,7 @@
 #include "allocator/module.h"
 #include "chrdev.h"
 #include "chrdevtab.h"
+#include "compat/temp_failure_retry.h"
 #include "cwd/module.h"
 #include "dir.h"
 #include "dirtab.h"

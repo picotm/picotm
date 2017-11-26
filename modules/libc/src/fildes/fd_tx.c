@@ -26,6 +26,7 @@
 #include <string.h>
 #include <unistd.h>
 #include "chrdev_tx.h"
+#include "compat/temp_failure_retry.h"
 #include "dir_tx.h"
 #include "fcntlop.h"
 #include "fcntloptab.h"
