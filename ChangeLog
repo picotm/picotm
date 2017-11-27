@@ -1,4 +1,23 @@
 
+picotm 0.8.0 (2017-11-27)
+------------
+
+    * New transactional data structures. Picotm now supports transactional
+      lists, multisets, queues and stacks. Operation on these data structures
+      provide concurrency control and error detection, and integrate with the
+      transaction manager.
+
+    * Unused functions and static variables can now be removed during the
+      link step. This can greatly reduce the size of statically linked
+      executables.
+
+    * Bug fix: Failure to initialize a transaction will now be handled
+      correctly by starting error recovery. (#139)
+
+    * Bug fix: Irrevocability state is released exactly once during a roll
+      back of the transaction. (#160)
+
+
 picotm 0.7.0 (2017-10-27)
 ------------
 
