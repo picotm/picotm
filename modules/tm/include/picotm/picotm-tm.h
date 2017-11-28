@@ -20,6 +20,7 @@
 #pragma once
 
 #include <picotm/compiler.h>
+#include <picotm/config/picotm-tm-config.h>
 #include <stddef.h>
 #include <stdint.h>
 
