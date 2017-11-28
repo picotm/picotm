@@ -86,8 +86,8 @@ dnl
 dnl Picotm compile-time variables
 dnl
 
-AC_DEFINE([MAXNUMFD], [1024])
-AC_DEFINE([RECBITS],  [5])
+AC_DEFINE([MAXNUMFD], [1024], [Maximum number of file descriptors])
+AC_DEFINE([RECBITS], [5], [Bits per file record])
 
 
 dnl
