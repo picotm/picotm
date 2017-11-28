@@ -22,6 +22,7 @@
 # build infrastructure.
 
 test -d build-aux/ || mkdir -p build-aux/ || exit $?
+test -d config/ || mkdir -p config/ || exit $?
 test -d m4/ || mkdir -p m4/ || exit $?
 
 test -e ChangeLog || touch ChangeLog || exit $?
