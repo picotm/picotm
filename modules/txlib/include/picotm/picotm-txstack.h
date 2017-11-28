@@ -20,6 +20,7 @@
 #pragma once
 
 #include <picotm/compiler.h>
+#include <picotm/config/picotm-txlib-config.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include "picotm-txstack-state.h"

@@ -100,6 +100,7 @@ CONFIG_LIBPTHREAD
 AC_CONFIG_HEADERS([modules/libm/include/picotm/config/picotm-libm-config.h])
 CONFIG_LIBM
 
+AC_CONFIG_HEADERS([modules/txlib/include/picotm/config/picotm-txlib-config.h])
 CONFIG_TXLIB
 
 
