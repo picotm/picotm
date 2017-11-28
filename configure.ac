@@ -87,6 +87,7 @@ dnl
 dnl Modules
 dnl
 
+AC_CONFIG_HEADERS([modules/libc/include/picotm/config/picotm-libc-config.h])
 CONFIG_LIBC
 
 CHECK_LIBM

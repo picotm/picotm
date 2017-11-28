@@ -21,6 +21,7 @@
 
 #include <fcntl.h>
 #include <picotm/compiler.h>
+#include <picotm/config/picotm-libc-config.h>
 
 PICOTM_BEGIN_DECLS
 

@@ -19,8 +19,9 @@
 
 #pragma once
 
-#include <stddef.h>
+#include <picotm/config/picotm-libc-config.h>
 #include <picotm/picotm-tm.h>
+#include <stddef.h>
 
 PICOTM_BEGIN_DECLS
 
