@@ -17,6 +17,7 @@
 # DEALINGS IN THE SOFTWARE.
 
 nobase_include_HEADERS = picotm/complex.h \
+                         picotm/config/picotm-libm-config.h \
                          picotm/math.h \
                          picotm/math-tm.h \
                          picotm/picotm-libm.h

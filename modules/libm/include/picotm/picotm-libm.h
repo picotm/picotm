@@ -20,6 +20,7 @@
 #pragma once
 
 #include <picotm/compiler.h>
+#include <picotm/config/picotm-libm-config.h>
 
 PICOTM_BEGIN_DECLS
 

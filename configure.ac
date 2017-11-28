@@ -94,6 +94,7 @@ AC_CONFIG_HEADERS(
     [modules/libpthread/include/picotm/config/picotm-libpthread-config.h])
 CONFIG_LIBPTHREAD
 
+AC_CONFIG_HEADERS([modules/libm/include/picotm/config/picotm-libm-config.h])
 CONFIG_LIBM
 
 
