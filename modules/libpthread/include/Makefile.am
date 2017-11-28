@@ -16,4 +16,5 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-nobase_include_HEADERS = picotm/pthread.h
+nobase_include_HEADERS = picotm/config/picotm-libpthread-config.h \
+                         picotm/pthread.h
