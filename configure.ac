@@ -66,7 +66,7 @@ dnl Build toolchain
 dnl
 
 AM_PROG_AR
-AC_PROG_LIBTOOL
+LT_INIT
 
 
 dnl
