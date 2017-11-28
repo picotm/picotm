@@ -90,6 +90,8 @@ dnl
 AC_CONFIG_HEADERS([modules/libc/include/picotm/config/picotm-libc-config.h])
 CONFIG_LIBC
 
+CONFIG_LIBPTHREAD
+
 CHECK_LIBM
 
 
