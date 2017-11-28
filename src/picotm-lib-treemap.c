@@ -396,14 +396,14 @@ picotm_treemap_for_each_value(struct picotm_treemap* self, void* data,
 
     /* allocate enough stack to hold n directories plus 1 value */
 
-#if defined HAVE_ALLOCA && HAVE_ALLOCA
-    struct dir_stack* stack = alloca(sizeof_dir_stack(self->depth));
-#else
+#if !defined(HAVE_ALLOCA) || !HAVE_ALLOCA
     struct dir_stack* stack = malloc(sizeof_dir_stack(self->depth));
     if (!stack) {
         picotm_error_set_errno(error, errno);
         return;
     }
+#else
+    struct dir_stack* stack = alloca(sizeof_dir_stack(self->depth));
 #endif
 
     size_t depth = 0; /* stack depth; *not* tree depth! */
@@ -422,12 +422,14 @@ picotm_treemap_for_each_value(struct picotm_treemap* self, void* data,
         goto err_walk_values;
     }
 
+#if !defined(HAVE_ALLOCA) || !HAVE_ALLOCA
     free(stack);
+#endif
 
     return;
 
 err_walk_values:
-#if !(defined HAVE_ALLOCA && HAVE_ALLOCA)
+#if !defined(HAVE_ALLOCA) || !HAVE_ALLOCA
     free(stack);
 #endif
     return;
