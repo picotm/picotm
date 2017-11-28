@@ -100,6 +100,8 @@ CONFIG_LIBPTHREAD
 AC_CONFIG_HEADERS([modules/libm/include/picotm/config/picotm-libm-config.h])
 CONFIG_LIBM
 
+CONFIG_TXLIB
+
 
 dnl
 dnl Documentation
