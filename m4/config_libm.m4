@@ -1,7 +1,7 @@
 #
 # SYNOPSIS
 #
-#   CHECK_LIBM
+#   CONFIG_LIBM
 #
 # LICENSE
 #
@@ -12,6 +12,6 @@
 #   notice and this notice are preserved.  This file is offered as-is,
 #   without any warranty.
 
-AC_DEFUN([CHECK_LIBM], [
+AC_DEFUN([CONFIG_LIBM], [
   AC_CHECK_LIB([m], [signgam])
 ])
