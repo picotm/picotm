@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <picotm/config/picotm-txlib-config.h>
 #include "picotm-txlist.h"
 #include "picotm-txlist-state.h"
 #include "picotm-txqueue.h"

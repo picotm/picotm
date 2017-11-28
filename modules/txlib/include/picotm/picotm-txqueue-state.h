@@ -21,6 +21,7 @@
 
 #include <stddef.h>
 #include <picotm/compiler.h>
+#include <picotm/config/picotm-txlib-config.h>
 #include <picotm/picotm-lib-rwlock.h>
 
 PICOTM_BEGIN_DECLS
