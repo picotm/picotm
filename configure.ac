@@ -94,7 +94,7 @@ AC_CONFIG_HEADERS(
     [modules/libpthread/include/picotm/config/picotm-libpthread-config.h])
 CONFIG_LIBPTHREAD
 
-CHECK_LIBM
+CONFIG_LIBM
 
 
 dnl
