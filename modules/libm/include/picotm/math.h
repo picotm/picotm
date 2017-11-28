@@ -21,6 +21,7 @@
 
 #include <math.h>
 #include <picotm/compiler.h>
+#include <picotm/config/picotm-libm-config.h>
 #include <picotm/picotm-tm.h>
 
 PICOTM_BEGIN_DECLS
