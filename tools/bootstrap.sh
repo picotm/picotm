@@ -21,12 +21,15 @@
 # Run this script in the repository's top-level directory to generate
 # build infrastructure.
 
-test -d build-aux/ || mkdir -p build-aux/
-test -d m4/ || mkdir -p m4/
+test -d build-aux/ || mkdir -p build-aux/ || exit $?
+test -d m4/ || mkdir -p m4/ || exit $?
 
-test -e ChangeLog || touch ChangeLog
+test -e ChangeLog || touch ChangeLog || exit $?
 
-libtoolize -c
-aclocal -I m4/
-automake -ac
-autoconf
+# TODO: pass '-Wall -Werror' to libtool after upgrading CI to libtool >= 2.4.3
+libtoolize -c || exit $?
+aclocal -Wall -Werror -I m4/ || exit $?
+automake -Wall -Werror -ac || exit $?
+autoconf -Wall -Werror || exit $?
+
+exit 0
