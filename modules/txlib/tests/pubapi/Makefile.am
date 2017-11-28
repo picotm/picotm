@@ -66,4 +66,4 @@ AM_CPPFLAGS = -I$(top_builddir)/tests/libtests \
               -I$(top_srcdir)/modules/txlib/include \
               -I$(top_builddir)/include \
               -I$(top_srcdir)/include \
-              -include picotm/config.h
+              -include config.h
