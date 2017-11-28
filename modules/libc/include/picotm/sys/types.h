@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <picotm/config/picotm-libc-config.h>
 #include <picotm/picotm-tm.h>
 #include <sys/types.h>
 

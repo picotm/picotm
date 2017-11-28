@@ -16,7 +16,8 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-nobase_include_HEADERS = picotm/errno.h \
+nobase_include_HEADERS = picotm/config/picotm-libc-config.h \
+                         picotm/errno.h \
                          picotm/fcntl-tm.h \
                          picotm/fcntl.h \
                          picotm/sched.h \
