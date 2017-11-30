@@ -118,14 +118,6 @@ else
 fi
 AC_SUBST([DOXYGEN_HAVE_DOT], [$doxygen_have_dot])
 
-doxygen_input="`realpath $srcdir/include`  \
-               `realpath $srcdir/modules`  \
-               `realpath $srcdir/src`"
-AC_SUBST([DOXYGEN_INPUT], [$doxygen_input])
-
-doxygen_strip_from_path="`realpath $srcdir`"
-AC_SUBST([DOXYGEN_STRIP_FROM_PATH], [$doxygen_strip_from_path])
-
 
 dnl
 dnl Output
