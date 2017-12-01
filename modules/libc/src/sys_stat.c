@@ -25,6 +25,7 @@
 #include "fildes/module.h"
 #include "picotm/sys/stat-tm.h"
 
+#if defined(PICOTM_LIBC_HAVE_CHMOD) && PICOTM_LIBC_HAVE_CHMOD
 PICOTM_EXPORT
 int
 chmod_tx(const char* path, mode_t mode)
@@ -32,7 +33,9 @@ chmod_tx(const char* path, mode_t mode)
     privatize_c_tx(path, '\0', PICOTM_TM_PRIVATIZE_LOAD);
     return chmod_tm(path, mode);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_FCHMOD) && PICOTM_LIBC_HAVE_FCHMOD
 PICOTM_EXPORT
 int
 fchmod_tx(int fildes, mode_t mode)
@@ -50,7 +53,9 @@ fchmod_tx(int fildes, mode_t mode)
 
     return res;
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_FSTAT) && PICOTM_LIBC_HAVE_FSTAT
 PICOTM_EXPORT
 int
 fstat_tx(int fildes, struct stat* buf)
@@ -58,7 +63,9 @@ fstat_tx(int fildes, struct stat* buf)
     privatize_tx(buf, sizeof(*buf), PICOTM_TM_PRIVATIZE_STORE);
     return fstat_tm(fildes, buf);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_LSTAT) && PICOTM_LIBC_HAVE_LSTAT
 PICOTM_EXPORT
 int
 lstat_tx(const char* path, struct stat* buf)
@@ -67,7 +74,9 @@ lstat_tx(const char* path, struct stat* buf)
     privatize_tx(buf, sizeof(*buf), PICOTM_TM_PRIVATIZE_STORE);
     return lstat_tm(path, buf);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_MKDIR) && PICOTM_LIBC_HAVE_MKDIR
 PICOTM_EXPORT
 int
 mkdir_tx(const char* path, mode_t mode)
@@ -75,7 +84,9 @@ mkdir_tx(const char* path, mode_t mode)
     privatize_c_tx(path, '\0', PICOTM_TM_PRIVATIZE_LOAD);
     return mkdir_tm(path, mode);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_MKFIFO) && PICOTM_LIBC_HAVE_MKFIFO
 PICOTM_EXPORT
 int
 mkfifo_tx(const char* path, mode_t mode)
@@ -83,7 +94,9 @@ mkfifo_tx(const char* path, mode_t mode)
     privatize_c_tx(path, '\0', PICOTM_TM_PRIVATIZE_LOAD);
     return mkfifo_tm(path, mode);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_MKNOD) && PICOTM_LIBC_HAVE_MKNOD
 #if defined(_BSD_SOURCE) || defined(_SVID_SOURCE) || _XOPEN_SOURCE >= 500
 PICOTM_EXPORT
 int
@@ -93,7 +106,9 @@ mknod_tx(const char* path, mode_t mode, dev_t dev)
     return mknod_tm(path, mode, dev);
 }
 #endif
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STAT) && PICOTM_LIBC_HAVE_STAT
 PICOTM_EXPORT
 int
 stat_tx(const char* path, struct stat* buf)
@@ -102,3 +117,4 @@ stat_tx(const char* path, struct stat* buf)
     privatize_tx(buf, sizeof(*buf), PICOTM_TM_PRIVATIZE_STORE);
     return stat_tm(path, buf);
 }
+#endif

@@ -23,6 +23,7 @@
 #include "error/module.h"
 #include "fildes/module.h"
 
+#if defined(PICOTM_LIBC_HAVE_CHMOD) && PICOTM_LIBC_HAVE_CHMOD
 PICOTM_EXPORT
 int
 chmod_tm(const char* path, mode_t mode)
@@ -40,7 +41,9 @@ chmod_tm(const char* path, mode_t mode)
 
     return res;
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_FSTAT) && PICOTM_LIBC_HAVE_FSTAT
 PICOTM_EXPORT
 int
 fstat_tm(int fildes, struct stat* buf)
@@ -58,7 +61,9 @@ fstat_tm(int fildes, struct stat* buf)
 
     return res;
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_LSTAT) && PICOTM_LIBC_HAVE_LSTAT
 PICOTM_EXPORT
 int
 lstat_tm(const char* path, struct stat* buf)
@@ -76,7 +81,9 @@ lstat_tm(const char* path, struct stat* buf)
 
     return res;
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_MKDIR) && PICOTM_LIBC_HAVE_MKDIR
 PICOTM_EXPORT
 int
 mkdir_tm(const char* path, mode_t mode)
@@ -94,7 +101,9 @@ mkdir_tm(const char* path, mode_t mode)
 
     return res;
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_MKFIFO) && PICOTM_LIBC_HAVE_MKFIFO
 PICOTM_EXPORT
 int
 mkfifo_tm(const char* path, mode_t mode)
@@ -112,7 +121,9 @@ mkfifo_tm(const char* path, mode_t mode)
 
     return res;
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_MKNOD) && PICOTM_LIBC_HAVE_MKNOD
 #if defined(_BSD_SOURCE) || defined(_SVID_SOURCE) || _XOPEN_SOURCE >= 500
 PICOTM_EXPORT
 int
@@ -132,7 +143,9 @@ mknod_tm(const char* path, mode_t mode, dev_t dev)
     return res;
 }
 #endif
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STAT) && PICOTM_LIBC_HAVE_STAT
 PICOTM_EXPORT
 int
 stat_tm(const char* path, struct stat* buf)
@@ -150,3 +163,4 @@ stat_tm(const char* path, struct stat* buf)
 
     return res;
 }
+#endif

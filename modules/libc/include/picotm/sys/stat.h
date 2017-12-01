@@ -32,6 +32,8 @@ PICOTM_BEGIN_DECLS
  * \brief Transactional wrappers for interfaces of <sys/stat.h>.
  */
 
+#if defined(PICOTM_LIBC_HAVE_CHMOD) && PICOTM_LIBC_HAVE_CHMOD || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [chmod()][posix::chmod].
@@ -41,7 +43,10 @@ PICOTM_NOTHROW
  */
 int
 chmod_tx(const char* path, mode_t mode);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_FCHMOD) && PICOTM_LIBC_HAVE_FCHMOD || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [fchmod()][posix::fchmod].
@@ -51,7 +56,10 @@ PICOTM_NOTHROW
  */
 int
 fchmod_tx(int fildes, mode_t mode);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_FSTAT) && PICOTM_LIBC_HAVE_FSTAT || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [fstat()][posix::fstat].
@@ -61,7 +69,10 @@ PICOTM_NOTHROW
  */
 int
 fstat_tx(int fildes, struct stat* buf);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_LSTAT) && PICOTM_LIBC_HAVE_LSTAT || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [lstat()][posix::lstat].
@@ -71,7 +82,10 @@ PICOTM_NOTHROW
  */
 int
 lstat_tx(const char* path, struct stat* buf);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_MKDIR) && PICOTM_LIBC_HAVE_MKDIR || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [mkdir()][posix::mkdir].
@@ -81,7 +95,10 @@ PICOTM_NOTHROW
  */
 int
 mkdir_tx(const char* path, mode_t mode);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_MKFIFO) && PICOTM_LIBC_HAVE_MKFIFO || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [mkfifo()][posix::mkfifo].
@@ -91,7 +108,10 @@ PICOTM_NOTHROW
  */
 int
 mkfifo_tx(const char* path, mode_t mode);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_MKNOD) && PICOTM_LIBC_HAVE_MKNOD || \
+    defined(__PICOTM_DOXYGEN)
 #if defined(_BSD_SOURCE) || \
     defined(_SVID_SOURCE) || \
     defined(_XOPEN_SOURCE) && _XOPEN_SOURCE >= 500 || \
@@ -106,7 +126,10 @@ PICOTM_NOTHROW
 int
 mknod_tx(const char* path, mode_t mode, dev_t dev);
 #endif
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STAT) && PICOTM_LIBC_HAVE_STAT || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [stat()][posix::stat].
@@ -116,5 +139,6 @@ PICOTM_NOTHROW
  */
 int
 stat_tx(const char* path, struct stat* buf);
+#endif
 
 PICOTM_END_DECLS
