@@ -32,6 +32,8 @@ PICOTM_BEGIN_DECLS
  * \brief Transactional wrappers for interfaces of <errno.h>.
  */
 
+#if defined(PICOTM_LIBC_HAVE_ERRNO) && PICOTM_LIBC_HAVE_ERRNO || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * Returns the address of 'errno'.
@@ -47,5 +49,6 @@ __errno_location_tx(void);
  *  http://pubs.opengroup.org/onlinepubs/9699919799/functions/errno.html
  */
 #define errno_tx    (*(__errno_location_tx()))
+#endif
 
 PICOTM_END_DECLS
