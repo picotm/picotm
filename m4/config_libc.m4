@@ -98,6 +98,48 @@ AC_DEFUN([_CHECK_LIBC_STDLIB_H], [
     fi
 ])
 
+AC_DEFUN([_CHECK_LIBC_STRING_H], [
+
+    AC_CHECK_HEADERS([string.h])
+
+    if test "x$ac_cv_header_string_h" != "xno"; then
+
+        #
+        # Public interfaces
+        #
+
+        _CHECK_MODULE_INTF([libc], [memccpy],    [[#include <string.h>]])
+        _CHECK_MODULE_INTF([libc], [memchr],     [[#include <string.h>]])
+        _CHECK_MODULE_INTF([libc], [memcmp],     [[#include <string.h>]])
+        _CHECK_MODULE_INTF([libc], [memcpy],     [[#include <string.h>]])
+        _CHECK_MODULE_INTF([libc], [memmove],    [[#include <string.h>]])
+        _CHECK_MODULE_INTF([libc], [memset],     [[#include <string.h>]])
+        _CHECK_MODULE_INTF([libc], [memrchr],    [[#include <string.h>]])
+        _CHECK_MODULE_INTF([libc], [rawmemchr],  [[#include <string.h>]])
+        _CHECK_MODULE_INTF([libc], [stpcpy],     [[#include <string.h>]])
+        _CHECK_MODULE_INTF([libc], [stpncpy],    [[#include <string.h>]])
+        _CHECK_MODULE_INTF([libc], [strcat],     [[#include <string.h>]])
+        _CHECK_MODULE_INTF([libc], [strchr],     [[#include <string.h>]])
+        _CHECK_MODULE_INTF([libc], [strcmp],     [[#include <string.h>]])
+        _CHECK_MODULE_INTF([libc], [strcoll_l],  [[#include <string.h>]])
+        _CHECK_MODULE_INTF([libc], [strcpy],     [[#include <string.h>]])
+        _CHECK_MODULE_INTF([libc], [strcspn],    [[#include <string.h>]])
+        _CHECK_MODULE_INTF([libc], [strdup],     [[#include <string.h>]])
+        _CHECK_MODULE_INTF([libc], [strerror_r], [[#include <string.h>]])
+        _CHECK_MODULE_INTF([libc], [strlen],     [[#include <string.h>]])
+        _CHECK_MODULE_INTF([libc], [strncat],    [[#include <string.h>]])
+        _CHECK_MODULE_INTF([libc], [strncmp],    [[#include <string.h>]])
+        _CHECK_MODULE_INTF([libc], [strncpy],    [[#include <string.h>]])
+        _CHECK_MODULE_INTF([libc], [strndup],    [[#include <string.h>]])
+        _CHECK_MODULE_INTF([libc], [strnlen],    [[#include <string.h>]])
+        _CHECK_MODULE_INTF([libc], [strpbrk],    [[#include <string.h>]])
+        _CHECK_MODULE_INTF([libc], [strrchr],    [[#include <string.h>]])
+        _CHECK_MODULE_INTF([libc], [strspn],     [[#include <string.h>]])
+        _CHECK_MODULE_INTF([libc], [strstr],     [[#include <string.h>]])
+        _CHECK_MODULE_INTF([libc], [strtok_r],   [[#include <string.h>]])
+    fi
+])
+
 AC_DEFUN([CONFIG_LIBC], [
     AC_CHECK_LIB([c], [longjmp])
     if test "x$ac_cv_lib_c_memcpy" != "xno"; then
@@ -118,5 +160,6 @@ AC_DEFUN([CONFIG_LIBC], [
         _CHECK_LIBC_SCHED_H
         _CHECK_LIBC_STDIO_H
         _CHECK_LIBC_STDLIB_H
+        _CHECK_LIBC_STRING_H
     fi
 ])
