@@ -25,6 +25,8 @@
 
 PICOTM_BEGIN_DECLS
 
+#if defined(PICOTM_LIBC_HAVE_FREE) && PICOTM_LIBC_HAVE_FREE || \
+    defined(__PICOTM_DOXYGEN)
 /**
  * \ingroup group_libc
  * \file
@@ -38,28 +40,41 @@ PICOTM_NOTHROW
  */
 void
 free_tm(void* ptr);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_MKDTEMP) && PICOTM_LIBC_HAVE_MKDTEMP || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_EXPORT
 /**
  * Variant of mkdtemp_tx() that operates on transactional memory.
  */
 char*
 mkdtemp_tm(char* template);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_MKSTEMP) && PICOTM_LIBC_HAVE_MKSTEMP || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_EXPORT
 /**
  * Variant of mkstemp_tx() that operates on transactional memory.
  */
 int
 mkstemp_tm(char* template);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_POSIX_MEMALIGN) && \
+        PICOTM_LIBC_HAVE_POSIX_MEMALIGN || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * Variant of posix_memalign_tx() that operates on transactional memory.
  */
 int
 posix_memalign_tm(void** memptr, size_t alignment, size_t size);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_QSORT) && PICOTM_LIBC_HAVE_QSORT || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * Variant of qsort_tx() that operates on transactional memory.
@@ -67,19 +82,26 @@ PICOTM_NOTHROW
 void
 qsort_tm(void* base, size_t nel, size_t width,
          int (*compar)(const void*, const void*));
+#endif
 
-PICOTM_NOTHROW
-/**
- * Variant of realloc_tx() that operates on transactional memory.
- */
-void*
-realloc_tm(void* ptr, size_t size);
-
+#if defined(PICOTM_LIBC_HAVE_RAND_R) && PICOTM_LIBC_HAVE_RAND_R || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * Variant of rand_r_tx() that operates on transactional memory.
  */
 int
 rand_r_tm(unsigned int* seed);
+#endif
+
+#if defined(PICOTM_LIBC_HAVE_REALLOC) && PICOTM_LIBC_HAVE_REALLOC || \
+    defined(__PICOTM_DOXYGEN)
+PICOTM_NOTHROW
+/**
+ * Variant of realloc_tx() that operates on transactional memory.
+ */
+void*
+realloc_tm(void* ptr, size_t size);
+#endif
 
 PICOTM_END_DECLS

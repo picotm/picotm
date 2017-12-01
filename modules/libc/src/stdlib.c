@@ -27,6 +27,7 @@
 #include "error/module.h"
 #include "picotm/stdlib-tm.h"
 
+#if defined(PICOTM_LIBC_HAVE__EXIT) && PICOTM_LIBC_HAVE__EXIT
 PICOTM_EXPORT
 void
 _Exit_tx(int status)
@@ -34,7 +35,9 @@ _Exit_tx(int status)
     __picotm_commit();
     _Exit(status);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_ABORT) && PICOTM_LIBC_HAVE_ABORT
 PICOTM_EXPORT
 void
 abort_tx()
@@ -42,7 +45,9 @@ abort_tx()
     __picotm_commit();
     abort();
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_CALLOC) && PICOTM_LIBC_HAVE_CALLOC
 PICOTM_EXPORT
 void*
 calloc_tx(size_t nmemb, size_t size)
@@ -56,7 +61,9 @@ calloc_tx(size_t nmemb, size_t size)
 
     return memset(mem, 0, alloc_size);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_EXIT) && PICOTM_LIBC_HAVE_EXIT
 PICOTM_EXPORT
 void
 exit_tx(int status)
@@ -64,7 +71,9 @@ exit_tx(int status)
     __picotm_commit();
     exit(status);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_FREE) && PICOTM_LIBC_HAVE_FREE
 PICOTM_EXPORT
 void
 free_tx(void* ptr)
@@ -75,7 +84,9 @@ free_tx(void* ptr)
     }
     allocator_module_free(ptr, usiz);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_MALLOC) && PICOTM_LIBC_HAVE_MALLOC
 PICOTM_EXPORT
 void*
 malloc_tx(size_t size)
@@ -87,7 +98,9 @@ malloc_tx(size_t size)
 
     return mem;
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_MKDTEMP) && PICOTM_LIBC_HAVE_MKDTEMP
 PICOTM_EXPORT
 char*
 mkdtemp_tx(char* template)
@@ -95,7 +108,9 @@ mkdtemp_tx(char* template)
     privatize_c_tx(template, '\0', PICOTM_TM_PRIVATIZE_LOADSTORE);
     return mkdtemp_tm(template);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_MKSTEMP) && PICOTM_LIBC_HAVE_MKSTEMP
 PICOTM_EXPORT
 int
 mkstemp_tx(char* template)
@@ -103,7 +118,10 @@ mkstemp_tx(char* template)
     privatize_c_tx(template, '\0', PICOTM_TM_PRIVATIZE_LOADSTORE);
     return mkstemp_tm(template);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_POSIX_MEMALIGN) && \
+        PICOTM_LIBC_HAVE_POSIX_MEMALIGN
 PICOTM_EXPORT
 int
 posix_memalign_tx(void** memptr, size_t alignment, size_t size)
@@ -111,7 +129,9 @@ posix_memalign_tx(void** memptr, size_t alignment, size_t size)
     privatize_tx(*memptr, sizeof(*memptr), PICOTM_TM_PRIVATIZE_STORE);
     return posix_memalign_tm(memptr, alignment, size);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_QSORT) && PICOTM_LIBC_HAVE_QSORT
 PICOTM_EXPORT
 void
 qsort_tx(void* base, size_t nel, size_t width,
@@ -120,7 +140,19 @@ qsort_tx(void* base, size_t nel, size_t width,
     privatize_tx(base, nel * width, PICOTM_TM_PRIVATIZE_LOADSTORE);
     qsort_tm(base, nel, width, compar);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_RAND_R) && PICOTM_LIBC_HAVE_RAND_R
+PICOTM_EXPORT
+int
+rand_r_tx(unsigned int* seed)
+{
+    privatize_tx(seed, sizeof(*seed), PICOTM_TM_PRIVATIZE_LOADSTORE);
+    return rand_r_tm(seed);
+}
+#endif
+
+#if defined(PICOTM_LIBC_HAVE_REALLOC) && PICOTM_LIBC_HAVE_REALLOC
 PICOTM_EXPORT
 void*
 realloc_tx(void* ptr, size_t size)
@@ -154,11 +186,4 @@ realloc_tx(void* ptr, size_t size)
 
     return mem;
 }
-
-PICOTM_EXPORT
-int
-rand_r_tx(unsigned int* seed)
-{
-    privatize_tx(seed, sizeof(*seed), PICOTM_TM_PRIVATIZE_LOADSTORE);
-    return rand_r_tm(seed);
-}
+#endif
