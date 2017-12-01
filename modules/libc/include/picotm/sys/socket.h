@@ -32,6 +32,8 @@ PICOTM_BEGIN_DECLS
  * \brief Transactional wrappers for interfaces of <sys/socket.h>.
  */
 
+#if defined(PICOTM_LIBC_HAVE_ACCEPT) && PICOTM_LIBC_HAVE_ACCEPT || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [accept()][posix::accept].
@@ -41,7 +43,10 @@ PICOTM_NOTHROW
  */
 int
 accept_tx(int socket, struct sockaddr* address, socklen_t* address_len);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_BIND) && PICOTM_LIBC_HAVE_BIND || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [bind()][posix::bind].
@@ -51,7 +56,10 @@ PICOTM_NOTHROW
  */
 int
 bind_tx(int socket, const struct sockaddr* address, socklen_t address_len);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_CONNECT) && PICOTM_LIBC_HAVE_CONNECT || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [connect()][posix::connect].
@@ -61,7 +69,10 @@ PICOTM_NOTHROW
  */
 int
 connect_tx(int socket, const struct sockaddr* address, socklen_t address_len);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_LISTEN) && PICOTM_LIBC_HAVE_LISTEN || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [listen()][posix::listen].
@@ -71,37 +82,10 @@ PICOTM_NOTHROW
  */
 int
 listen_tx(int socket, int backlog);
+#endif
 
-PICOTM_NOTHROW
-/**
- * A transaction-safe implementation of [send()][posix::send].
- *
- * [posix::send]:
- *  http://pubs.opengroup.org/onlinepubs/9699919799/functions/send.html
- */
-ssize_t
-send_tx(int socket, const void* buffer, size_t length, int flags);
-
-PICOTM_NOTHROW
-/**
- * A transaction-safe implementation of [shutdown()][posix::shutdown].
- *
- * [posix::shutdown]:
- *  http://pubs.opengroup.org/onlinepubs/9699919799/functions/shutdown.html
- */
-int
-shutdown_tx(int socket, int how);
-
-PICOTM_NOTHROW
-/**
- * A transaction-safe implementation of [socket()][posix::socket].
- *
- * [posix::socket]:
- *  http://pubs.opengroup.org/onlinepubs/9699919799/functions/socket.html
- */
-int
-socket_tx(int domain, int type, int protocol);
-
+#if defined(PICOTM_LIBC_HAVE_RECV) && PICOTM_LIBC_HAVE_RECV || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [recv()][posix::recv].
@@ -111,5 +95,45 @@ PICOTM_NOTHROW
  */
 ssize_t
 recv_tx(int socket, void* buffer, size_t length, int flags);
+#endif
+
+#if defined(PICOTM_LIBC_HAVE_SEND) && PICOTM_LIBC_HAVE_SEND || \
+    defined(__PICOTM_DOXYGEN)
+PICOTM_NOTHROW
+/**
+ * A transaction-safe implementation of [send()][posix::send].
+ *
+ * [posix::send]:
+ *  http://pubs.opengroup.org/onlinepubs/9699919799/functions/send.html
+ */
+ssize_t
+send_tx(int socket, const void* buffer, size_t length, int flags);
+#endif
+
+#if defined(PICOTM_LIBC_HAVE_SHUTDOWN) && PICOTM_LIBC_HAVE_SHUTDOWN || \
+    defined(__PICOTM_DOXYGEN)
+PICOTM_NOTHROW
+/**
+ * A transaction-safe implementation of [shutdown()][posix::shutdown].
+ *
+ * [posix::shutdown]:
+ *  http://pubs.opengroup.org/onlinepubs/9699919799/functions/shutdown.html
+ */
+int
+shutdown_tx(int socket, int how);
+#endif
+
+#if defined(PICOTM_LIBC_HAVE_SOCKET) && PICOTM_LIBC_HAVE_SOCKET || \
+    defined(__PICOTM_DOXYGEN)
+PICOTM_NOTHROW
+/**
+ * A transaction-safe implementation of [socket()][posix::socket].
+ *
+ * [posix::socket]:
+ *  http://pubs.opengroup.org/onlinepubs/9699919799/functions/socket.html
+ */
+int
+socket_tx(int domain, int type, int protocol);
+#endif
 
 PICOTM_END_DECLS

@@ -140,6 +140,27 @@ AC_DEFUN([_CHECK_LIBC_STRING_H], [
     fi
 ])
 
+AC_DEFUN([_CHECK_LIBC_SYS_SOCKET_H], [
+
+    AC_CHECK_HEADERS([sys/socket.h])
+
+    if test "x$ac_cv_header_sys_socket_h" != "xno"; then
+
+        #
+        # Public interfaces
+        #
+
+        _CHECK_MODULE_INTF([libc], [accept],   [[#include <sys/socket.h>]])
+        _CHECK_MODULE_INTF([libc], [bind],     [[#include <sys/socket.h>]])
+        _CHECK_MODULE_INTF([libc], [connect],  [[#include <sys/socket.h>]])
+        _CHECK_MODULE_INTF([libc], [listen],   [[#include <sys/socket.h>]])
+        _CHECK_MODULE_INTF([libc], [recv],     [[#include <sys/socket.h>]])
+        _CHECK_MODULE_INTF([libc], [send],     [[#include <sys/socket.h>]])
+        _CHECK_MODULE_INTF([libc], [shutdown], [[#include <sys/socket.h>]])
+        _CHECK_MODULE_INTF([libc], [socket],   [[#include <sys/socket.h>]])
+    fi
+])
+
 AC_DEFUN([CONFIG_LIBC], [
     AC_CHECK_LIB([c], [longjmp])
     if test "x$ac_cv_lib_c_memcpy" != "xno"; then
@@ -161,5 +182,6 @@ AC_DEFUN([CONFIG_LIBC], [
         _CHECK_LIBC_STDIO_H
         _CHECK_LIBC_STDLIB_H
         _CHECK_LIBC_STRING_H
+        _CHECK_LIBC_SYS_SOCKET_H
     fi
 ])
