@@ -22,6 +22,7 @@
 #include <picotm/picotm-module.h>
 #include "error/module.h"
 
+#if defined(PICOTM_LIBC_HAVE_SNPRINTF) && PICOTM_LIBC_HAVE_SNPRINTF
 PICOTM_EXPORT
 int
 snprintf_tm(char* s, size_t n, const char* format, ...)
@@ -34,7 +35,9 @@ snprintf_tm(char* s, size_t n, const char* format, ...)
 
     return res;
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_SSCANF) && PICOTM_LIBC_HAVE_SSCANF
 PICOTM_EXPORT
 int
 sscanf_tm(const char* s, const char* format, ...)
@@ -47,7 +50,9 @@ sscanf_tm(const char* s, const char* format, ...)
 
     return res;
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_VSNPRINTF) && PICOTM_LIBC_HAVE_VSNPRINTF
 PICOTM_EXPORT
 int
 vsnprintf_tm(char* s, size_t n, const char* format, va_list ap)
@@ -63,7 +68,9 @@ vsnprintf_tm(char* s, size_t n, const char* format, va_list ap)
         return res;
     } while (true);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_VSSCANF) && PICOTM_LIBC_HAVE_VSSCANF
 PICOTM_EXPORT
 int
 vsscanf_tm(const char* s, const char* format, va_list arg)
@@ -79,3 +86,4 @@ vsscanf_tm(const char* s, const char* format, va_list arg)
         return res;
     } while (true);
 }
+#endif

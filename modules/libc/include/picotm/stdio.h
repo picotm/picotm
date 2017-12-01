@@ -33,6 +33,8 @@ PICOTM_BEGIN_DECLS
  * \brief Transactional wrappers for interfaces of <stdio.h>.
  */
 
+#if defined(PICOTM_LIBC_HAVE_SNPRINTF) && PICOTM_LIBC_HAVE_SNPRINTF || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [snprintf()][posix::snprintf].
@@ -42,7 +44,10 @@ PICOTM_NOTHROW
  */
 int
 snprintf_tx(char* restrict s, size_t n, const char* restrict format, ...);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_SSCANF) && PICOTM_LIBC_HAVE_SSCANF || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [sscanf()][posix::sscanf].
@@ -52,7 +57,10 @@ PICOTM_NOTHROW
  */
 int
 sscanf_tx(const char* restrict s, const char* restrict format, ...);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_VSNPRINTF) && PICOTM_LIBC_HAVE_VSNPRINTF || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [vsnprintf()][posix::vsnprintf].
@@ -63,7 +71,10 @@ PICOTM_NOTHROW
 int
 vsnprintf_tx(char* restrict s, size_t n, const char* restrict format,
              va_list ap);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_VSSCANF) && PICOTM_LIBC_HAVE_VSSCANF || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [vsscanf()][posix::vsscanf].
@@ -73,5 +84,6 @@ PICOTM_NOTHROW
  */
 int
 vsscanf_tx(const char* restrict s, const char* restrict format, va_list arg);
+#endif
 
 PICOTM_END_DECLS

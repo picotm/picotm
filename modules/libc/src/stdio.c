@@ -25,6 +25,7 @@
 #include "error/module.h"
 #include "picotm/stdio-tm.h"
 
+#if defined(PICOTM_LIBC_HAVE_SNPRINTF) && PICOTM_LIBC_HAVE_SNPRINTF
 PICOTM_EXPORT
 int
 snprintf_tx(char* s, size_t n, const char* format, ...)
@@ -37,7 +38,9 @@ snprintf_tx(char* s, size_t n, const char* format, ...)
 
     return res;
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_SSCANF) && PICOTM_LIBC_HAVE_SSCANF
 PICOTM_EXPORT
 int
 sscanf_tx(const char* s, const char* format, ...)
@@ -50,6 +53,7 @@ sscanf_tx(const char* s, const char* format, ...)
 
     return res;
 }
+#endif
 
 static void
 privatize_printf_args(const char* format, va_list arg)
@@ -159,6 +163,7 @@ privatize_printf_args(const char* format, va_list arg)
     }
 }
 
+#if defined(PICOTM_LIBC_HAVE_VSNPRINTF) && PICOTM_LIBC_HAVE_VSNPRINTF
 PICOTM_EXPORT
 int
 vsnprintf_tx(char* s, size_t n, const char* format, va_list ap)
@@ -173,6 +178,7 @@ vsnprintf_tx(char* s, size_t n, const char* format, va_list ap)
     return vsnprintf_tm(s, n, format, ap);
 
 }
+#endif
 
 static void
 privatize_scanf_args(const char* format, va_list arg)
@@ -326,6 +332,7 @@ privatize_scanf_args(const char* format, va_list arg)
     }
 }
 
+#if defined(PICOTM_LIBC_HAVE_VSSCANF) && PICOTM_LIBC_HAVE_VSSCANF
 PICOTM_EXPORT
 int
 vsscanf_tx(const char* s, const char* format, va_list arg)
@@ -339,3 +346,4 @@ vsscanf_tx(const char* s, const char* format, va_list arg)
 
     return vsscanf_tm(s, format, arg);
 }
+#endif
