@@ -32,39 +32,54 @@ PICOTM_BEGIN_DECLS
  * \brief Transactional wrappers for interfaces of <sys/socket.h>.
  */
 
+#if defined(PICOTM_LIBC_HAVE_ACCEPT) && PICOTM_LIBC_HAVE_ACCEPT || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * Variant of accept_tx() that operates on transactional memory.
  */
 int
 accept_tm(int socket, struct sockaddr* address, socklen_t* address_len);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_BIND) && PICOTM_LIBC_HAVE_BIND || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * Variant of bind_tx() that operates on transactional memory.
  */
 int
 bind_tm(int socket, const struct sockaddr* address, socklen_t address_len);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_CONNECT) && PICOTM_LIBC_HAVE_CONNECT || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * Variant of connect_tx() that operates on transactional memory.
  */
 int
 connect_tm(int socket, const struct sockaddr* address, socklen_t address_len);
+#endif
 
-PICOTM_NOTHROW
-/**
- * Variant of send_tx() that operates on transactional memory.
- */
-ssize_t
-send_tm(int socket, const void* buffer, size_t length, int flags);
-
+#if defined(PICOTM_LIBC_HAVE_RECV) && PICOTM_LIBC_HAVE_RECV || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * Variant of recv_tx() that operates on transactional memory.
  */
 ssize_t
 recv_tm(int socket, void* buffer, size_t length, int flags);
+#endif
+
+#if defined(PICOTM_LIBC_HAVE_SEND) && PICOTM_LIBC_HAVE_SEND || \
+    defined(__PICOTM_DOXYGEN)
+PICOTM_NOTHROW
+/**
+ * Variant of send_tx() that operates on transactional memory.
+ */
+ssize_t
+send_tm(int socket, const void* buffer, size_t length, int flags);
+#endif
 
 PICOTM_END_DECLS

@@ -25,6 +25,7 @@
 #include "fildes/module.h"
 #include "picotm/sys/socket-tm.h"
 
+#if defined(PICOTM_LIBC_HAVE_ACCEPT) && PICOTM_LIBC_HAVE_ACCEPT
 PICOTM_EXPORT
 int
 accept_tx(int socket, struct sockaddr* address, socklen_t* address_len)
@@ -35,7 +36,9 @@ accept_tx(int socket, struct sockaddr* address, socklen_t* address_len)
     }
     return accept_tm(socket, address, address_len);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_BIND) && PICOTM_LIBC_HAVE_BIND
 PICOTM_EXPORT
 int
 bind_tx(int socket, const struct sockaddr* address, socklen_t address_len)
@@ -43,7 +46,9 @@ bind_tx(int socket, const struct sockaddr* address, socklen_t address_len)
     privatize_tx(address, address_len, PICOTM_TM_PRIVATIZE_LOAD);
     return bind_tm(socket, address, address_len);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_CONNECT) && PICOTM_LIBC_HAVE_CONNECT
 PICOTM_EXPORT
 int
 connect_tx(int socket, const struct sockaddr* address, socklen_t address_len)
@@ -51,7 +56,9 @@ connect_tx(int socket, const struct sockaddr* address, socklen_t address_len)
     privatize_tx(address, address_len, PICOTM_TM_PRIVATIZE_LOAD);
     return connect_tm(socket, address, address_len);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_LISTEN) && PICOTM_LIBC_HAVE_LISTEN
 PICOTM_EXPORT
 int
 listen_tx(int socket, int backlog)
@@ -69,7 +76,19 @@ listen_tx(int socket, int backlog)
 
     return res;
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_RECV) && PICOTM_LIBC_HAVE_RECV
+PICOTM_EXPORT
+ssize_t
+recv_tx(int socket, void* buffer, size_t length, int flags)
+{
+    privatize_tx(buffer, length, PICOTM_TM_PRIVATIZE_STORE);
+    return recv_tm(socket, buffer, length, flags);
+}
+#endif
+
+#if defined(PICOTM_LIBC_HAVE_SEND) && PICOTM_LIBC_HAVE_SEND
 PICOTM_EXPORT
 ssize_t
 send_tx(int socket, const void* buffer, size_t length, int flags)
@@ -77,7 +96,9 @@ send_tx(int socket, const void* buffer, size_t length, int flags)
     privatize_tx(buffer, length, PICOTM_TM_PRIVATIZE_LOAD);
     return send_tm(socket, buffer, length, flags);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_SHUTDOWN) && PICOTM_LIBC_HAVE_SHUTDOWN
 PICOTM_EXPORT
 int
 shutdown_tx(int socket, int how)
@@ -95,7 +116,9 @@ shutdown_tx(int socket, int how)
 
     return res;
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_SOCKET) && PICOTM_LIBC_HAVE_SOCKET
 PICOTM_EXPORT
 int
 socket_tx(int domain, int type, int protocol)
@@ -113,13 +136,4 @@ socket_tx(int domain, int type, int protocol)
 
     return res;
 }
-
-PICOTM_EXPORT
-ssize_t
-recv_tx(int socket, void* buffer, size_t length, int flags)
-{
-    privatize_tx(buffer, length, PICOTM_TM_PRIVATIZE_STORE);
-    return recv_tm(socket, buffer, length, flags);
-}
-
-
+#endif
