@@ -20,6 +20,7 @@
 #include "picotm/errno.h"
 #include "error/module.h"
 
+#if defined(PICOTM_LIBC_HAVE_ERRNO) && PICOTM_LIBC_HAVE_ERRNO
 PICOTM_EXPORT
 int*
 __errno_location_tx()
@@ -27,3 +28,4 @@ __errno_location_tx()
     error_module_save_errno();
     return &errno;
 }
+#endif

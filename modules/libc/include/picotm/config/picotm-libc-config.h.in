@@ -18,3 +18,7 @@
  */
 
 #pragma once
+
+#ifndef PICOTM_LIBC_HAVE_ERRNO
+#undef PICOTM_LIBC_HAVE_ERRNO
+#endif
