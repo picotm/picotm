@@ -32,67 +32,94 @@ PICOTM_BEGIN_DECLS
  * \brief Transactional wrappers for interfaces of <unistd.h>.
  */
 
+#if defined(PICOTM_LIBC_HAVE_CHDIR) && PICOTM_LIBC_HAVE_CHDIR || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * Variant of chdir_tx() that operates on transactional memory.
  */
 int
 chdir_tm(const char* path);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_GETCWD) && PICOTM_LIBC_HAVE_GETCWD || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * Variant of getcwd_tx() that operates on transactional memory.
  */
 char*
 getcwd_tm(char* buf, size_t size);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_LINK) && PICOTM_LIBC_HAVE_LINK || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * Variant of link_tx() that operates on transactional memory.
  */
 int
 link_tm(const char* path1, const char* path2);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_PIPE) && PICOTM_LIBC_HAVE_PIPE || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * Variant of pipe_tx() that operates on transactional memory.
  */
 int
 pipe_tm(int fildes[2]);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_PREAD) && PICOTM_LIBC_HAVE_PREAD || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * Variant of pread_tx() that operates on transactional memory.
  */
 ssize_t
 pread_tm(int fildes, void* buf, size_t nbyte, off_t offset);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_PWRITE) && PICOTM_LIBC_HAVE_PWRITE || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * Variant of pwrite_tx() that operates on transactional memory.
  */
 ssize_t
 pwrite_tm(int fildes, const void* buf, size_t nbyte, off_t offset);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_READ) && PICOTM_LIBC_HAVE_READ || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * Variant of read_tx() that operates on transactional memory.
  */
 ssize_t
 read_tm(int fildes, void* buf, size_t nbyte);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_UNLINK) && PICOTM_LIBC_HAVE_UNLINK || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * Variant of unlink_tx() that operates on transactional memory.
  */
 int
 unlink_tm(const char* path);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_WRITE) && PICOTM_LIBC_HAVE_WRITE || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * Variant of write_tx() that operates on transactional memory.
  */
 ssize_t
 write_tm(int fildes, const void* buf, size_t nbyte);
+#endif
 
 PICOTM_END_DECLS

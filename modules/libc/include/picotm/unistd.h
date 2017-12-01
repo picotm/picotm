@@ -32,6 +32,8 @@ PICOTM_BEGIN_DECLS
  * \brief Transactional wrappers for interfaces of <unistd.h>.
  */
 
+#if defined(PICOTM_LIBC_HAVE__EXIT) && PICOTM_LIBC_HAVE__EXIT || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW PICOTM_NORETURN
 /**
  * A transaction-safe implementation of [_exit()][posix::_exit].
@@ -44,7 +46,10 @@ PICOTM_NOTHROW PICOTM_NORETURN
  */
 void
 _exit_tx(int status);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_CHDIR) && PICOTM_LIBC_HAVE_CHDIR || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [chdir()][posix::chdir].
@@ -54,7 +59,10 @@ PICOTM_NOTHROW
  */
 int
 chdir_tx(const char* path);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_CLOSE) && PICOTM_LIBC_HAVE_CLOSE || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [close()][posix::close].
@@ -64,7 +72,10 @@ PICOTM_NOTHROW
  */
 int
 close_tx(int fildes);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_DUP) && PICOTM_LIBC_HAVE_DUP || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [dup()][posix::dup].
@@ -74,7 +85,10 @@ PICOTM_NOTHROW
  */
 int
 dup_tx(int fildes);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_DUP2) && PICOTM_LIBC_HAVE_DUP2 || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [dup2()][posix::dup2].
@@ -84,7 +98,10 @@ PICOTM_NOTHROW
  */
 int
 dup2_tx(int fildes, int fildes2);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_FCHDIR) && PICOTM_LIBC_HAVE_FCHDIR || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [fchdir()][posix::fchdir].
@@ -94,7 +111,10 @@ PICOTM_NOTHROW
  */
 int
 fchdir_tx(int fildes);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_FSYNC) && PICOTM_LIBC_HAVE_FSYNC || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [fsync()][posix::fsync].
@@ -104,7 +124,10 @@ PICOTM_NOTHROW
  */
 int
 fsync_tx(int fildes);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_GETCWD) && PICOTM_LIBC_HAVE_GETCWD || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [getcwd()][posix::getcwd].
@@ -114,7 +137,10 @@ PICOTM_NOTHROW
  */
 char*
 getcwd_tx(char* buf, size_t size);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_LINK) && PICOTM_LIBC_HAVE_LINK || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [link()][posix::link].
@@ -124,7 +150,10 @@ PICOTM_NOTHROW
  */
 int
 link_tx(const char* path1, const char* path2);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_LSEEK) && PICOTM_LIBC_HAVE_LSEEK || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [lseek()][posix::lseek].
@@ -134,7 +163,10 @@ PICOTM_NOTHROW
  */
 off_t
 lseek_tx(int fildes, off_t offset, int whence);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_PIPE) && PICOTM_LIBC_HAVE_PIPE || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [pipe()][posix::pipe].
@@ -144,7 +176,10 @@ PICOTM_NOTHROW
  */
 int
 pipe_tx(int fildes[2]);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_PREAD) && PICOTM_LIBC_HAVE_PREAD || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [pread()][posix::pread].
@@ -154,7 +189,10 @@ PICOTM_NOTHROW
  */
 ssize_t
 pread_tx(int fildes, void* buf, size_t nbyte, off_t offset);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_PWRITE) && PICOTM_LIBC_HAVE_PWRITE || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [pwrite()][posix::pwrite].
@@ -164,7 +202,10 @@ PICOTM_NOTHROW
  */
 ssize_t
 pwrite_tx(int fildes, const void* buf, size_t nbyte, off_t offset);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_READ) && PICOTM_LIBC_HAVE_READ || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [read()][posix::read].
@@ -174,7 +215,10 @@ PICOTM_NOTHROW
  */
 ssize_t
 read_tx(int fildes, void* buf, size_t nbyte);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_SLEEP) && PICOTM_LIBC_HAVE_SLEEP || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [sleep()][posix::sleep].
@@ -184,7 +228,10 @@ PICOTM_NOTHROW
  */
 unsigned
 sleep_tx(unsigned seconds);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_SYNC) && PICOTM_LIBC_HAVE_SYNC || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [sync()][posix::sync].
@@ -194,7 +241,10 @@ PICOTM_NOTHROW
  */
 void
 sync_tx(void);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_UNLINK) && PICOTM_LIBC_HAVE_UNLINK || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [unlink()][posix::unlink].
@@ -204,7 +254,10 @@ PICOTM_NOTHROW
  */
 int
 unlink_tx(const char* path);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_WRITE) && PICOTM_LIBC_HAVE_WRITE || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [write()][posix::write].
@@ -214,5 +267,6 @@ PICOTM_NOTHROW
  */
 ssize_t
 write_tx(int fildes, const void* buf, size_t nbyte);
+#endif
 
 PICOTM_END_DECLS
