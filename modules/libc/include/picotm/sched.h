@@ -32,6 +32,8 @@ PICOTM_BEGIN_DECLS
  * \brief Transactional wrappers for interfaces of <sched.h>.
  */
 
+#if defined(PICOTM_LIBC_HAVE_SCHED_YIELD) && PICOTM_LIBC_HAVE_SCHED_YIELD || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [sched_yield()][posix::sched_yield].
@@ -41,5 +43,6 @@ PICOTM_NOTHROW
  */
 int
 sched_yield_tx(void);
+#endif
 
 PICOTM_END_DECLS

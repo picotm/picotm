@@ -22,6 +22,7 @@
 #include <picotm/picotm-module.h>
 #include "error/module.h"
 
+#if defined(PICOTM_LIBC_HAVE_SCHED_YIELD) && PICOTM_LIBC_HAVE_SCHED_YIELD
 PICOTM_EXPORT
 int
 sched_yield_tx()
@@ -39,3 +40,4 @@ sched_yield_tx()
 
     return res;
 }
+#endif
