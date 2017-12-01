@@ -38,6 +38,7 @@ perform_recovery(int errno_hint)
     return (errno_hint != EAGAIN) && (errno_hint != EWOULDBLOCK);
 }
 
+#if defined(PICOTM_LIBC_HAVE_CHDIR) && PICOTM_LIBC_HAVE_CHDIR
 PICOTM_EXPORT
 int
 chdir_tm(const char* path)
@@ -54,7 +55,9 @@ chdir_tm(const char* path)
         picotm_recover_from_error(&error);
     } while (true);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_GETCWD) && PICOTM_LIBC_HAVE_GETCWD
 PICOTM_EXPORT
 char*
 getcwd_tm(char* buf, size_t size)
@@ -71,7 +74,9 @@ getcwd_tm(char* buf, size_t size)
         picotm_recover_from_error(&error);
     } while (true);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_LINK) && PICOTM_LIBC_HAVE_LINK
 PICOTM_EXPORT
 int
 link_tm(const char* path1, const char* path2)
@@ -89,7 +94,9 @@ link_tm(const char* path1, const char* path2)
 
     return res;
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_PIPE) && PICOTM_LIBC_HAVE_PIPE
 PICOTM_EXPORT
 int
 pipe_tm(int fildes[2])
@@ -107,7 +114,9 @@ pipe_tm(int fildes[2])
 
     return res;
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_PREAD) && PICOTM_LIBC_HAVE_PREAD
 PICOTM_EXPORT
 ssize_t
 pread_tm(int fildes, void* buf, size_t nbyte, off_t offset)
@@ -129,7 +138,9 @@ pread_tm(int fildes, void* buf, size_t nbyte, off_t offset)
 
     return res;
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_PWRITE) && PICOTM_LIBC_HAVE_PWRITE
 PICOTM_EXPORT
 ssize_t
 pwrite_tm(int fildes, const void* buf, size_t nbyte, off_t offset)
@@ -151,7 +162,9 @@ pwrite_tm(int fildes, const void* buf, size_t nbyte, off_t offset)
 
     return res;
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_READ) && PICOTM_LIBC_HAVE_READ
 PICOTM_EXPORT
 ssize_t
 read_tm(int fildes, void* buf, size_t nbyte)
@@ -173,7 +186,9 @@ read_tm(int fildes, void* buf, size_t nbyte)
 
     return res;
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_UNLINK) && PICOTM_LIBC_HAVE_UNLINK
 PICOTM_EXPORT
 int
 unlink_tm(const char* path)
@@ -191,7 +206,9 @@ unlink_tm(const char* path)
 
     return res;
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_WRITE) && PICOTM_LIBC_HAVE_WRITE
 PICOTM_EXPORT
 ssize_t
 write_tm(int fildes, const void* buf, size_t nbyte)
@@ -213,3 +230,4 @@ write_tm(int fildes, const void* buf, size_t nbyte)
 
     return res;
 }
+#endif

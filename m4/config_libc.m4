@@ -182,6 +182,37 @@ AC_DEFUN([_CHECK_LIBC_SYS_STAT_H], [
     fi
 ])
 
+AC_DEFUN([_CHECK_LIBC_UNISTD_H], [
+
+    AC_CHECK_HEADERS([unistd.h])
+
+    if test "x$ac_cv_header_unistd_h" != "xno"; then
+
+        #
+        # Public interfaces
+        #
+
+        _CHECK_MODULE_INTF([libc], [_exit],  [[#include <unistd.h>]])
+        _CHECK_MODULE_INTF([libc], [chdir],  [[#include <unistd.h>]])
+        _CHECK_MODULE_INTF([libc], [close],  [[#include <unistd.h>]])
+        _CHECK_MODULE_INTF([libc], [dup],    [[#include <unistd.h>]])
+        _CHECK_MODULE_INTF([libc], [dup2],   [[#include <unistd.h>]])
+        _CHECK_MODULE_INTF([libc], [fchdir], [[#include <unistd.h>]])
+        _CHECK_MODULE_INTF([libc], [fsync],  [[#include <unistd.h>]])
+        _CHECK_MODULE_INTF([libc], [getcwd], [[#include <unistd.h>]])
+        _CHECK_MODULE_INTF([libc], [link],   [[#include <unistd.h>]])
+        _CHECK_MODULE_INTF([libc], [lseek],  [[#include <unistd.h>]])
+        _CHECK_MODULE_INTF([libc], [pipe],   [[#include <unistd.h>]])
+        _CHECK_MODULE_INTF([libc], [pread],  [[#include <unistd.h>]])
+        _CHECK_MODULE_INTF([libc], [pwrite], [[#include <unistd.h>]])
+        _CHECK_MODULE_INTF([libc], [read],   [[#include <unistd.h>]])
+        _CHECK_MODULE_INTF([libc], [sleep],  [[#include <unistd.h>]])
+        _CHECK_MODULE_INTF([libc], [sync],   [[#include <unistd.h>]])
+        _CHECK_MODULE_INTF([libc], [unlink], [[#include <unistd.h>]])
+        _CHECK_MODULE_INTF([libc], [write],  [[#include <unistd.h>]])
+    fi
+])
+
 AC_DEFUN([CONFIG_LIBC], [
     AC_CHECK_LIB([c], [longjmp])
     if test "x$ac_cv_lib_c_memcpy" != "xno"; then
@@ -205,5 +236,6 @@ AC_DEFUN([CONFIG_LIBC], [
         _CHECK_LIBC_STRING_H
         _CHECK_LIBC_SYS_SOCKET_H
         _CHECK_LIBC_SYS_STAT_H
+        _CHECK_LIBC_UNISTD_H
     fi
 ])
