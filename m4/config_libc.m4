@@ -56,6 +56,23 @@ AC_DEFUN([_CHECK_LIBC_SCHED_H], [
     fi
 ])
 
+AC_DEFUN([_CHECK_LIBC_STDIO_H], [
+
+    AC_CHECK_HEADERS([stdio.h])
+
+    if test "x$ac_cv_header_stdio_h" != "xno"; then
+
+        #
+        # Public interfaces
+        #
+
+        _CHECK_MODULE_INTF([libc], [snprintf],  [[#include <stdio.h>]])
+        _CHECK_MODULE_INTF([libc], [sscanf],    [[#include <stdio.h>]])
+        _CHECK_MODULE_INTF([libc], [vsnprintf], [[#include <stdio.h>]])
+        _CHECK_MODULE_INTF([libc], [vsscanf],   [[#include <stdio.h>]])
+    fi
+])
+
 AC_DEFUN([CONFIG_LIBC], [
     AC_CHECK_LIB([c], [longjmp])
     if test "x$ac_cv_lib_c_memcpy" != "xno"; then
@@ -74,5 +91,6 @@ AC_DEFUN([CONFIG_LIBC], [
         _CHECK_LIBC_ERRNO_H
         _CHECK_LIBC_FCNTL_H
         _CHECK_LIBC_SCHED_H
+        _CHECK_LIBC_STDIO_H
     fi
 ])
