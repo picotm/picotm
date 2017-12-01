@@ -112,8 +112,29 @@ WARN_LOGFILE           =
 #---------------------------------------------------------------------------
 # Configuration options related to the input files
 #---------------------------------------------------------------------------
-INPUT                  = @abs_top_srcdir@/include \
-                         @abs_top_srcdir@/modules \
+INPUT                  = @abs_top_builddir@/include \
+                         @abs_top_srcdir@/include \
+                         @abs_top_builddir@/modules/libc/include \
+                         @abs_top_srcdir@/modules/libc/include \
+                         @abs_top_builddir@/modules/libc/src \
+                         @abs_top_srcdir@/modules/libc/src \
+                         @abs_top_builddir@/modules/libm/include \
+                         @abs_top_srcdir@/modules/libm/include \
+                         @abs_top_builddir@/modules/libm/src \
+                         @abs_top_srcdir@/modules/libm/src \
+                         @abs_top_builddir@/modules/libpthread/include \
+                         @abs_top_srcdir@/modules/libpthread/include \
+                         @abs_top_builddir@/modules/libpthread/src \
+                         @abs_top_srcdir@/modules/libpthread/src \
+                         @abs_top_builddir@/modules/tm/include \
+                         @abs_top_srcdir@/modules/tm/include \
+                         @abs_top_builddir@/modules/tm/src \
+                         @abs_top_srcdir@/modules/tm/src \
+                         @abs_top_builddir@/modules/txlib/include \
+                         @abs_top_srcdir@/modules/txlib/include \
+                         @abs_top_builddir@/modules/txlib/src \
+                         @abs_top_srcdir@/modules/txlib/src \
+                         @abs_top_builddir@/src \
                          @abs_top_srcdir@/src
 INPUT_ENCODING         = UTF-8
 FILE_PATTERNS          = *.c \
