@@ -29,6 +29,7 @@
  * Memory functions
  */
 
+#if defined(PICOTM_LIBC_HAVE_MEMCCPY) && PICOTM_LIBC_HAVE_MEMCCPY
 PICOTM_EXPORT
 void*
 memccpy_tx(void* restrict dest, const void* restrict src, int c, size_t n)
@@ -60,7 +61,9 @@ memccpy_tx(void* restrict dest, const void* restrict src, int c, size_t n)
     }
     return dest;
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_MEMCHR) && PICOTM_LIBC_HAVE_MEMCHR
 PICOTM_EXPORT
 void*
 memchr_tx(const void* s, int c, size_t n)
@@ -68,7 +71,9 @@ memchr_tx(const void* s, int c, size_t n)
     privatize_tx(s, n, PICOTM_TM_PRIVATIZE_LOAD);
     return memchr_tm(s, c, n);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_MEMCMP) && PICOTM_LIBC_HAVE_MEMCMP
 PICOTM_EXPORT
 int
 memcmp_tx(const void* s1, const void* s2, size_t n)
@@ -77,7 +82,9 @@ memcmp_tx(const void* s1, const void* s2, size_t n)
     privatize_tx(s2, n, PICOTM_TM_PRIVATIZE_LOAD);
     return memcmp_tm(s1, s2, n);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_MEMCPY) && PICOTM_LIBC_HAVE_MEMCPY
 PICOTM_EXPORT
 void*
 memcpy_tx(void* restrict dest, const void* restrict src, size_t n)
@@ -86,7 +93,9 @@ memcpy_tx(void* restrict dest, const void* restrict src, size_t n)
     privatize_tx(src, n, PICOTM_TM_PRIVATIZE_LOAD);
     return memcpy_tm(dest, src, n);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_MEMMOVE) && PICOTM_LIBC_HAVE_MEMMOVE
 PICOTM_EXPORT
 void*
 memmove_tx(void* dest, const void* src, size_t n)
@@ -109,7 +118,9 @@ memmove_tx(void* dest, const void* src, size_t n)
     }
     return dest;
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_MEMSET) && PICOTM_LIBC_HAVE_MEMSET
 PICOTM_EXPORT
 void*
 memset_tx(void* s, int c, size_t n)
@@ -128,7 +139,9 @@ memset_tx(void* s, int c, size_t n)
     }
     return s;
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_MEMRCHR) && PICOTM_LIBC_HAVE_MEMRCHR
 PICOTM_EXPORT
 void*
 memrchr_tx(const void* s, int c, size_t n)
@@ -136,7 +149,9 @@ memrchr_tx(const void* s, int c, size_t n)
     privatize_tx(s, n, PICOTM_TM_PRIVATIZE_LOAD);
     return memrchr_tm(s, c, n);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_RAWMEMCHR) && PICOTM_LIBC_HAVE_RAWMEMCHR
 PICOTM_EXPORT
 void*
 rawmemchr_tx(const void* s, int c)
@@ -144,11 +159,13 @@ rawmemchr_tx(const void* s, int c)
     privatize_c_tx(s, c, PICOTM_TM_PRIVATIZE_LOAD);
     return rawmemchr_tm(s, c);
 }
+#endif
 
 /*
  * String functions
  */
 
+#if defined(PICOTM_LIBC_HAVE_STPCPY) && PICOTM_LIBC_HAVE_STPCPY
 PICOTM_EXPORT
 char*
 stpcpy_tx(char* restrict dest, const char* restrict src)
@@ -157,7 +174,9 @@ stpcpy_tx(char* restrict dest, const char* restrict src)
     store_tx(dest, src, strlen(src));
     return dest;
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STPNCPY) && PICOTM_LIBC_HAVE_STPNCPY
 PICOTM_EXPORT
 char*
 stpncpy_tx(char* restrict dest, const char* restrict src, size_t n)
@@ -172,7 +191,9 @@ stpncpy_tx(char* restrict dest, const char* restrict src, size_t n)
     }
     return dest;
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STRCAT) && PICOTM_LIBC_HAVE_STRCAT
 PICOTM_EXPORT
 char*
 strcat_tx(char* restrict dest, const char* restrict src)
@@ -184,7 +205,9 @@ strcat_tx(char* restrict dest, const char* restrict src)
     store_tx(dest + dlen, src, slen);
     return dest;
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STRCHR) && PICOTM_LIBC_HAVE_STRCHR
 PICOTM_EXPORT
 char*
 strchr_tx(const char* s, int c)
@@ -192,7 +215,9 @@ strchr_tx(const char* s, int c)
     privatize_c_tx(s, c, PICOTM_TM_PRIVATIZE_LOAD);
     return strchr_tm(s, c);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STRCMP) && PICOTM_LIBC_HAVE_STRCMP
 PICOTM_EXPORT
 int
 strcmp_tx(const char* s1, const char* s2)
@@ -201,7 +226,9 @@ strcmp_tx(const char* s1, const char* s2)
     privatize_c_tx(s2, '\0', PICOTM_TM_PRIVATIZE_LOAD);
     return strcmp_tm(s1, s2);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STRCOLL_L) && PICOTM_LIBC_HAVE_STRCOLL_L
 PICOTM_EXPORT
 int
 strcoll_l_tx(const char* s1, const char* s2, locale_t locale)
@@ -210,7 +237,9 @@ strcoll_l_tx(const char* s1, const char* s2, locale_t locale)
     privatize_c_tx(s2, '\0', PICOTM_TM_PRIVATIZE_LOAD);
     return strcoll_l_tm(s1, s2, locale);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STRCPY) && PICOTM_LIBC_HAVE_STRCPY
 PICOTM_EXPORT
 char*
 strcpy_tx(char* restrict dest, const char* restrict src)
@@ -219,7 +248,9 @@ strcpy_tx(char* restrict dest, const char* restrict src)
     store_tx(dest, src, strlen(src) + 1);
     return dest;
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STRCSPN) && PICOTM_LIBC_HAVE_STRCSPN
 PICOTM_EXPORT
 size_t
 strcspn_tx(const char* s, const char* reject)
@@ -227,7 +258,9 @@ strcspn_tx(const char* s, const char* reject)
     privatize_c_tx(s, '\0', PICOTM_TM_PRIVATIZE_LOAD);
     return strcspn(s, reject);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STRDUP) && PICOTM_LIBC_HAVE_STRDUP
 PICOTM_EXPORT
 char*
 strdup_tx(const char* s)
@@ -235,7 +268,9 @@ strdup_tx(const char* s)
     privatize_c_tx(s, '\0', PICOTM_TM_PRIVATIZE_LOAD);
     return strdup_tm(s);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STRERROR_R) && PICOTM_LIBC_HAVE_STRERROR_R
 PICOTM_EXPORT
 char*
 __strerror_r_gnu_tx(int errnum, char* buf, size_t buflen)
@@ -251,7 +286,9 @@ __strerror_r_posix_tx(int errnum, char* buf, size_t buflen)
     privatize_tx(buf, buflen, PICOTM_TM_PRIVATIZE_STORE);
     return __strerror_r_posix_tm(errnum, buf, buflen);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STRLEN) && PICOTM_LIBC_HAVE_STRLEN
 PICOTM_EXPORT
 size_t
 strlen_tx(const char* s)
@@ -259,7 +296,9 @@ strlen_tx(const char* s)
     privatize_c_tx(s, '\0', PICOTM_TM_PRIVATIZE_LOAD);
     return strlen(s);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STRNCAT) && PICOTM_LIBC_HAVE_STRNCAT
 PICOTM_EXPORT
 char*
 strncat_tx(char* restrict dest, const char* restrict src, size_t n)
@@ -276,7 +315,9 @@ strncat_tx(char* restrict dest, const char* restrict src, size_t n)
     }
     return dest;
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STRNCMP) && PICOTM_LIBC_HAVE_STRNCMP
 PICOTM_EXPORT
 int
 strncmp_tx(const char* s1, const char* s2, size_t n)
@@ -285,7 +326,9 @@ strncmp_tx(const char* s1, const char* s2, size_t n)
     privatize_c_tx(s2, '\0', PICOTM_TM_PRIVATIZE_LOAD);
     return strncmp(s1, s2, n);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STRNCPY) && PICOTM_LIBC_HAVE_STRNCPY
 PICOTM_EXPORT
 char*
 strncpy_tx(char* restrict dest, const char* restrict src, size_t n)
@@ -299,7 +342,9 @@ strncpy_tx(char* restrict dest, const char* restrict src, size_t n)
     }
     return dest;
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STRNDUP) && PICOTM_LIBC_HAVE_STRNDUP
 PICOTM_EXPORT
 char*
 strndup_tx(const char* s, size_t n)
@@ -307,7 +352,9 @@ strndup_tx(const char* s, size_t n)
     privatize_c_tx(s, '\0', PICOTM_TM_PRIVATIZE_LOAD);
     return strndup_tm(s, n);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STRNLEN) && PICOTM_LIBC_HAVE_STRNLEN
 PICOTM_EXPORT
 size_t
 strnlen_tx(const char* s, size_t maxlen)
@@ -315,7 +362,9 @@ strnlen_tx(const char* s, size_t maxlen)
     privatize_c_tx(s, '\0', PICOTM_TM_PRIVATIZE_LOAD);
     return strnlen(s, maxlen);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STRPBRK) && PICOTM_LIBC_HAVE_STRPBRK
 PICOTM_EXPORT
 char*
 strpbrk_tx(const char* s, const char* accept)
@@ -324,7 +373,9 @@ strpbrk_tx(const char* s, const char* accept)
     privatize_c_tx(accept, '\0', PICOTM_TM_PRIVATIZE_LOAD);
     return strpbrk(s, accept);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STRRCHR) && PICOTM_LIBC_HAVE_STRRCHR
 PICOTM_EXPORT
 char*
 strrchr_tx(const char* s, int c)
@@ -332,7 +383,9 @@ strrchr_tx(const char* s, int c)
     privatize_c_tx(s, '\0', PICOTM_TM_PRIVATIZE_LOAD);
     return strrchr(s, c);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STRSPN) && PICOTM_LIBC_HAVE_STRSPN
 PICOTM_EXPORT
 size_t
 strspn_tx(const char* s, const char* accept)
@@ -341,7 +394,9 @@ strspn_tx(const char* s, const char* accept)
     privatize_c_tx(accept, '\0', PICOTM_TM_PRIVATIZE_LOAD);
     return strspn(s, accept);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STRSTR) && PICOTM_LIBC_HAVE_STRSTR
 PICOTM_EXPORT
 char*
 strstr_tx(const char* haystack, const char* needle)
@@ -350,7 +405,9 @@ strstr_tx(const char* haystack, const char* needle)
     privatize_c_tx(needle, '\0', PICOTM_TM_PRIVATIZE_LOAD);
     return strstr(haystack, needle);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STRTOK_R) && PICOTM_LIBC_HAVE_STRTOK_R
 PICOTM_EXPORT
 char*
 strtok_r_tx(char* restrict str, const char* restrict delim,
@@ -365,3 +422,4 @@ strtok_r_tx(char* restrict str, const char* restrict delim,
 
     return tok;
 }
+#endif

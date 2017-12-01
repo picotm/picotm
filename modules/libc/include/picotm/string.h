@@ -36,6 +36,8 @@ PICOTM_BEGIN_DECLS
  * Memory functions
  */
 
+#if defined(PICOTM_LIBC_HAVE_MEMCCPY) && PICOTM_LIBC_HAVE_MEMCCPY || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [memccpy()][posix::memccpy].
@@ -45,7 +47,10 @@ PICOTM_NOTHROW
  */
 void*
 memccpy_tx(void* restrict dest, const void* restrict src, int c, size_t n);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_MEMCHR) && PICOTM_LIBC_HAVE_MEMCHR || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [memchr()][posix::memchr].
@@ -55,7 +60,10 @@ PICOTM_NOTHROW
  */
 void*
 memchr_tx(const void* s, int c, size_t n);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_MEMCMP) && PICOTM_LIBC_HAVE_MEMCMP || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [memcmp()][posix::memcmp].
@@ -65,7 +73,10 @@ PICOTM_NOTHROW
  */
 int
 memcmp_tx(const void* s1, const void* s2, size_t n);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_MEMCPY) && PICOTM_LIBC_HAVE_MEMCPY || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [memcpy()][posix::memcpy].
@@ -75,7 +86,10 @@ PICOTM_NOTHROW
  */
 void*
 memcpy_tx(void* restrict dest, const void* restrict src, size_t n);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_MEMMOVE) && PICOTM_LIBC_HAVE_MEMMOVE || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [memmove()][posix::memmove].
@@ -85,7 +99,10 @@ PICOTM_NOTHROW
  */
 void*
 memmove_tx(void* dest, const void* src, size_t n);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_MEMSET) && PICOTM_LIBC_HAVE_MEMSET || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [memset()][posix::memset].
@@ -95,7 +112,10 @@ PICOTM_NOTHROW
  */
 void*
 memset_tx(void* s, int c, size_t n);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_MEMRCHR) && PICOTM_LIBC_HAVE_MEMRCHR || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [memrchr()][posix::memrchr].
@@ -105,7 +125,10 @@ PICOTM_NOTHROW
  */
 void*
 memrchr_tx(const void* s, int c, size_t n);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_RAWMEMCHR) && PICOTM_LIBC_HAVE_RAWMEMCHR || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [rawmemchr()][gnu::rawmemchr].
@@ -115,11 +138,14 @@ PICOTM_NOTHROW
  */
 void*
 rawmemchr_tx(const void* s, int c);
+#endif
 
 /*
  * String functions
  */
 
+#if defined(PICOTM_LIBC_HAVE_STPCPY) && PICOTM_LIBC_HAVE_STPCPY || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [stpcpy()][posix::stpcpy].
@@ -129,7 +155,10 @@ PICOTM_NOTHROW
  */
 char*
 stpcpy_tx(char* restrict dest, const char* restrict src);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STPNCPY) && PICOTM_LIBC_HAVE_STPNCPY || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [stpncpy()][posix::stpncpy].
@@ -139,7 +168,10 @@ PICOTM_NOTHROW
  */
 char*
 stpncpy_tx(char* restrict dest, const char* restrict src, size_t n);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STPCAT) && PICOTM_LIBC_HAVE_STPCAT || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [strcat()][posix::strcat].
@@ -149,7 +181,10 @@ PICOTM_NOTHROW
  */
 char*
 strcat_tx(char* restrict dest, const char* restrict src);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STRCHR) && PICOTM_LIBC_HAVE_STRCHR || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [strchr()][posix::strchr_tx].
@@ -159,7 +194,10 @@ PICOTM_NOTHROW
  */
 char*
 strchr_tx(const char* s, int c);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STRCMP) && PICOTM_LIBC_HAVE_STRCMP || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [strcmp()][posix::strcmp].
@@ -169,7 +207,10 @@ PICOTM_NOTHROW
  */
 int
 strcmp_tx(const char* s1, const char* s2);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STRCOLL_L) && PICOTM_LIBC_HAVE_STRCOLL_L || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [strcoll_l()][posix::strcoll_l].
@@ -179,7 +220,10 @@ PICOTM_NOTHROW
  */
 int
 strcoll_l_tx(const char* s1, const char* s2, locale_t locale);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STRCPY) && PICOTM_LIBC_HAVE_STRCPY || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [strcpy()][posix::strcpy].
@@ -189,7 +233,10 @@ PICOTM_NOTHROW
  */
 char*
 strcpy_tx(char* restrict dest, const char* restrict src);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STRCSPN) && PICOTM_LIBC_HAVE_STRCSPN || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [strcspn()][posix::strcspn].
@@ -199,7 +246,10 @@ PICOTM_NOTHROW
  */
 size_t
 strcspn_tx(const char* s, const char* reject);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STRDUP) && PICOTM_LIBC_HAVE_STRDUP || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [strdup()][posix::strdup].
@@ -209,7 +259,10 @@ PICOTM_NOTHROW
  */
 char*
 strdup_tx(const char* s);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STRERROR_R) && PICOTM_LIBC_HAVE_STRERROR_R || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [strerror_r()][gnu::strerror_r].
@@ -239,7 +292,10 @@ __strerror_r_posix_tx(int errnum, char* buf, size_t buflen);
 #else
 #define strerror_r_tx   __strerror_r_gnu_tx
 #endif
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STRLEN) && PICOTM_LIBC_HAVE_STRLEN || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [strlen()][posix::strlen].
@@ -249,7 +305,10 @@ PICOTM_NOTHROW
  */
 size_t
 strlen_tx(const char* s);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STRNCAT) && PICOTM_LIBC_HAVE_STRNCAT || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [strncat()][posix::strncat].
@@ -259,7 +318,10 @@ PICOTM_NOTHROW
  */
 char*
 strncat_tx(char* restrict dest, const char* restrict src, size_t n);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STRNCMP) && PICOTM_LIBC_HAVE_STRNCMP || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [strncmp()][posix::strncmp].
@@ -269,7 +331,10 @@ PICOTM_NOTHROW
  */
 int
 strncmp_tx(const char* s1, const char* s2, size_t n);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STRNCPY) && PICOTM_LIBC_HAVE_STRNCPY || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [strncpy()][posix::strncpy].
@@ -279,7 +344,10 @@ PICOTM_NOTHROW
  */
 char*
 strncpy_tx(char* restrict dest, const char* restrict src, size_t n);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STRNDUP) && PICOTM_LIBC_HAVE_STRNDUP || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [strndup()][posix::strndup].
@@ -289,7 +357,10 @@ PICOTM_NOTHROW
  */
 char*
 strndup_tx(const char* s, size_t n);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STRNLEN) && PICOTM_LIBC_HAVE_STRNLEN || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [strnlen()][posix::strnlen].
@@ -299,7 +370,10 @@ PICOTM_NOTHROW
  */
 size_t
 strnlen_tx(const char* s, size_t maxlen);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STRPBRK) && PICOTM_LIBC_HAVE_STRPBRK || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [strpbrk()][posix::strpbrk].
@@ -309,7 +383,10 @@ PICOTM_NOTHROW
  */
 char*
 strpbrk_tx(const char* s, const char* accept);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STRRCHR) && PICOTM_LIBC_HAVE_STRRCHR || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [strrchr()][posix::strrchr].
@@ -319,7 +396,10 @@ PICOTM_NOTHROW
  */
 char*
 strrchr_tx(const char* s, int c);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STRSPN) && PICOTM_LIBC_HAVE_STRSPN || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [strspn()][posix::strspn].
@@ -329,7 +409,10 @@ PICOTM_NOTHROW
  */
 size_t
 strspn_tx(const char* s, const char* accept);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STRSTR) && PICOTM_LIBC_HAVE_STRSTR || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [strstr()][posix::strstr].
@@ -339,7 +422,10 @@ PICOTM_NOTHROW
  */
 char*
 strstr_tx(const char* haystack, const char* needle);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_STRTOK_R) && PICOTM_LIBC_HAVE_STRTOK_R || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [strtok_r()][posix::strtok_r].
@@ -350,5 +436,6 @@ PICOTM_NOTHROW
 char*
 strtok_r_tx(char* restrict str, const char* restrict delim,
             char** restrict saveptr);
+#endif
 
 PICOTM_END_DECLS
