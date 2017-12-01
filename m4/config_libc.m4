@@ -161,6 +161,27 @@ AC_DEFUN([_CHECK_LIBC_SYS_SOCKET_H], [
     fi
 ])
 
+AC_DEFUN([_CHECK_LIBC_SYS_STAT_H], [
+
+    AC_CHECK_HEADERS([sys/stat.h])
+
+    if test "x$ac_cv_header_sys_stat_h" != "xno"; then
+
+        #
+        # Public interfaces
+        #
+
+        _CHECK_MODULE_INTF([libc], [chmod],  [[#include <sys/stat.h>]])
+        _CHECK_MODULE_INTF([libc], [fchmod], [[#include <sys/stat.h>]])
+        _CHECK_MODULE_INTF([libc], [fstat],  [[#include <sys/stat.h>]])
+        _CHECK_MODULE_INTF([libc], [lstat],  [[#include <sys/stat.h>]])
+        _CHECK_MODULE_INTF([libc], [mkdir],  [[#include <sys/stat.h>]])
+        _CHECK_MODULE_INTF([libc], [mkfifo], [[#include <sys/stat.h>]])
+        _CHECK_MODULE_INTF([libc], [mknod],  [[#include <sys/stat.h>]])
+        _CHECK_MODULE_INTF([libc], [stat],   [[#include <sys/stat.h>]])
+    fi
+])
+
 AC_DEFUN([CONFIG_LIBC], [
     AC_CHECK_LIB([c], [longjmp])
     if test "x$ac_cv_lib_c_memcpy" != "xno"; then
@@ -183,5 +204,6 @@ AC_DEFUN([CONFIG_LIBC], [
         _CHECK_LIBC_STDLIB_H
         _CHECK_LIBC_STRING_H
         _CHECK_LIBC_SYS_SOCKET_H
+        _CHECK_LIBC_SYS_STAT_H
     fi
 ])
