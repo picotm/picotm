@@ -27,13 +27,16 @@
 #include "error/module.h"
 #include "fildes/module.h"
 
+#if defined(PICOTM_LIBC_HAVE_FREE) && PICOTM_LIBC_HAVE_FREE
 PICOTM_EXPORT
 void
 free_tm(void* ptr)
 {
     allocator_module_free(ptr, malloc_usable_size(ptr));
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_MKDTEMP) && PICOTM_LIBC_HAVE_MKDTEMP
 PICOTM_EXPORT
 char*
 mkdtemp_tm(char* template)
@@ -51,7 +54,9 @@ mkdtemp_tm(char* template)
 
     return str;
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_MKSTEMP) && PICOTM_LIBC_HAVE_MKSTEMP
 PICOTM_EXPORT
 int
 mkstemp_tm(char* template)
@@ -69,7 +74,10 @@ mkstemp_tm(char* template)
 
     return res;
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_POSIX_MEMALIGN) && \
+        PICOTM_LIBC_HAVE_POSIX_MEMALIGN
 PICOTM_EXPORT
 int
 posix_memalign_tm(void** memptr, size_t alignment, size_t size)
@@ -77,7 +85,9 @@ posix_memalign_tm(void** memptr, size_t alignment, size_t size)
     allocator_module_posix_memalign(memptr, alignment, size);
     return 0;
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_QSORT) && PICOTM_LIBC_HAVE_QSORT
 PICOTM_EXPORT
 void
 qsort_tm(void* base, size_t nel, size_t width,
@@ -85,7 +95,18 @@ qsort_tm(void* base, size_t nel, size_t width,
 {
     qsort(base, nel, width, compar);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_RAND_R) && PICOTM_LIBC_HAVE_RAND_R
+PICOTM_EXPORT
+int
+rand_r_tm(unsigned int* seed)
+{
+    return rand_r(seed);
+}
+#endif
+
+#if defined(PICOTM_LIBC_HAVE_REALLOC) && PICOTM_LIBC_HAVE_REALLOC
 PICOTM_EXPORT
 void*
 realloc_tm(void* ptr, size_t size)
@@ -116,10 +137,4 @@ realloc_tm(void* ptr, size_t size)
 
     return mem;
 }
-
-PICOTM_EXPORT
-int
-rand_r_tm(unsigned int* seed)
-{
-    return rand_r(seed);
-}
+#endif

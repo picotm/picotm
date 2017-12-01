@@ -45,6 +45,8 @@ PICOTM_TM_STORE_TX(lldiv_t, lldiv_t);
 /*PICOTM_TM_STORE_TX(size_t, size_t);*/ /* defined in stddef.h */
 /*PICOTM_TM_LOAD_TX(_t, wchar_t);*/ /* defined in stddef.h */
 
+#if defined(PICOTM_LIBC_HAVE__EXIT) && PICOTM_LIBC_HAVE__EXIT || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 PICOTM_NORETURN
 /**
@@ -58,7 +60,10 @@ PICOTM_NORETURN
  */
 void
 _Exit_tx(int status);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_ABORT) && PICOTM_LIBC_HAVE_ABORT || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 PICOTM_NORETURN
 /**
@@ -72,7 +77,10 @@ PICOTM_NORETURN
  */
 void
 abort_tx(void);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_CALLOC) && PICOTM_LIBC_HAVE_CALLOC || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [calloc()][posix::calloc].
@@ -82,7 +90,10 @@ PICOTM_NOTHROW
  */
 void*
 calloc_tx(size_t nmemb, size_t size);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_EXIT) && PICOTM_LIBC_HAVE_EXIT || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 PICOTM_NORETURN
 /**
@@ -96,7 +107,10 @@ PICOTM_NORETURN
  */
 void
 exit_tx(int status);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_FREE) && PICOTM_LIBC_HAVE_FREE || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [free()][posix::free].
@@ -106,7 +120,10 @@ PICOTM_NOTHROW
  */
 void
 free_tx(void* ptr);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_MALLOC) && PICOTM_LIBC_HAVE_MALLOC || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [malloc()][posix::malloc].
@@ -116,7 +133,10 @@ PICOTM_NOTHROW
  */
 void*
 malloc_tx(size_t size);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_MKDTEMP) && PICOTM_LIBC_HAVE_MKDTEMP || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_EXPORT
 /**
  * A transaction-safe implementation of [mkdtemp()][posix::mkdtemp].
@@ -126,7 +146,10 @@ PICOTM_EXPORT
  */
 char*
 mkdtemp_tx(char* template);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_MKSTEMP) && PICOTM_LIBC_HAVE_MKSTEMP || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_EXPORT
 /**
  * A transaction-safe implementation of [mkstemp()][posix::mkstemp].
@@ -136,7 +159,11 @@ PICOTM_EXPORT
  */
 int
 mkstemp_tx(char* template);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_POSIX_MEMALIGN) && \
+        PICOTM_LIBC_HAVE_POSIX_MEMALIGN || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [posix_memalign()][posix::posix_memalign].
@@ -146,7 +173,10 @@ PICOTM_NOTHROW
  */
 int
 posix_memalign_tx(void** memptr, size_t alignment, size_t size);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_QSORT) && PICOTM_LIBC_HAVE_QSORT || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [qsort()][posix::qsort].
@@ -157,17 +187,10 @@ PICOTM_NOTHROW
 void
 qsort_tx(void* base, size_t nel, size_t width,
          int (*compar)(const void*, const void*));
+#endif
 
-PICOTM_NOTHROW
-/**
- * A transaction-safe implementation of [realloc()][posix::realloc].
- *
- * [posix::realloc]:
- *  http://pubs.opengroup.org/onlinepubs/9699919799/functions/realloc.html
- */
-void*
-realloc_tx(void* ptr, size_t size);
-
+#if defined(PICOTM_LIBC_HAVE_RAND_R) && PICOTM_LIBC_HAVE_RAND_R || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [rand_r()][posix::rand_r].
@@ -177,5 +200,19 @@ PICOTM_NOTHROW
  */
 int
 rand_r_tx(unsigned int* seed);
+#endif
+
+#if defined(PICOTM_LIBC_HAVE_REALLOC) && PICOTM_LIBC_HAVE_REALLOC || \
+    defined(__PICOTM_DOXYGEN)
+PICOTM_NOTHROW
+/**
+ * A transaction-safe implementation of [realloc()][posix::realloc].
+ *
+ * [posix::realloc]:
+ *  http://pubs.opengroup.org/onlinepubs/9699919799/functions/realloc.html
+ */
+void*
+realloc_tx(void* ptr, size_t size);
+#endif
 
 PICOTM_END_DECLS
