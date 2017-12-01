@@ -29,13 +29,16 @@
 #include "fildes/module.h"
 #include "picotm/fcntl-tm.h"
 
+#if defined(PICOTM_LIBC_HAVE_CREAT) && PICOTM_LIBC_HAVE_CREAT
 PICOTM_EXPORT
 int
 creat_tx(const char* path, mode_t mode)
 {
     return open_tx(path, O_CREAT | O_WRONLY | O_TRUNC, mode);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_FCNTL) && PICOTM_LIBC_HAVE_FCNTL
 PICOTM_EXPORT
 int
 fcntl_tx(int fildes, int cmd, ...)
@@ -93,7 +96,9 @@ fcntl_tx(int fildes, int cmd, ...)
 
     return res;
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_OPEN) && PICOTM_LIBC_HAVE_OPEN
 PICOTM_EXPORT
 int
 open_tx(const char* path, int oflag, ...)
@@ -118,3 +123,4 @@ open_tx(const char* path, int oflag, ...)
 
     return open_tm(path, oflag, mode);
 }
+#endif
