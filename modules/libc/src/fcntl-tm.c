@@ -27,13 +27,16 @@
 #include "error/module.h"
 #include "fildes/module.h"
 
+#if defined(PICOTM_LIBC_HAVE_CREAT) && PICOTM_LIBC_HAVE_CREAT
 PICOTM_EXPORT
 int
 creat_tm(const char* path, mode_t mode)
 {
     return open_tm(path, O_CREAT | O_WRONLY | O_TRUNC, mode);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_FCNTL) && PICOTM_LIBC_HAVE_FCNTL
 PICOTM_EXPORT
 int
 fcntl_tm(int fildes, int cmd, ...)
@@ -92,7 +95,9 @@ fcntl_tm(int fildes, int cmd, ...)
 
     return res;
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_OPEN) && PICOTM_LIBC_HAVE_OPEN
 PICOTM_EXPORT
 int
 open_tm(const char* path, int oflag, ...)
@@ -127,3 +132,4 @@ open_tm(const char* path, int oflag, ...)
 
     return res;
 }
+#endif

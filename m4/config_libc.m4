@@ -26,6 +26,22 @@ AC_DEFUN([_CHECK_LIBC_ERRNO_H], [
     fi
 ])
 
+AC_DEFUN([_CHECK_LIBC_FCNTL_H], [
+
+    AC_CHECK_HEADERS([fcntl.h])
+
+    if test "x$ac_cv_header_fcntl_h" != "xno"; then
+
+        #
+        # Public interfaces
+        #
+
+        _CHECK_MODULE_INTF([libc], [creat], [[#include <fcntl.h>]])
+        _CHECK_MODULE_INTF([libc], [fcntl], [[#include <fcntl.h>]])
+        _CHECK_MODULE_INTF([libc], [open],  [[#include <fcntl.h>]])
+    fi
+])
+
 AC_DEFUN([CONFIG_LIBC], [
     AC_CHECK_LIB([c], [longjmp])
     if test "x$ac_cv_lib_c_memcpy" != "xno"; then
@@ -42,5 +58,6 @@ AC_DEFUN([CONFIG_LIBC], [
         #
 
         _CHECK_LIBC_ERRNO_H
+        _CHECK_LIBC_FCNTL_H
     fi
 ])

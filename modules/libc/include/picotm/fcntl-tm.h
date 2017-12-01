@@ -32,25 +32,34 @@ PICOTM_BEGIN_DECLS
  * \brief Transactional wrappers for interfaces of <fcntl.h>.
  */
 
+#if defined(PICOTM_LIBC_HAVE_CREAT) && PICOTM_LIBC_HAVE_CREAT || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * Variant of creat_tx() that operates on transactional memory.
  */
 int
 creat_tm(const char* path, mode_t mode);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_FCNTL) && PICOTM_LIBC_HAVE_FCNTL || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * Variant of fcntl_tx() that operates on transactional memory.
  */
 int
 fcntl_tm(int fildes, int cmd, ...);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_OPEN) && PICOTM_LIBC_HAVE_OPEN || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * Variant of open_tx() that operates on transactional memory.
  */
 int
 open_tm(const char* path, int oflag, ...);
+#endif
 
 PICOTM_END_DECLS

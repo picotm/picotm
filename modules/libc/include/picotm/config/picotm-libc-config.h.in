@@ -19,6 +19,18 @@
 
 #pragma once
 
+#ifndef PICOTM_LIBC_HAVE_CREAT
+#undef PICOTM_LIBC_HAVE_CREAT
+#endif
+
 #ifndef PICOTM_LIBC_HAVE_ERRNO
 #undef PICOTM_LIBC_HAVE_ERRNO
+#endif
+
+#ifndef PICOTM_LIBC_HAVE_FCNTL
+#undef PICOTM_LIBC_HAVE_FCNTL
+#endif
+
+#ifndef PICOTM_LIBC_HAVE_OPEN
+#undef PICOTM_LIBC_HAVE_OPEN
 #endif

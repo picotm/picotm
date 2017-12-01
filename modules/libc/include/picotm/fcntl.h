@@ -32,6 +32,8 @@ PICOTM_BEGIN_DECLS
  * \brief Transactional wrappers for interfaces of <fcntl.h>.
  */
 
+#if defined(PICOTM_LIBC_HAVE_CREAT) && PICOTM_LIBC_HAVE_CREAT || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [creat()][posix::creat].
@@ -41,7 +43,10 @@ PICOTM_NOTHROW
  */
 int
 creat_tx(const char* path, mode_t mode);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_FCNTL) && PICOTM_LIBC_HAVE_FCNTL || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [fcntl()][posix::fcntl].
@@ -51,7 +56,10 @@ PICOTM_NOTHROW
  */
 int
 fcntl_tx(int fildes, int cmd, ...);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_OPEN) && PICOTM_LIBC_HAVE_OPEN || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [open()][posix::open].
@@ -61,5 +69,6 @@ PICOTM_NOTHROW
  */
 int
 open_tx(const char* path, int oflag, ...);
+#endif
 
 PICOTM_END_DECLS
