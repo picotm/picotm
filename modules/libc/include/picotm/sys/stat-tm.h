@@ -67,7 +67,10 @@ PICOTM_NOTHROW
 int
 mkfifo_tm(const char* path, mode_t mode);
 
-#if defined(_BSD_SOURCE) || defined(_SVID_SOURCE) || _XOPEN_SOURCE >= 500
+#if defined(_BSD_SOURCE) || \
+    defined(_SVID_SOURCE) || \
+    defined(_XOPEN_SOURCE) && _XOPEN_SOURCE >= 500 || \
+    defined(__PICOTM_DOXYGEN)
 /**
  * Variant of mknod_tx() that operates on transactional memory.
  */
