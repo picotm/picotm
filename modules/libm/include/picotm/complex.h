@@ -45,6 +45,8 @@ PICOTM_TM_PRIVATIZE_TX(cdouble, double _Complex);
 PICOTM_TM_PRIVATIZE_TX(cfloat, float _Complex);
 PICOTM_TM_PRIVATIZE_TX(cldouble, long double _Complex);
 
+#if defined(PICOTM_LIBM_HAVE_CABS) && PICOTM_LIBM_HAVE_CABS || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [cabs()][posix::cabs].
@@ -54,7 +56,10 @@ PICOTM_NOTHROW
  */
 double
 cabs_tx(double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CABSF) && PICOTM_LIBM_HAVE_CABSF || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [cabsf()][posix::cabsf].
@@ -64,7 +69,10 @@ PICOTM_NOTHROW
  */
 float
 cabsf_tx(float complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CABSL) && PICOTM_LIBM_HAVE_CABSL || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [cabsl()][posix::cabsl].
@@ -74,7 +82,10 @@ PICOTM_NOTHROW
  */
 long double
 cabsl_tx(long double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CACOS) && PICOTM_LIBM_HAVE_CACOS || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [cacos()][posix::cacos].
@@ -84,7 +95,10 @@ PICOTM_NOTHROW
  */
 double complex
 cacos_tx(double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CACOSF) && PICOTM_LIBM_HAVE_CACOSF || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [cacosf()][posix::cacosf].
@@ -94,7 +108,10 @@ PICOTM_NOTHROW
  */
 float complex
 cacosf_tx(float complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CACOSH) && PICOTM_LIBM_HAVE_CACOSH || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [cacosh()][posix::cacosh].
@@ -104,7 +121,10 @@ PICOTM_NOTHROW
  */
 double complex
 cacosh_tx(double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CACOSHF) && PICOTM_LIBM_HAVE_CACOSHF || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [cacoshf()][posix::cacoshf].
@@ -114,7 +134,10 @@ PICOTM_NOTHROW
  */
 float complex
 cacoshf_tx(float complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CACOSHL) && PICOTM_LIBM_HAVE_CACOSHL || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [cacoshl()][posix::cacoshl].
@@ -124,7 +147,10 @@ PICOTM_NOTHROW
  */
 long double complex
 cacoshl_tx(long double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CACOSL) && PICOTM_LIBM_HAVE_CACOSL || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [cacosl()][posix::cacosl].
@@ -134,7 +160,10 @@ PICOTM_NOTHROW
  */
 long double complex
 cacosl_tx(long double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CARG) && PICOTM_LIBM_HAVE_CARG || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [carg()][posix::carg].
@@ -144,7 +173,10 @@ PICOTM_NOTHROW
  */
 double
 carg_tx(double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CARGF) && PICOTM_LIBM_HAVE_CARGF || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [cargf()][posix::cargf].
@@ -154,7 +186,10 @@ PICOTM_NOTHROW
  */
 float
 cargf_tx(float complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CARGL) && PICOTM_LIBM_HAVE_CARGL || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [cargl()][posix::cargl].
@@ -164,7 +199,10 @@ PICOTM_NOTHROW
  */
 long double
 cargl_tx(long double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CASIN) && PICOTM_LIBM_HAVE_CASIN || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [casin()][posix::casin].
@@ -174,7 +212,10 @@ PICOTM_NOTHROW
  */
 double complex
 casin_tx(double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CASINF) && PICOTM_LIBM_HAVE_CASINF || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [casinf()][posix::casinf].
@@ -184,7 +225,10 @@ PICOTM_NOTHROW
  */
 float complex
 casinf_tx(float complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CASINH) && PICOTM_LIBM_HAVE_CASINH || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [casinh()][posix::casinh].
@@ -194,7 +238,10 @@ PICOTM_NOTHROW
  */
 double complex
 casinh_tx(double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CASINHF) && PICOTM_LIBM_HAVE_CASINHF || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [casinhf()][posix::casinhf].
@@ -204,7 +251,10 @@ PICOTM_NOTHROW
  */
 float complex
 casinhf_tx(float complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CASINHL) && PICOTM_LIBM_HAVE_CASINHL || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [casinhl()][posix::casinhl].
@@ -214,7 +264,10 @@ PICOTM_NOTHROW
  */
 long double complex
 casinhl_tx(long double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CASINL) && PICOTM_LIBM_HAVE_CASINL || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [casinl()][posix::casinl].
@@ -224,7 +277,10 @@ PICOTM_NOTHROW
  */
 long double complex
 casinl_tx(long double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CATAN) && PICOTM_LIBM_HAVE_CATAN || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [catan()][posix::catan].
@@ -234,7 +290,10 @@ PICOTM_NOTHROW
  */
 double complex
 catan_tx(double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CATANF) && PICOTM_LIBM_HAVE_CATANF || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [catanf()][posix::catanf].
@@ -244,7 +303,10 @@ PICOTM_NOTHROW
  */
 float complex
 catanf_tx(float complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CATANH) && PICOTM_LIBM_HAVE_CATANH || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [catanh()][posix::catanh].
@@ -254,7 +316,10 @@ PICOTM_NOTHROW
  */
 double complex
 catanh_tx(double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CATANHF) && PICOTM_LIBM_HAVE_CATANHF || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [catanhf()][posix::catanhf].
@@ -264,7 +329,10 @@ PICOTM_NOTHROW
  */
 float complex
 catanhf_tx(float complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CATANHL) && PICOTM_LIBM_HAVE_CATANHL || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [catanhl()][posix::catanhl].
@@ -274,7 +342,10 @@ PICOTM_NOTHROW
  */
 long double complex
 catanhl_tx(long double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CATANL) && PICOTM_LIBM_HAVE_CATANL || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [catanl()][posix::catanl].
@@ -284,7 +355,10 @@ PICOTM_NOTHROW
  */
 long double complex
 catanl_tx(long double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CCOS) && PICOTM_LIBM_HAVE_CCOS || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [ccos()][posix::ccos].
@@ -294,7 +368,10 @@ PICOTM_NOTHROW
  */
 double complex
 ccos_tx(double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CCOSF) && PICOTM_LIBM_HAVE_CCOSF || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [ccosf()][posix::ccosf].
@@ -304,7 +381,10 @@ PICOTM_NOTHROW
  */
 float complex
 ccosf_tx(float complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CCOSH) && PICOTM_LIBM_HAVE_CCOSH || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [ccosh()][posix::ccosh].
@@ -314,7 +394,10 @@ PICOTM_NOTHROW
  */
 double complex
 ccosh_tx(double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CCOSHF) && PICOTM_LIBM_HAVE_CCOSHF || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [ccoshf()][posix::ccoshf].
@@ -324,7 +407,10 @@ PICOTM_NOTHROW
  */
 float complex
 ccoshf_tx(float complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CCOSHL) && PICOTM_LIBM_HAVE_CCOSHL || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [ccoshl()][posix::ccoshl].
@@ -334,7 +420,10 @@ PICOTM_NOTHROW
  */
 long double complex
 ccoshl_tx(long double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CCOSL) && PICOTM_LIBM_HAVE_CCOSL || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [ccosl()][posix::ccosl].
@@ -344,7 +433,10 @@ PICOTM_NOTHROW
  */
 long double complex
 ccosl_tx(long double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CEXP) && PICOTM_LIBM_HAVE_CEXP || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [cexp()][posix::cexp].
@@ -354,7 +446,10 @@ PICOTM_NOTHROW
  */
 double complex
 cexp_tx(double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CEXPF) && PICOTM_LIBM_HAVE_CEXPF || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [cexpf()][posix::cexpf].
@@ -364,7 +459,10 @@ PICOTM_NOTHROW
  */
 float complex
 cexpf_tx(float complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CEXPL) && PICOTM_LIBM_HAVE_CEXPL || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [cexpl()][posix::cexpl].
@@ -374,7 +472,10 @@ PICOTM_NOTHROW
  */
 long double complex
 cexpl_tx(long double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CIMAG) && PICOTM_LIBM_HAVE_CIMAG || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [cimag()][posix::cimag].
@@ -384,7 +485,10 @@ PICOTM_NOTHROW
  */
 double
 cimag_tx(double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CIMAGF) && PICOTM_LIBM_HAVE_CIMAGF || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [cimagf()][posix::cimagf].
@@ -394,7 +498,10 @@ PICOTM_NOTHROW
  */
 float
 cimagf_tx(float complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CIMAGL) && PICOTM_LIBM_HAVE_CIMAGL || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [cimagl()][posix::cimagl].
@@ -404,7 +511,10 @@ PICOTM_NOTHROW
  */
 long double
 cimagl_tx(long double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CLOG) && PICOTM_LIBM_HAVE_CLOG || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [clog()][posix::clog].
@@ -414,7 +524,10 @@ PICOTM_NOTHROW
  */
 double complex
 clog_tx(double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CLOGF) && PICOTM_LIBM_HAVE_CLOGF || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [clogf()][posix::clogf].
@@ -424,7 +537,10 @@ PICOTM_NOTHROW
  */
 float complex
 clogf_tx(float complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CLOGL) && PICOTM_LIBM_HAVE_CLOGL || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [clogl()][posix::clogl].
@@ -434,7 +550,10 @@ PICOTM_NOTHROW
  */
 long double complex
 clogl_tx(long double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CONJ) && PICOTM_LIBM_HAVE_CONJ || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [conj()][posix::conj].
@@ -444,7 +563,10 @@ PICOTM_NOTHROW
  */
 double complex
 conj_tx(double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CONJF) && PICOTM_LIBM_HAVE_CONJF || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [conjf()][posix::conjf].
@@ -454,7 +576,10 @@ PICOTM_NOTHROW
  */
 float complex
 conjf_tx(float complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CONJL) && PICOTM_LIBM_HAVE_CONJL || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [conjl()][posix::conjl].
@@ -464,7 +589,10 @@ PICOTM_NOTHROW
  */
 long double complex
 conjl_tx(long double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CPOW) && PICOTM_LIBM_HAVE_CPOW || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [cpow()][posix::cpow].
@@ -474,7 +602,10 @@ PICOTM_NOTHROW
  */
 double complex
 cpow_tx(double complex x, double complex y);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CPOWF) && PICOTM_LIBM_HAVE_CPOWF || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [cpowf()][posix::cpowf].
@@ -484,7 +615,10 @@ PICOTM_NOTHROW
  */
 float complex
 cpowf_tx(float complex x, float complex y);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CPOWL) && PICOTM_LIBM_HAVE_CPOWL || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [cpowl()][posix::cpowl].
@@ -494,7 +628,10 @@ PICOTM_NOTHROW
  */
 long double complex
 cpowl_tx(long double complex x, long double complex y);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CPROJ) && PICOTM_LIBM_HAVE_CPROJ || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [cproj()][posix::cproj].
@@ -504,7 +641,10 @@ PICOTM_NOTHROW
  */
 double complex
 cproj_tx(double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CPROJF) && PICOTM_LIBM_HAVE_CPROJF || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [cprojf()][posix::cprojf].
@@ -514,7 +654,10 @@ PICOTM_NOTHROW
  */
 float complex
 cprojf_tx(float complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CPROJL) && PICOTM_LIBM_HAVE_CPROJL || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [cprojl()][posix::cprojl].
@@ -524,7 +667,10 @@ PICOTM_NOTHROW
  */
 long double complex
 cprojl_tx(long double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CREAL) && PICOTM_LIBM_HAVE_CREAL || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [creal()][posix::creal].
@@ -534,7 +680,10 @@ PICOTM_NOTHROW
  */
 double
 creal_tx(double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CREALF) && PICOTM_LIBM_HAVE_CREALF || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [crealf()][posix::crealf].
@@ -544,7 +693,10 @@ PICOTM_NOTHROW
  */
 float
 crealf_tx(float complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CREALL) && PICOTM_LIBM_HAVE_CREALL || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [creall()][posix::creall].
@@ -554,7 +706,10 @@ PICOTM_NOTHROW
  */
 long double
 creall_tx(long double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CSIN) && PICOTM_LIBM_HAVE_CSIN || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [csin()][posix::csin].
@@ -564,7 +719,10 @@ PICOTM_NOTHROW
  */
 double complex
 csin_tx(double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CSINF) && PICOTM_LIBM_HAVE_CSINF || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [csinf()][posix::csinf].
@@ -574,7 +732,10 @@ PICOTM_NOTHROW
  */
 float complex
 csinf_tx(float complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CSINH) && PICOTM_LIBM_HAVE_CSINH || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [csinh()][posix::csinh].
@@ -584,7 +745,10 @@ PICOTM_NOTHROW
  */
 double complex
 csinh_tx(double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CSINHF) && PICOTM_LIBM_HAVE_CSINHF || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [csinhf()][posix::csinhf].
@@ -594,7 +758,10 @@ PICOTM_NOTHROW
  */
 float complex
 csinhf_tx(float complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CSINHL) && PICOTM_LIBM_HAVE_CSINHL || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [csinhl()][posix::csinhl].
@@ -604,7 +771,10 @@ PICOTM_NOTHROW
  */
 long double complex
 csinhl_tx(long double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CSINL) && PICOTM_LIBM_HAVE_CSINL || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [csinl()][posix::csinl].
@@ -614,7 +784,10 @@ PICOTM_NOTHROW
  */
 long double complex
 csinl_tx(long double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CSQRT) && PICOTM_LIBM_HAVE_CSQRT || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [csqrt()][posix::csqrt].
@@ -624,7 +797,10 @@ PICOTM_NOTHROW
  */
 double complex
 csqrt_tx(double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CSQRTF) && PICOTM_LIBM_HAVE_CSQRTF || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [csqrtf()][posix::csqrtf].
@@ -634,7 +810,10 @@ PICOTM_NOTHROW
  */
 float complex
 csqrtf_tx(float complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CSQRTL) && PICOTM_LIBM_HAVE_CSQRTL || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [csqrtl()][posix::csqrtl].
@@ -644,7 +823,10 @@ PICOTM_NOTHROW
  */
 long double complex
 csqrtl_tx(long double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CTAN) && PICOTM_LIBM_HAVE_CTAN || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [ctan()][posix::ctan].
@@ -654,7 +836,10 @@ PICOTM_NOTHROW
  */
 double complex
 ctan_tx(double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CTANF) && PICOTM_LIBM_HAVE_CTANF || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [ctanf()][posix::ctanf].
@@ -664,7 +849,10 @@ PICOTM_NOTHROW
  */
 float complex
 ctanf_tx(float complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CTANH) && PICOTM_LIBM_HAVE_CTANH || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [ctanh()][posix::ctanh].
@@ -674,7 +862,10 @@ PICOTM_NOTHROW
  */
 double complex
 ctanh_tx(double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CTANHF) && PICOTM_LIBM_HAVE_CTANHF || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [ctanhf()][posix::ctanhf].
@@ -684,7 +875,10 @@ PICOTM_NOTHROW
  */
 float complex
 ctanhf_tx(float complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CTANHL) && PICOTM_LIBM_HAVE_CTANHL || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [ctanhl()][posix::ctanhl].
@@ -694,7 +888,10 @@ PICOTM_NOTHROW
  */
 long double complex
 ctanhl_tx(long double complex z);
+#endif
 
+#if defined(PICOTM_LIBM_HAVE_CTANL) && PICOTM_LIBM_HAVE_CTANL || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [ctanl()][posix::ctanl].
@@ -704,5 +901,6 @@ PICOTM_NOTHROW
  */
 long double complex
 ctanl_tx(long double complex z);
+#endif
 
 PICOTM_END_DECLS
