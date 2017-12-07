@@ -39,6 +39,9 @@ PICOTM_TM_STORE_TX(pthread_t, pthread_t);
 
 PICOTM_TM_PRIVATIZE_TX(pthread_t, pthread_t);
 
+#if defined(PICOTM_LIBPTHREAD_HAVE_PTHREAD_EQUAL) && \
+        PICOTM_LIBPTHREAD_HAVE_PTHREAD_EQUAL || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [pthread_equal()][posix::pthread_equal].
@@ -48,7 +51,11 @@ PICOTM_NOTHROW
  */
 int
 pthread_equal_tx(pthread_t t1, pthread_t t2);
+#endif
 
+#if defined(PICOTM_LIBPTHREAD_HAVE_PTHREAD_SELF) && \
+        PICOTM_LIBPTHREAD_HAVE_PTHREAD_SELF || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [pthread_self()][posix::pthread_self].
@@ -58,6 +65,7 @@ PICOTM_NOTHROW
  */
 pthread_t
 pthread_self_tx(void);
+#endif
 
 PICOTM_END_DECLS
 
