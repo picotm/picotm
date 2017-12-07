@@ -19,14 +19,20 @@
 
 #include "picotm/pthread.h"
 
+#if defined(PICOTM_LIBPTHREAD_HAVE_PTHREAD_EQUAL) && \
+        PICOTM_LIBPTHREAD_HAVE_PTHREAD_EQUAL
 int
 pthread_equal_tx(pthread_t t1, pthread_t t2)
 {
     return pthread_equal(t1, t2);
 }
+#endif
 
+#if defined(PICOTM_LIBPTHREAD_HAVE_PTHREAD_SELF) && \
+        PICOTM_LIBPTHREAD_HAVE_PTHREAD_SELF
 pthread_t
 pthread_self_tx()
 {
     return pthread_self();
 }
+#endif
