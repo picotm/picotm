@@ -25,6 +25,7 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include <string.h>
+#include "compat/static_assert.h"
 #include "error/module.h"
 #include "fildes/module.h"
 #include "picotm/fcntl-tm.h"
