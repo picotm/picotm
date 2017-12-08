@@ -23,6 +23,7 @@
 #include <stdbool.h>
 #include <sys/queue.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include "chrdev_tx.h"
 #include "dir_tx.h"
 #include "fd_event.h"
