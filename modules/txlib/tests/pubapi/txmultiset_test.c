@@ -26,6 +26,7 @@
 #include <picotm/picotm-module.h>
 #include <stdlib.h>
 #include <string.h>
+#include "compat/static_assert.h"
 #include "picotm/picotm-txmultiset.h"
 #include "ptr.h"
 #include "safeblk.h"
