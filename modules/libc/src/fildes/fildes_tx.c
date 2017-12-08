@@ -1405,7 +1405,11 @@ fildes_tx_exec_fcntl(struct fildes_tx* self, int fildes, int cmd,
 {
     assert(self);
 
+#if defined(F_DUPFD_CLOEXEC)
     if ((cmd == F_DUPFD) || (cmd == F_DUPFD_CLOEXEC)) {
+#else
+    if (cmd == F_DUPFD) {
+#endif
         /* Write-lock file-descriptor table to preserve file-descriptor order */
         fdtab_tx_try_wrlock(&self->fdtab_tx, error);
         if (picotm_error_is_set(error)) {

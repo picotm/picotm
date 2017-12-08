@@ -96,7 +96,7 @@ fd_tx_init(struct fd_tx* self)
 
     self->fd = NULL;
     self->ofd_tx = NULL;
-	self->cc_mode = PICOTM_LIBC_CC_MODE_2PL;
+    self->cc_mode = PICOTM_LIBC_CC_MODE_2PL;
 
     init_rwstates(picotm_arraybeg(self->rwstate),
                   picotm_arrayend(self->rwstate));
@@ -206,11 +206,11 @@ fd_tx_validate(struct fd_tx* self, struct picotm_error* error)
         return;
     }
 
-	/* file descriptor is still open; previously locked */
-	if (!fd_is_open_nl(self->fd)) {
+    /* file descriptor is still open; previously locked */
+    if (!fd_is_open_nl(self->fd)) {
         picotm_error_set_conflicting(error, NULL);
-		return;
-	}
+        return;
+    }
 }
 
 void
@@ -448,7 +448,11 @@ fd_tx_dup_exec(struct fd_tx* self, int fildes, bool cloexec,
 {
     static const int fcntl_cmd[] = {
         F_DUPFD,
+#if defined(F_DUPFD_CLOEXEC)
         F_DUPFD_CLOEXEC
+#else
+        F_DUPFD
+#endif
     };
 
     static const int start_fildes = 0;
