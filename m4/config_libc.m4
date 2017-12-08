@@ -56,6 +56,20 @@ AC_DEFUN([_CHECK_LIBC_MALLOC_H], [
     fi
 ])
 
+AC_DEFUN([_CHECK_LIBC_MALLOC_MALLOC_H], [
+
+    AC_CHECK_HEADERS([malloc/malloc.h])
+
+    if test "x$ac_cv_header_malloc_malloc_h" != "xno"; then
+
+        #
+        # System interfaces
+        #
+
+        AC_CHECK_DECLS([malloc_size],,,[[#include <malloc/malloc.h>]])
+    fi
+])
+
 AC_DEFUN([_CHECK_LIBC_MALLOC_NP_H], [
 
     AC_CHECK_HEADERS([malloc_np.h])
@@ -322,6 +336,7 @@ AC_DEFUN([CONFIG_LIBC], [
         _CHECK_LIBC_ERRNO_H
         _CHECK_LIBC_FCNTL_H
         _CHECK_LIBC_MALLOC_H
+        _CHECK_LIBC_MALLOC_MALLOC_H
         _CHECK_LIBC_MALLOC_NP_H
         _CHECK_LIBC_SCHED_H
         _CHECK_LIBC_STDDEF_H
