@@ -26,6 +26,9 @@
 #include "safeblk.h"
 #include "safe_pthread.h"
 #include "safe_stdlib.h"
+#if defined(__MACH__)
+#include "safe_unistd.h"
+#endif
 #include "taputils.h"
 
 static const char  g_template_string[] = "/picotm-XXXXXX";

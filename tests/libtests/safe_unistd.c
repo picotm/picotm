@@ -56,6 +56,19 @@ safe_getcwd(char* buf, size_t size)
     return cwd;
 }
 
+#if defined(__MACH__)
+char*
+safe_mkdtemp(char* tmplate)
+{
+    char* path = mkdtemp(tmplate);
+    if (!path) {
+        tap_error_errno("mkdtemp()", errno);
+        abort_safe_block();
+    }
+    return path;
+}
+#endif
+
 int
 safe_pipe(int pipefd[2])
 {
