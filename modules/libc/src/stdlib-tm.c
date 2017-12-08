@@ -31,6 +31,7 @@
 #include <picotm/picotm.h>
 #include <string.h>
 #include "allocator/module.h"
+#include "compat/malloc_usable_size.h"
 #include "error/module.h"
 #include "fildes/module.h"
 
