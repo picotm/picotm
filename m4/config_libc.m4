@@ -155,7 +155,12 @@ AC_DEFUN([_CHECK_LIBC_STDLIB_H], [
         _CHECK_MODULE_INTF([libc], [exit],           [[#include <stdlib.h>]])
         _CHECK_MODULE_INTF([libc], [free],           [[#include <stdlib.h>]])
         _CHECK_MODULE_INTF([libc], [malloc],         [[#include <stdlib.h>]])
-        _CHECK_MODULE_INTF([libc], [mkdtemp],        [[#include <stdlib.h>]])
+    case $host_os in
+        *darwin* ) ;;
+               * )
+                _CHECK_MODULE_INTF([libc], [mkdtemp],        [[#include <stdlib.h>]])
+            ;;
+    esac
         _CHECK_MODULE_INTF([libc], [mkstemp],        [[#include <stdlib.h>]])
         _CHECK_MODULE_INTF([libc], [posix_memalign], [[#include <stdlib.h>]])
         _CHECK_MODULE_INTF([libc], [qsort],          [[#include <stdlib.h>]])
@@ -301,6 +306,12 @@ AC_DEFUN([_CHECK_LIBC_UNISTD_H], [
         _CHECK_MODULE_INTF([libc], [getcwd], [[#include <unistd.h>]])
         _CHECK_MODULE_INTF([libc], [link],   [[#include <unistd.h>]])
         _CHECK_MODULE_INTF([libc], [lseek],  [[#include <unistd.h>]])
+    case $host_os in
+        *darwin* )
+                _CHECK_MODULE_INTF([libc], [mkdtemp],        [[#include <unistd.h>]])
+            ;;
+               * ) ;;
+    esac
         _CHECK_MODULE_INTF([libc], [pipe],   [[#include <unistd.h>]])
         _CHECK_MODULE_INTF([libc], [pread],  [[#include <unistd.h>]])
         _CHECK_MODULE_INTF([libc], [pwrite], [[#include <unistd.h>]])

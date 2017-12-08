@@ -165,6 +165,21 @@ off_t
 lseek_tx(int fildes, off_t offset, int whence);
 #endif
 
+#if defined(PICOTM_LIBC_HAVE_MKDTEMP) && PICOTM_LIBC_HAVE_MKDTEMP && \
+    defined(__MACH__) || \
+    defined(__PICOTM_DOXYGEN)
+PICOTM_EXPORT
+/**
+ * A transaction-safe implementation of [mkdtemp()][darwin::mkdtemp] on
+ * Darwin system.
+ *
+ * [darwin::mkdtemp]:
+ *  https://developer.apple.com/legacy/library/documentation/Darwin/Reference/ManPages/man3/mkdtemp.3.html
+ */
+char*
+mkdtemp_tx(char* template);
+#endif
+
 #if defined(PICOTM_LIBC_HAVE_PIPE) && PICOTM_LIBC_HAVE_PIPE || \
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW

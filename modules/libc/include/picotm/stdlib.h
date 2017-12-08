@@ -148,7 +148,8 @@ void*
 malloc_tx(size_t size);
 #endif
 
-#if defined(PICOTM_LIBC_HAVE_MKDTEMP) && PICOTM_LIBC_HAVE_MKDTEMP || \
+#if defined(PICOTM_LIBC_HAVE_MKDTEMP) && PICOTM_LIBC_HAVE_MKDTEMP && \
+    !defined(__MACH__) || \
     defined(__PICOTM_DOXYGEN)
 PICOTM_EXPORT
 /**
