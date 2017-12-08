@@ -54,11 +54,13 @@ picotm_os_cond_init(struct picotm_os_cond* self, struct picotm_error* error)
         return;
     }
 
+#if !defined(__MACH__)
     err = pthread_condattr_setclock(&attr, PICOTM_OS_TIMESPEC_CLOCKID);
     if (err) {
         picotm_error_set_errno(error, err);
         goto err_pthread_condattr_setclock;
     }
+#endif
 
     err = pthread_cond_init(&self->instance, &attr);
     if (err) {
@@ -71,7 +73,9 @@ picotm_os_cond_init(struct picotm_os_cond* self, struct picotm_error* error)
     return;
 
 err_pthread_cond_init:
+#if !defined(__MACH__)
 err_pthread_condattr_setclock:
+#endif
     safe_pthread_condattr_destroy(&attr);
     return;
 }
