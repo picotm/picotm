@@ -31,12 +31,14 @@
 struct picotm_error;
 struct timespec;
 
+#if !defined(__MACH__) || defined(__PICOTM_DOXYGEN)
 /**
  * CLOCK_REALTIME is the only clock supported by GNU libc's condition
  * variables. Something like CLOCK_BOOTTIME or CLOCK_MONOTONIC_RAW
  * would be ideal.
  */
 static const clockid_t PICOTM_OS_TIMESPEC_CLOCKID = CLOCK_REALTIME;
+#endif
 
 /**
  * \brief Retrieves the current time from the system.
