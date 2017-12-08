@@ -27,8 +27,10 @@ safe_calloc(size_t nmemb, size_t size);
 void*
 safe_malloc(size_t size);
 
+#if !defined(__MACH__)
 char*
 safe_mkdtemp(char* tmplate);
+#endif
 
 int
 safe_mkstemp(char* tmplate);

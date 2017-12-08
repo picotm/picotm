@@ -30,6 +30,11 @@ safe_close(int fd);
 char*
 safe_getcwd(char* buf, size_t size);
 
+#if defined(__MACH__)
+char*
+safe_mkdtemp(char* tmplate);
+#endif
+
 int
 safe_pipe(int pipefd[2]);
 

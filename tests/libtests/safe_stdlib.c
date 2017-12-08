@@ -45,6 +45,7 @@ safe_malloc(size_t size)
     return mem;
 }
 
+#if !defined(__MACH__)
 char*
 safe_mkdtemp(char* tmplate)
 {
@@ -55,6 +56,7 @@ safe_mkdtemp(char* tmplate)
     }
     return path;
 }
+#endif
 
 int
 safe_mkstemp(char* tmplate)
