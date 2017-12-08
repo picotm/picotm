@@ -618,7 +618,10 @@ fildes_test_9(unsigned int tid)
 {
     char str[100][256];
 
-    for (char (*s)[256] = str; s < str + arraylen(str); ++s) {
+    char (*str_beg)[256] = str;
+    char (*str_end)[256] = str + arraylen(str);
+
+    for (char (*s)[256] = str_beg; s < str_end; ++s) {
         safe_snprintf(*s, sizeof(str[0]), "%d line %d\n", tid, (int)(s - str));
     }
 
@@ -626,7 +629,7 @@ fildes_test_9(unsigned int tid)
 
         lseek_tx(g_fildes, 0, SEEK_END);
 
-        for (const char (*s)[256] = str; s < str + arraylen(str); ++s) {
+        for (char (*s)[256] = str_beg; s < str_end; ++s) {
             write_tx(g_fildes, *s, strlen_tm(*s));
         }
 
