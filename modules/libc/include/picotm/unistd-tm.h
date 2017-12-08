@@ -62,6 +62,18 @@ int
 link_tm(const char* path1, const char* path2);
 #endif
 
+#if defined(PICOTM_LIBC_HAVE_MKDTEMP) && PICOTM_LIBC_HAVE_MKDTEMP && \
+    defined(__MACH__) || \
+    defined(__PICOTM_DOXYGEN)
+PICOTM_EXPORT
+/**
+ * Variant of mkdtemp_tx() that operates on transactional memory on
+ * Darwin systems.
+ */
+char*
+mkdtemp_tm(char* template);
+#endif
+
 #if defined(PICOTM_LIBC_HAVE_PIPE) && PICOTM_LIBC_HAVE_PIPE || \
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW

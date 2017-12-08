@@ -36,6 +36,14 @@ dnl Compiler support
 dnl
 
 AC_USE_SYSTEM_EXTENSIONS
+AC_CANONICAL_HOST
+case $host_os in
+*darwin* ) AC_DEFINE([_DARWIN_C_SOURCE],
+                     [1],
+                     [Enable extensions on Darwin.]) ;;
+       * ) ;;
+esac
+
 AC_PROG_CC
 
 AX_PTHREAD

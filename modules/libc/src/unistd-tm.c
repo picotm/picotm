@@ -96,6 +96,27 @@ link_tm(const char* path1, const char* path2)
 }
 #endif
 
+#if defined(PICOTM_LIBC_HAVE_MKDTEMP) && PICOTM_LIBC_HAVE_MKDTEMP && \
+    defined(__MACH__)
+PICOTM_EXPORT
+char*
+mkdtemp_tm(char* template)
+{
+    error_module_save_errno();
+
+    char* str;
+
+    do {
+        str = mkdtemp(template);
+        if (!str) {
+            picotm_recover_from_errno(errno);
+        }
+    } while (!str);
+
+    return str;
+}
+#endif
+
 #if defined(PICOTM_LIBC_HAVE_PIPE) && PICOTM_LIBC_HAVE_PIPE
 PICOTM_EXPORT
 int

@@ -44,7 +44,8 @@ free_tm(void* ptr)
 }
 #endif
 
-#if defined(PICOTM_LIBC_HAVE_MKDTEMP) && PICOTM_LIBC_HAVE_MKDTEMP
+#if defined(PICOTM_LIBC_HAVE_MKDTEMP) && PICOTM_LIBC_HAVE_MKDTEMP && \
+    !defined(__MACH__)
 PICOTM_EXPORT
 char*
 mkdtemp_tm(char* template)

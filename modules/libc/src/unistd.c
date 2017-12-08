@@ -188,6 +188,17 @@ lseek_tx(int fildes, off_t offset, int whence)
 }
 #endif
 
+#if defined(PICOTM_LIBC_HAVE_MKDTEMP) && PICOTM_LIBC_HAVE_MKDTEMP && \
+    defined(__MACH__)
+PICOTM_EXPORT
+char*
+mkdtemp_tx(char* template)
+{
+    privatize_c_tx(template, '\0', PICOTM_TM_PRIVATIZE_LOADSTORE);
+    return mkdtemp_tm(template);
+}
+#endif
+
 #if defined(PICOTM_LIBC_HAVE_PIPE) && PICOTM_LIBC_HAVE_PIPE
 PICOTM_EXPORT
 int
