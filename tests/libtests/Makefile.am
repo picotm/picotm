@@ -18,7 +18,9 @@
 
 check_LTLIBRARIES = libpicotm_tests.la
 
-libpicotm_tests_la_SOURCES = compat/temp_failure_retry.h \
+libpicotm_tests_la_SOURCES = compat/pthread_barrier.c \
+                             compat/pthread_barrier.h \
+                             compat/temp_failure_retry.h \
                              opts.c \
                              opts.h \
                              ptr.h \
