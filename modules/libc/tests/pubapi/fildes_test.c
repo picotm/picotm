@@ -44,6 +44,10 @@
 #include "tempfile.h"
 #include "testhlp.h"
 
+#ifndef O_CLOEXEC
+#define O_CLOEXEC	0
+#endif
+
 enum picotm_libc_cc_mode g_cc_mode = PICOTM_LIBC_CC_MODE_2PL;
 
 static size_t
