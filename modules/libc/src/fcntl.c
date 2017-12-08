@@ -53,10 +53,12 @@ fcntl_tx(int fildes, int cmd, ...)
                 /* Handle like dup() */
                 res = fildes_module_dup_internal(fildes, false);
                 break;
+#if defined(F_DUPFD_CLOEXEC)
             case F_DUPFD_CLOEXEC:
                 /* Handle like dup() with CLOEXEC */
                 res = fildes_module_dup_internal(fildes, true);
                 break;
+#endif
             case F_SETFD:
             case F_SETFL:
             case F_SETOWN: {
