@@ -30,6 +30,7 @@ libpicotm_c_la_SOURCES = allocator/allocator_tx.c \
                          compat/get_current_dir_name.h \
                          compat/malloc_usable_size.c \
                          compat/malloc_usable_size.h \
+                         compat/static_assert.h \
                          compat/temp_failure_retry.h \
                          cwd/cwd.c \
                          cwd/cwd.h \
