@@ -27,18 +27,11 @@ picotm_os_mutex_init(struct picotm_os_mutex* self, struct picotm_error* error)
 {
     assert(self);
 
-    pthread_mutexattr_t attr;
-    pthread_mutexattr_init(&attr);
-    pthread_mutexattr_setrobust(&attr, PTHREAD_MUTEX_ROBUST);
-    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK);
-
-    int err = pthread_mutex_init(&self->instance, &attr);
+    int err = pthread_mutex_init(&self->instance, NULL);
     if (err) {
         picotm_error_set_errno(error, err);
         return;
     }
-
-    pthread_mutexattr_destroy(&attr);
 }
 
 void
