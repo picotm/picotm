@@ -31,6 +31,7 @@
 #include <picotm/sys/types.h>
 #include <picotm/picotm.h>
 #include <picotm/picotm-libc.h>
+#include <picotm/picotm-module.h>
 #include <picotm/picotm-tm.h>
 #include <picotm/unistd.h>
 #include "delay.h"
@@ -530,22 +531,54 @@ fildes_test_8(unsigned int tid)
     int pfd[2];
     safe_pipe(pfd);
 
-    /* Set pipe's read end to non-blocking mode */
-    {
-        int fl = safe_fcntl(pfd[0], F_GETFL);
-        safe_fcntl(pfd[0], F_SETFL, fl | O_NONBLOCK);
+    /* Set pipe ends to non-blocking mode */
+
+    for (size_t i = 0; i < arraylen(pfd); ++i) {
+        int fl = safe_fcntl(pfd[i], F_GETFL);
+        safe_fcntl(pfd[i], F_SETFL, fl | O_NONBLOCK);
     }
 
-    /* Fill pipe */
+    /* Fill pipe
+     *
+     * Different systems have different maximum sizes for their pipe
+     * buffers. With non-blocking I/O, we write the pipe until it's
+     * full.
+     *
+     * Typical pipe-buffer sizes are:
+     *
+     *  Linux:   1 MiB
+     *  MacOS:   16 Kib / 64 KiB / 4 KiB (depends on internal state)
+     */
+
+    size_t pwlen = 0; /* pipe write length */
 
     for (int i = 0; i < 1000; ++i) {
 
         char str[128];
         size_t len = safe_snprintf(str, sizeof(str), "%d %s", i, g_test_str);
-        safe_write(pfd[1], str, len);
+
+        ssize_t res = safe_write(pfd[1], str, len);
+        pwlen += res;
+        if ((size_t)res < len) {
+            break; /* non-blocking I/O; pipe full */
+        }
     }
 
+    if (!pwlen) {
+        tap_error("nothing was written to pipe\n");
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        picotm_error_set_error_code(&error, PICOTM_GENERAL_ERROR);
+        picotm_error_mark_as_non_recoverable(&error);
+        picotm_recover_from_error(&error);
+    }
+
+    size_t prlen_tx = 0; /* pipe read length */
+    size_t fwlen_tx = 0; /* file write length */
+
     picotm_begin
+
+        size_t prlen = 0;
+        size_t fwlen = 0;
 
         /* Open file */
 
@@ -566,19 +599,44 @@ fildes_test_8(unsigned int tid)
                     break;
                 }
             }
-            size_t rlen = res;
+            size_t len = res;
+
+            prlen += len;
 
             /* Write to file */
-            write_tx(fildes, rbuf, rlen);
+            fwlen += write_tx(fildes, rbuf, len);
         }
 
         close_tx(fildes);
+
+        store_size_t_tx(&prlen_tx, prlen);
+        store_size_t_tx(&fwlen_tx, fwlen);
 
     picotm_commit
 
         abort_transaction_on_error(__func__);
 
     picotm_end
+
+    /* Test if all data from pipe was written to file. */
+
+    if (pwlen != prlen_tx) {
+        tap_error("pipe write/read lengths differ: "
+                  "%zu bytes written, %zu bytes read\n", pwlen, prlen_tx);
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        picotm_error_set_error_code(&error, PICOTM_GENERAL_ERROR);
+        picotm_error_mark_as_non_recoverable(&error);
+        picotm_recover_from_error(&error);
+    }
+
+    if (prlen_tx != fwlen_tx) {
+        tap_error("pipe read / file write lengths differ: "
+                  "%zu bytes read, %zu bytes written\n", prlen_tx, fwlen_tx);
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        picotm_error_set_error_code(&error, PICOTM_GENERAL_ERROR);
+        picotm_error_mark_as_non_recoverable(&error);
+        picotm_recover_from_error(&error);
+    }
 
     /* Close pipe */
 
