@@ -123,17 +123,27 @@ close_fildes(int fildes)
     safe_close(fildes);
 }
 
+static void
+gen_i32buf(int32_t* buf, size_t len, int32_t (*gen_i32)(void))
+{
+    for (const int32_t* bufend = buf + len; buf < bufend; ++buf) {
+        *buf = gen_i32();
+    }
+}
+
 static int
 temp_fildes_gen(unsigned long testnum, unsigned long filenum, int flags,
                 size_t filsiz, int32_t (*gen_i32)(void))
 {
+    int32_t buf[4096];
+
     int fildes = temp_fildes(testnum, filenum, 0);
 
     while (filsiz) {
-        int32_t val = gen_i32();
-        size_t count = filsiz > sizeof(val) ? sizeof(val) : filsiz;
+        gen_i32buf(buf, arraylen(buf), gen_i32);
+        size_t count = filsiz > sizeof(buf) ? sizeof(buf) : filsiz;
 
-        filsiz -= safe_write(fildes, &val, count);
+        filsiz -= safe_write(fildes, buf, count);
     }
 
     if (flags) {
