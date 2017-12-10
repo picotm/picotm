@@ -39,7 +39,7 @@ safe_malloc(size_t size)
 {
     void* mem = malloc(size);
     if (size && !mem) {
-        tap_error_errno("malloc()", size);
+        tap_error_errno("malloc()", errno);
         abort_safe_block();
     }
     return mem;
