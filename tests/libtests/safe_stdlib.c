@@ -83,3 +83,14 @@ safe_mktemp(char* tmplate)
     }
     return filename;
 }
+
+char*
+safe_realpath(const char* path, char* resolved_path)
+{
+    char* res = realpath(path, resolved_path);
+    if (!res) {
+        tap_error_errno("realpath()", errno);
+        abort_safe_block();
+    }
+    return res;
+}

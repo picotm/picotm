@@ -35,3 +35,6 @@ safe_mkstemp(char* tmplate);
 
 char*
 safe_mktemp(char* tmplate);
+
+char*
+safe_realpath(const char* path, char* resolved_path);
