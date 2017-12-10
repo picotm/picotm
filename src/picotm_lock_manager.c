@@ -437,7 +437,6 @@ remove_waiter(struct picotm_lock_manager* self,
                 slist_funcs->cmpxchg_first_index(slist, index, next_index);
 
             if (old_first_index == index) {
-                unsigned long current = slist_funcs->get_first_index(slist);
                 goto out; /* removed waiter from lock; early out */
             }
 
