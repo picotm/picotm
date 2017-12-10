@@ -325,8 +325,6 @@ picotm_rwlock_unlock(struct picotm_rwlock* self)
 
     if (rw_index(n)) {
 
-        uint8_t n = atomic_load_explicit(&self->n, memory_order_acquire);
-
         /* We've released the lock at this point. Waiters can now
          * be woken up. */
 
