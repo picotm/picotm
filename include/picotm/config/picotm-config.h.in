@@ -18,3 +18,7 @@
  */
 
 #pragma once
+
+#ifndef PICOTM_HAVE_TYPE_KERN_RETURN_T
+#undef PICOTM_HAVE_TYPE_KERN_RETURN_T
+#endif

@@ -204,6 +204,7 @@ restart_tx(struct tx* tx, enum __picotm_mode mode)
             break;
         case PICOTM_ERROR_CODE:
         case PICOTM_ERRNO:
+        case PICOTM_KERN_RETURN_T:
             /* If we were restarting before, we're now recovering. */
             mode = PICOTM_MODE_RECOVERY;
             break;
@@ -233,6 +234,7 @@ __picotm_commit()
             break;
         case PICOTM_ERROR_CODE:
         case PICOTM_ERRNO:
+        case PICOTM_KERN_RETURN_T:
             restart_tx(tx, PICOTM_MODE_RECOVERY);
             break;
         }
@@ -325,6 +327,15 @@ picotm_error_as_errno()
     return get_non_null_error()->value.errno_hint;
 }
 
+#if defined(PICOTM_HAVE_TYPE_KERN_RETURN_T) && PICOTM_HAVE_TYPE_KERN_RETURN_T
+PICOTM_EXPORT
+kern_return_t
+picotm_error_as_kern_return_t()
+{
+    return get_non_null_error()->value.kern_return_t_value;
+}
+#endif
+
 /*
  * Module interface
  */
@@ -388,6 +399,18 @@ picotm_recover_from_errno(int errno_hint)
     restart_tx(get_non_null_tx(), PICOTM_MODE_RECOVERY);
 }
 
+#if defined(PICOTM_HAVE_TYPE_KERN_RETURN_T) && PICOTM_HAVE_TYPE_KERN_RETURN_T
+PICOTM_EXPORT
+void
+picotm_recover_from_kern_return_t(kern_return_t value)
+{
+    picotm_error_set_kern_return_t(get_non_null_error(), value);
+
+    /* Nothing we can do on errors; let's try to recover. */
+    restart_tx(get_non_null_tx(), PICOTM_MODE_RECOVERY);
+}
+#endif
+
 PICOTM_EXPORT
 void
 picotm_recover_from_error(const struct picotm_error* error)
@@ -407,6 +430,9 @@ picotm_recover_from_error(const struct picotm_error* error)
         restart_tx(get_non_null_tx(), PICOTM_MODE_RECOVERY);
         break;
     case PICOTM_ERRNO:
+        restart_tx(get_non_null_tx(), PICOTM_MODE_RECOVERY);
+        break;
+    case PICOTM_KERN_RETURN_T:
         restart_tx(get_non_null_tx(), PICOTM_MODE_RECOVERY);
         break;
     }

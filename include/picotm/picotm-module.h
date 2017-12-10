@@ -31,6 +31,9 @@
  * All existing modules are written on top of this interface as well.
  */
 
+#if defined(__MACH__)
+#include <mach/mach.h>
+#endif
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -235,6 +238,23 @@ PICOTM_NOTHROW
  */
 void
 picotm_recover_from_errno(int errno_hint);
+
+#if defined(PICOTM_HAVE_TYPE_KERN_RETURN_T) && \
+        PICOTM_HAVE_TYPE_KERN_RETURN_T || \
+    defined(_PICOTM_DOXYGEN)
+PICOTM_NOTHROW
+/**
+ * Instructs the transaction management system to recover from an error
+ * given as value of type 'kern_return_t'.
+ * \param   value The kern_return_t value of the detected error.
+ *
+ * \attention   This function will not return if picotm aborts the
+ *              transaction. If the function returns, the caller shall restart
+ *              the operation that triggered the conflict.
+ */
+void
+picotm_recover_from_kern_return_t(kern_return_t value);
+#endif
 
 PICOTM_NOTHROW
 /**

@@ -69,6 +69,19 @@ picotm_error_set_errno(struct picotm_error* error, int errno_hint)
     error->value.errno_hint = errno_hint;
 }
 
+#if defined(PICOTM_HAVE_TYPE_KERN_RETURN_T) && PICOTM_HAVE_TYPE_KERN_RETURN_T
+PICOTM_EXPORT
+void
+picotm_error_set_kern_return_t(struct picotm_error* error,
+                               kern_return_t value)
+{
+    error->status = PICOTM_KERN_RETURN_T;
+    error->is_non_recoverable = false;
+    error->description = NULL;
+    error->value.kern_return_t_value = value;
+}
+#endif
+
 PICOTM_EXPORT
 bool
 picotm_error_is_conflicting(const struct picotm_error* error)

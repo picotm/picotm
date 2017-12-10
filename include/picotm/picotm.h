@@ -19,6 +19,10 @@
 
 #pragma once
 
+#if defined(__MACH__)
+#include <mach/mach.h>
+#endif
+#include <picotm/config/picotm-config.h>
 #include <setjmp.h>
 #include "compiler.h"
 #include "picotm-error.h"
@@ -199,6 +203,21 @@ PICOTM_NOTHROW
  */
 int
 picotm_error_as_errno(void);
+
+#if defined(PICOTM_HAVE_TYPE_KERN_RETURN_T) && \
+        PICOTM_HAVE_TYPE_KERN_RETURN_T || \
+    defined(_PICOTM_DOXYGEN)
+/**
+ * Returns the current picotm kern_return_t value.
+ *
+ * \attention This function is only valid during the transaction's recovery
+ *            phase, and if ::picotm_error_status() is ::PICOTM_KERN_RETURN_T.
+ *
+ * \returns The current picotm kern_return_t value.
+ */
+kern_return_t
+picotm_error_as_kern_return_t(void);
+#endif
 
 PICOTM_END_DECLS
 
