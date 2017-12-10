@@ -17,6 +17,7 @@
 # DEALINGS IN THE SOFTWARE.
 
 nobase_include_HEADERS = picotm/compiler.h \
+                         picotm/config/picotm-config.h \
                          picotm/picotm-error.h \
                          picotm/picotm-lib-array.h \
                          picotm/picotm-lib-ptr.h \
