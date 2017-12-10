@@ -286,7 +286,6 @@ __strerror_r_posix_tm(int errnum, char* buf, size_t buflen)
             picotm_recover_from_errno(res);
         }
     } while (res); // error if res != 0 handled older and newer glibc
-    char* str = buf;
 #endif
 
     return res;
