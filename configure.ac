@@ -90,6 +90,12 @@ dnl
 AC_CONFIG_HEADERS(
     [include/picotm/config/picotm-config.h])
 
+AC_CHECK_TYPES([kern_return_t],
+               [AC_DEFINE([PICOTM_HAVE_TYPE_KERN_RETURN_T],
+                          [1],
+                          [Define to 1 if the system has the type 'kern_return_t'.])],,
+               [[@%:@include <mach/mach.h>]])
+
 
 dnl
 dnl Modules
