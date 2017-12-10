@@ -46,8 +46,8 @@ allocator_test_1(unsigned int tid)
             const char *beg = *ptr;
             const char *end = *ptr + (15 * 34);
             while (beg < end) {
-	            if (*beg) {
-	                abort_tx();
+                if (*beg) {
+                    abort_tx();
                 }
                 ++beg;
             }
@@ -56,7 +56,7 @@ allocator_test_1(unsigned int tid)
         delay_transaction(tid);
 
         for (char** ptr = mem; ptr < mem + arraylen(mem); ++ptr) {
-	        free_tm(*ptr);
+            free_tm(*ptr);
         }
 
     picotm_commit
@@ -90,8 +90,8 @@ allocator_test_2(unsigned int tid)
             const char *beg = *ptr;
             const char *end = *ptr + (15 * 34);
             while (beg < end) {
-	            if (*beg) {
-	                abort_tx();
+                if (*beg) {
+                    abort_tx();
                 }
                 ++beg;
             }
@@ -100,7 +100,7 @@ allocator_test_2(unsigned int tid)
         delay_transaction(tid);
 
         for (char** ptr = mem; ptr < mem + arraylen(mem); ++ptr) {
-	        free_tm(*ptr);
+            free_tm(*ptr);
         }
 
     picotm_commit
@@ -130,8 +130,8 @@ allocator_test_3(unsigned int tid)
             const char *beg = *ptr;
             const char *end = *ptr + (15 * 34);
             while (beg < end) {
-	            if (*beg) {
-	                abort_tx();
+                if (*beg) {
+                    abort_tx();
                 }
                 ++beg;
             }
@@ -150,7 +150,7 @@ allocator_test_3(unsigned int tid)
     picotm_end
 
     for (char** ptr = buf; ptr < buf + arraylen(buf); ++ptr) {
-	    free(*ptr);
+        free(*ptr);
     }
 }
 
@@ -199,11 +199,11 @@ allocator_test_5(unsigned int tid)
 {
     uint8_t* buf = safe_malloc(30 * sizeof(buf[0]));
 
-	for (uint8_t i = 0; i < 30; ++i) {
-	    buf[i] = i;
+    for (uint8_t i = 0; i < 30; ++i) {
+        buf[i] = i;
     }
 
-	picotm_begin
+    picotm_begin
 
         /* Load 'buf' into transaction instead of using it
          * directly. The return value of realloc_tx() is
@@ -216,23 +216,23 @@ allocator_test_5(unsigned int tid)
          * naming problems. */
         uint8_t* mem = load_ptr_tx(&buf);
 
-	    mem = realloc_tm(mem, 15 * 34 * sizeof(mem[0]));
+        mem = realloc_tm(mem, 15 * 34 * sizeof(mem[0]));
 
-	    for (uint8_t i = 0; i < 30; ++i) {
-	        if (mem[i] != i) {
-	            abort_tx();
+        for (uint8_t i = 0; i < 30; ++i) {
+            if (mem[i] != i) {
+                abort_tx();
             }
         }
 
-	    for (int i = 0; i < (15 * 34); ++i) {
-	        mem[i] = 0;
+        for (int i = 0; i < (15 * 34); ++i) {
+            mem[i] = 0;
         }
 
         delay_transaction(tid);
 
-	    free_tm(mem);
+        free_tm(mem);
 
-	picotm_commit
+    picotm_commit
 
         abort_transaction_on_error(__func__);
 
@@ -248,24 +248,24 @@ allocator_test_6(unsigned int tid)
 {
     uint8_t* buf = safe_malloc(30 * sizeof(buf[0]));
 
-	for (uint8_t i = 0; i < 30; ++i) {
-	    buf[i] = i;
+    for (uint8_t i = 0; i < 30; ++i) {
+        buf[i] = i;
     }
 
-	picotm_begin
+    picotm_begin
 
         uint8_t* mem = load_ptr_tx(&buf);
 
-	    mem = realloc_tm(mem, 15 * 34 * sizeof(mem[0]));
+        mem = realloc_tm(mem, 15 * 34 * sizeof(mem[0]));
 
-	    for (uint8_t i = 0; i < 30; ++i) {
-	        if (mem[i] != i) {
-	            abort_tx();
+        for (uint8_t i = 0; i < 30; ++i) {
+            if (mem[i] != i) {
+                abort_tx();
             }
         }
 
-	    for (int i = 0; i < (15 * 34); ++i) {
-	        mem[i] = 0;
+        for (int i = 0; i < (15 * 34); ++i) {
+            mem[i] = 0;
         }
 
         delay_transaction(tid);
@@ -278,13 +278,13 @@ allocator_test_6(unsigned int tid)
          */
         store_ptr_tx(&buf, mem);
 
-	picotm_commit
+    picotm_commit
 
         abort_transaction_on_error(__func__);
 
     picotm_end
 
-	free(buf);
+    free(buf);
 }
 
 static unsigned long long g_test_7_cycles;
