@@ -84,6 +84,14 @@ AC_FUNC_ALLOCA
 
 
 dnl
+dnl Core transaction manager
+dnl
+
+AC_CONFIG_HEADERS(
+    [include/picotm/config/picotm-config.h])
+
+
+dnl
 dnl Modules
 dnl
 
