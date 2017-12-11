@@ -91,6 +91,9 @@ safe_pread(int fd, void* buf, size_t count, off_t offset)
         ssize_t res = TEMP_FAILURE_RETRY(pread(fd, buf8, count - len,
                                                    offset + len));
         if (res < 0) {
+            if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
+                break; /* non-blocking I/O; return early */
+            }
             tap_error_errno("pread()", errno);
             abort_safe_block();
         }
@@ -112,6 +115,9 @@ safe_pwrite(int fd, const void* buf, size_t count, off_t offset)
         ssize_t res = TEMP_FAILURE_RETRY(pwrite(fd, buf8, count - len,
                                                 offset + len));
         if (res < 0) {
+            if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
+                break; /* non-blocking I/O; return early */
+            }
             tap_error_errno("pwrite()", errno);
             abort_safe_block();
         }
@@ -154,6 +160,9 @@ safe_write(int fd, const void* buf, size_t count)
     while (len < count) {
         ssize_t res = TEMP_FAILURE_RETRY(write(fd, buf8, count - len));
         if (res < 0) {
+            if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
+                break; /* non-blocking I/O; return early */
+            }
             tap_error_errno("write()", errno);
             abort_safe_block();
         }
