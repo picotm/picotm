@@ -19,6 +19,18 @@
 
 #pragma once
 
+/*
+ * Types
+ */
+
+#ifndef PICOTM_LIBPTHREAD_HAVE_TYPE_PTHREAD_T
+#undef PICOTM_LIBPTHREAD_HAVE_TYPE_PTHREAD_T
+#endif
+
+/*
+ * Public interfaces
+ */
+
 #ifndef PICOTM_LIBPTHREAD_HAVE_PTHREAD_EQUAL
 #undef PICOTM_LIBPTHREAD_HAVE_PTHREAD_EQUAL
 #endif

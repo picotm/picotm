@@ -33,11 +33,13 @@ PICOTM_BEGIN_DECLS
  * \brief Transactional wrappers for interfaces of <pthread.h>.
  */
 
+#if defined(PICOTM_LIBPTHREAD_HAVE_TYPE_PTHREAD_T) && \
+            PICOTM_LIBPTHREAD_HAVE_TYPE_PTHREAD_T || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_TM_LOAD_TX(pthread_t, pthread_t);
-
 PICOTM_TM_STORE_TX(pthread_t, pthread_t);
-
 PICOTM_TM_PRIVATIZE_TX(pthread_t, pthread_t);
+#endif
 
 #if defined(PICOTM_LIBPTHREAD_HAVE_PTHREAD_EQUAL) && \
         PICOTM_LIBPTHREAD_HAVE_PTHREAD_EQUAL || \
