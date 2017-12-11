@@ -84,6 +84,22 @@ AC_DEFUN([_CHECK_LIBC_SCHED_H], [
     fi
 ])
 
+AC_DEFUN([_CHECK_LIBC_STDDEF_H], [
+
+    AC_CHECK_HEADERS([stddef.h])
+
+    if test "x$ac_cv_header_stddef_h" != "xno"; then
+
+        #
+        # Types
+        #
+
+        _CHECK_MODULE_TYPE([libc], [ptrdiff_t], [[@%:@include <stddef.h>]])
+        _CHECK_MODULE_TYPE([libc], [size_t],    [[@%:@include <stddef.h>]])
+        _CHECK_MODULE_TYPE([libc], [wchar_t],   [[@%:@include <stddef.h>]])
+    fi
+])
+
 AC_DEFUN([_CHECK_LIBC_STDIO_H], [
 
     AC_CHECK_HEADERS([stdio.h])
@@ -106,6 +122,14 @@ AC_DEFUN([_CHECK_LIBC_STDLIB_H], [
     AC_CHECK_HEADERS([stdlib.h])
 
     if test "x$ac_cv_header_stdlib_h" != "xno"; then
+
+        #
+        # Types
+        #
+
+        _CHECK_MODULE_TYPE([libc], [div_t],   [[@%:@include <stdlib.h>]])
+        _CHECK_MODULE_TYPE([libc], [ldiv_t],  [[@%:@include <stdlib.h>]])
+        _CHECK_MODULE_TYPE([libc], [lldiv_t], [[@%:@include <stdlib.h>]])
 
         #
         # Public interfaces
@@ -210,6 +234,39 @@ AC_DEFUN([_CHECK_LIBC_SYS_STAT_H], [
     fi
 ])
 
+AC_DEFUN([_CHECK_LIBC_SYS_TYPES_H], [
+
+    AC_CHECK_HEADERS([sys/types.h])
+
+    if test "x$ac_cv_header_sys_types_h" != "xno"; then
+
+        #
+        # Types
+        #
+
+        _CHECK_MODULE_TYPE([libc], [blkcnt_t],    [[@%:@include <sys/types.h>]])
+        _CHECK_MODULE_TYPE([libc], [blksize_t],   [[@%:@include <sys/types.h>]])
+        _CHECK_MODULE_TYPE([libc], [clock_t],     [[@%:@include <sys/types.h>]])
+        _CHECK_MODULE_TYPE([libc], [clockid_t],   [[@%:@include <sys/types.h>]])
+        _CHECK_MODULE_TYPE([libc], [dev_t],       [[@%:@include <sys/types.h>]])
+        _CHECK_MODULE_TYPE([libc], [fsblkcnt_t],  [[@%:@include <sys/types.h>]])
+        _CHECK_MODULE_TYPE([libc], [fsfilcnt_t],  [[@%:@include <sys/types.h>]])
+        _CHECK_MODULE_TYPE([libc], [gid_t],       [[@%:@include <sys/types.h>]])
+        _CHECK_MODULE_TYPE([libc], [id_t],        [[@%:@include <sys/types.h>]])
+        _CHECK_MODULE_TYPE([libc], [ino_t],       [[@%:@include <sys/types.h>]])
+        _CHECK_MODULE_TYPE([libc], [key_t],       [[@%:@include <sys/types.h>]])
+        _CHECK_MODULE_TYPE([libc], [mode_t],      [[@%:@include <sys/types.h>]])
+        _CHECK_MODULE_TYPE([libc], [nlink_t],     [[@%:@include <sys/types.h>]])
+        _CHECK_MODULE_TYPE([libc], [off_t],       [[@%:@include <sys/types.h>]])
+        _CHECK_MODULE_TYPE([libc], [pid_t],       [[@%:@include <sys/types.h>]])
+        _CHECK_MODULE_TYPE([libc], [ssize_t],     [[@%:@include <sys/types.h>]])
+        _CHECK_MODULE_TYPE([libc], [suseconds_t], [[@%:@include <sys/types.h>]])
+        _CHECK_MODULE_TYPE([libc], [time_t],      [[@%:@include <sys/types.h>]])
+        _CHECK_MODULE_TYPE([libc], [timer_t],     [[@%:@include <sys/types.h>]])
+        _CHECK_MODULE_TYPE([libc], [uid_t],       [[@%:@include <sys/types.h>]])
+    fi
+])
+
 AC_DEFUN([_CHECK_LIBC_UNISTD_H], [
 
     AC_CHECK_HEADERS([unistd.h])
@@ -267,11 +324,13 @@ AC_DEFUN([CONFIG_LIBC], [
         _CHECK_LIBC_MALLOC_H
         _CHECK_LIBC_MALLOC_NP_H
         _CHECK_LIBC_SCHED_H
+        _CHECK_LIBC_STDDEF_H
         _CHECK_LIBC_STDIO_H
         _CHECK_LIBC_STDLIB_H
         _CHECK_LIBC_STRING_H
         _CHECK_LIBC_SYS_SOCKET_H
         _CHECK_LIBC_SYS_STAT_H
+        _CHECK_LIBC_SYS_TYPES_H
         _CHECK_LIBC_UNISTD_H
     fi
 ])
