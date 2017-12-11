@@ -19,6 +19,20 @@ AC_DEFUN([_CHECK_LIBM_COMPLEX_H], [
     if test "x$ac_cv_header_complex_h" != "xno"; then
 
         #
+        # Types
+        #
+
+        _CHECK_MODULE_TYPE([libm],
+                           [double _Complex],
+                           [[@%:@include <complex.h>]])
+        _CHECK_MODULE_TYPE([libm],
+                           [float _Complex],
+                           [[@%:@include <complex.h>]])
+        _CHECK_MODULE_TYPE([libm],
+                           [long double _Complex],
+                           [[@%:@include <complex.h>]])
+
+        #
         # Public interfaces
         #
 
@@ -96,6 +110,13 @@ AC_DEFUN([_CHECK_LIBM_MATH_H], [
     AC_CHECK_HEADERS([math.h])
 
     if test "x$ac_cv_header_math_h" != "xno"; then
+
+        #
+        # Types
+        #
+
+        _CHECK_MODULE_TYPE([libm], [double_t], [[@%:@include <math.h>]])
+        _CHECK_MODULE_TYPE([libm], [float_t],  [[@%:@include <math.h>]])
 
         #
         # Public interfaces
