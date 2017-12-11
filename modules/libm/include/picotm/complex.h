@@ -33,17 +33,29 @@ PICOTM_BEGIN_DECLS
  * \brief Transactional wrappers for interfaces of <complex.h>.
  */
 
+#if defined(PICOTM_LIBC_HAVE_TYPE_DOUBLE__COMPLEX) && \
+            PICOTM_LIBC_HAVE_TYPE_DOUBLE__COMPLEX || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_TM_LOAD_TX(cdouble, double _Complex);
-PICOTM_TM_LOAD_TX(cfloat, float _Complex);
-PICOTM_TM_LOAD_TX(cldouble, long double _Complex);
-
 PICOTM_TM_STORE_TX(cdouble, double _Complex);
-PICOTM_TM_STORE_TX(cfloat, float _Complex);
-PICOTM_TM_STORE_TX(cldouble, long double _Complex);
-
 PICOTM_TM_PRIVATIZE_TX(cdouble, double _Complex);
+#endif
+
+#if defined(PICOTM_LIBC_HAVE_TYPE_FLOAT__COMPLEX) && \
+            PICOTM_LIBC_HAVE_TYPE_FLOAT__COMPLEX || \
+    defined(__PICOTM_DOXYGEN)
+PICOTM_TM_LOAD_TX(cfloat, float _Complex);
+PICOTM_TM_STORE_TX(cfloat, float _Complex);
 PICOTM_TM_PRIVATIZE_TX(cfloat, float _Complex);
+#endif
+
+#if defined(PICOTM_LIBC_HAVE_TYPE_LONG_DOUBLE__COMPLEX) && \
+            PICOTM_LIBC_HAVE_TYPE_LONG_DOUBLE__COMPLEX || \
+    defined(__PICOTM_DOXYGEN)
+PICOTM_TM_LOAD_TX(cldouble, long double _Complex);
+PICOTM_TM_STORE_TX(cldouble, long double _Complex);
 PICOTM_TM_PRIVATIZE_TX(cldouble, long double _Complex);
+#endif
 
 #if defined(PICOTM_LIBM_HAVE_CABS) && PICOTM_LIBM_HAVE_CABS || \
     defined(__PICOTM_DOXYGEN)

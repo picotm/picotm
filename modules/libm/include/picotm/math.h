@@ -33,14 +33,21 @@ PICOTM_BEGIN_DECLS
  * \brief Transactional wrappers for interfaces of <math.h>.
  */
 
-PICOTM_TM_LOAD_TX(float_t, float_t);
+#if defined(PICOTM_LIBC_HAVE_TYPE_DOUBLE_T) && \
+            PICOTM_LIBC_HAVE_TYPE_DOUBLE_T || \
+    defined(__PICOTM_DOXYGEN)
 PICOTM_TM_LOAD_TX(double_t, double_t);
-
-PICOTM_TM_STORE_TX(float_t, float_t);
 PICOTM_TM_STORE_TX(double_t, double_t);
-
-PICOTM_TM_PRIVATIZE_TX(float_t, float_t);
 PICOTM_TM_PRIVATIZE_TX(double_t, double_t);
+#endif
+
+#if defined(PICOTM_LIBC_HAVE_TYPE_FLOAT_T) && \
+            PICOTM_LIBC_HAVE_TYPE_FLOAT_T || \
+    defined(__PICOTM_DOXYGEN)
+PICOTM_TM_LOAD_TX(float_t, float_t);
+PICOTM_TM_STORE_TX(float_t, float_t);
+PICOTM_TM_PRIVATIZE_TX(float_t, float_t);
+#endif
 
 #if defined(PICOTM_LIBM_HAVE_ACOS) && PICOTM_LIBM_HAVE_ACOS || \
     defined(__PICOTM_DOXYGEN)
