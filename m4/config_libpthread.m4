@@ -19,6 +19,12 @@ AC_DEFUN([_CHECK_LIBPTHREAD_PTHREAD_H], [
     if test "x$ac_cv_header_pthread_h" != "xno"; then
 
         #
+        # Types
+        #
+
+        _CHECK_MODULE_TYPE([libpthread], [pthread_t], [[@%:@include <pthread.h>]])
+
+        #
         # Public interfaces
         #
 
