@@ -30,8 +30,15 @@ test -d m4/ || mkdir -p m4/
 
 test -e ChangeLog || touch ChangeLog
 
+# Mac OS has it's own libtoolize script, which is something different. GNU's
+# libtoolize is usually called 'glibtoolize'. We use this name, if available.
+LIBTOOLIZE=`which glibtoolize 2>/dev/null` || true
+if test -z ${LIBTOOLIZE}; then
+    LIBTOOLIZE=libtoolize
+fi
+
 # TODO: pass '-Wall -Werror' to libtool after upgrading CI to libtool >= 2.4.3
-libtoolize -c
+${LIBTOOLIZE} -c
 aclocal -Wall -Werror -I m4/
 autoheader -Wall -Werror
 automake -Wall -Werror -ac
