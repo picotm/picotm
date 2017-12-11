@@ -13,4 +13,24 @@
 #   without any warranty.
 
 AC_DEFUN([CONFIG_TM], [
+
+    #
+    # Types
+    #
+
+    _CHECK_MODULE_TYPE([tm], [_Bool],              [[]])
+    _CHECK_MODULE_TYPE([tm], [char],               [[]])
+    _CHECK_MODULE_TYPE([tm], [double],             [[]])
+    _CHECK_MODULE_TYPE([tm], [float],              [[]])
+    _CHECK_MODULE_TYPE([tm], [int],                [[]])
+    _CHECK_MODULE_TYPE([tm], [long],               [[]])
+    _CHECK_MODULE_TYPE([tm], [long double],        [[]])
+    _CHECK_MODULE_TYPE([tm], [long long],          [[]])
+    _CHECK_MODULE_TYPE([tm], [short],              [[]])
+    _CHECK_MODULE_TYPE([tm], [signed char],        [[]])
+    _CHECK_MODULE_TYPE([tm], [unsigned char],      [[]])
+    _CHECK_MODULE_TYPE([tm], [unsigned int],       [[]])
+    _CHECK_MODULE_TYPE([tm], [unsigned long],      [[]])
+    _CHECK_MODULE_TYPE([tm], [unsigned long long], [[]])
+    _CHECK_MODULE_TYPE([tm], [unsigned short],     [[]])
 ])
