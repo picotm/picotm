@@ -74,7 +74,9 @@
  * \def PICOTM_EXPORT
  * Export interface from binary object.
  */
-#if __GNUC__ >= 4
+#if defined(__CYGWIN__)
+    #define PICOTM_EXPORT   __declspec(dllexport)
+#elif __GNUC__ >= 4
     #define PICOTM_EXPORT   __attribute__((visibility("default")))
 #else
     #define PICOTM_EXPORT
