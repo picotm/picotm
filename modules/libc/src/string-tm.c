@@ -200,7 +200,8 @@ char*
 __strerror_r_gnu_tm(int errnum, char* buf, size_t buflen)
 {
 #if defined(__GNU_LIBRARY__) && \
-    (defined(_GNU_SOURCE) || (_POSIX_C_SOURCE < 200112L))
+        (defined(_GNU_SOURCE) || (_POSIX_C_SOURCE < 200112L)) || \
+    defined(__CYGWIN__) && (__GNU_VISIBLE)
     char* str;
     do {
         str = strerror_r(errnum, buf, buflen);
@@ -247,7 +248,8 @@ __strerror_r_posix_tm(int errnum, char* buf, size_t buflen)
     int res = 0;
 
 #if defined(__GNU_LIBRARY__) && \
-    (defined(_GNU_SOURCE) || (_POSIX_C_SOURCE < 200112L))
+        (defined(_GNU_SOURCE) || (_POSIX_C_SOURCE < 200112L)) || \
+    defined(__CYGWIN__) && (__GNU_VISIBLE)
     char tmpbuf[STRERROR_MAXLEN];
     char* str;
     do {
