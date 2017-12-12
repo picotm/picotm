@@ -77,7 +77,7 @@ dnl Build toolchain
 dnl
 
 AM_PROG_AR
-LT_INIT
+LT_INIT([win32-dll])
 
 
 dnl
