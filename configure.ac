@@ -77,6 +77,16 @@ dnl Build toolchain
 dnl
 
 AM_PROG_AR
+
+dnl Building DLLs on Windows is currently not supported. A DLL
+dnl has to resolve all its dependencies at link time, but the
+dnl internal dependencies cannot be resolved as the picotm DLLs
+dnl don't exist until installation. DLLs are therefore currently
+dnl disabled.
+case $host_os in
+*cygwin* ) AC_DISABLE_SHARED ;;
+       * ) ;;
+esac
 LT_INIT([win32-dll])
 
 
