@@ -303,8 +303,18 @@ AC_DEFUN([_CHECK_LIBM_MATH_H], [
 ])
 
 AC_DEFUN([CONFIG_LIBM], [
+    have_libm="no"
     AC_CHECK_LIB([m], [signgam])
-    if test "x$ac_cv_lib_m_signam" != "xno"; then
+    if test "x$ac_cv_lib_m_signgam" != "xno"; then
+        have_libm="yes"
+    fi
+    # On Cygnus and other systems, signgam is provided by a
+    # reentrant function.
+    AC_CHECK_LIB([m], [__signgam])
+    if test "x$ac_cv_lib_m___signgam" != "xno"; then
+        have_libm="yes"
+    fi
+    if test "x$have_libm" != "xno"; then
         _CHECK_LIBM_COMPLEX_H
         _CHECK_LIBM_MATH_H
     fi
