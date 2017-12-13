@@ -158,6 +158,8 @@ else
 fi
 AC_SUBST([DOXYGEN_HAVE_DOT], [$doxygen_have_dot])
 
+AC_PATH_PROG([OPTIPNG], [optipng])
+
 
 dnl
 dnl Output

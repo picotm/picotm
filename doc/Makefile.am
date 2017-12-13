@@ -21,9 +21,11 @@ EXTRA_DIST = Doxyfile-html \
              html
 
 DOXYGEN_FLAGS ?=
+OPTIPNG_FLAGS ?= -silent -o7
 
 html-local:
 	@DOXYGEN@ $(DOXYGEN_FLAGS) @abs_srcdir@/Doxyfile-html
+	find html/ -type f -name "*.png" | xargs @OPTIPNG@ $(OPTIPNG_FLAGS)
 
 install-html-local:
 	@MKDIR_P@ ${htmldir} && \
