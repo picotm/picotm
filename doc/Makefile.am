@@ -17,7 +17,8 @@
 # DEALINGS IN THE SOFTWARE.
 
 EXTRA_DIST = Doxyfile-html \
-             Doxyfile.in
+             Doxyfile.in \
+             html
 
 AM_DOXYGEN_FLAGS =
 
