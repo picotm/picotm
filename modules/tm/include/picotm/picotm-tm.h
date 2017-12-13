@@ -78,13 +78,18 @@ load_ptr_tx(const void* addr)
  * \param   __name  The name of the type.
  * \param   __type  The C type.
  */
-#define PICOTM_TM_LOAD_TX(__name, __type)               \
-    static inline __type                                \
-    load_ ## __name ## _tx(const __type* addr)          \
-    {                                                   \
-        __type value;                                   \
-        load_tx(addr, &value, sizeof(value));           \
-        return value;                                   \
+#define PICOTM_TM_LOAD_TX(__name, __type)                                   \
+    /**
+        Loads a value of type '__type' with transactional semantics.
+        \param   addr   The source address.
+        \returns The transaction-local value loaded from address 'addr'.
+     */                                                                     \
+    static inline __type                                                    \
+    load_ ## __name ## _tx(const __type* addr)                              \
+    {                                                                       \
+        __type value;                                                       \
+        load_tx(addr, &value, sizeof(value));                               \
+        return value;                                                       \
     }
 
 PICOTM_NOTHROW
@@ -124,11 +129,16 @@ store_ptr_tx(void* addr, const void* ptr)
  * \param   __name  The name of the type.
  * \param   __type  The C type.
  */
-#define PICOTM_TM_STORE_TX(__name, __type)              \
-    static inline void                                  \
-    store_ ## __name ## _tx(__type* addr, __type value) \
-    {                                                   \
-        store_tx(addr, &value, sizeof(value));          \
+#define PICOTM_TM_STORE_TX(__name, __type)                                  \
+    /**
+        Stores a value of type '__type' with transactional semantics.
+        \param   addr   The destination address.
+        \param   value  The value to store at 'addr'.
+     */                                                                     \
+    static inline void                                                      \
+    store_ ## __name ## _tx(__type* addr, __type value)                     \
+    {                                                                       \
+        store_tx(addr, &value, sizeof(value));                              \
     }
 
 PICOTM_NOTHROW
@@ -211,11 +221,16 @@ privatize_c_tx(const void* addr, int c, unsigned long flags)
  * \param   __name  The name of the type.
  * \param   __type  The C type.
  */
-#define PICOTM_TM_PRIVATIZE_TX(__name, __type)                          \
-    static inline void                                                  \
-    privatize_ ## __name ## _tx(const __type* ptr, unsigned long flags) \
-    {                                                                   \
-        privatize_tx(ptr, sizeof(*ptr), flags);                         \
+#define PICOTM_TM_PRIVATIZE_TX(__name, __type)                              \
+    /**
+        Privatizes a value of type '__type'.
+        \param   addr   The address to privatize.\n
+        \param   flags  Privatizes for loading and/or storing.
+     */                                                                     \
+    static inline void                                                      \
+    privatize_ ## __name ## _tx(const __type* addr, unsigned long flags)    \
+    {                                                                       \
+        privatize_tx(addr, sizeof(*addr), flags);                           \
     }
 
 #if defined(PICOTM_TM_HAVE_TYPE__BOOL) && \
