@@ -23,9 +23,7 @@ EXTRA_DIST = Doxyfile-html \
 DOXYGEN_FLAGS ?=
 OPTIPNG_FLAGS ?= -silent -o7
 
-html-local:
-	@DOXYGEN@ $(DOXYGEN_FLAGS) @abs_srcdir@/Doxyfile-html
-	find html/ -type f -name "*.png" | xargs @OPTIPNG@ $(OPTIPNG_FLAGS)
+html-local: doxygen-html-optimized
 
 install-html-local:
 	@MKDIR_P@ ${htmldir} && \
@@ -33,3 +31,25 @@ install-html-local:
 
 uninstall-local:
 	rm -fr ${htmldir}/html/
+
+#
+# Internal rules
+#
+
+.PHONY: doxygen-html doxygen-html-optimized
+
+# Runs doxygen to generate HTML documentation. Good for testing
+# documentation changes.
+doxygen-html:
+if HAVE_DOXYGEN
+	$(DOXYGEN) $(DOXYGEN_FLAGS) @abs_srcdir@/Doxyfile-html
+endif
+
+# Runs optipng to reduce the size of generated PNG file. This
+# should only be necessary when generating the distribution.
+doxygen-html-optimized: doxygen-html
+if HAVE_OPTIPNG
+if HAVE_FIND
+	$(OPTIPNG) $(OPTIPNG_FLAGS) `$(FIND) html/ -type f -name "*.png"`
+endif
+endif
