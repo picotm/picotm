@@ -149,8 +149,9 @@ dnl Documentation
 dnl
 
 AC_PATH_PROG([DOXYGEN], [doxygen])
-AC_PATH_PROG([DOT], [dot])
+AM_CONDITIONAL([HAVE_DOXYGEN], [test x$DOXYGEN != x])
 
+AC_PATH_PROG([DOT], [dot])
 if test "x$ac_cv_path_DOT" = "x"; then
     doxygen_have_dot="NO"
 else
@@ -158,7 +159,11 @@ else
 fi
 AC_SUBST([DOXYGEN_HAVE_DOT], [$doxygen_have_dot])
 
+AC_PATH_PROG([FIND], [find])
+AM_CONDITIONAL([HAVE_FIND], [test x$FIND != x])
+
 AC_PATH_PROG([OPTIPNG], [optipng])
+AM_CONDITIONAL([HAVE_OPTIPNG], [test x$OPTIPNG != x])
 
 
 dnl
