@@ -221,9 +221,9 @@ privatize_c_tx(const void* addr, int c, unsigned long flags)
 #if defined(PICOTM_TM_HAVE_TYPE__BOOL) && \
             PICOTM_TM_HAVE_TYPE__BOOL || \
     defined(__PICOTM_DOXYGEN)
-PICOTM_TM_LOAD_TX(bool, _Bool)
-PICOTM_TM_STORE_TX(bool, _Bool)
-PICOTM_TM_PRIVATIZE_TX(bool, _Bool)
+PICOTM_TM_LOAD_TX(_Bool, _Bool)
+PICOTM_TM_STORE_TX(_Bool, _Bool)
+PICOTM_TM_PRIVATIZE_TX(_Bool, _Bool)
 #endif
 
 #if defined(PICOTM_TM_HAVE_TYPE_CHAR) && \
