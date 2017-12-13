@@ -37,12 +37,14 @@ PICOTM_BEGIN_DECLS
     defined(__PICOTM_DOXYGEN)
 PICOTM_TM_LOAD_TX(div_t, div_t);
 PICOTM_TM_STORE_TX(div_t, div_t);
+PICOTM_TM_PRIVATIZE_TX(div_t, div_t);
 #endif
 
 #if defined(PICOTM_LIBC_HAVE_TYPE_LDIV_T) && PICOTM_LIBC_HAVE_TYPE_LDIV_T || \
     defined(__PICOTM_DOXYGEN)
 PICOTM_TM_LOAD_TX(ldiv_t, ldiv_t);
 PICOTM_TM_STORE_TX(ldiv_t, ldiv_t);
+PICOTM_TM_PRIVATIZE_TX(ldiv_t, ldiv_t);
 #endif
 
 #if defined(PICOTM_LIBC_HAVE_TYPE_LLDIV_T) && \
@@ -50,6 +52,7 @@ PICOTM_TM_STORE_TX(ldiv_t, ldiv_t);
     defined(__PICOTM_DOXYGEN)
 PICOTM_TM_LOAD_TX(lldiv_t, lldiv_t);
 PICOTM_TM_STORE_TX(lldiv_t, lldiv_t);
+PICOTM_TM_PRIVATIZE_TX(lldiv_t, lldiv_t);
 #endif
 
 /*PICOTM_TM_LOAD_TX(size_t, size_t);*/ /* defined in stddef.h */
