@@ -16,12 +16,13 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-EXTRA_DIST = Doxyfile.in
+EXTRA_DIST = Doxyfile-html \
+             Doxyfile.in
 
 AM_DOXYGEN_FLAGS =
 
 html-local:
-	@DOXYGEN@ $(AM_DOXYGEN_FLAGS) Doxyfile
+	@DOXYGEN@ $(AM_DOXYGEN_FLAGS) @abs_srcdir@/Doxyfile-html
 
 install-html-local:
 	@MKDIR_P@ ${htmldir} && \
