@@ -128,6 +128,47 @@ AC_DEFUN([_CHECK_LIBC_STDDEF_H], [
     fi
 ])
 
+AC_DEFUN([_CHECK_LIBC_STDINT_H], [
+
+    AC_CHECK_HEADERS([stdint.h])
+
+    if test "x$ac_cv_header_stdint_h" != "xno"; then
+
+        #
+        # Types
+        #
+
+        _CHECK_MODULE_TYPE([libc], [int_fast8_t],    [[@%:@include <stdint.h>]])
+        _CHECK_MODULE_TYPE([libc], [int_fast16_t],   [[@%:@include <stdint.h>]])
+        _CHECK_MODULE_TYPE([libc], [int_fast32_t],   [[@%:@include <stdint.h>]])
+        _CHECK_MODULE_TYPE([libc], [int_fast64_t],   [[@%:@include <stdint.h>]])
+        _CHECK_MODULE_TYPE([libc], [int_least8_t],   [[@%:@include <stdint.h>]])
+        _CHECK_MODULE_TYPE([libc], [int_least16_t],  [[@%:@include <stdint.h>]])
+        _CHECK_MODULE_TYPE([libc], [int_least32_t],  [[@%:@include <stdint.h>]])
+        _CHECK_MODULE_TYPE([libc], [int_least64_t],  [[@%:@include <stdint.h>]])
+        _CHECK_MODULE_TYPE([libc], [int8_t],         [[@%:@include <stdint.h>]])
+        _CHECK_MODULE_TYPE([libc], [int16_t],        [[@%:@include <stdint.h>]])
+        _CHECK_MODULE_TYPE([libc], [int32_t],        [[@%:@include <stdint.h>]])
+        _CHECK_MODULE_TYPE([libc], [int64_t],        [[@%:@include <stdint.h>]])
+        _CHECK_MODULE_TYPE([libc], [intmax_t],       [[@%:@include <stdint.h>]])
+        _CHECK_MODULE_TYPE([libc], [intptr_t],       [[@%:@include <stdint.h>]])
+        _CHECK_MODULE_TYPE([libc], [uint_fast8_t],   [[@%:@include <stdint.h>]])
+        _CHECK_MODULE_TYPE([libc], [uint_fast16_t],  [[@%:@include <stdint.h>]])
+        _CHECK_MODULE_TYPE([libc], [uint_fast32_t],  [[@%:@include <stdint.h>]])
+        _CHECK_MODULE_TYPE([libc], [uint_fast64_t],  [[@%:@include <stdint.h>]])
+        _CHECK_MODULE_TYPE([libc], [uint_least8_t],  [[@%:@include <stdint.h>]])
+        _CHECK_MODULE_TYPE([libc], [uint_least16_t], [[@%:@include <stdint.h>]])
+        _CHECK_MODULE_TYPE([libc], [uint_least32_t], [[@%:@include <stdint.h>]])
+        _CHECK_MODULE_TYPE([libc], [uint_least64_t], [[@%:@include <stdint.h>]])
+        _CHECK_MODULE_TYPE([libc], [uint8_t],        [[@%:@include <stdint.h>]])
+        _CHECK_MODULE_TYPE([libc], [uint16_t],       [[@%:@include <stdint.h>]])
+        _CHECK_MODULE_TYPE([libc], [uint32_t],       [[@%:@include <stdint.h>]])
+        _CHECK_MODULE_TYPE([libc], [uint64_t],       [[@%:@include <stdint.h>]])
+        _CHECK_MODULE_TYPE([libc], [uintmax_t],      [[@%:@include <stdint.h>]])
+        _CHECK_MODULE_TYPE([libc], [uintptr_t],      [[@%:@include <stdint.h>]])
+    fi
+])
+
 AC_DEFUN([_CHECK_LIBC_STDIO_H], [
 
     AC_CHECK_HEADERS([stdio.h])
@@ -368,6 +409,7 @@ AC_DEFUN([CONFIG_LIBC], [
         _CHECK_LIBC_SCHED_H
         _CHECK_LIBC_STDBOOL_H
         _CHECK_LIBC_STDDEF_H
+        _CHECK_LIBC_STDINT_H
         _CHECK_LIBC_STDIO_H
         _CHECK_LIBC_STDLIB_H
         _CHECK_LIBC_STRING_H
