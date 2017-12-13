@@ -158,6 +158,8 @@ AC_DEFUN([_CHECK_LIBC_STDLIB_H], [
         _CHECK_MODULE_TYPE([libc], [div_t],   [[@%:@include <stdlib.h>]])
         _CHECK_MODULE_TYPE([libc], [ldiv_t],  [[@%:@include <stdlib.h>]])
         _CHECK_MODULE_TYPE([libc], [lldiv_t], [[@%:@include <stdlib.h>]])
+        _CHECK_MODULE_TYPE([libc], [size_t],  [[@%:@include <stdlib.h>]])
+        _CHECK_MODULE_TYPE([libc], [wchar_t], [[@%:@include <stdlib.h>]])
 
         #
         # Public interfaces
