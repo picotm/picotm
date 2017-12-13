@@ -98,6 +98,20 @@ AC_DEFUN([_CHECK_LIBC_SCHED_H], [
     fi
 ])
 
+AC_DEFUN([_CHECK_LIBC_STDBOOL_H], [
+
+    AC_CHECK_HEADERS([stdbool.h])
+
+    if test "x$ac_cv_header_stdbool_h" != "xno"; then
+
+        #
+        # Types
+        #
+
+        _CHECK_MODULE_TYPE([libc], [bool], [[@%:@include <stdbool.h>]])
+    fi
+])
+
 AC_DEFUN([_CHECK_LIBC_STDDEF_H], [
 
     AC_CHECK_HEADERS([stddef.h])
@@ -350,6 +364,7 @@ AC_DEFUN([CONFIG_LIBC], [
         _CHECK_LIBC_MALLOC_MALLOC_H
         _CHECK_LIBC_MALLOC_NP_H
         _CHECK_LIBC_SCHED_H
+        _CHECK_LIBC_STDBOOL_H
         _CHECK_LIBC_STDDEF_H
         _CHECK_LIBC_STDIO_H
         _CHECK_LIBC_STDLIB_H
