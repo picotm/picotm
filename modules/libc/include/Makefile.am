@@ -21,6 +21,7 @@ nobase_include_HEADERS = picotm/config/picotm-libc-config.h \
                          picotm/fcntl-tm.h \
                          picotm/fcntl.h \
                          picotm/sched.h \
+                         picotm/stdbool.h \
                          picotm/stddef.h \
                          picotm/stdio-tm.h \
                          picotm/stdio.h \
