@@ -323,7 +323,9 @@ INCLUDE_PATH           = @abs_top_builddir@/include \
                          @abs_top_srcdir@/src
 INCLUDE_FILE_PATTERNS  =
 PREDEFINED             = __PICOTM_DOXYGEN=1
-EXPAND_AS_DEFINED      =
+EXPAND_AS_DEFINED      = PICOTM_TM_LOAD_TX \
+                         PICOTM_TM_PRIVATIZE_TX \
+                         PICOTM_TM_STORE_TX
 SKIP_FUNCTION_MACROS   = YES
 #---------------------------------------------------------------------------
 # Configuration options related to external references
