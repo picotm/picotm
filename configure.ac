@@ -200,6 +200,7 @@ AC_CONFIG_FILES([Makefile
                  modules/txlib/tests/pubapi/Makefile
                  src/Makefile
                  tests/Makefile
+                 tests/libsafeblk/Makefile
                  tests/libtap/Makefile
                  tests/libtests/Makefile])
 AC_OUTPUT

@@ -16,24 +16,30 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-check_LTLIBRARIES = libpicotm_tests.la
+check_LTLIBRARIES = libpicotm_safeblk.la
 
-libpicotm_tests_la_SOURCES = opts.c \
-                             opts.h \
-                             ptr.h \
-                             tempfile.c \
-                             tempfile.h \
-                             test.c \
-                             test.h \
-                             testhlp.c \
-                             testhlp.h \
-                             thread.c \
-                             thread.h
+libpicotm_safeblk_la_SOURCES = compat/pthread_barrier.c \
+                               compat/pthread_barrier.h \
+                               compat/temp_failure_retry.h \
+                               safeblk.c \
+                               safeblk.h \
+                               safe_fcntl.c \
+                               safe_fcntl.h \
+                               safe_pthread.c \
+                               safe_pthread.h \
+                               safe_sched.c \
+                               safe_sched.h \
+                               safe_stdio.c \
+                               safe_stdio.h \
+                               safe_stdlib.c \
+                               safe_stdlib.h \
+                               safe_sys_stat.c \
+                               safe_sys_stat.h \
+                               safe_sys_time.c \
+                               safe_sys_time.h \
+                               safe_unistd.c \
+                               safe_unistd.h
 
 AM_CPPFLAGS = -I$(top_builddir)/tests/libtap \
               -I$(top_srcdir)/tests/libtap \
-              -I$(top_builddir)/tests/libsafeblk \
-              -I$(top_srcdir)/tests/libsafeblk \
-              -I$(top_builddir)/include \
-              -I$(top_srcdir)/include \
               -include config.h
