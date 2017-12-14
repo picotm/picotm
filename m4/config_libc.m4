@@ -212,17 +212,23 @@ AC_DEFUN([_CHECK_LIBC_STDLIB_H], [
         _CHECK_MODULE_INTF([libc], [exit],           [[#include <stdlib.h>]])
         _CHECK_MODULE_INTF([libc], [free],           [[#include <stdlib.h>]])
         _CHECK_MODULE_INTF([libc], [malloc],         [[#include <stdlib.h>]])
-    case $host_os in
+        case $host_os in
         *darwin* ) ;;
                * )
                 _CHECK_MODULE_INTF([libc], [mkdtemp],        [[#include <stdlib.h>]])
             ;;
-    esac
+        esac
         _CHECK_MODULE_INTF([libc], [mkstemp],        [[#include <stdlib.h>]])
         _CHECK_MODULE_INTF([libc], [posix_memalign], [[#include <stdlib.h>]])
         _CHECK_MODULE_INTF([libc], [qsort],          [[#include <stdlib.h>]])
         _CHECK_MODULE_INTF([libc], [realloc],        [[#include <stdlib.h>]])
         _CHECK_MODULE_INTF([libc], [rand_r],         [[#include <stdlib.h>]])
+
+        #
+        # Internal interfaces
+        #
+
+        AC_CHECK_FUNCS([posix_memalign],,, [[@%:@include <stdlib.h>]])
     fi
 ])
 

@@ -49,10 +49,16 @@ allocator_tx_init(struct allocator_tx* self, unsigned long module);
 void
 allocator_tx_uninit(struct allocator_tx* self);
 
+#if defined(HAVE_POSIX_MEMALIGN) && HAVE_POSIX_MEMALIGN
 void
 allocator_tx_exec_posix_memalign(struct allocator_tx* self, void** memptr,
                                  size_t alignment, size_t size,
                                  struct picotm_error* error);
+#endif
+
+void*
+allocator_tx_exec_malloc(struct allocator_tx* self, size_t size,
+                         struct picotm_error* error);
 
 void
 allocator_tx_exec_free(struct allocator_tx* self, void* ptr,

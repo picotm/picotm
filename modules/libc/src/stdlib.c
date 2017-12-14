@@ -100,11 +100,7 @@ void*
 malloc_tx(size_t size)
 {
     error_module_save_errno();
-
-    void* mem;
-    allocator_module_posix_memalign(&mem, 2 * sizeof(void*), size);
-
-    return mem;
+    return allocator_module_malloc(size);
 }
 #endif
 
