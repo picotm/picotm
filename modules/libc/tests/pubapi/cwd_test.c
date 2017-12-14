@@ -97,7 +97,7 @@ cwd_test_2(unsigned int tid)
         privatize_c_tx(path, '\0', PICOTM_TM_PRIVATIZE_LOAD);
         chdir_tx(path);
 
-        sched_yield_tx();
+        delay_transaction(tid);
 
         for (int i = 0; i < 5; ++i) {
 
@@ -122,7 +122,7 @@ cwd_test_2(unsigned int tid)
                 picotm_recover_from_error(&error);
             }
 
-            sleep_tx(1);
+            delay_transaction(tid);
         }
 
     picotm_commit
