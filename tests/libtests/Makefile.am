@@ -21,6 +21,8 @@ check_LTLIBRARIES = libpicotm_tests.la
 libpicotm_tests_la_SOURCES = opts.c \
                              opts.h \
                              ptr.h \
+                             pubapi.c \
+                             pubapi.h \
                              tempfile.c \
                              tempfile.h \
                              test.c \
