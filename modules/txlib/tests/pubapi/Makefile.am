@@ -54,12 +54,15 @@ txstack_pubapi_test_SOURCES = txstack_pubapi.c \
 AM_LDFLAGS = -static
 
 LDADD = $(top_builddir)/tests/libtests/libpicotm_tests.la \
+        $(top_builddir)/tests/libsafeblk/libpicotm_safeblk.la \
         $(top_builddir)/tests/libtap/libpicotm_tap.la \
         $(top_builddir)/modules/txlib/src/libpicotm-txlib.la \
         $(top_builddir)/src/libpicotm.la
 
 AM_CPPFLAGS = -I$(top_builddir)/tests/libtests \
               -I$(top_srcdir)/tests/libtests \
+              -I$(top_builddir)/tests/libsafeblk \
+              -I$(top_srcdir)/tests/libsafeblk \
               -I$(top_builddir)/tests/libtap \
               -I$(top_srcdir)/tests/libtap \
               -I$(top_builddir)/modules/txlib/include \
