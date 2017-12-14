@@ -34,21 +34,15 @@ check_PROGRAMS = allocator-pubapi.test \
 
 allocator_pubapi_test_SOURCES = delay.c \
                                 delay.h \
-                                allocator_pubapi.c \
-                                allocator_test.c \
-                                allocator_test.h
+                                allocator_pubapi.c
 
 cwd_pubapi_test_SOURCES = cwd_pubapi.c \
-                          cwd_test.c \
-                          cwd_test.h \
                           delay.c \
                           delay.h
 
 fildes_pubapi_test_SOURCES = delay.c \
                              delay.h \
-                             fildes_pubapi.c \
-                             fildes_test.c \
-                             fildes_test.h
+                             fildes_pubapi.c
 
 AM_LDFLAGS = -static
 
