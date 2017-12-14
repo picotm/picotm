@@ -18,6 +18,6 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-./tm-pubapi.test -t1
+./tm-pubapi -t1
 
 echo $?
