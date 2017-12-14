@@ -26,9 +26,7 @@ TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
 
 check_PROGRAMS = tm-pubapi.test
 
-tm_pubapi_test_SOURCES = tm_pubapi.c \
-                         tm_test.c \
-                         tm_test.h
+tm_pubapi_test_SOURCES = tm_pubapi.c
 
 AM_LDFLAGS = -static
 
