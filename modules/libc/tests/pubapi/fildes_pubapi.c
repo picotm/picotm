@@ -18,12 +18,10 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include "fildes_test.h"
 #include "opts.h"
-#include "tap.h"
-#include "test.h"
+#include "pubapi.h"
 
 static enum parse_opts_result
 opt_regular_cc_mode(const char* optarg)
@@ -44,46 +42,10 @@ opt_regular_cc_mode(const char* optarg)
 }
 
 int
-main(int argc, char** argv)
+main(int argc, char* argv[])
 {
     PARSE_OPT('R', opt_regular_cc_mode);
 
-    switch (parse_opts(argc, argv, PARSE_OPTS_STRING("R:"))) {
-        case PARSE_OPTS_EXIT:
-            return EXIT_SUCCESS;
-        case PARSE_OPTS_ERROR:
-            return EXIT_FAILURE;
-        default:
-            break;
-    }
-
-    if (number_of_fildes_tests() <= g_off) {
-        fprintf(stderr, "Test index out of range\n");
-        return EXIT_FAILURE;
-    }
-
-    size_t off = g_off;
-    size_t num;
-
-    if (!g_num) {
-        num = number_of_fildes_tests() - off;
-    } else {
-        num = g_num;
-    }
-
-    if (number_of_fildes_tests() < (off + g_num)) {
-        fprintf(stderr, "Test index out of range\n");
-        return EXIT_FAILURE;
-    }
-
-    /* run tests  */
-
-    tap_version(12);
-
-    const struct test_func* test_beg = fildes_test + off;
-    const struct test_func* test_end = fildes_test + off + num;
-
-    run_tests(test_beg, test_end, g_nthreads, g_loop, g_btype, g_cycles);
-
-    return EXIT_SUCCESS;
+    return pubapi_main(argc, argv, PARSE_OPTS_STRING("R:"),
+                       fildes_test, number_of_fildes_tests());
 }
