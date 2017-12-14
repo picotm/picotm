@@ -18,6 +18,6 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-./txstack-pubapi.test -t1
+./txstack-pubapi -t1
 
 echo $?

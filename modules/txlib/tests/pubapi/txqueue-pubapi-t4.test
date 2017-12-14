@@ -18,6 +18,6 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-./txqueue-pubapi.test -t4
+./txqueue-pubapi -t4
 
 echo $?
