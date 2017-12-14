@@ -20,10 +20,10 @@ EXTRA_DIST = Doxyfile-html \
              Doxyfile.in \
              html
 
-AM_DOXYGEN_FLAGS =
+DOXYGEN_FLAGS ?=
 
 html-local:
-	@DOXYGEN@ $(AM_DOXYGEN_FLAGS) @abs_srcdir@/Doxyfile-html
+	@DOXYGEN@ $(DOXYGEN_FLAGS) @abs_srcdir@/Doxyfile-html
 
 install-html-local:
 	@MKDIR_P@ ${htmldir} && \
