@@ -161,7 +161,7 @@ STRIP_CODE_COMMENTS    = YES
 REFERENCED_BY_RELATION = NO
 REFERENCES_RELATION    = NO
 REFERENCES_LINK_SOURCE = YES
-SOURCE_TOOLTIPS        = YES
+SOURCE_TOOLTIPS        = NO
 USE_HTAGS              = NO
 VERBATIM_HEADERS       = NO
 #---------------------------------------------------------------------------
