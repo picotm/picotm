@@ -127,7 +127,7 @@ realloc_tm(void* ptr, size_t size)
     void* mem = NULL;
 
     if (size) {
-        allocator_module_posix_memalign(&mem, 2 * sizeof(void*), size);
+        mem = allocator_module_malloc(size);
     }
 
     if (ptr && mem) {

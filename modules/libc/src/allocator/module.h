@@ -32,8 +32,13 @@
 void
 allocator_module_free(void* mem, size_t usiz);
 
+void*
+allocator_module_malloc(size_t size);
+
+#if defined(HAVE_POSIX_MEMALIGN) && HAVE_POSIX_MEMALIGN
 void
 allocator_module_posix_memalign(void** memptr, size_t alignment, size_t size);
+#endif
 
 /**
  * \cond impl || libc_impl || libc_impl_allocator

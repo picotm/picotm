@@ -18,12 +18,14 @@
  */
 
 #include "allocator_tx.h"
+#include <errno.h>
 #include <picotm/picotm-lib-tab.h>
 #include <picotm/picotm-module.h>
 #include <stdlib.h>
 
 enum allocator_tx_cmd {
     CMD_FREE = 0,
+    CMD_MALLOC,
     CMD_POSIX_MEMALIGN,
     LAST_CMD
 };
@@ -109,9 +111,55 @@ undo_free(struct allocator_tx* self, unsigned int cookie,
 { }
 
 /*
+ * malloc()
+ */
+
+void*
+allocator_tx_exec_malloc(struct allocator_tx* self, size_t size,
+                         struct picotm_error* error)
+{
+    void* mem = malloc(rnd2wb(size));
+    if (!mem) {
+        /* ISO C specifies allocator functions to return NULL in the
+         * case of an error. We report the errno code on all systems
+         * that support it, otherwise we set a picotm error code. */
+#if defined(ENOMEM)
+        picotm_error_set_errno(error, errno);
+#else
+        picotm_error_set_error_code(error, PICOTM_OUT_OF_MEMORY);
+#endif
+        return NULL;
+    }
+
+    append_cmd(self, CMD_MALLOC, mem, error);
+    if (picotm_error_is_set(error)) {
+        goto err_append_cmd;
+    }
+
+    return mem;
+
+err_append_cmd:
+    free(mem);
+    return NULL;
+}
+
+static void
+apply_malloc(struct allocator_tx* self, unsigned int cookie,
+             struct picotm_error* error)
+{ }
+
+static void
+undo_malloc(struct allocator_tx* self, unsigned int cookie,
+            struct picotm_error* error)
+{
+    free(self->ptrtab[cookie]);
+}
+
+/*
  * posix_memalign()
  */
 
+#if defined(HAVE_POSIX_MEMALIGN) && HAVE_POSIX_MEMALIGN
 void
 allocator_tx_exec_posix_memalign(struct allocator_tx* self, void** memptr,
                                  size_t alignment, size_t size,
@@ -137,18 +185,27 @@ allocator_tx_exec_posix_memalign(struct allocator_tx* self, void** memptr,
 err_append_cmd:
     free(mem);
 }
+#endif
 
+#if defined(HAVE_POSIX_MEMALIGN) && HAVE_POSIX_MEMALIGN
 static void
 apply_posix_memalign(struct allocator_tx* self, unsigned int cookie,
                      struct picotm_error* error)
 { }
+#else
+#define apply_posix_memalign    NULL
+#endif
 
+#if defined(HAVE_POSIX_MEMALIGN) && HAVE_POSIX_MEMALIGN
 static void
 undo_posix_memalign(struct allocator_tx* self, unsigned int cookie,
                     struct picotm_error* error)
 {
     free(self->ptrtab[cookie]);
 }
+#else
+#define undo_posix_memalign    NULL
+#endif
 
 /*
  * Module interface
@@ -163,6 +220,7 @@ allocator_tx_apply_event(struct allocator_tx* self,
                                           unsigned int,
                                           struct picotm_error*) = {
         apply_free,
+        apply_malloc,
         apply_posix_memalign
     };
 
@@ -181,6 +239,7 @@ allocator_tx_undo_event(struct allocator_tx* self,
                                          unsigned int,
                                          struct picotm_error*) = {
         undo_free,
+        undo_malloc,
         undo_posix_memalign
     };
 
