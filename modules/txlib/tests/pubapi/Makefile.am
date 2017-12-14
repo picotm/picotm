@@ -30,18 +30,18 @@ EXTRA_DIST = $(TESTS)
 TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
                   $(top_srcdir)/build-aux/tap-driver.sh
 
-check_PROGRAMS = txlist-pubapi.test \
-                 txmultiset-pubapi.test \
-                 txqueue-pubapi.test \
-                 txstack-pubapi.test
+check_PROGRAMS = txlist-pubapi \
+                 txmultiset-pubapi \
+                 txqueue-pubapi \
+                 txstack-pubapi
 
-txlist_pubapi_test_SOURCES = txlist_pubapi.c
+txlist_pubapi_SOURCES = txlist_pubapi.c
 
-txmultiset_pubapi_test_SOURCES = txmultiset_pubapi.c
+txmultiset_pubapi_SOURCES = txmultiset_pubapi.c
 
-txqueue_pubapi_test_SOURCES = txqueue_pubapi.c
+txqueue_pubapi_SOURCES = txqueue_pubapi.c
 
-txstack_pubapi_test_SOURCES = txstack_pubapi.c
+txstack_pubapi_SOURCES = txstack_pubapi.c
 
 AM_LDFLAGS = -static
 
