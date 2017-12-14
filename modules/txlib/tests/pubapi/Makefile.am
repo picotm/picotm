@@ -35,21 +35,13 @@ check_PROGRAMS = txlist-pubapi.test \
                  txqueue-pubapi.test \
                  txstack-pubapi.test
 
-txlist_pubapi_test_SOURCES = txlist_pubapi.c \
-                             txlist_test.c \
-                             txlist_test.h
+txlist_pubapi_test_SOURCES = txlist_pubapi.c
 
-txmultiset_pubapi_test_SOURCES = txmultiset_pubapi.c \
-                                 txmultiset_test.c \
-                                 txmultiset_test.h
+txmultiset_pubapi_test_SOURCES = txmultiset_pubapi.c
 
-txqueue_pubapi_test_SOURCES = txqueue_pubapi.c \
-                              txqueue_test.c \
-                              txqueue_test.h
+txqueue_pubapi_test_SOURCES = txqueue_pubapi.c
 
-txstack_pubapi_test_SOURCES = txstack_pubapi.c \
-                              txstack_test.c \
-                              txstack_test.h
+txstack_pubapi_test_SOURCES = txstack_pubapi.c
 
 AM_LDFLAGS = -static
 
