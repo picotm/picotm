@@ -24,9 +24,9 @@ EXTRA_DIST = $(TESTS)
 TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
                   $(top_srcdir)/build-aux/tap-driver.sh
 
-check_PROGRAMS = tm-pubapi.test
+check_PROGRAMS = tm-pubapi
 
-tm_pubapi_test_SOURCES = tm_pubapi.c
+tm_pubapi_SOURCES = tm_pubapi.c
 
 AM_LDFLAGS = -static
 
