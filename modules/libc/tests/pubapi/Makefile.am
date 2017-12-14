@@ -28,21 +28,21 @@ EXTRA_DIST = $(TESTS)
 TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
                   $(top_srcdir)/build-aux/tap-driver.sh
 
-check_PROGRAMS = allocator-pubapi.test \
-                 cwd-pubapi.test \
-                 fildes-pubapi.test
+check_PROGRAMS = allocator-pubapi \
+                 cwd-pubapi \
+                 fildes-pubapi
 
-allocator_pubapi_test_SOURCES = delay.c \
-                                delay.h \
-                                allocator_pubapi.c
+allocator_pubapi_SOURCES = delay.c \
+                           delay.h \
+                           allocator_pubapi.c
 
-cwd_pubapi_test_SOURCES = cwd_pubapi.c \
-                          delay.c \
-                          delay.h
+cwd_pubapi_SOURCES = cwd_pubapi.c \
+                     delay.c \
+                     delay.h
 
-fildes_pubapi_test_SOURCES = delay.c \
-                             delay.h \
-                             fildes_pubapi.c
+fildes_pubapi_SOURCES = delay.c \
+                        delay.h \
+                        fildes_pubapi.c
 
 AM_LDFLAGS = -static
 
