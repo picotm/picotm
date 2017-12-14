@@ -114,7 +114,7 @@ matrix:
         - MATRIX_EVAL="CC=clang-4.0 && SKIP_MAKE_CHECK=1"
 
 install:
-    - sudo apt-get install -y autoconf-archive doxygen graphviz
+    - sudo apt-get install -y autoconf-archive doxygen graphviz optipng
 
 before_script:
     - eval "${MATRIX_EVAL}"
@@ -123,5 +123,5 @@ script:
     - ( tools/bootstrap.sh &&
         ./configure &&
         make &&
-        make html &&
+        OPTIPNG_FLAGS="-silent -o0" make html &&
         ( [ -n "${SKIP_MAKE_CHECK}" ] || ( make -j1 check ) ) )
