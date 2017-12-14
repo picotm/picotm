@@ -62,7 +62,10 @@ cwd_test_1(unsigned int tid)
         if (strcmp(cwd, cwd_tx)) {
             tap_error("working directories did not match:"
                       " expected '%s', got '%s'\n", cwd, cwd_tx);
-            abort_safe_block();
+            struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+            picotm_error_set_error_code(&error, PICOTM_GENERAL_ERROR);
+            picotm_error_mark_as_non_recoverable(&error);
+            picotm_recover_from_error(&error);
         }
 
         delay_transaction(tid);
@@ -105,7 +108,10 @@ cwd_test_2(unsigned int tid)
             int res = sscanf_tm(cwd, format, &cwd_tid);
             if (res < 1l) {
                 tap_error("thread id did not match for CWD '%s'\n", cwd);
-                abort_safe_block();
+                struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+                picotm_error_set_error_code(&error, PICOTM_GENERAL_ERROR);
+                picotm_error_mark_as_non_recoverable(&error);
+                picotm_recover_from_error(&error);
             }
 
             if (cwd_tid != tid) {
