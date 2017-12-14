@@ -18,20 +18,20 @@
  */
 
 #include "delay.h"
-#include <picotm/picotm-tm.h>
-#include <picotm/stdlib.h>
+#include <picotm/sched.h>
+
+static const unsigned int MIN_NYIELD = 10;
+static const unsigned int RND_NYIELD = 7;
 
 void
 delay_transaction(unsigned int tid)
 {
-    static unsigned int g_curtid;
+    unsigned int nyield = MIN_NYIELD + (tid % RND_NYIELD);
 
-	store_uint_tx(&g_curtid, tid);
+    /* Switch threads several times to provoke conflicts with
+     * concurrent transactions. */
 
-	for (int i = 0; i < 10000; ++i) {
-		unsigned int curtid = load_uint_tx(&g_curtid);
-        if (curtid != tid) {
-		    abort_tx();
-		}
-	}
+    for (; nyield; --nyield) {
+        sched_yield_tx();
+    }
 }
