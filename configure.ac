@@ -183,6 +183,7 @@ AC_CONFIG_FILES([Makefile
                  extras/Makefile
                  extras/autoconf/Makefile
                  include/Makefile
+                 LICENSES/Makefile
                  modules/Makefile
                  modules/libc/Makefile
                  modules/libc/include/Makefile
