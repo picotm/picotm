@@ -19,11 +19,14 @@ dnl THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 dnl LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 dnl FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 dnl DEALINGS IN THE SOFTWARE.
+dnl
+dnl SPDX-License-Identifier: MIT
 
 AC_PREREQ([2.69])
 AC_INIT([picotm], [0.8.0], [bugs@picotm.org], [], [http://picotm.org])
 
 dnl Internal configuration header
+AH_TOP([/* SPDX-License-Identifier: MIT */])
 AC_CONFIG_HEADERS([config/config.h])
 
 AC_CONFIG_SRCDIR([src/Makefile.am])
