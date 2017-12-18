@@ -193,27 +193,29 @@ __picotm_begin(enum __picotm_mode mode, jmp_buf* env)
 }
 
 static void
-restart_tx(struct tx* tx, enum __picotm_mode mode)
+restart_tx(struct tx* tx, enum __picotm_mode mode, bool do_rollback)
 {
     assert(tx);
 
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    tx_rollback(tx, &error);
-    if (picotm_error_is_set(&error)) {
-        switch (error.status) {
-        case PICOTM_CONFLICTING:
-            /* Should be avoided, but no problem per se. */
-            break;
-        case PICOTM_REVOCABLE:
-            /* This should not happen. */
-            mode = PICOTM_MODE_IRREVOCABLE;
-            break;
-        case PICOTM_ERROR_CODE:
-        case PICOTM_ERRNO:
-        case PICOTM_KERN_RETURN_T:
-            /* If we were restarting before, we're now recovering. */
-            mode = PICOTM_MODE_RECOVERY;
-            break;
+    if (do_rollback) {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        tx_rollback(tx, &error);
+        if (picotm_error_is_set(&error)) {
+            switch (error.status) {
+            case PICOTM_CONFLICTING:
+                /* Should be avoided, but no problem per se. */
+                break;
+            case PICOTM_REVOCABLE:
+                /* This should not happen. */
+                mode = PICOTM_MODE_IRREVOCABLE;
+                break;
+            case PICOTM_ERROR_CODE:
+            case PICOTM_ERRNO:
+            case PICOTM_KERN_RETURN_T:
+                /* If we were restarting before, we're now recovering. */
+                mode = PICOTM_MODE_RECOVERY;
+                break;
+            }
         }
     }
 
@@ -233,15 +235,15 @@ __picotm_commit()
     if (picotm_error_is_set(error)) {
         switch (error->status) {
         case PICOTM_CONFLICTING:
-            restart_tx(tx, PICOTM_MODE_RETRY);
+            restart_tx(tx, PICOTM_MODE_RETRY, true);
             break;
         case PICOTM_REVOCABLE:
-            restart_tx(tx, PICOTM_MODE_IRREVOCABLE);
+            restart_tx(tx, PICOTM_MODE_IRREVOCABLE, true);
             break;
         case PICOTM_ERROR_CODE:
         case PICOTM_ERRNO:
         case PICOTM_KERN_RETURN_T:
-            restart_tx(tx, PICOTM_MODE_RECOVERY);
+            restart_tx(tx, PICOTM_MODE_RECOVERY, true);
             break;
         }
     }
@@ -251,7 +253,7 @@ PICOTM_EXPORT
 void
 picotm_restart()
 {
-    restart_tx(get_non_null_tx(), PICOTM_MODE_RETRY);
+    restart_tx(get_non_null_tx(), PICOTM_MODE_RETRY, false);
 }
 
 PICOTM_EXPORT
@@ -265,7 +267,7 @@ PICOTM_EXPORT
 void
 picotm_irrevocable()
 {
-    restart_tx(get_non_null_tx(), PICOTM_MODE_IRREVOCABLE);
+    restart_tx(get_non_null_tx(), PICOTM_MODE_IRREVOCABLE, true);
 }
 
 PICOTM_EXPORT
@@ -382,7 +384,7 @@ picotm_resolve_conflict(struct picotm_rwlock* conflicting_lock)
 {
     picotm_error_set_conflicting(get_non_null_error(), conflicting_lock);
 
-    restart_tx(get_non_null_tx(), PICOTM_MODE_RETRY);
+    restart_tx(get_non_null_tx(), PICOTM_MODE_RETRY, true);
 }
 
 PICOTM_EXPORT
@@ -392,7 +394,7 @@ picotm_recover_from_error_code(enum picotm_error_code error_hint)
     picotm_error_set_error_code(get_non_null_error(), error_hint);
 
     /* Nothing we can do on errors; let's try to recover. */
-    restart_tx(get_non_null_tx(), PICOTM_MODE_RECOVERY);
+    restart_tx(get_non_null_tx(), PICOTM_MODE_RECOVERY, true);
 }
 
 PICOTM_EXPORT
@@ -402,7 +404,7 @@ picotm_recover_from_errno(int errno_hint)
     picotm_error_set_errno(get_non_null_error(), errno_hint);
 
     /* Nothing we can do on errors; let's try to recover. */
-    restart_tx(get_non_null_tx(), PICOTM_MODE_RECOVERY);
+    restart_tx(get_non_null_tx(), PICOTM_MODE_RECOVERY, true);
 }
 
 #if defined(PICOTM_HAVE_TYPE_KERN_RETURN_T) && PICOTM_HAVE_TYPE_KERN_RETURN_T
@@ -413,7 +415,7 @@ picotm_recover_from_kern_return_t(kern_return_t value)
     picotm_error_set_kern_return_t(get_non_null_error(), value);
 
     /* Nothing we can do on errors; let's try to recover. */
-    restart_tx(get_non_null_tx(), PICOTM_MODE_RECOVERY);
+    restart_tx(get_non_null_tx(), PICOTM_MODE_RECOVERY, true);
 }
 #endif
 
@@ -427,19 +429,19 @@ picotm_recover_from_error(const struct picotm_error* error)
 
     switch (error->status) {
     case PICOTM_CONFLICTING:
-        restart_tx(get_non_null_tx(), PICOTM_MODE_RETRY);
+        restart_tx(get_non_null_tx(), PICOTM_MODE_RETRY, true);
         break;
     case PICOTM_REVOCABLE:
-        restart_tx(get_non_null_tx(), PICOTM_MODE_IRREVOCABLE);
+        restart_tx(get_non_null_tx(), PICOTM_MODE_IRREVOCABLE, true);
         break;
     case PICOTM_ERROR_CODE:
-        restart_tx(get_non_null_tx(), PICOTM_MODE_RECOVERY);
+        restart_tx(get_non_null_tx(), PICOTM_MODE_RECOVERY, true);
         break;
     case PICOTM_ERRNO:
-        restart_tx(get_non_null_tx(), PICOTM_MODE_RECOVERY);
+        restart_tx(get_non_null_tx(), PICOTM_MODE_RECOVERY, true);
         break;
     case PICOTM_KERN_RETURN_T:
-        restart_tx(get_non_null_tx(), PICOTM_MODE_RECOVERY);
+        restart_tx(get_non_null_tx(), PICOTM_MODE_RECOVERY, true);
         break;
     }
 }
