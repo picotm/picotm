@@ -210,7 +210,8 @@ AC_CONFIG_FILES([Makefile
                  tests/Makefile
                  tests/libsafeblk/Makefile
                  tests/libtap/Makefile
-                 tests/libtests/Makefile])
+                 tests/libtests/Makefile
+                 tests/pubapi/Makefile])
 AC_OUTPUT
 
 AC_MSG_RESULT([])
