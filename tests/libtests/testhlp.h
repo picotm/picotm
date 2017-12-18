@@ -30,3 +30,9 @@
  */
 void
 abort_transaction_on_error(const char* origin);
+
+/**
+ * Delays a transaction in favor of concurrent ones.
+ */
+void
+delay_transaction_tx(unsigned int tid);

@@ -25,7 +25,8 @@
 
 #include "testhlp.h"
 #include <picotm/picotm.h>
-#include <stdio.h>
+#include <picotm/picotm-module.h>
+#include <sched.h>
 #include <string.h>
 #include "safeblk.h"
 #include "taputils.h"
@@ -57,4 +58,28 @@ abort_transaction_on_error(const char* origin)
     }
 
     abort_safe_block();
+}
+
+void
+delay_transaction_tx(unsigned int tid)
+{
+    static const unsigned int MIN_NYIELD = 10;
+    static const unsigned int RND_NYIELD = 7;
+
+    unsigned int nyield = MIN_NYIELD + (tid % RND_NYIELD);
+
+    /* Switch threads several times to provoke conflicts with
+     * concurrent transactions. */
+
+    for (; nyield; --nyield) {
+        int err = sched_yield();
+        if (err) {
+            tap_error("%s:%d: sched_yield failed: %d (%s)",
+                      __func__, __LINE__, err, strerror(err));
+            struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+            picotm_error_set_errno(&error, err);
+            picotm_error_mark_as_non_recoverable(&error);
+            picotm_recover_from_error(&error);
+        }
+    }
 }
