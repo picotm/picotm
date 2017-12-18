@@ -28,7 +28,6 @@
 #include <picotm/stdlib-tm.h>
 #include <picotm/picotm.h>
 #include <picotm/picotm-tm.h>
-#include "delay.h"
 #include "ptr.h"
 #include "safe_stdlib.h"
 #include "test.h"
@@ -59,7 +58,7 @@ allocator_test_1(unsigned int tid)
             }
         }
 
-        delay_transaction(tid);
+        delay_transaction_tx(tid);
 
         for (char** ptr = mem; ptr < mem + arraylen(mem); ++ptr) {
             free_tm(*ptr);
@@ -103,7 +102,7 @@ allocator_test_2(unsigned int tid)
             }
         }
 
-        delay_transaction(tid);
+        delay_transaction_tx(tid);
 
         for (char** ptr = mem; ptr < mem + arraylen(mem); ++ptr) {
             free_tm(*ptr);
@@ -143,7 +142,7 @@ allocator_test_3(unsigned int tid)
             }
         }
 
-        delay_transaction(tid);
+        delay_transaction_tx(tid);
 
         for (size_t i = 0; i < arraylen(buf); ++i) {
             store_ptr_tx(buf + i, mem[i]);
@@ -186,7 +185,7 @@ allocator_test_4(unsigned int tid)
             mem[i] = 0;
         }
 
-        delay_transaction(tid);
+        delay_transaction_tx(tid);
 
         free_tm(mem);
 
@@ -234,7 +233,7 @@ allocator_test_5(unsigned int tid)
             mem[i] = 0;
         }
 
-        delay_transaction(tid);
+        delay_transaction_tx(tid);
 
         free_tm(mem);
 
@@ -274,7 +273,7 @@ allocator_test_6(unsigned int tid)
             mem[i] = 0;
         }
 
-        delay_transaction(tid);
+        delay_transaction_tx(tid);
 
         /* _Always_ store results in non-transactional variables
          * explicitly, even if the variable is thread-local or

@@ -32,7 +32,6 @@
 #include <picotm/unistd.h>
 #include <picotm/unistd-tm.h>
 #include <string.h>
-#include "delay.h"
 #include "ptr.h"
 #include "safeblk.h"
 #include "safe_stdio.h"
@@ -74,7 +73,7 @@ cwd_test_1(unsigned int tid)
             picotm_recover_from_error(&error);
         }
 
-        delay_transaction(tid);
+        delay_transaction_tx(tid);
 
     picotm_commit
 
@@ -103,7 +102,7 @@ cwd_test_2(unsigned int tid)
         privatize_c_tx(path, '\0', PICOTM_TM_PRIVATIZE_LOAD);
         chdir_tx(path);
 
-        delay_transaction(tid);
+        delay_transaction_tx(tid);
 
         for (int i = 0; i < 5; ++i) {
 
@@ -128,7 +127,7 @@ cwd_test_2(unsigned int tid)
                 picotm_recover_from_error(&error);
             }
 
-            delay_transaction(tid);
+            delay_transaction_tx(tid);
         }
 
     picotm_commit

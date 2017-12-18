@@ -38,17 +38,11 @@ check_PROGRAMS = allocator-pubapi \
                  cwd-pubapi \
                  fildes-pubapi
 
-allocator_pubapi_SOURCES = delay.c \
-                           delay.h \
-                           allocator_pubapi.c
+allocator_pubapi_SOURCES = allocator_pubapi.c
 
-cwd_pubapi_SOURCES = cwd_pubapi.c \
-                     delay.c \
-                     delay.h
+cwd_pubapi_SOURCES = cwd_pubapi.c
 
-fildes_pubapi_SOURCES = delay.c \
-                        delay.h \
-                        fildes_pubapi.c
+fildes_pubapi_SOURCES = fildes_pubapi.c
 
 AM_LDFLAGS = -static
 

@@ -39,7 +39,6 @@
 #include <picotm/picotm-module.h>
 #include <picotm/picotm-tm.h>
 #include <picotm/unistd.h>
-#include "delay.h"
 #include "ptr.h"
 #include "safe_fcntl.h"
 #include "safe_pthread.h"
@@ -210,7 +209,7 @@ fildes_test_1(unsigned int tid)
                              O_WRONLY | O_CREAT,
                              S_IRWXU | S_IRWXG | S_IRWXO);
 
-        delay_transaction(tid);
+        delay_transaction_tx(tid);
 
         close_tx(fildes);
 
@@ -251,7 +250,7 @@ fildes_test_2(unsigned int tid)
 
         write_tx(fildes, g_test_str, strlen_tm(g_test_str));
 
-        delay_transaction(tid);
+        delay_transaction_tx(tid);
 
         close_tx(fildes);
 
@@ -292,7 +291,7 @@ fildes_test_3(unsigned int tid)
         lseek_tx(fildes, 0, SEEK_SET);
         write_tx(fildes, g_test_str, strlen_tm(g_test_str));
 
-        /*delay_transaction(tid)*/
+        /*delay_transaction_tx(tid)*/
 
         close_tx(fildes);
 
@@ -334,7 +333,7 @@ fildes_test_4(unsigned int tid)
 
         pwrite_tx(fildes, g_test_str, strlen_tm(g_test_str), 2);
 
-        /*delay_transaction(tid)*/
+        /*delay_transaction_tx(tid)*/
 
         close_tx(fildes);
 
@@ -389,7 +388,7 @@ fildes_test_5(unsigned int tid)
         pread_tx(fildes, rbuf, sizeof(rbuf), 0);
         pwrite_tx(fildes, rbuf, sizeof(rbuf), 6);
 
-        delay_transaction(tid);
+        delay_transaction_tx(tid);
 
         close_tx(fildes);
 
@@ -933,7 +932,7 @@ fildes_test_15(unsigned int tid)
 
         int fildes2 = dup_tx(g_fildes);
 
-        delay_transaction(tid);
+        delay_transaction_tx(tid);
 
         close_tx(fildes2);
 
@@ -976,7 +975,7 @@ fildes_test_16(unsigned int tid)
 
         int fildes2 = dup_tx(fildes);
 
-        delay_transaction(tid);
+        delay_transaction_tx(tid);
 
         close_tx(fildes2);
         close_tx(fildes);
@@ -1962,7 +1961,7 @@ fildes_test_37(unsigned int tid)
                              O_WRONLY | O_CREAT | O_EXCL,
                              S_IRWXU | S_IRWXG | S_IRWXO);
 
-        delay_transaction(tid);
+        delay_transaction_tx(tid);
 
         close_tx(fildes);
 
