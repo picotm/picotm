@@ -237,7 +237,7 @@ PICOTM_EXPORT
 long double
 atanl_tx(long double x)
 {
-    MATHERR(long, res, atanl(x), FE_UNDERFLOW);
+    MATHERR(long double, res, atanl(x), FE_UNDERFLOW);
     return res;
 }
 #endif
