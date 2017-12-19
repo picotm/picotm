@@ -174,7 +174,7 @@ fpu_module_save_fexcept()
         struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
         fpu_tx_save_fexcept(fpu_tx, &error);
-        if (picotm_error_is_set(&error)) {
+        if (!picotm_error_is_set(&error)) {
             return;
         }
         picotm_recover_from_error(&error);
