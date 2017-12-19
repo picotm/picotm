@@ -22,6 +22,4 @@
 #
 # SPDX-License-Identifier: MIT
 
-SUBDIRS = include \
-          src \
-          tests
+SUBDIRS = pubapi
