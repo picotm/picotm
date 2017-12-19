@@ -193,6 +193,8 @@ AC_CONFIG_FILES([Makefile
                  modules/libm/Makefile
                  modules/libm/include/Makefile
                  modules/libm/src/Makefile
+                 modules/libm/tests/Makefile
+                 modules/libm/tests/pubapi/Makefile
                  modules/libpthread/Makefile
                  modules/libpthread/include/Makefile
                  modules/libpthread/src/Makefile
