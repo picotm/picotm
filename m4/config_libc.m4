@@ -52,7 +52,7 @@ AC_DEFUN([_CHECK_LIBC_MALLOC_H], [
         # System interfaces
         #
 
-        AC_CHECK_DECLS([malloc_usable_size],,,[[#include <malloc.h>]])
+        AC_CHECK_DECLS([malloc_usable_size],,, [[#include <malloc.h>]])
     fi
 ])
 
@@ -66,7 +66,7 @@ AC_DEFUN([_CHECK_LIBC_MALLOC_MALLOC_H], [
         # System interfaces
         #
 
-        AC_CHECK_DECLS([malloc_size],,,[[#include <malloc/malloc.h>]])
+        AC_CHECK_DECLS([malloc_size],,, [[#include <malloc/malloc.h>]])
     fi
 ])
 
@@ -80,7 +80,7 @@ AC_DEFUN([_CHECK_LIBC_MALLOC_NP_H], [
         # System interfaces
         #
 
-        AC_CHECK_DECLS([malloc_usable_size],,,[[#include <malloc_np.h>]])
+        AC_CHECK_DECLS([malloc_usable_size],,, [[#include <malloc_np.h>]])
     fi
 ])
 
@@ -388,7 +388,7 @@ AC_DEFUN([_CHECK_LIBC_UNISTD_H], [
         # System interfaces
         #
 
-        AC_CHECK_DECLS([get_current_dir_name],,,[[#include <unistd.h>]])
+        AC_CHECK_DECLS([get_current_dir_name],,, [[#include <unistd.h>]])
     fi
 ])
 
