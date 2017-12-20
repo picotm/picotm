@@ -28,8 +28,8 @@ AC_DEFUN([_CHECK_LIBPTHREAD_PTHREAD_H], [
         # Public interfaces
         #
 
-        _CHECK_MODULE_INTF([libpthread], [pthread_equal], [[#include <pthread.h>]])
-        _CHECK_MODULE_INTF([libpthread], [pthread_self],  [[#include <pthread.h>]])
+        _CHECK_MODULE_INTF([libpthread], [pthread_equal], [[@%:@include <pthread.h>]])
+        _CHECK_MODULE_INTF([libpthread], [pthread_self],  [[@%:@include <pthread.h>]])
     fi
 ])
 
