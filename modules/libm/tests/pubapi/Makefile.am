@@ -22,7 +22,9 @@
 #
 # SPDX-License-Identifier: MIT
 
-TESTS = math-pubapi-t1.test \
+TESTS = complex-pubapi-t1.test \
+        complex-pubapi-t4.test \
+        math-pubapi-t1.test \
         math-pubapi-t4.test
 
 EXTRA_DIST = $(TESTS)
@@ -30,7 +32,11 @@ EXTRA_DIST = $(TESTS)
 TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
                   $(top_srcdir)/build-aux/tap-driver.sh
 
-check_PROGRAMS = math-pubapi
+check_PROGRAMS = complex-pubapi \
+                 math-pubapi
+
+complex_pubapi_SOURCES = complex_pubapi.c \
+                         testmacro.h
 
 math_pubapi_SOURCES = math_pubapi.c \
                       testmacro.h
