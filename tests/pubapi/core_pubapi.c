@@ -39,23 +39,35 @@
 /* Test 1
  */
 
-static const char core_test_1_desc[] = "Test begin/commit/end combo.";
+static const char core_test_1_desc[] = "Test clean-up without transaction.";
 
 static void
 core_test_1(unsigned int tid)
+{
+    /* The caller runs the thread-local clean-up code in picotm_release(). */
+    return;
+}
+
+/* Test 2
+ */
+
+static const char core_test_2_desc[] = "Test begin/commit/end combo.";
+
+static void
+core_test_2(unsigned int tid)
 {
     picotm_begin
     picotm_commit
     picotm_end
 }
 
-/* Test 2
+/* Test 3
  */
 
-static const char core_test_2_desc[] = "Test error recovery without restart.";
+static const char core_test_3_desc[] = "Test error recovery without restart.";
 
 static void
-core_test_2(unsigned int tid)
+core_test_3(unsigned int tid)
 {
     picotm_safe bool performed_error_recovery = false;
 
@@ -78,13 +90,13 @@ core_test_2(unsigned int tid)
     }
 }
 
-/* Test 3
+/* Test 4
  */
 
-static const char core_test_3_desc[] = "Test error recovery with restart.";
+static const char core_test_4_desc[] = "Test error recovery with restart.";
 
 static void
-core_test_3(unsigned int tid)
+core_test_4(unsigned int tid)
 {
     picotm_safe bool performed_error_recovery = false;
     picotm_safe bool performed_restart = false;
@@ -122,7 +134,8 @@ core_test_3(unsigned int tid)
 static const struct test_func core_test[] = {
     {core_test_1_desc, core_test_1, NULL, NULL},
     {core_test_2_desc, core_test_2, NULL, NULL},
-    {core_test_3_desc, core_test_3, NULL, NULL}
+    {core_test_3_desc, core_test_3, NULL, NULL},
+    {core_test_4_desc, core_test_4, NULL, NULL}
 };
 
 /*
