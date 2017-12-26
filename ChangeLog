@@ -1,4 +1,27 @@
 
+picotm 0.9.0 (2017-12-26)
+------------
+
+    * Added support for MacOS X, Windows and FreeBSD. Picotm now supports
+      MacOS X and FreeBSD natively. Windows is supported through the Cygwin
+      compatibility layer.
+
+    * Added feature-test macros. Presence of transactional interfaces for
+      system libraries is now announce at build time by C pre-processor macros.
+      Test for PICOTM_<module>_HAVE_<interface> to be defined to 1.
+
+    * Added test cases for math functions. All functions in the libm module
+      now have at least one test case.
+
+    * Bug fix: Don't free alloca()-allocated memory. (#173)
+
+    * Bug fix: Decode 'mode_t' as int when used in varargs. (#182)
+
+    * Bug fix: Don't roll-back twice during recovery. (#208)
+
+    * Bug fix: Don't roll-back when saving FPU exception flags. (#212)
+
+
 picotm 0.8.0 (2017-11-27)
 ------------
 
