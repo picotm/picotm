@@ -26,7 +26,7 @@ EXTRA_DIST = Doxyfile-html \
              Doxyfile.in
 
 DOXYGEN_FLAGS ?=
-OPTIPNG_FLAGS ?= -silent -o7
+OPTIPNG_FLAGS ?= -silent -o0
 
 html-local: doxygen-html-optimized
 

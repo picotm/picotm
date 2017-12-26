@@ -129,5 +129,5 @@ script:
     - ( tools/bootstrap.sh &&
         ./configure &&
         make &&
-        OPTIPNG_FLAGS="-silent -o0" make html &&
+        make html &&
         ( [ -n "${SKIP_MAKE_CHECK}" ] || ( make -j1 check ) ) )
