@@ -23,8 +23,7 @@
 # SPDX-License-Identifier: MIT
 
 EXTRA_DIST = Doxyfile-html \
-             Doxyfile.in \
-             html
+             Doxyfile.in
 
 DOXYGEN_FLAGS ?=
 OPTIPNG_FLAGS ?= -silent -o7
