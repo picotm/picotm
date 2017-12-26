@@ -45,12 +45,14 @@ my $opt_release_abi_updated = undef;
 my $opt_package = 1;
 my $release_type = undef;
 my $opt_tag = 1;
+my $opt_username = undef;
 
 GetOptions('release-abi-updated!' => \$opt_release_abi_updated, # flag
            'package!'             => \$opt_package,  # flag
            'release-type=s'       => \$release_type, # string: 'major', 'minor',
-                                                    #         'micro'
-           'tag!'                 => \$opt_tag)      # flag
+                                                     #         'micro'
+           'tag!'                 => \$opt_tag,      # flag
+           'username=s'           => \$opt_username) # string: 'GPG user name'
     or die;
 
 die('Set --release-abi-updated if you updated the ABI version')
@@ -400,6 +402,29 @@ sub tagRelease
     system("git tag --sign -m \"$package_string\" v$major.$minor.$micro") == 0 or die;
 }
 
+# Returns the user's email address
+#
+sub getUserEmail
+{
+    my ($user_email, @tail) = split(/\n/, `git config --get user.email`);
+
+    return $user_email;
+}
+
+
+#########################################################################
+#                                                                       #
+#   Signatures and Checksums                                            #
+#                                                                       #
+#########################################################################
+
+sub signFile
+{
+    my ($filename, $username) = @_;
+
+    system("gpg --output $filename.sig --local-user $username --detach-sig $filename") == 0 or die;
+}
+
 
 #########################################################################
 #                                                                       #
@@ -469,6 +494,8 @@ sub createSourcePackage
     my ($filename) = executeInDir($execute, $absbuilddir, $package_name, $configure);
 
     copy("$absbuilddir/$filename", "./$filename");
+
+    return $filename;
 }
 
 sub createDocPackage
@@ -498,7 +525,7 @@ sub createDocPackage
 
 sub createPackages {
 
-    my ($package, $major, $minor, $micro) = @_;
+    my ($package, $major, $minor, $micro, $username) = @_;
 
     my $builddir = tempdir();
     my $installdir = tempdir();
@@ -506,7 +533,11 @@ sub createPackages {
     say "builddir: $builddir";
     say "installdir: $installdir";
 
-    createSourcePackage("$package-$major.$minor.$micro", './', "$builddir", $installdir);
+    my $filename = createSourcePackage("$package-$major.$minor.$micro",
+                                       './',
+                                       "$builddir",
+                                       $installdir);
+    signFile($filename, $username);
 
     createDocPackage("$package-doc-$major.$minor.$micro", './', "$builddir", $installdir);
 }
@@ -559,7 +590,9 @@ commitChanges($new_package_string);
 # Perform build and tests
 #
 
-createPackages($package, $new_major, $new_minor, $new_micro) unless $opt_package eq 0;
+$opt_username = getUserEmail() unless defined $opt_username;
+
+createPackages($package, $new_major, $new_minor, $new_micro, $opt_username) unless $opt_package eq 0;
 
 # Tag release
 #
