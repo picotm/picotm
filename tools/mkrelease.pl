@@ -471,6 +471,31 @@ sub createSourcePackage
     copy("$absbuilddir/$filename", "./$filename");
 }
 
+sub createDocPackage
+{
+    my $execute = sub {
+
+        my ($package_name) = @_;
+
+        system('OPTIPNG_FLAGS="-silent -o7 -zm1-9" make html') == 0 or die;
+        system("mv doc/html $package_name") == 0 or die;
+        system("tar -cf $package_name.tar $package_name/") == 0 or die;
+        system("gzip -9 $package_name.tar") == 0 or die;
+
+        return ("$package_name.tar.gz");
+    };
+
+    my ($package_name, $srcdir, $builddir, $installdir) = @_;
+
+    my $abssrcdir = File::Spec->rel2abs($srcdir);
+    my $absbuilddir = File::Spec->rel2abs($builddir);
+    my $absinstalldir = File::Spec->rel2abs($installdir);
+
+    my ($filename) = executeInDir($execute, $absbuilddir, $package_name);
+
+    copy("$absbuilddir/$filename", "./$filename");
+}
+
 sub createPackages {
 
     my ($package, $major, $minor, $micro) = @_;
@@ -482,6 +507,8 @@ sub createPackages {
     say "installdir: $installdir";
 
     createSourcePackage("$package-$major.$minor.$micro", './', "$builddir", $installdir);
+
+    createDocPackage("$package-doc-$major.$minor.$micro", './', "$builddir", $installdir);
 }
 
 
