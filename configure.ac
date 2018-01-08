@@ -1,6 +1,6 @@
 dnl
 dnl MIT License
-dnl Copyright (c) 2017  Thomas Zimmermann <tdz@users.sourceforge.net>
+dnl Copyright (c) 2017-2018 Thomas Zimmermann <tdz@users.sourceforge.net>
 dnl
 dnl Permission is hereby granted, free of charge, to any person obtaining a
 dnl copy of this software and associated documentation files (the "Software"),
@@ -44,13 +44,10 @@ dnl
 
 AC_USE_SYSTEM_EXTENSIONS
 AC_CANONICAL_HOST
-case $host_os in
-*darwin* ) AC_DEFINE([_DARWIN_C_SOURCE],
-                     [1],
-                     [Enable extensions on Darwin.]) ;;
-       * ) ;;
-esac
-
+AS_CASE([$host_os],
+        [*darwin*], [AC_DEFINE([_DARWIN_C_SOURCE],
+                               [1],
+                               [Enable extensions on Darwin.])])
 AC_PROG_CC
 
 AX_PTHREAD
