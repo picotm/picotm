@@ -51,29 +51,30 @@ AS_CASE([$host_os],
 AC_PROG_CC
 
 AX_PTHREAD
-CC="$PTHREAD_CC"
-CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
-LDFLAGS="$LDFLAGS $PTHREAD_LDFLAGS"
-LIBS="$PTHREAD_LIBS $LIBS"
+AS_VAR_SET([CC], ["$PTHREAD_CC"])
+AS_VAR_APPEND([CFLAGS], [" $PTHREAD_CFLAGS"])
+AS_VAR_APPEND([LDFLAGS], [" $PTHREAD_LDFLAGS"])
+AS_VAR_SET([LIBS], ["$PTHREAD_LIBS $LIBS"])
 
 dnl Request C11
-AX_CHECK_COMPILE_FLAG([-std=c11], [CFLAGS="$CFLAGS -std=c11"])
+AX_CHECK_COMPILE_FLAG([-std=c11],
+                      [AS_VAR_APPEND([CFLAGS], [" -std=c11"])])
 
 dnl By default, all symbols are hidden. Public symbols have to
 dnl exported explicitly.
 AX_CHECK_COMPILE_FLAG([-fvisibility=hidden],
-                      [CFLAGS="$CFLAGS -fvisibility=hidden"])
+                      [AS_VAR_APPEND([CFLAGS], [" -fvisibility=hidden"])])
 
 dnl Garbage-collect unused functions and data. This is mostly
 dnl useful for reducing the size of statically linked binaries.
 AX_CHECK_LINK_FLAG([-Wl,--gc-sections],
-                   [LDFLAGS="$LDFLAGS -Wl,--gc-sections"]
+                   [AS_VAR_APPEND([LDFLAGS], [" -Wl,--gc-sections"])]
                    [AX_CHECK_COMPILE_FLAG(
                         [-ffunction-sections],
-                        [CFLAGS="$CFLAGS -ffunction-sections"])]
+                        [AS_VAR_APPEND([CFLAGS], [" -ffunction-sections"])])]
                    [AX_CHECK_COMPILE_FLAG(
                         [-fdata-sections],
-                        [CFLAGS="$CFLAGS -fdata-sections"])])
+                        [AS_VAR_APPEND([CFLAGS], [" -fdata-sections"])])])
 
 
 dnl
