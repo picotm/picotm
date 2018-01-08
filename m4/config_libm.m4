@@ -299,13 +299,15 @@ AC_DEFUN([_CHECK_LIBM_MATH_H], [
 ])
 
 AC_DEFUN([CONFIG_LIBM], [
-    have_libm="no"
+    AS_VAR_SET([have_libm], [no])
     AC_CHECK_LIB([m], [signgam])
-    AS_VAR_IF([ac_cv_lib_m_signgam], [yes], [have_libm="yes"])
+    AS_VAR_IF([ac_cv_lib_m_signgam], [yes],
+              [AS_VAR_SET([have_libm], [yes])])
     # On Cygnus and other systems, signgam is provided by a
     # reentrant function.
     AC_CHECK_LIB([m], [__signgam])
-    AS_VAR_IF([ac_cv_lib_m___signgam], [yes], [have_libm="yes"])
+    AS_VAR_IF([ac_cv_lib_m___signgam], [yes],
+              [AS_VAR_SET([have_libm], [yes])])
     AS_VAR_IF([have_libm], [yes], [
         _CHECK_LIBM_COMPLEX_H
         _CHECK_LIBM_MATH_H
