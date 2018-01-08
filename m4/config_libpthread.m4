@@ -5,7 +5,7 @@
 #
 # LICENSE
 #
-#   Copyright (c) 2017 Thomas Zimmermann <tdz@users.sourceforge.net>
+#   Copyright (c) 2017-2018 Thomas Zimmermann <tdz@users.sourceforge.net>
 #
 #   Copying and distribution of this file, with or without modification,
 #   are permitted in any medium without royalty provided the copyright
@@ -13,10 +13,8 @@
 #   without any warranty.
 
 AC_DEFUN([_CHECK_LIBPTHREAD_PTHREAD_H], [
-
     AC_CHECK_HEADERS([pthread.h])
-
-    if test "x$ac_cv_header_pthread_h" != "xno"; then
+    AS_VAR_IF([ac_cv_header_pthread_h], [yes], [
 
         #
         # Types
@@ -30,12 +28,12 @@ AC_DEFUN([_CHECK_LIBPTHREAD_PTHREAD_H], [
 
         _CHECK_MODULE_INTF([libpthread], [pthread_equal], [[@%:@include <pthread.h>]])
         _CHECK_MODULE_INTF([libpthread], [pthread_self],  [[@%:@include <pthread.h>]])
-    fi
+    ])
 ])
 
 AC_DEFUN([CONFIG_LIBPTHREAD], [
     AC_REQUIRE([AX_PTHREAD])
-    if test "x$ax_pthread_ok" != "xno"; then
+    AS_VAR_IF([ax_pthread_ok], [yes], [
         _CHECK_LIBPTHREAD_PTHREAD_H
-    fi
+    ])
 ])

@@ -5,7 +5,7 @@
 #
 # LICENSE
 #
-#   Copyright (c) 2017 Thomas Zimmermann <tdz@users.sourceforge.net>
+#   Copyright (c) 2017-2018 Thomas Zimmermann <tdz@users.sourceforge.net>
 #
 #   Copying and distribution of this file, with or without modification,
 #   are permitted in any medium without royalty provided the copyright
@@ -13,10 +13,8 @@
 #   without any warranty.
 
 AC_DEFUN([_CHECK_LIBM_COMPLEX_H], [
-
     AC_CHECK_HEADERS([complex.h])
-
-    if test "x$ac_cv_header_complex_h" != "xno"; then
+    AS_VAR_IF([ac_cv_header_complex_h], [yes], [
 
         #
         # Types
@@ -102,14 +100,12 @@ AC_DEFUN([_CHECK_LIBM_COMPLEX_H], [
         _CHECK_MODULE_INTF([libm], [ctanhf],  [[@%:@include <complex.h>]])
         _CHECK_MODULE_INTF([libm], [ctanhl],  [[@%:@include <complex.h>]])
         _CHECK_MODULE_INTF([libm], [ctanl],   [[@%:@include <complex.h>]])
-    fi
+    ])
 ])
 
 AC_DEFUN([_CHECK_LIBM_MATH_H], [
-
     AC_CHECK_HEADERS([math.h])
-
-    if test "x$ac_cv_header_math_h" != "xno"; then
+    AS_VAR_IF([ac_cv_header_math_h], [yes], [
 
         #
         # Types
@@ -299,23 +295,19 @@ AC_DEFUN([_CHECK_LIBM_MATH_H], [
         _CHECK_MODULE_INTF([libm], [y0],          [[@%:@include <math.h>]])
         _CHECK_MODULE_INTF([libm], [y1],          [[@%:@include <math.h>]])
         _CHECK_MODULE_INTF([libm], [yn],          [[@%:@include <math.h>]])
-    fi
+    ])
 ])
 
 AC_DEFUN([CONFIG_LIBM], [
     have_libm="no"
     AC_CHECK_LIB([m], [signgam])
-    if test "x$ac_cv_lib_m_signgam" != "xno"; then
-        have_libm="yes"
-    fi
+    AS_VAR_IF([ac_cv_lib_m_signgam], [yes], [have_libm="yes"])
     # On Cygnus and other systems, signgam is provided by a
     # reentrant function.
     AC_CHECK_LIB([m], [__signgam])
-    if test "x$ac_cv_lib_m___signgam" != "xno"; then
-        have_libm="yes"
-    fi
-    if test "x$have_libm" != "xno"; then
+    AS_VAR_IF([ac_cv_lib_m___signgam], [yes], [have_libm="yes"])
+    AS_VAR_IF([have_libm], [yes], [
         _CHECK_LIBM_COMPLEX_H
         _CHECK_LIBM_MATH_H
-    fi
+    ])
 ])
