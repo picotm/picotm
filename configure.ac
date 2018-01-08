@@ -154,7 +154,7 @@ dnl Documentation
 dnl
 
 AC_PATH_PROG([DOXYGEN], [doxygen])
-AM_CONDITIONAL([HAVE_DOXYGEN], [test x$DOXYGEN != x])
+AM_CONDITIONAL([HAVE_DOXYGEN], [test "x$DOXYGEN" != "x"])
 
 AC_PATH_PROG([DOT], [dot])
 AS_VAR_IF([ac_cv_path_DOT], [],
@@ -163,10 +163,10 @@ AS_VAR_IF([ac_cv_path_DOT], [],
 AC_SUBST([DOXYGEN_HAVE_DOT], [$doxygen_have_dot])
 
 AC_PATH_PROG([FIND], [find])
-AM_CONDITIONAL([HAVE_FIND], [test x$FIND != x])
+AM_CONDITIONAL([HAVE_FIND], [test "x$FIND" != "x"])
 
 AC_PATH_PROG([OPTIPNG], [optipng])
-AM_CONDITIONAL([HAVE_OPTIPNG], [test x$OPTIPNG != x])
+AM_CONDITIONAL([HAVE_OPTIPNG], [test "x$OPTIPNG" != "x"])
 
 
 dnl
