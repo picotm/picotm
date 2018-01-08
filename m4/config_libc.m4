@@ -13,24 +13,20 @@
 #   without any warranty.
 
 AC_DEFUN([_CHECK_LIBC_ERRNO_H], [
-
     AC_CHECK_HEADERS([errno.h])
-
-    if test "x$ac_cv_header_errno_h" != "xno"; then
+    AS_VAR_IF([ac_cv_header_errno_h], [yes], [
 
         #
         # Public interfaces
         #
 
         _CHECK_MODULE_INTF([libc], [errno], [[@%:@include <errno.h>]])
-    fi
+    ])
 ])
 
 AC_DEFUN([_CHECK_LIBC_FCNTL_H], [
-
     AC_CHECK_HEADERS([fcntl.h])
-
-    if test "x$ac_cv_header_fcntl_h" != "xno"; then
+    AS_VAR_IF([ac_cv_header_fcntl_h], [yes], [
 
         #
         # Public interfaces
@@ -39,84 +35,72 @@ AC_DEFUN([_CHECK_LIBC_FCNTL_H], [
         _CHECK_MODULE_INTF([libc], [creat], [[@%:@include <fcntl.h>]])
         _CHECK_MODULE_INTF([libc], [fcntl], [[@%:@include <fcntl.h>]])
         _CHECK_MODULE_INTF([libc], [open],  [[@%:@include <fcntl.h>]])
-    fi
+    ])
 ])
 
 AC_DEFUN([_CHECK_LIBC_MALLOC_H], [
-
     AC_CHECK_HEADERS([malloc.h])
-
-    if test "x$ac_cv_header_malloc_h" != "xno"; then
+    AS_VAR_IF([ac_cv_header_malloc_h], [yes], [
 
         #
         # System interfaces
         #
 
         AC_CHECK_DECLS([malloc_usable_size],,, [[@%:@include <malloc.h>]])
-    fi
+    ])
 ])
 
 AC_DEFUN([_CHECK_LIBC_MALLOC_MALLOC_H], [
-
     AC_CHECK_HEADERS([malloc/malloc.h])
-
-    if test "x$ac_cv_header_malloc_malloc_h" != "xno"; then
+    AS_VAR_IF([ac_cv_header_malloc_malloc_h], [yes], [
 
         #
         # System interfaces
         #
 
         AC_CHECK_DECLS([malloc_size],,, [[@%:@include <malloc/malloc.h>]])
-    fi
+    ])
 ])
 
 AC_DEFUN([_CHECK_LIBC_MALLOC_NP_H], [
-
     AC_CHECK_HEADERS([malloc_np.h])
-
-    if test "x$ac_cv_header_malloc_np_h" != "xno"; then
+    AS_VAR_IF([ac_cv_header_malloc_np_h], [yes], [
 
         #
         # System interfaces
         #
 
         AC_CHECK_DECLS([malloc_usable_size],,, [[@%:@include <malloc_np.h>]])
-    fi
+    ])
 ])
 
 AC_DEFUN([_CHECK_LIBC_SCHED_H], [
-
     AC_CHECK_HEADERS([sched.h])
-
-    if test "x$ac_cv_header_sched_h" != "xno"; then
+    AS_VAR_IF([ac_cv_header_sched_h], [yes], [
 
         #
         # Public interfaces
         #
 
         _CHECK_MODULE_INTF([libc], [sched_yield], [[@%:@include <sched.h>]])
-    fi
+    ])
 ])
 
 AC_DEFUN([_CHECK_LIBC_STDBOOL_H], [
-
     AC_CHECK_HEADERS([stdbool.h])
-
-    if test "x$ac_cv_header_stdbool_h" != "xno"; then
+    AS_VAR_IF([ac_cv_header_stdbool_h], [yes], [
 
         #
         # Types
         #
 
         _CHECK_MODULE_TYPE([libc], [bool], [[@%:@include <stdbool.h>]])
-    fi
+    ])
 ])
 
 AC_DEFUN([_CHECK_LIBC_STDDEF_H], [
-
     AC_CHECK_HEADERS([stddef.h])
-
-    if test "x$ac_cv_header_stddef_h" != "xno"; then
+    AS_VAR_IF([ac_cv_header_stddef_h], [yes], [
 
         #
         # Types
@@ -125,14 +109,12 @@ AC_DEFUN([_CHECK_LIBC_STDDEF_H], [
         _CHECK_MODULE_TYPE([libc], [ptrdiff_t], [[@%:@include <stddef.h>]])
         _CHECK_MODULE_TYPE([libc], [size_t],    [[@%:@include <stddef.h>]])
         _CHECK_MODULE_TYPE([libc], [wchar_t],   [[@%:@include <stddef.h>]])
-    fi
+    ])
 ])
 
 AC_DEFUN([_CHECK_LIBC_STDINT_H], [
-
     AC_CHECK_HEADERS([stdint.h])
-
-    if test "x$ac_cv_header_stdint_h" != "xno"; then
+    AS_VAR_IF([ac_cv_header_stdint_h], [yes], [
 
         #
         # Types
@@ -166,14 +148,12 @@ AC_DEFUN([_CHECK_LIBC_STDINT_H], [
         _CHECK_MODULE_TYPE([libc], [uint64_t],       [[@%:@include <stdint.h>]])
         _CHECK_MODULE_TYPE([libc], [uintmax_t],      [[@%:@include <stdint.h>]])
         _CHECK_MODULE_TYPE([libc], [uintptr_t],      [[@%:@include <stdint.h>]])
-    fi
+    ])
 ])
 
 AC_DEFUN([_CHECK_LIBC_STDIO_H], [
-
     AC_CHECK_HEADERS([stdio.h])
-
-    if test "x$ac_cv_header_stdio_h" != "xno"; then
+    AS_VAR_IF([ac_cv_header_stdio_h], [yes], [
 
         #
         # Public interfaces
@@ -183,14 +163,12 @@ AC_DEFUN([_CHECK_LIBC_STDIO_H], [
         _CHECK_MODULE_INTF([libc], [sscanf],    [[@%:@include <stdio.h>]])
         _CHECK_MODULE_INTF([libc], [vsnprintf], [[@%:@include <stdio.h>]])
         _CHECK_MODULE_INTF([libc], [vsscanf],   [[@%:@include <stdio.h>]])
-    fi
+    ])
 ])
 
 AC_DEFUN([_CHECK_LIBC_STDLIB_H], [
-
     AC_CHECK_HEADERS([stdlib.h])
-
-    if test "x$ac_cv_header_stdlib_h" != "xno"; then
+    AS_VAR_IF([ac_cv_header_stdlib_h], [yes], [
 
         #
         # Types
@@ -227,14 +205,12 @@ AC_DEFUN([_CHECK_LIBC_STDLIB_H], [
         #
 
         AC_CHECK_FUNCS([posix_memalign],,, [[@%:@include <stdlib.h>]])
-    fi
+    ])
 ])
 
 AC_DEFUN([_CHECK_LIBC_STRING_H], [
-
     AC_CHECK_HEADERS([string.h])
-
-    if test "x$ac_cv_header_string_h" != "xno"; then
+    AS_VAR_IF([ac_cv_header_string_h], [yes], [
 
         #
         # Public interfaces
@@ -269,14 +245,12 @@ AC_DEFUN([_CHECK_LIBC_STRING_H], [
         _CHECK_MODULE_INTF([libc], [strspn],     [[@%:@include <string.h>]])
         _CHECK_MODULE_INTF([libc], [strstr],     [[@%:@include <string.h>]])
         _CHECK_MODULE_INTF([libc], [strtok_r],   [[@%:@include <string.h>]])
-    fi
+    ])
 ])
 
 AC_DEFUN([_CHECK_LIBC_SYS_SOCKET_H], [
-
     AC_CHECK_HEADERS([sys/socket.h])
-
-    if test "x$ac_cv_header_sys_socket_h" != "xno"; then
+    AS_VAR_IF([ac_cv_header_sys_socket_h], [yes], [
 
         #
         # Public interfaces
@@ -290,14 +264,12 @@ AC_DEFUN([_CHECK_LIBC_SYS_SOCKET_H], [
         _CHECK_MODULE_INTF([libc], [send],     [[@%:@include <sys/socket.h>]])
         _CHECK_MODULE_INTF([libc], [shutdown], [[@%:@include <sys/socket.h>]])
         _CHECK_MODULE_INTF([libc], [socket],   [[@%:@include <sys/socket.h>]])
-    fi
+    ])
 ])
 
 AC_DEFUN([_CHECK_LIBC_SYS_STAT_H], [
-
     AC_CHECK_HEADERS([sys/stat.h])
-
-    if test "x$ac_cv_header_sys_stat_h" != "xno"; then
+    AS_VAR_IF([ac_cv_header_sys_stat_h], [yes], [
 
         #
         # Public interfaces
@@ -311,14 +283,12 @@ AC_DEFUN([_CHECK_LIBC_SYS_STAT_H], [
         _CHECK_MODULE_INTF([libc], [mkfifo], [[@%:@include <sys/stat.h>]])
         _CHECK_MODULE_INTF([libc], [mknod],  [[@%:@include <sys/stat.h>]])
         _CHECK_MODULE_INTF([libc], [stat],   [[@%:@include <sys/stat.h>]])
-    fi
+    ])
 ])
 
 AC_DEFUN([_CHECK_LIBC_SYS_TYPES_H], [
-
     AC_CHECK_HEADERS([sys/types.h])
-
-    if test "x$ac_cv_header_sys_types_h" != "xno"; then
+    AS_VAR_IF([ac_cv_header_sys_types_h], [yes], [
 
         #
         # Types
@@ -344,14 +314,12 @@ AC_DEFUN([_CHECK_LIBC_SYS_TYPES_H], [
         _CHECK_MODULE_TYPE([libc], [time_t],      [[@%:@include <sys/types.h>]])
         _CHECK_MODULE_TYPE([libc], [timer_t],     [[@%:@include <sys/types.h>]])
         _CHECK_MODULE_TYPE([libc], [uid_t],       [[@%:@include <sys/types.h>]])
-    fi
+    ])
 ])
 
 AC_DEFUN([_CHECK_LIBC_UNISTD_H], [
-
     AC_CHECK_HEADERS([unistd.h])
-
-    if test "x$ac_cv_header_unistd_h" != "xno"; then
+    AS_VAR_IF([ac_cv_header_unistd_h], [yes], [
 
         #
         # Public interfaces
@@ -385,12 +353,12 @@ AC_DEFUN([_CHECK_LIBC_UNISTD_H], [
         #
 
         AC_CHECK_DECLS([get_current_dir_name],,, [[@%:@include <unistd.h>]])
-    fi
+    ])
 ])
 
 AC_DEFUN([CONFIG_LIBC], [
     AC_CHECK_LIB([c], [longjmp])
-    if test "x$ac_cv_lib_c_longjmp" != "xno"; then
+    AS_VAR_IF([ac_cv_lib_c_longjmp], [yes], [
 
         #
         # libc compile-time constants
@@ -419,5 +387,5 @@ AC_DEFUN([CONFIG_LIBC], [
         _CHECK_LIBC_SYS_STAT_H
         _CHECK_LIBC_SYS_TYPES_H
         _CHECK_LIBC_UNISTD_H
-    fi
+    ])
 ])

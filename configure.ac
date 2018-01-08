@@ -156,11 +156,9 @@ AC_PATH_PROG([DOXYGEN], [doxygen])
 AM_CONDITIONAL([HAVE_DOXYGEN], [test x$DOXYGEN != x])
 
 AC_PATH_PROG([DOT], [dot])
-if test "x$ac_cv_path_DOT" = "x"; then
-    doxygen_have_dot="NO"
-else
-    doxygen_have_dot="YES"
-fi
+AS_VAR_IF([ac_cv_path_DOT], [],
+          [doxygen_have_dot="NO"],
+          [doxygen_have_dot="YES"])
 AC_SUBST([DOXYGEN_HAVE_DOT], [$doxygen_have_dot])
 
 AC_PATH_PROG([FIND], [find])
