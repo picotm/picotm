@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -35,6 +35,10 @@
 
 #ifndef PICOTM_LIBC_HAVE_TYPE_BLKSIZE_T
 #undef PICOTM_LIBC_HAVE_TYPE_BLKSIZE_T
+#endif
+
+#ifndef PICOTM_LIBC_HAVE_TYPE_BOOL
+#undef PICOTM_LIBC_HAVE_TYPE_BOOL
 #endif
 
 #ifndef PICOTM_LIBC_HAVE_TYPE_CLOCK_T
