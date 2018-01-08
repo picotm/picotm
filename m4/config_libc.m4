@@ -5,7 +5,7 @@
 #
 # LICENSE
 #
-#   Copyright (c) 2017 Thomas Zimmermann <tdz@users.sourceforge.net>
+#   Copyright (c) 2017-2018 Thomas Zimmermann <tdz@users.sourceforge.net>
 #
 #   Copying and distribution of this file, with or without modification,
 #   are permitted in any medium without royalty provided the copyright
@@ -394,7 +394,7 @@ AC_DEFUN([_CHECK_LIBC_UNISTD_H], [
 
 AC_DEFUN([CONFIG_LIBC], [
     AC_CHECK_LIB([c], [longjmp])
-    if test "x$ac_cv_lib_c_memcpy" != "xno"; then
+    if test "x$ac_cv_lib_c_longjmp" != "xno"; then
 
         #
         # libc compile-time constants
