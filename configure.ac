@@ -85,15 +85,15 @@ dnl
 
 AM_PROG_AR
 
-dnl Building DLLs on Windows is currently not supported. A DLL
-dnl has to resolve all its dependencies at link time, but the
-dnl internal dependencies cannot be resolved as the picotm DLLs
-dnl don't exist until installation. DLLs are therefore currently
-dnl disabled.
-case $host_os in
-*cygwin* ) AC_DISABLE_SHARED ;;
-       * ) ;;
-esac
+dnl 1) All options to LT_INIT are evaluated statically by autoconf
+dnl    when it generates the configure script. So none can depend on
+dnl    run-time parameters. Same is true for libtool's AC_ macros.
+dnl
+dnl 2) Building shared DLLs on Windows is currently not supported. A
+dnl    shared DLL has to resolve all its dependencies at link time, but
+dnl    the internal dependencies cannot be resolved as DLLs of picotm
+dnl    do not exist until installation. Libtool will warn during the
+dnl    link process and disabled shared DLLs automatically.
 LT_INIT([win32-dll])
 
 
