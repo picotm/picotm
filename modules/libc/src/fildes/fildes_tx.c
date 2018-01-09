@@ -41,9 +41,9 @@
 #include "cwd/module.h"
 #include "dir.h"
 #include "dirtab.h"
-#include "fd.h"
 #include "fifo.h"
 #include "fifotab.h"
+#include "fildes_log.h"
 #include "ofdtab.h"
 #include "openop.h"
 #include "openoptab.h"
@@ -55,36 +55,12 @@
 #include "socket.h"
 #include "sockettab.h"
 
-enum fildes_tx_cmd {
-    CMD_ACCEPT,
-    CMD_BIND,
-    CMD_CLOSE,
-    CMD_CONNECT,
-    CMD_DUP,
-    CMD_FCHMOD,
-    CMD_FCNTL,
-    CMD_FSTAT,
-    CMD_FSYNC,
-    CMD_LISTEN,
-    CMD_LSEEK,
-    CMD_MKSTEMP,
-    CMD_OPEN,
-    CMD_PIPE,
-    CMD_PREAD,
-    CMD_PWRITE,
-    CMD_READ,
-    CMD_RECV,
-    CMD_SEND,
-    CMD_SHUTDOWN,
-    CMD_SOCKET,
-    CMD_SYNC,
-    CMD_WRITE
-};
-
 void
-fildes_tx_init(struct fildes_tx* self, unsigned long module)
+fildes_tx_init(struct fildes_tx* self, struct fildes_log* log)
 {
-    self->module = module;
+    assert(self);
+
+    self->log = log;
 
     fdtab_tx_init(&self->fdtab_tx);
 
@@ -103,10 +79,6 @@ fildes_tx_init(struct fildes_tx* self, unsigned long module)
     self->ofd_tx_max_index = 0;
 
     SLIST_INIT(&self->ofd_tx_active_list);
-
-    self->eventtab = NULL;
-    self->eventtablen = 0;
-    self->eventtabsiz = 0;
 
     self->openoptab = NULL;
     self->openoptablen = 0;
@@ -178,8 +150,6 @@ fildes_tx_uninit(struct fildes_tx* self)
 
     pipeoptab_clear(&self->pipeoptab, &self->pipeoptablen);
     openoptab_clear(&self->openoptab, &self->openoptablen);
-
-    free(self->eventtab);
 }
 
 static struct chrdev_tx*
@@ -691,37 +661,6 @@ add_dup_fd_tx_with_ref(struct fildes_tx* self, int fildes, int old_fildes,
     return find_fd_tx_with_ref(self, fildes, old_fildes, false, error);
 }
 
-static int
-append_cmd(struct fildes_tx* self, enum fildes_tx_cmd cmd, int fildes,
-           int cookie, struct picotm_error* error)
-{
-    if (__builtin_expect(self->eventtablen >= self->eventtabsiz, 0)) {
-
-        void* tmp = picotm_tabresize(self->eventtab,
-                                     self->eventtabsiz,
-                                     self->eventtabsiz + 1,
-                                     sizeof(self->eventtab[0]), error);
-        if (picotm_error_is_set(error)) {
-            return -1;
-        }
-        self->eventtab = tmp;
-
-        ++self->eventtabsiz;
-    }
-
-    struct fd_event* event = self->eventtab + self->eventtablen;
-
-    event->fildes = fildes;
-    event->cookie = cookie;
-
-    picotm_append_event(self->module, cmd, self->eventtablen, error);
-    if (picotm_error_is_set(error)) {
-        return -1;
-    }
-
-    return (int)self->eventtablen++;
-}
-
 /* For each file descriptor, Linux puts a symlink in /proc/self/fd/. The
  * link refers to the actual file. This function isn't portable, as other
  * Unix systems might use different techniques.
@@ -899,7 +838,7 @@ fildes_tx_exec_accept(struct fildes_tx* self, int sockfd,
     }
 
     /* Inject event */
-    append_cmd(self, CMD_ACCEPT, connfd, cookie, error);
+    fildes_log_append(self->log, FILDES_OP_ACCEPT, connfd, cookie, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -980,7 +919,7 @@ fildes_tx_exec_bind(struct fildes_tx* self, int socket,
 
     /* Inject event */
     if (cookie >= 0) {
-        append_cmd(self, CMD_BIND, socket, cookie, error);
+        fildes_log_append(self->log, FILDES_OP_BIND, socket, cookie, error);
         if (picotm_error_is_set(error)) {
             return -1;
         }
@@ -1083,7 +1022,7 @@ fildes_tx_exec_close(struct fildes_tx* self, int fildes, int isnoundo,
 
     /* Inject event */
     if (cookie >= 0) {
-        append_cmd(self, CMD_CLOSE, fildes, cookie, error);
+        fildes_log_append(self->log, FILDES_OP_CLOSE, fildes, cookie, error);
         if (picotm_error_is_set(error)) {
             return -1;
         }
@@ -1154,7 +1093,7 @@ fildes_tx_exec_connect(struct fildes_tx* self, int sockfd,
 
     /* Inject event */
     if (cookie >= 0) {
-        append_cmd(self, CMD_CONNECT, sockfd, cookie, error);
+        fildes_log_append(self->log, FILDES_OP_CONNECT, sockfd, cookie, error);
         if (picotm_error_is_set(error)) {
             return -1;
         }
@@ -1239,14 +1178,14 @@ fildes_tx_exec_dup(struct fildes_tx* self, int fildes, int cloexec,
     }
 
     /* Inject event */
-    append_cmd(self, CMD_DUP, new_fildes, cookie, error);
+    fildes_log_append(self->log, FILDES_OP_DUP, new_fildes, cookie, error);
     if (picotm_error_is_set(error)) {
-        goto err_append_cmd;
+        goto err_fildes_log_append;
     }
 
     return new_fildes;
 
-err_append_cmd:
+err_fildes_log_append:
 err_add_dup_fd_tx_with_ref:
     TEMP_FAILURE_RETRY(close(new_fildes));
     return -1;
@@ -1365,7 +1304,7 @@ fildes_tx_exec_fchmod(struct fildes_tx* self, int fildes, mode_t mode,
 
     /* Inject event */
     if (cookie >= 0) {
-        append_cmd(self, CMD_FCHMOD, fildes, cookie, error);
+        fildes_log_append(self->log, FILDES_OP_FCHMOD, fildes, cookie, error);
         if (picotm_error_is_set(error)) {
             return -1;
         }
@@ -1447,7 +1386,7 @@ fildes_tx_exec_fcntl(struct fildes_tx* self, int fildes, int cmd,
 
     /* Inject event */
     if (cookie >= 0) {
-        append_cmd(self, CMD_FCNTL, fildes, cookie, error);
+        fildes_log_append(self->log, FILDES_OP_FCNTL, fildes, cookie, error);
         if (picotm_error_is_set(error)) {
             return -1;
         }
@@ -1519,7 +1458,7 @@ fildes_tx_exec_fstat(struct fildes_tx* self, int fildes, struct stat* buf,
 
     /* Inject event */
     if (cookie >= 0) {
-        append_cmd(self, CMD_FSTAT, fildes, cookie, error);
+        fildes_log_append(self->log, FILDES_OP_FSTAT, fildes, cookie, error);
         if (picotm_error_is_set(error)) {
             return -1;
         }
@@ -1591,7 +1530,7 @@ fildes_tx_exec_fsync(struct fildes_tx* self, int fildes, int isnoundo,
 
     /* Inject event */
     if (cookie >= 0) {
-        append_cmd(self, CMD_FSYNC, fildes, cookie, error);
+        fildes_log_append(self->log, FILDES_OP_FSYNC, fildes, cookie, error);
         if (picotm_error_is_set(error)) {
             return -1;
         }
@@ -1699,7 +1638,7 @@ fildes_tx_exec_listen(struct fildes_tx* self, int sockfd, int backlog,
 
     /* Inject event */
     if (cookie >= 0) {
-        append_cmd(self, CMD_LISTEN, sockfd, cookie, error);
+        fildes_log_append(self->log, FILDES_OP_LISTEN, sockfd, cookie, error);
         if (picotm_error_is_set(error)) {
             return -1;
         }
@@ -1771,7 +1710,7 @@ fildes_tx_exec_lseek(struct fildes_tx* self, int fildes, off_t offset,
 
     /* Inject event */
     if (cookie >= 0) {
-        append_cmd(self, CMD_LSEEK, fildes, cookie, error);
+        fildes_log_append(self->log, FILDES_OP_LSEEK, fildes, cookie, error);
         if (picotm_error_is_set(error)) {
             return (off_t)-1;
         }
@@ -1963,16 +1902,16 @@ fildes_tx_exec_mkstemp(struct fildes_tx* self, char* pathname,
     memcpy(pathname + strlen(pathname) - 6,
            abs_path + strlen(abs_path) - 6, 6);
 
-    append_cmd(self, CMD_MKSTEMP, fildes, fildes, error);
+    fildes_log_append(self->log, FILDES_OP_MKSTEMP, fildes, fildes, error);
     if (picotm_error_is_set(error)) {
-        goto err_append_cmd;
+        goto err_fildes_log_append;
     }
 
     free(abs_path);
 
     return fildes;
 
-err_append_cmd:
+err_fildes_log_append:
     unlink(abs_path);
 err_mkstemp:
     free(abs_path);
@@ -2055,9 +1994,9 @@ fildes_tx_exec_open(struct fildes_tx* self, const char* path, int oflag,
 
     /* Inject event */
     if (cookie >= 0) {
-        append_cmd(self, CMD_OPEN, fildes, cookie, error);
+        fildes_log_append(self->log, FILDES_OP_OPEN, fildes, cookie, error);
         if (picotm_error_is_set(error)) {
-            goto err_append_cmd;
+            goto err_fildes_log_append;
         }
     }
 
@@ -2065,7 +2004,7 @@ fildes_tx_exec_open(struct fildes_tx* self, const char* path, int oflag,
 
     return fildes;
 
-err_append_cmd:
+err_fildes_log_append:
 err_openoptab_append:
 err_add_new_fd_tx_with_ref:
     TEMP_FAILURE_RETRY(close(fildes));
@@ -2160,7 +2099,7 @@ fildes_tx_exec_pipe(struct fildes_tx* self, int pipefd[2],
 
     /* Inject event */
     if (cookie >= 0) {
-        append_cmd(self, CMD_PIPE, 0, cookie, error);
+        fildes_log_append(self->log, FILDES_OP_PIPE, 0, cookie, error);
         if (picotm_error_is_set(error)) {
             if (TEMP_FAILURE_RETRY(close(pipefd[0])) < 0) {
                 perror("close");
@@ -2230,7 +2169,7 @@ fildes_tx_exec_pread(struct fildes_tx* self, int fildes, void* buf,
 
     /* inject event */
     if (cookie >= 0) {
-        append_cmd(self, CMD_PREAD, fildes, cookie, error);
+        fildes_log_append(self->log, FILDES_OP_PREAD, fildes, cookie, error);
         if (picotm_error_is_set(error)) {
             return -1;
         }
@@ -2303,7 +2242,7 @@ fildes_tx_exec_pwrite(struct fildes_tx* self, int fildes, const void* buf,
 
     /* Inject event */
     if (cookie >= 0) {
-        append_cmd(self, CMD_PWRITE, fildes, cookie, error);
+        fildes_log_append(self->log, FILDES_OP_PWRITE, fildes, cookie, error);
         if (picotm_error_is_set(error)) {
             return -1;
         }
@@ -2375,7 +2314,7 @@ fildes_tx_exec_read(struct fildes_tx* self, int fildes, void* buf,
 
     /* Inject event */
     if (cookie >= 0) {
-        append_cmd(self, CMD_READ, fildes, cookie, error);
+        fildes_log_append(self->log, FILDES_OP_READ, fildes, cookie, error);
         if (picotm_error_is_set(error)) {
             return -1;
         }
@@ -2448,7 +2387,7 @@ fildes_tx_exec_recv(struct fildes_tx* self, int sockfd, void* buffer,
 
     /* Inject event */
     if (cookie >= 0) {
-        append_cmd(self, CMD_RECV, sockfd, cookie, error);
+        fildes_log_append(self->log, FILDES_OP_RECV, sockfd, cookie, error);
         if (picotm_error_is_set(error)) {
             return -1;
         }
@@ -2601,7 +2540,7 @@ fildes_tx_exec_send(struct fildes_tx* self, int sockfd, const void* buffer,
 
     /* Inject event */
     if (cookie >= 0) {
-        append_cmd(self, CMD_SEND, sockfd, cookie, error);
+        fildes_log_append(self->log, FILDES_OP_SEND, sockfd, cookie, error);
         if (picotm_error_is_set(error)) {
             return -1;
         }
@@ -2673,7 +2612,7 @@ fildes_tx_exec_shutdown(struct fildes_tx* self, int sockfd, int how,
 
     /* Inject event */
     if (cookie >= 0) {
-        append_cmd(self, CMD_SHUTDOWN, sockfd, cookie, error);
+        fildes_log_append(self->log, FILDES_OP_SHUTDOWN, sockfd, cookie, error);
         if (picotm_error_is_set(error)) {
             return -1;
         }
@@ -2751,7 +2690,7 @@ fildes_tx_exec_socket(struct fildes_tx* self, int domain, int type,
     }
 
     /* Inject event */
-    append_cmd(self, CMD_SOCKET, sockfd, -1, error);
+    fildes_log_append(self->log, FILDES_OP_SOCKET, sockfd, -1, error);
     if (picotm_error_is_set(error)) {
         if (TEMP_FAILURE_RETRY(close(sockfd)) < 0) {
             perror("close");
@@ -2827,7 +2766,7 @@ fildes_tx_exec_sync(struct fildes_tx* self, struct picotm_error* error)
     sync();
 
     /* Inject event */
-    append_cmd(self, CMD_SYNC, -1, -1, error);
+    fildes_log_append(self->log, FILDES_OP_SYNC, -1, -1, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -2904,7 +2843,7 @@ fildes_tx_exec_write(struct fildes_tx* self, int fildes, const void* buf,
 
     /* Inject event */
     if (cookie >= 0) {
-        append_cmd(self, CMD_WRITE, fildes, cookie, error);
+        fildes_log_append(self->log, FILDES_OP_WRITE, fildes, cookie, error);
         if (picotm_error_is_set(error)) {
             return -1;
         }
@@ -3045,14 +2984,13 @@ fildes_tx_validate(struct fildes_tx* self, int noundo,
 }
 
 void
-fildes_tx_apply_event(struct fildes_tx* self,
-                      unsigned short op, uintptr_t cookie,
-                      struct picotm_error* error)
+fildes_tx_apply_event(struct fildes_tx* self, enum fildes_op op, int fildes,
+                      int cookie, struct picotm_error* error)
 {
-    static void (* const apply[])(struct fildes_tx*,
-                                  int,
-                                  int,
-                                  struct picotm_error*) = {
+    static void (* const apply[LAST_FILDES_OP])(struct fildes_tx*,
+                                                int,
+                                                int,
+                                                struct picotm_error*) = {
         apply_accept,
         apply_bind,
         apply_close,
@@ -3078,24 +3016,20 @@ fildes_tx_apply_event(struct fildes_tx* self,
         apply_write
     };
 
-    apply[op](self,
-              self->eventtab[cookie].fildes,
-              self->eventtab[cookie].cookie,
-              error);
+    apply[op](self, fildes, cookie, error);
     if (picotm_error_is_set(error)) {
         return;
     }
 }
 
 void
-fildes_tx_undo_event(struct fildes_tx* self,
-                     unsigned short op, uintptr_t cookie,
-                     struct picotm_error* error)
+fildes_tx_undo_event(struct fildes_tx* self, enum fildes_op op, int fildes,
+                     int cookie, struct picotm_error* error)
 {
-    static void (* const undo[])(struct fildes_tx*,
-                                 int,
-                                 int,
-                                 struct picotm_error*) = {
+    static void (* const undo[LAST_FILDES_OP])(struct fildes_tx*,
+                                               int,
+                                               int,
+                                               struct picotm_error*) = {
         undo_accept,
         undo_bind,
         undo_close,
@@ -3121,10 +3055,7 @@ fildes_tx_undo_event(struct fildes_tx* self,
         undo_write
     };
 
-    undo[op](self,
-             self->eventtab[cookie].fildes,
-             self->eventtab[cookie].cookie,
-             error);
+    undo[op](self, fildes, cookie, error);
     if (picotm_error_is_set(error)) {
         return;
     }
