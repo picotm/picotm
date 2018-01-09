@@ -25,17 +25,14 @@
 
 #pragma once
 
-#include <picotm/picotm-module.h>
-#include <stdbool.h>
+#include <picotm/picotm-error.h>
 #include <sys/queue.h>
-#include <sys/stat.h>
-#include <sys/time.h>
 #include "chrdev_tx.h"
 #include "dir_tx.h"
-#include "fd_event.h"
 #include "fdtab_tx.h"
 #include "fd_tx.h"
 #include "fifo_tx.h"
+#include "fildes_event.h"
 #include "ofd_tx.h"
 #include "regfile_tx.h"
 #include "socket_tx.h"
@@ -48,6 +45,7 @@
  * \endcond
  */
 
+struct fildes_log;
 struct pipeop;
 struct openop;
 
@@ -56,7 +54,8 @@ SLIST_HEAD(file_tx_slist, file_tx);
 SLIST_HEAD(ofd_tx_slist, ofd_tx);
 
 struct fildes_tx {
-    unsigned long module;
+
+    struct fildes_log* log;
 
     struct fdtab_tx fdtab_tx;
 
@@ -90,10 +89,6 @@ struct fildes_tx {
     /** Active instances of |struct ofd_tx| */
     struct ofd_tx_slist ofd_tx_active_list;
 
-    struct fd_event* eventtab;
-    size_t           eventtablen;
-    size_t           eventtabsiz;
-
     struct openop* openoptab;
     size_t         openoptablen;
 
@@ -102,7 +97,7 @@ struct fildes_tx {
 };
 
 void
-fildes_tx_init(struct fildes_tx* self, unsigned long module);
+fildes_tx_init(struct fildes_tx* self, struct fildes_log* log);
 
 void
 fildes_tx_uninit(struct fildes_tx* self);
@@ -263,14 +258,12 @@ fildes_tx_validate(struct fildes_tx* self, int noundo,
                    struct picotm_error* error);
 
 void
-fildes_tx_apply_event(struct fildes_tx* self,
-                      unsigned short op, uintptr_t cookie,
-                      struct picotm_error* error);
+fildes_tx_apply_event(struct fildes_tx* self, enum fildes_op op, int fildes,
+                      int cookie, struct picotm_error* error);
 
 void
-fildes_tx_undo_event(struct fildes_tx* self,
-                     unsigned short op, uintptr_t cookie,
-                     struct picotm_error* error);
+fildes_tx_undo_event(struct fildes_tx* self, enum fildes_op op, int fildes,
+                     int cookie, struct picotm_error* error);
 
 void
 fildes_tx_update_cc(struct fildes_tx* self, int noundo,

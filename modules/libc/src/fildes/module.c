@@ -26,11 +26,15 @@
 #include "module.h"
 #include <assert.h>
 #include <picotm/picotm.h>
+#include <picotm/picotm-module.h>
 #include <stdlib.h>
+#include "fildes_event.h"
+#include "fildes_log.h"
 #include "fildes_tx.h"
 
 struct fildes_module {
     bool          is_initialized;
+    struct fildes_log log;
     struct fildes_tx tx;
 };
 
@@ -64,7 +68,10 @@ apply_event_cb(uint16_t head, uintptr_t tail, void* data,
 {
     struct fildes_module* module = data;
 
-    fildes_tx_apply_event(&module->tx, head, tail, error);
+    struct fildes_event* event = fildes_log_at(&module->log, tail);
+
+    fildes_tx_apply_event(&module->tx, head, event->fildes, event->cookie,
+                          error);
 }
 
 static void
@@ -73,7 +80,10 @@ undo_event_cb(uint16_t head, uintptr_t tail, void *data,
 {
     struct fildes_module* module = data;
 
-    fildes_tx_undo_event(&module->tx, head, tail, error);
+    struct fildes_event* event = fildes_log_at(&module->log, tail);
+
+    fildes_tx_undo_event(&module->tx, head, event->fildes, event->cookie,
+                         error);
 }
 
 static void
@@ -98,6 +108,7 @@ finish_cb(void* data, struct picotm_error* error)
     struct fildes_module* module = data;
 
     fildes_tx_finish(&module->tx, error);
+    fildes_log_clear(&module->log);
 }
 
 static void
@@ -106,6 +117,8 @@ uninit_cb(void* data)
     struct fildes_module* module = data;
 
     fildes_tx_uninit(&module->tx);
+    fildes_log_uninit(&module->log);
+
     module->is_initialized = false;
 }
 
@@ -136,7 +149,8 @@ get_fildes_tx(bool initialize, struct picotm_error* error)
         return NULL;
     }
 
-    fildes_tx_init(&t_module.tx, module);
+    fildes_log_init(&t_module.log, module);
+    fildes_tx_init(&t_module.tx, &t_module.log);
 
     t_module.is_initialized = true;
 
@@ -159,6 +173,10 @@ get_non_null_fildes_tx(void)
 
     } while (true);
 }
+
+/*
+ * Module interface
+ */
 
 int
 fildes_module_accept(int sockfd, struct sockaddr* address,
