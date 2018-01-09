@@ -29,6 +29,20 @@
 #include "txlib_module.h"
 #include "txmultiset_tx.h"
 
+PICOTM_EXPORT
+void
+txmultiset_entry_init_tm(struct txmultiset_entry* self)
+{
+    txmultiset_entry_init(self);
+}
+
+PICOTM_EXPORT
+void
+txmultiset_entry_uninit_tm(struct txmultiset_entry* self)
+{
+    txmultiset_entry_uninit(self);
+}
+
 static struct txmultiset*
 multiset_of_multiset_tx(struct txmultiset_tx* multiset_tx)
 {

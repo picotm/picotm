@@ -29,6 +29,20 @@
 #include "txlib_module.h"
 #include "txlist_tx.h"
 
+PICOTM_EXPORT
+void
+txlist_entry_init_tm(struct txlist_entry* self)
+{
+    txlist_entry_init(self);
+}
+
+PICOTM_EXPORT
+void
+txlist_entry_uninit_tm(struct txlist_entry* self)
+{
+    txlist_entry_uninit(self);
+}
+
 static struct txlist*
 list_of_list_tx(struct txlist_tx* list_tx)
 {

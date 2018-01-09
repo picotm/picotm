@@ -40,6 +40,30 @@ PICOTM_BEGIN_DECLS
  * \brief Provides transactional lists
  */
 
+PICOTM_NOTHROW
+/**
+ * \brief Initializes an entry of a transactional list from within a
+ *        transaction.
+ * \param self The list entry to initialize.
+ * \attention This function expects the entry's memory to be owned by
+ *            the calling transaction. Shared-memory locations have to
+ *            be read/write privatized first.
+ */
+void
+txlist_entry_init_tm(struct txlist_entry* self);
+
+PICOTM_NOTHROW
+/**
+ * \brief Cleans up an entry of a transactional list from within a
+ *        transaction.
+ * \param self The list entry to clean up.
+ * \attention This function expects the entry's memory to be owned by
+ *            the calling transaction. Shared-memory locations have to
+ *            be read/write privatized first.
+ */
+void
+txlist_entry_uninit_tm(struct txlist_entry* self);
+
 /**
  * \struct txlist
  * \brief A handle for operating on transaction-safe lists.

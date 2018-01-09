@@ -282,6 +282,30 @@ PICOTM_BEGIN_DECLS
  * ~~~
  */
 
+PICOTM_NOTHROW
+/**
+ * \brief Initializes an entry of a transactional stack from within a
+ *        transaction.
+ * \param self The stack entry to initialize.
+ * \attention This function expects the entry's memory to be owned by
+ *            the calling transaction. Shared-memory locations have to
+ *            be read/write privatized first.
+ */
+void
+txstack_entry_init_tm(struct txstack_entry* self);
+
+PICOTM_NOTHROW
+/**
+ * \brief Cleans up an entry of a transactional stack from within a
+ *        transaction.
+ * \param self The stack entry to clean up.
+ * \attention This function expects the entry's memory to be owned by
+ *            the calling transaction. Shared-memory locations have to
+ *            be read/write privatized first.
+ */
+void
+txstack_entry_uninit_tm(struct txstack_entry* self);
+
 /**
  * \struct txstack
  * \brief A handle for operating on transaction-safe stacks.
