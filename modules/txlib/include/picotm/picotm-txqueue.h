@@ -40,6 +40,29 @@ PICOTM_BEGIN_DECLS
  * \brief Provides transactional queues
  */
 
+PICOTM_NOTHROW
+/**
+ * \brief Initializes an entry of a transactional queue from within a
+ *        transaction.
+ * \param self The queue entry to initialize.
+ * \attention This function expects the entry's memory to be owned by
+ *            the calling transaction. Shared-memory locations have to
+ *            be read/write privatized first.
+ */
+void
+txqueue_entry_init_tm(struct txqueue_entry* self);
+
+PICOTM_NOTHROW
+/**
+ * \brief Cleans up an entry of a transactional queue.
+ * \param self The queue entry to clean up.
+ * \attention This function expects the entry's memory to be owned by
+ *            the calling transaction. Shared-memory locations have to
+ *            be read/write privatized first.
+ */
+void
+txqueue_entry_uninit_tm(struct txqueue_entry* self);
+
 /**
  * \struct txqueue
  * \brief A handle for operating on transaction-safe queues.

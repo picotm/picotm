@@ -29,6 +29,20 @@
 #include "txlib_module.h"
 #include "txqueue_tx.h"
 
+PICOTM_EXPORT
+void
+txqueue_entry_init_tm(struct txqueue_entry* self)
+{
+    txqueue_entry_init(self);
+}
+
+PICOTM_EXPORT
+void
+txqueue_entry_uninit_tm(struct txqueue_entry* self)
+{
+    txqueue_entry_uninit(self);
+}
+
 static struct txqueue*
 queue_of_queue_tx(struct txqueue_tx* queue_tx)
 {

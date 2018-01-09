@@ -29,6 +29,20 @@
 #include "txlib_module.h"
 #include "txstack_tx.h"
 
+PICOTM_EXPORT
+void
+txstack_entry_init_tm(struct txstack_entry* self)
+{
+    txstack_entry_init(self);
+}
+
+PICOTM_EXPORT
+void
+txstack_entry_uninit_tm(struct txstack_entry* self)
+{
+    txstack_entry_uninit(self);
+}
+
 static struct txstack*
 stack_of_stack_tx(struct txstack_tx* stack_tx)
 {

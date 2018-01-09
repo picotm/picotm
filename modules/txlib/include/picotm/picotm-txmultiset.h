@@ -40,6 +40,30 @@ PICOTM_BEGIN_DECLS
  * \brief Provides transactional multisets
  */
 
+PICOTM_NOTHROW
+/**
+ * \brief Initializes an entry of a transactional multiset from within a
+ *        transaction.
+ * \param self The multiset entry to initialize.
+ * \attention This function expects the entry's memory to be owned by
+ *            the calling transaction. Shared-memory locations have to
+ *            be read/write privatized first.
+ */
+void
+txmultiset_entry_init_tm(struct txmultiset_entry* self);
+
+PICOTM_NOTHROW
+/**
+ * \brief Cleans up an entry of a transactional multiset from within a
+ *        transaction.
+ * \param self The multiset entry to clean up.
+ * \attention This function expects the entry's memory to be owned by
+ *            the calling transaction. Shared-memory locations have to
+ *            be read/write privatized first.
+ */
+void
+txmultiset_entry_uninit_tm(struct txmultiset_entry* self);
+
 /**
  * \struct txmultiset
  * \brief A handle for operating on transaction-safe multisets.
