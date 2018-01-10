@@ -146,7 +146,7 @@ realloc_tm(void* ptr, size_t size)
         memcpy(mem, ptr, size < usiz ? size : usiz);
     }
 
-    if (ptr && !size) {
+    if (ptr) {
         allocator_module_free(ptr, usiz);
     }
 
