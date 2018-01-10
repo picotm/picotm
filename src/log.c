@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -26,8 +26,9 @@
 #include "log.h"
 #include <assert.h>
 #include <stdlib.h>
-#include <picotm/picotm-module.h>
 #include "module.h"
+#include "picotm/picotm-module.h"
+#include "picotm_event.h"
 #include "table.h"
 
 void
@@ -90,7 +91,7 @@ log_apply_events(struct log* self, const struct module* module, bool noundo,
     const struct picotm_event* end = self->eventtab + self->eventtablen;
 
     while (beg < end) {
-        module_apply_event(module + beg->module, beg, error);
+        module_apply_event(module + beg->module, beg->call, beg->cookie, error);
         if (picotm_error_is_set(error)) {
             return;
         }
@@ -113,7 +114,7 @@ log_undo_events(struct log* self, const struct module* module, bool noundo,
 
     while (beg > end) {
         --beg;
-        module_undo_event(module + beg->module, beg, error);
+        module_undo_event(module + beg->module, beg->call, beg->cookie, error);
         if (picotm_error_is_set(error)) {
             return;
         }

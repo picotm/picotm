@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -91,17 +91,17 @@ struct module {
 };
 
 static void
-module_apply_event(struct module* module, const struct picotm_event* event,
+module_apply_event(struct module* module, unsigned short op, uintptr_t cookie,
                    struct picotm_error* error)
 {
-    cwd_tx_apply_event(&module->tx, event, error);
+    cwd_tx_apply_event(&module->tx, op, cookie, error);
 }
 
 static void
-module_undo_event(struct module* module, const struct picotm_event* event,
+module_undo_event(struct module* module, unsigned short op, uintptr_t cookie,
                   struct picotm_error* error)
 {
-    cwd_tx_undo_event(&module->tx, event, error);
+    cwd_tx_undo_event(&module->tx, op, cookie, error);
 }
 
 static void
@@ -134,17 +134,17 @@ module_uninit(struct module* module)
  */
 
 static void
-apply_event_cb(const struct picotm_event* event, void* data,
+apply_event_cb(unsigned short op, uintptr_t cookie, void* data,
                struct picotm_error* error)
 {
-    module_apply_event(data, event, error);
+    module_apply_event(data, op, cookie, error);
 }
 
 static void
-undo_event_cb(const struct picotm_event* event, void* data,
+undo_event_cb(unsigned short op, uintptr_t cookie, void* data,
               struct picotm_error* error)
 {
-    module_undo_event(data, event, error);
+    module_undo_event(data, op, cookie, error);
 }
 
 static void

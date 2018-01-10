@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -50,12 +50,6 @@ PICOTM_BEGIN_DECLS
 
 struct picotm_tx;
 
-struct picotm_event {
-    unsigned long  module;
-    unsigned short call;
-    uintptr_t      cookie;
-};
-
 /**
  * Invoked by picotm to lock a module's resources at the beginning
  * if a commit.
@@ -104,23 +98,27 @@ typedef void (*picotm_module_undo_function)(void* data,
 
 /**
  * Invoked by picotm during the commit phase to apply an event.
- * \param       event   An event.
+ * \param       op      The module-specific operation.
+ * \param       cookie  The module-specific cookie.
  * \param       data    The pointer to module-specific data.
  * \param[out]  error   Returns an error from the module.
  */
 typedef void (*picotm_module_apply_event_function)(
-    const struct picotm_event* event,
+    unsigned short op,
+    uintptr_t cookie,
     void* data,
     struct picotm_error* error);
 
 /**
  * Invoked by picotm during the roll-back phase to revert an event.
- * \param       event   An event.
+ * \param       op      The module-specific operation.
+ * \param       cookie  The module-specific cookie.
  * \param       data    The pointer to module-specific data.
  * \param[out]  error   Returns an error from the module.
  */
 typedef void (*picotm_module_undo_event_function)(
-    const struct picotm_event* event,
+    unsigned short op,
+    uintptr_t cookie,
     void* data,
     struct picotm_error* error);
 
@@ -403,26 +401,26 @@ PICOTM_END_DECLS
  *
  * ~~~{.c}
  *  int
- *  apply(const struct picotm_event* event, void* data, picotm_error* error)
+ *  apply(unsigned short op, uintptr_t cookie, void* data, picotm_error* error)
  *  {
- *      if (event->call == CMD_MALLOC) {
+ *      if (op == CMD_MALLOC) {
  *          // Nothing to do.
  *      }
- *      if (event->call == CMD_FREE) {
+ *      if (op == CMD_FREE) {
  *          // Apply free().
- *          free((void*)event->cookie);
+ *          free((void*)cookie);
  *      }
  *      return 0;
  *  }
  *
  *  int
- *  undo(const struct picotm_event* event, void* data, picotm_error* error)
+ *  undo(unsigned short op, uintptr_t cookie, void* data, picotm_error* error)
  *  {
- *      if (event->call == CMD_MALLOC) {
+ *      if (op == CMD_MALLOC) {
  *          // Revert malloc().
- *          free((void*)event->cookie);
+ *          free((void*)cookie);
  *      }
- *      if (event->call == CMD_FREE) {
+ *      if (op == CMD_FREE) {
  *          // Nothing to do.
  *      }
  *      return 0;

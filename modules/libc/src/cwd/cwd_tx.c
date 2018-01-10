@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -377,7 +377,7 @@ undo_realpath(struct cwd_tx* self, const struct cwdop* cwdop,
  */
 
 void
-cwd_tx_apply_event(struct cwd_tx* self, const struct picotm_event* event,
+cwd_tx_apply_event(struct cwd_tx* self, unsigned short op, uintptr_t cookie,
                    struct picotm_error* error)
 {
     static void (* const apply[])(struct cwd_tx*, const struct cwdop*,
@@ -388,17 +388,16 @@ cwd_tx_apply_event(struct cwd_tx* self, const struct picotm_event* event,
     };
 
     assert(self);
-    assert(event);
-    assert(event->cookie < self->cwdoptablen);
+    assert(cookie < self->cwdoptablen);
 
-    apply[event->call](self, self->cwdoptab + event->cookie, error);
+    apply[op](self, self->cwdoptab + cookie, error);
     if (picotm_error_is_set(error)) {
         return;
     }
 }
 
 void
-cwd_tx_undo_event(struct cwd_tx* self, const struct picotm_event* event,
+cwd_tx_undo_event(struct cwd_tx* self, unsigned short op, uintptr_t cookie,
                   struct picotm_error* error)
 {
     static void (* const undo[])(struct cwd_tx*, const struct cwdop*,
@@ -409,10 +408,9 @@ cwd_tx_undo_event(struct cwd_tx* self, const struct picotm_event* event,
     };
 
     assert(self);
-    assert(event);
-    assert(event->cookie < self->cwdoptablen);
+    assert(cookie < self->cwdoptablen);
 
-    undo[event->call](self, self->cwdoptab + event->cookie, error);
+    undo[op](self, self->cwdoptab + cookie, error);
     if (picotm_error_is_set(error)) {
         return;
     }

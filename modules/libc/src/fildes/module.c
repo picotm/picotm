@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -59,21 +59,21 @@ validate_cb(void* data, int noundo, struct picotm_error* error)
 }
 
 static void
-apply_event_cb(const struct picotm_event* event, void* data,
+apply_event_cb(unsigned short op, uintptr_t cookie, void* data,
                struct picotm_error* error)
 {
     struct fildes_module* module = data;
 
-    fildes_tx_apply_event(&module->tx, event, error);
+    fildes_tx_apply_event(&module->tx, op, cookie, error);
 }
 
 static void
-undo_event_cb(const struct picotm_event* event, void *data,
+undo_event_cb(unsigned short op, uintptr_t cookie, void *data,
               struct picotm_error* error)
 {
     struct fildes_module* module = data;
 
-    fildes_tx_undo_event(&module->tx, event, error);
+    fildes_tx_undo_event(&module->tx, op, cookie, error);
 }
 
 static void

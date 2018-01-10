@@ -1,6 +1,6 @@
 #
 # MIT License
-# Copyright (c) 2017    Thomas Zimmermann <tdz@users.sourceforge.net>
+# Copyright (c) 2017-2018   Thomas Zimmermann <tdz@users.sourceforge.net>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -42,6 +42,8 @@ libpicotm_la_SOURCES = log.c \
                        picotm-lib-shared-treemap.c \
                        picotm-lib-tab.c \
                        picotm-lib-treemap.c \
+                       picotm_event.c \
+                       picotm_event.h \
                        picotm_lock_manager.c \
                        picotm_lock_manager.h \
                        picotm_lock_owner.c \
