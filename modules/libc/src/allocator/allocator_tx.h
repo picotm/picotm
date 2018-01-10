@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -26,6 +26,7 @@
 #pragma once
 
 #include <stddef.h>
+#include <stdint.h>
 
 /**
  * \cond impl || libc_impl || libc_impl_allocator
@@ -36,7 +37,6 @@
  */
 
 struct picotm_error;
-struct picotm_event;
 
 /**
  * A transaction on the memory allocation.
@@ -72,12 +72,12 @@ allocator_tx_exec_free(struct allocator_tx* self, void* ptr,
 
 void
 allocator_tx_apply_event(struct allocator_tx* self,
-                         const struct picotm_event* event,
+                         unsigned short op, uintptr_t cookie,
                          struct picotm_error* error);
 
 void
 allocator_tx_undo_event(struct allocator_tx* self,
-                        const struct picotm_event* event,
+                        unsigned short op, uintptr_t cookie,
                         struct picotm_error* error);
 
 void

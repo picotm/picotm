@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -329,28 +329,26 @@ txlib_tx_lock(struct txlib_tx* self, struct picotm_error* error)
 }
 
 void
-txlib_tx_apply_event(struct txlib_tx* self, const struct picotm_event* event,
-                     struct picotm_error* error)
+txlib_tx_apply_event(struct txlib_tx* self, unsigned short op,
+                     uintptr_t cookie, struct picotm_error* error)
 {
     assert(self);
-    assert(event);
-    assert(event->cookie < self->nevents);
+    assert(cookie < self->nevents);
 
-    txlib_event_apply(self->event + event->cookie, error);
+    txlib_event_apply(self->event + cookie, error);
     if (picotm_error_is_set(error)) {
         return;
     }
 }
 
 void
-txlib_tx_undo_event(struct txlib_tx* self, const struct picotm_event* event,
-                    struct picotm_error* error)
+txlib_tx_undo_event(struct txlib_tx* self, unsigned short op,
+                    uintptr_t cookie, struct picotm_error* error)
 {
     assert(self);
-    assert(event);
-    assert(event->cookie < self->nevents);
+    assert(cookie < self->nevents);
 
-    txlib_event_undo(self->event + event->cookie, error);
+    txlib_event_undo(self->event + cookie, error);
     if (picotm_error_is_set(error)) {
         return;
     }

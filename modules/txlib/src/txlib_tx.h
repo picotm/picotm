@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -26,6 +26,7 @@
 #pragma once
 
 #include <stddef.h>
+#include <stdint.h>
 #include <sys/queue.h>
 #include "txlist_tx.h"
 #include "txmultiset_tx.h"
@@ -40,7 +41,6 @@
  */
 
 struct picotm_error;
-struct picotm_event;
 struct txlib_event;
 
 struct txlib_tx_entry {
@@ -186,12 +186,12 @@ txlib_tx_lock(struct txlib_tx* self, struct picotm_error* error);
 
 void
 txlib_tx_apply_event(struct txlib_tx* self,
-                     const struct picotm_event* event,
+                     unsigned short op, uintptr_t cookie,
                      struct picotm_error* error);
 
 void
 txlib_tx_undo_event(struct txlib_tx* self,
-                    const struct picotm_event* event,
+                    unsigned short op, uintptr_t cookie,
                     struct picotm_error* error);
 
 void

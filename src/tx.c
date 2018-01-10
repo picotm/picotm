@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -105,9 +105,9 @@ tx_register_module(struct tx* self,
                    void (*validate)(void*, int, struct picotm_error*),
                    void (*apply)(void*, struct picotm_error*),
                    void (*undo)(void*, struct picotm_error*),
-                   void (*apply_event)(const struct picotm_event*,
+                   void (*apply_event)(unsigned short op, uintptr_t cookie,
                                        void*, struct picotm_error*),
-                   void (*undo_event)(const struct picotm_event*,
+                   void (*undo_event)(unsigned short op, uintptr_t cookie,
                                       void*, struct picotm_error*),
                    void (*update_cc)(void*, int, struct picotm_error*),
                    void (*clear_cc)(void*, int, struct picotm_error*),

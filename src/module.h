@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -27,6 +27,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 /**
  * \cond impl || lib_impl
@@ -36,7 +37,6 @@
  */
 
 struct picotm_error;
-struct picotm_event;
 
 struct module {
     void (*lock)(void*, struct picotm_error*);
@@ -44,9 +44,9 @@ struct module {
     void (*validate)(void*, int, struct picotm_error*);
     void (*apply)(void*, struct picotm_error*);
     void (*undo)(void*, struct picotm_error*);
-    void (*apply_event)(const struct picotm_event*,
+    void (*apply_event)(unsigned short op, uintptr_t cookie,
                         void*, struct picotm_error*);
-    void (*undo_event)(const struct picotm_event*,
+    void (*undo_event)(unsigned short op, uintptr_t cookie,
                        void*, struct picotm_error*);
     void (*update_cc)(void*, int, struct picotm_error*);
     void (*clear_cc)(void*, int, struct picotm_error*);
@@ -62,9 +62,9 @@ module_init(struct module* self,
             void (*validate)(void*, int, struct picotm_error*),
             void (*apply)(void*, struct picotm_error*),
             void (*undo)(void*, struct picotm_error*),
-            void (*apply_event)(const struct picotm_event*,
+            void (*apply_event)(unsigned short op, uintptr_t cookie,
                                 void*, struct picotm_error*),
-            void (*undo_event)(const struct picotm_event*,
+            void (*undo_event)(unsigned short op, uintptr_t cookie,
                                void*, struct picotm_error*),
             void (*update_cc)(void*, int, struct picotm_error*),
             void (*clear_cc)(void*, int, struct picotm_error*),
@@ -96,12 +96,12 @@ module_undo(const struct module* self, struct picotm_error* error);
 
 void
 module_apply_event(const struct module* self,
-                   const struct picotm_event *event,
+                   unsigned short op, uintptr_t cookie,
                    struct picotm_error* error);
 
 void
 module_undo_event(const struct module* self,
-                  const struct picotm_event *event,
+                  unsigned short op, uintptr_t cookie,
                   struct picotm_error* error);
 
 void

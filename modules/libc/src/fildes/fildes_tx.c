@@ -3046,7 +3046,7 @@ fildes_tx_validate(struct fildes_tx* self, int noundo,
 
 void
 fildes_tx_apply_event(struct fildes_tx* self,
-                      const struct picotm_event* event,
+                      unsigned short op, uintptr_t cookie,
                       struct picotm_error* error)
 {
     static void (* const apply[])(struct fildes_tx*,
@@ -3078,10 +3078,10 @@ fildes_tx_apply_event(struct fildes_tx* self,
         apply_write
     };
 
-    apply[event->call](self,
-                       self->eventtab[event->cookie].fildes,
-                       self->eventtab[event->cookie].cookie,
-                       error);
+    apply[op](self,
+              self->eventtab[cookie].fildes,
+              self->eventtab[cookie].cookie,
+              error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -3089,7 +3089,7 @@ fildes_tx_apply_event(struct fildes_tx* self,
 
 void
 fildes_tx_undo_event(struct fildes_tx* self,
-                     const struct picotm_event* event,
+                     unsigned short op, uintptr_t cookie,
                      struct picotm_error* error)
 {
     static void (* const undo[])(struct fildes_tx*,
@@ -3121,10 +3121,10 @@ fildes_tx_undo_event(struct fildes_tx* self,
         undo_write
     };
 
-    undo[event->call](self,
-                      self->eventtab[event->cookie].fildes,
-                      self->eventtab[event->cookie].cookie,
-                      error);
+    undo[op](self,
+             self->eventtab[cookie].fildes,
+             self->eventtab[cookie].cookie,
+             error);
     if (picotm_error_is_set(error)) {
         return;
     }

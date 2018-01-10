@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -56,18 +56,18 @@ lock(struct txlib_module* module, struct picotm_error* error)
 
 static void
 apply_event(struct txlib_module* module,
-            const struct picotm_event* event,
+            unsigned short op, uintptr_t cookie,
             struct picotm_error* error)
 {
-    txlib_tx_apply_event(&module->tx, event, error);
+    txlib_tx_apply_event(&module->tx, op, cookie, error);
 }
 
 static void
 undo_event(struct txlib_module* module,
-           const struct picotm_event* event,
+           unsigned short op, uintptr_t cookie,
            struct picotm_error* error)
 {
-    txlib_tx_undo_event(&module->tx, event, error);
+    txlib_tx_undo_event(&module->tx, op, cookie, error);
 }
 
 static void
@@ -94,17 +94,17 @@ lock_cb(void* data, struct picotm_error* error)
 }
 
 static void
-apply_event_cb(const struct picotm_event* event, void* data,
+apply_event_cb(unsigned short op, uintptr_t cookie, void* data,
                struct picotm_error* error)
 {
-    apply_event(data, event, error);
+    apply_event(data, op, cookie, error);
 }
 
 static void
-undo_event_cb(const struct picotm_event* event, void* data,
+undo_event_cb(unsigned short op, uintptr_t cookie, void* data,
               struct picotm_error* error)
 {
-    undo_event(data, event, error);
+    undo_event(data, op, cookie, error);
 }
 
 static void

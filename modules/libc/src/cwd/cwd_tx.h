@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -27,6 +27,7 @@
 
 #include <picotm/picotm-lib-rwstate.h>
 #include <stddef.h>
+#include <stdint.h>
 #include "cwd.h"
 
 /**
@@ -39,7 +40,6 @@
 
 struct cwdop;
 struct picotm_error;
-struct picotm_event;
 
 struct cwd_tx {
 
@@ -110,11 +110,11 @@ cwd_tx_realpath_exec(struct cwd_tx* self, const char* path,
  */
 
 void
-cwd_tx_apply_event(struct cwd_tx* self, const struct picotm_event* event,
+cwd_tx_apply_event(struct cwd_tx* self, unsigned short op, uintptr_t cookie,
                    struct picotm_error* error);
 
 void
-cwd_tx_undo_event(struct cwd_tx* self, const struct picotm_event* event,
+cwd_tx_undo_event(struct cwd_tx* self, unsigned short op, uintptr_t cookie,
                   struct picotm_error* error);
 
 void

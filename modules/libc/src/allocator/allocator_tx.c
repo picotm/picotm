@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -219,7 +219,7 @@ undo_posix_memalign(struct allocator_tx* self, unsigned int cookie,
 
 void
 allocator_tx_apply_event(struct allocator_tx* self,
-                         const struct picotm_event* event,
+                         unsigned short op, uintptr_t cookie,
                          struct picotm_error* error)
 {
     static void (* const apply[LAST_CMD])(struct allocator_tx*,
@@ -230,7 +230,7 @@ allocator_tx_apply_event(struct allocator_tx* self,
         apply_posix_memalign
     };
 
-    apply[event->call](self, event->cookie, error);
+    apply[op](self, cookie, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -238,7 +238,7 @@ allocator_tx_apply_event(struct allocator_tx* self,
 
 void
 allocator_tx_undo_event(struct allocator_tx* self,
-                        const struct picotm_event* event,
+                        unsigned short op, uintptr_t cookie,
                         struct picotm_error* error)
 {
     static void (* const undo[LAST_CMD])(struct allocator_tx*,
@@ -249,7 +249,7 @@ allocator_tx_undo_event(struct allocator_tx* self,
         undo_posix_memalign
     };
 
-    undo[event->call](self, event->cookie, error);
+    undo[op](self, cookie, error);
     if (picotm_error_is_set(error)) {
         return;
     }
