@@ -25,9 +25,8 @@
 
 #include "log.h"
 #include <assert.h>
-#include <stdlib.h>
-#include "module.h"
-#include "picotm/picotm-module.h"
+#include <picotm/picotm-error.h>
+#include <string.h>
 #include "picotm_event.h"
 #include "table.h"
 
@@ -46,79 +45,78 @@ log_uninit(struct log* self)
 {
     assert(self);
 
-    free(self->eventtab);
+    tabfree(self->eventtab);
 }
 
-void
-log_append_event(struct log* self, unsigned long module, unsigned long call,
-                 uintptr_t cookie, struct picotm_error* error)
+struct picotm_event*
+log_begin(struct log* self)
 {
     assert(self);
 
-    if (self->eventtablen >= self->eventtabsiz) {
+    return self->eventtab;
+}
 
-        size_t eventtabsiz = self->eventtabsiz + 1;
+const struct picotm_event*
+log_end(struct log* self)
+{
+    assert(self);
 
-        void* tmp = tabresize(self->eventtab,
-                              self->eventtabsiz, eventtabsiz,
-                              sizeof(self->eventtab[0]),
-                              error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-        self->eventtab = tmp;
-        self->eventtabsiz = eventtabsiz;
+    return self->eventtab + self->eventtablen;
+}
+
+void
+log_clear(struct log* self)
+{
+    self->eventtablen = 0;
+}
+
+static struct picotm_event*
+log_end_alloc(struct log* self, struct picotm_error* error)
+{
+    assert(self);
+
+    size_t neweventtabsiz = self->eventtablen + 1;
+
+    if (neweventtabsiz <= self->eventtabsiz) {
+        goto out;
     }
 
-    struct picotm_event* event = self->eventtab + self->eventtablen;
+    void* tmp = tabresize(self->eventtab,
+                          self->eventtabsiz, neweventtabsiz,
+                          sizeof(self->eventtab[0]),
+                          error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+    self->eventtab = tmp;
+    self->eventtabsiz = neweventtabsiz;
 
-    event->cookie = cookie;
-    event->module = module;
-    event->call = call;
+out:
+    return (struct picotm_event*)log_end(self);
+}
+
+static void
+log_end_seal(struct log* self, const struct picotm_event* event)
+{
+    assert(self);
+    assert(event == log_end(self));
 
     ++self->eventtablen;
 }
 
 void
-log_apply_events(struct log* self, const struct module* module, bool noundo,
-                 struct picotm_error* error)
+log_append(struct log* self, const struct picotm_event* event,
+           struct picotm_error* error)
 {
     assert(self);
+    assert(event);
 
-    /* Apply events in chronological order */
-
-    const struct picotm_event* beg = self->eventtab;
-    const struct picotm_event* end = self->eventtab + self->eventtablen;
-
-    while (beg < end) {
-        module_apply_event(module + beg->module, beg->call, beg->cookie, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-        ++beg;
+    struct picotm_event* end = log_end_alloc(self, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 
-    self->eventtablen = 0;
-}
+    memcpy(end, event, sizeof(*event));
 
-void
-log_undo_events(struct log* self, const struct module* module, bool noundo,
-                struct picotm_error* error)
-{
-    assert(self);
-
-    /* Undo events in reversed-chronological order */
-
-    const struct picotm_event* beg = self->eventtab + self->eventtablen;
-    const struct picotm_event* end = self->eventtab;
-
-    while (beg > end) {
-        --beg;
-        module_undo_event(module + beg->module, beg->call, beg->cookie, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-    }
-
-    self->eventtablen = 0;
+    log_end_seal(self, end);
 }

@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include "picotm/picotm-error.h"
 #include "picotm/picotm-lib-array.h"
+#include "picotm_event.h"
 #include "table.h"
 #include "tx_shared.h"
 
@@ -141,7 +142,10 @@ tx_append_event(struct tx* self, unsigned long module, unsigned long op,
 {
     assert(self);
 
-    log_append_event(&self->log, module, op, cookie, error);
+    const struct picotm_event event = PICOTM_EVENT_INITIALIZER(module,
+                                                               op,
+                                                               cookie);
+    log_append(&self->log, &event, error);
 }
 
 void
@@ -355,6 +359,52 @@ finish_modules(struct module* module, unsigned long nmodules,
     }
 }
 
+static void
+apply_event(struct tx* tx, const struct picotm_event* event,
+            struct picotm_error* error)
+{
+    module_apply_event(tx->module + event->module, event->op,
+                       event->cookie, error);
+}
+
+static void
+apply_event_cb(struct picotm_event* event, void* data,
+               struct picotm_error* error)
+{
+    apply_event(data, event, error);
+}
+
+static void
+apply_events(struct tx* self, struct picotm_error* error)
+{
+    picotm_events_foreach1(log_begin(&self->log), log_end(&self->log),
+                           self, apply_event_cb, error);
+    log_clear(&self->log);
+}
+
+static void
+undo_event(struct tx* tx, const struct picotm_event* event,
+           struct picotm_error* error)
+{
+    module_undo_event(tx->module + event->module, event->op,
+                      event->cookie, error);
+}
+
+static void
+undo_event_cb(struct picotm_event* event, void* data,
+              struct picotm_error* error)
+{
+    undo_event(data, event, error);
+}
+
+static void
+undo_events(struct tx* self, struct picotm_error* error)
+{
+    picotm_events_rev_foreach1(log_begin(&self->log), log_end(&self->log),
+                               self, undo_event_cb, error);
+    log_clear(&self->log);
+}
+
 void
 tx_commit(struct tx* self, struct picotm_error* error)
 {
@@ -384,9 +434,9 @@ tx_commit(struct tx* self, struct picotm_error* error)
         goto err_apply_modules;
     }
 
-    log_apply_events(&self->log, self->module, is_irrevocable, error);
+    apply_events(self, error);
     if (picotm_error_is_set(error)) {
-        goto err_log_apply_events;
+        goto err_apply_events;
     }
 
     update_modules_cc(self->module, self->nmodules, is_irrevocable, error);
@@ -409,7 +459,7 @@ tx_commit(struct tx* self, struct picotm_error* error)
     return;
 
 err_update_modules_cc:
-err_log_apply_events:
+err_apply_events:
 err_apply_modules:
 err_validate_modules:
     {
@@ -435,7 +485,7 @@ tx_rollback(struct tx* self, struct picotm_error* error)
         goto err;
     }
 
-    log_undo_events(&self->log, self->module, is_irrevocable, error);
+    undo_events(self, error);
     if (picotm_error_is_set(error)) {
         goto err;
     }

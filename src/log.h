@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -25,9 +25,7 @@
 
 #pragma once
 
-#include <stdbool.h>
 #include <stddef.h>
-#include <stdint.h>
 
 /**
  * \cond impl || lib_impl
@@ -36,7 +34,6 @@
  * \endcond
  */
 
-struct module;
 struct picotm_error;
 struct picotm_event;
 
@@ -45,13 +42,13 @@ struct picotm_event;
  */
 struct log {
 
-    /** Table of transaction's events. */
+    /** Table of transaction events. */
     struct picotm_event* eventtab;
 
-    /** Number of events in the log. */
+    /** Valid data bytes in the transaction log. */
     size_t eventtablen;
 
-    /** Maximum number of events. */
+    /** Allocation size of the transaction log. */
     size_t eventtabsiz;
 };
 
@@ -68,32 +65,34 @@ void
 log_uninit(struct log* self);
 
 /**
- * Appends an event to the transaction's event log.
+ * \brief Returns the first event in an event log.
+ * \param   self    The event log.
+ * \returns The event log's first event.
  */
-void
-log_append_event(struct log* self, unsigned long module, unsigned long call,
-                 uintptr_t cookie, struct picotm_error* error);
+struct picotm_event*
+log_begin(struct log* self);
 
 /**
- * Apply events in the log.
- *
- * \param self          The log.
- * \param module        The table of registered modules.
- * \param noundo        True if the transaction is irrevokable, or false otherwise.
- * \param[out] error    An error returned by an apply operation.
+ * \brief Returns the terminal event at the end of an event log.
+ * \param   self    The event log.
+ * \returns The event log's terminal event.
  */
-void
-log_apply_events(struct log* self, const struct module* module, bool noundo,
-                 struct picotm_error* error);
+const struct picotm_event*
+log_end(struct log* self);
 
 /**
- * Undo events in the log.
- *
- * \param self          The log.
- * \param module        The table of registered modules.
- * \param noundo        True if the transaction is irrevokable, or false otherwise.
- * \param[out] error    An error returned by an undo operation.
+ * \brief Appends an event to an event log.
+ * \param       self    The event log.
+ * \param       event   The event to append to the log.
+ * \param[out]  error   Returns an error to the caller.
  */
 void
-log_undo_events(struct log* self, const struct module* module, bool noundo,
-                struct picotm_error* error);
+log_append(struct log* self, const struct picotm_event* event,
+           struct picotm_error* error);
+
+/**
+ * \brief Removes all events from an event log.
+ * \param   self    The event log.
+ */
+void
+log_clear(struct log* self);

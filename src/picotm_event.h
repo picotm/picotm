@@ -34,8 +34,42 @@
  * \endcond
  */
 
+struct picotm_error;
+
+/**
+ * \brief Represents an event in a transaction's event log.
+ */
 struct picotm_event {
-    unsigned long  module;
-    unsigned short call;
-    uintptr_t      cookie;
+    unsigned long module;
+    unsigned short op;
+    uintptr_t cookie;
 };
+
+/**
+ * Static initializer for `struct picotm_event`.
+ * \param   _module The instance's module value.
+ * \param   _op     The instance's op value.
+ * \param   _cookie The instance's cookie value.
+ */
+#define PICOTM_EVENT_INITIALIZER(_module, _op, _cookie) \
+    {                                                   \
+        (_module),                                      \
+        (_op),                                          \
+        (_cookie)                                       \
+    }
+
+void
+picotm_events_foreach1(struct picotm_event* beg,
+                 const struct picotm_event* end,
+                       void* data,
+                       void (*call)(struct picotm_event*, void*,
+                                    struct picotm_error*),
+                       struct picotm_error* error);
+
+void
+picotm_events_rev_foreach1(struct picotm_event* beg,
+                     const struct picotm_event* end,
+                           void* data,
+                           void (*call)(struct picotm_event*, void*,
+                                        struct picotm_error*),
+                           struct picotm_error* error);
