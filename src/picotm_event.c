@@ -24,3 +24,34 @@
  */
 
 #include "picotm_event.h"
+#include <picotm/picotm-error.h>
+
+void
+picotm_events_foreach1(struct picotm_event* beg,
+                 const struct picotm_event* end,
+                       void* data,
+                       void (*call)(struct picotm_event*, void*,
+                                    struct picotm_error*),
+                       struct picotm_error* error)
+{
+    while ((beg < end) && !picotm_error_is_set(error)) {
+        call(beg, data, error);
+        ++beg;
+    }
+}
+
+void
+picotm_events_rev_foreach1(struct picotm_event* beg,
+                     const struct picotm_event* end,
+                           void* data,
+                           void (*call)(struct picotm_event*, void*,
+                                        struct picotm_error*),
+                           struct picotm_error* error)
+{
+    struct picotm_event* pos = (struct picotm_event*)end;
+
+    while ((beg < pos) && !picotm_error_is_set(error)) {
+        --pos;
+        call(pos, data, error);
+    }
+}
