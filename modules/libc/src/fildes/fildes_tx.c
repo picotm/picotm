@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -156,6 +156,14 @@ fildes_tx_uninit(struct fildes_tx* self)
                            socket_tx < self->socket_tx + self->socket_tx_max_index;
                          ++socket_tx) {
         socket_tx_uninit(socket_tx);
+    }
+
+    /* Uninit ofd_txs */
+
+    for (struct ofd_tx* ofd_tx = self->ofd_tx;
+                        ofd_tx < self->ofd_tx + self->ofd_tx_max_index;
+                      ++ofd_tx) {
+        ofd_tx_uninit(ofd_tx);
     }
 
     /* Uninit fd_txs */
