@@ -27,10 +27,12 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <picotm/picotm-module.h>
+#include "allocator_log.h"
 #include "allocator_tx.h"
 
 struct allocator_module {
     bool                is_initialized;
+    struct allocator_log log;
     struct allocator_tx tx;
 };
 
@@ -40,7 +42,10 @@ apply_event_cb(uint16_t head, uintptr_t tail, void* data,
 {
     struct allocator_module* module = data;
 
-    allocator_tx_apply_event(&module->tx, head, tail, error);
+    const struct allocator_event* event =
+        allocator_log_at(&module->log, tail);
+
+    allocator_tx_apply_event(&module->tx, head, event->ptr, error);
 }
 
 static void
@@ -49,7 +54,10 @@ undo_event_cb(uint16_t head, uintptr_t tail, void* data,
 {
     struct allocator_module* module = data;
 
-    allocator_tx_undo_event(&module->tx, head, tail, error);
+    const struct allocator_event* event =
+        allocator_log_at(&module->log, tail);
+
+    allocator_tx_undo_event(&module->tx, head, event->ptr, error);
 }
 
 static void
@@ -58,6 +66,7 @@ finish_cb(void* data, struct picotm_error* error)
     struct allocator_module* module = data;
 
     allocator_tx_finish(&module->tx);
+    allocator_log_clear(&module->log);
 }
 
 static void
@@ -66,6 +75,8 @@ uninit_cb(void* data)
     struct allocator_module* module = data;
 
     allocator_tx_uninit(&module->tx);
+    allocator_log_uninit(&module->log);
+
     module->is_initialized = false;
 }
 
@@ -93,7 +104,8 @@ get_allocator_tx(bool initialize, struct picotm_error* error)
         return NULL;
     }
 
-    allocator_tx_init(&t_module.tx, module);
+    allocator_log_init(&t_module.log, module);
+    allocator_tx_init(&t_module.tx, &t_module.log);
 
     t_module.is_initialized = true;
 

@@ -24,17 +24,11 @@
  */
 
 #include "allocator_tx.h"
+#include <assert.h>
 #include <errno.h>
-#include <picotm/picotm-lib-tab.h>
-#include <picotm/picotm-module.h>
+#include <picotm/picotm-error.h>
 #include <stdlib.h>
-
-enum allocator_tx_cmd {
-    CMD_FREE = 0,
-    CMD_MALLOC,
-    CMD_POSIX_MEMALIGN,
-    LAST_CMD
-};
+#include "allocator_log.h"
 
 /**
  * Round size up to next multiple of word size.
@@ -48,71 +42,39 @@ rnd2wb(size_t size)
 }
 
 void
-allocator_tx_init(struct allocator_tx* self, unsigned long module)
+allocator_tx_init(struct allocator_tx* self, struct allocator_log* log)
 {
-    self->module = module;
+    assert(self);
 
-    self->ptrtab = NULL;
-    self->ptrtablen = 0;
-    self->ptrtabsiz = 0;
+    self->log = log;
 }
 
 void
 allocator_tx_uninit(struct allocator_tx* self)
-{
-    picotm_tabfree(self->ptrtab);
-}
-
-static int
-append_cmd(struct allocator_tx* self, enum allocator_tx_cmd cmd, void* ptr,
-           struct picotm_error* error)
-{
-    if (__builtin_expect(self->ptrtablen >= self->ptrtabsiz, 0)) {
-        void* tmp = picotm_tabresize(self->ptrtab,
-                                     self->ptrtabsiz,
-                                     self->ptrtabsiz + 1,
-                                     sizeof(self->ptrtab[0]),
-                                     error);
-        if (picotm_error_is_set(error)) {
-            return -1;
-        }
-        self->ptrtab = tmp;
-
-        ++self->ptrtabsiz;
-    }
-
-    void** ptrtab = self->ptrtab + self->ptrtablen;
-
-    *ptrtab = ptr;
-
-    picotm_append_event(self->module, cmd, self->ptrtablen, error);
-    if (picotm_error_is_set(error)) {
-        return -1;
-    }
-
-    return self->ptrtablen++;
-}
+{ }
 
 /*
  * free()
  */
 
 void
-allocator_tx_exec_free(struct allocator_tx* self, void *mem,
+allocator_tx_exec_free(struct allocator_tx* self, void* mem,
                        struct picotm_error* error)
 {
-    append_cmd(self, CMD_FREE, mem, error);
+    assert(self);
+
+    allocator_log_append(self->log, ALLOCATOR_OP_FREE, mem, error);
 }
 
 static void
-apply_free(struct allocator_tx* self, unsigned int cookie,
+apply_free(struct allocator_tx* self, void* ptr,
            struct picotm_error* error)
 {
-    free(self->ptrtab[cookie]);
+    free(ptr);
 }
 
 static void
-undo_free(struct allocator_tx* self, unsigned int cookie,
+undo_free(struct allocator_tx* self, void* ptr,
           struct picotm_error* error)
 { }
 
@@ -124,6 +86,8 @@ void*
 allocator_tx_exec_malloc(struct allocator_tx* self, size_t size,
                          struct picotm_error* error)
 {
+    assert(self);
+
     void* mem = malloc(rnd2wb(size));
     if (!mem) {
         /* ISO C specifies allocator functions to return NULL in the
@@ -137,28 +101,28 @@ allocator_tx_exec_malloc(struct allocator_tx* self, size_t size,
         return NULL;
     }
 
-    append_cmd(self, CMD_MALLOC, mem, error);
+    allocator_log_append(self->log, ALLOCATOR_OP_MALLOC, mem, error);
     if (picotm_error_is_set(error)) {
-        goto err_append_cmd;
+        goto err_allocator_log_append;
     }
 
     return mem;
 
-err_append_cmd:
+err_allocator_log_append:
     free(mem);
     return NULL;
 }
 
 static void
-apply_malloc(struct allocator_tx* self, unsigned int cookie,
+apply_malloc(struct allocator_tx* self, void* mem,
              struct picotm_error* error)
 { }
 
 static void
-undo_malloc(struct allocator_tx* self, unsigned int cookie,
+undo_malloc(struct allocator_tx* self, void* mem,
             struct picotm_error* error)
 {
-    free(self->ptrtab[cookie]);
+    free(mem);
 }
 
 /*
@@ -171,6 +135,8 @@ allocator_tx_exec_posix_memalign(struct allocator_tx* self, void** memptr,
                                  size_t alignment, size_t size,
                                  struct picotm_error* error)
 {
+    assert(self);
+
     void* mem;
 
     int err = posix_memalign(&mem, alignment, rnd2wb(size));
@@ -179,23 +145,23 @@ allocator_tx_exec_posix_memalign(struct allocator_tx* self, void** memptr,
         return;
     }
 
-    append_cmd(self, CMD_POSIX_MEMALIGN, mem, error);
+    allocator_log_append(self->log, ALLOCATOR_OP_POSIX_MEMALIGN, mem, error);
     if (picotm_error_is_set(error)) {
-        goto err_append_cmd;
+        goto err_allocator_log_append;
     }
 
     *memptr = mem;
 
     return;
 
-err_append_cmd:
+err_allocator_log_append:
     free(mem);
 }
 #endif
 
 #if defined(HAVE_POSIX_MEMALIGN) && HAVE_POSIX_MEMALIGN
 static void
-apply_posix_memalign(struct allocator_tx* self, unsigned int cookie,
+apply_posix_memalign(struct allocator_tx* self, void* ptr,
                      struct picotm_error* error)
 { }
 #else
@@ -204,10 +170,10 @@ apply_posix_memalign(struct allocator_tx* self, unsigned int cookie,
 
 #if defined(HAVE_POSIX_MEMALIGN) && HAVE_POSIX_MEMALIGN
 static void
-undo_posix_memalign(struct allocator_tx* self, unsigned int cookie,
+undo_posix_memalign(struct allocator_tx* self, void* ptr,
                     struct picotm_error* error)
 {
-    free(self->ptrtab[cookie]);
+    free(ptr);
 }
 #else
 #define undo_posix_memalign    NULL
@@ -219,18 +185,18 @@ undo_posix_memalign(struct allocator_tx* self, unsigned int cookie,
 
 void
 allocator_tx_apply_event(struct allocator_tx* self,
-                         unsigned short op, uintptr_t cookie,
+                         enum allocator_op op, void* ptr,
                          struct picotm_error* error)
 {
-    static void (* const apply[LAST_CMD])(struct allocator_tx*,
-                                          unsigned int,
-                                          struct picotm_error*) = {
+    static void (* const apply[LAST_ALLOCATOR_OP])(struct allocator_tx*,
+                                                   void*,
+                                                   struct picotm_error*) = {
         apply_free,
         apply_malloc,
         apply_posix_memalign
     };
 
-    apply[op](self, cookie, error);
+    apply[op](self, ptr, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -238,18 +204,18 @@ allocator_tx_apply_event(struct allocator_tx* self,
 
 void
 allocator_tx_undo_event(struct allocator_tx* self,
-                        unsigned short op, uintptr_t cookie,
+                        enum allocator_op op, void* ptr,
                         struct picotm_error* error)
 {
-    static void (* const undo[LAST_CMD])(struct allocator_tx*,
-                                         unsigned int,
-                                         struct picotm_error*) = {
+    static void (* const undo[LAST_ALLOCATOR_OP])(struct allocator_tx*,
+                                                  void*,
+                                                  struct picotm_error*) = {
         undo_free,
         undo_malloc,
         undo_posix_memalign
     };
 
-    undo[op](self, cookie, error);
+    undo[op](self, ptr, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -257,6 +223,4 @@ allocator_tx_undo_event(struct allocator_tx* self,
 
 void
 allocator_tx_finish(struct allocator_tx* self)
-{
-    self->ptrtablen = 0;
-}
+{ }

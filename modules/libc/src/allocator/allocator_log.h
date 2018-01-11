@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2018   Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -36,46 +36,38 @@
  * \endcond
  */
 
-struct allocator_log;
 struct picotm_error;
 
-/**
- * A transaction on the memory allocation.
- */
-struct allocator_tx {
-    struct allocator_log* log;
+struct allocator_log {
+
+    unsigned long module;
+
+    struct allocator_event* eventtab;
+    size_t                  eventtablen;
+    size_t                  eventtabsiz;
 };
 
 void
-allocator_tx_init(struct allocator_tx* self, struct allocator_log* log);
+allocator_log_init(struct allocator_log* self, unsigned long module);
 
 void
-allocator_tx_uninit(struct allocator_tx* self);
+allocator_log_uninit(struct allocator_log* self);
+
+static inline size_t
+allocator_log_length(const struct allocator_log* self)
+{
+    return self->eventtablen;
+}
+
+static inline struct allocator_event*
+allocator_log_at(const struct allocator_log* self, size_t i)
+{
+    return self->eventtab + i;
+}
 
 void
-allocator_tx_exec_free(struct allocator_tx* self, void* ptr,
-                       struct picotm_error* error);
-
-void*
-allocator_tx_exec_malloc(struct allocator_tx* self, size_t size,
-                         struct picotm_error* error);
-
-#if defined(HAVE_POSIX_MEMALIGN) && HAVE_POSIX_MEMALIGN
-void
-allocator_tx_exec_posix_memalign(struct allocator_tx* self, void** memptr,
-                                 size_t alignment, size_t size,
-                                 struct picotm_error* error);
-#endif
+allocator_log_clear(struct allocator_log* self);
 
 void
-allocator_tx_apply_event(struct allocator_tx* self,
-                         enum allocator_op op, void* ptr,
-                         struct picotm_error* error);
-
-void
-allocator_tx_undo_event(struct allocator_tx* self,
-                        enum allocator_op op, void* ptr,
-                        struct picotm_error* error);
-
-void
-allocator_tx_finish(struct allocator_tx* self);
+allocator_log_append(struct allocator_log* self, enum allocator_op op,
+                     void* ptr, struct picotm_error* error);
