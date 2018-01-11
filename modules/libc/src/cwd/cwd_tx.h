@@ -29,6 +29,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "cwd.h"
+#include "cwd_event.h"
 
 /**
  * \cond impl || libc_impl || libc_impl_cwd
@@ -38,23 +39,20 @@
  * \endcond
  */
 
-struct cwdop;
+struct cwd_log;
 struct picotm_error;
 
 struct cwd_tx {
 
-    unsigned long module;
+    struct cwd_log* log;
 
     struct cwd* cwd;
 
     struct picotm_rwstate   rwstate[NUMBER_OF_CWD_FIELDS];
-
-    struct cwdop* cwdoptab;
-    size_t        cwdoptablen;
 };
 
 void
-cwd_tx_init(struct cwd_tx* self, unsigned long module, struct cwd* cwd);
+cwd_tx_init(struct cwd_tx* self, struct cwd_log* log, struct cwd* cwd);
 
 void
 cwd_tx_uninit(struct cwd_tx* self);
@@ -110,11 +108,11 @@ cwd_tx_realpath_exec(struct cwd_tx* self, const char* path,
  */
 
 void
-cwd_tx_apply_event(struct cwd_tx* self, unsigned short op, uintptr_t cookie,
+cwd_tx_apply_event(struct cwd_tx* self, enum cwd_op op, char* alloced,
                    struct picotm_error* error);
 
 void
-cwd_tx_undo_event(struct cwd_tx* self, unsigned short op, uintptr_t cookie,
+cwd_tx_undo_event(struct cwd_tx* self, enum cwd_op op, char* alloced,
                   struct picotm_error* error);
 
 void

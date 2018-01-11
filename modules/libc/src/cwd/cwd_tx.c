@@ -33,45 +33,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "compat/get_current_dir_name.h"
-
-enum cwd_tx_cmd {
-    CMD_CHDIR,
-    CMD_GETCWD,
-    CMD_REALPATH
-};
-
-struct cwdop {
-    union {
-        struct {
-            char* old_cwd;
-        } chdir;
-        struct {
-            char* alloced_cwd;
-        } getcwd;
-        struct {
-            char* alloced_res;
-        } realpath;
-    } data;
-};
-
-static struct cwdop*
-append_cwdop(struct cwdop** tab, size_t* nelems, struct picotm_error* error)
-{
-    assert(tab);
-    assert(nelems);
-
-    void* tmp = picotm_tabresize(*tab, *nelems, *nelems + 1,
-                                 sizeof((*tab)[0]), error);
-    if (picotm_error_is_set(error)) {
-        return NULL;
-    }
-    *tab = tmp;
-
-    struct cwdop* cwdop = (*tab) + (*nelems);
-    ++(*nelems);
-
-    return cwdop;
-}
+#include "cwd_log.h"
 
 static void
 init_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end)
@@ -105,27 +67,22 @@ unlock_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end,
 }
 
 void
-cwd_tx_init(struct cwd_tx* self, unsigned long module, struct cwd* cwd)
+cwd_tx_init(struct cwd_tx* self, struct cwd_log* log, struct cwd* cwd)
 {
     assert(self);
     assert(cwd);
 
-    self->module = module;
+    self->log = log;
     self->cwd = cwd;
 
     init_rwstates(picotm_arraybeg(self->rwstate),
                   picotm_arrayend(self->rwstate));
-
-    self->cwdoptab = NULL;
-    self->cwdoptablen = 0;
 }
 
 void
 cwd_tx_uninit(struct cwd_tx* self)
 {
     assert(self);
-
-    picotm_tabfree(self->cwdoptab);
 
     uninit_rwstates(picotm_arraybeg(self->rwstate),
                     picotm_arrayend(self->rwstate));
@@ -149,18 +106,6 @@ cwd_tx_try_wrlock_field(struct cwd_tx* self, enum cwd_field field,
     cwd_try_wrlock_field(self->cwd, field, self->rwstate + field, error);
 }
 
-static void
-append_event(struct cwd_tx* self, enum cwd_tx_cmd cmd,
-             const struct cwdop* cwdop, struct picotm_error* error)
-{
-    assert(self);
-
-    picotm_append_event(self->module, cmd, cwdop - self->cwdoptab, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
-}
-
 /*
  * chdir()
  */
@@ -176,19 +121,11 @@ cwd_tx_chdir_exec(struct cwd_tx* self, const char* path,
         return -1;
     }
 
-    struct cwdop* cwdop =  append_cwdop(&self->cwdoptab, &self->cwdoptablen,
-                                        error);
-    if (picotm_error_is_set(error)) {
-        return -1;
-    }
-
     char* cwd = get_current_dir_name();
     if (!cwd) {
         picotm_error_set_errno(error, errno);
         return -1;
     }
-
-    cwdop->data.chdir.old_cwd = cwd;
 
     int res = chdir(path);
     if (res < 0) {
@@ -196,7 +133,7 @@ cwd_tx_chdir_exec(struct cwd_tx* self, const char* path,
         goto err_chdir;
     }
 
-    append_event(self, CMD_CHDIR, cwdop, error);
+    cwd_log_append(self->log, CWD_OP_CHDIR, cwd, error);
     if (picotm_error_is_set(error)) {
         goto err_append_event;
     }
@@ -217,27 +154,27 @@ err_chdir:
 }
 
 void
-apply_chdir(struct cwd_tx* self, const struct cwdop* cwdop,
+apply_chdir(struct cwd_tx* self, char* old_cwd,
             struct picotm_error* error)
 {
-    assert(self);
-
-    free(cwdop->data.chdir.old_cwd);
+    free(old_cwd);
 }
 
 void
-undo_chdir(struct cwd_tx* self, const struct cwdop* cwdop,
+undo_chdir(struct cwd_tx* self, char* old_cwd,
            struct picotm_error* error)
 {
-    assert(cwdop);
+    assert(old_cwd);
 
     /* The old working directory might have been deleted by an external
      * process. We cannot do much about it, but signal a transaction error.
      */
-    int res = chdir(cwdop->data.chdir.old_cwd);
+    int res = chdir(old_cwd);
     if (res < 0) {
         picotm_error_set_errno(error, errno);
     }
+
+    free(old_cwd);
 }
 
 /*
@@ -255,28 +192,24 @@ cwd_tx_getcwd_exec(struct cwd_tx* self, char* buf, size_t size,
         return NULL;
     }
 
-    struct cwdop* cwdop = append_cwdop(&self->cwdoptab, &self->cwdoptablen,
-                                       error);
-    if (picotm_error_is_set(error)) {
-        return NULL;
-    }
-
     char* cwd = getcwd(buf, size);
     if (!cwd) {
         picotm_error_set_errno(error, errno);
         return NULL;
     }
 
+    char* alloced_cwd;
+
     if (!buf && cwd) {
         /* Some implementations of getcwd() return a newly allocated
          * buffer if 'buf' is NULL. We free this buffer during a roll-
          * back. */
-        cwdop->data.getcwd.alloced_cwd = cwd;
+        alloced_cwd = cwd;
     } else {
-        cwdop->data.getcwd.alloced_cwd = NULL;
+        alloced_cwd = NULL;
     }
 
-    append_event(self, CMD_GETCWD, cwdop, error);
+    cwd_log_append(self->log, CWD_OP_GETCWD, alloced_cwd, error);
     if (picotm_error_is_set(error)) {
         goto err_append_event;
     }
@@ -291,19 +224,19 @@ err_append_event:
 }
 
 void
-apply_getcwd(struct cwd_tx* self, const struct cwdop* cwdop,
+apply_getcwd(struct cwd_tx* self, char* alloced_cwd,
              struct picotm_error* error)
 {
     assert(self);
 }
 
 void
-undo_getcwd(struct cwd_tx* self, const struct cwdop* cwdop,
+undo_getcwd(struct cwd_tx* self, char* alloced_cwd,
             struct picotm_error* error)
 {
     assert(self);
 
-    free(cwdop->data.getcwd.alloced_cwd);
+    free(alloced_cwd);
 }
 
 /*
@@ -321,28 +254,24 @@ cwd_tx_realpath_exec(struct cwd_tx* self, const char* path,
         return NULL;
     }
 
-    struct cwdop* cwdop = append_cwdop(&self->cwdoptab, &self->cwdoptablen,
-                                       error);
-    if (picotm_error_is_set(error)) {
-        return NULL;
-    }
-
     char* res = realpath(path, resolved_path);
     if (!res) {
         picotm_error_set_errno(error, errno);
         return NULL;
     }
 
+    char* alloced_res;
+
     if (!resolved_path && res) {
         /* Calls to realpath() return a newly allocated buffer if
          * 'resolved_path' is NULL. We free this buffer during a roll-
          * back. */
-        cwdop->data.realpath.alloced_res = res;
+        alloced_res = res;
     } else {
-        cwdop->data.realpath.alloced_res = NULL;
+        alloced_res = NULL;
     }
 
-    append_event(self, CMD_REALPATH, cwdop, error);
+    cwd_log_append(self->log, CWD_OP_REALPATH, alloced_res, error);
     if (picotm_error_is_set(error)) {
         goto err_append_event;
     }
@@ -357,19 +286,19 @@ err_append_event:
 }
 
 void
-apply_realpath(struct cwd_tx* self, const struct cwdop* cwdop,
+apply_realpath(struct cwd_tx* self, char* alloced_res,
                struct picotm_error* error)
 {
     assert(self);
 }
 
 void
-undo_realpath(struct cwd_tx* self, const struct cwdop* cwdop,
+undo_realpath(struct cwd_tx* self, char* alloced_res,
               struct picotm_error* error)
 {
     assert(self);
 
-    free(cwdop->data.realpath.alloced_res);
+    free(alloced_res);
 }
 
 /*
@@ -377,40 +306,34 @@ undo_realpath(struct cwd_tx* self, const struct cwdop* cwdop,
  */
 
 void
-cwd_tx_apply_event(struct cwd_tx* self, unsigned short op, uintptr_t cookie,
+cwd_tx_apply_event(struct cwd_tx* self, enum cwd_op op, char* alloced,
                    struct picotm_error* error)
 {
-    static void (* const apply[])(struct cwd_tx*, const struct cwdop*,
+    static void (* const apply[])(struct cwd_tx*, char*,
                                   struct picotm_error*) = {
         apply_chdir,
         apply_getcwd,
         apply_realpath
     };
 
-    assert(self);
-    assert(cookie < self->cwdoptablen);
-
-    apply[op](self, self->cwdoptab + cookie, error);
+    apply[op](self, alloced, error);
     if (picotm_error_is_set(error)) {
         return;
     }
 }
 
 void
-cwd_tx_undo_event(struct cwd_tx* self, unsigned short op, uintptr_t cookie,
+cwd_tx_undo_event(struct cwd_tx* self, enum cwd_op op, char* alloced,
                   struct picotm_error* error)
 {
-    static void (* const undo[])(struct cwd_tx*, const struct cwdop*,
+    static void (* const undo[])(struct cwd_tx*, char*,
                                  struct picotm_error*) = {
         undo_chdir,
         undo_getcwd,
         undo_realpath
     };
 
-    assert(self);
-    assert(cookie < self->cwdoptablen);
-
-    undo[op](self, self->cwdoptab + cookie, error);
+    undo[op](self, alloced, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -442,6 +365,4 @@ void
 cwd_tx_finish(struct cwd_tx* self)
 {
     assert(self);
-
-    self->cwdoptablen = 0;
 }

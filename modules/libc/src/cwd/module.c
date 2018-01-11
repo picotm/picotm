@@ -31,6 +31,7 @@
 #include <stdatomic.h>
 #include <stdlib.h>
 #include "cwd.h"
+#include "cwd_log.h"
 #include "cwd_tx.h"
 
 /*
@@ -84,6 +85,7 @@ out:
  */
 
 struct module {
+    struct cwd_log log;
     struct cwd_tx tx;
 
     /* True if module structure has been initialized, false otherwise */
@@ -94,14 +96,22 @@ static void
 module_apply_event(struct module* module, uint16_t head, uintptr_t tail,
                    struct picotm_error* error)
 {
-    cwd_tx_apply_event(&module->tx, head, tail, error);
+    assert(module);
+
+    const struct cwd_event* event = cwd_log_at(&module->log, tail);
+
+    cwd_tx_apply_event(&module->tx, head, event->alloced, error);
 }
 
 static void
 module_undo_event(struct module* module, uint16_t head, uintptr_t tail,
                   struct picotm_error* error)
 {
-    cwd_tx_undo_event(&module->tx, head, tail, error);
+    assert(module);
+
+    const struct cwd_event* event = cwd_log_at(&module->log, tail);
+
+    cwd_tx_undo_event(&module->tx, head, event->alloced, error);
 }
 
 static void
@@ -120,12 +130,15 @@ static void
 module_finish(struct module* module)
 {
     cwd_tx_finish(&module->tx);
+    cwd_log_clear(&module->log);
 }
 
 static void
 module_uninit(struct module* module)
 {
     cwd_tx_uninit(&module->tx);
+    cwd_log_uninit(&module->log);
+
     module->is_initialized = false;
 }
 
@@ -202,7 +215,8 @@ get_cwd_tx(bool initialize, struct picotm_error* error)
         return NULL;
     }
 
-    cwd_tx_init(&t_module.tx, module, cwd);
+    cwd_log_init(&t_module.log, module);
+    cwd_tx_init(&t_module.tx, &t_module.log, cwd);
 
     t_module.is_initialized = true;
 
