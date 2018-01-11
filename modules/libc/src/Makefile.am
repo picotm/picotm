@@ -1,6 +1,6 @@
 #
 # MIT License
-# Copyright (c) 2017    Thomas Zimmermann <tdz@users.sourceforge.net>
+# Copyright (c) 2017-2018   Thomas Zimmermann <tdz@users.sourceforge.net>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -28,7 +28,11 @@ age = 2
 
 lib_LTLIBRARIES = libpicotm-c.la
 
-libpicotm_c_la_SOURCES = allocator/allocator_tx.c \
+libpicotm_c_la_SOURCES = allocator/allocator_event.c \
+                         allocator/allocator_event.h \
+                         allocator/allocator_log.c \
+                         allocator/allocator_log.h \
+                         allocator/allocator_tx.c \
                          allocator/allocator_tx.h \
                          allocator/module.c \
                          allocator/module.h \
