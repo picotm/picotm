@@ -44,6 +44,10 @@ libpicotm_c_la_SOURCES = allocator/allocator_event.c \
                          compat/temp_failure_retry.h \
                          cwd/cwd.c \
                          cwd/cwd.h \
+                         cwd/cwd_event.c \
+                         cwd/cwd_event.h \
+                         cwd/cwd_log.c \
+                         cwd/cwd_log.h \
                          cwd/cwd_tx.c \
                          cwd/cwd_tx.h \
                          cwd/module.c \
