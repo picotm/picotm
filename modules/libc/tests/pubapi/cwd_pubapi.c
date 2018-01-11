@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -29,6 +29,7 @@
 #include <picotm/picotm-tm.h>
 #include <picotm/sched.h>
 #include <picotm/stdio-tm.h>
+#include <picotm/stdlib.h>
 #include <picotm/unistd.h>
 #include <picotm/unistd-tm.h>
 #include <string.h>
@@ -56,9 +57,9 @@ test_dir_format_string(char format[PATH_MAX], unsigned long test)
 static void
 cwd_test_1(unsigned int tid)
 {
-    const char* cwd = safe_getcwd(NULL, 0);
+    char* cwd = safe_getcwd(NULL, 0);
 
-	picotm_begin
+    picotm_begin
 
         privatize_c_tx(cwd, '\0', PICOTM_TM_PRIVATIZE_LOAD);
 
@@ -73,13 +74,17 @@ cwd_test_1(unsigned int tid)
             picotm_recover_from_error(&error);
         }
 
+        free_tx(cwd_tx);
+
         delay_transaction_tx(tid);
 
     picotm_commit
 
         abort_transaction_on_error(__func__);
 
-	picotm_end
+    picotm_end
+
+    free(cwd);
 }
 
 /*
