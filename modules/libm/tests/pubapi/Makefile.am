@@ -27,6 +27,13 @@ TESTS = complex-pubapi-t1.test \
         math-pubapi-t1.test \
         math-pubapi-t4.test
 
+VALGRIND_TESTS = complex-pubapi-valgrind-t1.test \
+                 math-pubapi-valgrind-t1.test
+
+if HAVE_VALGRIND
+TESTS += $(VALGRIND_TESTS)
+endif
+
 EXTRA_DIST = $(TESTS)
 
 TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
