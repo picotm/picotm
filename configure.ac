@@ -107,6 +107,14 @@ AC_FUNC_ALLOCA
 
 
 dnl
+dnl Test infrastructure
+dnl
+
+AC_CHECK_TYPES([pthread_barrierattr_t],,, [[@%:@include <pthread.h>]])
+AC_CHECK_TYPES([pthread_barrier_t],,,     [[@%:@include <pthread.h>]])
+
+
+dnl
 dnl Core transaction manager
 dnl
 
@@ -139,14 +147,6 @@ CONFIG_LIBM
 
 AC_CONFIG_HEADERS([modules/txlib/include/picotm/config/picotm-txlib-config.h])
 CONFIG_TXLIB
-
-
-dnl
-dnl Tests
-dnl
-
-AC_CHECK_TYPES([pthread_barrierattr_t],,, [[@%:@include <pthread.h>]])
-AC_CHECK_TYPES([pthread_barrier_t],,,     [[@%:@include <pthread.h>]])
 
 
 dnl
