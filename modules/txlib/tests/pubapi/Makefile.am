@@ -1,6 +1,6 @@
 #
 # MIT License
-# Copyright (c) 2017    Thomas Zimmermann <tdz@users.sourceforge.net>
+# Copyright (c) 2017-2018   Thomas Zimmermann <tdz@users.sourceforge.net>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -30,6 +30,15 @@ TESTS = txlist-pubapi-t1.test \
         txqueue-pubapi-t4.test \
         txstack-pubapi-t1.test \
         txstack-pubapi-t4.test
+
+VALGRIND_TESTS = txlist-pubapi-valgrind-t1.test \
+                 txmultiset-pubapi-valgrind-t1.test \
+                 txqueue-pubapi-valgrind-t1.test \
+                 txstack-pubapi-valgrind-t1.test
+
+if HAVE_VALGRIND
+TESTS += $(VALGRIND_TESTS)
+endif
 
 EXTRA_DIST = $(TESTS)
 
