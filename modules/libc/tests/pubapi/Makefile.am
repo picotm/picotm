@@ -1,6 +1,6 @@
 #
 # MIT License
-# Copyright (c) 2017    Thomas Zimmermann <tdz@users.sourceforge.net>
+# Copyright (c) 2017-2018   Thomas Zimmermann <tdz@users.sourceforge.net>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -28,6 +28,14 @@ TESTS = allocator-pubapi-t1.test \
         cwd-pubapi-t4.test \
         fildes-pubapi-t1.test \
         fildes-pubapi-t4.test
+
+VALGRIND_TESTS = allocator-pubapi-valgrind-t1.test \
+                 cwd-pubapi-valgrind-t1.test \
+                 fildes-pubapi-valgrind-t1.test
+
+if HAVE_VALGRIND
+TESTS += $(VALGRIND_TESTS)
+endif
 
 EXTRA_DIST = $(TESTS)
 

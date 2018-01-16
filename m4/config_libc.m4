@@ -388,4 +388,8 @@ AC_DEFUN([CONFIG_LIBC], [
         _CHECK_LIBC_SYS_TYPES_H
         _CHECK_LIBC_UNISTD_H
     ])
+
+    CONFIG_TEST([modules/libc/tests/pubapi/allocator-pubapi-valgrind-t1.test])
+    CONFIG_TEST([modules/libc/tests/pubapi/cwd-pubapi-valgrind-t1.test])
+    CONFIG_TEST([modules/libc/tests/pubapi/fildes-pubapi-valgrind-t1.test])
 ])
