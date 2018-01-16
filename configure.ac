@@ -113,6 +113,9 @@ dnl
 AC_CHECK_TYPES([pthread_barrierattr_t],,, [[@%:@include <pthread.h>]])
 AC_CHECK_TYPES([pthread_barrier_t],,,     [[@%:@include <pthread.h>]])
 
+AC_PATH_PROG([VALGRIND], [valgrind])
+AM_CONDITIONAL([HAVE_VALGRIND], [test "x$VALGRIND" != "x"])
+
 
 dnl
 dnl Core transaction manager
