@@ -5,7 +5,7 @@
 #
 # LICENSE
 #
-#   Copyright (c) 2017 Thomas Zimmermann <tdz@users.sourceforge.net>
+#   Copyright (c) 2017-2018 Thomas Zimmermann <tdz@users.sourceforge.net>
 #
 #   Copying and distribution of this file, with or without modification,
 #   are permitted in any medium without royalty provided the copyright
@@ -33,4 +33,6 @@ AC_DEFUN([CONFIG_TM], [
     _CHECK_MODULE_TYPE([tm], [unsigned long],      [[]])
     _CHECK_MODULE_TYPE([tm], [unsigned long long], [[]])
     _CHECK_MODULE_TYPE([tm], [unsigned short],     [[]])
+
+    CONFIG_TEST([modules/tm/tests/pubapi/tm-pubapi-valgrind-t1.test])
 ])
