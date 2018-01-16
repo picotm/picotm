@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -160,9 +160,9 @@ TEST_SUCCESS(long complex, csinl,  tid + tid * I)
 #else
 TEST_SUCCESS_SKIP(csinl)
 #endif
-TEST_SUCCESS(double complex,      csqrt,  tid + tid * I)
-TEST_SUCCESS(float complex,       csqrtf, tid + tid * I)
-TEST_SUCCESS(long double complex, csqrtl, tid + tid * I)
+TEST_SUCCESS(double complex,      csqrt,  (tid + 1) + (tid + 1) * I)
+TEST_SUCCESS(float complex,       csqrtf, (tid + 1) + (tid + 1) * I)
+TEST_SUCCESS(long double complex, csqrtl, (tid + 1) + (tid + 1) * I)
 TEST_SUCCESS(double complex,      ctan,   (M_PI_2 / (tid + 1)) + tid * I)
 TEST_SUCCESS(float complex,       ctanf,  (M_PI_2 / (tid + 1)) + tid * I)
 TEST_SUCCESS(double complex,      ctanh,  (M_PI_2 / (tid + 1)) + tid * I)
