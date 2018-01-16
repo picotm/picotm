@@ -52,6 +52,9 @@ struct tm_page {
     /** Transaction-local buffer */
     uint8_t buf[TM_BLOCK_SIZE];
 
+    /** Bitmap of the valid fields in buf. */
+    uint8_t buf_bits;
+
     /** Entry into allocator lists */
     SLIST_ENTRY(tm_page) list;
 };
@@ -78,16 +81,23 @@ void*
 tm_page_buffer(struct tm_page* page);
 
 void
-tm_page_ld(struct tm_page* page, struct tm_vmem* vmem,
+tm_page_ld(struct tm_page* page, unsigned long bits, struct tm_vmem* vmem,
            struct picotm_error* error);
 
-void
-tm_page_st(struct tm_page* page, struct tm_vmem* vmem,
-           struct picotm_error* error);
-
-void
-tm_page_xchg(struct tm_page* page, struct tm_vmem* vmem,
+bool
+tm_page_ld_c(struct tm_page* page, unsigned long bits, int c, struct tm_vmem* vmem,
              struct picotm_error* error);
+
+void
+tm_page_st(struct tm_page* page, unsigned long bits, struct tm_vmem* vmem,
+           struct picotm_error* error);
+
+void
+tm_page_xchg(struct tm_page* page, unsigned long bits, struct tm_vmem* vmem,
+             struct picotm_error* error);
+bool
+tm_page_xchg_c(struct tm_page* page, unsigned long bits, int c, struct tm_vmem* vmem,
+               struct picotm_error* error);
 
 static inline bool
 tm_page_has_locked_frame(const struct tm_page* page)

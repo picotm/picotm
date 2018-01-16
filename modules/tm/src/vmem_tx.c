@@ -25,6 +25,7 @@
 
 #include "vmem_tx.h"
 #include <picotm/picotm-error.h>
+#include <picotm/picotm-lib-ptr.h>
 #include <stdlib.h>
 #include <string.h>
 #include "picotm/picotm-tm.h"
@@ -146,8 +147,34 @@ release_page(struct tm_vmem_tx* vmem_tx, struct tm_page* page,
     free_page(vmem_tx, page);
 }
 
+static unsigned long
+ulmin(unsigned long lhs, unsigned long rhs)
+{
+    return lhs < rhs ? lhs : rhs;
+}
+
+static unsigned long
+copy_all_bits(void)
+{
+    return (TM_BLOCK_SIZE - 1);
+}
+
+static unsigned long
+copy_bits(uintptr_t addr, size_t siz)
+{
+    unsigned long bits = copy_all_bits(); /* Set all bits. */
+
+    /* Don't copy more than siz bytes. */
+    bits >>= TM_BLOCK_SIZE - ulmin(siz, TM_BLOCK_SIZE);
+    /* Start copying at addr. */
+    bits <<= addr - picotm_address_ceil(addr, TM_BLOCK_SIZE);
+
+    return bits & copy_all_bits();
+}
+
 static void
-prepare_page_ld(struct tm_page* page, struct tm_vmem* vmem,
+prepare_page_ld(struct tm_page* page, uintptr_t addr, size_t siz,
+                struct tm_vmem* vmem,
                 struct picotm_error* error)
 {
     if (page->flags & TM_PAGE_FLAG_DISCARDED) {
@@ -161,7 +188,8 @@ prepare_page_ld(struct tm_page* page, struct tm_vmem* vmem,
     if (picotm_error_is_set(error)) {
         return;
     }
-    tm_page_ld(page, vmem, error);
+
+    tm_page_ld(page, copy_bits(addr, siz), vmem, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -180,7 +208,7 @@ tm_vmem_tx_ld(struct tm_vmem_tx* vmem_tx, uintptr_t addr, void* buf,
         if (picotm_error_is_set(error)) {
             return;
         }
-        prepare_page_ld(page, vmem_tx->vmem, error);
+        prepare_page_ld(page, addr, siz, vmem_tx->vmem, error);
         if (picotm_error_is_set(error)) {
             return;
         }
@@ -200,7 +228,8 @@ tm_vmem_tx_ld(struct tm_vmem_tx* vmem_tx, uintptr_t addr, void* buf,
 }
 
 static void
-prepare_page_st(struct tm_page* page, struct tm_vmem* vmem,
+prepare_page_st(struct tm_page* page, uintptr_t addr, size_t siz,
+                struct tm_vmem* vmem,
                 struct picotm_error* error)
 {
     if (page->flags & TM_PAGE_FLAG_DISCARDED) {
@@ -214,7 +243,7 @@ prepare_page_st(struct tm_page* page, struct tm_vmem* vmem,
     if (picotm_error_is_set(error)) {
         return;
     }
-    tm_page_ld(page, vmem, error);
+    tm_page_ld(page, copy_bits(addr, siz), vmem, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -233,7 +262,7 @@ tm_vmem_tx_st(struct tm_vmem_tx* vmem_tx, uintptr_t addr, const void* buf,
         if (picotm_error_is_set(error)) {
             return;
         }
-        prepare_page_st(page, vmem_tx->vmem, error);
+        prepare_page_st(page, addr, siz, vmem_tx->vmem, error);
         if (picotm_error_is_set(error)) {
             return;
         }
@@ -263,7 +292,7 @@ tm_vmem_tx_ldst(struct tm_vmem_tx* vmem_tx, uintptr_t laddr, uintptr_t saddr,
         if (picotm_error_is_set(error)) {
             return;
         }
-        prepare_page_ld(lpage, vmem_tx->vmem, error);
+        prepare_page_ld(lpage, laddr, siz, vmem_tx->vmem, error);
         if (picotm_error_is_set(error)) {
             return;
         }
@@ -278,7 +307,7 @@ tm_vmem_tx_ldst(struct tm_vmem_tx* vmem_tx, uintptr_t laddr, uintptr_t saddr,
         if (picotm_error_is_set(error)) {
             return;
         }
-        prepare_page_st(spage, vmem_tx->vmem, error);
+        prepare_page_st(spage, saddr, siz, vmem_tx->vmem, error);
         if (picotm_error_is_set(error)) {
             return;
         }
@@ -299,7 +328,8 @@ tm_vmem_tx_ldst(struct tm_vmem_tx* vmem_tx, uintptr_t laddr, uintptr_t saddr,
 }
 
 static void
-prepare_page_privatize(struct tm_page* page, struct tm_vmem* vmem,
+prepare_page_privatize(struct tm_page* page, uintptr_t addr, size_t siz,
+                       struct tm_vmem* vmem,
                        unsigned long flags, struct picotm_error* error)
 {
     if (page->flags & TM_PAGE_FLAG_DISCARDED) {
@@ -316,7 +346,7 @@ prepare_page_privatize(struct tm_page* page, struct tm_vmem* vmem,
         if (picotm_error_is_set(error)) {
             return;
         }
-        tm_page_ld(page, vmem, error);
+        tm_page_ld(page, copy_bits(addr, siz), vmem, error);
         if (picotm_error_is_set(error)) {
             return;
         }
@@ -331,7 +361,7 @@ prepare_page_privatize(struct tm_page* page, struct tm_vmem* vmem,
         if (picotm_error_is_set(error)) {
             return;
         }
-        tm_page_ld(page, vmem, error);
+        tm_page_ld(page, copy_bits(addr, siz), vmem, error);
         if (picotm_error_is_set(error)) {
             return;
         }
@@ -357,7 +387,7 @@ prepare_page_privatize(struct tm_page* page, struct tm_vmem* vmem,
          */
 
         if (tm_page_has_wrlocked_frame(page)) {
-            tm_page_xchg(page, vmem, error);
+            tm_page_xchg(page, copy_bits(addr, siz), vmem, error);
             if (picotm_error_is_set(error)) {
                 return;
             }
@@ -377,7 +407,7 @@ tm_vmem_tx_privatize(struct tm_vmem_tx* vmem_tx, uintptr_t addr, size_t siz,
         if (picotm_error_is_set(error)) {
             return;
         }
-        prepare_page_privatize(page, vmem_tx->vmem, flags, error);
+        prepare_page_privatize(page, addr, siz, vmem_tx->vmem, flags, error);
         if (picotm_error_is_set(error)) {
             return;
         }
@@ -392,18 +422,109 @@ tm_vmem_tx_privatize(struct tm_vmem_tx* vmem_tx, uintptr_t addr, size_t siz,
     }
 }
 
+static bool
+prepare_page_privatize_c(struct tm_page* page,
+                         uintptr_t addr, size_t page_diff, int c,
+                         struct tm_vmem* vmem, unsigned long flags,
+                         struct picotm_error* error)
+{
+    bool found_c;
+
+    if ((flags & PICOTM_TM_PRIVATIZE_STORE) &&
+            !tm_page_has_wrlocked_frame(page)) {
+
+        /* Page requires a writer lock. */
+
+        tm_page_try_wrlock_frame(page, vmem, error);
+        if (picotm_error_is_set(error)) {
+            return false;
+        }
+
+        found_c = tm_page_ld_c(page, copy_bits(addr, page_diff), c, vmem,
+                               error);
+        if (picotm_error_is_set(error)) {
+            return false;
+        }
+        page->flags |= TM_PAGE_FLAG_WRITE_THROUGH;
+
+    } else if ((flags & PICOTM_TM_PRIVATIZE_LOAD) &&
+                !tm_page_has_rdlocked_frame(page)) {
+
+        /* Page requires a reader lock. */
+
+        tm_page_try_rdlock_frame(page, vmem, error);
+        if (picotm_error_is_set(error)) {
+            return false;
+        }
+        found_c = tm_page_ld_c(page, copy_bits(addr, page_diff), c, vmem,
+                               error);
+        if (picotm_error_is_set(error)) {
+            return false;
+        }
+        page->flags |= TM_PAGE_FLAG_WRITE_THROUGH;
+
+    } else if (!flags && !tm_page_has_wrlocked_frame(page)) {
+
+        /* Not setting any flags marks the page as discarded.
+         * Page requires a writer lock. */
+
+        tm_page_try_wrlock_frame(page, vmem, error);
+        if (picotm_error_is_set(error)) {
+            return false;
+        }
+
+        uintptr_t page_addr = tm_page_address(page);
+        size_t page_head = addr - page_addr;
+        const uint8_t* mem = tm_page_buffer(page);
+        found_c = !!memchr(mem + page_head, c, page_diff);
+
+        page->flags |= TM_PAGE_FLAG_DISCARDED;
+
+    } else if (!(page->flags & TM_PAGE_FLAG_WRITE_THROUGH)) {
+
+        /* Page holds correct lock, but requires write-through
+         * mode. Privatized pages use write-through semantics,
+         * so that all stores are immediately visible in the
+         * region's memory.
+         */
+
+        if (tm_page_has_wrlocked_frame(page)) {
+            found_c = tm_page_xchg_c(page, copy_bits(addr, page_diff), c, vmem, error);
+            if (picotm_error_is_set(error)) {
+                return false;
+            }
+        } else {
+            uintptr_t page_addr = tm_page_address(page);
+            size_t page_head = addr - page_addr;
+            const uint8_t* mem = tm_page_buffer(page);
+            found_c = !!memchr(mem + page_head, c, page_diff);
+        }
+        page->flags |= TM_PAGE_FLAG_WRITE_THROUGH;
+    } else {
+
+        /* The page is already set up correctly. We only have to
+         * check for the character 'c'.
+         */
+
+        uintptr_t page_addr = tm_page_address(page);
+        size_t page_head = addr - page_addr;
+        const uint8_t* mem = tm_page_buffer(page);
+        found_c = !!memchr(mem + page_head, c, page_diff);
+    }
+
+    return found_c;
+}
+
 void
 tm_vmem_tx_privatize_c(struct tm_vmem_tx* vmem_tx, uintptr_t addr, int c,
                        unsigned long flags, struct picotm_error* error)
 {
-    while (true) {
+    bool found_c = false;
+
+    while (!found_c) {
 
         /* released as part of apply() or undo() */
         struct tm_page* page = acquire_page_by_address(vmem_tx, addr, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-        prepare_page_privatize(page, vmem_tx->vmem, flags, error);
         if (picotm_error_is_set(error)) {
             return;
         }
@@ -413,10 +534,10 @@ tm_vmem_tx_privatize_c(struct tm_vmem_tx* vmem_tx, uintptr_t addr, int c,
         size_t page_tail = TM_BLOCK_SIZE - page_head;
         size_t page_diff = page_tail;
 
-        /* check for 'c' in current page */
-        const uint8_t* mem = tm_page_buffer(page);
-        if (memchr(mem + page_head, c, page_diff)) {
-            break;
+        found_c = prepare_page_privatize_c(page, addr, page_diff, c,
+                                           vmem_tx->vmem, flags, error);
+        if (picotm_error_is_set(error)) {
+            return;
         }
 
         addr += page_diff;
@@ -451,7 +572,7 @@ tm_vmem_tx_apply(struct tm_vmem_tx* vmem_tx, struct picotm_error* error)
         if (tm_page_has_wrlocked_frame(page) &&
                 !(page->flags & TM_PAGE_FLAG_WRITE_THROUGH) &&
                 !(page->flags & TM_PAGE_FLAG_DISCARDED)) {
-            tm_page_st(page, vmem_tx->vmem, error);
+            tm_page_st(page, copy_all_bits(), vmem_tx->vmem, error);
             if (picotm_error_is_set(error)) {
                 return;
             }
@@ -467,7 +588,7 @@ tm_vmem_tx_undo(struct tm_vmem_tx* vmem_tx, struct picotm_error* error)
         if (tm_page_has_wrlocked_frame(page) &&
                 (page->flags & TM_PAGE_FLAG_WRITE_THROUGH) &&
                !(page->flags & TM_PAGE_FLAG_DISCARDED)) {
-            tm_page_st(page, vmem_tx->vmem, error);
+            tm_page_st(page, copy_all_bits(), vmem_tx->vmem, error);
             if (picotm_error_is_set(error)) {
                 return;
             }
