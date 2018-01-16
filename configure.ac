@@ -130,6 +130,8 @@ AC_CHECK_TYPES([kern_return_t],
                           [Define to 1 if the system has the type 'kern_return_t'.])],,
                [[@%:@include <mach/mach.h>]])
 
+CONFIG_TEST([tests/pubapi/core-pubapi-valgrind-t1.test])
+
 
 dnl
 dnl Modules

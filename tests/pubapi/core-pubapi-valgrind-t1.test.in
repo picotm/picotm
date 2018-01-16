@@ -1,6 +1,8 @@
+#!/bin/sh
+
 #
 # MIT License
-# Copyright (c) 2017-2018   Thomas Zimmermann <tdz@users.sourceforge.net>
+# Copyright (c) 2018    Thomas Zimmermann <tdz@users.sourceforge.net>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -22,37 +24,6 @@
 #
 # SPDX-License-Identifier: MIT
 
-TESTS = core-pubapi-t1.test \
-        core-pubapi-t4.test
+VALGRIND_FLAGS="--quiet --leak-check=full --error-exitcode=1"
 
-VALGRIND_TESTS = core-pubapi-valgrind-t1.test
-
-if HAVE_VALGRIND
-TESTS += $(VALGRIND_TESTS)
-endif
-
-EXTRA_DIST = $(TESTS)
-
-TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
-                  $(top_srcdir)/build-aux/tap-driver.sh
-
-check_PROGRAMS = core-pubapi
-
-core_pubapi_SOURCES = core_pubapi.c
-
-AM_LDFLAGS = -static
-
-LDADD = $(top_builddir)/tests/libtests/libpicotm_tests.la \
-        $(top_builddir)/tests/libsafeblk/libpicotm_safeblk.la \
-        $(top_builddir)/tests/libtap/libpicotm_tap.la \
-        $(top_builddir)/src/libpicotm.la
-
-AM_CPPFLAGS = -I$(top_builddir)/tests/libtests \
-              -I$(top_srcdir)/tests/libtests \
-              -I$(top_builddir)/tests/libsafeblk \
-              -I$(top_srcdir)/tests/libsafeblk \
-              -I$(top_builddir)/tests/libtap \
-              -I$(top_srcdir)/tests/libtap \
-              -I$(top_builddir)/include \
-              -I$(top_srcdir)/include \
-              -include config.h
+@VALGRIND@ ${VALGRIND_FLAGS} ./core-pubapi -t1
