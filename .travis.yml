@@ -1,6 +1,6 @@
 #
 # MIT License
-# Copyright (c) 2017    Thomas Zimmermann <tdz@users.sourceforge.net>
+# Copyright (c) 2017-2018   Thomas Zimmermann <tdz@users.sourceforge.net>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -120,7 +120,7 @@ matrix:
         - MATRIX_EVAL="CC=clang-4.0 && SKIP_MAKE_CHECK=1"
 
 install:
-    - sudo apt-get install -y autoconf-archive doxygen graphviz optipng
+    - sudo apt-get install -y autoconf-archive doxygen graphviz optipng valgrind
 
 before_script:
     - eval "${MATRIX_EVAL}"
