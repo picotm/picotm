@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -94,7 +94,7 @@ free_tx(void* ptr)
 {
     size_t usiz = malloc_usable_size(ptr);
     if (usiz) {
-        privatize_tx(ptr, usiz, PICOTM_TM_PRIVATIZE_LOADSTORE);
+        privatize_tx(ptr, usiz, 0); /* discard memory region */
     }
     allocator_module_free(ptr, usiz);
 }
@@ -170,7 +170,7 @@ realloc_tx(void* ptr, size_t size)
 {
     size_t usiz = malloc_usable_size(ptr);
     if (usiz) {
-        privatize_tx(ptr, usiz, PICOTM_TM_PRIVATIZE_LOADSTORE);
+        privatize_tx(ptr, usiz, 0); /* discard memory region */
     }
 
     error_module_save_errno();
