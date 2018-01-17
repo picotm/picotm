@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -200,7 +200,8 @@ __picotm_tm_privatize_c(uintptr_t addr, int c, unsigned long flags);
  * Privatizes the memory region starting at address.
  * \param   addr    The address to privatize.
  * \param   siz     The number of bytes to privatize.
- * \param   flags   Privatizes for loading and/or storing.
+ * \param   flags   Privatizes for loading and/or storing. Not setting flags
+ *                  discards the buffer.
  */
 static inline void
 privatize_tx(const void* addr, size_t siz, unsigned long flags)
@@ -213,7 +214,8 @@ privatize_tx(const void* addr, size_t siz, unsigned long flags)
  * at character 'c'.
  * \param   addr    The address to privatize.
  * \param   c       The region's terminating character.
- * \param   flags   Privatizes for loading and/or storing.
+ * \param   flags   Privatizes for loading and/or storing. Not setting flags
+ *                  discards the buffer.
  */
 static inline void
 privatize_c_tx(const void* addr, int c, unsigned long flags)
@@ -231,7 +233,8 @@ privatize_c_tx(const void* addr, int c, unsigned long flags)
     /**
         Privatizes a value of type '__type'.
         \param   addr   The address to privatize.\n
-        \param   flags  Privatizes for loading and/or storing.
+        \param   flags  Privatizes for loading and/or storing. Not setting
+                        flags discards the buffer.
      */                                                                     \
     static inline void                                                      \
     privatize_ ## __name ## _tx(const __type* addr, unsigned long flags)    \
@@ -480,7 +483,7 @@ PICOTM_END_DECLS
  *
  * Loads and stores always copy values into or out of a transaction. There
  * are cases where you don't want a copy, but the exact memory location
- * of a value. This is called *privatization*. For example, the function
+ * of a value. This is called *privatization.* For example, the function
  * `memcpy()` loads and stores an indefinite amount of data between memory
  * buffers. The actual buffer size is often not known in advance. It would
  * be wasteful to first load the data into a transaction-local buffer and
@@ -510,8 +513,10 @@ PICOTM_END_DECLS
  * The number of bytes is given in the second argument. The flags argument is
  * a bitmask of PICOTM_TM_PRIVATIZE_LOAD and PICOTM_TM_PRIVATIZE_STORE. These
  * flags control how picotm handles the memory location. If you only
- * privatized a memory location for loading *or* storing, you should execute
- * the other operation.
+ * privatized a memory location for loading *or* storing, you should never
+ * invoke the other operation. Setting no flags at all will discard the
+ * memory location. This signals to other transactions that the memory is
+ * invalid and to be freed.
  *
  * There can be cases where you don't know in advance how long the privatized
  * buffer is going to be. For example, when you privatize a C string, the

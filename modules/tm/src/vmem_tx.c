@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -150,7 +150,10 @@ static void
 prepare_page_ld(struct tm_page* page, struct tm_vmem* vmem,
                 struct picotm_error* error)
 {
-    if (tm_page_has_rdlocked_frame(page)) {
+    if (page->flags & TM_PAGE_FLAG_DISCARDED) {
+        picotm_error_set_error_code(error, PICOTM_OUT_OF_BOUNDS);
+        return;
+    } else if (tm_page_has_rdlocked_frame(page)) {
         return;
     }
 
@@ -200,7 +203,10 @@ static void
 prepare_page_st(struct tm_page* page, struct tm_vmem* vmem,
                 struct picotm_error* error)
 {
-    if (tm_page_has_wrlocked_frame(page)) {
+    if (page->flags & TM_PAGE_FLAG_DISCARDED) {
+        picotm_error_set_error_code(error, PICOTM_OUT_OF_BOUNDS);
+        return;
+    } else if (tm_page_has_wrlocked_frame(page)) {
         return;
     }
 
@@ -296,6 +302,11 @@ static void
 prepare_page_privatize(struct tm_page* page, struct tm_vmem* vmem,
                        unsigned long flags, struct picotm_error* error)
 {
+    if (page->flags & TM_PAGE_FLAG_DISCARDED) {
+        picotm_error_set_error_code(error, PICOTM_OUT_OF_BOUNDS);
+        return;
+    }
+
     if ((flags & PICOTM_TM_PRIVATIZE_STORE) &&
             !tm_page_has_wrlocked_frame(page)) {
 
@@ -311,7 +322,8 @@ prepare_page_privatize(struct tm_page* page, struct tm_vmem* vmem,
         }
         page->flags |= TM_PAGE_FLAG_WRITE_THROUGH;
 
-    } else if (!tm_page_has_rdlocked_frame(page)) {
+    } else if ((flags & PICOTM_TM_PRIVATIZE_LOAD) &&
+                !tm_page_has_rdlocked_frame(page)) {
 
         /* Page requires a reader lock. */
 
@@ -324,6 +336,17 @@ prepare_page_privatize(struct tm_page* page, struct tm_vmem* vmem,
             return;
         }
         page->flags |= TM_PAGE_FLAG_WRITE_THROUGH;
+
+    } else if (!flags && !tm_page_has_wrlocked_frame(page)) {
+
+        /* Not setting any flags marks the page as discarded.
+         * Page requires a writer lock. */
+
+        tm_page_try_wrlock_frame(page, vmem, error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
+        page->flags |= TM_PAGE_FLAG_DISCARDED;
 
     } else if (!(page->flags & TM_PAGE_FLAG_WRITE_THROUGH)) {
 
@@ -426,7 +449,8 @@ tm_vmem_tx_apply(struct tm_vmem_tx* vmem_tx, struct picotm_error* error)
     struct tm_page* page;
     SLIST_FOREACH(page, &vmem_tx->active_pages, list) {
         if (tm_page_has_wrlocked_frame(page) &&
-                !(page->flags & TM_PAGE_FLAG_WRITE_THROUGH)) {
+                !(page->flags & TM_PAGE_FLAG_WRITE_THROUGH) &&
+                !(page->flags & TM_PAGE_FLAG_DISCARDED)) {
             tm_page_st(page, vmem_tx->vmem, error);
             if (picotm_error_is_set(error)) {
                 return;
@@ -441,7 +465,8 @@ tm_vmem_tx_undo(struct tm_vmem_tx* vmem_tx, struct picotm_error* error)
     struct tm_page* page;
     SLIST_FOREACH(page, &vmem_tx->active_pages, list) {
         if (tm_page_has_wrlocked_frame(page) &&
-                (page->flags & TM_PAGE_FLAG_WRITE_THROUGH)) {
+                (page->flags & TM_PAGE_FLAG_WRITE_THROUGH) &&
+               !(page->flags & TM_PAGE_FLAG_DISCARDED)) {
             tm_page_st(page, vmem_tx->vmem, error);
             if (picotm_error_is_set(error)) {
                 return;

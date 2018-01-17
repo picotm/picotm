@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -34,7 +34,8 @@
 struct tm_vmem;
 
 enum {
-    TM_PAGE_FLAG_WRITE_THROUGH = 1 << 0
+    TM_PAGE_FLAG_WRITE_THROUGH = 1 << 0,
+    TM_PAGE_FLAG_DISCARDED     = 1 << 1
 };
 
 /**
