@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -279,13 +279,86 @@ tm_test_6(unsigned int tid)
     }
 }
 
+/**
+ * Discard a buffer and load it. Should generate an Out-of-Bounds error.
+ */
+static void
+tm_test_7(unsigned int tid)
+{
+    picotm_safe bool performed_error_recovery = false;
+
+    const char buf[8] = "";
+
+    picotm_begin
+
+        privatize_tx(buf, sizeof(buf), 0);
+
+        char tx_buf[8];
+        load_tx(buf, tx_buf, sizeof(tx_buf));
+
+    picotm_commit
+
+        if ((picotm_error_status() != PICOTM_ERROR_CODE) ||
+            (picotm_error_as_error_code() != PICOTM_OUT_OF_BOUNDS)) {
+            abort_transaction_on_error(__func__);
+        }
+
+        performed_error_recovery = true;
+        /* leave error recovery without restarting TX */
+
+    picotm_end
+
+    if (!performed_error_recovery) {
+        tap_error("Transaction did not perform error recovery.\n");
+        abort_safe_block();
+    }
+}
+
+/**
+ * Discard a buffer and store to it. Should generate an
+ * Out-of-Bounds error.
+ */
+static void
+tm_test_8(unsigned int tid)
+{
+    picotm_safe bool performed_error_recovery = false;
+
+    char buf[8];
+
+    picotm_begin
+
+        privatize_tx(buf, sizeof(buf), 0);
+
+        const char tx_buf[8] = "";
+        store_tx(buf, tx_buf, sizeof(buf));
+
+    picotm_commit
+
+        if ((picotm_error_status() != PICOTM_ERROR_CODE) ||
+            (picotm_error_as_error_code() != PICOTM_OUT_OF_BOUNDS)) {
+            abort_transaction_on_error(__func__);
+        }
+
+        performed_error_recovery = true;
+        /* leave error recovery without restarting TX */
+
+    picotm_end
+
+    if (!performed_error_recovery) {
+        tap_error("Transaction did not perform error recovery.\n");
+        abort_safe_block();
+    }
+}
+
 static const struct test_func tm_test[] = {
     {"tm_test_1", tm_test_1, tm_test_1_pre, tm_test_1_post},
     {"tm_test_2", tm_test_2, tm_test_2_pre, tm_test_2_post},
     {"tm_test_3", tm_test_3, tm_test_3_pre, tm_test_3_post},
     {"tm_test_4", tm_test_4, tm_test_4_pre, NULL},
     {"tm_test_5", tm_test_5, tm_test_5_pre, NULL},
-    {"tm_test_6", tm_test_6, NULL, NULL}
+    {"tm_test_6", tm_test_6, NULL, NULL},
+    {"tm_test_7", tm_test_7, NULL, NULL},
+    {"tm_test_8", tm_test_8, NULL, NULL}
 };
 
 /*
