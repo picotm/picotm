@@ -40,7 +40,7 @@ struct picotm_event;
 /**
  * \brief The log holds the events of a transaction.
  */
-struct log {
+struct picotm_log {
 
     /** Table of transaction events. */
     struct picotm_event* eventtab;
@@ -56,13 +56,13 @@ struct log {
  * Init log.
  */
 void
-log_init(struct log* self);
+picotm_log_init(struct picotm_log* self);
 
 /**
  * Uninit log.
  */
 void
-log_uninit(struct log* self);
+picotm_log_uninit(struct picotm_log* self);
 
 /**
  * \brief Returns the first event in an event log.
@@ -70,7 +70,7 @@ log_uninit(struct log* self);
  * \returns The event log's first event.
  */
 struct picotm_event*
-log_begin(struct log* self);
+picotm_log_begin(struct picotm_log* self);
 
 /**
  * \brief Returns the terminal event at the end of an event log.
@@ -78,7 +78,7 @@ log_begin(struct log* self);
  * \returns The event log's terminal event.
  */
 const struct picotm_event*
-log_end(struct log* self);
+picotm_log_end(struct picotm_log* self);
 
 /**
  * \brief Appends an event to an event log.
@@ -87,7 +87,7 @@ log_end(struct log* self);
  * \param[out]  error   Returns an error to the caller.
  */
 void
-log_append(struct log* self, const struct picotm_event* event,
+picotm_log_append(struct picotm_log* self, const struct picotm_event* event,
            struct picotm_error* error);
 
 /**
@@ -95,4 +95,4 @@ log_append(struct log* self, const struct picotm_event* event,
  * \param   self    The event log.
  */
 void
-log_clear(struct log* self);
+picotm_log_clear(struct picotm_log* self);

@@ -28,9 +28,7 @@ age = 1
 
 lib_LTLIBRARIES = libpicotm.la
 
-libpicotm_la_SOURCES = log.c \
-                       log.h \
-                       module.c \
+libpicotm_la_SOURCES = module.c \
                        module.h \
                        picotm.c \
                        picotm.h \
@@ -48,6 +46,8 @@ libpicotm_la_SOURCES = log.c \
                        picotm_lock_manager.h \
                        picotm_lock_owner.c \
                        picotm_lock_owner.h \
+                       picotm_log.c \
+                       picotm_log.h \
                        picotm_os_cond.c \
                        picotm_os_cond.h \
                        picotm_os_mutex.c \

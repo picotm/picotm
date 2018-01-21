@@ -27,9 +27,9 @@
 
 #include <setjmp.h>
 #include <stdbool.h>
-#include "log.h"
 #include "module.h"
 #include "picotm_lock_owner.h"
+#include "picotm_log.h"
 
 /**
  * \cond impl || lib_impl
@@ -50,7 +50,7 @@ enum tx_mode {
 
 struct tx {
     jmp_buf*          env;
-    struct log        log;
+    struct picotm_log log;
     struct tx_shared *shared;
     enum tx_mode      mode;
     unsigned long     nretries;
