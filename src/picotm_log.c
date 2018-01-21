@@ -23,7 +23,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include "log.h"
+#include "picotm_log.h"
 #include <assert.h>
 #include <picotm/picotm-error.h>
 #include <string.h>
@@ -31,7 +31,7 @@
 #include "table.h"
 
 void
-log_init(struct log* self)
+picotm_log_init(struct picotm_log* self)
 {
     assert(self);
 
@@ -41,7 +41,7 @@ log_init(struct log* self)
 }
 
 void
-log_uninit(struct log* self)
+picotm_log_uninit(struct picotm_log* self)
 {
     assert(self);
 
@@ -49,7 +49,7 @@ log_uninit(struct log* self)
 }
 
 struct picotm_event*
-log_begin(struct log* self)
+picotm_log_begin(struct picotm_log* self)
 {
     assert(self);
 
@@ -57,7 +57,7 @@ log_begin(struct log* self)
 }
 
 const struct picotm_event*
-log_end(struct log* self)
+picotm_log_end(struct picotm_log* self)
 {
     assert(self);
 
@@ -65,13 +65,13 @@ log_end(struct log* self)
 }
 
 void
-log_clear(struct log* self)
+picotm_log_clear(struct picotm_log* self)
 {
     self->eventtablen = 0;
 }
 
 static struct picotm_event*
-log_end_alloc(struct log* self, struct picotm_error* error)
+picotm_log_end_alloc(struct picotm_log* self, struct picotm_error* error)
 {
     assert(self);
 
@@ -92,31 +92,31 @@ log_end_alloc(struct log* self, struct picotm_error* error)
     self->eventtabsiz = neweventtabsiz;
 
 out:
-    return (struct picotm_event*)log_end(self);
+    return (struct picotm_event*)picotm_log_end(self);
 }
 
 static void
-log_end_seal(struct log* self, const struct picotm_event* event)
+picotm_log_end_seal(struct picotm_log* self, const struct picotm_event* event)
 {
     assert(self);
-    assert(event == log_end(self));
+    assert(event == picotm_log_end(self));
 
     ++self->eventtablen;
 }
 
 void
-log_append(struct log* self, const struct picotm_event* event,
+picotm_log_append(struct picotm_log* self, const struct picotm_event* event,
            struct picotm_error* error)
 {
     assert(self);
     assert(event);
 
-    struct picotm_event* end = log_end_alloc(self, error);
+    struct picotm_event* end = picotm_log_end_alloc(self, error);
     if (picotm_error_is_set(error)) {
         return;
     }
 
     memcpy(end, event, sizeof(*event));
 
-    log_end_seal(self, end);
+    picotm_log_end_seal(self, end);
 }

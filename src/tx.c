@@ -46,7 +46,7 @@ tx_init(struct tx* self, struct tx_shared* tx_shared,
 {
     assert(self);
 
-    log_init(&self->log);
+    picotm_log_init(&self->log);
 
     self->env = NULL;
     self->shared = tx_shared;
@@ -70,7 +70,7 @@ tx_init(struct tx* self, struct tx_shared* tx_shared,
 err_lock_manager_register_owner:
     picotm_lock_owner_uninit(&self->lo);
 err_picotm_lock_owner_init:
-    log_uninit(&self->log);
+    picotm_log_uninit(&self->log);
 }
 
 void
@@ -80,7 +80,7 @@ tx_release(struct tx* self)
 
     picotm_lock_manager_unregister_owner(&self->shared->lm, &self->lo);
     picotm_lock_owner_uninit(&self->lo);
-    log_uninit(&self->log);
+    picotm_log_uninit(&self->log);
 
     struct module* module = self->module;
     const struct module* module_end = self->module + self->nmodules;
@@ -145,7 +145,7 @@ tx_append_event(struct tx* self, unsigned long module, unsigned long op,
     const struct picotm_event event = PICOTM_EVENT_INITIALIZER(module,
                                                                op,
                                                                cookie);
-    log_append(&self->log, &event, error);
+    picotm_log_append(&self->log, &event, error);
 }
 
 void
@@ -377,9 +377,10 @@ apply_event_cb(struct picotm_event* event, void* data,
 static void
 apply_events(struct tx* self, struct picotm_error* error)
 {
-    picotm_events_foreach1(log_begin(&self->log), log_end(&self->log),
+    picotm_events_foreach1(picotm_log_begin(&self->log),
+                           picotm_log_end(&self->log),
                            self, apply_event_cb, error);
-    log_clear(&self->log);
+    picotm_log_clear(&self->log);
 }
 
 static void
@@ -400,9 +401,10 @@ undo_event_cb(struct picotm_event* event, void* data,
 static void
 undo_events(struct tx* self, struct picotm_error* error)
 {
-    picotm_events_rev_foreach1(log_begin(&self->log), log_end(&self->log),
+    picotm_events_rev_foreach1(picotm_log_begin(&self->log),
+                               picotm_log_end(&self->log),
                                self, undo_event_cb, error);
-    log_clear(&self->log);
+    picotm_log_clear(&self->log);
 }
 
 void
