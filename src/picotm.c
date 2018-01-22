@@ -29,6 +29,7 @@
 #include <stdatomic.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdlib.h>
 #include <string.h>
 #include "picotm/picotm-lib-ptr.h"
 #include "picotm/picotm-lib-spinlock.h"
@@ -40,7 +41,24 @@
  */
 
 static struct tx_shared*
-get_tx_shared(struct picotm_error* error)
+get_tx_shared(bool initialize, struct picotm_error* error);
+
+static void
+atexit_tx_shared(void)
+{
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+
+    struct tx_shared* tx_shared = get_tx_shared(false, &error);
+    if (picotm_error_is_set(&error)) {
+        return;
+    }
+    if (tx_shared) {
+        tx_shared_uninit(tx_shared);
+    }
+}
+
+static struct tx_shared*
+get_tx_shared(bool initialize, struct picotm_error* error)
 {
     static struct tx_shared g_tx_shared;
     static atomic_bool      g_tx_shared_is_initialized;
@@ -49,6 +67,8 @@ get_tx_shared(struct picotm_error* error)
                                                memory_order_acquire);
     if (is_initialized) {
         return &g_tx_shared;
+    } else if (!initialize) {
+        return NULL;
     }
 
     static struct picotm_spinlock lock = PICOTM_SPINLOCK_INITIALIZER;
@@ -67,6 +87,8 @@ get_tx_shared(struct picotm_error* error)
     if (picotm_error_is_set(error)) {
         goto err_tx_shared_init;
     }
+
+    atexit(atexit_tx_shared);
 
     atomic_store_explicit(&g_tx_shared_is_initialized, true,
                           memory_order_release);
@@ -96,7 +118,7 @@ get_tx(bool do_init, struct picotm_error* error)
         return NULL;
     }
 
-    struct tx_shared* tx_shared = get_tx_shared(error);
+    struct tx_shared* tx_shared = get_tx_shared(true, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
