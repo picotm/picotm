@@ -106,9 +106,9 @@ tx_register_module(struct tx* self,
                    void (*validate)(void*, int, struct picotm_error*),
                    void (*apply)(void*, struct picotm_error*),
                    void (*undo)(void*, struct picotm_error*),
-                   void (*apply_event)(unsigned short op, uintptr_t cookie,
+                   void (*apply_event)(uint16_t head, uintptr_t tail,
                                        void*, struct picotm_error*),
-                   void (*undo_event)(unsigned short op, uintptr_t cookie,
+                   void (*undo_event)(uint16_t head, uintptr_t tail,
                                       void*, struct picotm_error*),
                    void (*update_cc)(void*, int, struct picotm_error*),
                    void (*clear_cc)(void*, int, struct picotm_error*),
@@ -137,14 +137,14 @@ tx_register_module(struct tx* self,
 }
 
 void
-tx_append_event(struct tx* self, unsigned long module, unsigned long op,
-                uintptr_t cookie, struct picotm_error* error)
+tx_append_event(struct tx* self, unsigned long module, uint16_t head,
+                uintptr_t tail, struct picotm_error* error)
 {
     assert(self);
 
     const struct picotm_event event = PICOTM_EVENT_INITIALIZER(module,
-                                                               op,
-                                                               cookie);
+                                                               head,
+                                                               tail);
     picotm_log_append(&self->log, &event, error);
 }
 
@@ -363,8 +363,8 @@ static void
 apply_event(struct tx* tx, const struct picotm_event* event,
             struct picotm_error* error)
 {
-    module_apply_event(tx->module + event->module, event->op,
-                       event->cookie, error);
+    module_apply_event(tx->module + event->module, event->head, event->tail,
+                       error);
 }
 
 static void
@@ -387,8 +387,8 @@ static void
 undo_event(struct tx* tx, const struct picotm_event* event,
            struct picotm_error* error)
 {
-    module_undo_event(tx->module + event->module, event->op,
-                      event->cookie, error);
+    module_undo_event(tx->module + event->module, event->head, event->tail,
+                      error);
 }
 
 static void

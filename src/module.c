@@ -33,10 +33,10 @@ module_init(struct module* self,
             void (*validate)(void*, int, struct picotm_error*),
             void (*apply)(void*, struct picotm_error*),
             void (*undo)(void*, struct picotm_error*),
-            void (*apply_event)(unsigned short op, uintptr_t cookie,
-                                void*, struct picotm_error*),
-            void (*undo_event)(unsigned short op, uintptr_t cookie,
-                               void*, struct picotm_error*),
+            void (*apply_event)(uint16_t, uintptr_t, void*,
+                                struct picotm_error*),
+            void (*undo_event)(uint16_t, uintptr_t, void*,
+                               struct picotm_error*),
             void (*update_cc)(void*, int, struct picotm_error*),
             void (*clear_cc)(void*, int, struct picotm_error*),
             void (*finish)(void*, struct picotm_error*),
@@ -134,27 +134,27 @@ module_undo(const struct module* self, struct picotm_error* error)
 }
 
 void
-module_apply_event(const struct module* self, unsigned short op,
-                   uintptr_t cookie, struct picotm_error* error)
+module_apply_event(const struct module* self, uint16_t head, uintptr_t tail,
+                   struct picotm_error* error)
 {
     assert(self);
 
     if (!self->apply_event) {
         return;
     }
-    self->apply_event(op, cookie, self->data, error);
+    self->apply_event(head, tail, self->data, error);
 }
 
 void
-module_undo_event(const struct module* self, unsigned short op,
-                  uintptr_t cookie, struct picotm_error* error)
+module_undo_event(const struct module* self, uint16_t head, uintptr_t tail,
+                  struct picotm_error* error)
 {
     assert(self);
 
     if (!self->undo_event) {
         return;
     }
-    self->undo_event(op, cookie, self->data, error);
+    self->undo_event(head, tail, self->data, error);
 }
 
 void

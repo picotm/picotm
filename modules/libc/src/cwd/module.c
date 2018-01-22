@@ -91,17 +91,17 @@ struct module {
 };
 
 static void
-module_apply_event(struct module* module, unsigned short op, uintptr_t cookie,
+module_apply_event(struct module* module, uint16_t head, uintptr_t tail,
                    struct picotm_error* error)
 {
-    cwd_tx_apply_event(&module->tx, op, cookie, error);
+    cwd_tx_apply_event(&module->tx, head, tail, error);
 }
 
 static void
-module_undo_event(struct module* module, unsigned short op, uintptr_t cookie,
+module_undo_event(struct module* module, uint16_t head, uintptr_t tail,
                   struct picotm_error* error)
 {
-    cwd_tx_undo_event(&module->tx, op, cookie, error);
+    cwd_tx_undo_event(&module->tx, head, tail, error);
 }
 
 static void
@@ -134,17 +134,17 @@ module_uninit(struct module* module)
  */
 
 static void
-apply_event_cb(unsigned short op, uintptr_t cookie, void* data,
+apply_event_cb(uint16_t head, uintptr_t tail, void* data,
                struct picotm_error* error)
 {
-    module_apply_event(data, op, cookie, error);
+    module_apply_event(data, head, tail, error);
 }
 
 static void
-undo_event_cb(unsigned short op, uintptr_t cookie, void* data,
+undo_event_cb(uint16_t head, uintptr_t tail, void* data,
               struct picotm_error* error)
 {
-    module_undo_event(data, op, cookie, error);
+    module_undo_event(data, head, tail, error);
 }
 
 static void
