@@ -1,6 +1,6 @@
 /**
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
   Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -394,10 +394,10 @@ picotm_register_module(picotm_module_lock_function lock,
 
 PICOTM_EXPORT
 void
-picotm_append_event(unsigned long module, unsigned long op, uintptr_t cookie,
+picotm_append_event(unsigned long module, uint16_t head, uintptr_t tail,
                     struct picotm_error* error)
 {
-    tx_append_event(get_non_null_tx(), module, op, cookie, error);
+    tx_append_event(get_non_null_tx(), module, head, tail, error);
 }
 
 PICOTM_EXPORT

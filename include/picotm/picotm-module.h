@@ -98,27 +98,27 @@ typedef void (*picotm_module_undo_function)(void* data,
 
 /**
  * Invoked by picotm during the commit phase to apply an event.
- * \param       op      The module-specific operation.
- * \param       cookie  The module-specific cookie.
+ * \param       head    The event's head data.
+ * \param       tail    The event's tail data.
  * \param       data    The pointer to module-specific data.
  * \param[out]  error   Returns an error from the module.
  */
 typedef void (*picotm_module_apply_event_function)(
-    unsigned short op,
-    uintptr_t cookie,
+    uint16_t head,
+    uintptr_t tail,
     void* data,
     struct picotm_error* error);
 
 /**
  * Invoked by picotm during the roll-back phase to revert an event.
- * \param       op      The module-specific operation.
- * \param       cookie  The module-specific cookie.
+ * \param       head    The event's head data.
+ * \param       tail    The event's tail data.
  * \param       data    The pointer to module-specific data.
  * \param[out]  error   Returns an error from the module.
  */
 typedef void (*picotm_module_undo_event_function)(
-    unsigned short op,
-    uintptr_t cookie,
+    uint16_t head,
+    uintptr_t tail,
     void* data,
     struct picotm_error* error);
 
@@ -194,12 +194,12 @@ PICOTM_NOTHROW
 /**
  * Appends an event to the transaction's event log.
  * \param       module  The module number
- * \param       op      A module-specific operation.
- * \param       cookie  A module-specific cookie.
+ * \param       head    Module-specific head data.
+ * \param       tail    Module-specific tail data, or a pointer to tail data.
  * \param[out]  error   Returns an error.
  */
 void
-picotm_append_event(unsigned long module, unsigned long op, uintptr_t cookie,
+picotm_append_event(unsigned long module, uint16_t head, uintptr_t tail,
                     struct picotm_error* error);
 
 PICOTM_NOTHROW
@@ -401,26 +401,26 @@ PICOTM_END_DECLS
  *
  * ~~~{.c}
  *  int
- *  apply(unsigned short op, uintptr_t cookie, void* data, picotm_error* error)
+ *  apply(uint16_t head, uintptr_t tail, void* data, picotm_error* error)
  *  {
- *      if (op == CMD_MALLOC) {
+ *      if (head == CMD_MALLOC) {
  *          // Nothing to do.
  *      }
- *      if (op == CMD_FREE) {
+ *      if (head == CMD_FREE) {
  *          // Apply free().
- *          free((void*)cookie);
+ *          free((void*)tail);
  *      }
  *      return 0;
  *  }
  *
  *  int
- *  undo(unsigned short op, uintptr_t cookie, void* data, picotm_error* error)
+ *  undo(uint16_t head, uintptr_t tail, void* data, picotm_error* error)
  *  {
- *      if (op == CMD_MALLOC) {
+ *      if (head == CMD_MALLOC) {
  *          // Revert malloc().
- *          free((void*)cookie);
+ *          free((void*)tail);
  *      }
- *      if (op == CMD_FREE) {
+ *      if (head == CMD_FREE) {
  *          // Nothing to do.
  *      }
  *      return 0;

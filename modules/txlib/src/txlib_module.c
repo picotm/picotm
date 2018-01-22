@@ -55,19 +55,17 @@ lock(struct txlib_module* module, struct picotm_error* error)
 }
 
 static void
-apply_event(struct txlib_module* module,
-            unsigned short op, uintptr_t cookie,
+apply_event(struct txlib_module* module, uint16_t head, uintptr_t tail,
             struct picotm_error* error)
 {
-    txlib_tx_apply_event(&module->tx, op, cookie, error);
+    txlib_tx_apply_event(&module->tx, head, tail, error);
 }
 
 static void
-undo_event(struct txlib_module* module,
-           unsigned short op, uintptr_t cookie,
+undo_event(struct txlib_module* module, uint16_t head, uintptr_t tail,
            struct picotm_error* error)
 {
-    txlib_tx_undo_event(&module->tx, op, cookie, error);
+    txlib_tx_undo_event(&module->tx, head, tail, error);
 }
 
 static void
@@ -94,17 +92,17 @@ lock_cb(void* data, struct picotm_error* error)
 }
 
 static void
-apply_event_cb(unsigned short op, uintptr_t cookie, void* data,
+apply_event_cb(uint16_t head, uintptr_t tail, void* data,
                struct picotm_error* error)
 {
-    apply_event(data, op, cookie, error);
+    apply_event(data, head, tail, error);
 }
 
 static void
-undo_event_cb(unsigned short op, uintptr_t cookie, void* data,
+undo_event_cb(uint16_t head, uintptr_t tail, void* data,
               struct picotm_error* error)
 {
-    undo_event(data, op, cookie, error);
+    undo_event(data, head, tail, error);
 }
 
 static void

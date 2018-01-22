@@ -81,9 +81,9 @@ tx_register_module(struct tx* self,
                    void (*validate)(void*, int, struct picotm_error*),
                    void (*apply)(void*, struct picotm_error*),
                    void (*undo)(void*, struct picotm_error*),
-                   void (*apply_event)(unsigned short op, uintptr_t cookie,
+                   void (*apply_event)(uint16_t head, uintptr_t tail,
                                        void*, struct picotm_error*),
-                   void (*undo_event)(unsigned short op, uintptr_t cookie,
+                   void (*undo_event)(uint16_t head, uintptr_t tail,
                                       void*, struct picotm_error*),
                    void (*updatecc)(void*, int, struct picotm_error*),
                    void (*clearcc)(void*, int, struct picotm_error*),
@@ -93,8 +93,8 @@ tx_register_module(struct tx* self,
                    struct picotm_error* error);
 
 void
-tx_append_event(struct tx* self, unsigned long module, unsigned long op,
-                uintptr_t cookie, struct picotm_error* error);
+tx_append_event(struct tx* self, unsigned long module, uint16_t head,
+                uintptr_t tail, struct picotm_error* error);
 
 void
 tx_begin(struct tx* self, enum tx_mode mode, bool is_retry, jmp_buf* env,

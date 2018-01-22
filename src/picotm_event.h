@@ -40,22 +40,28 @@ struct picotm_error;
  * \brief Represents an event in a transaction's event log.
  */
 struct picotm_event {
-    unsigned long module;
-    unsigned short op;
-    uintptr_t cookie;
+    /** \brief The module id. */
+    uint16_t module;
+    /** \brief The event's head data field. */
+    uint16_t head;
+
+    /* Possibly padding bytes here */
+
+    /** \brief A pointer to the event's tail data, or the tail data itself. */
+    uintptr_t tail;
 };
 
 /**
  * Static initializer for `struct picotm_event`.
  * \param   _module The instance's module value.
- * \param   _op     The instance's op value.
- * \param   _cookie The instance's cookie value.
+ * \param   _head   The instance's head data.
+ * \param   _tail   The instance's tail data.
  */
-#define PICOTM_EVENT_INITIALIZER(_module, _op, _cookie) \
+#define PICOTM_EVENT_INITIALIZER(_module, _head, _tail) \
     {                                                   \
         (_module),                                      \
-        (_op),                                          \
-        (_cookie)                                       \
+        (_head),                                        \
+        (_tail)                                         \
     }
 
 void

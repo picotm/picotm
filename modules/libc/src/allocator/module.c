@@ -35,21 +35,21 @@ struct allocator_module {
 };
 
 static void
-apply_event_cb(unsigned short op, uintptr_t cookie, void* data,
+apply_event_cb(uint16_t head, uintptr_t tail, void* data,
                struct picotm_error* error)
 {
     struct allocator_module* module = data;
 
-    allocator_tx_apply_event(&module->tx, op, cookie, error);
+    allocator_tx_apply_event(&module->tx, head, tail, error);
 }
 
 static void
-undo_event_cb(unsigned short op, uintptr_t cookie, void* data,
+undo_event_cb(uint16_t head, uintptr_t tail, void* data,
               struct picotm_error* error)
 {
     struct allocator_module* module = data;
 
-    allocator_tx_undo_event(&module->tx, op, cookie, error);
+    allocator_tx_undo_event(&module->tx, head, tail, error);
 }
 
 static void
