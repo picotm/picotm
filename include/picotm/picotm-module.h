@@ -323,21 +323,25 @@ PICOTM_END_DECLS
  * module might look like this.
  *
  * ~~~{.c}
- *  long res = picotm_register_module(NULL,
- *                                    NULL,
- *                                    NULL,
- *                                    NULL,
- *                                    NULL,
- *                                    apply, // See below.
- *                                    undo,  // See below.
- *                                    NULL,
- *                                    NULL,
- *                                    NULL,
- *                                    NULL);
- *  if (res < 0) {
+ *  struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+ *
+ *  unsigned long module_number =
+ *      picotm_register_module(NULL,
+ *                             NULL,
+ *                             NULL,
+ *                             NULL,
+ *                             NULL,
+ *                             apply, // See below.
+ *                             undo,  // See below.
+ *                             NULL,
+ *                             NULL,
+ *                             NULL,
+ *                             NULL,
+ *                             NULL,
+ *                             &error);
+ *  if (picotm_error_is_set(&error)) {
  *      // abort with an error
  *  }
- *  unsigned int module_number = res;
  * ~~~
  *
  * Modules are registered per-thread. You have to register your module on
@@ -401,7 +405,7 @@ PICOTM_END_DECLS
  *
  * ~~~{.c}
  *  int
- *  apply(uint16_t head, uintptr_t tail, void* data, picotm_error* error)
+ *  apply(uint16_t head, uintptr_t tail, void* data, struct picotm_error* error)
  *  {
  *      if (head == CMD_MALLOC) {
  *          // Nothing to do.
@@ -414,7 +418,7 @@ PICOTM_END_DECLS
  *  }
  *
  *  int
- *  undo(uint16_t head, uintptr_t tail, void* data, picotm_error* error)
+ *  undo(uint16_t head, uintptr_t tail, void* data, struct picotm_error* error)
  *  {
  *      if (head == CMD_MALLOC) {
  *          // Revert malloc().
