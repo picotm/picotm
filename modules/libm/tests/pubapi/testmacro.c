@@ -24,7 +24,27 @@
  */
 
 #include "testmacro.h"
+#include <errno.h>
+#include <fenv.h>
+#include <stdatomic.h>
 #include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
+
+int
+errno_of_flag(int flag)
+{
+    if (flag == FE_INVALID) {
+        return EDOM;
+    } else if (flag == FE_DIVBYZERO) {
+        return ERANGE;
+    } else if (flag == FE_OVERFLOW) {
+        return ERANGE;
+    } else if (flag == FE_UNDERFLOW) {
+        return ERANGE;
+    }
+    return 0;
+}
 
 _Bool
 is_cygwin()
@@ -34,4 +54,70 @@ is_cygwin()
 #else
     return false;
 #endif
+}
+
+_Bool
+is_freebsd()
+{
+#if defined(__FreeBSD__)
+    return true;
+#else
+    return false;
+#endif
+}
+
+_Bool
+is_linux()
+{
+#if defined(__linux__)
+    return true;
+#else
+    return false;
+#endif
+}
+
+_Bool
+is_macos()
+{
+#if defined(__APPLE__)
+    return true;
+#else
+    return false;
+#endif
+}
+
+static bool
+test_is_valgrind(void)
+{
+    /* We test for Valgrind by checking for preloaded libraries. */
+
+    const char* str = getenv("LD_PRELOAD");
+    if (!str) {
+        return false;
+    }
+
+    const char* pos = strstr(str, "valgrind/");
+    if (!pos) {
+        return false;
+    }
+
+    return true;
+}
+
+_Bool
+is_valgrind()
+{
+    static atomic_bool tested = false;
+    static atomic_bool result = false;
+
+    if (atomic_load(&tested)) {
+        return atomic_load(&result);
+    }
+
+    bool res = test_is_valgrind();
+
+    atomic_store(&result, res);
+    atomic_store(&tested, true);
+
+    return res;
 }

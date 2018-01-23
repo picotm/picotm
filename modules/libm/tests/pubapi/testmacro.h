@@ -27,10 +27,15 @@
 
 #include <picotm/picotm.h>
 #include <picotm/picotm-module.h>
+#include <safeblk.h>
 #include "taputils.h"
 
 #define __TEST_SYMBOL(_func)    \
     test_ ## _func
+
+/*
+ * Test for success
+ */
 
 #define __TEST_SUCCESS_SYMBOL(_func)    \
     __TEST_SYMBOL(success_ ## _func)
@@ -178,8 +183,128 @@
     {"Test " #_func "_tx()", __TEST_SUCCESS_SYMBOL(_func), NULL, NULL}
 
 /*
+ * Test for errno code
+ */
+
+#define __TEST_E_ERRNO_SYMBOL(_errno, _func)    \
+    __TEST_SYMBOL(e_ ## _errno ## _ ## _func)
+
+#define __TEST_E_ERRNO(_sym, _cond, _errno, _func, ...)                 \
+    static void                                                         \
+    _sym(unsigned int tid)                                              \
+    {                                                                   \
+        if (!(_cond)) {                                                 \
+            tap_info("skipping next test for " #_func "_tx();"          \
+                     " condition failed");                              \
+            return;                                                     \
+        }                                                               \
+                                                                        \
+        bool error_detected = false;                                    \
+                                                                        \
+        errno = 0;                                                      \
+                                                                        \
+        picotm_begin                                                    \
+                                                                        \
+            _func ## _tx(__VA_ARGS__);                                  \
+                                                                        \
+        picotm_commit                                                   \
+                                                                        \
+            if ((picotm_error_status() == PICOTM_ERRNO) &&              \
+                picotm_error_as_errno() == (_errno)) {                  \
+                error_detected = true;                                  \
+            }                                                           \
+                                                                        \
+        picotm_end                                                      \
+                                                                        \
+        if (!error_detected) {                                          \
+            tap_error("%s, No error detected.", __func__);              \
+            abort_safe_block();                                         \
+        }                                                               \
+    }
+
+#define TEST_E_ERRNO_IF(_cond, _errno, _func, ...)                      \
+    __TEST_E_ERRNO(__TEST_E_ERRNO_SYMBOL(errno_ ## _errno, _func),      \
+                   _cond, _errno, _func, __VA_ARGS__)
+
+#define TEST_E_ERRNO(_errno, _func, ...)                                \
+    __TEST_E_ERRNO(__TEST_E_ERRNO_SYMBOL(errno_ ## _errno, _func),      \
+                   1, _errno, _func, __VA_ARGS__)
+
+#define TEST_E_ERRNO_FUNC(_errno, _func)                            \
+    {"Test " #_func "_tx() for " #_errno,                           \
+        __TEST_E_ERRNO_SYMBOL(errno_ ## _errno, _func), NULL, NULL}
+
+/*
+ * Test for floating-point exception
+ */
+
+int
+errno_of_flag(int flag);
+
+#define __TEST_E_EXCPT_SYMBOL(_flag, _func)     \
+    __TEST_SYMBOL(e_ ## _flag ## _ ## _func)
+
+#define __TEST_E_EXCPT(_sym, _cond, _flag, _func, ...)              \
+    static void                                                     \
+    _sym(unsigned int tid)                                          \
+    {                                                               \
+        if (!(_cond)) {                                             \
+            tap_info("skipping next test for " #_func "_tx();"      \
+                     " condition failed");                          \
+            return;                                                 \
+        }                                                           \
+                                                                    \
+        bool error_detected = false;                                \
+                                                                    \
+        errno = 0;                                                  \
+        feclearexcept(FE_ALL_EXCEPT);                               \
+                                                                    \
+        picotm_begin                                                \
+                                                                    \
+            _func ## _tx(__VA_ARGS__);                              \
+                                                                    \
+        picotm_commit                                               \
+                                                                    \
+            if ((picotm_error_status() == PICOTM_ERRNO) &&          \
+                picotm_error_as_errno() == errno_of_flag(_flag)) {  \
+                error_detected = true;                              \
+            }                                                       \
+                                                                    \
+        picotm_end                                                  \
+                                                                    \
+        if (!error_detected) {                                      \
+            tap_error("%s, No error detected.", __func__);          \
+            abort_safe_block();                                     \
+        }                                                           \
+    }
+
+#define TEST_E_EXCPT_IF(_cond, _flag, _func, ...)                   \
+    __TEST_E_EXCPT(__TEST_E_EXCPT_SYMBOL(excpt_ ## _flag, _func),   \
+                   _cond, _flag, _func, __VA_ARGS__)
+
+#define TEST_E_EXCPT(_flag, _func, ...)                             \
+    __TEST_E_EXCPT(__TEST_E_EXCPT_SYMBOL(excpt_ ## _flag, _func),   \
+                   1, _flag, _func, __VA_ARGS__)
+
+#define TEST_E_EXCPT_FUNC(_flag, _func)                             \
+    {"Test " #_func "_tx() for " #_flag,                            \
+        __TEST_E_EXCPT_SYMBOL(excpt_ ## _flag, _func), NULL, NULL}
+
+/*
  * Pre-defined test conditions
  */
 
 _Bool
 is_cygwin(void);
+
+_Bool
+is_freebsd(void);
+
+_Bool
+is_linux(void);
+
+_Bool
+is_macos(void);
+
+_Bool
+is_valgrind(void);
