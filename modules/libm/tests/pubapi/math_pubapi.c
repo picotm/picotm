@@ -23,8 +23,12 @@
  * SPDX-License-Identifier: MIT
  */
 
+#include <errno.h>
+#include <fenv.h>
+#include <float.h>
 #include <picotm/math.h>
 #include <picotm/picotm-tm.h>
+#include <stdbool.h>
 #include "ptr.h"
 #include "test.h"
 #include "testhlp.h"
@@ -219,6 +223,282 @@ TEST_SUCCESS(double, y0, 1 + tid)
 TEST_SUCCESS(double, y1, 1 + tid)
 TEST_SUCCESS(double, yn, tid, 1 + tid)
 
+TEST_E_ERRNO(   EDOM, acos, INFINITY)
+TEST_E_ERRNO(   EDOM, acosf, INFINITY)
+TEST_E_ERRNO(   EDOM, acosh, 0)
+TEST_E_ERRNO(   EDOM, acoshf, 0)
+TEST_E_ERRNO(   EDOM, acoshl, 0)
+TEST_E_ERRNO_IF(!is_cygwin(),
+                EDOM, acosl, INFINITY)
+TEST_E_ERRNO(   EDOM, asin, INFINITY)
+TEST_E_ERRNO(   EDOM, asinf, INFINITY)
+TEST_E_ERRNO_IF(!is_cygwin(),
+                EDOM, asinl, INFINITY)
+TEST_E_ERRNO_IF(!is_cygwin(),
+                ERANGE, atanh, 1)
+TEST_E_ERRNO_IF(!is_cygwin(),
+                ERANGE, atanhf, 1)
+TEST_E_ERRNO(   ERANGE, atanhl, 1)
+TEST_E_ERRNO_IF(!is_freebsd(/* 11.1 */),
+                ERANGE, cosh, DBL_MAX)
+TEST_E_ERRNO_IF(!is_freebsd(/* 11.1 */),
+                ERANGE, coshf, FLT_MAX)
+TEST_E_ERRNO_IF(!is_valgrind(/* 3.13 */),
+                ERANGE, coshl, LDBL_MAX)
+TEST_E_ERRNO_IF(!is_cygwin() && !is_macos(/* 10.6 */),
+                ERANGE, erfc, DBL_MAX)
+TEST_E_ERRNO_IF(!is_cygwin() && !is_macos(/* 10.6 */),
+                ERANGE, erfcf, FLT_MAX)
+TEST_E_ERRNO_IF(!is_macos(/* 10.6 */) && !is_valgrind(/* 3.13 */),
+                ERANGE, erfcl, LDBL_MAX)
+TEST_E_ERRNO(   ERANGE, exp, DBL_MAX)
+TEST_E_ERRNO(   ERANGE, exp2, DBL_MAX)
+TEST_E_ERRNO(   ERANGE, exp2f, FLT_MAX)
+TEST_E_ERRNO_IF(!is_cygwin() && !is_valgrind(/* 3.13 */),
+                ERANGE, exp2l, LDBL_MAX)
+TEST_E_ERRNO(   ERANGE, expf, FLT_MAX)
+TEST_E_ERRNO_IF(!is_valgrind(/* 3.13 */),
+                ERANGE, expl, LDBL_MAX)
+TEST_E_ERRNO_IF(!is_cygwin(),
+                ERANGE, expm1, DBL_MAX)
+TEST_E_ERRNO_IF(!is_cygwin(),
+                ERANGE, expm1f, FLT_MAX)
+TEST_E_ERRNO_IF(!is_valgrind(/* 3.13 */),
+                ERANGE, expm1l, LDBL_MAX)
+TEST_E_ERRNO_IF(!is_cygwin(),
+                ERANGE, fdim, DBL_MAX, -DBL_MAX)
+TEST_E_ERRNO_IF(!is_cygwin(),
+                ERANGE, fdimf, FLT_MAX, -FLT_MAX)
+TEST_E_ERRNO_IF(!is_valgrind(/* 3.13 */),
+                ERANGE, fdiml, LDBL_MAX, -LDBL_MAX)
+TEST_E_ERRNO(   ERANGE, hypot, DBL_MAX, DBL_MAX)
+TEST_E_ERRNO(   ERANGE, hypotf, FLT_MAX, FLT_MAX)
+TEST_E_ERRNO_IF(!is_valgrind(/* 3.13 */),
+                ERANGE, hypotl, LDBL_MAX, LDBL_MAX)
+TEST_E_ERRNO(   ERANGE, ldexp, DBL_MAX, 1)
+TEST_E_ERRNO(   ERANGE, ldexpf, FLT_MAX, 1)
+TEST_E_ERRNO_IF(!is_valgrind(/* 3.13 */),
+                ERANGE, ldexpl, LDBL_MAX, 1)
+TEST_E_ERRNO_IF(!is_cygwin(),
+                ERANGE, lgamma, -(long)tid)
+TEST_E_ERRNO_IF(!is_cygwin(),
+                ERANGE, lgammaf, -(long)tid)
+TEST_E_ERRNO_IF(!is_cygwin() && !is_valgrind(/* 3.13 */),
+                ERANGE, lgammal, -(long)tid)
+TEST_E_ERRNO(   EDOM, log, -(long)(tid + 1))
+TEST_E_ERRNO(   EDOM, log10, -(long)(tid + 1))
+TEST_E_ERRNO(   EDOM, log10f, -(long)(tid + 1))
+TEST_E_ERRNO_IF(!is_cygwin(),
+                EDOM, log10l, -(long)(tid + 1))
+TEST_E_ERRNO_IF(!is_cygwin() && !is_linux(/* Ubuntu 14.4 */),
+                EDOM, log1p, -(long)(tid + 2))
+TEST_E_ERRNO_IF(!is_cygwin() && !is_linux(/* Ubuntu 14.4 */),
+                EDOM, log1pf, -(long)(tid + 2))
+TEST_E_ERRNO_IF(!is_cygwin() && !is_linux(/* Ubuntu 14.4 */),
+                EDOM, log1pl, -(long)(tid + 2))
+TEST_E_ERRNO(   EDOM, log2, -(long)(tid + 1))
+TEST_E_ERRNO(   EDOM, log2f, -(long)(tid + 1))
+TEST_E_ERRNO_IF(!is_cygwin(),
+                EDOM, log2l, -(long)(tid + 1))
+TEST_E_ERRNO(   EDOM, logf, -(long)(tid + 1))
+TEST_E_ERRNO(   EDOM, logl, -(long)(tid + 1))
+TEST_E_ERRNO(   ERANGE, log, 0)
+TEST_E_ERRNO(   ERANGE, log10, 0)
+TEST_E_ERRNO(   ERANGE, log10f, 0)
+TEST_E_ERRNO_IF(!is_cygwin(),
+                ERANGE, log10l, 0)
+TEST_E_ERRNO_IF(!is_cygwin() && !is_linux(/* Ubuntu 14.4 */),
+                ERANGE, log1p, -1)
+TEST_E_ERRNO_IF(!is_cygwin() && !is_linux(/* Ubuntu 14.4 */),
+                ERANGE, log1pf, -1)
+TEST_E_ERRNO_IF(!is_cygwin() && !is_linux(/* Ubuntu 14.4 */),
+                ERANGE, log1pl, -1)
+TEST_E_ERRNO(   ERANGE, log2, 0)
+TEST_E_ERRNO(   ERANGE, log2f, 0)
+TEST_E_ERRNO_IF(!is_cygwin(),
+                ERANGE, log2l, 0)
+TEST_E_ERRNO(   ERANGE, logf, 0)
+TEST_E_ERRNO(   ERANGE, logl, 0)
+TEST_E_ERRNO_IF(!is_cygwin() && !is_linux(/* Ubuntu 14.4 */),
+                ERANGE, nexttoward, DBL_MAX, LDBL_MAX)
+TEST_E_ERRNO_IF(!is_cygwin() && !is_linux(/* Ubuntu 14.4 */),
+                ERANGE, nexttowardf, FLT_MAX, LDBL_MAX)
+/* Can we make this overflow?
+TEST_E_ERRNO_IF(!is_cygwin() && !is_linux(),
+                ERANGE, nexttowardl, LDBL_MAX, LDBL_MAX)*/
+TEST_E_ERRNO_IF(!is_cygwin() && !is_linux(/* Ubuntu 14.4 */),
+                ERANGE, scalbln, DBL_MAX, tid + 2)
+TEST_E_ERRNO_IF(!is_cygwin() && !is_linux(/* Ubuntu 14.4 */),
+                ERANGE, scalblnf, FLT_MAX, tid + 2)
+TEST_E_ERRNO_IF(!is_cygwin() && !is_valgrind(/* 3.13 */),
+                ERANGE, scalblnl, LDBL_MAX, tid + 2)
+TEST_E_ERRNO_IF(!is_cygwin() && !is_linux(/* Ubuntu 14.4 */),
+                ERANGE, scalbn, DBL_MAX, tid + 2)
+TEST_E_ERRNO_IF(!is_cygwin() && !is_linux(/* Ubuntu 14.4 */),
+                ERANGE, scalbnf, FLT_MAX, tid + 2)
+TEST_E_ERRNO_IF(!is_cygwin() && !is_valgrind(/* 3.13 */),
+                ERANGE, scalbnl, LDBL_MAX, tid + 2)
+TEST_E_ERRNO(   ERANGE, sinh, DBL_MAX)
+TEST_E_ERRNO(   ERANGE, sinhf, FLT_MAX)
+TEST_E_ERRNO_IF(!is_valgrind(/* 3.13 */),
+                ERANGE, sinhl, LDBL_MAX)
+TEST_E_ERRNO(   EDOM, sqrt, -(long)(tid + 1))
+TEST_E_ERRNO(   EDOM, sqrtf, -(long)(tid + 1))
+TEST_E_ERRNO(   EDOM, sqrtl, -(long)(tid + 1))
+TEST_E_ERRNO(   ERANGE, tgamma, DBL_MAX)
+TEST_E_ERRNO(   ERANGE, tgammaf, FLT_MAX)
+TEST_E_ERRNO_IF(!is_valgrind(/* 3.13 */),
+                ERANGE, tgammal, LDBL_MAX)
+TEST_E_ERRNO(   EDOM, y0, -(long)(tid + 1))
+TEST_E_ERRNO(   EDOM, y1, -(long)(tid + 1))
+TEST_E_ERRNO(   EDOM, yn, tid + 1, -(long)(tid + 1))
+TEST_E_ERRNO_IF(!is_cygwin(),
+                ERANGE, y0, 0)
+TEST_E_ERRNO_IF(!is_cygwin(),
+                ERANGE, y1, 0)
+TEST_E_ERRNO_IF(!is_cygwin(),
+                ERANGE, yn, tid + 1, 0)
+
+TEST_E_EXCPT(   FE_INVALID, acos, INFINITY)
+TEST_E_EXCPT(   FE_INVALID, acosf, INFINITY)
+TEST_E_EXCPT(   FE_INVALID, acosh, 0)
+TEST_E_EXCPT(   FE_INVALID, acoshf, 0)
+TEST_E_EXCPT(   FE_INVALID, acoshl, 0)
+TEST_E_EXCPT_IF(!is_cygwin(),
+                FE_INVALID, acosl, INFINITY)
+TEST_E_EXCPT(   FE_INVALID, asin, INFINITY)
+TEST_E_EXCPT(   FE_INVALID, asinf, INFINITY)
+TEST_E_EXCPT_IF(!is_cygwin(),
+                FE_INVALID, asinl, INFINITY)
+TEST_E_EXCPT_IF(!is_cygwin(),
+                FE_DIVBYZERO, atanh, 1)
+TEST_E_EXCPT_IF(!is_cygwin(),
+                FE_DIVBYZERO, atanhf, 1)
+TEST_E_EXCPT(   FE_DIVBYZERO, atanhl, 1)
+TEST_E_EXCPT_IF(!is_freebsd(/* 11.1 */),
+                FE_OVERFLOW, cosh, DBL_MAX)
+TEST_E_EXCPT_IF(!is_freebsd(/* 11.1 */),
+                FE_OVERFLOW, coshf, FLT_MAX)
+TEST_E_EXCPT_IF(!is_valgrind(/* 3.13 */),
+                FE_OVERFLOW, coshl, LDBL_MAX)
+TEST_E_EXCPT_IF(!is_cygwin() && !is_macos(/* 10.6 */),
+                FE_UNDERFLOW, erfc, DBL_MAX)
+TEST_E_EXCPT_IF(!is_cygwin() && !is_macos(/* 10.6 */),
+                FE_UNDERFLOW, erfcf, FLT_MAX)
+TEST_E_EXCPT_IF(!is_macos(/* 10.6 */) && !is_valgrind(/* 3.13 */),
+                FE_UNDERFLOW, erfcl, LDBL_MAX)
+TEST_E_EXCPT(   FE_OVERFLOW, exp, DBL_MAX)
+TEST_E_EXCPT(   FE_OVERFLOW, exp2, DBL_MAX)
+TEST_E_EXCPT(   FE_OVERFLOW, exp2f, FLT_MAX)
+TEST_E_EXCPT_IF(!is_cygwin() && !is_valgrind(/* 3.13 */),
+                FE_OVERFLOW, exp2l, LDBL_MAX)
+TEST_E_EXCPT(   FE_OVERFLOW, expf, FLT_MAX)
+TEST_E_EXCPT_IF(!is_valgrind(/* 3.13 */),
+                FE_OVERFLOW, expl, LDBL_MAX)
+TEST_E_EXCPT_IF(!is_cygwin(),
+                FE_OVERFLOW, expm1, DBL_MAX)
+TEST_E_EXCPT_IF(!is_cygwin(),
+                FE_OVERFLOW, expm1f, FLT_MAX)
+TEST_E_EXCPT_IF(!is_valgrind(/* 3.13 */),
+                FE_OVERFLOW, expm1l, LDBL_MAX)
+TEST_E_EXCPT_IF(!is_cygwin(),
+                FE_OVERFLOW, fdim, DBL_MAX, -DBL_MAX)
+TEST_E_EXCPT_IF(!is_cygwin(),
+                FE_OVERFLOW, fdimf, FLT_MAX, -FLT_MAX)
+TEST_E_EXCPT_IF(!is_valgrind(/* 3.13 */),
+                FE_OVERFLOW, fdiml, LDBL_MAX, -LDBL_MAX)
+TEST_E_EXCPT(   FE_OVERFLOW, hypot, DBL_MAX, DBL_MAX)
+TEST_E_EXCPT(   FE_OVERFLOW, hypotf, FLT_MAX, FLT_MAX)
+TEST_E_EXCPT_IF(!is_valgrind(/* 3.13 */),
+                FE_OVERFLOW, hypotl, LDBL_MAX, LDBL_MAX)
+TEST_E_EXCPT(   FE_OVERFLOW, ldexp, DBL_MAX, 1)
+TEST_E_EXCPT(   FE_OVERFLOW, ldexpf, FLT_MAX, 1)
+TEST_E_EXCPT_IF(!is_valgrind(/* 3.13 */),
+                FE_OVERFLOW, ldexpl, LDBL_MAX, 1)
+TEST_E_EXCPT_IF(!is_cygwin(),
+                FE_DIVBYZERO, lgamma, -(long)tid)
+TEST_E_EXCPT_IF(!is_cygwin(),
+                FE_DIVBYZERO, lgammaf, -(long)tid)
+TEST_E_EXCPT_IF(!is_cygwin() && !is_valgrind(/* 3.13 */),
+                FE_DIVBYZERO, lgammal, -(long)tid)
+TEST_E_EXCPT(   FE_OVERFLOW, lgamma, DBL_MAX)
+TEST_E_EXCPT(   FE_OVERFLOW, lgammaf, FLT_MAX)
+TEST_E_EXCPT_IF(!is_valgrind(/* 3.13 */),
+                FE_OVERFLOW, lgammal, LDBL_MAX)
+TEST_E_EXCPT(   FE_INVALID, log, -(long)(tid + 1))
+TEST_E_EXCPT(   FE_INVALID, log10, -(long)(tid + 1))
+TEST_E_EXCPT(   FE_INVALID, log10f, -(long)(tid + 1))
+TEST_E_EXCPT_IF(!is_cygwin(),
+                FE_INVALID, log10l, -(long)(tid + 1))
+TEST_E_EXCPT_IF(!is_cygwin() && !is_linux(/* Ubuntu 14.4 */),
+                FE_INVALID, log1p, -(long)(tid + 2))
+TEST_E_EXCPT_IF(!is_cygwin() && !is_linux(/* Ubuntu 14.4 */),
+                FE_INVALID, log1pf, -(long)(tid + 2))
+TEST_E_EXCPT_IF(!is_cygwin() && !is_linux(/* Ubuntu 14.4 */),
+                FE_INVALID, log1pl, -(long)(tid + 2))
+TEST_E_EXCPT(   FE_INVALID, log2, -(long)(tid + 1))
+TEST_E_EXCPT(   FE_INVALID, log2f, -(long)(tid + 1))
+TEST_E_EXCPT_IF(!is_cygwin(),
+                FE_INVALID, log2l, -(long)(tid + 1))
+TEST_E_EXCPT(   FE_INVALID, logf, -(long)(tid + 1))
+TEST_E_EXCPT(   FE_INVALID, logl, -(long)(tid + 1))
+TEST_E_EXCPT(   FE_DIVBYZERO, log, 0)
+TEST_E_EXCPT(   FE_DIVBYZERO, log10, 0)
+TEST_E_EXCPT(   FE_DIVBYZERO, log10f, 0)
+TEST_E_EXCPT_IF(!is_cygwin(),
+                FE_DIVBYZERO, log10l, 0)
+TEST_E_EXCPT_IF(!is_cygwin() && !is_linux(/* Ubuntu 14.4 */),
+                FE_DIVBYZERO, log1p, -1)
+TEST_E_EXCPT_IF(!is_cygwin() && !is_linux(/* Ubuntu 14.4 */),
+                FE_DIVBYZERO, log1pf, -1)
+TEST_E_EXCPT_IF(!is_cygwin() && !is_linux(/* Ubuntu 14.4 */) ,
+                FE_DIVBYZERO, log1pl, -1)
+TEST_E_EXCPT(   FE_DIVBYZERO, log2, 0)
+TEST_E_EXCPT(   FE_DIVBYZERO, log2f, 0)
+TEST_E_EXCPT_IF(!is_cygwin(),
+                FE_DIVBYZERO, log2l, 0)
+TEST_E_EXCPT(   FE_DIVBYZERO, logf, 0)
+TEST_E_EXCPT(   FE_DIVBYZERO, logl, 0)
+TEST_E_EXCPT_IF(!is_cygwin() && !is_linux(/* Ubuntu 14.4 */),
+                FE_OVERFLOW, nexttoward, DBL_MAX, LDBL_MAX)
+TEST_E_EXCPT_IF(!is_cygwin() && !is_linux(/* Ubuntu 14.4 */),
+                FE_OVERFLOW, nexttowardf, FLT_MAX, LDBL_MAX)
+/* Can we make this overflow?
+TEST_E_EXCPT_IF(!is_cygwin() && !is_linux(),
+                FE_OVERFLOW, nexttowardl, LDBL_MAX, LDBL_MAX)*/
+TEST_E_EXCPT_IF(!is_cygwin() && !is_linux(/* Ubuntu 14.4 */),
+                FE_OVERFLOW, scalbln, DBL_MAX, tid + 2)
+TEST_E_EXCPT_IF(!is_cygwin() && !is_linux(/* Ubuntu 14.4 */),
+                FE_OVERFLOW, scalblnf, FLT_MAX, tid + 2)
+TEST_E_EXCPT_IF(!is_cygwin() && !is_valgrind(/* 3.13 */),
+                FE_OVERFLOW, scalblnl, LDBL_MAX, tid + 2)
+TEST_E_EXCPT_IF(!is_cygwin() && !is_linux(/* Ubuntu 14.4 */),
+                FE_OVERFLOW, scalbn, DBL_MAX, tid + 2)
+TEST_E_EXCPT_IF(!is_cygwin() && !is_linux(/* Ubuntu 14.4 */),
+                FE_OVERFLOW, scalbnf, FLT_MAX, tid + 2)
+TEST_E_EXCPT_IF(!is_cygwin() && !is_valgrind(/* 3.13 */),
+                FE_OVERFLOW, scalbnl, LDBL_MAX, tid + 2)
+TEST_E_EXCPT(   FE_OVERFLOW, sinh, DBL_MAX)
+TEST_E_EXCPT(   FE_OVERFLOW, sinhf, FLT_MAX)
+TEST_E_EXCPT_IF(!is_valgrind(/* 3.13 */),
+                FE_OVERFLOW, sinhl, LDBL_MAX)
+TEST_E_EXCPT(   FE_INVALID, sqrt, -(long)(tid + 1))
+TEST_E_EXCPT(   FE_INVALID, sqrtf, -(long)(tid + 1))
+TEST_E_EXCPT(   FE_INVALID, sqrtl, -(long)(tid + 1))
+TEST_E_EXCPT(   FE_OVERFLOW, tgamma, DBL_MAX)
+TEST_E_EXCPT(   FE_OVERFLOW, tgammaf, FLT_MAX)
+TEST_E_EXCPT_IF(!is_valgrind(/* 3.13 */),
+                FE_OVERFLOW, tgammal, LDBL_MAX)
+TEST_E_EXCPT(   FE_INVALID, y0, -(long)(tid + 1))
+TEST_E_EXCPT(   FE_INVALID, y1, -(long)(tid + 1))
+TEST_E_EXCPT(   FE_INVALID, yn, tid + 1, -(long)(tid + 1))
+TEST_E_EXCPT_IF(!is_cygwin(),
+                FE_DIVBYZERO, y0, 0)
+TEST_E_EXCPT_IF(!is_cygwin(),
+                FE_DIVBYZERO, y1, 0)
+TEST_E_EXCPT_IF(!is_cygwin() && !is_valgrind(/* 3.13 */),
+                FE_DIVBYZERO, yn, tid + 1, 0)
+
 static const struct test_func test[] = {
     TEST_SUCCESS_FUNC(acos),
     TEST_SUCCESS_FUNC(acosf),
@@ -396,7 +676,188 @@ static const struct test_func test[] = {
     TEST_SUCCESS_FUNC(truncl),
     TEST_SUCCESS_FUNC(y0),
     TEST_SUCCESS_FUNC(y1),
-    TEST_SUCCESS_FUNC(yn)
+    TEST_SUCCESS_FUNC(yn),
+
+    /* Test errno */
+    TEST_E_ERRNO_FUNC(EDOM, acos),
+    TEST_E_ERRNO_FUNC(EDOM, acosf),
+    TEST_E_ERRNO_FUNC(EDOM, acosh),
+    TEST_E_ERRNO_FUNC(EDOM, acoshf),
+    TEST_E_ERRNO_FUNC(EDOM, acoshl),
+    TEST_E_ERRNO_FUNC(EDOM, acosl),
+    TEST_E_ERRNO_FUNC(EDOM, asin),
+    TEST_E_ERRNO_FUNC(EDOM, asinf),
+    TEST_E_ERRNO_FUNC(EDOM, asinl),
+    TEST_E_ERRNO_FUNC(ERANGE, atanh),
+    TEST_E_ERRNO_FUNC(ERANGE, atanhf),
+    TEST_E_ERRNO_FUNC(ERANGE, atanhl),
+    TEST_E_ERRNO_FUNC(ERANGE, cosh),
+    TEST_E_ERRNO_FUNC(ERANGE, coshf),
+    TEST_E_ERRNO_FUNC(ERANGE, coshl),
+    TEST_E_ERRNO_FUNC(ERANGE, erfc),
+    TEST_E_ERRNO_FUNC(ERANGE, erfcf),
+    TEST_E_ERRNO_FUNC(ERANGE, erfcl),
+    TEST_E_ERRNO_FUNC(ERANGE, exp),
+    TEST_E_ERRNO_FUNC(ERANGE, exp2),
+    TEST_E_ERRNO_FUNC(ERANGE, exp2f),
+    TEST_E_ERRNO_FUNC(ERANGE, exp2l),
+    TEST_E_ERRNO_FUNC(ERANGE, expf),
+    TEST_E_ERRNO_FUNC(ERANGE, expl),
+    TEST_E_ERRNO_FUNC(ERANGE, expm1),
+    TEST_E_ERRNO_FUNC(ERANGE, expm1f),
+    TEST_E_ERRNO_FUNC(ERANGE, expm1l),
+    TEST_E_ERRNO_FUNC(ERANGE, fdim),
+    TEST_E_ERRNO_FUNC(ERANGE, fdimf),
+    TEST_E_ERRNO_FUNC(ERANGE, fdiml),
+    TEST_E_ERRNO_FUNC(ERANGE, hypot),
+    TEST_E_ERRNO_FUNC(ERANGE, hypotf),
+    TEST_E_ERRNO_FUNC(ERANGE, hypotl),
+    TEST_E_ERRNO_FUNC(ERANGE, ldexp),
+    TEST_E_ERRNO_FUNC(ERANGE, ldexpf),
+    TEST_E_ERRNO_FUNC(ERANGE, ldexpl),
+    TEST_E_ERRNO_FUNC(ERANGE, lgamma),
+    TEST_E_ERRNO_FUNC(ERANGE, lgammaf),
+    TEST_E_ERRNO_FUNC(ERANGE, lgammal),
+    TEST_E_ERRNO_FUNC(EDOM, log),
+    TEST_E_ERRNO_FUNC(EDOM, log10),
+    TEST_E_ERRNO_FUNC(EDOM, log10f),
+    TEST_E_ERRNO_FUNC(EDOM, log10l),
+    TEST_E_ERRNO_FUNC(EDOM, log1p),
+    TEST_E_ERRNO_FUNC(EDOM, log1pf),
+    TEST_E_ERRNO_FUNC(EDOM, log1pl),
+    TEST_E_ERRNO_FUNC(EDOM, log2),
+    TEST_E_ERRNO_FUNC(EDOM, log2f),
+    TEST_E_ERRNO_FUNC(EDOM, log2l),
+    TEST_E_ERRNO_FUNC(EDOM, logf),
+    TEST_E_ERRNO_FUNC(EDOM, logl),
+    TEST_E_ERRNO_FUNC(ERANGE, log),
+    TEST_E_ERRNO_FUNC(ERANGE, log10),
+    TEST_E_ERRNO_FUNC(ERANGE, log10f),
+    TEST_E_ERRNO_FUNC(ERANGE, log10l),
+    TEST_E_ERRNO_FUNC(ERANGE, log1p),
+    TEST_E_ERRNO_FUNC(ERANGE, log1pf),
+    TEST_E_ERRNO_FUNC(ERANGE, log1pl),
+    TEST_E_ERRNO_FUNC(ERANGE, log2),
+    TEST_E_ERRNO_FUNC(ERANGE, log2f),
+    TEST_E_ERRNO_FUNC(ERANGE, log2l),
+    TEST_E_ERRNO_FUNC(ERANGE, logf),
+    TEST_E_ERRNO_FUNC(ERANGE, logl),
+    TEST_E_ERRNO_FUNC(ERANGE, nexttoward),
+    TEST_E_ERRNO_FUNC(ERANGE, nexttowardf),
+    /*TEST_E_ERRNO_FUNC(ERANGE, nexttowardl),*/
+    TEST_E_ERRNO_FUNC(ERANGE, scalbln),
+    TEST_E_ERRNO_FUNC(ERANGE, scalblnf),
+    TEST_E_ERRNO_FUNC(ERANGE, scalblnl),
+    TEST_E_ERRNO_FUNC(ERANGE, scalbn),
+    TEST_E_ERRNO_FUNC(ERANGE, scalbnf),
+    TEST_E_ERRNO_FUNC(ERANGE, scalbnl),
+    TEST_E_ERRNO_FUNC(ERANGE, sinh),
+    TEST_E_ERRNO_FUNC(ERANGE, sinhf),
+    TEST_E_ERRNO_FUNC(ERANGE, sinhl),
+    TEST_E_ERRNO_FUNC(EDOM, sqrt),
+    TEST_E_ERRNO_FUNC(EDOM, sqrtf),
+    TEST_E_ERRNO_FUNC(EDOM, sqrtl),
+    TEST_E_ERRNO_FUNC(ERANGE, tgamma),
+    TEST_E_ERRNO_FUNC(ERANGE, tgammaf),
+    TEST_E_ERRNO_FUNC(ERANGE, tgammal),
+    TEST_E_ERRNO_FUNC(EDOM, y0),
+    TEST_E_ERRNO_FUNC(EDOM, y1),
+    TEST_E_ERRNO_FUNC(EDOM, yn),
+    TEST_E_ERRNO_FUNC(ERANGE, y0),
+    TEST_E_ERRNO_FUNC(ERANGE, y1),
+    TEST_E_ERRNO_FUNC(ERANGE, yn),
+
+    /* Test float-point exceptions */
+    TEST_E_EXCPT_FUNC(FE_INVALID, acos),
+    TEST_E_EXCPT_FUNC(FE_INVALID, acosf),
+    TEST_E_EXCPT_FUNC(FE_INVALID, acosh),
+    TEST_E_EXCPT_FUNC(FE_INVALID, acoshf),
+    TEST_E_EXCPT_FUNC(FE_INVALID, acoshl),
+    TEST_E_EXCPT_FUNC(FE_INVALID, acosl),
+    TEST_E_EXCPT_FUNC(FE_INVALID, asin),
+    TEST_E_EXCPT_FUNC(FE_INVALID, asinf),
+    TEST_E_EXCPT_FUNC(FE_INVALID, asinl),
+    TEST_E_EXCPT_FUNC(FE_DIVBYZERO, atanh),
+    TEST_E_EXCPT_FUNC(FE_DIVBYZERO, atanhf),
+    TEST_E_EXCPT_FUNC(FE_DIVBYZERO, atanhl),
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, cosh),
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, coshf),
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, coshl),
+    TEST_E_EXCPT_FUNC(FE_UNDERFLOW, erfc),
+    TEST_E_EXCPT_FUNC(FE_UNDERFLOW, erfcf),
+    TEST_E_EXCPT_FUNC(FE_UNDERFLOW, erfcl),
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, exp),
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, exp2),
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, exp2f),
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, exp2l),
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, expf),
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, expl),
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, expm1),
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, expm1f),
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, expm1l),
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, fdim),
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, fdimf),
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, fdiml),
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, hypot),
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, hypotf),
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, hypotl),
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, ldexp),
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, ldexpf),
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, ldexpl),
+    TEST_E_EXCPT_FUNC(FE_DIVBYZERO, lgamma),
+    TEST_E_EXCPT_FUNC(FE_DIVBYZERO, lgammaf),
+    TEST_E_EXCPT_FUNC(FE_DIVBYZERO, lgammal),
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, lgamma),
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, lgammaf),
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, lgammal),
+    TEST_E_EXCPT_FUNC(FE_INVALID, log),
+    TEST_E_EXCPT_FUNC(FE_INVALID, log10),
+    TEST_E_EXCPT_FUNC(FE_INVALID, log10f),
+    TEST_E_EXCPT_FUNC(FE_INVALID, log10l),
+    TEST_E_EXCPT_FUNC(FE_INVALID, log1p),
+    TEST_E_EXCPT_FUNC(FE_INVALID, log1pf),
+    TEST_E_EXCPT_FUNC(FE_INVALID, log1pl),
+    TEST_E_EXCPT_FUNC(FE_INVALID, log2),
+    TEST_E_EXCPT_FUNC(FE_INVALID, log2f),
+    TEST_E_EXCPT_FUNC(FE_INVALID, log2l),
+    TEST_E_EXCPT_FUNC(FE_INVALID, logf),
+    TEST_E_EXCPT_FUNC(FE_INVALID, logl),
+    TEST_E_EXCPT_FUNC(FE_DIVBYZERO, log),
+    TEST_E_EXCPT_FUNC(FE_DIVBYZERO, log10),
+    TEST_E_EXCPT_FUNC(FE_DIVBYZERO, log10f),
+    TEST_E_EXCPT_FUNC(FE_DIVBYZERO, log10l),
+    TEST_E_EXCPT_FUNC(FE_DIVBYZERO, log1p),
+    TEST_E_EXCPT_FUNC(FE_DIVBYZERO, log1pf),
+    TEST_E_EXCPT_FUNC(FE_DIVBYZERO, log1pl),
+    TEST_E_EXCPT_FUNC(FE_DIVBYZERO, log2),
+    TEST_E_EXCPT_FUNC(FE_DIVBYZERO, log2f),
+    TEST_E_EXCPT_FUNC(FE_DIVBYZERO, log2l),
+    TEST_E_EXCPT_FUNC(FE_DIVBYZERO, logf),
+    TEST_E_EXCPT_FUNC(FE_DIVBYZERO, logl),
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, nexttoward),
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, nexttowardf),
+    /*TEST_E_EXCPT_FUNC(FE_OVERFLOW, nexttowardl),*/
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, scalbln),
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, scalblnf),
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, scalblnl),
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, scalbn),
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, scalbnf),
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, scalbnl),
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, sinh),
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, sinhf),
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, sinhl),
+    TEST_E_EXCPT_FUNC(FE_INVALID, sqrt),
+    TEST_E_EXCPT_FUNC(FE_INVALID, sqrtf),
+    TEST_E_EXCPT_FUNC(FE_INVALID, sqrtl),
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, tgamma),
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, tgammaf),
+    TEST_E_EXCPT_FUNC(FE_OVERFLOW, tgammal),
+    TEST_E_EXCPT_FUNC(FE_INVALID, y0),
+    TEST_E_EXCPT_FUNC(FE_INVALID, y1),
+    TEST_E_EXCPT_FUNC(FE_INVALID, yn),
+    TEST_E_EXCPT_FUNC(FE_DIVBYZERO, y0),
+    TEST_E_EXCPT_FUNC(FE_DIVBYZERO, y1),
+    TEST_E_EXCPT_FUNC(FE_DIVBYZERO, yn)
 };
 
 /*
