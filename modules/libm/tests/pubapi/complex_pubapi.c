@@ -31,149 +31,185 @@
 #include "testhlp.h"
 #include "testmacro.h"
 
+/**
+ * \brief Creates a complex number if type `double _Complex`
+ * \param   r   The real part.
+ * \param   i   The imaginary part.
+ * \returns The complex number (r + i * I).
+ */
+static double _Complex
+cnum(double r, double i)
+{
+    return r + i * _Complex_I;
+}
+
+/**
+ * \brief Creates a complex number if type `float _Complex`
+ * \param   r   The real part.
+ * \param   i   The imaginary part.
+ * \returns The complex number (r + i * I).
+ */
+static float _Complex
+cnumf(float r, float i)
+{
+    return r + i * _Complex_I;
+}
+
+/**
+ * \brief Creates a complex number if type `long double _Complex`
+ * \param   r   The real part.
+ * \param   i   The imaginary part.
+ * \returns The complex number (r + i * I).
+ */
+static long double _Complex
+cnuml(long double r, long double i)
+{
+    return r + i * _Complex_I;
+}
+
 /*
  * Test interfaces of <picotm/complex.h>
  */
 
-TEST_SUCCESS(double,      cabs,  tid + tid * I)
-TEST_SUCCESS(float,       cabsf, tid + tid * I)
-TEST_SUCCESS(long double, cabsl, tid + tid * I)
-TEST_SUCCESS(double complex, cacos,   1.0 / (tid + 1) + tid * I)
-TEST_SUCCESS(float complex,  cacosf,  1.0 / (tid + 1) + tid * I)
-TEST_SUCCESS(double complex, cacosh,  tid + 1 + tid * I)
-TEST_SUCCESS(float complex,  cacoshf, tid + 1 + tid * I)
+TEST_SUCCESS(double,      cabs,  cnum(tid, tid))
+TEST_SUCCESS(float,       cabsf, cnumf(tid, tid))
+TEST_SUCCESS(long double, cabsl, cnuml(tid, tid))
+TEST_SUCCESS(double complex, cacos,   cnum(1.0 / (tid + 1), tid))
+TEST_SUCCESS(float complex,  cacosf,  cnumf(1.0 / (tid + 1), tid))
+TEST_SUCCESS(double complex, cacosh,  cnum(tid + 1, tid))
+TEST_SUCCESS(float complex,  cacoshf, cnumf(tid + 1, tid))
 #if defined(PICOTM_LIBM_HAVE_CACOSHL) && PICOTM_LIBM_HAVE_CACOSHL
-TEST_SUCCESS(long double complex, cacoshl, tid + 1 + tid * I)
+TEST_SUCCESS(long double complex, cacoshl, cnuml(tid + 1, tid))
 #else
 TEST_SUCCESS_SKIP(cacoshl)
 #endif
 #if defined(PICOTM_LIBM_HAVE_CACOSL) && PICOTM_LIBM_HAVE_CACOSL
-TEST_SUCCESS(long double complex, cacosl,  1.0 / (tid + 1) + tid * I)
+TEST_SUCCESS(long double complex, cacosl,  cnuml(1.0 / (tid + 1), tid))
 #else
 TEST_SUCCESS_SKIP(cacosl)
 #endif
-TEST_SUCCESS(double,      carg,  tid + tid * I)
-TEST_SUCCESS(float,       cargf, tid + tid * I)
-TEST_SUCCESS(long double, cargl, tid + tid * I)
-TEST_SUCCESS(double complex, casin,   1.0 / (tid + 1) + tid * I)
-TEST_SUCCESS(float complex,  casinf,  1.0 / (tid + 1) + tid * I)
-TEST_SUCCESS(double complex, casinh,  1.0 / (tid + 1) + tid * I)
-TEST_SUCCESS(float complex,  casinhf, 1.0 / (tid + 1) + tid * I)
+TEST_SUCCESS(double,      carg,  cnum(tid, tid))
+TEST_SUCCESS(float,       cargf, cnumf(tid, tid))
+TEST_SUCCESS(long double, cargl, cnuml(tid, tid))
+TEST_SUCCESS(double complex, casin,   cnum(1.0 / (tid + 1), tid))
+TEST_SUCCESS(float complex,  casinf,  cnumf(1.0 / (tid + 1), tid))
+TEST_SUCCESS(double complex, casinh,  cnum(1.0 / (tid + 1), tid))
+TEST_SUCCESS(float complex,  casinhf, cnumf(1.0 / (tid + 1), tid))
 #if defined(PICOTM_LIBM_HAVE_CASINHL) && PICOTM_LIBM_HAVE_CASINHL
-TEST_SUCCESS(long double complex, casinhl, 1.0 / (tid + 1) + tid * I)
+TEST_SUCCESS(long double complex, casinhl, cnuml(1.0 / (tid + 1), tid))
 #else
 TEST_SUCCESS_SKIP(casinhl)
 #endif
 #if defined(PICOTM_LIBM_HAVE_CASINL) && PICOTM_LIBM_HAVE_CASINL
-TEST_SUCCESS(long complex, casinl,  1.0 / (tid + 1) + tid * I)
+TEST_SUCCESS(long double complex, casinl,  cnuml(1.0 / (tid + 1), tid))
 #else
 TEST_SUCCESS_SKIP(casinl)
 #endif
-TEST_SUCCESS(double complex, catan,   1.0 / (tid + 2) + tid * I)
-TEST_SUCCESS(float complex,  catanf,  1.0 / (tid + 2) + tid * I)
-TEST_SUCCESS(double complex, catanh,  1.0 / (tid + 2) + tid * I)
-TEST_SUCCESS(float complex,  catanhf, 1.0 / (tid + 2) + tid * I)
+TEST_SUCCESS(double complex, catan,   cnum(1.0 / (tid + 2), tid))
+TEST_SUCCESS(float complex,  catanf,  cnumf(1.0 / (tid + 2), tid))
+TEST_SUCCESS(double complex, catanh,  cnum(1.0 / (tid + 2), tid))
+TEST_SUCCESS(float complex,  catanhf, cnumf(1.0 / (tid + 2), tid))
 #if defined(PICOTM_LIBM_HAVE_CATANHL) && PICOTM_LIBM_HAVE_CATANHL
-TEST_SUCCESS(long double complex, catanhl, 1.0 / (tid + 2) + tid * I)
+TEST_SUCCESS(long double complex, catanhl, cnuml(1.0 / (tid + 2), tid))
 #else
 TEST_SUCCESS_SKIP(catanhl)
 #endif
 #if defined(PICOTM_LIBM_HAVE_CATANL) && PICOTM_LIBM_HAVE_CATANL
-TEST_SUCCESS(long complex, catanl,  1.0 / (tid + 2) + tid * I)
+TEST_SUCCESS(long double complex, catanl,  cnuml(1.0 / (tid + 2), tid))
 #else
 TEST_SUCCESS_SKIP(catanl)
 #endif
-TEST_SUCCESS(double complex, ccos,   1.0 / (tid + 1) + tid * I)
-TEST_SUCCESS(float complex,  ccosf,  1.0 / (tid + 1) + tid * I)
-TEST_SUCCESS(double complex, ccosh,  tid + 1 + tid * I)
-TEST_SUCCESS(float complex,  ccoshf, tid + 1 + tid * I)
+TEST_SUCCESS(double complex, ccos,   cnum(1.0 / (tid + 1), tid))
+TEST_SUCCESS(float complex,  ccosf,  cnumf(1.0 / (tid + 1), tid))
+TEST_SUCCESS(double complex, ccosh,  cnum(tid + 1, tid))
+TEST_SUCCESS(float complex,  ccoshf, cnumf(tid + 1, tid))
 #if defined(PICOTM_LIBM_HAVE_CCOSHL) && PICOTM_LIBM_HAVE_CCOSHL
-TEST_SUCCESS(long double complex, ccoshl, tid + 1 + tid * I)
+TEST_SUCCESS(long double complex, ccoshl, cnuml(tid + 1, tid))
 #else
 TEST_SUCCESS_SKIP(ccoshl)
 #endif
 #if defined(PICOTM_LIBM_HAVE_CCOSL) && PICOTM_LIBM_HAVE_CCOSL
-TEST_SUCCESS(long double complex, ccosl,  1.0 / (tid + 1) + tid * I)
+TEST_SUCCESS(long double complex, ccosl,  cnuml(1.0 / (tid + 1), tid))
 #else
 TEST_SUCCESS_SKIP(ccosl)
 #endif
-TEST_SUCCESS(double complex, cexp,  tid + tid * I)
-TEST_SUCCESS(float complex,  cexpf, tid + tid * I)
+TEST_SUCCESS(double complex, cexp,  cnum(tid, tid))
+TEST_SUCCESS(float complex,  cexpf, cnumf(tid, tid))
 #if defined(PICOTM_LIBM_HAVE_CEXPL) && PICOTM_LIBM_HAVE_CEXPL
-TEST_SUCCESS(long double complex, cexpl, tid + tid * I)
+TEST_SUCCESS(long double complex, cexpl, cnuml(tid, tid))
 #else
 TEST_SUCCESS_SKIP(cexpl)
 #endif
-TEST_SUCCESS(double,      cimag,  tid + tid * I)
-TEST_SUCCESS(float,       cimagf, tid + tid * I)
-TEST_SUCCESS(long double, cimagl, tid + tid * I)
+TEST_SUCCESS(double,      cimag,  cnum(tid, tid))
+TEST_SUCCESS(float,       cimagf, cnumf(tid, tid))
+TEST_SUCCESS(long double, cimagl, cnuml(tid, tid))
 #if defined(PICOTM_LIBM_HAVE_CLOG) && PICOTM_LIBM_HAVE_CLOG
-TEST_SUCCESS(double complex, clog,  0.5 + tid + tid * I)
+TEST_SUCCESS(double complex, clog, cnum(0.5 + tid, tid))
 #else
 TEST_SUCCESS_SKIP(clog)
 #endif
 #if defined(PICOTM_LIBM_HAVE_CLOGF) && PICOTM_LIBM_HAVE_CLOGF
-TEST_SUCCESS(float complex,  clogf, 0.5 + tid + tid * I)
+TEST_SUCCESS(float complex,  clogf, cnumf(0.5 + tid, tid))
 #else
 TEST_SUCCESS_SKIP(clogf)
 #endif
 #if defined(PICOTM_LIBM_HAVE_CLOGL) && PICOTM_LIBM_HAVE_CLOGL
-TEST_SUCCESS(long double complex, clogl, 0.5 + tid + tid * I)
+TEST_SUCCESS(long double complex, clogl, cnuml(0.5 + tid, tid))
 #else
 TEST_SUCCESS_SKIP(clogl)
 #endif
-TEST_SUCCESS(double complex,      conj,  tid + tid * I)
-TEST_SUCCESS(float complex,       conjf, tid + tid * I)
-TEST_SUCCESS(long double complex, conjl, tid + tid * I)
+TEST_SUCCESS(double complex,      conj,  cnum(tid, tid))
+TEST_SUCCESS(float complex,       conjf, cnumf(tid, tid))
+TEST_SUCCESS(long double complex, conjl, cnuml(tid, tid))
 #if defined(PICOTM_LIBM_HAVE_CPOW) && PICOTM_LIBM_HAVE_CPOW
-TEST_SUCCESS(double complex, cpow,  tid + (tid + 1) * I, tid + tid * I)
+TEST_SUCCESS(double complex, cpow, cnum(tid, tid + 1), cnum(tid, tid))
 #else
 TEST_SUCCESS_SKIP(cpow)
 #endif
 #if defined(PICOTM_LIBM_HAVE_CPOWF) && PICOTM_LIBM_HAVE_CPOWF
-TEST_SUCCESS(float complex, cpowf, tid + (tid + 1) * I, tid + tid * I)
+TEST_SUCCESS(float complex, cpowf, cnumf(tid, tid + 1), cnumf(tid, tid))
 #else
 TEST_SUCCESS_SKIP(cpowf)
 #endif
 #if defined(PICOTM_LIBM_HAVE_CPOWL) && PICOTM_LIBM_HAVE_CPOWL
-TEST_SUCCESS(long double complex, cpowl, tid + (tid + 1) * I, tid + tid * I)
+TEST_SUCCESS(long double complex, cpowl, cnuml(tid, tid + 1), cnuml(tid, tid))
 #else
 TEST_SUCCESS_SKIP(cpowl)
 #endif
-TEST_SUCCESS(double complex,      cproj,  tid + tid * I)
-TEST_SUCCESS(float complex,       cprojf, tid + tid * I)
-TEST_SUCCESS(long double complex, cprojl, tid + tid * I)
-TEST_SUCCESS(double,      creal,  tid + tid * I)
-TEST_SUCCESS(float,       crealf, tid + tid * I)
-TEST_SUCCESS(long double, creall, tid + tid * I)
-TEST_SUCCESS(double complex,      csin,   tid + tid * I)
-TEST_SUCCESS(float complex,       csinf,  tid + tid * I)
-TEST_SUCCESS(double complex,      csinh,  tid + tid * I)
-TEST_SUCCESS(float complex,       csinhf, tid + tid * I)
+TEST_SUCCESS(double complex,      cproj,  cnum(tid, tid))
+TEST_SUCCESS(float complex,       cprojf, cnumf(tid, tid))
+TEST_SUCCESS(long double complex, cprojl, cnuml(tid, tid))
+TEST_SUCCESS(double,      creal,  cnum(tid, tid))
+TEST_SUCCESS(float,       crealf, cnumf(tid, tid))
+TEST_SUCCESS(long double, creall, cnuml(tid, tid))
+TEST_SUCCESS(double complex,      csin,   cnum(tid, tid))
+TEST_SUCCESS(float complex,       csinf,  cnumf(tid, tid))
+TEST_SUCCESS(double complex,      csinh,  cnum(tid, tid))
+TEST_SUCCESS(float complex,       csinhf, cnumf(tid, tid))
 #if defined(PICOTM_LIBM_HAVE_CSINHL) && PICOTM_LIBM_HAVE_CSINHL
-TEST_SUCCESS(long double complex, csinhl, tid + tid * I)
+TEST_SUCCESS(long double complex, csinhl, cnuml(tid, tid))
 #else
 TEST_SUCCESS_SKIP(csinhl)
 #endif
 #if defined(PICOTM_LIBM_HAVE_CSINL) && PICOTM_LIBM_HAVE_CSINL
-TEST_SUCCESS(long complex, csinl,  tid + tid * I)
+TEST_SUCCESS(long double complex, csinl, cnuml(tid, tid))
 #else
 TEST_SUCCESS_SKIP(csinl)
 #endif
-TEST_SUCCESS(double complex,      csqrt,  (tid + 1) + (tid + 1) * I)
-TEST_SUCCESS(float complex,       csqrtf, (tid + 1) + (tid + 1) * I)
-TEST_SUCCESS(long double complex, csqrtl, (tid + 1) + (tid + 1) * I)
-TEST_SUCCESS(double complex,      ctan,   (M_PI_2 / (tid + 1)) + tid * I)
-TEST_SUCCESS(float complex,       ctanf,  (M_PI_2 / (tid + 1)) + tid * I)
-TEST_SUCCESS(double complex,      ctanh,  (M_PI_2 / (tid + 1)) + tid * I)
-TEST_SUCCESS(float complex,       ctanhf, (M_PI_2 / (tid + 1)) + tid * I)
+TEST_SUCCESS(double complex,      csqrt,  cnum(tid + 1, tid + 1))
+TEST_SUCCESS(float complex,       csqrtf, cnumf(tid + 1, tid + 1))
+TEST_SUCCESS(long double complex, csqrtl, cnuml(tid + 1, tid + 1))
+TEST_SUCCESS(double complex,      ctan,   cnum(M_PI_2 / (tid + 1), tid))
+TEST_SUCCESS(float complex,       ctanf,  cnumf(M_PI_2 / (tid + 1), tid))
+TEST_SUCCESS(double complex,      ctanh,  cnum(M_PI_2 / (tid + 1), tid))
+TEST_SUCCESS(float complex,       ctanhf, cnumf(M_PI_2 / (tid + 1), tid))
 #if defined(PICOTM_LIBM_HAVE_CTANHL) && PICOTM_LIBM_HAVE_CTANHL
-TEST_SUCCESS(long double complex, ctanhl, (M_PI_2 / (tid + 1)) + tid * I)
+TEST_SUCCESS(long double complex, ctanhl, cnuml(M_PI_2 / (tid + 1), tid))
 #else
 TEST_SUCCESS_SKIP(ctanhl)
 #endif
 #if defined(PICOTM_LIBM_HAVE_CTANL) && PICOTM_LIBM_HAVE_CTANL
-TEST_SUCCESS(long complex, ctanl,  (M_PI_2 / (tid + 1)) + tid * I)
+TEST_SUCCESS(long double complex, ctanl, cnuml(M_PI_2 / (tid + 1), tid))
 #else
 TEST_SUCCESS_SKIP(ctanl)
 #endif
