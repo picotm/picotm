@@ -1,6 +1,6 @@
 #
 # MIT License
-# Copyright (c) 2017    Thomas Zimmermann <tdz@users.sourceforge.net>
+# Copyright (c) 2017-2018   Thomas Zimmermann <tdz@users.sourceforge.net>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -43,9 +43,11 @@ check_PROGRAMS = complex-pubapi \
                  math-pubapi
 
 complex_pubapi_SOURCES = complex_pubapi.c \
+                         testmacro.c \
                          testmacro.h
 
 math_pubapi_SOURCES = math_pubapi.c \
+                      testmacro.c \
                       testmacro.h
 
 AM_LDFLAGS = -static

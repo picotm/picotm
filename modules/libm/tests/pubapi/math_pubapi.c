@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -70,12 +70,7 @@ TEST_SUCCESS(float,       ceilf, 1.0)
 TEST_SUCCESS(long double, ceill, 1.0)
 TEST_SUCCESS(double,      copysign,  1.0, -1.0)
 TEST_SUCCESS(float,       copysignf, 1.0, -1.0)
-#if !defined(__CYGWIN__)
-TEST_SUCCESS(long double, copysignl, 1.0, -1.0)
-#else
-/* Broken on Cygwin. */
-TEST_SUCCESS_SKIP(copysignl)
-#endif
+TEST_SUCCESS_IF(!is_cygwin(), long double, copysignl, 1.0, -1.0)
 TEST_SUCCESS(double,      cos,   1.0 / (tid + 1))
 TEST_SUCCESS(float,       cosf,  1.0 / (tid + 1))
 TEST_SUCCESS(double,      cosh,  tid + 1)
