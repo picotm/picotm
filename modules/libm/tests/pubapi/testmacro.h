@@ -177,3 +177,9 @@
 #define TEST_SUCCESS_FUNC(_func) \
     {"Test " #_func "_tx()", __TEST_SUCCESS_SYMBOL(_func), NULL, NULL}
 
+/*
+ * Pre-defined test conditions
+ */
+
+_Bool
+is_cygwin(void);
