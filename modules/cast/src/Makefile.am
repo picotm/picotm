@@ -1,6 +1,6 @@
 #
 # MIT License
-# Copyright (c) 2017-2018   Thomas Zimmermann <tdz@users.sourceforge.net>
+# Copyright (c) 2018    Thomas Zimmermann <tdz@users.sourceforge.net>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -22,9 +22,19 @@
 #
 # SPDX-License-Identifier: MIT
 
-SUBDIRS = cast \
-          tm \
-          libc \
-          libm \
-          libpthread \
-          txlib
+current = 0
+revision = 0
+age = 0
+
+lib_LTLIBRARIES = libpicotm-cast.la
+
+libpicotm_cast_la_SOURCES = cast.c \
+							cast.h
+
+libpicotm_cast_la_LDFLAGS = -version-info $(current):$(revision):$(age)
+
+AM_CPPFLAGS = -I$(top_builddir)/modules/cast/include \
+              -I$(top_srcdir)/modules/cast/include \
+              -I$(top_builddir)/include \
+              -I$(top_srcdir)/include \
+              -include config.h

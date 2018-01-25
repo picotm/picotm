@@ -137,6 +137,9 @@ dnl
 dnl Modules
 dnl
 
+AC_CONFIG_HEADERS([modules/cast/include/picotm/config/picotm-cast-config.h])
+CONFIG_CAST
+
 AC_CONFIG_HEADERS([modules/tm/include/picotm/config/picotm-tm-config.h])
 CONFIG_TM
 
@@ -186,6 +189,11 @@ AC_CONFIG_FILES([Makefile
                  include/Makefile
                  LICENSES/Makefile
                  modules/Makefile
+                 modules/cast/Makefile
+                 modules/cast/include/Makefile
+                 modules/cast/src/Makefile
+                 modules/cast/tests/Makefile
+                 modules/cast/tests/pubapi/Makefile
                  modules/libc/Makefile
                  modules/libc/include/Makefile
                  modules/libc/src/Makefile
