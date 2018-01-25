@@ -27,6 +27,7 @@
 
 #include <picotm/picotm-error.h>
 #include <sys/queue.h>
+#include <sys/time.h>
 #include "chrdev_tx.h"
 #include "dir_tx.h"
 #include "fdtab_tx.h"
