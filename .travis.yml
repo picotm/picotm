@@ -119,6 +119,18 @@ matrix:
       env:
         - MATRIX_EVAL="CC=clang-4.0 && SKIP_MAKE_CHECK=1"
 
+    # clang 5.0
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-5.0
+          packages:
+            - clang-5.0
+      env:
+        - MATRIX_EVAL="CC=clang-5.0"
+
 install:
     - sudo apt-get install -y autoconf-archive doxygen graphviz optipng valgrind
 
