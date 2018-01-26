@@ -357,7 +357,14 @@ AC_DEFUN([_CHECK_LIBC_UNISTD_H], [
 ])
 
 AC_DEFUN([CONFIG_LIBC], [
+    dnl Functions from the C standard library are often provided as
+    dnl built-ins by the compiler. This breaks the Autoconf test. We
+    dnl disable built-ins while testing for longjmp().
+    AS_VAR_COPY([saved_LDFLAGS], [LDFLAGS])
+    AS_VAR_APPEND([LDFLAGS], [" -fno-builtin"])
     AC_CHECK_LIB([c], [longjmp])
+    AS_VAR_COPY([LDFLAGS], [saved_LDFLAGS])
+
     AS_VAR_IF([ac_cv_lib_c_longjmp], [yes], [
 
         #
