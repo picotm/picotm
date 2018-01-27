@@ -23,7 +23,7 @@
 # SPDX-License-Identifier: MIT
 
 current = 3
-revision = 0
+revision = 1
 age = 2
 
 lib_LTLIBRARIES = libpicotm-c.la

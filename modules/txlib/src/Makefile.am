@@ -1,6 +1,6 @@
 #
 # MIT License
-# Copyright (c) 2017    Thomas Zimmermann <tdz@users.sourceforge.net>
+# Copyright (c) 2017-2018   Thomas Zimmermann <tdz@users.sourceforge.net>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -22,9 +22,9 @@
 #
 # SPDX-License-Identifier: MIT
 
-current = 0
+current = 1
 revision = 0
-age = 0
+age = 1
 
 lib_LTLIBRARIES = libpicotm-txlib.la
 
