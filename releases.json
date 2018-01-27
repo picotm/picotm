@@ -7,6 +7,14 @@
     "tags": "c, concurrency, development, distributedsystems, embedded, errorhandling, failsafe, framework, linux, lockless, manufacturing, multicore, multithreading, softwaretransactionalmemory, transactions",
     "releases": [
         {
+            "version": "0.10.0",
+            "state": "beta",
+            "scope": "minor",
+            "changes": "Single-byte TM. TM-buffer discards. Valgrind tests. Bug fixes.",
+            "download": "https://github.com/picotm/picotm/releases/download/v0.10.0/picotm-0.10.0.tar.gz",
+            "published": "2018-01-27T12:08:46+00:00"
+        },
+        {
             "version": "0.9.0",
             "state": "beta",
             "scope": "minor",

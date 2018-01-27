@@ -1,4 +1,39 @@
 
+picotm 0.10.0 (2018-01-27)
+-------------
+
+    * Single-byte Transactional Memory. The TM module now maintains state
+      for each individual byte. Previous versions only operated on complete
+      memory words. The new feature avoids problems with dynamic memory and
+      false positives by memory checkers.
+
+    * TM-buffer discards: Transactional memory buffers can now be discarded
+      when they are freed. This improves the performance of free_tx() and
+      similar functions.
+
+    * Valgrind-instrumented test cases. In addition to regular testing, all
+      single-threaded test cases now run under Valgrind.
+
+    * Tests for math error. Many tests have been added to test the error
+      detection in the libm module.
+
+    * Transactional txlib-entry initialization. Entries for txlib data
+      structures can now be initialized from within transactions; hence
+      simplifying the use of the data structure in general.
+
+    * Redesigned event log.
+
+    * Improved portability of Autoconf scripts.
+
+    * Bug fix: Restore shared libraries (#219)
+
+    * Bug fix: Fix test for libc (#220, #236)
+
+    * Bug fix: Release old memory buffers in realloc_tx() (#224)
+
+    * Bug fix: Release OFD transactions at transaction end (#227)
+
+
 picotm 0.9.0 (2017-12-26)
 ------------
 
