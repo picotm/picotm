@@ -183,7 +183,7 @@ picotm_error_set_errno(struct picotm_error* error, int errno_hint);
 
 #if defined(PICOTM_HAVE_TYPE_KERN_RETURN_T) && \
         PICOTM_HAVE_TYPE_KERN_RETURN_T || \
-    defined(_PICOTM_DOXYGEN)
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * Sets an error of type PICOTM_KERN_RETURN_T.

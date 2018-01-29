@@ -212,7 +212,7 @@ picotm_error_as_errno(void);
 
 #if defined(PICOTM_HAVE_TYPE_KERN_RETURN_T) && \
         PICOTM_HAVE_TYPE_KERN_RETURN_T || \
-    defined(_PICOTM_DOXYGEN)
+    defined(__PICOTM_DOXYGEN)
 /**
  * Returns the current picotm kern_return_t value.
  *
