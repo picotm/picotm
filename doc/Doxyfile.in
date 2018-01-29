@@ -114,6 +114,10 @@ WARN_LOGFILE           =
 #---------------------------------------------------------------------------
 INPUT                  = @abs_top_builddir@/include \
                          @abs_top_srcdir@/include \
+                         @abs_top_builddir@/modules/cast/include \
+                         @abs_top_srcdir@/modules/cast/include \
+                         @abs_top_builddir@/modules/cast/src \
+                         @abs_top_srcdir@/modules/cast/src \
                          @abs_top_builddir@/modules/libc/include \
                          @abs_top_srcdir@/modules/libc/include \
                          @abs_top_builddir@/modules/libc/src \
@@ -299,6 +303,10 @@ EXPAND_ONLY_PREDEF     = YES
 SEARCH_INCLUDES        = YES
 INCLUDE_PATH           = @abs_top_builddir@/include \
                          @abs_top_srcdir@/include \
+                         @abs_top_builddir@/modules/cast/include \
+                         @abs_top_srcdir@/modules/cast/include \
+                         @abs_top_builddir@/modules/cast/src \
+                         @abs_top_srcdir@/modules/cast/src \
                          @abs_top_builddir@/modules/libc/include \
                          @abs_top_srcdir@/modules/libc/include \
                          @abs_top_builddir@/modules/libc/src \
@@ -323,7 +331,8 @@ INCLUDE_PATH           = @abs_top_builddir@/include \
                          @abs_top_srcdir@/src
 INCLUDE_FILE_PATTERNS  =
 PREDEFINED             = __PICOTM_DOXYGEN=1
-EXPAND_AS_DEFINED      = PICOTM_TM_LOAD_TX \
+EXPAND_AS_DEFINED      = PICOTM_CAST_TX \
+                         PICOTM_TM_LOAD_TX \
                          PICOTM_TM_PRIVATIZE_TX \
                          PICOTM_TM_STORE_TX
 SKIP_FUNCTION_MACROS   = YES
