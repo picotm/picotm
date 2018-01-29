@@ -245,7 +245,7 @@ picotm_recover_from_errno(int errno_hint);
 
 #if defined(PICOTM_HAVE_TYPE_KERN_RETURN_T) && \
         PICOTM_HAVE_TYPE_KERN_RETURN_T || \
-    defined(_PICOTM_DOXYGEN)
+    defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
  * Instructs the transaction management system to recover from an error
