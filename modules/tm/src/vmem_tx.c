@@ -156,7 +156,7 @@ ulmin(unsigned long lhs, unsigned long rhs)
 static unsigned long
 copy_all_bits(void)
 {
-    return (TM_BLOCK_SIZE - 1);
+    return TM_BLOCK_OFFSET_MASK;
 }
 
 static unsigned long
