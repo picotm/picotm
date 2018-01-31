@@ -65,6 +65,9 @@ tm_page_init(struct tm_page* page, size_t block_index);
 void
 tm_page_uninit(struct tm_page* page);
 
+bool
+tm_page_is_complete(const struct tm_page* self);
+
 static inline size_t
 tm_page_block_index(const struct tm_page* page)
 {
