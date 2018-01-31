@@ -181,15 +181,16 @@ prepare_page_ld(struct tm_page* page, uintptr_t addr, size_t siz,
     if (page->flags & TM_PAGE_FLAG_DISCARDED) {
         picotm_error_set_error_code(error, PICOTM_OUT_OF_BOUNDS);
         return;
-    } else if (tm_page_has_rdlocked_frame(page)) {
-        return;
+    } else if (!tm_page_has_rdlocked_frame(page)) {
+        tm_page_try_rdlock_frame(page, vmem, error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
     }
 
-    tm_page_try_rdlock_frame(page, vmem, error);
-    if (picotm_error_is_set(error)) {
+    if (tm_page_is_complete(page)) {
         return;
     }
-
     tm_page_ld(page, copy_bits(addr, siz), vmem, error);
     if (picotm_error_is_set(error)) {
         return;
@@ -236,14 +237,17 @@ prepare_page_st(struct tm_page* page, uintptr_t addr, size_t siz,
     if (page->flags & TM_PAGE_FLAG_DISCARDED) {
         picotm_error_set_error_code(error, PICOTM_OUT_OF_BOUNDS);
         return;
-    } else if (tm_page_has_wrlocked_frame(page)) {
-        return;
+    } else if (!tm_page_has_wrlocked_frame(page)) {
+        tm_page_try_wrlock_frame(page, vmem, error);
+        if (picotm_error_is_set(error)) {
+            return;
+        }
     }
 
-    tm_page_try_wrlock_frame(page, vmem, error);
-    if (picotm_error_is_set(error)) {
+    if (tm_page_is_complete(page)) {
         return;
     }
+    /* LD marks the bits we're going to store. */
     tm_page_ld(page, copy_bits(addr, siz), vmem, error);
     if (picotm_error_is_set(error)) {
         return;
@@ -338,44 +342,52 @@ prepare_page_privatize(struct tm_page* page, uintptr_t addr, size_t siz,
         return;
     }
 
-    if ((flags & PICOTM_TM_PRIVATIZE_STORE) &&
-            !tm_page_has_wrlocked_frame(page)) {
+    if (flags & PICOTM_TM_PRIVATIZE_STORE) {
 
         /* Page requires a writer lock. */
 
-        tm_page_try_wrlock_frame(page, vmem, error);
-        if (picotm_error_is_set(error)) {
-            return;
+        if (!tm_page_has_wrlocked_frame(page)) {
+            tm_page_try_wrlock_frame(page, vmem, error);
+            if (picotm_error_is_set(error)) {
+                return;
+            }
         }
-        tm_page_ld(page, copy_bits(addr, siz), vmem, error);
-        if (picotm_error_is_set(error)) {
-            return;
+        if (!tm_page_is_complete(page)) {
+            tm_page_ld(page, copy_bits(addr, siz), vmem, error);
+            if (picotm_error_is_set(error)) {
+                return;
+            }
         }
         page->flags |= TM_PAGE_FLAG_WRITE_THROUGH;
 
-    } else if ((flags & PICOTM_TM_PRIVATIZE_LOAD) &&
-                !tm_page_has_rdlocked_frame(page)) {
+    } else if (flags & PICOTM_TM_PRIVATIZE_LOAD) {
 
         /* Page requires a reader lock. */
 
-        tm_page_try_rdlock_frame(page, vmem, error);
-        if (picotm_error_is_set(error)) {
-            return;
+        if (!tm_page_has_rdlocked_frame(page)) {
+            tm_page_try_rdlock_frame(page, vmem, error);
+            if (picotm_error_is_set(error)) {
+                return;
+            }
         }
-        tm_page_ld(page, copy_bits(addr, siz), vmem, error);
-        if (picotm_error_is_set(error)) {
-            return;
+        if (!tm_page_is_complete(page)) {
+            tm_page_ld(page, copy_bits(addr, siz), vmem, error);
+            if (picotm_error_is_set(error)) {
+                return;
+            }
         }
         page->flags |= TM_PAGE_FLAG_WRITE_THROUGH;
 
-    } else if (!flags && !tm_page_has_wrlocked_frame(page)) {
+    } else if (!flags) {
 
         /* Not setting any flags marks the page as discarded.
          * Page requires a writer lock. */
 
-        tm_page_try_wrlock_frame(page, vmem, error);
-        if (picotm_error_is_set(error)) {
-            return;
+        if (!tm_page_has_wrlocked_frame(page)) {
+            tm_page_try_wrlock_frame(page, vmem, error);
+            if (picotm_error_is_set(error)) {
+                return;
+            }
         }
         page->flags |= TM_PAGE_FLAG_DISCARDED;
 
@@ -431,14 +443,15 @@ prepare_page_privatize_c(struct tm_page* page,
 {
     bool found_c;
 
-    if ((flags & PICOTM_TM_PRIVATIZE_STORE) &&
-            !tm_page_has_wrlocked_frame(page)) {
+    if (flags & PICOTM_TM_PRIVATIZE_STORE) {
 
         /* Page requires a writer lock. */
 
-        tm_page_try_wrlock_frame(page, vmem, error);
-        if (picotm_error_is_set(error)) {
-            return false;
+        if (!tm_page_has_wrlocked_frame(page)) {
+            tm_page_try_wrlock_frame(page, vmem, error);
+            if (picotm_error_is_set(error)) {
+                return false;
+            }
         }
 
         found_c = tm_page_ld_c(page, copy_bits(addr, page_diff), c, vmem,
@@ -448,14 +461,15 @@ prepare_page_privatize_c(struct tm_page* page,
         }
         page->flags |= TM_PAGE_FLAG_WRITE_THROUGH;
 
-    } else if ((flags & PICOTM_TM_PRIVATIZE_LOAD) &&
-                !tm_page_has_rdlocked_frame(page)) {
+    } else if (flags & PICOTM_TM_PRIVATIZE_LOAD) {
 
         /* Page requires a reader lock. */
 
-        tm_page_try_rdlock_frame(page, vmem, error);
-        if (picotm_error_is_set(error)) {
-            return false;
+        if (!tm_page_has_rdlocked_frame(page)) {
+            tm_page_try_rdlock_frame(page, vmem, error);
+            if (picotm_error_is_set(error)) {
+                return false;
+            }
         }
         found_c = tm_page_ld_c(page, copy_bits(addr, page_diff), c, vmem,
                                error);
@@ -464,14 +478,16 @@ prepare_page_privatize_c(struct tm_page* page,
         }
         page->flags |= TM_PAGE_FLAG_WRITE_THROUGH;
 
-    } else if (!flags && !tm_page_has_wrlocked_frame(page)) {
+    } else if (!flags) {
 
         /* Not setting any flags marks the page as discarded.
          * Page requires a writer lock. */
 
-        tm_page_try_wrlock_frame(page, vmem, error);
-        if (picotm_error_is_set(error)) {
-            return false;
+        if (!tm_page_has_wrlocked_frame(page)) {
+            tm_page_try_wrlock_frame(page, vmem, error);
+            if (picotm_error_is_set(error)) {
+                return false;
+            }
         }
 
         uintptr_t page_addr = tm_page_address(page);
