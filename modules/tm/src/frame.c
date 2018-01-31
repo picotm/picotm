@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -31,12 +31,13 @@
 #include <stdbool.h>
 #include "block.h"
 
+#define TM_FRAME_FLAGS_MASK     (TM_BLOCK_SIZE - 1)
+
 void
 tm_frame_init(struct tm_frame* frame, size_t block_index)
 {
     picotm_rwlock_init(&frame->rwlock);
     frame->flags = block_index << TM_BLOCK_SIZE_BITS;
-
 }
 
 void
@@ -66,7 +67,7 @@ tm_frame_buffer(const struct tm_frame* frame)
 unsigned long
 tm_frame_flags(const struct tm_frame* frame)
 {
-    return frame->flags & ~TM_BLOCK_MASK;
+    return frame->flags & TM_FRAME_FLAGS_MASK;
 }
 
 void
