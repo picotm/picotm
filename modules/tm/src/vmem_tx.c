@@ -164,11 +164,12 @@ copy_bits(uintptr_t addr, size_t siz)
 {
     unsigned long bits = copy_all_bits(); /* Set all bits. */
 
-    /* Don't copy more than siz bytes. */
+    /* Don't copy more than siz or block-size bytes. */
     bits >>= TM_BLOCK_SIZE - ulmin(siz, TM_BLOCK_SIZE);
-    /* Start copying at addr. */
-    bits <<= addr - picotm_address_ceil(addr, TM_BLOCK_SIZE);
+    /* Start copying at byte. */
+    bits <<= addr - picotm_address_floor(addr, TM_BLOCK_SIZE);
 
+    /* Filter out bits within the current page. */
     return bits & copy_all_bits();
 }
 
