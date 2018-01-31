@@ -57,7 +57,13 @@ tm_page_buffer(struct tm_page* page)
 static bool
 all_buf_bits_set(unsigned long bits)
 {
-    return bits == (TM_BLOCK_SIZE - 1);
+    return bits == TM_BLOCK_OFFSET_MASK;
+}
+
+bool
+tm_page_is_complete(const struct tm_page* page)
+{
+    return all_buf_bits_set(page->buf_bits);
 }
 
 void
