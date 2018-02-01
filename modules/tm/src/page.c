@@ -120,13 +120,17 @@ tm_page_ld_c(struct tm_page* page, unsigned long bits, int c, struct tm_vmem* vm
     const uint8_t* mem = tm_frame_buffer(frame);
     unsigned long bit = 1ul;
 
-    for (buf = buf_beg; (buf < buf_end) && (*mem != c); ++buf, ++mem, bit <<= 1) {
+    for (buf = buf_beg; buf < buf_end; ++buf, ++mem, bit <<= 1) {
         if ((bits & bit) && !(page->buf_bits & bit)) {
             *buf = *mem;
+            page->buf_bits |= bit;
+        }
+        if (page->buf_bits & bit) {
+            if (*mem == c) {
+                break;
+            }
         }
     }
-
-    page->buf_bits |= bits;
 
     tm_vmem_release_frame(vmem, frame);
 
