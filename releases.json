@@ -7,6 +7,14 @@
     "tags": "c, concurrency, development, distributedsystems, embedded, errorhandling, failsafe, framework, linux, lockless, manufacturing, multicore, multithreading, softwaretransactionalmemory, transactions",
     "releases": [
         {
+            "version": "0.10.1",
+            "state": "beta",
+            "scope": "bugfix",
+            "changes": "Fixed transactional memory inconsistencies.",
+            "download": "https://github.com/picotm/picotm/releases/download/v0.10.1/picotm-0.10.1.tar.gz",
+            "published": "2018-02-02T10:00:58+00:00"
+        },
+        {
             "version": "0.10.0",
             "state": "beta",
             "scope": "minor",
