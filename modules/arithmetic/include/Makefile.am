@@ -1,6 +1,6 @@
 #
 # MIT License
-# Copyright (c) 2017-2018   Thomas Zimmermann <tdz@users.sourceforge.net>
+# Copyright (c) 2018    Thomas Zimmermann <tdz@users.sourceforge.net>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -22,10 +22,6 @@
 #
 # SPDX-License-Identifier: MIT
 
-SUBDIRS = arithmetic \
-          cast \
-          tm \
-          libc \
-          libm \
-          libpthread \
-          txlib
+nobase_include_HEADERS = picotm/config/picotm-arithmetic-config.h \
+                         picotm/picotm-arithmetic.h \
+                         picotm/picotm-arithmetic-ctypes.h

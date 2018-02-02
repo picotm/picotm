@@ -140,6 +140,10 @@ dnl
 AC_CONFIG_HEADERS([modules/cast/include/picotm/config/picotm-cast-config.h])
 CONFIG_CAST
 
+AC_CONFIG_HEADERS(
+    [modules/arithmetic/include/picotm/config/picotm-arithmetic-config.h])
+CONFIG_ARITHMETIC
+
 AC_CONFIG_HEADERS([modules/tm/include/picotm/config/picotm-tm-config.h])
 CONFIG_TM
 
@@ -189,6 +193,11 @@ AC_CONFIG_FILES([Makefile
                  include/Makefile
                  LICENSES/Makefile
                  modules/Makefile
+                 modules/arithmetic/Makefile
+                 modules/arithmetic/include/Makefile
+                 modules/arithmetic/src/Makefile
+                 modules/arithmetic/tests/Makefile
+                 modules/arithmetic/tests/pubapi/Makefile
                  modules/cast/Makefile
                  modules/cast/include/Makefile
                  modules/cast/src/Makefile
