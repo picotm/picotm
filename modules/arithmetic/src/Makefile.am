@@ -1,6 +1,6 @@
 #
 # MIT License
-# Copyright (c) 2017-2018   Thomas Zimmermann <tdz@users.sourceforge.net>
+# Copyright (c) 2018    Thomas Zimmermann <tdz@users.sourceforge.net>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -22,10 +22,19 @@
 #
 # SPDX-License-Identifier: MIT
 
-SUBDIRS = arithmetic \
-          cast \
-          tm \
-          libc \
-          libm \
-          libpthread \
-          txlib
+current = 0
+revision = 0
+age = 0
+
+lib_LTLIBRARIES = libpicotm-arithmetic.la
+
+libpicotm_arithmetic_la_SOURCES = arithmetic.c \
+                                  arithmetic.h
+
+libpicotm_arithmetic_la_LDFLAGS = -version-info $(current):$(revision):$(age)
+
+AM_CPPFLAGS = -I$(top_builddir)/modules/arithmetic/include \
+              -I$(top_srcdir)/modules/arithmetic/include \
+              -I$(top_builddir)/include \
+              -I$(top_srcdir)/include \
+              -include config.h
