@@ -289,22 +289,3 @@ errno_of_flag(int flag);
 #define TEST_E_EXCPT_FUNC(_flag, _func)                             \
     {"Test " #_func "_tx() for " #_flag,                            \
         __TEST_E_EXCPT_SYMBOL(excpt_ ## _flag, _func), NULL, NULL}
-
-/*
- * Pre-defined test conditions
- */
-
-_Bool
-is_cygwin(void);
-
-_Bool
-is_freebsd(void);
-
-_Bool
-is_linux(void);
-
-_Bool
-is_macos(void);
-
-_Bool
-is_valgrind(void);
