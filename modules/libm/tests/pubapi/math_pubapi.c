@@ -30,6 +30,7 @@
 #include <picotm/picotm-tm.h>
 #include <stdbool.h>
 #include "ptr.h"
+#include "sysenv.h"
 #include "test.h"
 #include "testhlp.h"
 #include "testmacro.h"

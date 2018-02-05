@@ -23,21 +23,21 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include "testmacro.h"
-#include <errno.h>
-#include <fenv.h>
+/*
+ * Pre-defined test conditions
+ */
 
-int
-errno_of_flag(int flag)
-{
-    if (flag == FE_INVALID) {
-        return EDOM;
-    } else if (flag == FE_DIVBYZERO) {
-        return ERANGE;
-    } else if (flag == FE_OVERFLOW) {
-        return ERANGE;
-    } else if (flag == FE_UNDERFLOW) {
-        return ERANGE;
-    }
-    return 0;
-}
+_Bool
+is_cygwin(void);
+
+_Bool
+is_freebsd(void);
+
+_Bool
+is_linux(void);
+
+_Bool
+is_macos(void);
+
+_Bool
+is_valgrind(void);
