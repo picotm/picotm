@@ -87,3 +87,23 @@
 #else
     #define PICOTM_EXPORT
 #endif
+
+#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112l) || \
+    defined(__PICOTM_DOXYGEN)
+    /**
+     * Provides a portable static assertion.
+     * \brief   _cond   The compile-time assertion.
+     * \brief   _errmsg An error message that is printed if the condition
+     *                  fails.
+     */
+    #define PICOTM_STATIC_ASSERT(_cond, _errmsg)    \
+        _Static_assert((_cond), _errmsg)
+#elif defined(__GNUC__)
+    #define PICOTM_STATIC_ASSERT(_cond, _errmsg)                            \
+        (__extension__({                                                    \
+            int assertion_holds[1 - ( 2 *!(_cond))]                         \
+                    __attribute__((__unused__));                            \
+        }))
+#else
+    #define PICOTM_STATIC_ASSERT(_cond, _errmsg)
+#endif
