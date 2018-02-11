@@ -27,7 +27,7 @@
 
 #include <setjmp.h>
 #include <stdbool.h>
-#include "module.h"
+#include "picotm_module.h"
 #include "picotm_lock_owner.h"
 #include "picotm_log.h"
 
@@ -59,7 +59,7 @@ struct tx {
     struct picotm_lock_owner lo;
 
     unsigned long nmodules; /**< \brief Number allocated modules */
-    struct module module[MAX_NMODULES]; /** \brief Registered modules */
+    struct picotm_module module[MAX_NMODULES]; /** \brief Registered modules */
 
     bool is_initialized;
 };
