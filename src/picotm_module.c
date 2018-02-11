@@ -23,25 +23,25 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include "module.h"
+#include "picotm_module.h"
 #include <assert.h>
 
 void
-module_init(struct module* self,
-            void (*lock)(void*, struct picotm_error*),
-            void (*unlock)(void*, struct picotm_error*),
-            void (*validate)(void*, int, struct picotm_error*),
-            void (*apply)(void*, struct picotm_error*),
-            void (*undo)(void*, struct picotm_error*),
-            void (*apply_event)(uint16_t, uintptr_t, void*,
-                                struct picotm_error*),
-            void (*undo_event)(uint16_t, uintptr_t, void*,
-                               struct picotm_error*),
-            void (*update_cc)(void*, int, struct picotm_error*),
-            void (*clear_cc)(void*, int, struct picotm_error*),
-            void (*finish)(void*, struct picotm_error*),
-            void (*uninit)(void*),
-            void *data)
+picotm_module_init(struct picotm_module* self,
+                   void (*lock)(void*, struct picotm_error*),
+                   void (*unlock)(void*, struct picotm_error*),
+                   void (*validate)(void*, int, struct picotm_error*),
+                   void (*apply)(void*, struct picotm_error*),
+                   void (*undo)(void*, struct picotm_error*),
+                   void (*apply_event)(uint16_t, uintptr_t, void*,
+                                       struct picotm_error*),
+                   void (*undo_event)(uint16_t, uintptr_t, void*,
+                                      struct picotm_error*),
+                   void (*update_cc)(void*, int, struct picotm_error*),
+                   void (*clear_cc)(void*, int, struct picotm_error*),
+                   void (*finish)(void*, struct picotm_error*),
+                   void (*uninit)(void*),
+                   void *data)
 {
     assert(self);
 
@@ -60,7 +60,7 @@ module_init(struct module* self,
 }
 
 void
-module_uninit(struct module* self)
+picotm_module_uninit(struct picotm_module* self)
 {
     assert(self);
 
@@ -70,7 +70,7 @@ module_uninit(struct module* self)
 }
 
 void*
-module_get_data(const struct module* self)
+picotm_module_get_data(const struct picotm_module* self)
 {
     assert(self);
 
@@ -78,7 +78,8 @@ module_get_data(const struct module* self)
 }
 
 void
-module_lock(const struct module* self, struct picotm_error* error)
+picotm_module_lock(const struct picotm_module* self,
+                   struct picotm_error* error)
 {
     assert(self);
 
@@ -89,7 +90,8 @@ module_lock(const struct module* self, struct picotm_error* error)
 }
 
 void
-module_unlock(const struct module* self, struct picotm_error* error)
+picotm_module_unlock(const struct picotm_module* self,
+                     struct picotm_error* error)
 {
     assert(self);
 
@@ -100,8 +102,8 @@ module_unlock(const struct module* self, struct picotm_error* error)
 }
 
 void
-module_validate(const struct module* self, bool noundo,
-                struct picotm_error* error)
+picotm_module_validate(const struct picotm_module* self, bool noundo,
+                       struct picotm_error* error)
 {
     assert(self);
 
@@ -112,7 +114,8 @@ module_validate(const struct module* self, bool noundo,
 }
 
 void
-module_apply(const struct module* self, struct picotm_error* error)
+picotm_module_apply(const struct picotm_module* self,
+                    struct picotm_error* error)
 {
     assert(self);
 
@@ -123,7 +126,8 @@ module_apply(const struct module* self, struct picotm_error* error)
 }
 
 void
-module_undo(const struct module* self, struct picotm_error* error)
+picotm_module_undo(const struct picotm_module* self,
+                   struct picotm_error* error)
 {
     assert(self);
 
@@ -134,8 +138,9 @@ module_undo(const struct module* self, struct picotm_error* error)
 }
 
 void
-module_apply_event(const struct module* self, uint16_t head, uintptr_t tail,
-                   struct picotm_error* error)
+picotm_module_apply_event(const struct picotm_module* self,
+                          uint16_t head, uintptr_t tail,
+                          struct picotm_error* error)
 {
     assert(self);
 
@@ -146,8 +151,9 @@ module_apply_event(const struct module* self, uint16_t head, uintptr_t tail,
 }
 
 void
-module_undo_event(const struct module* self, uint16_t head, uintptr_t tail,
-                  struct picotm_error* error)
+picotm_module_undo_event(const struct picotm_module* self,
+                         uint16_t head, uintptr_t tail,
+                         struct picotm_error* error)
 {
     assert(self);
 
@@ -158,8 +164,8 @@ module_undo_event(const struct module* self, uint16_t head, uintptr_t tail,
 }
 
 void
-module_update_cc(const struct module* self, bool noundo,
-                 struct picotm_error* error)
+picotm_module_update_cc(const struct picotm_module* self, bool noundo,
+                        struct picotm_error* error)
 {
     assert(self);
 
@@ -170,8 +176,8 @@ module_update_cc(const struct module* self, bool noundo,
 }
 
 void
-module_clear_cc(const struct module* self, bool noundo,
-                struct picotm_error* error)
+picotm_module_clear_cc(const struct picotm_module* self, bool noundo,
+                       struct picotm_error* error)
 {
     assert(self);
 
@@ -182,7 +188,8 @@ module_clear_cc(const struct module* self, bool noundo,
 }
 
 void
-module_finish(const struct module* self, struct picotm_error* error)
+picotm_module_finish(const struct picotm_module* self,
+                     struct picotm_error* error)
 {
     assert(self);
 

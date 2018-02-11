@@ -82,11 +82,11 @@ tx_release(struct tx* self)
     picotm_lock_owner_uninit(&self->lo);
     picotm_log_uninit(&self->log);
 
-    struct module* module = self->module;
-    const struct module* module_end = self->module + self->nmodules;
+    struct picotm_module* module = self->module;
+    const struct picotm_module* module_end = self->module + self->nmodules;
 
     while (module < module_end) {
-        module_uninit(module);
+        picotm_module_uninit(module);
         ++module;
     }
 }
@@ -126,10 +126,10 @@ tx_register_module(struct tx* self,
         return 0;
     }
 
-    module_init(self->module + module, lock, unlock, validate,
-                apply, undo, apply_event, undo_event,
-                update_cc, clear_cc,
-                finish, uninit, data);
+    picotm_module_init(self->module + module, lock, unlock, validate,
+                       apply, undo, apply_event, undo_event,
+                       update_cc, clear_cc,
+                       finish, uninit, data);
 
     self->nmodules = module + 1;
 
@@ -199,12 +199,12 @@ err_picotm_lock_owner_reset_timestamp:
 static size_t
 lock_cb(void* module, struct picotm_error* error)
 {
-    module_lock(module, error);
+    picotm_module_lock(module, error);
     return picotm_error_is_set(error) ? 0 : 1;
 }
 
 static void
-lock_modules(struct module* module, unsigned long nmodules,
+lock_modules(struct picotm_module* module, unsigned long nmodules,
              struct picotm_error* error)
 {
     tabwalk_1(module, nmodules, sizeof(*module), lock_cb, error);
@@ -216,12 +216,12 @@ lock_modules(struct module* module, unsigned long nmodules,
 static size_t
 unlock_cb(void* module, struct picotm_error* error)
 {
-    module_unlock(module, error);
+    picotm_module_unlock(module, error);
     return picotm_error_is_set(error) ? 0 : 1;
 }
 
 static void
-unlock_modules(struct module* module, unsigned long nmodules,
+unlock_modules(struct picotm_module* module, unsigned long nmodules,
                struct picotm_error* error)
 {
     tabrwalk_1(module, nmodules, sizeof(*module), unlock_cb, error);
@@ -235,7 +235,7 @@ validate_cb(void* module, void* is_irrevocable, struct picotm_error* error)
 {
     assert(is_irrevocable);
 
-    module_validate(module, *((bool*)is_irrevocable), error);
+    picotm_module_validate(module, *((bool*)is_irrevocable), error);
     if (picotm_error_is_set(error)) {
         return 0;
     }
@@ -243,7 +243,7 @@ validate_cb(void* module, void* is_irrevocable, struct picotm_error* error)
 }
 
 static void
-validate_modules(struct module* module, unsigned long nmodules,
+validate_modules(struct picotm_module* module, unsigned long nmodules,
                  bool is_irrevocable, struct picotm_error* error)
 {
     tabwalk_2(module, nmodules, sizeof(*module), validate_cb, &is_irrevocable,
@@ -256,7 +256,7 @@ validate_modules(struct module* module, unsigned long nmodules,
 static size_t
 apply_cb(void* module, struct picotm_error* error)
 {
-    module_apply(module, error);
+    picotm_module_apply(module, error);
     if (picotm_error_is_set(error)) {
         return 0;
     }
@@ -264,7 +264,7 @@ apply_cb(void* module, struct picotm_error* error)
 }
 
 static void
-apply_modules(struct module* module, unsigned long nmodules,
+apply_modules(struct picotm_module* module, unsigned long nmodules,
               struct picotm_error* error)
 {
     tabwalk_1(module, nmodules, sizeof(*module), apply_cb, error);
@@ -276,7 +276,7 @@ apply_modules(struct module* module, unsigned long nmodules,
 static size_t
 undo_cb(void* module, struct picotm_error* error)
 {
-    module_undo(module, error);
+    picotm_module_undo(module, error);
     if (picotm_error_is_set(error)) {
         return 0;
     }
@@ -284,7 +284,7 @@ undo_cb(void* module, struct picotm_error* error)
 }
 
 static void
-undo_modules(struct module* module, unsigned long nmodules,
+undo_modules(struct picotm_module* module, unsigned long nmodules,
              struct picotm_error* error)
 {
     tabwalk_1(module, nmodules, sizeof(*module), undo_cb, error);
@@ -298,7 +298,7 @@ update_cc_cb(void* module, void* is_irrevocable, struct picotm_error* error)
 {
     assert(is_irrevocable);
 
-    module_update_cc(module, *((bool*)is_irrevocable), error);
+    picotm_module_update_cc(module, *((bool*)is_irrevocable), error);
     if (picotm_error_is_set(error)) {
         return 0;
     }
@@ -306,7 +306,7 @@ update_cc_cb(void* module, void* is_irrevocable, struct picotm_error* error)
 }
 
 static void
-update_modules_cc(struct module* module, unsigned long nmodules,
+update_modules_cc(struct picotm_module* module, unsigned long nmodules,
                   bool is_irrevocable, struct picotm_error* error)
 {
     tabwalk_2(module, nmodules, sizeof(*module), update_cc_cb,
@@ -321,7 +321,7 @@ clear_cc_cb(void* module, void* is_irrevocable, struct picotm_error* error)
 {
     assert(is_irrevocable);
 
-    module_clear_cc(module, *((bool*)is_irrevocable), error);
+    picotm_module_clear_cc(module, *((bool*)is_irrevocable), error);
     if (picotm_error_is_set(error)) {
         return 0;
     }
@@ -329,7 +329,7 @@ clear_cc_cb(void* module, void* is_irrevocable, struct picotm_error* error)
 }
 
 static void
-clear_modules_cc(struct module* module, unsigned long nmodules,
+clear_modules_cc(struct picotm_module* module, unsigned long nmodules,
                  bool is_irrevocable, struct picotm_error* error)
 {
     tabwalk_2(module, nmodules, sizeof(*module), clear_cc_cb, &is_irrevocable,
@@ -342,7 +342,7 @@ clear_modules_cc(struct module* module, unsigned long nmodules,
 static size_t
 log_finish_cb(void* module, struct picotm_error* error)
 {
-    module_finish(module, error);
+    picotm_module_finish(module, error);
     if (picotm_error_is_set(error)) {
         return 0;
     }
@@ -350,7 +350,7 @@ log_finish_cb(void* module, struct picotm_error* error)
 }
 
 static void
-finish_modules(struct module* module, unsigned long nmodules,
+finish_modules(struct picotm_module* module, unsigned long nmodules,
                struct picotm_error* error)
 {
     tabwalk_1(module, nmodules, sizeof(*module), log_finish_cb, error);
@@ -363,8 +363,9 @@ static void
 apply_event(struct tx* tx, const struct picotm_event* event,
             struct picotm_error* error)
 {
-    module_apply_event(tx->module + event->module, event->head, event->tail,
-                       error);
+    picotm_module_apply_event(tx->module + event->module,
+                              event->head, event->tail,
+                              error);
 }
 
 static void
@@ -387,8 +388,9 @@ static void
 undo_event(struct tx* tx, const struct picotm_event* event,
            struct picotm_error* error)
 {
-    module_undo_event(tx->module + event->module, event->head, event->tail,
-                      error);
+    picotm_module_undo_event(tx->module + event->module,
+                             event->head, event->tail,
+                             error);
 }
 
 static void
