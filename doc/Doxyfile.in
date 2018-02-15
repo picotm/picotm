@@ -130,6 +130,10 @@ INPUT                  = @abs_top_builddir@/include \
                          @abs_top_srcdir@/modules/libpthread/include \
                          @abs_top_builddir@/modules/libpthread/src \
                          @abs_top_srcdir@/modules/libpthread/src \
+                         @abs_top_builddir@/modules/arithmetic/include \
+                         @abs_top_srcdir@/modules/arithmetic/include \
+                         @abs_top_builddir@/modules/arithmetic/src \
+                         @abs_top_srcdir@/modules/arithmetic/src \
                          @abs_top_builddir@/modules/tm/include \
                          @abs_top_srcdir@/modules/tm/include \
                          @abs_top_builddir@/modules/tm/src \
@@ -319,6 +323,10 @@ INCLUDE_PATH           = @abs_top_builddir@/include \
                          @abs_top_srcdir@/modules/libpthread/include \
                          @abs_top_builddir@/modules/libpthread/src \
                          @abs_top_srcdir@/modules/libpthread/src \
+                         @abs_top_builddir@/modules/arithmetic/include \
+                         @abs_top_srcdir@/modules/arithmetic/include \
+                         @abs_top_builddir@/modules/arithmetic/src \
+                         @abs_top_srcdir@/modules/arithmetic/src \
                          @abs_top_builddir@/modules/tm/include \
                          @abs_top_srcdir@/modules/tm/include \
                          @abs_top_builddir@/modules/tm/src \
@@ -331,7 +339,19 @@ INCLUDE_PATH           = @abs_top_builddir@/include \
                          @abs_top_srcdir@/src
 INCLUDE_FILE_PATTERNS  =
 PREDEFINED             = __PICOTM_DOXYGEN=1
-EXPAND_AS_DEFINED      = PICOTM_CAST_TX \
+EXPAND_AS_DEFINED      = PICOTM_ARITHMETIC_ADD_F_TX \
+                         PICOTM_ARITHMETIC_ADD_S_TX \
+                         PICOTM_ARITHMETIC_ADD_U_TX \
+                         PICOTM_ARITHMETIC_DIV_F_TX \
+                         PICOTM_ARITHMETIC_DIV_S_TX \
+                         PICOTM_ARITHMETIC_DIV_U_TX \
+                         PICOTM_ARITHMETIC_MUL_F_TX \
+                         PICOTM_ARITHMETIC_MUL_S_TX \
+                         PICOTM_ARITHMETIC_MUL_U_TX \
+                         PICOTM_ARITHMETIC_SUB_F_TX \
+                         PICOTM_ARITHMETIC_SUB_S_TX \
+                         PICOTM_ARITHMETIC_SUB_U_TX \
+                         PICOTM_CAST_TX \
                          PICOTM_TM_LOAD_TX \
                          PICOTM_TM_PRIVATIZE_TX \
                          PICOTM_TM_STORE_TX
