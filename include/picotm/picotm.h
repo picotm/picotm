@@ -343,6 +343,8 @@ PICOTM_END_DECLS
  *      \copybrief group_tm
  *  -# \ref group_cast \n
  *      \copybrief group_cast
+ *  -# \ref group_arithmetic \n
+ *      \copybrief group_arithmetic
  *  -# \ref group_txlib \n
  *      \copybrief group_txlib
  *  -# \ref group_libc \n
