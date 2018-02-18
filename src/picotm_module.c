@@ -25,37 +25,16 @@
 
 #include "picotm_module.h"
 #include <assert.h>
+#include "picotm/picotm-module.h"
 
 void
 picotm_module_init(struct picotm_module* self,
-                   void (*lock)(void*, struct picotm_error*),
-                   void (*unlock)(void*, struct picotm_error*),
-                   void (*validate)(void*, int, struct picotm_error*),
-                   void (*apply)(void*, struct picotm_error*),
-                   void (*undo)(void*, struct picotm_error*),
-                   void (*apply_event)(uint16_t, uintptr_t, void*,
-                                       struct picotm_error*),
-                   void (*undo_event)(uint16_t, uintptr_t, void*,
-                                      struct picotm_error*),
-                   void (*update_cc)(void*, int, struct picotm_error*),
-                   void (*clear_cc)(void*, int, struct picotm_error*),
-                   void (*finish)(void*, struct picotm_error*),
-                   void (*uninit)(void*),
+                   const struct picotm_module_ops* ops,
                    void *data)
 {
     assert(self);
 
-    self->lock = lock;
-    self->unlock = unlock;
-    self->validate = validate;
-    self->apply = apply;
-    self->undo = undo;
-    self->apply_event = apply_event;
-    self->undo_event = undo_event;
-    self->update_cc = update_cc;
-    self->clear_cc = clear_cc;
-    self->finish = finish;
-    self->uninit = uninit;
+    self->ops = ops;
     self->data = data;
 }
 
@@ -63,9 +42,10 @@ void
 picotm_module_uninit(struct picotm_module* self)
 {
     assert(self);
+    assert(self->ops);
 
-    if (self->uninit) {
-        self->uninit(self->data);
+    if (self->ops->uninit) {
+        self->ops->uninit(self->data);
     }
 }
 
@@ -82,11 +62,12 @@ picotm_module_lock(const struct picotm_module* self,
                    struct picotm_error* error)
 {
     assert(self);
+    assert(self->ops);
 
-    if (!self->lock) {
+    if (!self->ops->lock) {
         return;
     }
-    self->lock(self->data, error);
+    self->ops->lock(self->data, error);
 }
 
 void
@@ -94,11 +75,12 @@ picotm_module_unlock(const struct picotm_module* self,
                      struct picotm_error* error)
 {
     assert(self);
+    assert(self->ops);
 
-    if (!self->unlock) {
+    if (!self->ops->unlock) {
         return;
     }
-    self->unlock(self->data, error);
+    self->ops->unlock(self->data, error);
 }
 
 void
@@ -106,11 +88,12 @@ picotm_module_validate(const struct picotm_module* self, bool noundo,
                        struct picotm_error* error)
 {
     assert(self);
+    assert(self->ops);
 
-    if (!self->validate) {
+    if (!self->ops->validate) {
         return;
     }
-    self->validate(self->data, noundo, error);
+    self->ops->validate(self->data, noundo, error);
 }
 
 void
@@ -118,11 +101,12 @@ picotm_module_apply(const struct picotm_module* self,
                     struct picotm_error* error)
 {
     assert(self);
+    assert(self->ops);
 
-    if (!self->apply) {
+    if (!self->ops->apply) {
         return;
     }
-    self->apply(self->data, error);
+    self->ops->apply(self->data, error);
 }
 
 void
@@ -130,11 +114,12 @@ picotm_module_undo(const struct picotm_module* self,
                    struct picotm_error* error)
 {
     assert(self);
+    assert(self->ops);
 
-    if (!self->undo) {
+    if (!self->ops->undo) {
         return;
     }
-    self->undo(self->data, error);
+    self->ops->undo(self->data, error);
 }
 
 void
@@ -143,11 +128,12 @@ picotm_module_apply_event(const struct picotm_module* self,
                           struct picotm_error* error)
 {
     assert(self);
+    assert(self->ops);
 
-    if (!self->apply_event) {
+    if (!self->ops->apply_event) {
         return;
     }
-    self->apply_event(head, tail, self->data, error);
+    self->ops->apply_event(head, tail, self->data, error);
 }
 
 void
@@ -156,11 +142,12 @@ picotm_module_undo_event(const struct picotm_module* self,
                          struct picotm_error* error)
 {
     assert(self);
+    assert(self->ops);
 
-    if (!self->undo_event) {
+    if (!self->ops->undo_event) {
         return;
     }
-    self->undo_event(head, tail, self->data, error);
+    self->ops->undo_event(head, tail, self->data, error);
 }
 
 void
@@ -168,11 +155,12 @@ picotm_module_update_cc(const struct picotm_module* self, bool noundo,
                         struct picotm_error* error)
 {
     assert(self);
+    assert(self->ops);
 
-    if (!self->update_cc) {
+    if (!self->ops->update_cc) {
         return;
     }
-    self->update_cc(self->data, noundo, error);
+    self->ops->update_cc(self->data, noundo, error);
 }
 
 void
@@ -180,11 +168,12 @@ picotm_module_clear_cc(const struct picotm_module* self, bool noundo,
                        struct picotm_error* error)
 {
     assert(self);
+    assert(self->ops);
 
-    if (!self->clear_cc) {
+    if (!self->ops->clear_cc) {
         return;
     }
-    self->clear_cc(self->data, noundo, error);
+    self->ops->clear_cc(self->data, noundo, error);
 }
 
 void
@@ -192,9 +181,10 @@ picotm_module_finish(const struct picotm_module* self,
                      struct picotm_error* error)
 {
     assert(self);
+    assert(self->ops);
 
-    if (!self->finish) {
+    if (!self->ops->finish) {
         return;
     }
-    self->finish(self->data, error);
+    self->ops->finish(self->data, error);
 }

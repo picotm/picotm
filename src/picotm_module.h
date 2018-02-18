@@ -37,37 +37,16 @@
  */
 
 struct picotm_error;
+struct picotm_module_ops;
 
 struct picotm_module {
-    void (*lock)(void*, struct picotm_error*);
-    void (*unlock)(void*, struct picotm_error*);
-    void (*validate)(void*, int, struct picotm_error*);
-    void (*apply)(void*, struct picotm_error*);
-    void (*undo)(void*, struct picotm_error*);
-    void (*apply_event)(uint16_t, uintptr_t, void*, struct picotm_error*);
-    void (*undo_event)(uint16_t, uintptr_t, void*, struct picotm_error*);
-    void (*update_cc)(void*, int, struct picotm_error*);
-    void (*clear_cc)(void*, int, struct picotm_error*);
-    void (*finish)(void*, struct picotm_error*);
-    void (*uninit)(void*);
-    void *data;
+    const struct picotm_module_ops* ops;
+    void* data;
 };
 
 void
 picotm_module_init(struct picotm_module* self,
-                   void (*lock)(void*, struct picotm_error*),
-                   void (*unlock)(void*, struct picotm_error*),
-                   void (*validate)(void*, int, struct picotm_error*),
-                   void (*apply)(void*, struct picotm_error*),
-                   void (*undo)(void*, struct picotm_error*),
-                   void (*apply_event)(uint16_t, uintptr_t, void*,
-                                       struct picotm_error*),
-                   void (*undo_event)(uint16_t, uintptr_t, void*,
-                                      struct picotm_error*),
-                   void (*update_cc)(void*, int, struct picotm_error*),
-                   void (*clear_cc)(void*, int, struct picotm_error*),
-                   void (*finish)(void*, struct picotm_error*),
-                   void (*uninit)(void*),
+                   const struct picotm_module_ops* ops,
                    void* data);
 
 void

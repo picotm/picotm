@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -82,6 +82,11 @@ uninit_cb(void* data)
 static struct fpu_tx*
 get_fpu_tx(bool initialize, struct picotm_error* error)
 {
+    static const struct picotm_module_ops g_ops = {
+        .undo = undo_cb,
+        .finish = finish_cb,
+        .uninit = uninit_cb
+    };
     static __thread struct fpu_module t_module;
 
     if (t_module.is_initialized) {
@@ -90,14 +95,7 @@ get_fpu_tx(bool initialize, struct picotm_error* error)
         return NULL;
     }
 
-    unsigned long module = picotm_register_module(NULL, NULL, NULL,
-                                                  NULL, undo_cb,
-                                                  NULL, NULL,
-                                                  NULL, NULL,
-                                                  finish_cb,
-                                                  uninit_cb,
-                                                  &t_module,
-                                                  error);
+    unsigned long module = picotm_register_module(&g_ops, &t_module, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }

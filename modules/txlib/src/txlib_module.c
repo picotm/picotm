@@ -120,6 +120,13 @@ uninit_cb(void* data)
 static struct txlib_tx*
 get_txl_tx(bool initialize, struct picotm_error* error)
 {
+    static const struct picotm_module_ops g_ops = {
+        .lock = lock_cb,
+        .apply_event = apply_event_cb,
+        .undo_event = undo_event_cb,
+        .finish = finish_cb,
+        .uninit = uninit_cb
+    };
     static __thread struct txlib_module t_module;
 
     if (t_module.is_initialized) {
@@ -128,15 +135,7 @@ get_txl_tx(bool initialize, struct picotm_error* error)
         return NULL;
     }
 
-    unsigned long module = picotm_register_module(lock_cb, NULL,
-                                                  NULL,
-                                                  NULL, NULL,
-                                                  apply_event_cb, undo_event_cb,
-                                                  NULL, NULL,
-                                                  finish_cb,
-                                                  uninit_cb,
-                                                  &t_module,
-                                                  error);
+    unsigned long module = picotm_register_module(&g_ops, &t_module, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
