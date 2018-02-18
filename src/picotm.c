@@ -372,24 +372,10 @@ picotm_error_as_kern_return_t()
 
 PICOTM_EXPORT
 unsigned long
-picotm_register_module(picotm_module_lock_function lock,
-                       picotm_module_unlock_function unlock,
-                       picotm_module_validate_function validate,
-                       picotm_module_apply_function apply,
-                       picotm_module_undo_function undo,
-                       picotm_module_apply_event_function apply_event,
-                       picotm_module_undo_event_function undo_event,
-                       picotm_module_update_cc_function update_cc,
-                       picotm_module_clear_cc_function clear_cc,
-                       picotm_module_finish_function finish,
-                       picotm_module_uninit_function uninit,
-                       void* data,
+picotm_register_module(const struct picotm_module_ops* ops, void* data,
                        struct picotm_error* error)
 {
-    return tx_register_module(get_non_null_tx(), lock, unlock, validate,
-                              apply, undo, apply_event, undo_event,
-                              update_cc, clear_cc,
-                              finish, uninit, data, error);
+    return tx_register_module(get_non_null_tx(), ops, data, error);
 }
 
 PICOTM_EXPORT

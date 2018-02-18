@@ -157,37 +157,34 @@ typedef void (*picotm_module_finish_function)(void* data,
  */
 typedef void (*picotm_module_uninit_function)(void* data);
 
+/**
+ * The module structure contains call-back functions for each
+ * module.
+ */
+struct picotm_module_ops {
+    picotm_module_lock_function lock;
+    picotm_module_unlock_function unlock;
+    picotm_module_validate_function validate;
+    picotm_module_apply_function apply;
+    picotm_module_undo_function undo;
+    picotm_module_apply_event_function apply_event;
+    picotm_module_undo_event_function undo_event;
+    picotm_module_update_cc_function update_cc;
+    picotm_module_clear_cc_function clear_cc;
+    picotm_module_finish_function finish;
+    picotm_module_uninit_function uninit;
+};
+
 PICOTM_NOTHROW
 /**
  * Registers a new module with the transaction management system.
- * \param       lock            The lock call-back function.
- * \param       unlock          The unlock call-back function.
- * \param       validate        The validate call-back function.
- * \param       apply           The apply call-back function.
- * \param       undo            The undo call-back function.
- * \param       apply_event     The apply-event call-back function.
- * \param       undo_event      The undo-event call-back function.
- * \param       update_cc       The update-CC call-back function.
- * \param       clear_cc        The clear-CC call-back function.
- * \param       finish          The finish call-back function.
- * \param       uninit          The uninit call-back function.
- * \param       cbdata          A pointer to module-specific data.
- * \param[out]  error           Returns an error.
+ * \param       ops     The module-operations call-back structure.
+ * \param       data    A pointer to module-specific data.
+ * \param[out]  error   Returns an error.
  * \returns A module number on success.
  */
 unsigned long
-picotm_register_module(picotm_module_lock_function lock,
-                       picotm_module_unlock_function unlock,
-                       picotm_module_validate_function validate,
-                       picotm_module_apply_function apply,
-                       picotm_module_undo_function undo,
-                       picotm_module_apply_event_function apply_event,
-                       picotm_module_undo_event_function undo_event,
-                       picotm_module_update_cc_function update_cc,
-                       picotm_module_clear_cc_function clear_cc,
-                       picotm_module_finish_function finish,
-                       picotm_module_uninit_function uninit,
-                       void* cbdata,
+picotm_register_module(const struct picotm_module_ops* ops, void* data,
                        struct picotm_error* error);
 
 PICOTM_NOTHROW
