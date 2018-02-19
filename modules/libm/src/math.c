@@ -26,7 +26,7 @@
 #include "picotm/math.h"
 #include <fenv.h>
 #include <math.h>
-#include <picotm/picotm-tm.h>
+#include <picotm/picotm-tm-ctypes.h>
 #include <picotm/picotm-libc.h>
 #include "matherr.h"
 #include "picotm/math-tm.h"
