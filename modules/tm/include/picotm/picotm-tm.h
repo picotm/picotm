@@ -253,10 +253,11 @@ PICOTM_END_DECLS
  *
  * The Transactional Memory module provides load and store operations for
  * main memory. In order to avoid conflicting access to shared memory
- * locations, picotm has to know which transaction uses which location. The
+ * locations, picotm has to know which transaction uses which locations. The
  * Transactional Memory module maintains these information.
  *
- * Call `load_tx()` to load a memory location into your transaction.
+ * A call to `load_tx()` copies a memory location's value into a transaction,
+ * as illustrated in the example below.
  *
  * ~~~{.c}
  *  int x;
@@ -272,13 +273,13 @@ PICOTM_END_DECLS
  *  picotm_end
  * ~~~
  *
- * This copies the value of `x` into your transaction's variable `x_tx` and
+ * This copies the value of `x` into our transaction's variable `x_tx` and
  * puts the memory location of `x` under control of the transaction manager.
- * You're free to change the value of `x_tx` at will, since it's transaction
- * local. If you change it, the original, non-transactional value in `x`
+ * We are free to change the value of `x_tx` at will, since it's transaction
+ * local. If we change it, the original non-transactional value in `x`
  * remains unchanged.
  *
- * Similarly, you can store a copy of a transactional variable in a
+ * In a similarly way we store a copy of a transactional variable in a
  * memory location. This is done with `store_tx()`.
  *
  * ~~~{.c}
@@ -299,10 +300,10 @@ PICOTM_END_DECLS
  * immediately, but only become permanent after the transaction successfully
  * committed.
  *
- * You don't have to deal with all these addresses yourself. The TM module
- * comes with helper functions for various basic C types are provided. With
- * `load_int_tx()` and `store_int_tx()` we can rewrite the example
- * transactions as shown below.
+ * We don't have to deal with all these addresses ourselves. The TM module
+ * comes with helper functions for the basic C types. With `load_int_tx()`
+ * and `store_int_tx()` we can rewrite the example transactions as shown
+ * below.
  *
  * ~~~{.c}
  *  int x;
@@ -323,9 +324,9 @@ PICOTM_END_DECLS
  *
  * Besides `load_int_tx()` and `store_int_tx()`, the Transactional Memory
  * module provides similar functions for the basic C types. Each is defined
- * via the macros `PICOTM_TM_LOAD_TX()` and `PICOTM_TM_STORE_TX()`. You can
- * use these macros to define load and store functions for your application's
- * data types. Both macros expand to inline C functions, so you don't loose
+ * via the macros `PICOTM_TM_LOAD_TX()` and `PICOTM_TM_STORE_TX()`. We can
+ * use these macros to define load and store functions for our application's
+ * data types. Both macros expand to inline C functions, so we don't loose
  * performance compared to `load_tx()` and `store_tx()`.
  *
  * ~~~{.c}
@@ -340,8 +341,8 @@ PICOTM_END_DECLS
  * ~~~
  *
  * Since address and pointer handling can be tricky, there are also helpers
- * for loading and storing pointers. Note that these functions load and store
- * the address stored in a pointer variable, but not the value stored at that
+ * for loading and storing pointers. These functions load and store the
+ * address stored in a pointer variable, but not the value stored at that
  * address.
  *
  * ~~~{.c}
@@ -362,7 +363,7 @@ PICOTM_END_DECLS
  * ~~~
  *
  * Loads and stores always copy values into or out of a transaction. There
- * are cases where you don't want a copy, but the exact memory location
+ * are cases where we don't want a copy, but the exact memory location
  * of a value. This is called *privatization.* For example, the function
  * `memcpy()` loads and stores an indefinite amount of data between memory
  * buffers. The actual buffer size is often not known in advance. It would
@@ -392,17 +393,17 @@ PICOTM_END_DECLS
  * This privatizes `x` for transactional access from within the transaction.
  * The number of bytes is given in the second argument. The flags argument is
  * a bitmask of `PICOTM_TM_PRIVATIZE_LOAD` and `PICOTM_TM_PRIVATIZE_STORE`.
- * These flags control how picotm handles the memory location. If you only
- * privatized a memory location for loading *or* storing, you should never
+ * These flags control how picotm handles the memory location. If we only
+ * privatized a memory location for loading *or* storing, we may never
  * invoke the other operation. Setting no flags at all will discard the
  * memory location. This signals to other transactions that the memory is
  * invalid and to be freed.
  *
- * There can be cases where you don't know in advance how long the privatized
- * buffer is going to be. For example, when you privatize a C string, the
- * length is not always given, but given by the location of the terminating
- * `\0` character. To privatize a memory region up to and including a specific
- * character, use `privatize_c_tx()`.
+ * There can be cases where we don't know in advance how large in size the
+ * privatized buffer is going to be. For example, if we privatize a C string,
+ * the length is not explicitly stored in the string, but given by the
+ * location of the terminating `\0` character. To privatize a memory region
+ * up to and including a specific character, there is `privatize_c_tx()`.
  *
  * ~~~{.c}
  *  char* str = "foo";
@@ -411,11 +412,11 @@ PICOTM_END_DECLS
  *
  *      privatize_c_tx(str, '\0', PICOTM_TM_PRIVATIZE_LOAD);
  *
- *      // The string in 'str' is now available within the transaction.
+ *      // The string at 'str' is now available within the transaction.
  *
- *      privatize_c_tx(str, '0', PICOTM_TM_PRIVATIZE_STORE);
+ *      privatize_c_tx(str, '\0', PICOTM_TM_PRIVATIZE_STORE);
  *
- *      // Changes to 'str' will be committed into the string of 'str'.
+ *      // Changes to 'str' will be committed into the string at 'str'.
  *
  *  picotm_commit
  *  picotm_end
