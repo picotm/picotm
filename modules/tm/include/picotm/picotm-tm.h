@@ -256,7 +256,7 @@ PICOTM_END_DECLS
  * locations, picotm has to know which transaction uses which location. The
  * Transactional Memory module maintains these information.
  *
- * Call load_tx() to load a memory location into your transaction.
+ * Call `load_tx()` to load a memory location into your transaction.
  *
  * ~~~{.c}
  *  int x;
@@ -272,14 +272,14 @@ PICOTM_END_DECLS
  *  picotm_end
  * ~~~
  *
- * This copies the value of 'x' into your transaction's variable 'x_tx' and
- * puts the memory location of 'x' under control of the transaction manager.
- * You're free to change the value of 'x_tx' at will, since it's transaction
- * local. If you change it, the original, non-transactional value in 'x'
+ * This copies the value of `x` into your transaction's variable `x_tx` and
+ * puts the memory location of `x` under control of the transaction manager.
+ * You're free to change the value of `x_tx` at will, since it's transaction
+ * local. If you change it, the original, non-transactional value in `x`
  * remains unchanged.
  *
  * Similarly, you can store a copy of a transactional variable in a
- * memory location. This is done with store_tx().
+ * memory location. This is done with `store_tx()`.
  *
  * ~~~{.c}
  *  int x;
@@ -323,10 +323,10 @@ PICOTM_END_DECLS
  *
  * Besides `load_int_tx()` and `store_int_tx()`, the Transactional Memory
  * module provides similar functions for the basic C types. Each is defined
- * via the macros PICOTM_TM_LOAD_TX() and PICOTM_TM_STORE_TX(). You can
+ * via the macros `PICOTM_TM_LOAD_TX()` and `PICOTM_TM_STORE_TX()`. You can
  * use these macros to define load and store functions for your application's
  * data types. Both macros expand to inline C functions, so you don't loose
- * performance compared to load_tx() and store_tx().
+ * performance compared to `load_tx()` and `store_tx()`.
  *
  * ~~~{.c}
  *  // An application-specific type
@@ -369,7 +369,7 @@ PICOTM_END_DECLS
  * be wasteful to first load the data into a transaction-local buffer and
  * then further store it in another buffer.
  *
- * The functions privatize_tx() and privatize_c_tx() offer privatization
+ * The functions `privatize_tx()` and `privatize_c_tx()` offer privatization
  * of memory locations.
  *
  * ~~~{.c}
@@ -389,10 +389,10 @@ PICOTM_END_DECLS
  *  picotm_end
  * ~~~
  *
- * This privatizes 'x' for transactional access from within the transaction.
+ * This privatizes `x` for transactional access from within the transaction.
  * The number of bytes is given in the second argument. The flags argument is
- * a bitmask of PICOTM_TM_PRIVATIZE_LOAD and PICOTM_TM_PRIVATIZE_STORE. These
- * flags control how picotm handles the memory location. If you only
+ * a bitmask of `PICOTM_TM_PRIVATIZE_LOAD` and `PICOTM_TM_PRIVATIZE_STORE`.
+ * These flags control how picotm handles the memory location. If you only
  * privatized a memory location for loading *or* storing, you should never
  * invoke the other operation. Setting no flags at all will discard the
  * memory location. This signals to other transactions that the memory is
@@ -402,7 +402,7 @@ PICOTM_END_DECLS
  * buffer is going to be. For example, when you privatize a C string, the
  * length is not always given, but given by the location of the terminating
  * `\0` character. To privatize a memory region up to and including a specific
- * character, use privatize_c_tx().
+ * character, use `privatize_c_tx()`.
  *
  * ~~~{.c}
  *  char* str = "foo";
@@ -421,10 +421,10 @@ PICOTM_END_DECLS
  *  picotm_end
  * ~~~
  *
- * Using privatize_c_tx() with strings is the most common use case, but
+ * Using `privatize_c_tx()` with strings is the most common use case, but
  * arbitrary characters are possible.
  *
- * Finally, there is loadstore_tx(). Even through the name suggests
+ * Finally, there is `loadstore_tx()`. Even through the name suggests
  * load-and-store, the function is a mixture of load, store and
  * privatization. It privatizes an input buffer for loading and an
  * output buffer for storing, and copies the input buffer's content
@@ -444,7 +444,7 @@ PICOTM_END_DECLS
  *  picotm_end
  * ~~~
  *
- * A call to loadstore_tx() is like a call to `memcpy()` that privatizes
+ * A call to `loadstore_tx()` is like a call to `memcpy()` that privatizes
  * its input buffers. It's an optimization for platform without transactional
  * C library.
  */
