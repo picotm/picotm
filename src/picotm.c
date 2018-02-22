@@ -33,12 +33,39 @@
 #include <string.h>
 #include "picotm/picotm-lib-ptr.h"
 #include "picotm/picotm-lib-spinlock.h"
+#include "picotm_lock_manager.h"
 #include "tx.h"
-#include "tx_shared.h"
 
 /*
  * Global data
  */
+
+struct tx_shared {
+    /**
+     * The global lock manager for all transactional locks. Register your
+     * transaction's lock-owner instance with this object.
+     */
+    struct picotm_lock_manager lm;
+};
+
+static void
+init_tx_shared(struct tx_shared* tx_shared, struct picotm_error* error)
+{
+    assert(tx_shared);
+
+    picotm_lock_manager_init(&tx_shared->lm, error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
+}
+
+static void
+uninit_tx_shared(struct tx_shared* tx_shared)
+{
+    assert(tx_shared);
+
+    picotm_lock_manager_uninit(&tx_shared->lm);
+}
 
 static struct tx_shared*
 get_tx_shared(bool initialize, struct picotm_error* error);
@@ -51,9 +78,8 @@ atexit_tx_shared(void)
     struct tx_shared* tx_shared = get_tx_shared(false, &error);
     if (picotm_error_is_set(&error)) {
         return;
-    }
-    if (tx_shared) {
-        tx_shared_uninit(tx_shared);
+    } else if (tx_shared) {
+        uninit_tx_shared(tx_shared);
     }
 }
 
@@ -83,7 +109,7 @@ get_tx_shared(bool initialize, struct picotm_error* error)
         goto out;
     }
 
-    tx_shared_init(&g_tx_shared, error);
+    init_tx_shared(&g_tx_shared, error);
     if (picotm_error_is_set(error)) {
         goto err_tx_shared_init;
     }
