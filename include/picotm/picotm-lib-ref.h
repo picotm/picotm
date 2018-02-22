@@ -94,6 +94,14 @@ struct picotm_shared_ref16 {
     atomic_uint_fast16_t count;
 };
 
+/* Initializes a static reference counter with the given value.
+ * \param   count   The initial reference count
+ */
+#define PICOTM_SHARED_REF16_INITIALIZER(count)  \
+{                                               \
+    .count = ATOMIC_VAR_INIT(count)             \
+}
+
 /* Initializes the counter with the given value.
  * \warning This is an internal interface. Don't use it in application code.
  */
@@ -141,6 +149,22 @@ __picotm_shared_ref16_count(const struct picotm_shared_ref16* self)
     return atomic_load_explicit((atomic_uint_fast16_t*)&self->count,
                                 memory_order_acquire);
 #endif
+}
+
+/* Initializes a statically allocated reference counter with the given value.
+ * \param   __count The initial reference count
+ */
+#define PICOTM_REF_INITIALIZER(__count) \
+{                                       \
+    .count = (__count)                  \
+}
+
+/* Initializes a statically allocated reference counter with the given value.
+ * \param   __count The initial reference count
+ */
+#define PICOTM_SHARED_REF_INITIALIZER(__count)  \
+{                                               \
+    .count = ATOMIC_VAR_INIT(__count)           \
 }
 
 /**
