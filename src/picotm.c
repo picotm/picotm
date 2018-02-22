@@ -123,7 +123,7 @@ get_tx(bool do_init, struct picotm_error* error)
         return NULL;
     }
 
-    tx_init(&t_tx, tx_shared, error);
+    tx_init(&t_tx, &tx_shared->lm, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
@@ -174,7 +174,7 @@ picotm_lock_owner_get_lock_manager(struct picotm_lock_owner* lo)
 
     const struct tx* tx = picotm_containerof(lo, struct tx, lo);
 
-    return &tx->shared->lm;
+    return tx->lm;
 }
 
 /*

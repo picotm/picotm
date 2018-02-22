@@ -41,7 +41,7 @@
 #define MAX_NMODULES    (256)
 
 struct picotm_error;
-struct tx_shared;
+struct picotm_lock_manager;
 
 enum tx_mode {
     TX_MODE_REVOCABLE,
@@ -51,9 +51,11 @@ enum tx_mode {
 struct tx {
     jmp_buf*          env;
     struct picotm_log log;
-    struct tx_shared *shared;
     enum tx_mode      mode;
     unsigned long     nretries;
+
+    /** The global lock manager for all transactions. */
+    struct picotm_lock_manager* lm;
 
     /** The transaction's lock-owner instance. */
     struct picotm_lock_owner lo;
@@ -65,7 +67,7 @@ struct tx {
 };
 
 void
-tx_init(struct tx* self, struct tx_shared* tx_shared,
+tx_init(struct tx* self, struct picotm_lock_manager* lm,
         struct picotm_error* error);
 
 void
