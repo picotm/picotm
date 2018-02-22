@@ -29,9 +29,9 @@
 #include <stdatomic.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdlib.h>
 #include <string.h>
 #include "picotm/picotm-lib-ptr.h"
+#include "picotm/picotm-lib-shared-ref-obj.h"
 #include "picotm/picotm-lib-spinlock.h"
 #include "picotm_lock_manager.h"
 #include "tx.h"
@@ -41,12 +41,24 @@
  */
 
 struct global_state {
+
+    /**
+     * The reference counter for the global-state object. Every thread
+     * with a transaction holds a reference.
+     */
+    struct picotm_shared_ref16_obj ref_obj;
+
     /**
      * The global lock manager for all transactional locks. Register your
      * transaction's lock-owner instance with this object.
      */
     struct picotm_lock_manager lm;
 };
+
+#define GLOBAL_STATE_INITIALIZER                        \
+{                                                       \
+    .ref_obj = PICOTM_SHARED_REF16_OBJ_INITIALIZER      \
+}
 
 static void
 init_global_state_fields(struct global_state* global,
@@ -68,70 +80,73 @@ uninit_global_state_fields(struct global_state* global)
     picotm_lock_manager_uninit(&global->lm);
 }
 
+static bool
+up_cond_global_state(struct picotm_shared_ref16_obj* ref_obj, void* data,
+                     struct picotm_error* error)
+{
+    bool initialize = *((bool*)data);
+
+    bool has_ref = !!picotm_shared_ref16_obj_count(ref_obj);
+
+    *(bool*)data = has_ref; /* returned to caller */
+
+    return has_ref || initialize;
+}
+
+/* Returns the statically allocated global state. Callers *must* already
+ * hold a reference. */
 static struct global_state*
-get_global_state(bool initialize, struct picotm_error* error);
+get_global_state(void)
+{
+    static struct global_state g_global = GLOBAL_STATE_INITIALIZER;
+
+    return &g_global;
+}
 
 static void
-atexit_global_state(void)
+first_ref_global_state(struct picotm_shared_ref16_obj* ref_obj, void* data,
+                       struct picotm_error* error)
 {
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+    struct global_state* global = picotm_containerof(ref_obj,
+                                                     struct global_state,
+                                                     ref_obj);
+    init_global_state_fields(global, error);
+}
 
-    struct global_state* global = get_global_state(false, &error);
-    if (picotm_error_is_set(&error)) {
-        return;
-    } else if (global) {
-        uninit_global_state_fields(global);
-    }
+static void
+final_ref_global_state(struct picotm_shared_ref16_obj* ref_obj, void* data,
+                       struct picotm_error* error)
+{
+    struct global_state* global = picotm_containerof(ref_obj,
+                                                     struct global_state,
+                                                     ref_obj);
+    uninit_global_state_fields(global);
 }
 
 static struct global_state*
-get_global_state(bool initialize, struct picotm_error* error)
+ref_global_state(bool initialize, struct picotm_error* error)
 {
-    static struct {
-        atomic_bool is_initialized;
-        struct picotm_spinlock lock;
-        struct global_state global;
-    } g_state = {
-        .is_initialized = ATOMIC_VAR_INIT(false),
-        .lock = PICOTM_SPINLOCK_INITIALIZER
-    };
+    struct global_state* global = get_global_state();
 
-    bool is_initialized = atomic_load_explicit(&g_state.is_initialized,
-                                               memory_order_acquire);
-    if (is_initialized) {
-        return &g_state.global;
-    } else if (!initialize) {
+    bool has_ref = initialize; /* updated by up_cond function */
+
+    picotm_shared_ref16_obj_up(&global->ref_obj, &has_ref,
+                               up_cond_global_state, first_ref_global_state,
+                               error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    } else if (!has_ref && !initialize) {
         return NULL;
     }
 
-    picotm_spinlock_lock(&g_state.lock);
+    return global;
+}
 
-    is_initialized = atomic_load_explicit(&g_state.is_initialized,
-                                          memory_order_acquire);
-    if (is_initialized) {
-        /* Another transaction initialized the global state
-         * concurrently; we're done. */
-        goto out;
-    }
-
-    init_global_state_fields(&g_state.global, error);
-    if (picotm_error_is_set(error)) {
-        goto err_init_global_state_fields;
-    }
-
-    atexit(atexit_global_state);
-
-    atomic_store_explicit(&g_state.is_initialized, true,
-                          memory_order_release);
-
-out:
-    picotm_spinlock_unlock(&g_state.lock);
-
-    return &g_state.global;
-
-err_init_global_state_fields:
-    picotm_spinlock_unlock(&g_state.lock);
-    return NULL;
+void
+unref_global_state(struct global_state* global)
+{
+    picotm_shared_ref16_obj_down(&global->ref_obj, NULL, NULL,
+                                 final_ref_global_state);
 }
 
 /*
@@ -145,16 +160,24 @@ struct thread_state {
 
 static void
 init_thread_state_fields(struct thread_state* thread,
-                         struct global_state* global,
                          struct picotm_error* error)
 {
     assert(thread);
-    assert(global);
 
-    tx_init(&thread->tx, &global->lm, error);
+    struct global_state* global = ref_global_state(true, error);
     if (picotm_error_is_set(error)) {
         return;
     }
+
+    tx_init(&thread->tx, &global->lm, error);
+    if (picotm_error_is_set(error)) {
+        goto err_tx_init;
+    }
+
+    return;
+
+err_tx_init:
+    unref_global_state(global);
 }
 
 static void
@@ -163,6 +186,14 @@ uninit_thread_state_fields(struct thread_state* thread)
     assert(thread);
 
     tx_release(&thread->tx);
+
+    /* We're going to release our reference to the global state from
+     * init_thread_state_fields(). Because the global-state object's
+     * address never changes, there's no need to store it in the thread
+     * state. */
+
+    struct global_state* global = get_global_state();
+    unref_global_state(global);
 }
 
 static struct thread_state*
@@ -181,12 +212,7 @@ get_thread_state(bool initialize, struct picotm_error* error)
         return NULL;
     }
 
-    struct global_state* global = get_global_state(true, error);
-    if (picotm_error_is_set(error)) {
-        return NULL;
-    }
-
-    init_thread_state_fields(&t_state.thread, global, error);
+    init_thread_state_fields(&t_state.thread, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
