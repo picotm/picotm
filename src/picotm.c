@@ -34,7 +34,7 @@
 #include "picotm/picotm-lib-shared-ref-obj.h"
 #include "picotm/picotm-lib-spinlock.h"
 #include "picotm_lock_manager.h"
-#include "tx.h"
+#include "picotm_tx.h"
 
 /*
  * Global data
@@ -171,7 +171,7 @@ struct thread_state {
     /**
      * The thread-local transaction state.
      */
-    struct tx tx;
+    struct picotm_tx tx;
 };
 
 #define THREAD_STATE_INITIALIZER        \
@@ -192,16 +192,16 @@ init_thread_state_fields(struct thread_state* thread,
         return;
     }
 
-    tx_init(&thread->tx, &global->lm, error);
+    picotm_tx_init(&thread->tx, &global->lm, error);
     if (picotm_error_is_set(error)) {
-        goto err_tx_init;
+        goto err_picotm_tx_init;
     }
 
     thread->fields_are_initialized = true;
 
     return;
 
-err_tx_init:
+err_picotm_tx_init:
     unref_global_state(global);
 }
 
@@ -211,7 +211,7 @@ uninit_thread_state_fields(struct thread_state* thread)
     assert(thread);
     assert(thread->fields_are_initialized);
 
-    tx_release(&thread->tx);
+    picotm_tx_release(&thread->tx);
 
     /* We're going to release our reference to the global state from
      * init_thread_state_fields(). Because the global-state object's
@@ -232,7 +232,7 @@ get_thread_state(void)
     return &t_thread;
 }
 
-static struct tx*
+static struct picotm_tx*
 get_tx(bool initialize, struct picotm_error* error)
 {
     struct thread_state* thread = get_thread_state();
@@ -251,13 +251,13 @@ get_tx(bool initialize, struct picotm_error* error)
     return &thread->tx;
 }
 
-static struct tx*
+static struct picotm_tx*
 get_non_null_tx(void)
 {
     while (true) {
         struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-        struct tx* tx = get_tx(true, &error);
+        struct picotm_tx* tx = get_tx(true, &error);
         if (picotm_error_is_set(&error)) {
             picotm_recover_from_error(&error);
             continue;
@@ -282,7 +282,7 @@ get_non_null_error(void)
 struct picotm_lock_owner*
 picotm_lock_owner_get_thread_local_instance()
 {
-    struct tx* tx = get_non_null_tx();
+    struct picotm_tx* tx = get_non_null_tx();
 
     return &tx->lo;
 }
@@ -292,7 +292,7 @@ picotm_lock_owner_get_lock_manager(struct picotm_lock_owner* lo)
 {
     assert(lo);
 
-    const struct tx* tx = picotm_containerof(lo, struct tx, lo);
+    const struct picotm_tx* tx = picotm_containerof(lo, struct picotm_tx, lo);
 
     return tx->lm;
 }
@@ -321,12 +321,12 @@ __picotm_begin(enum __picotm_mode mode, jmp_buf* env)
     struct picotm_error* error = get_non_null_error();
     memset(error, 0, sizeof(*error));
 
-    struct tx* tx = get_tx(true, error);
+    struct picotm_tx* tx = get_tx(true, error);
     if (picotm_error_is_set(error)) {
         return false; /* Enter recovery mode. */
     }
 
-    tx_begin(tx, tx_mode[mode], mode == PICOTM_MODE_RETRY, env, error);
+    picotm_tx_begin(tx, tx_mode[mode], mode == PICOTM_MODE_RETRY, env, error);
     if (picotm_error_is_set(error)) {
         return false; /* Enter recovery mode. */
     }
@@ -335,13 +335,13 @@ __picotm_begin(enum __picotm_mode mode, jmp_buf* env)
 }
 
 static void
-restart_tx(struct tx* tx, enum __picotm_mode mode, bool do_rollback)
+restart_tx(struct picotm_tx* tx, enum __picotm_mode mode, bool do_rollback)
 {
     assert(tx);
 
     if (do_rollback) {
         struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-        tx_rollback(tx, &error);
+        picotm_tx_rollback(tx, &error);
         if (picotm_error_is_set(&error)) {
             switch (error.status) {
             case PICOTM_CONFLICTING:
@@ -370,10 +370,10 @@ PICOTM_EXPORT
 void
 __picotm_commit()
 {
-    struct tx* tx = get_non_null_tx();
+    struct picotm_tx* tx = get_non_null_tx();
 
     struct picotm_error* error = get_non_null_error();
-    tx_commit(tx, error);
+    picotm_tx_commit(tx, error);
     if (picotm_error_is_set(error)) {
         switch (error->status) {
         case PICOTM_CONFLICTING:
@@ -402,7 +402,7 @@ PICOTM_EXPORT
 bool
 picotm_is_valid()
 {
-    return tx_is_valid(get_non_null_tx());
+    return picotm_tx_is_valid(get_non_null_tx());
 }
 
 PICOTM_EXPORT
@@ -416,7 +416,7 @@ PICOTM_EXPORT
 bool
 picotm_is_irrevocable()
 {
-    return tx_is_irrevocable(get_non_null_tx());
+    return picotm_tx_is_irrevocable(get_non_null_tx());
 }
 
 PICOTM_EXPORT
@@ -425,7 +425,7 @@ picotm_number_of_restarts()
 {
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    struct tx* tx = get_tx(false, &error);
+    struct picotm_tx* tx = get_tx(false, &error);
     if (picotm_error_is_set(&error)) {
         return 0;
     } else if (!tx) {
@@ -493,7 +493,7 @@ unsigned long
 picotm_register_module(const struct picotm_module_ops* ops, void* data,
                        struct picotm_error* error)
 {
-    return tx_register_module(get_non_null_tx(), ops, data, error);
+    return picotm_tx_register_module(get_non_null_tx(), ops, data, error);
 }
 
 PICOTM_EXPORT
@@ -501,7 +501,7 @@ void
 picotm_append_event(unsigned long module, uint16_t head, uintptr_t tail,
                     struct picotm_error* error)
 {
-    tx_append_event(get_non_null_tx(), module, head, tail, error);
+    picotm_tx_append_event(get_non_null_tx(), module, head, tail, error);
 }
 
 PICOTM_EXPORT
