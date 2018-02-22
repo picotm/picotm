@@ -234,7 +234,7 @@ typedef void (*picotm_shared_ref16_obj_final_ref_function)(
 #define PICOTM_SHARED_REF16_OBJ_INITIALIZER     \
 {                                               \
     .lock = PICOTM_SPINLOCK_INITIALIZER,        \
-    .ref = PICOTM_SHARED_REF_INITIALIZER        \
+    .ref = PICOTM_SHARED_REF_INITIALIZER(0)     \
 }
 
 /**
@@ -290,5 +290,13 @@ void
 picotm_shared_ref16_obj_down(struct picotm_shared_ref16_obj* self, void* data,
                              picotm_shared_ref16_obj_condition_function cond,
                              picotm_shared_ref16_obj_final_ref_function final_ref);
+
+/**
+ * Reads the value of a shared-ref16 object's counter.
+ * \param   self    The shared-ref16 object.
+ * \returns The current value of the reference counter.
+ */
+uint16_t
+picotm_shared_ref16_obj_count(struct picotm_shared_ref16_obj* self);
 
 PICOTM_END_DECLS
