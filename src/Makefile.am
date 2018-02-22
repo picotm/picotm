@@ -56,10 +56,10 @@ libpicotm_la_SOURCES = picotm.c \
                        picotm_os_rwlock.h \
                        picotm_os_timespec.c \
                        picotm_os_timespec.h \
+                       picotm_tx.c \
+                       picotm_tx.h \
                        table.c \
-                       table.h \
-                       tx.c \
-                       tx.h
+                       table.h
 
 libpicotm_la_LDFLAGS = -version-info $(current):$(revision):$(age)
 

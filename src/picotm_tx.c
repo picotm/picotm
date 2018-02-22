@@ -23,7 +23,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include "tx.h"
+#include "picotm_tx.h"
 #include <assert.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -41,8 +41,8 @@
 static const unsigned long TX_NRETRIES_LIMIT = 10;
 
 void
-tx_init(struct tx* self, struct picotm_lock_manager* lm,
-        struct picotm_error* error)
+picotm_tx_init(struct picotm_tx* self, struct picotm_lock_manager* lm,
+               struct picotm_error* error)
 {
     assert(self);
     assert(lm);
@@ -75,7 +75,7 @@ err_picotm_lock_owner_init:
 }
 
 void
-tx_release(struct tx* self)
+picotm_tx_release(struct picotm_tx* self)
 {
     assert(self);
 
@@ -93,7 +93,7 @@ tx_release(struct tx* self)
 }
 
 bool
-tx_is_irrevocable(const struct tx* self)
+picotm_tx_is_irrevocable(const struct picotm_tx* self)
 {
     assert(self);
 
@@ -101,9 +101,9 @@ tx_is_irrevocable(const struct tx* self)
 }
 
 unsigned long
-tx_register_module(struct tx* self,
-                   const struct picotm_module_ops* ops, void* data,
-                   struct picotm_error* error)
+picotm_tx_register_module(struct picotm_tx* self,
+                          const struct picotm_module_ops* ops, void* data,
+                          struct picotm_error* error)
 {
     assert(self);
 
@@ -122,8 +122,9 @@ tx_register_module(struct tx* self,
 }
 
 void
-tx_append_event(struct tx* self, unsigned long module, uint16_t head,
-                uintptr_t tail, struct picotm_error* error)
+picotm_tx_append_event(struct picotm_tx* self, unsigned long module,
+                       uint16_t head, uintptr_t tail,
+                       struct picotm_error* error)
 {
     assert(self);
 
@@ -134,8 +135,8 @@ tx_append_event(struct tx* self, unsigned long module, uint16_t head,
 }
 
 void
-tx_begin(struct tx* self, enum tx_mode mode, bool is_retry, jmp_buf* env,
-         struct picotm_error* error)
+picotm_tx_begin(struct picotm_tx* self, enum picotm_tx_mode mode, bool is_retry,
+                jmp_buf* env, struct picotm_error* error)
 {
     assert(self);
 
@@ -344,7 +345,7 @@ finish_modules(struct picotm_module* module, unsigned long nmodules,
 }
 
 static void
-apply_event(struct tx* tx, const struct picotm_event* event,
+apply_event(struct picotm_tx* tx, const struct picotm_event* event,
             struct picotm_error* error)
 {
     picotm_module_apply_event(tx->module + event->module,
@@ -360,7 +361,7 @@ apply_event_cb(struct picotm_event* event, void* data,
 }
 
 static void
-apply_events(struct tx* self, struct picotm_error* error)
+apply_events(struct picotm_tx* self, struct picotm_error* error)
 {
     picotm_events_foreach1(picotm_log_begin(&self->log),
                            picotm_log_end(&self->log),
@@ -369,7 +370,7 @@ apply_events(struct tx* self, struct picotm_error* error)
 }
 
 static void
-undo_event(struct tx* tx, const struct picotm_event* event,
+undo_event(struct picotm_tx* tx, const struct picotm_event* event,
            struct picotm_error* error)
 {
     picotm_module_undo_event(tx->module + event->module,
@@ -385,7 +386,7 @@ undo_event_cb(struct picotm_event* event, void* data,
 }
 
 static void
-undo_events(struct tx* self, struct picotm_error* error)
+undo_events(struct picotm_tx* self, struct picotm_error* error)
 {
     picotm_events_rev_foreach1(picotm_log_begin(&self->log),
                                picotm_log_end(&self->log),
@@ -394,11 +395,11 @@ undo_events(struct tx* self, struct picotm_error* error)
 }
 
 void
-tx_commit(struct tx* self, struct picotm_error* error)
+picotm_tx_commit(struct picotm_tx* self, struct picotm_error* error)
 {
     assert(self);
 
-    bool is_irrevocable = tx_is_irrevocable(self);
+    bool is_irrevocable = picotm_tx_is_irrevocable(self);
     bool is_non_recoverable = false;
 
     lock_modules(self->module, self->nmodules, error);
@@ -462,11 +463,11 @@ err:
 }
 
 void
-tx_rollback(struct tx* self, struct picotm_error* error)
+picotm_tx_rollback(struct picotm_tx* self, struct picotm_error* error)
 {
     assert(self);
 
-    bool is_irrevocable = tx_is_irrevocable(self);
+    bool is_irrevocable = picotm_tx_is_irrevocable(self);
 
     undo_modules(self->module, self->nmodules, error);
     if (picotm_error_is_set(error)) {
@@ -498,12 +499,13 @@ err:
 }
 
 bool
-tx_is_valid(struct tx* self)
+picotm_tx_is_valid(struct picotm_tx* self)
 {
     assert(self);
 
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    validate_modules(self->module, self->nmodules, tx_is_irrevocable(self),
+    validate_modules(self->module, self->nmodules,
+                     picotm_tx_is_irrevocable(self),
                      &error);
     if (picotm_error_is_set(&error)) {
         return false;

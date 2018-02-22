@@ -43,16 +43,16 @@
 struct picotm_error;
 struct picotm_lock_manager;
 
-enum tx_mode {
+enum picotm_tx_mode {
     TX_MODE_REVOCABLE,
     TX_MODE_IRREVOCABLE
 };
 
-struct tx {
-    jmp_buf*          env;
-    struct picotm_log log;
-    enum tx_mode      mode;
-    unsigned long     nretries;
+struct picotm_tx {
+    jmp_buf*            env;
+    struct picotm_log   log;
+    enum picotm_tx_mode mode;
+    unsigned long       nretries;
 
     /** The global lock manager for all transactions. */
     struct picotm_lock_manager* lm;
@@ -65,33 +65,34 @@ struct tx {
 };
 
 void
-tx_init(struct tx* self, struct picotm_lock_manager* lm,
-        struct picotm_error* error);
+picotm_tx_init(struct picotm_tx* self, struct picotm_lock_manager* lm,
+               struct picotm_error* error);
 
 void
-tx_release(struct tx* self);
+picotm_tx_release(struct picotm_tx* self);
 
 bool
-tx_is_irrevocable(const struct tx* self);
+picotm_tx_is_irrevocable(const struct picotm_tx* self);
 
 unsigned long
-tx_register_module(struct tx* self,
-                   const struct picotm_module_ops* ops, void* data,
-                   struct picotm_error* error);
+picotm_tx_register_module(struct picotm_tx* self,
+                          const struct picotm_module_ops* ops, void* data,
+                          struct picotm_error* error);
 
 void
-tx_append_event(struct tx* self, unsigned long module, uint16_t head,
-                uintptr_t tail, struct picotm_error* error);
+picotm_tx_append_event(struct picotm_tx* self, unsigned long module,
+                       uint16_t head, uintptr_t tail,
+                       struct picotm_error* error);
 
 void
-tx_begin(struct tx* self, enum tx_mode mode, bool is_retry, jmp_buf* env,
-         struct picotm_error* error);
+picotm_tx_begin(struct picotm_tx* self, enum picotm_tx_mode mode,
+                bool is_retry, jmp_buf* env, struct picotm_error* error);
 
 void
-tx_commit(struct tx* self, struct picotm_error* error);
+picotm_tx_commit(struct picotm_tx* self, struct picotm_error* error);
 
 void
-tx_rollback(struct tx* self, struct picotm_error* error);
+picotm_tx_rollback(struct picotm_tx* self, struct picotm_error* error);
 
 bool
-tx_is_valid(struct tx* self);
+picotm_tx_is_valid(struct picotm_tx* self);
