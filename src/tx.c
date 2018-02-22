@@ -53,7 +53,6 @@ tx_init(struct tx* self, struct picotm_lock_manager* lm,
     self->mode = TX_MODE_REVOCABLE;
     self->nretries = 0;
     self->nmodules = 0;
-    self->is_initialized = true;
 
     self->lm = lm;
 
