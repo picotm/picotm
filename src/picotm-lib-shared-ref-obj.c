@@ -144,3 +144,12 @@ picotm_shared_ref16_obj_down(struct picotm_shared_ref16_obj* self, void* data,
 unlock:
     picotm_spinlock_unlock(&self->lock);
 }
+
+PICOTM_EXPORT
+uint16_t
+picotm_shared_ref16_obj_count(struct picotm_shared_ref16_obj* self)
+{
+    assert(self);
+
+    return picotm_ref_count(&self->ref);
+}
