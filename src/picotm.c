@@ -40,7 +40,7 @@
  * Global data
  */
 
-struct tx_shared {
+struct global_state {
     /**
      * The global lock manager for all transactional locks. Register your
      * transaction's lock-owner instance with this object.
@@ -49,83 +49,88 @@ struct tx_shared {
 };
 
 static void
-init_tx_shared(struct tx_shared* tx_shared, struct picotm_error* error)
+init_global_state_fields(struct global_state* global,
+                         struct picotm_error* error)
 {
-    assert(tx_shared);
+    assert(global);
 
-    picotm_lock_manager_init(&tx_shared->lm, error);
+    picotm_lock_manager_init(&global->lm, error);
     if (picotm_error_is_set(error)) {
         return;
     }
 }
 
 static void
-uninit_tx_shared(struct tx_shared* tx_shared)
+uninit_global_state_fields(struct global_state* global)
 {
-    assert(tx_shared);
+    assert(global);
 
-    picotm_lock_manager_uninit(&tx_shared->lm);
+    picotm_lock_manager_uninit(&global->lm);
 }
 
-static struct tx_shared*
-get_tx_shared(bool initialize, struct picotm_error* error);
+static struct global_state*
+get_global_state(bool initialize, struct picotm_error* error);
 
 static void
-atexit_tx_shared(void)
+atexit_global_state(void)
 {
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    struct tx_shared* tx_shared = get_tx_shared(false, &error);
+    struct global_state* global = get_global_state(false, &error);
     if (picotm_error_is_set(&error)) {
         return;
-    } else if (tx_shared) {
-        uninit_tx_shared(tx_shared);
+    } else if (global) {
+        uninit_global_state_fields(global);
     }
 }
 
-static struct tx_shared*
-get_tx_shared(bool initialize, struct picotm_error* error)
+static struct global_state*
+get_global_state(bool initialize, struct picotm_error* error)
 {
-    static struct tx_shared g_tx_shared;
-    static atomic_bool      g_tx_shared_is_initialized;
+    static struct {
+        atomic_bool is_initialized;
+        struct picotm_spinlock lock;
+        struct global_state global;
+    } g_state = {
+        .is_initialized = ATOMIC_VAR_INIT(false),
+        .lock = PICOTM_SPINLOCK_INITIALIZER
+    };
 
-    bool is_initialized = atomic_load_explicit(&g_tx_shared_is_initialized,
+    bool is_initialized = atomic_load_explicit(&g_state.is_initialized,
                                                memory_order_acquire);
     if (is_initialized) {
-        return &g_tx_shared;
+        return &g_state.global;
     } else if (!initialize) {
         return NULL;
     }
 
-    static struct picotm_spinlock lock = PICOTM_SPINLOCK_INITIALIZER;
+    picotm_spinlock_lock(&g_state.lock);
 
-    picotm_spinlock_lock(&lock);
-
-    is_initialized = atomic_load_explicit(&g_tx_shared_is_initialized,
+    is_initialized = atomic_load_explicit(&g_state.is_initialized,
                                           memory_order_acquire);
     if (is_initialized) {
-        /* Another transaction initialized the tx_state structure
+        /* Another transaction initialized the global state
          * concurrently; we're done. */
         goto out;
     }
 
-    init_tx_shared(&g_tx_shared, error);
+    init_global_state_fields(&g_state.global, error);
     if (picotm_error_is_set(error)) {
-        goto err_tx_shared_init;
+        goto err_init_global_state_fields;
     }
 
-    atexit(atexit_tx_shared);
+    atexit(atexit_global_state);
 
-    atomic_store_explicit(&g_tx_shared_is_initialized, true,
+    atomic_store_explicit(&g_state.is_initialized, true,
                           memory_order_release);
 
 out:
-    picotm_spinlock_unlock(&lock);
+    picotm_spinlock_unlock(&g_state.lock);
 
-    return &g_tx_shared;
+    return &g_state.global;
 
-err_tx_shared_init:
-    picotm_spinlock_unlock(&lock);
+err_init_global_state_fields:
+    picotm_spinlock_unlock(&g_state.lock);
     return NULL;
 }
 
@@ -144,12 +149,12 @@ get_tx(bool do_init, struct picotm_error* error)
         return NULL;
     }
 
-    struct tx_shared* tx_shared = get_tx_shared(true, error);
+    struct global_state* global = get_global_state(true, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
 
-    tx_init(&t_tx, &tx_shared->lm, error);
+    tx_init(&t_tx, &global->lm, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
