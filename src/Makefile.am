@@ -59,9 +59,7 @@ libpicotm_la_SOURCES = picotm.c \
                        table.c \
                        table.h \
                        tx.c \
-                       tx.h \
-                       tx_shared.c \
-                       tx_shared.h
+                       tx.h
 
 libpicotm_la_LDFLAGS = -version-info $(current):$(revision):$(age)
 
