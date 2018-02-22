@@ -62,8 +62,6 @@ struct tx {
 
     unsigned long nmodules; /**< \brief Number allocated modules */
     struct picotm_module module[MAX_NMODULES]; /** \brief Registered modules */
-
-    bool is_initialized;
 };
 
 void

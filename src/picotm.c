@@ -138,14 +138,46 @@ err_init_global_state_fields:
  * Thread-local data
  */
 
-static struct tx*
-get_tx(bool do_init, struct picotm_error* error)
-{
-    static __thread struct tx t_tx;
+struct thread_state {
+    /** The thread-local transaction state. */
+    struct tx tx;
+};
 
-    if (t_tx.is_initialized) {
-        return &t_tx;
-    } else if (!do_init) {
+static void
+init_thread_state_fields(struct thread_state* thread,
+                         struct global_state* global,
+                         struct picotm_error* error)
+{
+    assert(thread);
+    assert(global);
+
+    tx_init(&thread->tx, &global->lm, error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
+}
+
+static void
+uninit_thread_state_fields(struct thread_state* thread)
+{
+    assert(thread);
+
+    tx_release(&thread->tx);
+}
+
+static struct thread_state*
+get_thread_state(bool initialize, struct picotm_error* error)
+{
+    static __thread struct {
+        bool is_initialized;
+        struct thread_state thread;
+    } t_state = {
+        .is_initialized = false
+    };
+
+    if (t_state.is_initialized) {
+        return &t_state.thread;
+    } else if (!initialize) {
         return NULL;
     }
 
@@ -154,12 +186,26 @@ get_tx(bool do_init, struct picotm_error* error)
         return NULL;
     }
 
-    tx_init(&t_tx, &global->lm, error);
+    init_thread_state_fields(&t_state.thread, global, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
 
-    return &t_tx;
+    t_state.is_initialized = true;
+
+    return &t_state.thread;
+}
+
+static struct tx*
+get_tx(bool initialize, struct picotm_error* error)
+{
+    struct thread_state* thread = get_thread_state(initialize, error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    } else if (!thread) {
+        return NULL;
+    }
+    return &thread->tx;
 }
 
 static struct tx*
@@ -351,13 +397,13 @@ picotm_release()
 {
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    struct tx* tx = get_tx(false, &error);
+    struct thread_state* thread = get_thread_state(false, &error);
     if (picotm_error_is_set(&error)) {
         return;
-    } else if (!tx) {
+    } else if (!thread) {
         return; /* thread executed no transaction; not an error */
     }
-    tx_release(tx);
+    uninit_thread_state_fields(thread);
 }
 
 PICOTM_EXPORT
