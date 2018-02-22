@@ -30,8 +30,8 @@
 #include "picotm/picotm-error.h"
 #include "picotm/picotm-lib-array.h"
 #include "picotm_event.h"
+#include "picotm_lock_manager.h"
 #include "table.h"
-#include "tx_shared.h"
 
 /* The maximum number of retries per transaction. If a transacion reaches
  * this limit it switches to irrevocable mode. The actual limit depends on
@@ -41,26 +41,28 @@
 static const unsigned long TX_NRETRIES_LIMIT = 10;
 
 void
-tx_init(struct tx* self, struct tx_shared* tx_shared,
+tx_init(struct tx* self, struct picotm_lock_manager* lm,
         struct picotm_error* error)
 {
     assert(self);
+    assert(lm);
 
     picotm_log_init(&self->log);
 
     self->env = NULL;
-    self->shared = tx_shared;
     self->mode = TX_MODE_REVOCABLE;
     self->nretries = 0;
     self->nmodules = 0;
     self->is_initialized = true;
+
+    self->lm = lm;
 
     picotm_lock_owner_init(&self->lo, error);
     if (picotm_error_is_set(error)) {
         goto err_picotm_lock_owner_init;
     }
 
-    picotm_lock_manager_register_owner(&self->shared->lm, &self->lo, error);
+    picotm_lock_manager_register_owner(self->lm, &self->lo, error);
     if (picotm_error_is_set(error)) {
         goto err_lock_manager_register_owner;
     }
@@ -78,7 +80,7 @@ tx_release(struct tx* self)
 {
     assert(self);
 
-    picotm_lock_manager_unregister_owner(&self->shared->lm, &self->lo);
+    picotm_lock_manager_unregister_owner(self->lm, &self->lo);
     picotm_lock_owner_uninit(&self->lo);
     picotm_log_uninit(&self->log);
 
@@ -148,13 +150,12 @@ tx_begin(struct tx* self, enum tx_mode mode, bool is_retry, jmp_buf* env,
         case TX_MODE_REVOCABLE:
             /* If we're not the exclusive transaction, we wait
              * for a possible exclusive transaction to finish. */
-            picotm_lock_manager_wait_irrevocable(&self->shared->lm, error);
+            picotm_lock_manager_wait_irrevocable(self->lm, error);
             break;
         case TX_MODE_IRREVOCABLE:
             /* If we're supposed to run exclusively, we wait
              * for the other transactions to finish. */
-            picotm_lock_manager_make_irrevocable(&self->shared->lm, &self->lo,
-                                                 error);
+            picotm_lock_manager_make_irrevocable(self->lm, &self->lo, error);
             break;
     }
     if (picotm_error_is_set(error)) {
@@ -177,7 +178,7 @@ tx_begin(struct tx* self, enum tx_mode mode, bool is_retry, jmp_buf* env,
     return;
 
 err_picotm_lock_owner_reset_timestamp:
-    picotm_lock_manager_release_irrevocability(&self->shared->lm);
+    picotm_lock_manager_release_irrevocability(self->lm);
 }
 
 static size_t
@@ -442,7 +443,7 @@ tx_commit(struct tx* self, struct picotm_error* error)
         goto err;
     }
 
-    picotm_lock_manager_release_irrevocability(&self->shared->lm);
+    picotm_lock_manager_release_irrevocability(self->lm);
 
     return;
 
@@ -488,13 +489,13 @@ tx_rollback(struct tx* self, struct picotm_error* error)
         goto err;
     }
 
-    picotm_lock_manager_release_irrevocability(&self->shared->lm);
+    picotm_lock_manager_release_irrevocability(self->lm);
 
     return;
 
 err:
     picotm_error_mark_as_non_recoverable(error);
-    picotm_lock_manager_release_irrevocability(&self->shared->lm);
+    picotm_lock_manager_release_irrevocability(self->lm);
 }
 
 bool
