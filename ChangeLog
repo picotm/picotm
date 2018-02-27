@@ -1,4 +1,31 @@
 
+picotm 0.11.0 (2018-02-27)
+-------------
+
+    * Cate: Cate is now the official mascot of the picotm project.
+
+    * Safe type casting: The type-casting module provides safe type casting
+      between C types. Overflows and underflows of the destination type's
+      range result in a rollback of the transaction.
+
+    * Safe arithmetics: The arithmetics module provides safe addition,
+      subtraction, multiplication and division for C types. Overflows,
+      underflows or division-by-zero errors result in the rollback of
+      the transaction.
+
+    * Reworked module interface: The new module interface allows for better
+      sharing of a module's call-back function. Further led to cleanups of
+      internal data structures and a reduced size of the log entries.
+
+    * Improved documentation
+
+    * Bug fix: Doxygen now generates the documentation for errors involving
+               `kern_return_t` Mac OS correctly. (#239)
+
+    * Bug fix: Fix memory handling in the TM module that resulted in
+               inconsistent commits. (#240, #241)
+
+
 picotm 0.10.0 (2018-01-27)
 -------------
 
