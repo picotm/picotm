@@ -22,7 +22,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-current = 5
+current = 6
 revision = 0
 age = 0
 
