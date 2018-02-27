@@ -438,8 +438,6 @@ PICOTM_EXPORT
 void
 picotm_release()
 {
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
     struct thread_state* thread = get_thread_state();
     if (!thread->fields_are_initialized) {
         return; /* Thread did not execute a transaction; not an error. */
