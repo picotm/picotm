@@ -1,4 +1,10 @@
 
+picotm 0.11.1 (2018-03-4)
+-------------
+
+    * Bug fix: Tarball does no longer depend on hard-coded paths (PR #253)
+
+
 picotm 0.11.0 (2018-02-27)
 -------------
 
