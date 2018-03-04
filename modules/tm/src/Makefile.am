@@ -28,7 +28,8 @@ age = 0
 
 lib_LTLIBRARIES = libpicotm-tm.la
 
-libpicotm_tm_la_SOURCES = frame.c \
+libpicotm_tm_la_SOURCES = block.h \
+                          frame.c \
                           frame.h \
                           framemap.c \
                           framemap.h \
