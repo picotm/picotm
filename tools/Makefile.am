@@ -1,6 +1,6 @@
 #
 # MIT License
-# Copyright (c) 2017    Thomas Zimmermann <tdz@users.sourceforge.net>
+# Copyright (c) 2017-2018   Thomas Zimmermann <tdz@users.sourceforge.net>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -22,27 +22,5 @@
 #
 # SPDX-License-Identifier: MIT
 
-#
-# The dependency chain between the directories is
-#
-#   include -> src -> tests -> modules -> doc
-#
-# We first create the core headers and library from `include' and `src'.
-# The `tests' directory only contains helpers for `make check'. It does not
-# contain artifacts for building the regular code, but probably depends on
-# the core interfaces. Modules in `modules' depend on the core library, each
-# other, and their tests depend on the test infrastructure. The documentation
-# in `doc' can depend on any source or header files.
-#
-SUBDIRS = include \
-          src \
-          tests \
-          modules \
-          doc \
-          extras \
-          tools \
-          LICENSES
-
-ACLOCAL_AMFLAGS = -I m4
-
-EXTRA_DIST = LICENSE
+EXTRA_DIST = bootstrap.sh \
+             mkrelease.pl
