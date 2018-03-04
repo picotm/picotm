@@ -26,6 +26,7 @@ check_LTLIBRARIES = libpicotm_safeblk.la
 
 libpicotm_safeblk_la_SOURCES = compat/pthread_barrier.c \
                                compat/pthread_barrier.h \
+                               compat/static_assert.h \
                                compat/temp_failure_retry.h \
                                safeblk.c \
                                safeblk.h \
