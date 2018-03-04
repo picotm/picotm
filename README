@@ -55,13 +55,7 @@ Requirements
 Building picotm
 ===============
 
-  Make sure you have all requirements installed. To prepare your build,
-  invoke
-
-    tools/bootstrap.sh
-
-  This command generates the build system based on GNU autotools. If it
-  succeeds without errors, invoke
+  Make sure you have all requirements installed. To create a build, run
 
     ./configure
     make
@@ -78,6 +72,17 @@ Building picotm
     make html
     sudo make install-html
 
+  For developing picotm, you'll require a copy of picotm's Git repository.
+  Run
+
+    git clone https://github.com/picotm/picotm.git picotm
+    cd picotm
+    tools/bootstrap.sh
+
+  These commands obtain a copy of the Git repository and generate the build
+  system based on GNU autotools. If they succeed, you can configure, build
+  and install your modified copy of picotm as described above.
+
 
 Using picotm
 ============
@@ -86,6 +91,11 @@ Using picotm
   in your system's include directory. A number of program libraries should be
   in the system's library directory, each starting with the prefix picotm-.
   Which modules are available depends on your system.
+
+  If your compiler toolchain cannot find installed header files or libraries,
+  make sure that the respective install directories (e.g.,
+  `/usr/local/include' and `/usr/local/lib') are listed in CPPFLAGS,
+  LD_RUN_PATH, LD_LIBRARY_PATH, and similar environment variables.
 
 
 License
