@@ -22,21 +22,26 @@
 #
 # SPDX-License-Identifier: MIT
 
-TESTS = arithmetic-pubapi-t1.test \
-        arithmetic-pubapi-t4.test
+PUBAPI_TESTS = arithmetic-pubapi-t1.test \
+               arithmetic-pubapi-t4.test
 
-VALGRIND_TESTS = arithmetic-pubapi-valgrind-t1.test
-
+TESTS =
+if ENABLE_MODULE_ARITHMETIC
+TESTS += $(PUBAPI_TESTS)
 if HAVE_VALGRIND
-TESTS += $(VALGRIND_TESTS)
+TESTS += arithmetic-pubapi-valgrind-t1.test
+endif
 endif
 
-EXTRA_DIST = $(TESTS)
+EXTRA_DIST = $(PUBAPI_TESTS)
 
 TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
                   $(top_srcdir)/build-aux/tap-driver.sh
 
-check_PROGRAMS = arithmetic-pubapi
+check_PROGRAMS =
+if ENABLE_MODULE_ARITHMETIC
+check_PROGRAMS += arithmetic-pubapi
+endif
 
 arithmetic_pubapi_SOURCES = arithmetic_pubapi.c
 

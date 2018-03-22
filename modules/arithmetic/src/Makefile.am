@@ -26,7 +26,10 @@ current = 0
 revision = 0
 age = 0
 
-lib_LTLIBRARIES = libpicotm-arithmetic.la
+lib_LTLIBRARIES =
+if ENABLE_MODULE_ARITHMETIC
+lib_LTLIBRARIES += libpicotm-arithmetic.la
+endif
 
 libpicotm_arithmetic_la_SOURCES = arithmetic.c \
                                   arithmetic.h

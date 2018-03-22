@@ -12,7 +12,7 @@
 #   notice and this notice are preserved.  This file is offered as-is,
 #   without any warranty.
 
-AC_DEFUN([CONFIG_ARITHMETIC], [
+AC_DEFUN([_CONFIG_ARITHMETIC], [
 
     #
     # Types
@@ -35,4 +35,17 @@ AC_DEFUN([CONFIG_ARITHMETIC], [
     _CHECK_MODULE_TYPE([arithmetic], [unsigned short],     [[]])
 
     CONFIG_TEST([modules/arithmetic/tests/pubapi/arithmetic-pubapi-valgrind-t1.test])
+])
+
+AC_DEFUN([CONFIG_ARITHMETIC], [
+    AC_ARG_ENABLE([module-arithmetic],
+                  [AS_HELP_STRING([--enable-module-arithmetic],
+                                  [enable arithmetic module @<:@default=yes@:>@])],
+                  [enable_module_arithmetic=$enableval],
+                  [enable_module_arithmetic=yes])
+    AM_CONDITIONAL([ENABLE_MODULE_ARITHMETIC],
+                   [test "x$enable_module_arithmetic" = "xyes"])
+    AS_VAR_IF([enable_module_arithmetic], [yes], [
+        _CONFIG_ARITHMETIC
+    ])
 ])
