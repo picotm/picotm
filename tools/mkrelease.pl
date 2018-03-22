@@ -432,7 +432,7 @@ sub signFile
 #                                                                       #
 #########################################################################
 
-sub generateConfigure
+sub generateRunConfigure
 {
     my $generate = sub {
 
@@ -449,7 +449,11 @@ sub generateConfigure
 
     my ($abssrcdir, $absbuilddir, $absinstalldir) = @_;
 
-    my $filename = "$absbuilddir/configure";
+    # Never call this file 'configure' ! Doing so will package the
+    # locally generated 'run-configure' script instead of the actual
+    # configure script. The resulting package will not be buildable.
+    # https://github.com/picotm/picotm/issues/256
+    my $filename = "$absbuilddir/run-configure";
 
     generateFile($generate, $filename, $abssrcdir, $absbuilddir, $absinstalldir);
 
@@ -458,22 +462,11 @@ sub generateConfigure
 
 sub createSourcePackage
 {
-    my $generate = sub {
-
-        my ($fh, $filename, $abssrcdir, $absbuilddir, $absinstalldir) = @_;
-
-        print $fh "#!/bin/bash\n" .
-                  "PREFIXDIR=\"$absinstalldir\"\n" .
-                  "export CPPFLAGS=\"-I\${PREFIXDIR}/include\"\n" .
-                  "export LDFLAGS=\"-L\${PREFIXDIR}/lib\"\n" .
-                  "$abssrcdir/configure --prefix=\"\${PREFIXDIR}\"";
-    };
-
     my $execute = sub {
 
-        my ($package_name, $configure) = @_;
+        my ($package_name, $run_configure) = @_;
 
-        system("$configure") == 0 or die;
+        system("$run_configure") == 0 or die;
         system('make distcheck') == 0 or die;
 
         # Later packages might depend on this one; so build and install.
@@ -489,9 +482,9 @@ sub createSourcePackage
     my $absbuilddir = File::Spec->rel2abs($builddir);
     my $absinstalldir = File::Spec->rel2abs($installdir);
 
-    my $configure = generateConfigure($abssrcdir, $absbuilddir, $absinstalldir);
+    my $run_configure = generateRunConfigure($abssrcdir, $absbuilddir, $absinstalldir);
 
-    my ($filename) = executeInDir($execute, $absbuilddir, $package_name, $configure);
+    my ($filename) = executeInDir($execute, $absbuilddir, $package_name, $run_configure);
 
     copy("$absbuilddir/$filename", "./$filename");
 
