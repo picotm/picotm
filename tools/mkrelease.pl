@@ -480,6 +480,13 @@ sub createSourcePackage
         system('make') == 0 or die;
         system('make install') == 0 or die;
 
+        # The tarball built by 'make distcheck' is *not* suitable for
+        # distribution. We create a new tarball with 'make dist'.
+        # https://github.com/picotm/picotm/issues/256
+        system("rm -f $package_name.tar.gz") == 0 or die;
+        system('make clean') == 0 or die;
+        system('make dist') == 0 or die;
+
         return ("$package_name.tar.gz");
     };
 
