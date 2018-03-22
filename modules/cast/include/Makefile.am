@@ -22,6 +22,8 @@
 #
 # SPDX-License-Identifier: MIT
 
+if ENABLE_MODULE_CAST
 nobase_include_HEADERS = picotm/config/picotm-cast-config.h \
                          picotm/picotm-cast.h \
                          picotm/picotm-cast-ctypes.h
+endif
