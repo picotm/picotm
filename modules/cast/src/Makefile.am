@@ -26,7 +26,10 @@ current = 0
 revision = 0
 age = 0
 
-lib_LTLIBRARIES = libpicotm-cast.la
+lib_LTLIBRARIES =
+if ENABLE_MODULE_CAST
+lib_LTLIBRARIES += libpicotm-cast.la
+endif
 
 libpicotm_cast_la_SOURCES = cast.c \
 							cast.h
