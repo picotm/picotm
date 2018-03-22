@@ -22,6 +22,8 @@
 #
 # SPDX-License-Identifier: MIT
 
+if ENABLE_MODULE_ARITHMETIC
 nobase_include_HEADERS = picotm/config/picotm-arithmetic-config.h \
                          picotm/picotm-arithmetic.h \
                          picotm/picotm-arithmetic-ctypes.h
+endif
