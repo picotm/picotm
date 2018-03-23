@@ -22,29 +22,33 @@
 #
 # SPDX-License-Identifier: MIT
 
-TESTS = allocator-pubapi-t1.test \
-        allocator-pubapi-t4.test \
-        cwd-pubapi-t1.test \
-        cwd-pubapi-t4.test \
-        fildes-pubapi-t1.test \
-        fildes-pubapi-t4.test
+PUBAPI_TESTS = allocator-pubapi-t1.test \
+               allocator-pubapi-t4.test \
+               cwd-pubapi-t1.test \
+               cwd-pubapi-t4.test \
+               fildes-pubapi-t1.test \
+               fildes-pubapi-t4.test
 
-VALGRIND_TESTS = allocator-pubapi-valgrind-t1.test \
-                 cwd-pubapi-valgrind-t1.test \
-                 fildes-pubapi-valgrind-t1.test
-
+TESTS =
+if ENABLE_MODULE_LIBC
+TESTS += $(PUBAPI_TESTS)
 if HAVE_VALGRIND
-TESTS += $(VALGRIND_TESTS)
+TESTS += allocator-pubapi-valgrind-t1.test \
+         cwd-pubapi-valgrind-t1.test \
+         fildes-pubapi-valgrind-t1.test
+endif
 endif
 
-EXTRA_DIST = $(TESTS)
+EXTRA_DIST = $(PUBAPI_TESTS)
 
 TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
                   $(top_srcdir)/build-aux/tap-driver.sh
 
+if ENABLE_MODULE_LIBC
 check_PROGRAMS = allocator-pubapi \
                  cwd-pubapi \
                  fildes-pubapi
+endif
 
 allocator_pubapi_SOURCES = allocator_pubapi.c
 

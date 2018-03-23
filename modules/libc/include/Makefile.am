@@ -1,6 +1,6 @@
 #
 # MIT License
-# Copyright (c) 2017    Thomas Zimmermann <tdz@users.sourceforge.net>
+# Copyright (c) 2017-2018   Thomas Zimmermann <tdz@users.sourceforge.net>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -22,6 +22,7 @@
 #
 # SPDX-License-Identifier: MIT
 
+if ENABLE_MODULE_LIBC
 nobase_include_HEADERS = picotm/config/picotm-libc-config.h \
                          picotm/errno.h \
                          picotm/fcntl-tm.h \
@@ -44,3 +45,4 @@ nobase_include_HEADERS = picotm/config/picotm-libc-config.h \
                          picotm/picotm-libc.h \
                          picotm/unistd-tm.h \
                          picotm/unistd.h
+endif

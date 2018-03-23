@@ -26,7 +26,10 @@ current = 3
 revision = 2
 age = 2
 
-lib_LTLIBRARIES = libpicotm-c.la
+lib_LTLIBRARIES =
+if ENABLE_MODULE_LIBC
+lib_LTLIBRARIES += libpicotm-c.la
+endif
 
 libpicotm_c_la_SOURCES = allocator/allocator_event.c \
                          allocator/allocator_event.h \

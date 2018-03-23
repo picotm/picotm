@@ -356,7 +356,7 @@ AC_DEFUN([_CHECK_LIBC_UNISTD_H], [
     ])
 ])
 
-AC_DEFUN([CONFIG_LIBC], [
+AC_DEFUN([_CONFIG_LIBC], [
     dnl Functions from the C standard library are often provided as
     dnl built-ins by the compiler. This breaks the Autoconf test. We
     dnl disable built-ins while testing for longjmp().
@@ -399,4 +399,17 @@ AC_DEFUN([CONFIG_LIBC], [
     CONFIG_TEST([modules/libc/tests/pubapi/allocator-pubapi-valgrind-t1.test])
     CONFIG_TEST([modules/libc/tests/pubapi/cwd-pubapi-valgrind-t1.test])
     CONFIG_TEST([modules/libc/tests/pubapi/fildes-pubapi-valgrind-t1.test])
+])
+
+AC_DEFUN([CONFIG_LIBC], [
+    AC_ARG_ENABLE([module-libc],
+                  [AS_HELP_STRING([--enable-module-libc],
+                                  [enable C Standard Library module @<:@default=yes@:>@])],
+                  [enable_module_libc=$enableval],
+                  [enable_module_libc=yes])
+    AM_CONDITIONAL([ENABLE_MODULE_LIBC],
+                   [test "x$enable_module_libc" = "xyes"])
+    AS_VAR_IF([enable_module_libc], [yes], [
+        _CONFIG_LIBC
+    ])
 ])
