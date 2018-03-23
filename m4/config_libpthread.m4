@@ -31,9 +31,22 @@ AC_DEFUN([_CHECK_LIBPTHREAD_PTHREAD_H], [
     ])
 ])
 
-AC_DEFUN([CONFIG_LIBPTHREAD], [
+AC_DEFUN([_CONFIG_LIBPTHREAD], [
     AC_REQUIRE([AX_PTHREAD])
     AS_VAR_IF([ax_pthread_ok], [yes], [
         _CHECK_LIBPTHREAD_PTHREAD_H
+    ])
+])
+
+AC_DEFUN([CONFIG_LIBPTHREAD], [
+    AC_ARG_ENABLE([module-libpthread],
+                  [AS_HELP_STRING([--enable-module-libpthread],
+                                  [enable POSIX Threads module @<:@default=yes@:>@])],
+                  [enable_module_libpthread=$enableval],
+                  [enable_module_libpthread=yes])
+    AM_CONDITIONAL([ENABLE_MODULE_LIBPTHREAD],
+                   [test "x$enable_module_libpthread" = "xyes"])
+    AS_VAR_IF([enable_module_libpthread], [yes], [
+        _CONFIG_LIBPTHREAD
     ])
 ])
