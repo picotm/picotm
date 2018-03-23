@@ -24,8 +24,4 @@
 #
 # SPDX-License-Identifier: MIT
 
-VALGRIND_FLAGS="--quiet --show-reachable=yes"
-VALGRIND_FLAGS="${VALGRIND_FLAGS} --leak-check=full --errors-for-leak-kinds=all"
-VALGRIND_FLAGS="${VALGRIND_FLAGS} --error-exitcode=1"
-
-@VALGRIND@ ${VALGRIND_FLAGS} ./cast-pubapi -t1
+${VALGRIND} ${VALGRIND_FLAGS} ./cast-pubapi -t1
