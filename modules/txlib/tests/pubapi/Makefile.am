@@ -22,33 +22,37 @@
 #
 # SPDX-License-Identifier: MIT
 
-TESTS = txlist-pubapi-t1.test \
-        txlist-pubapi-t4.test \
-        txmultiset-pubapi-t1.test \
-        txmultiset-pubapi-t4.test \
-        txqueue-pubapi-t1.test \
-        txqueue-pubapi-t4.test \
-        txstack-pubapi-t1.test \
-        txstack-pubapi-t4.test
+PUBAPI_TESTS = txlist-pubapi-t1.test \
+               txlist-pubapi-t4.test \
+               txmultiset-pubapi-t1.test \
+               txmultiset-pubapi-t4.test \
+               txqueue-pubapi-t1.test \
+               txqueue-pubapi-t4.test \
+               txstack-pubapi-t1.test \
+               txstack-pubapi-t4.test
 
-VALGRIND_TESTS = txlist-pubapi-valgrind-t1.test \
-                 txmultiset-pubapi-valgrind-t1.test \
-                 txqueue-pubapi-valgrind-t1.test \
-                 txstack-pubapi-valgrind-t1.test
-
+TESTS =
+if ENABLE_MODULE_TXLIB
+TESTS += $(PUBAPI_TESTS)
 if HAVE_VALGRIND
-TESTS += $(VALGRIND_TESTS)
+TESTS += txlist-pubapi-valgrind-t1.test \
+         txmultiset-pubapi-valgrind-t1.test \
+         txqueue-pubapi-valgrind-t1.test \
+         txstack-pubapi-valgrind-t1.test
+endif
 endif
 
-EXTRA_DIST = $(TESTS)
+EXTRA_DIST = $(PUBAPI_TESTS)
 
 TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
                   $(top_srcdir)/build-aux/tap-driver.sh
 
+if ENABLE_MODULE_TXLIB
 check_PROGRAMS = txlist-pubapi \
                  txmultiset-pubapi \
                  txqueue-pubapi \
                  txstack-pubapi
+endif
 
 txlist_pubapi_SOURCES = txlist_pubapi.c
 

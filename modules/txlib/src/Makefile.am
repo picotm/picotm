@@ -26,7 +26,10 @@ current = 1
 revision = 1
 age = 1
 
-lib_LTLIBRARIES = libpicotm-txlib.la
+lib_LTLIBRARIES =
+if ENABLE_MODULE_TXLIB
+lib_LTLIBRARIES += libpicotm-txlib.la
+endif
 
 libpicotm_txlib_la_SOURCES = txlib_event.c \
                              txlib_event.h \

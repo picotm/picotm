@@ -12,9 +12,22 @@
 #   notice and this notice are preserved.  This file is offered as-is,
 #   without any warranty.
 
-AC_DEFUN([CONFIG_TXLIB], [
+AC_DEFUN([_CONFIG_TXLIB], [
     CONFIG_TEST([modules/txlib/tests/pubapi/txlist-pubapi-valgrind-t1.test])
     CONFIG_TEST([modules/txlib/tests/pubapi/txmultiset-pubapi-valgrind-t1.test])
     CONFIG_TEST([modules/txlib/tests/pubapi/txqueue-pubapi-valgrind-t1.test])
     CONFIG_TEST([modules/txlib/tests/pubapi/txstack-pubapi-valgrind-t1.test])
+])
+
+AC_DEFUN([CONFIG_TXLIB], [
+    AC_ARG_ENABLE([module-txlib],
+                  [AS_HELP_STRING([--enable-module-txlib],
+                                  [enable txlib module @<:@default=yes@:>@])],
+                  [enable_module_txlib=$enableval],
+                  [enable_module_txlib=yes])
+    AM_CONDITIONAL([ENABLE_MODULE_TXLIB],
+                   [test "x$enable_module_txlib" = "xyes"])
+    AS_VAR_IF([enable_module_txlib], [yes], [
+        _CONFIG_TXLIB
+    ])
 ])
