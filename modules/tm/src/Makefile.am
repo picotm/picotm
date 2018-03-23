@@ -26,7 +26,10 @@ current = 1
 revision = 1
 age = 0
 
-lib_LTLIBRARIES = libpicotm-tm.la
+lib_LTLIBRARIES =
+if ENABLE_MODULE_TM
+lib_LTLIBRARIES += libpicotm-tm.la
+endif
 
 libpicotm_tm_la_SOURCES = block.h \
                           frame.c \

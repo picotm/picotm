@@ -22,21 +22,25 @@
 #
 # SPDX-License-Identifier: MIT
 
-TESTS = tm-pubapi-t1.test \
-        tm-pubapi-t4.test
+PUBAPI_TESTS = tm-pubapi-t1.test \
+               tm-pubapi-t4.test
 
-VALGRIND_TESTS = tm-pubapi-valgrind-t1.test
-
+TESTS =
+if ENABLE_MODULE_TM
+TESTS += $(PUBAPI_TESTS)
 if HAVE_VALGRIND
-TESTS += $(VALGRIND_TESTS)
+TESTS += tm-pubapi-valgrind-t1.test
+endif
 endif
 
-EXTRA_DIST = $(TESTS)
+EXTRA_DIST = $(PUBAPI_TESTS)
 
 TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
                   $(top_srcdir)/build-aux/tap-driver.sh
 
+if ENABLE_MODULE_TM
 check_PROGRAMS = tm-pubapi
+endif
 
 tm_pubapi_SOURCES = tm_pubapi.c
 
