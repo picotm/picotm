@@ -1,6 +1,6 @@
 #
 # MIT License
-# Copyright (c) 2017    Thomas Zimmermann <tdz@users.sourceforge.net>
+# Copyright (c) 2017-2018   Thomas Zimmermann <tdz@users.sourceforge.net>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -26,7 +26,10 @@ current = 0
 revision = 2
 age = 0
 
-lib_LTLIBRARIES = libpicotm-m.la
+lib_LTLIBRARIES =
+if ENABLE_MODULE_LIBM
+lib_LTLIBRARIES += libpicotm-m.la
+endif
 
 libpicotm_m_la_SOURCES = complex.c \
                          fpu_tx.c \
