@@ -33,8 +33,6 @@ AC_DEFUN([_CONFIG_CAST], [
     _CHECK_MODULE_TYPE([cast], [unsigned long],      [[]])
     _CHECK_MODULE_TYPE([cast], [unsigned long long], [[]])
     _CHECK_MODULE_TYPE([cast], [unsigned short],     [[]])
-
-    CONFIG_TEST([modules/cast/tests/pubapi/cast-pubapi-valgrind-t1.test])
 ])
 
 AC_DEFUN([CONFIG_CAST], [

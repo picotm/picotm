@@ -312,9 +312,6 @@ AC_DEFUN([_CONFIG_LIBM], [
         _CHECK_LIBM_COMPLEX_H
         _CHECK_LIBM_MATH_H
     ])
-
-    CONFIG_TEST([modules/libm/tests/pubapi/complex-pubapi-valgrind-t1.test])
-    CONFIG_TEST([modules/libm/tests/pubapi/math-pubapi-valgrind-t1.test])
 ])
 
 AC_DEFUN([CONFIG_LIBM], [
