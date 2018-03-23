@@ -46,6 +46,7 @@ EXTRA_DIST = $(PUBAPI_TESTS)
 
 # Prepare environment for test scripts.
 AM_TESTS_ENVIRONMENT = \
+    PATH="$(top_srcdir)/tests/env:${PATH}"; \
     . $(top_builddir)/tests/env/tests-env.sh;
 
 TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
