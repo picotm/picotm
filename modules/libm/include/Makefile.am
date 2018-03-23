@@ -1,6 +1,6 @@
 #
 # MIT License
-# Copyright (c) 2017    Thomas Zimmermann <tdz@users.sourceforge.net>
+# Copyright (c) 2017-2018   Thomas Zimmermann <tdz@users.sourceforge.net>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -22,8 +22,10 @@
 #
 # SPDX-License-Identifier: MIT
 
+if ENABLE_MODULE_LIBM
 nobase_include_HEADERS = picotm/complex.h \
                          picotm/config/picotm-libm-config.h \
                          picotm/math.h \
                          picotm/math-tm.h \
                          picotm/picotm-libm.h
+endif

@@ -298,7 +298,7 @@ AC_DEFUN([_CHECK_LIBM_MATH_H], [
     ])
 ])
 
-AC_DEFUN([CONFIG_LIBM], [
+AC_DEFUN([_CONFIG_LIBM], [
     AS_VAR_SET([have_libm], [no])
     AC_CHECK_LIB([m], [signgam])
     AS_VAR_IF([ac_cv_lib_m_signgam], [yes],
@@ -315,4 +315,17 @@ AC_DEFUN([CONFIG_LIBM], [
 
     CONFIG_TEST([modules/libm/tests/pubapi/complex-pubapi-valgrind-t1.test])
     CONFIG_TEST([modules/libm/tests/pubapi/math-pubapi-valgrind-t1.test])
+])
+
+AC_DEFUN([CONFIG_LIBM], [
+    AC_ARG_ENABLE([module-libm],
+                  [AS_HELP_STRING([--enable-module-libm],
+                                  [enable C Standard Math Library module @<:@default=yes@:>@])],
+                  [enable_module_libm=$enableval],
+                  [enable_module_libm=yes])
+    AM_CONDITIONAL([ENABLE_MODULE_LIBM],
+                   [test "x$enable_module_libm" = "xyes"])
+    AS_VAR_IF([enable_module_libm], [yes], [
+        _CONFIG_LIBM
+    ])
 ])

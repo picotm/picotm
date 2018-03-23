@@ -22,25 +22,29 @@
 #
 # SPDX-License-Identifier: MIT
 
-TESTS = complex-pubapi-t1.test \
-        complex-pubapi-t4.test \
-        math-pubapi-t1.test \
-        math-pubapi-t4.test
+PUBAPI_TESTS = complex-pubapi-t1.test \
+               complex-pubapi-t4.test \
+               math-pubapi-t1.test \
+               math-pubapi-t4.test
 
-VALGRIND_TESTS = complex-pubapi-valgrind-t1.test \
-                 math-pubapi-valgrind-t1.test
-
+TESTS =
+if ENABLE_MODULE_LIBM
+TESTS += $(PUBAPI_TESTS)
 if HAVE_VALGRIND
-TESTS += $(VALGRIND_TESTS)
+TESTS += complex-pubapi-valgrind-t1.test \
+         math-pubapi-valgrind-t1.test
+endif
 endif
 
-EXTRA_DIST = $(TESTS)
+EXTRA_DIST = $(PUBAPI_TESTS)
 
 TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
                   $(top_srcdir)/build-aux/tap-driver.sh
 
+if ENABLE_MODULE_LIBM
 check_PROGRAMS = complex-pubapi \
                  math-pubapi
+endif
 
 complex_pubapi_SOURCES = complex_pubapi.c \
                          testmacro.c \
