@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env sh
 
 #
 # MIT License
@@ -24,4 +24,12 @@
 #
 # SPDX-License-Identifier: MIT
 
-run_test_under_valgrind ./math-pubapi -t1
+set -e
+
+if test -z ${VALGRIND}; then
+    echo "1..1"
+    echo "ok 1 # skip Valgrind not found"
+    exit 0
+fi
+
+${VALGRIND} ${VALGRIND_FLAGS} "$@"

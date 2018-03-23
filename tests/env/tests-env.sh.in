@@ -27,7 +27,6 @@
 # Include this file from the test-script environment.
 
 set -e
-set -o posix
 
 #
 # Valgrind

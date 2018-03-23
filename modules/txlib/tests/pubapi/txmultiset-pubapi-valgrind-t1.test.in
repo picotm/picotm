@@ -24,4 +24,4 @@
 #
 # SPDX-License-Identifier: MIT
 
-${VALGRIND} ${VALGRIND_FLAGS} ./txmultiset-pubapi -t1
+run_test_under_valgrind ./txmultiset-pubapi -t1

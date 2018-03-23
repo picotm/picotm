@@ -23,4 +23,4 @@
 # SPDX-License-Identifier: MIT
 
 # tests-env.sh.in is auto-included in distribution.
-EXTRA_DIST =
+EXTRA_DIST = run_test_under_valgrind

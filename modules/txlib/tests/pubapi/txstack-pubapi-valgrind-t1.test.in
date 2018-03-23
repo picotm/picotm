@@ -24,4 +24,4 @@
 #
 # SPDX-License-Identifier: MIT
 
-${VALGRIND} ${VALGRIND_FLAGS} ./txstack-pubapi -t1
+run_test_under_valgrind ./txstack-pubapi -t1
