@@ -118,6 +118,8 @@ AS_VAR_SET_IF([VALGRIND],,[AS_VAR_SET([VALGRIND], [valgrind])])
 AC_PATH_PROG([VALGRIND], [$VALGRIND])
 AM_CONDITIONAL([HAVE_VALGRIND], [test "x$VALGRIND" != "x"])
 
+AC_CONFIG_FILES([tests/env/tests-env.sh])
+
 
 dnl
 dnl Core transaction manager
@@ -250,6 +252,7 @@ AC_CONFIG_FILES([Makefile
                  modules/txlib/tests/pubapi/Makefile
                  src/Makefile
                  tests/Makefile
+                 tests/env/Makefile
                  tests/libsafeblk/Makefile
                  tests/libtap/Makefile
                  tests/libtests/Makefile
