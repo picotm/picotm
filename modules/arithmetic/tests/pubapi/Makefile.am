@@ -23,14 +23,12 @@
 # SPDX-License-Identifier: MIT
 
 PUBAPI_TESTS = arithmetic-pubapi-t1.test \
+               arithmetic-pubapi-t1-valgrind.test \
                arithmetic-pubapi-t4.test
 
 TESTS =
 if ENABLE_MODULE_ARITHMETIC
 TESTS += $(PUBAPI_TESTS)
-if HAVE_VALGRIND
-TESTS += arithmetic-pubapi-valgrind-t1.test
-endif
 endif
 
 EXTRA_DIST = $(PUBAPI_TESTS)

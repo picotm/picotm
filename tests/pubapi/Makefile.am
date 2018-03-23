@@ -23,13 +23,8 @@
 # SPDX-License-Identifier: MIT
 
 TESTS = core-pubapi-t1.test \
+        core-pubapi-t1-valgrind.test \
         core-pubapi-t4.test
-
-VALGRIND_TESTS = core-pubapi-valgrind-t1.test
-
-if HAVE_VALGRIND
-TESTS += $(VALGRIND_TESTS)
-endif
 
 EXTRA_DIST = $(TESTS)
 

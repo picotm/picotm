@@ -23,14 +23,12 @@
 # SPDX-License-Identifier: MIT
 
 PUBAPI_TESTS = cast-pubapi-t1.test \
+               cast-pubapi-t1-valgrind.test \
                cast-pubapi-t4.test
 
 TESTS =
 if ENABLE_MODULE_CAST
 TESTS += $(PUBAPI_TESTS)
-if HAVE_VALGRIND
-TESTS += cast-pubapi-valgrind-t1.test
-endif
 endif
 
 EXTRA_DIST = $(PUBAPI_TESTS)

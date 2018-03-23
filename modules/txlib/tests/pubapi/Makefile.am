@@ -23,23 +23,21 @@
 # SPDX-License-Identifier: MIT
 
 PUBAPI_TESTS = txlist-pubapi-t1.test \
+               txlist-pubapi-t1-valgrind.test \
                txlist-pubapi-t4.test \
                txmultiset-pubapi-t1.test \
+               txmultiset-pubapi-t1-valgrind.test \
                txmultiset-pubapi-t4.test \
                txqueue-pubapi-t1.test \
+               txqueue-pubapi-t1-valgrind.test \
                txqueue-pubapi-t4.test \
                txstack-pubapi-t1.test \
+               txstack-pubapi-t1-valgrind.test \
                txstack-pubapi-t4.test
 
 TESTS =
 if ENABLE_MODULE_TXLIB
 TESTS += $(PUBAPI_TESTS)
-if HAVE_VALGRIND
-TESTS += txlist-pubapi-valgrind-t1.test \
-         txmultiset-pubapi-valgrind-t1.test \
-         txqueue-pubapi-valgrind-t1.test \
-         txstack-pubapi-valgrind-t1.test
-endif
 endif
 
 EXTRA_DIST = $(PUBAPI_TESTS)
