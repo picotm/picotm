@@ -22,6 +22,8 @@
 #
 # SPDX-License-Identifier: MIT
 
+if ENABLE_MODULE_TM
 nobase_include_HEADERS = picotm/config/picotm-tm-config.h \
                          picotm/picotm-tm.h \
                          picotm/picotm-tm-ctypes.h
+endif

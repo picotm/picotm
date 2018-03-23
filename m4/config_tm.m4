@@ -12,7 +12,7 @@
 #   notice and this notice are preserved.  This file is offered as-is,
 #   without any warranty.
 
-AC_DEFUN([CONFIG_TM], [
+AC_DEFUN([_CONFIG_TM], [
 
     #
     # Types
@@ -35,4 +35,17 @@ AC_DEFUN([CONFIG_TM], [
     _CHECK_MODULE_TYPE([tm], [unsigned short],     [[]])
 
     CONFIG_TEST([modules/tm/tests/pubapi/tm-pubapi-valgrind-t1.test])
+])
+
+AC_DEFUN([CONFIG_TM], [
+    AC_ARG_ENABLE([module-tm],
+                  [AS_HELP_STRING([--enable-module-tm],
+                                  [enable Transactional Memory module @<:@default=yes@:>@])],
+                  [enable_module_tm=$enableval],
+                  [enable_module_tm=yes])
+    AM_CONDITIONAL([ENABLE_MODULE_TM],
+                   [test "x$enable_module_tm" = "xyes"])
+    AS_VAR_IF([enable_module_tm], [yes], [
+        _CONFIG_TM
+    ])
 ])
