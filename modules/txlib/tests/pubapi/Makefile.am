@@ -44,6 +44,10 @@ endif
 
 EXTRA_DIST = $(PUBAPI_TESTS)
 
+# Prepare environment for test scripts.
+AM_TESTS_ENVIRONMENT = \
+    . $(top_builddir)/tests/env/tests-env.sh;
+
 TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
                   $(top_srcdir)/build-aux/tap-driver.sh
 
