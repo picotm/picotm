@@ -23,17 +23,15 @@
 # SPDX-License-Identifier: MIT
 
 PUBAPI_TESTS = complex-pubapi-t1.test \
+               complex-pubapi-t1-valgrind.test \
                complex-pubapi-t4.test \
                math-pubapi-t1.test \
+               math-pubapi-t1-valgrind.test \
                math-pubapi-t4.test
 
 TESTS =
 if ENABLE_MODULE_LIBM
 TESTS += $(PUBAPI_TESTS)
-if HAVE_VALGRIND
-TESTS += complex-pubapi-valgrind-t1.test \
-         math-pubapi-valgrind-t1.test
-endif
 endif
 
 EXTRA_DIST = $(PUBAPI_TESTS)

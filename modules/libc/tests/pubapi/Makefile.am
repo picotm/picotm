@@ -23,20 +23,18 @@
 # SPDX-License-Identifier: MIT
 
 PUBAPI_TESTS = allocator-pubapi-t1.test \
+               allocator-pubapi-t1-valgrind.test \
                allocator-pubapi-t4.test \
                cwd-pubapi-t1.test \
+               cwd-pubapi-t1-valgrind.test \
                cwd-pubapi-t4.test \
                fildes-pubapi-t1.test \
+               fildes-pubapi-t1-valgrind.test \
                fildes-pubapi-t4.test
 
 TESTS =
 if ENABLE_MODULE_LIBC
 TESTS += $(PUBAPI_TESTS)
-if HAVE_VALGRIND
-TESTS += allocator-pubapi-valgrind-t1.test \
-         cwd-pubapi-valgrind-t1.test \
-         fildes-pubapi-valgrind-t1.test
-endif
 endif
 
 EXTRA_DIST = $(PUBAPI_TESTS)

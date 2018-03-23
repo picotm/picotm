@@ -134,8 +134,6 @@ AC_CHECK_TYPES([kern_return_t],
                           [Define to 1 if the system has the type 'kern_return_t'.])],,
                [[@%:@include <mach/mach.h>]])
 
-CONFIG_TEST([tests/pubapi/core-pubapi-valgrind-t1.test])
-
 
 dnl
 dnl Modules
@@ -143,22 +141,16 @@ dnl
 
 AC_CONFIG_HEADERS([modules/cast/include/picotm/config/picotm-cast-config.h])
 CONFIG_CAST
-CONFIG_TEST([modules/cast/tests/pubapi/cast-pubapi-valgrind-t1.test])
 
 AC_CONFIG_HEADERS(
     [modules/arithmetic/include/picotm/config/picotm-arithmetic-config.h])
 CONFIG_ARITHMETIC
-CONFIG_TEST([modules/arithmetic/tests/pubapi/arithmetic-pubapi-valgrind-t1.test])
 
 AC_CONFIG_HEADERS([modules/tm/include/picotm/config/picotm-tm-config.h])
 CONFIG_TM
-CONFIG_TEST([modules/tm/tests/pubapi/tm-pubapi-valgrind-t1.test])
 
 AC_CONFIG_HEADERS([modules/libc/include/picotm/config/picotm-libc-config.h])
 CONFIG_LIBC
-CONFIG_TEST([modules/libc/tests/pubapi/allocator-pubapi-valgrind-t1.test])
-CONFIG_TEST([modules/libc/tests/pubapi/cwd-pubapi-valgrind-t1.test])
-CONFIG_TEST([modules/libc/tests/pubapi/fildes-pubapi-valgrind-t1.test])
 
 AC_CONFIG_HEADERS(
     [modules/libpthread/include/picotm/config/picotm-libpthread-config.h])
@@ -166,15 +158,9 @@ CONFIG_LIBPTHREAD
 
 AC_CONFIG_HEADERS([modules/libm/include/picotm/config/picotm-libm-config.h])
 CONFIG_LIBM
-CONFIG_TEST([modules/libm/tests/pubapi/complex-pubapi-valgrind-t1.test])
-CONFIG_TEST([modules/libm/tests/pubapi/math-pubapi-valgrind-t1.test])
 
 AC_CONFIG_HEADERS([modules/txlib/include/picotm/config/picotm-txlib-config.h])
 CONFIG_TXLIB
-CONFIG_TEST([modules/txlib/tests/pubapi/txlist-pubapi-valgrind-t1.test])
-CONFIG_TEST([modules/txlib/tests/pubapi/txmultiset-pubapi-valgrind-t1.test])
-CONFIG_TEST([modules/txlib/tests/pubapi/txqueue-pubapi-valgrind-t1.test])
-CONFIG_TEST([modules/txlib/tests/pubapi/txstack-pubapi-valgrind-t1.test])
 
 
 dnl
