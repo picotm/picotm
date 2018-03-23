@@ -33,8 +33,6 @@ AC_DEFUN([_CONFIG_ARITHMETIC], [
     _CHECK_MODULE_TYPE([arithmetic], [unsigned long],      [[]])
     _CHECK_MODULE_TYPE([arithmetic], [unsigned long long], [[]])
     _CHECK_MODULE_TYPE([arithmetic], [unsigned short],     [[]])
-
-    CONFIG_TEST([modules/arithmetic/tests/pubapi/arithmetic-pubapi-valgrind-t1.test])
 ])
 
 AC_DEFUN([CONFIG_ARITHMETIC], [

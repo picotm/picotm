@@ -33,8 +33,6 @@ AC_DEFUN([_CONFIG_TM], [
     _CHECK_MODULE_TYPE([tm], [unsigned long],      [[]])
     _CHECK_MODULE_TYPE([tm], [unsigned long long], [[]])
     _CHECK_MODULE_TYPE([tm], [unsigned short],     [[]])
-
-    CONFIG_TEST([modules/tm/tests/pubapi/tm-pubapi-valgrind-t1.test])
 ])
 
 AC_DEFUN([CONFIG_TM], [
