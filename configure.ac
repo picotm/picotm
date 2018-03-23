@@ -113,7 +113,9 @@ dnl
 AC_CHECK_TYPES([pthread_barrierattr_t],,, [[@%:@include <pthread.h>]])
 AC_CHECK_TYPES([pthread_barrier_t],,,     [[@%:@include <pthread.h>]])
 
-AC_PATH_PROG([VALGRIND], [valgrind])
+AC_ARG_VAR([VALGRIND], [Path to Valgrind])
+AS_VAR_SET_IF([VALGRIND],,[AS_VAR_SET([VALGRIND], [valgrind])])
+AC_PATH_PROG([VALGRIND], [$VALGRIND])
 AM_CONDITIONAL([HAVE_VALGRIND], [test "x$VALGRIND" != "x"])
 
 
@@ -177,19 +179,27 @@ dnl
 dnl Documentation
 dnl
 
-AC_PATH_PROG([DOXYGEN], [doxygen])
+AC_ARG_VAR([DOXYGEN], [Path to Doxygen])
+AS_VAR_SET_IF([DOXYGEN],,[AS_VAR_SET([DOXYGEN], [doxygen])])
+AC_PATH_PROG([DOXYGEN], [$DOXYGEN])
 AM_CONDITIONAL([HAVE_DOXYGEN], [test "x$DOXYGEN" != "x"])
 
-AC_PATH_PROG([DOT], [dot])
+AC_ARG_VAR([DOT], [Path to dot])
+AS_VAR_SET_IF([DOT],,[AS_VAR_SET([DOT], [dot])])
+AC_PATH_PROG([DOT], [$DOT])
 AS_VAR_IF([ac_cv_path_DOT], [],
           [AS_VAR_SET([doxygen_have_dot], ["NO"])],
           [AS_VAR_SET([doxygen_have_dot], ["YES"])])
 AC_SUBST([DOXYGEN_HAVE_DOT], [$doxygen_have_dot])
 
-AC_PATH_PROG([FIND], [find])
+AC_ARG_VAR([FIND], [Path to find])
+AS_VAR_SET_IF([FIND],,[AS_VAR_SET([FIND], [find])])
+AC_PATH_PROG([FIND], [$FIND])
 AM_CONDITIONAL([HAVE_FIND], [test "x$FIND" != "x"])
 
-AC_PATH_PROG([OPTIPNG], [optipng])
+AC_ARG_VAR([OPTIPNG], [Path to OptiPNG])
+AS_VAR_SET_IF([OPTIPNG],,[AS_VAR_SET([OPTIPNG], [optipng])])
+AC_PATH_PROG([OPTIPNG], [$OPTIPNG])
 AM_CONDITIONAL([HAVE_OPTIPNG], [test "x$OPTIPNG" != "x"])
 
 
