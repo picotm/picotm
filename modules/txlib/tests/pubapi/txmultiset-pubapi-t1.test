@@ -24,6 +24,6 @@
 #
 # SPDX-License-Identifier: MIT
 
-./txmultiset-pubapi -t1
+set -e
 
-echo $?
+./txmultiset-pubapi -t1

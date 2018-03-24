@@ -24,4 +24,6 @@
 #
 # SPDX-License-Identifier: MIT
 
+set -e
+
 ./core-pubapi -t4
