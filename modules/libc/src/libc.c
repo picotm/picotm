@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -23,9 +23,10 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include "picotm/picotm-libc.h"
+#include "libc.h"
 #include <stdatomic.h>
 #include "error/module.h"
+#include "signal/module.h"
 
 /*
  * Error handling
@@ -81,4 +82,47 @@ picotm_libc_get_file_type_cc_mode(enum picotm_libc_file_type file_type)
 {
     return atomic_load_explicit(g_file_type_cc_mode + file_type,
                                 memory_order_acquire);
+}
+
+/*
+ * Signal handling
+ */
+
+PICOTM_EXPORT
+void
+picotm_libc_acquire_proc_signal(int signum,
+                                void (*nontx_sigaction)(int, siginfo_t*,
+                                                        void*),
+                                struct picotm_error* error)
+{
+    signal_module_acquire_proc_signal(signum, nontx_sigaction, error);
+}
+
+PICOTM_EXPORT
+void
+picotm_libc_release_proc_signal(int signum, struct picotm_error* error)
+{
+    signal_module_release_proc_signal(signum, error);
+}
+
+PICOTM_EXPORT
+void
+picotm_libc_add_signal(int signum, _Bool is_recoverable,
+                       struct picotm_error* error)
+{
+    signal_module_add_signal(signum, is_recoverable, error);
+}
+
+PICOTM_EXPORT
+void
+picotm_libc_remove_signal(int signum)
+{
+    signal_module_remove_signal(signum);
+}
+
+PICOTM_EXPORT
+void
+picotm_libc_clear_signals()
+{
+    signal_module_clear_signals();
 }

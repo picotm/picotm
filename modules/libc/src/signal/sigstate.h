@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2018   Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -25,17 +25,19 @@
 
 #pragma once
 
-/**
- * \cond impl || libc_impl || libc_impl_fd
- * \ingroup libc_impl
- * \file
- * \endcond
- */
+#include "picotm/picotm-lib-spinlock.h"
+#include <signal.h>
+#include <stdbool.h>
 
-#include "picotm/picotm-libc.h"
+struct picotm_error;
 
-/**
- * \cond impl || libc_impl || libc_impl_fd
- * \defgroup libc_impl libc Implementation
- * \endcond
- */
+/* Provided by module.c */
+extern void tx_signal_handler(int, siginfo_t*, void*);
+
+void
+sigstate_acquire_proc_signal(int signum,
+                             void (*nontx_sigaction)(int, siginfo_t*, void*),
+                             struct picotm_error* error);
+
+void
+sigstate_release_proc_signal(int signum, struct picotm_error* error);

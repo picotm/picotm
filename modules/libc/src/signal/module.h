@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2018   Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -25,17 +25,34 @@
 
 #pragma once
 
+#include <signal.h>
+#include <stdbool.h>
+
 /**
- * \cond impl || libc_impl || libc_impl_fd
+ * \cond impl || libc_impl || libc_impl_signal
  * \ingroup libc_impl
+ * \ingroup libc_impl_signal
  * \file
  * \endcond
  */
 
-#include "picotm/picotm-libc.h"
+struct picotm_error;
 
-/**
- * \cond impl || libc_impl || libc_impl_fd
- * \defgroup libc_impl libc Implementation
- * \endcond
- */
+void
+signal_module_acquire_proc_signal(int signum,
+                                  void (*nontx_sigaction)(int, siginfo_t*,
+                                                          void*),
+                                  struct picotm_error* error);
+
+void
+signal_module_release_proc_signal(int signum, struct picotm_error* error);
+
+void
+signal_module_add_signal(int signum, bool is_recoverable,
+                         struct picotm_error* error);
+
+void
+signal_module_remove_signal(int signum);
+
+void
+signal_module_clear_signals(void);
