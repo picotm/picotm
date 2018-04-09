@@ -58,6 +58,19 @@ picotm_module_get_data(const struct picotm_module* self)
 }
 
 void
+picotm_module_begin(const struct picotm_module* self,
+                    struct picotm_error* error)
+{
+    assert(self);
+    assert(self->ops);
+
+    if (!self->ops->begin) {
+        return;
+    }
+    self->ops->begin(self->data, error);
+}
+
+void
 picotm_module_lock(const struct picotm_module* self,
                    struct picotm_error* error)
 {

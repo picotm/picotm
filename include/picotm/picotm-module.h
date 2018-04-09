@@ -52,6 +52,14 @@ PICOTM_BEGIN_DECLS
 struct picotm_tx;
 
 /**
+ * Invoked by picotm at the beginning of a transaction.
+ * \param       data    The pointer to module-specific data.
+ * \param[out]  error   Returns an error from the module.
+ */
+typedef void (*picotm_module_begin_function)(void* data,
+                                             struct picotm_error* error);
+
+/**
  * Invoked by picotm to lock a module's resources at the beginning
  * if a commit.
  * \param       data    The pointer to module-specific data.
@@ -163,6 +171,7 @@ typedef void (*picotm_module_uninit_function)(void* data);
  * module.
  */
 struct picotm_module_ops {
+    picotm_module_begin_function begin;
     picotm_module_lock_function lock;
     picotm_module_unlock_function unlock;
     picotm_module_validate_function validate;
