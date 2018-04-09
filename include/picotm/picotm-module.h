@@ -64,7 +64,7 @@ typedef void (*picotm_module_begin_function)(void* data,
 
 /**
  * Invoked by picotm to lock a module's resources at the beginning
- * if a commit.
+ * of a commit.
  * \param       data    The pointer to module-specific data.
  * \param[out]  error   Returns an error from the module.
  */
