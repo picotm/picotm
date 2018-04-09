@@ -134,6 +134,48 @@ picotm_tx_append_event(struct picotm_tx* self, unsigned long module,
     picotm_log_append(&self->log, &event, error);
 }
 
+static size_t
+begin_cb(void* module, struct picotm_error* error)
+{
+    picotm_module_begin(module, error);
+    if (picotm_error_is_set(error)) {
+        return 0;
+    }
+    return 1;
+}
+
+static size_t
+begin_modules(struct picotm_module* module, unsigned long nmodules,
+              struct picotm_error* error)
+{
+    size_t nwalked = tabwalk_1(module, nmodules, sizeof(*module), begin_cb,
+                               error);
+    if (picotm_error_is_set(error)) {
+        return nwalked;
+    }
+    return nwalked;
+}
+
+static size_t
+finish_cb(void* module, struct picotm_error* error)
+{
+    picotm_module_finish(module, error);
+    if (picotm_error_is_set(error)) {
+        return 0;
+    }
+    return 1;
+}
+
+static void
+finish_modules(struct picotm_module* module, unsigned long nmodules,
+               struct picotm_error* error)
+{
+    tabwalk_1(module, nmodules, sizeof(*module), finish_cb, error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
+}
+
 static inline bool
 log_is_empty(struct picotm_tx* self)
 {
@@ -182,8 +224,21 @@ picotm_tx_begin(struct picotm_tx* self, enum picotm_tx_mode mode, bool is_retry,
     self->mode = mode;
     self->env = env;
 
+    size_t nbegin = begin_modules(self->module, self->nmodules, error);
+    if (picotm_error_is_set(error)) {
+        goto err_begin_modules;
+    }
+
     return;
 
+err_begin_modules: {
+        struct picotm_error err_error = PICOTM_ERROR_INITIALIZER;
+        finish_modules(self->module, nbegin, &err_error);
+        if (picotm_error_is_set(&err_error)) {
+            picotm_error_mark_as_non_recoverable(error);
+            return;
+        }
+    }
 err_picotm_lock_owner_reset_timestamp:
     picotm_lock_manager_release_irrevocability(self->lm);
 }
@@ -326,26 +381,6 @@ clear_modules_cc(struct picotm_module* module, unsigned long nmodules,
 {
     tabwalk_2(module, nmodules, sizeof(*module), clear_cc_cb, &is_irrevocable,
               error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
-}
-
-static size_t
-log_finish_cb(void* module, struct picotm_error* error)
-{
-    picotm_module_finish(module, error);
-    if (picotm_error_is_set(error)) {
-        return 0;
-    }
-    return 1;
-}
-
-static void
-finish_modules(struct picotm_module* module, unsigned long nmodules,
-               struct picotm_error* error)
-{
-    tabwalk_1(module, nmodules, sizeof(*module), log_finish_cb, error);
     if (picotm_error_is_set(error)) {
         return;
     }
