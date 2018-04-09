@@ -161,6 +161,12 @@ libpicotm_c_la_SOURCES = allocator/allocator_event.c \
                          libc.c \
                          libc.h \
                          sched.c \
+                         signal/module.c \
+                         signal/module.h \
+                         signal/signal_tx.c \
+                         signal/signal_tx.h \
+                         signal/sigstate.c \
+                         signal/sigstate.h \
                          stdio-tm.c \
                          stdio.c \
                          stdlib-tm.c \

@@ -27,8 +27,11 @@
 
 #include "picotm/config/picotm-libc-config.h"
 #include "picotm/compiler.h"
+#include <signal.h>
 
 PICOTM_BEGIN_DECLS
+
+struct picotm_error;
 
 /**
  * \ingroup group_libc
@@ -144,6 +147,78 @@ PICOTM_NOTHROW
 enum picotm_libc_cc_mode
 picotm_libc_get_file_type_cc_mode(enum picotm_libc_file_type file_type);
 
+/*
+ * Signal handling
+ */
+
+PICOTM_NOTHROW
+/**
+ * \brief Acquires the signal handler from the process.
+ * \param       signum          The number of the signal to acquire.
+ * \param       nontx_sigaction The signal-handler function for
+ *                              non-transactional code.
+ * \param[out]  error           Returns an error to the caller.
+ *
+ * A call to `picotm_libc_acquire_proc_signal()` takes over the
+ * handling of a signal from the process. After a call to this function,
+ * picotm handles the acquired signal.
+ */
+void
+picotm_libc_acquire_proc_signal(int signum,
+                                void (*nontx_sigaction)(int, siginfo_t*,
+                                                        void*),
+                                struct picotm_error* error);
+
+PICOTM_NOTHROW
+/**
+ * \brief Releases a previously acquired signal to the process.
+ * \param       signum  The number of the signal to release.
+ * \param[out]  error   Returns an error to the caller.
+ *
+ * A call to `picotm_libc_release_proc_signal()` returns an acquired
+ * signal back to the process. It restores the signal's signal-handler
+ * settings that have been saved by `picotm_libc_acquire_proc_signal()`.
+ */
+void
+picotm_libc_release_proc_signal(int signum, struct picotm_error* error);
+
+PICOTM_NOTHROW
+/**
+ * \brief Enable recovery for a UNIX signal.
+ * \param       signum          The signal number.
+ * \param       is_recoverable  Send a recoverable error to the transaction.
+ * \param[out]  error           Returns an error to the caller.
+ *
+ * A call to `picotm_libc_add_signal()` enables transaction-safe signal
+ * handling for the specified signal *on the current thread.* Enabled
+ * signals have to be acquired with a call to
+ * `picotm_libc_acquire_proc_signal()` first.
+ *
+ * \attention The second parameter, `is_recoverable`, marks the
+ *            signal-generated error as recoverable. Because signals can
+ *            happen at any time, it is generally *unsafe* to treat signal
+ *            errors as recoverable. This parameter should be set to
+ *            *false.*
+ */
+void
+picotm_libc_add_signal(int signum, _Bool is_recoverable,
+                       struct picotm_error* error);
+
+PICOTM_NOTHROW
+/**
+ * \brief Disable recovery for a UNIX signal.
+ * \param   signum  The signal number.
+ */
+void
+picotm_libc_remove_signal(int signum);
+
+PICOTM_NOTHROW
+/**
+ * \brief Disable recovery for all UNIX signals.
+ */
+void
+picotm_libc_clear_signals(void);
+
 PICOTM_END_DECLS
 
 /**
@@ -163,6 +238,11 @@ PICOTM_END_DECLS
  * With a few exceptions, the transactional functions will handle errors for
  * you. Only rarely you should have a need to examine the errno status. If
  * accessed, the errno value is saved and restored during aborts.
+ *
+ * # Signal Handling
+ *
+ * The C Standard library module can handle signals automatically and execute
+ * recovery for a signal.
  *
  * # Memory allocation
  *
