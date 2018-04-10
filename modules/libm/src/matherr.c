@@ -24,11 +24,11 @@
  */
 
 #include "matherr.h"
+#include "picotm/picotm-libc.h"
+#include "picotm/picotm-module.h"
 #include <errno.h>
 #include <fenv.h>
 #include <math.h>
-#include <picotm/picotm-libc.h>
-#include <picotm/picotm-module.h>
 #include "module.h"
 
 /* Gcc does not support the FENV_ACCESS pragma. */

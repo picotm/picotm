@@ -25,9 +25,10 @@
 
 #pragma once
 
+#include "picotm/config/picotm-arithmetic-config.h"
+#include "picotm/compiler.h"
 #include <float.h>
 #include <limits.h>
-#include <picotm/compiler.h>
 #include <stdlib.h>
 #include "picotm-arithmetic.h"
 

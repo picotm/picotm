@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -24,11 +24,11 @@
  */
 
 #include "regfiletab.h"
+#include "picotm/picotm-error.h"
+#include "picotm/picotm-lib-array.h"
+#include "picotm/picotm-lib-tab.h"
+#include "picotm/picotm-module.h"
 #include <errno.h>
-#include <picotm/picotm-error.h>
-#include <picotm/picotm-lib-array.h>
-#include <picotm/picotm-lib-tab.h>
-#include <picotm/picotm-module.h>
 #include <pthread.h>
 #include "range.h"
 #include "regfile.h"

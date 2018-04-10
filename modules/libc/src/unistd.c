@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -24,13 +24,13 @@
  */
 
 #include "picotm/unistd.h"
+#include "picotm/picotm.h"
+#include "picotm/picotm-module.h"
+#include "picotm/picotm-tm.h"
+#include "picotm/unistd-tm.h"
 #include <errno.h>
-#include <picotm/picotm.h>
-#include <picotm/picotm-module.h>
-#include <picotm/picotm-tm.h>
 #include "error/module.h"
 #include "fildes/module.h"
-#include "picotm/unistd-tm.h"
 
 #if defined(PICOTM_LIBC_HAVE__EXIT) && PICOTM_LIBC_HAVE__EXIT
 PICOTM_EXPORT

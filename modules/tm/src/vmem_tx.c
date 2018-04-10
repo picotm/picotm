@@ -24,11 +24,11 @@
  */
 
 #include "vmem_tx.h"
-#include <picotm/picotm-error.h>
-#include <picotm/picotm-lib-ptr.h>
+#include "picotm/picotm-error.h"
+#include "picotm/picotm-lib-ptr.h"
+#include "picotm/picotm-tm.h"
 #include <stdlib.h>
 #include <string.h>
-#include "picotm/picotm-tm.h"
 #include "page.h"
 
 void

@@ -37,6 +37,7 @@
  * All existing modules are written on top of this interface as well.
  */
 
+#include "picotm/config/picotm-config.h"
 #if defined(__MACH__)
 #include <mach/mach.h>
 #endif

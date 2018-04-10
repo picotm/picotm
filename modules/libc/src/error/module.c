@@ -24,8 +24,8 @@
  */
 
 #include "module.h"
+#include "picotm/picotm-module.h"
 #include <assert.h>
-#include <picotm/picotm-module.h>
 #include <stdlib.h>
 #include "error_tx.h"
 

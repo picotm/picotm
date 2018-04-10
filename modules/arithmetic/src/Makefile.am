@@ -36,8 +36,8 @@ libpicotm_arithmetic_la_SOURCES = arithmetic.c \
 
 libpicotm_arithmetic_la_LDFLAGS = -version-info $(current):$(revision):$(age)
 
-AM_CPPFLAGS = -I$(top_builddir)/modules/arithmetic/include \
-              -I$(top_srcdir)/modules/arithmetic/include \
-              -I$(top_builddir)/include \
-              -I$(top_srcdir)/include \
+AM_CPPFLAGS = -iquote $(top_builddir)/modules/arithmetic/include \
+              -iquote $(top_srcdir)/modules/arithmetic/include \
+              -iquote $(top_builddir)/include \
+              -iquote $(top_srcdir)/include \
               -include config.h

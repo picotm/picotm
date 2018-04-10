@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -24,12 +24,12 @@
  */
 
 #include "rwcountermap.h"
+#include "picotm/picotm-error.h"
+#include "picotm/picotm-lib-array.h"
+#include "picotm/picotm-lib-ptr.h"
+#include "picotm/picotm-module.h"
 #include <assert.h>
 #include <errno.h>
-#include <picotm/picotm-error.h>
-#include <picotm/picotm-lib-array.h>
-#include <picotm/picotm-lib-ptr.h>
-#include <picotm/picotm-module.h>
 #include <stdlib.h>
 #include "range.h"
 #include "rwcounter.h"

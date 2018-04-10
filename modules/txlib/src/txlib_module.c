@@ -24,10 +24,10 @@
  */
 
 #include "txlib_module.h"
+#include "picotm/picotm-lib-spinlock.h"
+#include "picotm/picotm-module.h"
 #include <assert.h>
 #include <errno.h>
-#include <picotm/picotm-lib-spinlock.h>
-#include <picotm/picotm-module.h>
 #include <stdatomic.h>
 #include <stdlib.h>
 #include "txlib_tx.h"

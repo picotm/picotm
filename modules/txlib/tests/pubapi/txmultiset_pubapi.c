@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -23,16 +23,16 @@
  * SPDX-License-Identifier: MIT
  */
 
+#include "picotm/picotm.h"
+#include "picotm/picotm-error.h"
+#include "picotm/picotm-lib-array.h"
+#include "picotm/picotm-lib-ptr.h"
+#include "picotm/picotm-module.h"
+#include "picotm/picotm-txmultiset.h"
 #include <assert.h>
-#include <picotm/picotm.h>
-#include <picotm/picotm-error.h>
-#include <picotm/picotm-lib-array.h>
-#include <picotm/picotm-lib-ptr.h>
-#include <picotm/picotm-module.h>
 #include <stdlib.h>
 #include <string.h>
 #include "compat/static_assert.h"
-#include "picotm/picotm-txmultiset.h"
 #include "ptr.h"
 #include "safeblk.h"
 #include "safe_sched.h"

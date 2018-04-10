@@ -23,11 +23,11 @@
  * SPDX-License-Identifier: MIT
  */
 
+#include "picotm/math.h"
+#include "picotm/picotm-tm.h"
 #include <errno.h>
 #include <fenv.h>
 #include <float.h>
-#include <picotm/math.h>
-#include <picotm/picotm-tm.h>
 #include <stdbool.h>
 #include "ptr.h"
 #include "sysenv.h"

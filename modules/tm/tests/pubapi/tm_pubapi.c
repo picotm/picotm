@@ -23,11 +23,11 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <picotm/picotm.h>
-#include <picotm/picotm-error.h>
-#include <picotm/picotm-module.h>
-#include <picotm/picotm-lib-array.h>
-#include <picotm/picotm-tm-ctypes.h>
+#include "picotm/picotm.h"
+#include "picotm/picotm-error.h"
+#include "picotm/picotm-module.h"
+#include "picotm/picotm-lib-array.h"
+#include "picotm/picotm-tm-ctypes.h"
 #include <stdlib.h>
 #include <string.h>
 #include "ptr.h"

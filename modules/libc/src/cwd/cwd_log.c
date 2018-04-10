@@ -24,10 +24,10 @@
  */
 
 #include "cwd_log.h"
+#include "picotm/picotm-error.h"
+#include "picotm/picotm-lib-tab.h"
+#include "picotm/picotm-module.h"
 #include <assert.h>
-#include <picotm/picotm-error.h>
-#include <picotm/picotm-lib-tab.h>
-#include <picotm/picotm-module.h>
 
 void
 cwd_log_init(struct cwd_log* self, unsigned long module)

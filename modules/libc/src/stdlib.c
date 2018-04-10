@@ -24,6 +24,8 @@
  */
 
 #include "picotm/stdlib.h"
+#include "picotm/picotm.h"
+#include "picotm/picotm-module.h"
 #include <errno.h>
 /* We test and include <malloc_np.h> first, because FreeBSD provides
  * <malloc_np.h>, but fails with an error if <malloc.h> is included.
@@ -33,8 +35,6 @@
 #elif defined (HAVE_MALLOC_H) && HAVE_MALLOC_H
 #include <malloc.h>
 #endif
-#include <picotm/picotm.h>
-#include <picotm/picotm-module.h>
 #include <string.h>
 #include "allocator/module.h"
 #include "compat/malloc_usable_size.h"

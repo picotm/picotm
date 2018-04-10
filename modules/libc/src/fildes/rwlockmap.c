@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -24,11 +24,11 @@
  */
 
 #include "rwlockmap.h"
+#include "picotm/picotm-error.h"
+#include "picotm/picotm-lib-array.h"
 #include <assert.h>
 #include <errno.h>
 #include <limits.h>
-#include <picotm/picotm-error.h>
-#include <picotm/picotm-lib-array.h>
 #include <stdlib.h>
 #include <sys/types.h>
 

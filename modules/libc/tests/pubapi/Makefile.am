@@ -68,16 +68,16 @@ LDADD = $(top_builddir)/tests/libtests/libpicotm_tests.la \
         $(top_builddir)/modules/tm/src/libpicotm-tm.la \
         $(top_builddir)/src/libpicotm.la
 
-AM_CPPFLAGS = -I$(top_builddir)/tests/libtests \
-              -I$(top_srcdir)/tests/libtests \
-              -I$(top_builddir)/tests/libsafeblk \
-              -I$(top_srcdir)/tests/libsafeblk \
-              -I$(top_builddir)/tests/libtap \
-              -I$(top_srcdir)/tests/libtap \
-              -I$(top_builddir)/modules/libc/include \
-              -I$(top_srcdir)/modules/libc/include \
-              -I$(top_builddir)/modules/tm/include \
-              -I$(top_srcdir)/modules/tm/include \
-              -I$(top_builddir)/include \
-              -I$(top_srcdir)/include \
+AM_CPPFLAGS = -iquote $(top_builddir)/tests/libtests \
+              -iquote $(top_srcdir)/tests/libtests \
+              -iquote $(top_builddir)/tests/libsafeblk \
+              -iquote $(top_srcdir)/tests/libsafeblk \
+              -iquote $(top_builddir)/tests/libtap \
+              -iquote $(top_srcdir)/tests/libtap \
+              -iquote $(top_builddir)/modules/libc/include \
+              -iquote $(top_srcdir)/modules/libc/include \
+              -iquote $(top_builddir)/modules/tm/include \
+              -iquote $(top_srcdir)/modules/tm/include \
+              -iquote $(top_builddir)/include \
+              -iquote $(top_srcdir)/include \
               -include config.h

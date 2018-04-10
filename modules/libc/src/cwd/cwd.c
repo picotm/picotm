@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -24,10 +24,10 @@
  */
 
 #include "cwd.h"
+#include "picotm/picotm-error.h"
+#include "picotm/picotm-lib-array.h"
+#include "picotm/picotm-lib-rwstate.h"
 #include <assert.h>
-#include <picotm/picotm-error.h>
-#include <picotm/picotm-lib-array.h>
-#include <picotm/picotm-lib-rwstate.h>
 
 static void
 init_rwlocks(struct picotm_rwlock* beg, const struct picotm_rwlock* end)

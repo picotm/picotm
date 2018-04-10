@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -24,6 +24,8 @@
  */
 
 #include "picotm/stdlib-tm.h"
+#include "picotm/picotm-module.h"
+#include "picotm/picotm.h"
 #include <errno.h>
 /* We test and include <malloc_np.h> first, because FreeBSD provides
  * <malloc_np.h>, but fails with an error if <malloc.h> is included.
@@ -33,8 +35,6 @@
 #elif defined (HAVE_MALLOC_H) && HAVE_MALLOC_H
 #include <malloc.h>
 #endif
-#include <picotm/picotm-module.h>
-#include <picotm/picotm.h>
 #include <string.h>
 #include "allocator/module.h"
 #include "compat/malloc_usable_size.h"

@@ -25,7 +25,7 @@
 
 #pragma once
 
-#include <picotm/picotm-lib-rwlock.h>
+#include "picotm/picotm-lib-rwlock.h"
 
 /**
  * \cond impl || libc_impl || libc_impl_cwd

@@ -24,8 +24,8 @@
  */
 
 #include "cast.h"
+#include "picotm/picotm-module.h"
 #include <errno.h>
-#include <picotm/picotm-module.h>
 
 static void
 report_errno(int errno_code)

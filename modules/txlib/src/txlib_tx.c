@@ -24,12 +24,12 @@
  */
 
 #include "txlib_tx.h"
+#include "picotm/picotm-error.h"
+#include "picotm/picotm-lib-array.h"
+#include "picotm/picotm-lib-tab.h"
+#include "picotm/picotm-module.h"
 #include <assert.h>
 #include <errno.h>
-#include <picotm/picotm-error.h>
-#include <picotm/picotm-lib-array.h>
-#include <picotm/picotm-lib-tab.h>
-#include <picotm/picotm-module.h>
 #include <stdlib.h>
 #include <string.h>
 #include "txlib_event.h"

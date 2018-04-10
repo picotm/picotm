@@ -176,10 +176,10 @@ libpicotm_c_la_SOURCES = allocator/allocator_event.c \
 
 libpicotm_c_la_LDFLAGS = -version-info $(current):$(revision):$(age)
 
-AM_CPPFLAGS = -I$(top_builddir)/modules/libc/include \
-              -I$(top_srcdir)/modules/libc/include \
-              -I$(top_builddir)/modules/tm/include \
-              -I$(top_srcdir)/modules/tm/include \
-              -I$(top_builddir)/include \
-              -I$(top_srcdir)/include \
+AM_CPPFLAGS = -iquote $(top_builddir)/modules/libc/include \
+              -iquote $(top_srcdir)/modules/libc/include \
+              -iquote $(top_builddir)/modules/tm/include \
+              -iquote $(top_srcdir)/modules/tm/include \
+              -iquote $(top_builddir)/include \
+              -iquote $(top_srcdir)/include \
               -include config.h

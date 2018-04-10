@@ -25,9 +25,9 @@
 
 #pragma once
 
-#include <picotm/picotm.h>
-#include <picotm/picotm-module.h>
-#include <safeblk.h>
+#include "picotm/picotm.h"
+#include "picotm/picotm-module.h"
+#include "safeblk.h"
 #include "taputils.h"
 
 #define __TEST_SYMBOL(_func)    \
