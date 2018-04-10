@@ -24,8 +24,8 @@
  */
 
 #include "picotm_log.h"
+#include "picotm/picotm-error.h"
 #include <assert.h>
-#include <picotm/picotm-error.h>
 #include <string.h>
 #include "picotm_event.h"
 #include "table.h"

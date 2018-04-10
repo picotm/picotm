@@ -23,9 +23,9 @@
  * SPDX-License-Identifier: MIT
  */
 
+#include "picotm/complex.h"
+#include "picotm/picotm-tm.h"
 #include <math.h>
-#include <picotm/complex.h>
-#include <picotm/picotm-tm.h>
 #include "ptr.h"
 #include "test.h"
 #include "testhlp.h"

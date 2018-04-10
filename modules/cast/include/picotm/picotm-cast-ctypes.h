@@ -25,9 +25,10 @@
 
 #pragma once
 
+#include "picotm/config/picotm-cast-config.h"
+#include "picotm/compiler.h"
 #include <float.h>
 #include <limits.h>
-#include <picotm/compiler.h>
 #include "picotm-cast.h"
 
 PICOTM_BEGIN_DECLS

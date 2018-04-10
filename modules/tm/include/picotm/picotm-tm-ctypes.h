@@ -25,8 +25,8 @@
 
 #pragma once
 
-#include <picotm/compiler.h>
-#include <picotm/config/picotm-tm-config.h>
+#include "picotm/config/picotm-tm-config.h"
+#include "picotm/compiler.h"
 #include "picotm-tm.h"
 
 PICOTM_BEGIN_DECLS

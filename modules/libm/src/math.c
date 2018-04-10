@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -24,12 +24,12 @@
  */
 
 #include "picotm/math.h"
+#include "picotm/picotm-tm-ctypes.h"
+#include "picotm/picotm-libc.h"
+#include "picotm/math-tm.h"
 #include <fenv.h>
 #include <math.h>
-#include <picotm/picotm-tm-ctypes.h>
-#include <picotm/picotm-libc.h>
 #include "matherr.h"
-#include "picotm/math-tm.h"
 
 #if defined(PICOTM_LIBM_HAVE_ACOS) && PICOTM_LIBM_HAVE_ACOS
 PICOTM_EXPORT

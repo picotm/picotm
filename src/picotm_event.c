@@ -24,7 +24,7 @@
  */
 
 #include "picotm_event.h"
-#include <picotm/picotm-error.h>
+#include "picotm/picotm-error.h"
 
 void
 picotm_events_foreach1(struct picotm_event* beg,

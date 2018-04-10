@@ -24,10 +24,10 @@
  */
 
 #include "allocator_log.h"
+#include "picotm/picotm-error.h"
+#include "picotm/picotm-lib-tab.h"
+#include "picotm/picotm-module.h"
 #include <assert.h>
-#include <picotm/picotm-error.h>
-#include <picotm/picotm-lib-tab.h>
-#include <picotm/picotm-module.h>
 
 void
 allocator_log_init(struct allocator_log* self, unsigned long module)

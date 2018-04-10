@@ -24,9 +24,9 @@
  */
 
 #include "module.h"
+#include "picotm/picotm-module.h"
 #include <assert.h>
 #include <stdbool.h>
-#include <picotm/picotm-module.h>
 #include "allocator_log.h"
 #include "allocator_tx.h"
 

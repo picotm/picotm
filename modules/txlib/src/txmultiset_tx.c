@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -24,8 +24,8 @@
  */
 
 #include "txmultiset_tx.h"
+#include "picotm/picotm-module.h"
 #include <assert.h>
-#include <picotm/picotm-module.h>
 #include "txmultiset_entry.h"
 #include "txmultiset_state.h"
 #include "txlib_event.h"

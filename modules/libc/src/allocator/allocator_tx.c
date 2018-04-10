@@ -24,9 +24,9 @@
  */
 
 #include "allocator_tx.h"
+#include "picotm/picotm-error.h"
 #include <assert.h>
 #include <errno.h>
-#include <picotm/picotm-error.h>
 #include <stdlib.h>
 #include "allocator_log.h"
 

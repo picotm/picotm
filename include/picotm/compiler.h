@@ -25,6 +25,8 @@
 
 #pragma once
 
+#include "picotm/config/picotm-config.h"
+
 /**
  * \ingroup group_modules
  * \file

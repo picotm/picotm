@@ -1,6 +1,6 @@
 #
 # MIT License
-# Copyright (c) 2017    Thomas Zimmermann <tdz@users.sourceforge.net>
+# Copyright (c) 2017-2018   Thomas Zimmermann <tdz@users.sourceforge.net>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -29,6 +29,6 @@ libpicotm_tap_la_SOURCES = tap.c \
                            taputils.c \
                            taputils.h
 
-AM_CPPFLAGS = -I$(top_builddir)/include \
-              -I$(top_srcdir)/include \
+AM_CPPFLAGS = -iquote $(top_builddir)/include \
+              -iquote $(top_srcdir)/include \
               -include config.h

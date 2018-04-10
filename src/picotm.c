@@ -24,15 +24,15 @@
  */
 
 #include "picotm.h"
+#include "picotm/picotm-lib-ptr.h"
+#include "picotm/picotm-lib-shared-ref-obj.h"
+#include "picotm/picotm-lib-spinlock.h"
 #include <assert.h>
 #include <errno.h>
 #include <stdatomic.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
-#include "picotm/picotm-lib-ptr.h"
-#include "picotm/picotm-lib-shared-ref-obj.h"
-#include "picotm/picotm-lib-spinlock.h"
 #include "picotm_lock_manager.h"
 #include "picotm_tx.h"
 

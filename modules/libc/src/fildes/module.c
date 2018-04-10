@@ -24,9 +24,9 @@
  */
 
 #include "module.h"
+#include "picotm/picotm.h"
+#include "picotm/picotm-module.h"
 #include <assert.h>
-#include <picotm/picotm.h>
-#include <picotm/picotm-module.h>
 #include <stdlib.h>
 #include "fildes_event.h"
 #include "fildes_log.h"

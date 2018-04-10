@@ -36,8 +36,8 @@ libpicotm_cast_la_SOURCES = cast.c \
 
 libpicotm_cast_la_LDFLAGS = -version-info $(current):$(revision):$(age)
 
-AM_CPPFLAGS = -I$(top_builddir)/modules/cast/include \
-              -I$(top_srcdir)/modules/cast/include \
-              -I$(top_builddir)/include \
-              -I$(top_srcdir)/include \
+AM_CPPFLAGS = -iquote $(top_builddir)/modules/cast/include \
+              -iquote $(top_srcdir)/modules/cast/include \
+              -iquote $(top_builddir)/include \
+              -iquote $(top_srcdir)/include \
               -include config.h

@@ -24,10 +24,10 @@
  */
 
 #include "fildes_log.h"
+#include "picotm/picotm-error.h"
+#include "picotm/picotm-lib-tab.h"
+#include "picotm/picotm-module.h"
 #include <assert.h>
-#include <picotm/picotm-error.h>
-#include <picotm/picotm-lib-tab.h>
-#include <picotm/picotm-module.h>
 
 void
 fildes_log_init(struct fildes_log* self, unsigned long module)

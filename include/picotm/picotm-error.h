@@ -33,10 +33,10 @@
  * \brief Contains struct picotm_error and helper functions.
  */
 
+#include "picotm/config/picotm-config.h"
 #if defined(__MACH__)
 #include <mach/mach.h>
 #endif
-#include <picotm/config/picotm-config.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include "compiler.h"

@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -24,10 +24,10 @@
  */
 
 #include "openoptab.h"
+#include "picotm/picotm-error.h"
+#include "picotm/picotm-lib-tab.h"
 #include <assert.h>
 #include <stdlib.h>
-#include <picotm/picotm-error.h>
-#include <picotm/picotm-lib-tab.h>
 #include "openop.h"
 
 unsigned long

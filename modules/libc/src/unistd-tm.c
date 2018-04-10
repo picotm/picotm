@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -24,9 +24,9 @@
  */
 
 #include "picotm/unistd-tm.h"
+#include "picotm/picotm.h"
+#include "picotm/picotm-module.h"
 #include <errno.h>
-#include <picotm/picotm.h>
-#include <picotm/picotm-module.h>
 #include "cwd/module.h"
 #include "error/module.h"
 #include "fildes/module.h"

@@ -1,6 +1,6 @@
 #
 # MIT License
-# Copyright (c) 2017    Thomas Zimmermann <tdz@users.sourceforge.net>
+# Copyright (c) 2017-2018   Thomas Zimmermann <tdz@users.sourceforge.net>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -47,6 +47,6 @@ libpicotm_safeblk_la_SOURCES = compat/pthread_barrier.c \
                                safe_unistd.c \
                                safe_unistd.h
 
-AM_CPPFLAGS = -I$(top_builddir)/tests/libtap \
-              -I$(top_srcdir)/tests/libtap \
+AM_CPPFLAGS = -iquote $(top_builddir)/tests/libtap \
+              -iquote $(top_srcdir)/tests/libtap \
               -include config.h

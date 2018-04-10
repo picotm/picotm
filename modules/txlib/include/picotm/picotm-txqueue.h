@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -25,8 +25,8 @@
 
 #pragma once
 
-#include <picotm/compiler.h>
-#include <picotm/config/picotm-txlib-config.h>
+#include "picotm/config/picotm-txlib-config.h"
+#include "picotm/compiler.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include "picotm-txqueue-state.h"

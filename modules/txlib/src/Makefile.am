@@ -72,8 +72,8 @@ libpicotm_txlib_la_SOURCES = txlib_event.c \
 
 libpicotm_txlib_la_LDFLAGS = -version-info $(current):$(revision):$(age)
 
-AM_CPPFLAGS = -I$(top_builddir)/modules/txlib/include \
-              -I$(top_srcdir)/modules/txlib/include \
-              -I$(top_builddir)/include \
-              -I$(top_srcdir)/include \
+AM_CPPFLAGS = -iquote $(top_builddir)/modules/txlib/include \
+              -iquote $(top_srcdir)/modules/txlib/include \
+              -iquote $(top_builddir)/include \
+              -iquote $(top_srcdir)/include \
               -include config.h

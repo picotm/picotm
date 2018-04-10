@@ -23,11 +23,11 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <picotm/stddef.h>
-#include <picotm/stdlib.h>
-#include <picotm/stdlib-tm.h>
-#include <picotm/picotm.h>
-#include <picotm/picotm-tm-ctypes.h>
+#include "picotm/stddef.h"
+#include "picotm/stdlib.h"
+#include "picotm/stdlib-tm.h"
+#include "picotm/picotm.h"
+#include "picotm/picotm-tm-ctypes.h"
 #include "ptr.h"
 #include "safe_stdlib.h"
 #include "test.h"

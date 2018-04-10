@@ -24,8 +24,8 @@
  */
 
 #include "page.h"
-#include <picotm/picotm-error.h>
-#include <picotm/picotm-lib-array.h>
+#include "picotm/picotm-error.h"
+#include "picotm/picotm-lib-array.h"
 #include <string.h>
 #include "frame.h"
 #include "vmem.h"

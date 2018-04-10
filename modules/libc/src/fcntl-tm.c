@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -24,9 +24,9 @@
  */
 
 #include "picotm/fcntl-tm.h"
+#include "picotm/picotm-module.h"
 #include <assert.h>
 #include <errno.h>
-#include <picotm/picotm-module.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <string.h>
