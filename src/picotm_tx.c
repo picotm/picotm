@@ -134,11 +134,18 @@ picotm_tx_append_event(struct picotm_tx* self, unsigned long module,
     picotm_log_append(&self->log, &event, error);
 }
 
+static inline bool
+log_is_empty(struct picotm_tx* self)
+{
+    return picotm_log_begin(&self->log) == picotm_log_end(&self->log);
+}
+
 void
 picotm_tx_begin(struct picotm_tx* self, enum picotm_tx_mode mode, bool is_retry,
                 jmp_buf* env, struct picotm_error* error)
 {
     assert(self);
+    assert(log_is_empty(self));
 
     unsigned long nretries = is_retry ? self->nretries + 1 : 0;
 
