@@ -37,6 +37,9 @@
 #if defined(__MACH__)
 #include <mach/mach.h>
 #endif
+#if defined(PICOTM_HAVE_SIGNAL_H) && PICOTM_HAVE_SIGNAL_H
+#include <signal.h>
+#endif
 #include <stdbool.h>
 #include <stddef.h>
 #include "compiler.h"
@@ -77,7 +80,9 @@ enum picotm_error_status {
     /** Error detected. Encoded as errno code. */
     PICOTM_ERRNO,
     /** Error detected. Encoded as `kern_return_t` value. */
-    PICOTM_KERN_RETURN_T
+    PICOTM_KERN_RETURN_T,
+    /** Error detected. Encoded as signal's `siginfo_t` value. */
+    PICOTM_SIGINFO_T
 };
 
 /**
@@ -118,6 +123,15 @@ struct picotm_error {
          * The picotm kern_return_t value for PICOTM_KERN_RETURN_T.
          */
         kern_return_t kern_return_t_value;
+#endif
+
+#if defined(PICOTM_HAVE_TYPE_SIGINFO_T) && \
+            PICOTM_HAVE_TYPE_SIGINFO_T || \
+    defined(__PICOTM_DOXYGEN)
+        /**
+         * The picotm siginfo_t information for PICOTM_SIGINFO_T.
+         */
+        siginfo_t siginfo_t_info;
 #endif
     } value;
 };
@@ -194,6 +208,20 @@ PICOTM_NOTHROW
 void
 picotm_error_set_kern_return_t(struct picotm_error* error,
                                kern_return_t value);
+#endif
+
+#if defined(PICOTM_HAVE_TYPE_SIGINFO_T) && \
+            PICOTM_HAVE_TYPE_SIGINFO_T || \
+    defined(__PICOTM_DOXYGEN)
+PICOTM_NOTHROW
+/**
+ * Sets an error of type PICOTM_SIGINFO_T.
+ *
+ * \param[in,out]   error   The error to set.
+ * \param[in]       info    The signal information.
+ */
+void
+picotm_error_set_siginfo_t(struct picotm_error* error, const siginfo_t* info);
 #endif
 
 /**
