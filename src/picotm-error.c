@@ -24,6 +24,7 @@
  */
 
 #include "picotm/picotm-error.h"
+#include <string.h>
 
 PICOTM_EXPORT
 void
@@ -85,6 +86,18 @@ picotm_error_set_kern_return_t(struct picotm_error* error,
     error->is_non_recoverable = false;
     error->description = NULL;
     error->value.kern_return_t_value = value;
+}
+#endif
+
+#if defined(PICOTM_HAVE_TYPE_SIGINFO_T) && PICOTM_HAVE_TYPE_SIGINFO_T
+PICOTM_EXPORT
+void
+picotm_error_set_siginfo_t(struct picotm_error* error, const siginfo_t* info)
+{
+    error->status = PICOTM_SIGINFO_T;
+    error->is_non_recoverable = false;
+    error->description = NULL;
+    memcpy(&error->value.siginfo_t_info, info, sizeof(*info));
 }
 #endif
 

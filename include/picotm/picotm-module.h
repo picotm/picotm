@@ -41,6 +41,9 @@
 #if defined(__MACH__)
 #include <mach/mach.h>
 #endif
+#if defined(PICOTM_HAVE_SIGNAL_H) && PICOTM_HAVE_SIGNAL_H
+#include <signal.h>
+#endif
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -265,6 +268,21 @@ PICOTM_NOTHROW
  */
 void
 picotm_recover_from_kern_return_t(kern_return_t value);
+#endif
+
+#if defined(PICOTM_HAVE_TYPE_SIGINFO_T) && \
+            PICOTM_HAVE_TYPE_SIGINFO_T || \
+    defined(__PICOTM_DOXYGEN)
+PICOTM_NOTHROW
+/**
+ * Instructs the transaction management system to recover from an signal.
+ * Informaton about the signal is provided as value of type 'siginfo_t'.
+ * \param[in]   info    The siginfo_t value of the received signal.
+ *
+ * \attention   This function does not return.
+ */
+void
+picotm_recover_from_siginfo_t(const siginfo_t* info);
 #endif
 
 PICOTM_NOTHROW

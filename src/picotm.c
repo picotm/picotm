@@ -396,7 +396,8 @@ restart_tx_from_error(struct picotm_tx* tx, const struct picotm_error* error)
         break;
     case PICOTM_ERROR_CODE:     /* fall through */
     case PICOTM_ERRNO:          /* fall through */
-    case PICOTM_KERN_RETURN_T:
+    case PICOTM_KERN_RETURN_T:  /* fall through */
+    case PICOTM_SIGINFO_T:
         restart_tx(tx, PICOTM_MODE_RECOVERY);
         break;
     }
@@ -506,6 +507,15 @@ picotm_error_as_kern_return_t()
 }
 #endif
 
+#if defined(PICOTM_HAVE_TYPE_SIGINFO_T) && PICOTM_HAVE_TYPE_SIGINFO_T
+PICOTM_EXPORT
+const siginfo_t*
+picotm_error_as_siginfo_t()
+{
+    return &get_non_null_error()->value.siginfo_t_info;
+}
+#endif
+
 /*
  * Module interface
  */
@@ -561,6 +571,18 @@ void
 picotm_recover_from_kern_return_t(kern_return_t value)
 {
     picotm_error_set_kern_return_t(get_non_null_error(), value);
+
+    /* Nothing we can do on errors; let's try to recover. */
+    restart_tx(get_non_null_tx(), PICOTM_MODE_RECOVERY);
+}
+#endif
+
+#if defined(PICOTM_HAVE_TYPE_SIGINFO_T) && PICOTM_HAVE_TYPE_SIGINFO_T
+PICOTM_EXPORT
+void
+picotm_recover_from_siginfo_t(const siginfo_t* info)
+{
+    picotm_error_set_siginfo_t(get_non_null_error(), info);
 
     /* Nothing we can do on errors; let's try to recover. */
     restart_tx(get_non_null_tx(), PICOTM_MODE_RECOVERY);

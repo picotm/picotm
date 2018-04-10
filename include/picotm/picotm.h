@@ -30,6 +30,9 @@
 #include <mach/mach.h>
 #endif
 #include <setjmp.h>
+#if defined(PICOTM_HAVE_SIGNAL_H) && PICOTM_HAVE_SIGNAL_H
+#include <signal.h>
+#endif
 #include "compiler.h"
 #include "picotm-error.h"
 
@@ -240,6 +243,21 @@ picotm_error_as_errno(void);
  */
 kern_return_t
 picotm_error_as_kern_return_t(void);
+#endif
+
+#if defined(PICOTM_HAVE_TYPE_SIGINFO_T) && \
+            PICOTM_HAVE_TYPE_SIGINFO_T || \
+    defined(__PICOTM_DOXYGEN)
+/**
+ * Returns the current error's siginfo_t value.
+ *
+ * \attention This function is only valid during the transaction's recovery
+ *            phase, and if ::picotm_error_status() is ::PICOTM_SIGINFO_T.
+ *
+ * \returns The current siginfo_t value.
+ */
+const siginfo_t*
+picotm_error_as_siginfo_t(void);
 #endif
 
 PICOTM_END_DECLS
