@@ -25,7 +25,7 @@
 
 #pragma once
 
-#include <setjmp.h>
+#include "picotm/picotm.h" /* for __picotm_jmp_buf */
 #include <stdbool.h>
 #include "picotm_module.h"
 #include "picotm_lock_owner.h"
@@ -49,7 +49,7 @@ enum picotm_tx_mode {
 };
 
 struct picotm_tx {
-    jmp_buf*            env;
+    __picotm_jmp_buf*   env;
     struct picotm_log   log;
     enum picotm_tx_mode mode;
     unsigned long       nretries;
@@ -86,7 +86,8 @@ picotm_tx_append_event(struct picotm_tx* self, unsigned long module,
 
 void
 picotm_tx_begin(struct picotm_tx* self, enum picotm_tx_mode mode,
-                bool is_retry, jmp_buf* env, struct picotm_error* error);
+                bool is_retry, __picotm_jmp_buf* env,
+                struct picotm_error* error);
 
 void
 picotm_tx_commit(struct picotm_tx* self, struct picotm_error* error);

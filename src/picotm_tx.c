@@ -183,8 +183,9 @@ log_is_empty(struct picotm_tx* self)
 }
 
 void
-picotm_tx_begin(struct picotm_tx* self, enum picotm_tx_mode mode, bool is_retry,
-                jmp_buf* env, struct picotm_error* error)
+picotm_tx_begin(struct picotm_tx* self, enum picotm_tx_mode mode,
+                bool is_retry, __picotm_jmp_buf* env,
+                struct picotm_error* error)
 {
     assert(self);
     assert(log_is_empty(self));

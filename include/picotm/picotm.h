@@ -91,12 +91,28 @@ enum __picotm_mode {
     PICOTM_MODE_RESTART
 };
 
+#if defined(PICOTM_HAVE_SIGNAL_H) && PICOTM_HAVE_SIGNAL_H ||    \
+    defined(__PICOTM_DOXYGEN)
+/* The type of the jump-buffer variable.
+ * \warning This is an internal interface. Don't use it in application code.
+ */
+#define __picotm_jmp_buf        sigjmp_buf
+/* Sets a non-local goto target. For systems with Unix signals, the
+ * macro saves the signal mask.
+ * \warning This is an internal interface. Don't use it in application code.
+ */
+#define __picotm_setjmp(env_)   (enum __picotm_mode)sigsetjmp(env_, 1)
+#else
+#define __picotm_jmp_buf        jmp_buf
+#define __picotm_setjmp(env_)   (enum __picotm_mode)setjmp(env_)
+#endif
+
 PICOTM_NOTHROW
 /* Begins or restarts a transaction, or handles an error.
  * \warning This is an internal interface. Don't use it in application code.
  */
 _Bool
-__picotm_begin(enum __picotm_mode mode, jmp_buf* env);
+__picotm_begin(enum __picotm_mode mode, __picotm_jmp_buf* env);
 
 /**
  * Starts a new transaction.
@@ -106,10 +122,10 @@ __picotm_begin(enum __picotm_mode mode, jmp_buf* env);
  * execution phase. If the transaction aborts, it will restart from where
  * the ::picotm_begin had been invoked.
  */
-#define picotm_begin                                                    \
-    {                                                                   \
-        jmp_buf __env;                                                  \
-        if (__picotm_begin((enum __picotm_mode)setjmp(__env), &__env))  \
+#define picotm_begin                                            \
+    {                                                           \
+        __picotm_jmp_buf __env;                                          \
+        if (__picotm_begin(__picotm_setjmp(__env), &__env))     \
         {
 
 PICOTM_NOTHROW
