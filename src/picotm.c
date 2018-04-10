@@ -303,7 +303,7 @@ picotm_lock_owner_get_lock_manager(struct picotm_lock_owner* lo)
 
 PICOTM_EXPORT
 _Bool
-__picotm_begin(enum __picotm_mode mode, jmp_buf* env)
+__picotm_begin(enum __picotm_mode mode, __picotm_jmp_buf* env)
 {
     static const unsigned char tx_mode[] = {
         TX_MODE_REVOCABLE,
@@ -374,7 +374,11 @@ restart_tx(struct picotm_tx* tx, enum __picotm_mode mode)
 
     /* Restarting the transaction here transfers control
      * to __picotm_begin(). */
+#if defined(PICOTM_HAVE_SIGNAL_H) && PICOTM_HAVE_SIGNAL_H
+    siglongjmp(*(tx->env), (int)mode);
+#else
     longjmp(*(tx->env), (int)mode);
+#endif
 }
 
 static void
