@@ -308,29 +308,62 @@ __picotm_begin(enum __picotm_mode mode, jmp_buf* env)
     static const unsigned char tx_mode[] = {
         TX_MODE_REVOCABLE,
         TX_MODE_REVOCABLE,
-        TX_MODE_IRREVOCABLE
+        TX_MODE_IRREVOCABLE,
+        TX_MODE_REVOCABLE,
+        TX_MODE_REVOCABLE
     };
 
-    if (mode == PICOTM_MODE_RECOVERY) {
+    switch (mode) {
+    case PICOTM_MODE_RECOVERY: {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        struct picotm_tx* tx = get_tx(true, &error);
+        if (picotm_error_is_set(&error)) {
+            return false; /* Enter recovery mode. */
+        }
+        if (!picotm_error_is_non_recoverable()) {
+            picotm_tx_rollback(tx, &error);
+        }
         /* We're recovering from an error. Returning 'false'
          * will invoke the transaction's recovery code. */
         return false;
     }
+    case PICOTM_MODE_IRREVOCABLE:
+        /* fall through */
+    case PICOTM_MODE_RETRY: {
+            /* We (re-)start a transaction. Clear the old error state. */
+            struct picotm_error* error = get_non_null_error();
+            memset(error, 0, sizeof(*error));
 
-    /* We (re-)start a transaction. Clear the old error state. */
-    struct picotm_error* error = get_non_null_error();
-    memset(error, 0, sizeof(*error));
+            struct picotm_tx* tx = get_tx(false, error);
+            if (picotm_error_is_set(error)) {
+                return false; /* Enter recovery mode. */
+            }
+            assert(tx);
+            picotm_tx_rollback(tx, error);
+            if (picotm_error_is_set(error)) {
+                return false; /* Enter recovery mode. */
+            }
+        }
+        /* fall through */
+    case PICOTM_MODE_RESTART:
+        /* fall through */
+    case PICOTM_MODE_START: {
 
-    struct picotm_tx* tx = get_tx(true, error);
-    if (picotm_error_is_set(error)) {
-        return false; /* Enter recovery mode. */
+            /* We (re-)start a transaction. Clear the old error state. */
+            struct picotm_error* error = get_non_null_error();
+            memset(error, 0, sizeof(*error));
+
+            struct picotm_tx* tx = get_tx(true, error);
+            if (picotm_error_is_set(error)) {
+                return false; /* Enter recovery mode. */
+            }
+
+            picotm_tx_begin(tx, tx_mode[mode], mode != PICOTM_MODE_START, env, error);
+            if (picotm_error_is_set(error)) {
+                return false; /* Enter recovery mode. */
+            }
+        }
     }
-
-    picotm_tx_begin(tx, tx_mode[mode], mode == PICOTM_MODE_RETRY, env, error);
-    if (picotm_error_is_set(error)) {
-        return false; /* Enter recovery mode. */
-    }
-
     return true;
 }
 
@@ -338,34 +371,6 @@ static void
 restart_tx(struct picotm_tx* tx, enum __picotm_mode mode)
 {
     assert(tx);
-
-    switch (mode) {
-    case PICOTM_MODE_RESTART:
-        /* no roll-back for restarts fro recovery mode */
-        mode = PICOTM_MODE_RETRY;
-        break;
-    default: {
-            struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-            picotm_tx_rollback(tx, &error);
-            if (picotm_error_is_set(&error)) {
-                switch (error.status) {
-                case PICOTM_CONFLICTING:
-                    /* Should be avoided, but no problem per se. */
-                    break;
-                case PICOTM_REVOCABLE:
-                    /* This should not happen. */
-                    mode = PICOTM_MODE_IRREVOCABLE;
-                    break;
-                case PICOTM_ERROR_CODE:
-                case PICOTM_ERRNO:
-                case PICOTM_KERN_RETURN_T:
-                    /* If we were restarting before, we're now recovering. */
-                    mode = PICOTM_MODE_RECOVERY;
-                    break;
-                }
-            }
-        }
-    }
 
     /* Restarting the transaction here transfers control
      * to __picotm_begin(). */
