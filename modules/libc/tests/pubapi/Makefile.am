@@ -30,19 +30,25 @@ PUBAPI_TESTS = allocator-pubapi-t1.test \
                cwd-pubapi-t4.test \
                fildes-pubapi-t1.test \
                fildes-pubapi-t1-valgrind.test \
-               fildes-pubapi-t4.test
+               fildes-pubapi-t4.test \
+               signal-pubapi-t1.test \
+               signal-pubapi-t1-valgrind.test \
+               signal-pubapi-t4.test
 
 TESTS =
 if ENABLE_MODULE_LIBC
 TESTS += $(PUBAPI_TESTS)
 endif
 
-EXTRA_DIST = $(PUBAPI_TESTS)
+EXTRA_DIST = $(PUBAPI_TESTS) \
+             signal_pubapi.supp
 
 # Prepare environment for test scripts.
 AM_TESTS_ENVIRONMENT = \
     PATH="$(top_srcdir)/tests/env:${PATH}"; \
-    . $(top_builddir)/tests/env/tests-env.sh;
+    . $(top_builddir)/tests/env/tests-env.sh; \
+    export SRCDIR="$(srcdir)"; \
+    export BUILDDIR="$(builddir)";
 
 TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
                   $(top_srcdir)/build-aux/tap-driver.sh
@@ -50,7 +56,8 @@ TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
 if ENABLE_MODULE_LIBC
 check_PROGRAMS = allocator-pubapi \
                  cwd-pubapi \
-                 fildes-pubapi
+                 fildes-pubapi \
+                 signal-pubapi
 endif
 
 allocator_pubapi_SOURCES = allocator_pubapi.c
@@ -58,6 +65,8 @@ allocator_pubapi_SOURCES = allocator_pubapi.c
 cwd_pubapi_SOURCES = cwd_pubapi.c
 
 fildes_pubapi_SOURCES = fildes_pubapi.c
+
+signal_pubapi_SOURCES = signal_pubapi.c
 
 AM_LDFLAGS = -static
 
