@@ -32,7 +32,6 @@ report_errno(int errno_code)
 {
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
     picotm_error_set_errno(&error, errno_code);
-    picotm_error_mark_as_non_recoverable(&error);
     picotm_recover_from_error(&error);
 }
 
