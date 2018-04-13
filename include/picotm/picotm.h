@@ -53,11 +53,11 @@ PICOTM_BEGIN_DECLS
  * Marks a non-transactional variable in a function.
  *
  * When restarting a transaction, picotm uses non-local goto, based on
- * the `sigjmp()` and `longjmp()` functions provided by the C Standard
+ * the `setjmp()` and `longjmp()` functions provided by the C Standard
  * Library. These functions save and restore the thread's instruction
  * and stack pointer, but don't save any variables. This can result in
  * program errors if a variable is held in a register that changes its
- * value between invocations of `sigjmp()` and `longjmp()`. The call
+ * value between invocations of `setjmp()` and `longjmp()`. The call
  * to `longjmp()` will not restore the variable's original value.
  *
  * To avoid this problem, mark local, non-transactional variables with
