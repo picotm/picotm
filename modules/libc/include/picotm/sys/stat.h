@@ -42,6 +42,7 @@ PICOTM_BEGIN_DECLS
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [chmod()][posix::chmod].
  *
  * [posix::chmod]:
@@ -55,6 +56,7 @@ chmod_tx(const char* path, mode_t mode);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [fchmod()][posix::fchmod].
  *
  * [posix::fchmod]:
@@ -68,6 +70,7 @@ fchmod_tx(int fildes, mode_t mode);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [fstat()][posix::fstat].
  *
  * [posix::fstat]:
@@ -81,6 +84,7 @@ fstat_tx(int fildes, struct stat* buf);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [lstat()][posix::lstat].
  *
  * [posix::lstat]:
@@ -94,6 +98,7 @@ lstat_tx(const char* path, struct stat* buf);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [mkdir()][posix::mkdir].
  *
  * [posix::mkdir]:
@@ -107,6 +112,7 @@ mkdir_tx(const char* path, mode_t mode);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [mkfifo()][posix::mkfifo].
  *
  * [posix::mkfifo]:
@@ -123,6 +129,7 @@ mkfifo_tx(const char* path, mode_t mode);
     defined(_XOPEN_SOURCE) && _XOPEN_SOURCE >= 500 || \
     defined(__PICOTM_DOXYGEN)
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [mknod()][posix::mknod].
  *
  * [posix::mknod]:
@@ -138,6 +145,7 @@ mknod_tx(const char* path, mode_t mode, dev_t dev);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [stat()][posix::stat].
  *
  * [posix::stat]:

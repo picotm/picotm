@@ -42,6 +42,7 @@ PICOTM_BEGIN_DECLS
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Returns the address of 'errno'.
  * \warning This is an internal interface. Don't use it in application code.
  */
@@ -49,6 +50,7 @@ int*
 __errno_location_tx(void);
 
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [errno][posix::errno].
  *
  * [posix::errno]:

@@ -41,24 +41,33 @@ PICOTM_BEGIN_DECLS
 
 #if defined(PICOTM_LIBC_HAVE_TYPE_DIV_T) && PICOTM_LIBC_HAVE_TYPE_DIV_T || \
     defined(__PICOTM_DOXYGEN)
+/** \addtogroup group_libc
+ * \{ */
 PICOTM_TM_LOAD_TX(div_t, div_t);
 PICOTM_TM_STORE_TX(div_t, div_t);
 PICOTM_TM_PRIVATIZE_TX(div_t, div_t);
+/** \} */
 #endif
 
 #if defined(PICOTM_LIBC_HAVE_TYPE_LDIV_T) && PICOTM_LIBC_HAVE_TYPE_LDIV_T || \
     defined(__PICOTM_DOXYGEN)
+/** \addtogroup group_libc
+ * \{ */
 PICOTM_TM_LOAD_TX(ldiv_t, ldiv_t);
 PICOTM_TM_STORE_TX(ldiv_t, ldiv_t);
 PICOTM_TM_PRIVATIZE_TX(ldiv_t, ldiv_t);
+/** \} */
 #endif
 
 #if defined(PICOTM_LIBC_HAVE_TYPE_LLDIV_T) && \
             PICOTM_LIBC_HAVE_TYPE_LLDIV_T || \
     defined(__PICOTM_DOXYGEN)
+/** \addtogroup group_libc
+ * \{ */
 PICOTM_TM_LOAD_TX(lldiv_t, lldiv_t);
 PICOTM_TM_STORE_TX(lldiv_t, lldiv_t);
 PICOTM_TM_PRIVATIZE_TX(lldiv_t, lldiv_t);
+/** \} */
 #endif
 
 #if defined(PICOTM_LIBC_HAVE_TYPE_SIZE_T) && \
@@ -67,17 +76,26 @@ PICOTM_TM_PRIVATIZE_TX(lldiv_t, lldiv_t);
 #if !defined(__PICOTM_LOAD_SIZE_T_TX) || !__PICOTM_LOAD_SIZE_T_TX
 #undef __PICOTM_LOAD_SIZE_T_TX
 #define __PICOTM_LOAD_SIZE_T_TX     (1)
+/** \addtogroup group_libc
+ * \{ */
 PICOTM_TM_LOAD_TX(size_t, size_t); /* as defined in <picotm/stddef.h> */
+/** \} */
 #endif
 #if !defined(__PICOTM_STORE_SIZE_T_TX) || !__PICOTM_STORE_SIZE_T_TX
 #undef __PICOTM_STORE_SIZE_T_TX
 #define __PICOTM_STORE_SIZE_T_TX    (1)
+/** \addtogroup group_libc
+ * \{ */
 PICOTM_TM_STORE_TX(size_t, size_t); /* as defined in <picotm/stddef.h> */
+/** \} */
 #endif
 #if !defined(__PICOTM_PRIVATIZE_SIZE_T_TX) || !__PICOTM_PRIVATIZE_SIZE_T_TX
 #undef __PICOTM_PRIVATIZE_SIZE_T_TX
 #define __PICOTM_PRIVATIZE_SIZE_T_TX    (1)
+/** \addtogroup group_libc
+ * \{ */
 PICOTM_TM_PRIVATIZE_TX(size_t, size_t); /* as defined in <picotm/stddef.h> */
+/** \} */
 #endif
 #endif
 
@@ -87,18 +105,27 @@ PICOTM_TM_PRIVATIZE_TX(size_t, size_t); /* as defined in <picotm/stddef.h> */
 #if !defined(__PICOTM_LOAD_WCHAR_T_TX) || !__PICOTM_LOAD_WCHAR_T_TX
 #undef __PICOTM_LOAD_WCHAR_T_TX
 #define __PICOTM_LOAD_WCHAR_T_TX    (1)
+/** \addtogroup group_libc
+ * \{ */
 PICOTM_TM_LOAD_TX(wchar_t, wchar_t); /* as defined in <picotm/stddef.h> */
+/** \} */
 #endif
 #if !defined(__PICOTM_STORE_WCHAR_T_TX) || !__PICOTM_STORE_WCHAR_T_TX
 #undef __PICOTM_STORE_WCHAR_T_TX
 #define __PICOTM_STORE_WCHAR_T_TX   (1)
+/** \addtogroup group_libc
+ * \{ */
 PICOTM_TM_STORE_TX(wchar_t, wchar_t); /* as defined in <picotm/stddef.h> */
+/** \} */
 #endif
 #if !defined(__PICOTM_PRIVATIZE_WCHAR_T_TX) || \
     !__PICOTM_PRIVATIZE_WCHAR_T_TX
 #undef __PICOTM_PRIVATIZE_WCHAR_T_TX
 #define __PICOTM_PRIVATIZE_WCHAR_T_TX   (1)
+/** \addtogroup group_libc
+ * \{ */
 PICOTM_TM_PRIVATIZE_TX(wchar_t, wchar_t); /* as defined in <picotm/stddef.h> */
+/** \} */
 #endif
 #endif
 
@@ -107,6 +134,7 @@ PICOTM_TM_PRIVATIZE_TX(wchar_t, wchar_t); /* as defined in <picotm/stddef.h> */
 PICOTM_NOTHROW
 PICOTM_NORETURN
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [_Exit()][posix::_Exit].
  *
  * \bug Calling _Exit() simply terminates the process. It probably should not
@@ -124,6 +152,7 @@ _Exit_tx(int status);
 PICOTM_NOTHROW
 PICOTM_NORETURN
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [abort()][posix::abort].
  *
  * \bug Calling abort() simply terminates the process. It probably should not
@@ -140,6 +169,7 @@ abort_tx(void);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [calloc()][posix::calloc].
  *
  * [posix::calloc]:
@@ -154,6 +184,7 @@ calloc_tx(size_t nmemb, size_t size);
 PICOTM_NOTHROW
 PICOTM_NORETURN
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [exit()][posix::exit].
  *
  * \bug Calling exit() simply terminates the process. It probably should not
@@ -170,6 +201,7 @@ exit_tx(int status);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [free()][posix::free].
  *
  * [posix::free]:
@@ -183,6 +215,7 @@ free_tx(void* ptr);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [malloc()][posix::malloc].
  *
  * [posix::malloc]:
@@ -197,6 +230,7 @@ malloc_tx(size_t size);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [mkdtemp()][posix::mkdtemp].
  *
  * [posix::mkdtemp]:
@@ -210,6 +244,7 @@ mkdtemp_tx(char* template);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [mkstemp()][posix::mkstemp].
  *
  * [posix::mkstemp]:
@@ -224,6 +259,7 @@ mkstemp_tx(char* template);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [posix_memalign()][posix::posix_memalign].
  *
  * [posix::posix_memalign]:
@@ -237,6 +273,7 @@ posix_memalign_tx(void** memptr, size_t alignment, size_t size);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [qsort()][posix::qsort].
  *
  * [posix::qsort]:
@@ -251,6 +288,7 @@ qsort_tx(void* base, size_t nel, size_t width,
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [rand_r()][posix::rand_r].
  *
  * [posix::rand_r]:
@@ -264,6 +302,7 @@ rand_r_tx(unsigned int* seed);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [realloc()][posix::realloc].
  *
  * [posix::realloc]:

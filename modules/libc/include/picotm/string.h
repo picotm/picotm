@@ -46,6 +46,7 @@ PICOTM_BEGIN_DECLS
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [memccpy()][posix::memccpy].
  *
  * [posix::memccpy]:
@@ -59,6 +60,7 @@ memccpy_tx(void* restrict dest, const void* restrict src, int c, size_t n);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [memchr()][posix::memchr].
  *
  * [posix::memchr]:
@@ -72,6 +74,7 @@ memchr_tx(const void* s, int c, size_t n);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [memcmp()][posix::memcmp].
  *
  * [posix::memcmp]:
@@ -85,6 +88,7 @@ memcmp_tx(const void* s1, const void* s2, size_t n);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [memcpy()][posix::memcpy].
  *
  * [posix::memcpy]:
@@ -98,6 +102,7 @@ memcpy_tx(void* restrict dest, const void* restrict src, size_t n);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [memmove()][posix::memmove].
  *
  * [posix::memmove]:
@@ -111,6 +116,7 @@ memmove_tx(void* dest, const void* src, size_t n);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [memset()][posix::memset].
  *
  * [posix::memset]:
@@ -124,6 +130,7 @@ memset_tx(void* s, int c, size_t n);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [memrchr()][posix::memrchr].
  *
  * [posix::memrchr]:
@@ -137,6 +144,7 @@ memrchr_tx(const void* s, int c, size_t n);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [rawmemchr()][gnu::rawmemchr].
  *
  * [gnu::rawmemchr]:
@@ -154,6 +162,7 @@ rawmemchr_tx(const void* s, int c);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [stpcpy()][posix::stpcpy].
  *
  * [posix::stpcpy]:
@@ -167,6 +176,7 @@ stpcpy_tx(char* restrict dest, const char* restrict src);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [stpncpy()][posix::stpncpy].
  *
  * [posix::stpncpy]:
@@ -180,6 +190,7 @@ stpncpy_tx(char* restrict dest, const char* restrict src, size_t n);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [strcat()][posix::strcat].
  *
  * [posix::strcat]:
@@ -193,6 +204,7 @@ strcat_tx(char* restrict dest, const char* restrict src);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [strchr()][posix::strchr_tx].
  *
  * [posix::strchr]:
@@ -206,6 +218,7 @@ strchr_tx(const char* s, int c);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [strcmp()][posix::strcmp].
  *
  * [posix::strcmp]:
@@ -219,6 +232,7 @@ strcmp_tx(const char* s1, const char* s2);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [strcoll_l()][posix::strcoll_l].
  *
  * [posix::strcoll_l]:
@@ -232,6 +246,7 @@ strcoll_l_tx(const char* s1, const char* s2, locale_t locale);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [strcpy()][posix::strcpy].
  *
  * [posix::strcpy]:
@@ -245,6 +260,7 @@ strcpy_tx(char* restrict dest, const char* restrict src);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [strcspn()][posix::strcspn].
  *
  * [posix::strcspn]:
@@ -258,6 +274,7 @@ strcspn_tx(const char* s, const char* reject);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [strdup()][posix::strdup].
  *
  * [posix::strdup]:
@@ -271,6 +288,7 @@ strdup_tx(const char* s);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [strerror_r()][gnu::strerror_r].
  *
  * \warning This is an internal interface. Call strerror_r_tx() instead.
@@ -283,6 +301,7 @@ __strerror_r_gnu_tx(int errnum, char* buf, size_t buflen);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [strerror_r()][posix::strerror_r].
  *
  * \warning This is an internal interface. Call strerror_r_tx() instead.
@@ -306,6 +325,7 @@ __strerror_r_posix_tx(int errnum, char* buf, size_t buflen);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [strlen()][posix::strlen].
  *
  * [posix::strlen]:
@@ -319,6 +339,7 @@ strlen_tx(const char* s);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [strncat()][posix::strncat].
  *
  * [posix::strncat]:
@@ -332,6 +353,7 @@ strncat_tx(char* restrict dest, const char* restrict src, size_t n);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [strncmp()][posix::strncmp].
  *
  * [posix::strncmp]:
@@ -345,6 +367,7 @@ strncmp_tx(const char* s1, const char* s2, size_t n);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [strncpy()][posix::strncpy].
  *
  * [posix::strncpy]:
@@ -358,6 +381,7 @@ strncpy_tx(char* restrict dest, const char* restrict src, size_t n);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [strndup()][posix::strndup].
  *
  * [posix::strndup]:
@@ -371,6 +395,7 @@ strndup_tx(const char* s, size_t n);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [strnlen()][posix::strnlen].
  *
  * [posix::strnlen]:
@@ -384,6 +409,7 @@ strnlen_tx(const char* s, size_t maxlen);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [strpbrk()][posix::strpbrk].
  *
  * [posix::strpbrk]:
@@ -397,6 +423,7 @@ strpbrk_tx(const char* s, const char* accept);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [strrchr()][posix::strrchr].
  *
  * [posix::strrchr]:
@@ -410,6 +437,7 @@ strrchr_tx(const char* s, int c);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [strspn()][posix::strspn].
  *
  * [posix::strspn]:
@@ -423,6 +451,7 @@ strspn_tx(const char* s, const char* accept);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [strstr()][posix::strstr].
  *
  * [posix::strstr]:
@@ -436,6 +465,7 @@ strstr_tx(const char* haystack, const char* needle);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [strtok_r()][posix::strtok_r].
  *
  * [posix::strtok_r]:

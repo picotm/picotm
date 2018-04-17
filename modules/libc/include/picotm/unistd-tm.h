@@ -42,6 +42,7 @@ PICOTM_BEGIN_DECLS
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of chdir_tx() that operates on transactional memory.
  */
 int
@@ -52,6 +53,7 @@ chdir_tm(const char* path);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of getcwd_tx() that operates on transactional memory.
  */
 char*
@@ -62,6 +64,7 @@ getcwd_tm(char* buf, size_t size);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of link_tx() that operates on transactional memory.
  */
 int
@@ -73,6 +76,7 @@ link_tm(const char* path1, const char* path2);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of mkdtemp_tx() that operates on transactional memory on
  * Darwin systems.
  */
@@ -84,6 +88,7 @@ mkdtemp_tm(char* template);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of pipe_tx() that operates on transactional memory.
  */
 int
@@ -94,6 +99,7 @@ pipe_tm(int fildes[2]);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of pread_tx() that operates on transactional memory.
  */
 ssize_t
@@ -104,6 +110,7 @@ pread_tm(int fildes, void* buf, size_t nbyte, off_t offset);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of pwrite_tx() that operates on transactional memory.
  */
 ssize_t
@@ -114,6 +121,7 @@ pwrite_tm(int fildes, const void* buf, size_t nbyte, off_t offset);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of read_tx() that operates on transactional memory.
  */
 ssize_t
@@ -124,6 +132,7 @@ read_tm(int fildes, void* buf, size_t nbyte);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of unlink_tx() that operates on transactional memory.
  */
 int
@@ -134,6 +143,7 @@ unlink_tm(const char* path);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of write_tx() that operates on transactional memory.
  */
 ssize_t

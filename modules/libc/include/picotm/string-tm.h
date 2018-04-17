@@ -42,6 +42,7 @@ PICOTM_BEGIN_DECLS
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of memccpy_tx() that operates on transactional memory.
  */
 void*
@@ -52,6 +53,7 @@ memccpy_tm(void* restrict dest, const void* restrict src, int c, size_t n);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of memcchr_tx() that operates on transactional memory.
  */
 void*
@@ -62,6 +64,7 @@ memchr_tm(const void* s, int c, size_t n);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of memcmp_tx() that operates on transactional memory.
  */
 int
@@ -72,6 +75,7 @@ memcmp_tm(const void* s1, const void* s2, size_t n);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of memcpy_tx() that operates on transactional memory.
  */
 void*
@@ -82,6 +86,7 @@ memcpy_tm(void* restrict dest, const void* restrict src, size_t n);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of memmove_tx() that operates on transactional memory.
  */
 void*
@@ -92,6 +97,7 @@ memmove_tm(void* dest, const void* src, size_t n);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of memset_tx() that operates on transactional memory.
  */
 void*
@@ -102,6 +108,7 @@ memset_tm(void* s, int c, size_t n);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of memrchr_tx() that operates on transactional memory.
  */
 void*
@@ -112,6 +119,7 @@ memrchr_tm(const void* s, int c, size_t n);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of rawmemchr_tx() that operates on transactional memory.
  */
 void*
@@ -122,6 +130,7 @@ rawmemchr_tm(const void* s, int c);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of stpcpy_tx() that operates on transactional memory.
  */
 char*
@@ -132,6 +141,7 @@ stpcpy_tm(char* restrict dest, const char* restrict src);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of stpncpy_tx() that operates on transactional memory.
  */
 char*
@@ -142,6 +152,7 @@ stpncpy_tm(char* restrict dest, const char* restrict src, size_t n);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of strcat_tx() that operates on transactional memory.
  */
 char*
@@ -152,6 +163,7 @@ strcat_tm(char* restrict dest, const char* restrict src);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of strchr_tx() that operates on transactional memory.
  */
 char*
@@ -162,6 +174,7 @@ strchr_tm(const char* s, int c);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of strcmp_tx() that operates on transactional memory.
  */
 int
@@ -172,6 +185,7 @@ strcmp_tm(const char* s1, const char* s2);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of strcoll_l_tx() that operates on transactional memory.
  */
 int
@@ -182,6 +196,7 @@ strcoll_l_tm(const char* s1, const char* s2, locale_t locale);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of strcpy_tx() that operates on transactional memory.
  */
 char*
@@ -192,6 +207,7 @@ strcpy_tm(char* restrict dest, const char* restrict src);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of strcspn_tx() that operates on transactional memory.
  */
 size_t
@@ -202,6 +218,7 @@ strcspn_tm(const char* s, const char* reject);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of strdup_tx() that operates on transactional memory.
  */
 char*
@@ -212,6 +229,7 @@ strdup_tm(const char* s);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of __strerror_r_gnu_tx() that operates on transactional memory.
  *
  * \warning This is an internal interface. Call strerror_r_tm() instead.
@@ -221,6 +239,7 @@ __strerror_r_gnu_tm(int errnum, char* buf, size_t buflen);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of __strerror_r_posix_tx() that operates on transactional memory.
  *
  * \warning This is an internal interface. Call strerror_r_tm() instead.
@@ -241,6 +260,7 @@ __strerror_r_posix_tm(int errnum, char* buf, size_t buflen);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of strlen_tx() that operates on transactional memory.
  */
 size_t
@@ -251,6 +271,7 @@ strlen_tm(const char* s);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of strncat_tx() that operates on transactional memory.
  */
 char*
@@ -261,6 +282,7 @@ strncat_tm(char* restrict dest, const char* restrict src, size_t n);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of strncmp_tx() that operates on transactional memory.
  */
 int
@@ -271,6 +293,7 @@ strncmp_tm(const char* s1, const char* s2, size_t n);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of strncpy_tx() that operates on transactional memory.
  */
 char*
@@ -281,6 +304,7 @@ strncpy_tm(char* restrict dest, const char* restrict src, size_t n);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of strndup_tx() that operates on transactional memory.
  */
 char*
@@ -291,6 +315,7 @@ strndup_tm(const char* s, size_t n);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of strnlen_tx() that operates on transactional memory.
  */
 size_t
@@ -301,6 +326,7 @@ strnlen_tm(const char* s, size_t maxlen);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of strpbrk_tx() that operates on transactional memory.
  */
 char*
@@ -311,6 +337,7 @@ strpbrk_tm(const char* s, const char* accept);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of strrchr_tx() that operates on transactional memory.
  */
 char*
@@ -321,6 +348,7 @@ strrchr_tm(const char* s, int c);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of strspn_tx() that operates on transactional memory.
  */
 size_t
@@ -331,6 +359,7 @@ strspn_tm(const char* s, const char* accept);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of strstr_tx() that operates on transactional memory.
  */
 char*
@@ -341,6 +370,7 @@ strstr_tm(const char* haystack, const char* needle);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of strtok_r_tx() that operates on transactional memory.
  */
 char*

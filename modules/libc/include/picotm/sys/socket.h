@@ -42,6 +42,7 @@ PICOTM_BEGIN_DECLS
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [accept()][posix::accept].
  *
  * [posix::accept]:
@@ -55,6 +56,7 @@ accept_tx(int socket, struct sockaddr* address, socklen_t* address_len);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [bind()][posix::bind].
  *
  * [posix::bind]:
@@ -68,6 +70,7 @@ bind_tx(int socket, const struct sockaddr* address, socklen_t address_len);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [connect()][posix::connect].
  *
  * [posix::connect]:
@@ -81,6 +84,7 @@ connect_tx(int socket, const struct sockaddr* address, socklen_t address_len);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [listen()][posix::listen].
  *
  * [posix::listen]:
@@ -94,6 +98,7 @@ listen_tx(int socket, int backlog);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [recv()][posix::recv].
  *
  * [posix::recv]:
@@ -107,6 +112,7 @@ recv_tx(int socket, void* buffer, size_t length, int flags);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [send()][posix::send].
  *
  * [posix::send]:
@@ -120,6 +126,7 @@ send_tx(int socket, const void* buffer, size_t length, int flags);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [shutdown()][posix::shutdown].
  *
  * [posix::shutdown]:
@@ -133,6 +140,7 @@ shutdown_tx(int socket, int how);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [socket()][posix::socket].
  *
  * [posix::socket]:

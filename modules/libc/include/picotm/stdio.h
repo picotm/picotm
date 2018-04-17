@@ -43,6 +43,7 @@ PICOTM_BEGIN_DECLS
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [snprintf()][posix::snprintf].
  *
  * [posix::snprintf]:
@@ -56,6 +57,7 @@ snprintf_tx(char* restrict s, size_t n, const char* restrict format, ...);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [sscanf()][posix::sscanf].
  *
  * [posix::sscanf]:
@@ -69,6 +71,7 @@ sscanf_tx(const char* restrict s, const char* restrict format, ...);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [vsnprintf()][posix::vsnprintf].
  *
  * [posix::vsnprintf]:
@@ -83,6 +86,7 @@ vsnprintf_tx(char* restrict s, size_t n, const char* restrict format,
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [vsscanf()][posix::vsscanf].
  *
  * [posix::vsscanf]:

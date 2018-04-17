@@ -42,9 +42,12 @@ PICOTM_BEGIN_DECLS
 #if defined(PICOTM_LIBC_HAVE_TYPE_BOOL) && \
             PICOTM_LIBC_HAVE_TYPE_BOOL || \
     defined(__PICOTM_DOXYGEN)
+/** \addtogroup group_libc
+ * \{ */
 PICOTM_TM_LOAD_TX(bool, bool)
 PICOTM_TM_STORE_TX(bool, bool)
 PICOTM_TM_PRIVATIZE_TX(bool, bool)
+/** \} */
 #endif
 
 PICOTM_END_DECLS
