@@ -44,6 +44,7 @@ PICOTM_BEGIN_DECLS
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * Saves the floating-point environment.
  */
 void
@@ -51,6 +52,7 @@ picotm_libm_save_fenv(void);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * Saves the floating-point status flags.
  */
 void
