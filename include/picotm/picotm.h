@@ -94,7 +94,7 @@ enum __picotm_mode {
     PICOTM_MODE_RESTART
 };
 
-#if defined(PICOTM_HAVE_SIGNAL_H) && PICOTM_HAVE_SIGNAL_H ||    \
+#if defined(PICOTM_HAVE_TYPE_SIGJMP_BUF) && PICOTM_HAVE_TYPE_SIGJMP_BUF ||  \
     defined(__PICOTM_DOXYGEN)
 /* The type of the jump-buffer variable.
  * \warning This is an internal interface. Don't use it in application code.
@@ -105,7 +105,7 @@ enum __picotm_mode {
  * \warning This is an internal interface. Don't use it in application code.
  */
 #define __picotm_setjmp(env_)   (enum __picotm_mode)sigsetjmp(env_, 1)
-#else
+#else /* systems without Unix signals */
 #define __picotm_jmp_buf        jmp_buf
 #define __picotm_setjmp(env_)   (enum __picotm_mode)setjmp(env_)
 #endif

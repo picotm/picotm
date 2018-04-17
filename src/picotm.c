@@ -374,7 +374,7 @@ restart_tx(struct picotm_tx* tx, enum __picotm_mode mode)
 
     /* Restarting the transaction here transfers control
      * to __picotm_begin(). */
-#if defined(PICOTM_HAVE_SIGNAL_H) && PICOTM_HAVE_SIGNAL_H
+#if defined(PICOTM_HAVE_TYPE_SIGJMP_BUF) && PICOTM_HAVE_TYPE_SIGJMP_BUF
     siglongjmp(*(tx->env), (int)mode);
 #else
     longjmp(*(tx->env), (int)mode);
