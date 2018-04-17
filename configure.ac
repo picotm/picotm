@@ -138,6 +138,16 @@ AC_CHECK_HEADERS([signal.h],
                                  [Define to 1 if the system has the type 'siginfo_t'.])],,
                                  [[@%:@include <signal.h>]])])
 
+AC_CHECK_HEADERS([setjmp.h],
+                 [AC_DEFINE([PICOTM_HAVE_SETJMP_H],
+                            [1],
+                            [Define to 1 if you have the <setjmp.h> header file.])]
+                 [AC_CHECK_TYPES([sigjmp_buf],
+                                 [AC_DEFINE([PICOTM_HAVE_TYPE_SIGJMP_BUF],
+                                 [1],
+                                 [Define to 1 if the system has the type 'sigjmp_buf'.])],,
+                                 [[@%:@include <setjmp.h>]])])
+
 AC_CHECK_TYPES([kern_return_t],
                [AC_DEFINE([PICOTM_HAVE_TYPE_KERN_RETURN_T],
                           [1],
