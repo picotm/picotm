@@ -67,7 +67,7 @@ PICOTM_END_DECLS
  *        transactional C math functions, such `sqrt()` or `pow()`.
  *
  * The C Math Library module provides transactional implementations
- * of typical C math functions, such ar `sqrt()` or `pow()`.
+ * of typical C math functions, such as `sqrt()` or `pow()`.
  * The functions in this module can simply be invoked without further
  * configuration. Most of them don't have any state besides error reporting
  * and the floating-point environment. All functions instrument the TM
