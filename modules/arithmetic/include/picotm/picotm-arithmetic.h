@@ -39,6 +39,7 @@ PICOTM_BEGIN_DECLS
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_arithmetic
  * Reports a division-by-zero error to the transaction manager.
  * \warning This is an internal interface. Don't use it in application code.
  */
@@ -47,6 +48,7 @@ __picotm_arithmetic_error_divbyzero_tx(void);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_arithmetic
  * Reports an overflow error to the transaction manager.
  * \warning This is an internal interface. Don't use it in application code.
  */
@@ -55,6 +57,7 @@ __picotm_arithmetic_error_overflow_tx(void);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_arithmetic
  * Reports an underflow error to the transaction manager.
  * \warning This is an internal interface. Don't use it in application code.
  */
@@ -62,6 +65,7 @@ void
 __picotm_arithmetic_error_underflow_tx(void);
 
 /**
+ * \ingroup group_arithmetic
  * Tests if a signed type uses two's complement.
  * \warning This is an internal interface. Don't use it in application code.
  */
@@ -70,6 +74,7 @@ __picotm_arithmetic_error_underflow_tx(void);
                          "Type " #__type " does not use two's complement.")
 
 /**
+ * \ingroup group_arithmetic
  * Tests if a type is unsigned.
  * \warning This is an internal interface. Don't use it in application code.
  */
@@ -81,6 +86,7 @@ __picotm_arithmetic_error_underflow_tx(void);
  */
 
 /**
+ * \ingroup group_arithmetic
  * Defines a C function that adds two values of the signed C type `__type`.
  * \param   __name  The name of the value's type.
  * \param   __type  The C type of the value.
@@ -131,6 +137,7 @@ __picotm_arithmetic_error_underflow_tx(void);
     }
 
 /**
+ * \ingroup group_arithmetic
  * Defines a C function that adds two values of the unsigned C type `__type`.
  * \param   __name  The name of the value's type.
  * \param   __type  The C type of the value.
@@ -165,6 +172,7 @@ __picotm_arithmetic_error_underflow_tx(void);
     }
 
 /**
+ * \ingroup group_arithmetic
  * Defines a C function that adds two values of the floating-point C
  * type `__type`.
  * \param   __name  The name of the value's type.
@@ -218,6 +226,7 @@ __picotm_arithmetic_error_underflow_tx(void);
  */
 
 /**
+ * \ingroup group_arithmetic
  * Defines a C function that subtracts one value of the signed C type
  * `__type` from another value of the same type.
  * \param   __name  The name of the value's type.
@@ -270,6 +279,7 @@ __picotm_arithmetic_error_underflow_tx(void);
     }
 
 /**
+ * \ingroup group_arithmetic
  * Defines a C function that subtracts one value of the unsigned C type
  * `__type` from another value of the same type.
  * \param   __name  The name of the value's type.
@@ -308,6 +318,7 @@ __picotm_arithmetic_error_underflow_tx(void);
     }
 
 /**
+ * \ingroup group_arithmetic
  * Defines a C function that subtracts one value of the floating-point C type
  * `__type` from another value of the same type.
  * \param   __name  The name of the value's type.
@@ -362,6 +373,7 @@ __picotm_arithmetic_error_underflow_tx(void);
  */
 
 /**
+ * \ingroup group_arithmetic
  * Defines a C function that multiplies two values of the signed C type
  * `__type`.
  * \param   __name  The name of the value's type.
@@ -433,6 +445,7 @@ __picotm_arithmetic_error_underflow_tx(void);
     }
 
 /**
+ * \ingroup group_arithmetic
  * Defines a C function that multiplies two values of the unsigned C type
  * `__type`.
  * \param   __name  The name of the value's type.
@@ -476,6 +489,7 @@ __picotm_arithmetic_error_underflow_tx(void);
     }
 
 /**
+ * \ingroup group_arithmetic
  * Defines a C function that multiplies two values of the floating-point C
  * type `__type`.
  * \param   __name  The name of the value's type.
@@ -543,6 +557,7 @@ __picotm_arithmetic_error_underflow_tx(void);
  */
 
 /**
+ * \ingroup group_arithmetic
  * Defines a C function that divides a values of the signed C type `__type`
  * by a value of the same type.
  * \param   __name  The name of the value's type.
@@ -590,6 +605,7 @@ __picotm_arithmetic_error_underflow_tx(void);
     }
 
 /**
+ * \ingroup group_arithmetic
  * Defines a C function that divides a values of the unsigned C type `__type`
  * by a value of the same type.
  * \param   __name  The name of the value's type.
@@ -629,6 +645,7 @@ __picotm_arithmetic_error_underflow_tx(void);
     }
 
 /**
+ * \ingroup group_arithmetic
  * Defines a C function that divides a values of the floatng-point C type
  * `__type` by a value of the same type.
  * \param   __name  The name of the value's type.

@@ -78,6 +78,8 @@ __picotm_arithmetic_div__Bool(_Bool lhs, _Bool rhs)
     return lhs / rhs;
 }
 
+/** \addtogroup group_arithmetic
+ * \{ */
 PICOTM_ARITHMETIC_ADD_U_TX(_Bool, _Bool, 0, 1, 0,
                            __picotm_arithmetic_add__Bool,
                            __picotm_arithmetic_sub__Bool)
@@ -90,6 +92,7 @@ PICOTM_ARITHMETIC_MUL_U_TX(_Bool, _Bool, 0, 1, 1, 0,
 PICOTM_ARITHMETIC_DIV_U_TX(_Bool, _Bool, 0, 1, 1, 0,
                            __picotm_arithmetic_mul__Bool,
                            __picotm_arithmetic_div__Bool)
+/** \} */
 
 #endif
 
@@ -135,6 +138,8 @@ __picotm_arithmetic_div_char(char lhs, char rhs)
 }
 
 #if CHAR_MIN == 0
+/** \addtogroup group_arithmetic
+ * \{ */
 PICOTM_ARITHMETIC_ADD_U_TX(char, char, CHAR_MIN, CHAR_MAX, 0,
                            __picotm_arithmetic_add_char,
                            __picotm_arithmetic_sub_char)
@@ -147,7 +152,10 @@ PICOTM_ARITHMETIC_MUL_U_TX(char, char, CHAR_MIN, CHAR_MAX, 1, 0,
 PICOTM_ARITHMETIC_DIV_U_TX(char, char, CHAR_MIN, CHAR_MAX, 1, 0,
                            __picotm_arithmetic_mul_char,
                            __picotm_arithmetic_div_char)
+/** \} */
 #else
+/** \addtogroup group_arithmetic
+ * \{ */
 PICOTM_ARITHMETIC_ADD_S_TX(char, char, CHAR_MIN, CHAR_MAX, 0,
                            __picotm_arithmetic_add_char,
                            __picotm_arithmetic_sub_char)
@@ -160,6 +168,7 @@ PICOTM_ARITHMETIC_MUL_S_TX(char, char, CHAR_MIN, CHAR_MAX, 1, 0,
 PICOTM_ARITHMETIC_DIV_S_TX(char, char, CHAR_MIN, CHAR_MAX, 1, 0,
                            __picotm_arithmetic_mul_char,
                            __picotm_arithmetic_div_char)
+/** \} */
 #endif
 
 #endif
@@ -201,6 +210,8 @@ __picotm_arithmetic_div_schar(signed char lhs, signed char rhs)
     return res.quot;
 }
 
+/** \addtogroup group_arithmetic
+ * \{ */
 PICOTM_ARITHMETIC_ADD_S_TX(schar, signed char, SCHAR_MIN, SCHAR_MAX, 0,
                            __picotm_arithmetic_add_schar,
                            __picotm_arithmetic_sub_schar)
@@ -213,6 +224,7 @@ PICOTM_ARITHMETIC_MUL_S_TX(schar, signed char, SCHAR_MIN, SCHAR_MAX, 1, 0,
 PICOTM_ARITHMETIC_DIV_S_TX(schar, signed char, SCHAR_MIN, SCHAR_MAX, 1, 0,
                            __picotm_arithmetic_mul_schar,
                            __picotm_arithmetic_div_schar)
+/** \} */
 
 #endif
 
@@ -253,6 +265,8 @@ __picotm_arithmetic_div_short(short lhs, short rhs)
     return res.quot;
 }
 
+/** \addtogroup group_arithmetic
+ * \{ */
 PICOTM_ARITHMETIC_ADD_S_TX(short, short, SHRT_MIN, SHRT_MAX, 0,
                            __picotm_arithmetic_add_short,
                            __picotm_arithmetic_sub_short)
@@ -265,6 +279,7 @@ PICOTM_ARITHMETIC_MUL_S_TX(short, short, SHRT_MIN, SHRT_MAX, 1, 0,
 PICOTM_ARITHMETIC_DIV_S_TX(short, short, SHRT_MIN, SHRT_MAX, 1, 0,
                            __picotm_arithmetic_mul_short,
                            __picotm_arithmetic_div_short)
+/** \} */
 
 #endif
 
@@ -305,6 +320,8 @@ __picotm_arithmetic_div_int(int lhs, int rhs)
     return res.quot;
 }
 
+/** \addtogroup group_arithmetic
+ * \{ */
 PICOTM_ARITHMETIC_ADD_S_TX(int, int, INT_MIN, INT_MAX, 0,
                            __picotm_arithmetic_add_int,
                            __picotm_arithmetic_sub_int)
@@ -317,6 +334,7 @@ PICOTM_ARITHMETIC_MUL_S_TX(int, int, INT_MIN, INT_MAX, 1, 0,
 PICOTM_ARITHMETIC_DIV_S_TX(int, int, INT_MIN, INT_MAX, 1, 0,
                            __picotm_arithmetic_mul_int,
                            __picotm_arithmetic_div_int)
+/** \} */
 
 #endif
 
@@ -357,6 +375,8 @@ __picotm_arithmetic_div_long(long lhs, long rhs)
     return res.quot;
 }
 
+/** \addtogroup group_arithmetic
+ * \{ */
 PICOTM_ARITHMETIC_ADD_S_TX(long, long, LONG_MIN, LONG_MAX, 0l,
                            __picotm_arithmetic_add_long,
                            __picotm_arithmetic_sub_long)
@@ -369,6 +389,7 @@ PICOTM_ARITHMETIC_MUL_S_TX(long, long, LONG_MIN, LONG_MAX, 1l, 0l,
 PICOTM_ARITHMETIC_DIV_S_TX(long, long, LONG_MIN, LONG_MAX, 1l, 0l,
                            __picotm_arithmetic_mul_long,
                            __picotm_arithmetic_div_long)
+/** \} */
 
 #endif
 
@@ -409,6 +430,8 @@ __picotm_arithmetic_div_llong(long long lhs, long long rhs)
     return res.quot;
 }
 
+/** \addtogroup group_arithmetic
+ * \{ */
 PICOTM_ARITHMETIC_ADD_S_TX(llong, long long, LLONG_MIN, LLONG_MAX, 0ll,
                            __picotm_arithmetic_add_llong,
                            __picotm_arithmetic_sub_llong)
@@ -421,6 +444,7 @@ PICOTM_ARITHMETIC_MUL_S_TX(llong, long long, LLONG_MIN, LLONG_MAX, 1ll, 0ll,
 PICOTM_ARITHMETIC_DIV_S_TX(llong, long long, LLONG_MIN, LLONG_MAX, 1ll, 0ll,
                            __picotm_arithmetic_mul_llong,
                            __picotm_arithmetic_div_llong)
+/** \} */
 
 #endif
 
@@ -460,6 +484,8 @@ __picotm_arithmetic_div_uchar(unsigned char lhs, unsigned char rhs)
     return lhs / rhs;
 }
 
+/** \addtogroup group_arithmetic
+ * \{ */
 PICOTM_ARITHMETIC_ADD_U_TX(uchar, unsigned char, 0u, UCHAR_MAX, 0u,
                            __picotm_arithmetic_add_uchar,
                            __picotm_arithmetic_sub_uchar)
@@ -472,6 +498,7 @@ PICOTM_ARITHMETIC_MUL_U_TX(uchar, unsigned char, 0u, UCHAR_MAX, 1u, 0u,
 PICOTM_ARITHMETIC_DIV_U_TX(uchar, unsigned char, 0u, UCHAR_MAX, 1u, 0u,
                            __picotm_arithmetic_mul_uchar,
                            __picotm_arithmetic_div_uchar)
+/** \} */
 
 #endif
 
@@ -511,6 +538,8 @@ __picotm_arithmetic_div_ushort(unsigned short lhs, unsigned short rhs)
     return lhs / rhs;
 }
 
+/** \addtogroup group_arithmetic
+ * \{ */
 PICOTM_ARITHMETIC_ADD_U_TX(ushort, unsigned short, 0u, USHRT_MAX, 0u,
                            __picotm_arithmetic_add_ushort,
                            __picotm_arithmetic_sub_ushort)
@@ -523,6 +552,7 @@ PICOTM_ARITHMETIC_MUL_U_TX(ushort, unsigned short, 0u, USHRT_MAX, 1u, 0u,
 PICOTM_ARITHMETIC_DIV_U_TX(ushort, unsigned short, 0u, USHRT_MAX, 1u, 0u,
                            __picotm_arithmetic_mul_ushort,
                            __picotm_arithmetic_div_ushort)
+/** \} */
 
 #endif
 
@@ -562,6 +592,8 @@ __picotm_arithmetic_div_uint(unsigned int lhs, unsigned int rhs)
     return lhs / rhs;
 }
 
+/** \addtogroup group_arithmetic
+ * \{ */
 PICOTM_ARITHMETIC_ADD_U_TX(uint, unsigned int, 0u, UINT_MAX, 0u,
                            __picotm_arithmetic_add_uint,
                            __picotm_arithmetic_sub_uint)
@@ -574,6 +606,7 @@ PICOTM_ARITHMETIC_MUL_U_TX(uint, unsigned int, 0u, UINT_MAX, 1u, 0u,
 PICOTM_ARITHMETIC_DIV_U_TX(uint, unsigned int, 0u, UINT_MAX, 1u, 0u,
                            __picotm_arithmetic_mul_uint,
                            __picotm_arithmetic_div_uint)
+/** \} */
 
 #endif
 
@@ -613,6 +646,8 @@ __picotm_arithmetic_div_ulong(unsigned long lhs, unsigned long rhs)
     return lhs / rhs;
 }
 
+/** \addtogroup group_arithmetic
+ * \{ */
 PICOTM_ARITHMETIC_ADD_U_TX(ulong, unsigned long, 0ul, ULONG_MAX, 0ul,
                            __picotm_arithmetic_add_ulong,
                            __picotm_arithmetic_sub_ulong)
@@ -625,6 +660,7 @@ PICOTM_ARITHMETIC_MUL_U_TX(ulong, unsigned long, 0ul, ULONG_MAX, 1ul, 0ul,
 PICOTM_ARITHMETIC_DIV_U_TX(ulong, unsigned long, 0ul, ULONG_MAX, 1ul, 0ul,
                            __picotm_arithmetic_mul_ulong,
                            __picotm_arithmetic_div_ulong)
+/** \} */
 
 #endif
 
@@ -664,6 +700,8 @@ __picotm_arithmetic_div_ullong(unsigned long long lhs, unsigned long long rhs)
     return lhs / rhs;
 }
 
+/** \addtogroup group_arithmetic
+ * \{ */
 PICOTM_ARITHMETIC_ADD_U_TX(ullong, unsigned long long, 0ull, ULLONG_MAX, 0ull,
                            __picotm_arithmetic_add_ullong,
                            __picotm_arithmetic_sub_ullong)
@@ -676,6 +714,7 @@ PICOTM_ARITHMETIC_DIV_U_TX(ullong, unsigned long long, 0ull, ULLONG_MAX, 1ull, 0
 PICOTM_ARITHMETIC_MUL_U_TX(ullong, unsigned long long, 0ull, ULLONG_MAX, 1ull, 0ull,
                            __picotm_arithmetic_mul_ullong,
                            __picotm_arithmetic_div_ullong)
+/** \} */
 
 #endif
 
@@ -715,6 +754,8 @@ __picotm_arithmetic_div_float(float lhs, float rhs)
     return lhs / rhs;
 }
 
+/** \addtogroup group_arithmetic
+ * \{ */
 PICOTM_ARITHMETIC_ADD_F_TX(float, float, FLT_MAX, 0.f,
                            __picotm_arithmetic_add_float,
                            __picotm_arithmetic_sub_float)
@@ -727,6 +768,7 @@ PICOTM_ARITHMETIC_MUL_F_TX(float, float, FLT_MAX, 1.f, 0.f,
 PICOTM_ARITHMETIC_DIV_F_TX(float, float, FLT_MAX, 1.f, 0.f,
                            __picotm_arithmetic_mul_float,
                            __picotm_arithmetic_div_float)
+/** \} */
 
 #endif
 
@@ -766,6 +808,8 @@ __picotm_arithmetic_div_double(double lhs, double rhs)
     return lhs / rhs;
 }
 
+/** \addtogroup group_arithmetic
+ * \{ */
 PICOTM_ARITHMETIC_ADD_F_TX(double, double, DBL_MAX, 0.,
                            __picotm_arithmetic_add_double,
                            __picotm_arithmetic_sub_double)
@@ -778,6 +822,7 @@ PICOTM_ARITHMETIC_MUL_F_TX(double, double, DBL_MAX, 1., 0.,
 PICOTM_ARITHMETIC_DIV_F_TX(double, double, DBL_MAX, 1., 0.,
                            __picotm_arithmetic_mul_double,
                            __picotm_arithmetic_div_double)
+/** \} */
 
 #endif
 
@@ -817,6 +862,8 @@ __picotm_arithmetic_div_ldouble(long double lhs, long double rhs)
     return lhs / rhs;
 }
 
+/** \addtogroup group_arithmetic
+ * \{ */
 PICOTM_ARITHMETIC_ADD_F_TX(ldouble, long double, LDBL_MAX, 0.l,
                            __picotm_arithmetic_add_ldouble,
                            __picotm_arithmetic_sub_ldouble)
@@ -829,6 +876,7 @@ PICOTM_ARITHMETIC_MUL_F_TX(ldouble, long double, LDBL_MAX, 1.l, 0.l,
 PICOTM_ARITHMETIC_DIV_F_TX(ldouble, long double, LDBL_MAX, 1.l, 0.l,
                            __picotm_arithmetic_mul_ldouble,
                            __picotm_arithmetic_div_ldouble)
+/** \} */
 
 #endif
 
