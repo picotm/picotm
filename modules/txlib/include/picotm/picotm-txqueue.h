@@ -42,6 +42,7 @@ PICOTM_BEGIN_DECLS
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Initializes an entry of a transactional queue from within a
  *        transaction.
  * \param self The queue entry to initialize.
@@ -54,6 +55,7 @@ txqueue_entry_init_tm(struct txqueue_entry* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Cleans up an entry of a transactional queue.
  * \param self The queue entry to clean up.
  * \attention This function expects the entry's memory to be owned by
@@ -64,6 +66,7 @@ void
 txqueue_entry_uninit_tm(struct txqueue_entry* self);
 
 /**
+ * \ingroup group_txlib
  * \struct txqueue
  * \brief A handle for operating on transaction-safe queues.
  */
@@ -71,6 +74,7 @@ struct txqueue;
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Creates a transactional queue for a queue state.
  * \param queue_state The queue state.
  * \returns A transactional queue for the queue state.
@@ -84,6 +88,7 @@ txqueue_of_state_tx(struct txqueue_state* queue_state);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Tests a transactional queue for emptiness.
  * \param self The transactional queue.
  * \returns True if the queue is empty, false otherwise.
@@ -93,6 +98,7 @@ txqueue_empty_tx(struct txqueue* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Returns the number of entries in a transactional queue.
  * \param self The transactional queue.
  * \returns The number of entries in the transactional queue.
@@ -106,6 +112,7 @@ txqueue_size_tx(struct txqueue* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Returns the front-end entry of a transactional queue.
  * \param self The transactional queue.
  * \returns The entry at the transactional queue's front end.
@@ -115,6 +122,7 @@ txqueue_front_tx(struct txqueue* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Retruns the back-end entry of a transactional queue.
  * \param self The transactional queue.
  * \returns The entry at the transactional queue's back end.
@@ -128,6 +136,7 @@ txqueue_back_tx(struct txqueue* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Removes the last entry of a transactional queue.
  * \param self The transactional queue.
  */
@@ -136,6 +145,7 @@ txqueue_pop_tx(struct txqueue* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Inserts an entry at the front of a transactional queue.
  * \param self The transactional queue.
  * \param entry The queue entry to insert.

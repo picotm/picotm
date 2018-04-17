@@ -284,6 +284,7 @@ PICOTM_BEGIN_DECLS
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Initializes an entry of a transactional stack from within a
  *        transaction.
  * \param self The stack entry to initialize.
@@ -296,6 +297,7 @@ txstack_entry_init_tm(struct txstack_entry* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Cleans up an entry of a transactional stack from within a
  *        transaction.
  * \param self The stack entry to clean up.
@@ -307,6 +309,7 @@ void
 txstack_entry_uninit_tm(struct txstack_entry* self);
 
 /**
+ * \ingroup group_txlib
  * \struct txstack
  * \brief A handle for operating on transaction-safe stacks.
  */
@@ -314,6 +317,7 @@ struct txstack;
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Creates a transactional stack for a stack state.
  * \param stack_state The stack state.
  * \returns A transactional stack for the stack state.
@@ -327,6 +331,7 @@ txstack_of_state_tx(struct txstack_state* stack_state);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Tests a transactional stack for emptiness.
  * \param self The transactional stack.
  * \returns True if the stack is empty, false otherwise.
@@ -336,6 +341,7 @@ txstack_empty_tx(struct txstack* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Returns the number of entries on a transactional stack.
  * \param self The transactional stack.
  * \returns The number of entries on the transactional stack.
@@ -349,6 +355,7 @@ txstack_size_tx(struct txstack* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Returns the top-most entry of a transactional stack.
  * \param self The transactional stack.
  * \returns The entry at the transactional stack's front end.
@@ -362,6 +369,7 @@ txstack_top_tx(struct txstack* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Removes the top-most entry of a transactional stack.
  * \param self The transactional stack.
  */
@@ -370,6 +378,7 @@ txstack_pop_tx(struct txstack* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Inserts an entry at the top of a transactional stack.
  * \param self The transactional stack.
  * \param entry The stack entry to insert.

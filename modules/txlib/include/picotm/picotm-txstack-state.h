@@ -40,6 +40,7 @@ PICOTM_BEGIN_DECLS
  */
 
 /**
+ * \ingroup group_txlib
  * \brief Represents an entry in a transaction-safe stack.
  */
 struct txstack_entry {
@@ -49,6 +50,7 @@ struct txstack_entry {
 };
 
 /**
+ * \ingroup group_txlib
  * \brief Initializer macro for `struct txstack_entry`.
  *
  * \warning This is an internal interface. Don't use it in application code.
@@ -61,12 +63,14 @@ struct txstack_entry {
     }
 
 /**
+ * \ingroup group_txlib
  * \brief Initializer macro for `struct txstack_entry`.
  */
 #define TXSTACK_ENTRY_INITIALIZER   __TXSTACK_ENTRY_INITIALIZER(NULL)
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Initializes an entry of a transactional stack.
  * \param self The stack entry to initialize.
  */
@@ -75,6 +79,7 @@ txstack_entry_init(struct txstack_entry* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Cleans up an entry of a transactional stack.
  * \param self The stack entry to clean up.
  */
@@ -82,6 +87,7 @@ void
 txstack_entry_uninit(struct txstack_entry* self);
 
 /**
+ * \ingroup group_txlib
  * \brief The global state of transaction-safe stack.
  */
 struct txstack_state {
@@ -92,6 +98,7 @@ struct txstack_state {
 };
 
 /**
+ * \ingroup group_txlib
  * \brief Initializer macro for `struct txstack_state`.
  */
 #define TXSTACK_STATE_INITIALIZER(stack_state)                          \
@@ -104,6 +111,7 @@ struct txstack_state {
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Initializes stack state.
  * \param self The stack state to initialize.
  */
@@ -112,6 +120,7 @@ txstack_state_init(struct txstack_state* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Cleans up stack state.
  * \param self The stack state to clean up.
  */
@@ -120,6 +129,7 @@ txstack_state_uninit(struct txstack_state* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Removes all entries from a stack state and runs a cleanup
  *        function on each.
  * \param self The stack state to clear.

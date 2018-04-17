@@ -42,6 +42,7 @@ PICOTM_BEGIN_DECLS
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Initializes an entry of a transactional list from within a
  *        transaction.
  * \param self The list entry to initialize.
@@ -54,6 +55,7 @@ txlist_entry_init_tm(struct txlist_entry* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Cleans up an entry of a transactional list from within a
  *        transaction.
  * \param self The list entry to clean up.
@@ -65,6 +67,7 @@ void
 txlist_entry_uninit_tm(struct txlist_entry* self);
 
 /**
+ * \ingroup group_txlib
  * \struct txlist
  * \brief A handle for operating on transaction-safe lists.
  */
@@ -72,6 +75,7 @@ struct txlist;
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Creates a transactional list for a list state.
  * \param list_state The list state.
  * \returns A transactional list for the list state.
@@ -85,6 +89,7 @@ txlist_of_state_tx(struct txlist_state* list_state);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Returns the first entry of a transactional list.
  * \param self The transactional list.
  * \returns The transactional list's first entry.
@@ -94,6 +99,7 @@ txlist_begin_tx(struct txlist* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Returns the terminator of a transactional list.
  * \param self The transactional list.
  * \returns The transactional list's terminator entry.
@@ -107,6 +113,7 @@ txlist_end_tx(struct txlist* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Tests a transactional list for emptiness.
  * \param self The transactional list.
  * \returns True if the list is empty, false otherwise.
@@ -116,6 +123,7 @@ txlist_empty_tx(struct txlist* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Returns the number of entries in a transactional list.
  * \param self The transactional list.
  * \returns The number of entries in the transactional list.
@@ -129,6 +137,7 @@ txlist_size_tx(struct txlist* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Returns the front-end entry of a transactional list without
  *        removing it.
  * \param self The transactional list.
@@ -139,6 +148,7 @@ txlist_front_tx(struct txlist* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Returns the back-end entry of a transactional list without
  *        removing it.
  * \param self The transactional list.
@@ -153,6 +163,7 @@ txlist_back_tx(struct txlist* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Removes all entries from a transactional list.
  * \param self The transactional list.
  */
@@ -161,6 +172,7 @@ txlist_clear_tx(struct txlist* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Removes an entry from a transactional list.
  * \param self The transactional list.
  * \param entry The list entry to remove.
@@ -170,6 +182,7 @@ txlist_erase_tx(struct txlist* self, struct txlist_entry* entry);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Inserts an entry into a transactional list.
  * \param self The transactional list.
  * \param entry The list entry to insert.
@@ -181,6 +194,7 @@ txlist_insert_tx(struct txlist* self, struct txlist_entry* entry,
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Removes the last entry of a transactional list.
  * \param self The transactional list.
  */
@@ -189,6 +203,7 @@ txlist_pop_back_tx(struct txlist* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Removes the first entry of a transactional list.
  * \param self The transactional list.
  */
@@ -197,6 +212,7 @@ txlist_pop_front_tx(struct txlist* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Inserts an entry at the end of a transactional list.
  * \param self The transactional list.
  * \param entry The list entry to insert.
@@ -206,6 +222,7 @@ txlist_push_back_tx(struct txlist* self, struct txlist_entry* entry);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Inserts an entry at the beginning of a transactional list.
  * \param self The transactional list.
  * \param entry The list entry to insert.
