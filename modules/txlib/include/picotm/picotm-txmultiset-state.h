@@ -40,6 +40,7 @@ PICOTM_BEGIN_DECLS
  */
 
 /**
+ * \ingroup group_txlib
  * \brief Represents an entry in a transaction-safe multiset.
  */
 struct txmultiset_entry {
@@ -51,6 +52,7 @@ struct txmultiset_entry {
 };
 
 /**
+ * \ingroup group_txlib
  * \brief Initializer macro for `struct txmultiset_entry`.
  *
  * \warning This is an internal interface. Don't use it in application code.
@@ -65,12 +67,14 @@ struct txmultiset_entry {
     }
 
 /**
+ * \ingroup group_txlib
  * \brief Initializer macro for `struct txmultiset_entry`.
  */
 #define TXMULTISET_ENTRY_INITIALIZER    __TXMULTISET_ENTRY_INITIALIZER(NULL)
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Initializes an entry of a transactional multiset.
  * \param self The multiset entry to initialize.
  */
@@ -79,6 +83,7 @@ txmultiset_entry_init(struct txmultiset_entry* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Cleans up an entry of a transactional multiset.
  * \param self The multiset entry to clean up.
  */
@@ -87,6 +92,7 @@ txmultiset_entry_uninit(struct txmultiset_entry* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Returns the next multiset entry.
  * \param self The current multiset entry.
  * \returns The next multiset entry.
@@ -96,6 +102,7 @@ txmultiset_entry_next_tx(const struct txmultiset_entry* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Returns the previous multiset entry.
  * \param self The current multiset entry.
  * \returns The previous multiset entry.
@@ -104,6 +111,7 @@ struct txmultiset_entry*
 txmultiset_entry_prev_tx(const struct txmultiset_entry* self);
 
 /**
+ * \ingroup group_txlib
  * \brief Generates a compare key for a multiset entry.
  * \param The multiset entry.
  * \returns A comparable key for the multiset entry.
@@ -111,6 +119,7 @@ txmultiset_entry_prev_tx(const struct txmultiset_entry* self);
 typedef const void* (*txmultiset_key_function)(struct txmultiset_entry* entry);
 
 /**
+ * \ingroup group_txlib
  * \brief Key-compare function for two multiset-entry keys.
  * \param lhs The left-hand-side key.
  * \param rhs The right-hand-side key.
@@ -120,6 +129,7 @@ typedef const void* (*txmultiset_key_function)(struct txmultiset_entry* entry);
 typedef int (*txmultiset_compare_function)(const void* lhs, const void* rhs);
 
 /**
+ * \ingroup group_txlib
  * \brief The global state of transaction-safe multiset.
  */
 struct txmultiset_state {
@@ -132,6 +142,7 @@ struct txmultiset_state {
 };
 
 /**
+ * \ingroup group_txlib
  * \brief Initializer macro for `struct txmultiset_state`.
  */
 #define TXMULTISET_STATE_INITIALIZER(_multiset_state, _key, _compare)         \
@@ -146,6 +157,7 @@ struct txmultiset_state {
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Initializes multiset state.
  * \param self The multiset state to initialize.
  * \param key The key generator function for the multiset's entries.
@@ -158,6 +170,7 @@ txmultiset_state_init(struct txmultiset_state* self,
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Cleans up multiset state.
  * \param self The multiset state to clean up.
  */
@@ -166,6 +179,7 @@ txmultiset_state_uninit(struct txmultiset_state* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Removes all entries from a multiset state and runs a cleanup
  *        function on each.
  * \param self The multiset state to clear.

@@ -39,6 +39,7 @@ PICOTM_BEGIN_DECLS
  */
 
 /**
+ * \ingroup group_txlib
  * \brief Represents an entry in a transaction-safe list.
  */
 struct txlist_entry {
@@ -49,6 +50,7 @@ struct txlist_entry {
 };
 
 /**
+ * \ingroup group_txlib
  * \brief Initializer macro for `struct txlist_entry`.
  *
  * \warning This is an internal interface. Don't use it in application code.
@@ -62,12 +64,14 @@ struct txlist_entry {
     }
 
 /**
+ * \ingroup group_txlib
  * \brief Initializer macro for `struct txlist_entry`.
  */
 #define TXLIST_ENTRY_INITIALIZER    __TXLIST_ENTRY_INITIALIZER(NULL)
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Initializes an entry of a transactional list.
  * \param self The list entry to initialize.
  */
@@ -76,6 +80,7 @@ txlist_entry_init(struct txlist_entry* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Cleans up an entry of a transactional list.
  * \param self The list entry to clean up.
  */
@@ -84,6 +89,7 @@ txlist_entry_uninit(struct txlist_entry* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Returns the next list entry.
  * \param self The current list entry.
  * \returns The next list entry.
@@ -93,6 +99,7 @@ txlist_entry_next_tx(const struct txlist_entry* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Returns the previous list entry.
  * \param self The current list entry.
  * \returns The previous list entry.
@@ -101,6 +108,7 @@ struct txlist_entry*
 txlist_entry_prev_tx(const struct txlist_entry* self);
 
 /**
+ * \ingroup group_txlib
  * \brief The global state of transaction-safe list.
  */
 struct txlist_state {
@@ -111,6 +119,7 @@ struct txlist_state {
 };
 
 /**
+ * \ingroup group_txlib
  * \brief Initializer macro for `struct txlist_state`.
  */
 #define TXLIST_STATE_INITIALIZER(list_state)                        \
@@ -123,6 +132,7 @@ struct txlist_state {
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Initializes list state.
  * \param self The list state to initialize.
  */
@@ -131,6 +141,7 @@ txlist_state_init(struct txlist_state* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Cleans up list state.
  * \param self The list state to clean up.
  */
@@ -139,6 +150,7 @@ txlist_state_uninit(struct txlist_state* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Removes all entries from a list state and runs a cleanup
  *        function on each.
  * \param self The list state to clear.

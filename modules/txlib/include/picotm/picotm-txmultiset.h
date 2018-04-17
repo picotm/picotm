@@ -42,6 +42,7 @@ PICOTM_BEGIN_DECLS
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Initializes an entry of a transactional multiset from within a
  *        transaction.
  * \param self The multiset entry to initialize.
@@ -54,6 +55,7 @@ txmultiset_entry_init_tm(struct txmultiset_entry* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Cleans up an entry of a transactional multiset from within a
  *        transaction.
  * \param self The multiset entry to clean up.
@@ -65,6 +67,7 @@ void
 txmultiset_entry_uninit_tm(struct txmultiset_entry* self);
 
 /**
+ * \ingroup group_txlib
  * \struct txmultiset
  * \brief A handle for operating on transaction-safe multisets.
  */
@@ -72,6 +75,7 @@ struct txmultiset;
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Creates a transactional multiset for a multiset state.
  * \param multiset_state The multiset state.
  * \returns A transactional multiset for the multiset state.
@@ -85,6 +89,7 @@ txmultiset_of_state_tx(struct txmultiset_state* multiset_state);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Returns the first entry of a transactional multiset.
  * \param self The transactional multiset.
  * \returns The transactional multiset's first entry.
@@ -94,6 +99,7 @@ txmultiset_begin_tx(struct txmultiset* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Returns the terminator of a transactional multiset.
  * \param self The transactional multiset.
  * \returns The transactional multiset's terminator entry.
@@ -107,6 +113,7 @@ txmultiset_end_tx(struct txmultiset* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Tests a transactional multiset for emptiness.
  * \param self The transactional multiset.
  * \returns True if the multiset is empty, false otherwise.
@@ -116,6 +123,7 @@ txmultiset_empty_tx(struct txmultiset* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Returns the number of entries in a transactional multiset.
  * \param self The transactional multiset.
  * \returns The number of entries in the transactional multiset.
@@ -129,6 +137,7 @@ txmultiset_size_tx(struct txmultiset* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Removes all entries from a transactional multiset.
  * \param self The transactional multiset.
  */
@@ -137,6 +146,7 @@ txmultiset_clear_tx(struct txmultiset* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Removes an entry from a transactional multiset.
  * \param self The transactional multiset.
  * \param entry The multiset entry to remove.
@@ -146,6 +156,7 @@ txmultiset_erase_tx(struct txmultiset* self, struct txmultiset_entry* entry);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Inserts an entry into a transactional multiset.
  * \param self The transactional multiset.
  * \param entry The multiset entry to insert.
@@ -155,6 +166,7 @@ txmultiset_insert_tx(struct txmultiset* self, struct txmultiset_entry* entry);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Finds an entry with a specific key in a transactional multiset.
  * \param self The transactional multiset.
  * \param key The multiset entry's key.
@@ -166,6 +178,7 @@ txmultiset_find_tx(struct txmultiset* self, const void* key);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Returns a transactional multiset's the first entry with a specific
  *        key.
  * \param self The transactional multiset.
@@ -178,6 +191,7 @@ txmultiset_lower_bound_tx(struct txmultiset* self, const void* key);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Returns a transactional multiset's first entry with a key larger
  *        than a specific key.
  * \param self The transactional multiset.
@@ -190,6 +204,7 @@ txmultiset_upper_bound_tx(struct txmultiset* self, const void* key);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Returns the number of entries with a specfic key in a transactional
  *        multiset.
  * \param self The transactional multiset.

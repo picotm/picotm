@@ -40,6 +40,7 @@ PICOTM_BEGIN_DECLS
  */
 
 /**
+ * \ingroup group_txlib
  * \brief Represents an entry in a transaction-safe queue.
  */
 struct txqueue_entry {
@@ -50,6 +51,7 @@ struct txqueue_entry {
 };
 
 /**
+ * \ingroup group_txlib
  * \brief Initializer macro for `struct txqueue_entry`.
  *
  * \warning This is an internal interface. Don't use it in application code.
@@ -63,12 +65,14 @@ struct txqueue_entry {
     }
 
 /**
+ * \ingroup group_txlib
  * \brief Initializer macro for `struct txqueue_entry`.
  */
 #define TXQUEUE_ENTRY_INITIALIZER   __TXQUEUE_ENTRY_INITIALIZER(NULL)
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Initializes an entry of a transactional queue.
  * \param self The queue entry to initialize.
  */
@@ -77,6 +81,7 @@ txqueue_entry_init(struct txqueue_entry* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Cleans up an entry of a transactional queue.
  * \param self The queue entry to clean up.
  */
@@ -84,6 +89,7 @@ void
 txqueue_entry_uninit(struct txqueue_entry* self);
 
 /**
+ * \ingroup group_txlib
  * \brief The global state of transaction-safe queue.
  */
 struct txqueue_state {
@@ -94,6 +100,7 @@ struct txqueue_state {
 };
 
 /**
+ * \ingroup group_txlib
  * \brief Initializer macro for `struct txqueue_state`.
  */
 #define TXQUEUE_STATE_INITIALIZER(queue_state)                          \
@@ -106,6 +113,7 @@ struct txqueue_state {
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Initializes queue state.
  * \param self The queue state to initialize.
  */
@@ -114,6 +122,7 @@ txqueue_state_init(struct txqueue_state* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Cleans up queue state.
  * \param self The queue state to clean up.
  */
@@ -122,6 +131,7 @@ txqueue_state_uninit(struct txqueue_state* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_txlib
  * \brief Removes all entries from a queue state and runs a cleanup
  *        function on each.
  * \param self The queue state to clear.
