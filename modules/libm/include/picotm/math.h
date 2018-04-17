@@ -42,23 +42,30 @@ PICOTM_BEGIN_DECLS
 #if defined(PICOTM_LIBC_HAVE_TYPE_DOUBLE_T) && \
             PICOTM_LIBC_HAVE_TYPE_DOUBLE_T || \
     defined(__PICOTM_DOXYGEN)
+/** \addtogroup group_libm
+ * \{ */
 PICOTM_TM_LOAD_TX(double_t, double_t);
 PICOTM_TM_STORE_TX(double_t, double_t);
 PICOTM_TM_PRIVATIZE_TX(double_t, double_t);
+/** \} */
 #endif
 
 #if defined(PICOTM_LIBC_HAVE_TYPE_FLOAT_T) && \
             PICOTM_LIBC_HAVE_TYPE_FLOAT_T || \
     defined(__PICOTM_DOXYGEN)
+/** \addtogroup group_libm
+ * \{ */
 PICOTM_TM_LOAD_TX(float_t, float_t);
 PICOTM_TM_STORE_TX(float_t, float_t);
 PICOTM_TM_PRIVATIZE_TX(float_t, float_t);
+/** \} */
 #endif
 
 #if defined(PICOTM_LIBM_HAVE_ACOS) && PICOTM_LIBM_HAVE_ACOS || \
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [acos()][posix::acos].
  *
  * [posix::acos]:
@@ -72,6 +79,7 @@ acos_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [acosf()][posix::acosf].
  *
  * [posix::acosf]:
@@ -85,6 +93,7 @@ acosf_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [acosh()][posix::acosh].
  *
  * [posix::acosh]:
@@ -98,6 +107,7 @@ acosh_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [acoshf()][posix::acoshf].
  *
  * [posix::acoshf]:
@@ -111,6 +121,7 @@ acoshf_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [acoshl()][posix::acoshl].
  *
  * [posix::acoshl]:
@@ -124,6 +135,7 @@ acoshl_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [acosl()][posix::acosl].
  *
  * [posix::acosl]:
@@ -137,6 +149,7 @@ acosl_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [asin()][posix::asin].
  *
  * [posix::asin]:
@@ -150,6 +163,7 @@ asin_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [asinf()][posix::asinf].
  *
  * [posix::asinf]:
@@ -163,6 +177,7 @@ asinf_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [asinh()][posix::asinh].
  *
  * [posix::asinh]:
@@ -176,6 +191,7 @@ asinh_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [asinhf()][posix::asinhf].
  *
  * [posix::asinhf]:
@@ -189,6 +205,7 @@ asinhf_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [asinhl()][posix::asinhl].
  *
  * [posix::asinhl]:
@@ -202,6 +219,7 @@ asinhl_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [asinl()][posix::asinl].
  *
  * [posix::asinl]:
@@ -215,6 +233,7 @@ asinl_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [atan()][posix::atan].
  *
  * [posix::atan]:
@@ -228,6 +247,7 @@ atan_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [atan2()][posix::atan2].
  *
  * [posix::atan2]:
@@ -241,6 +261,7 @@ atan2_tx(double y, double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [atan2f()][posix::atan2f].
  *
  * [posix::atan2f]:
@@ -254,6 +275,7 @@ atan2f_tx(float y, float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [atan2l()][posix::atan2l].
  *
  * [posix::atan2l]:
@@ -267,6 +289,7 @@ atan2l_tx(long double y, long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [atanf()][posix::atanf].
  *
  * [posix::atanf]:
@@ -280,6 +303,7 @@ atanf_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [atanh()][posix::atanh].
  *
  * [posix::atanh]:
@@ -293,6 +317,7 @@ atanh_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [atanhf()][posix::atanhf].
  *
  * [posix::atanhf]:
@@ -306,6 +331,7 @@ atanhf_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [atanhl()][posix::atanhl].
  *
  * [posix::atanhl]:
@@ -319,6 +345,7 @@ atanhl_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [atanl()][posix::atanl].
  *
  * [posix::atanl]:
@@ -332,6 +359,7 @@ atanl_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [cbrt()][posix::cbrt].
  *
  * [posix::cbrt]:
@@ -345,6 +373,7 @@ cbrt_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [cbrtf()][posix::cbrtf].
  *
  * [posix::cbrtf]:
@@ -358,6 +387,7 @@ cbrtf_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [cbrtl()][posix::cbrtl].
  *
  * [posix::cbrtl]:
@@ -371,6 +401,7 @@ cbrtl_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [ceil()][posix::ceil].
  *
  * [posix::ceil]:
@@ -384,6 +415,7 @@ ceil_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [ceilf()][posix::ceilf].
  *
  * [posix::ceilf]:
@@ -397,6 +429,7 @@ ceilf_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [ceill()][posix::ceill].
  *
  * [posix::ceill]:
@@ -410,6 +443,7 @@ ceill_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [copysign()][posix::copysign].
  *
  * [posix::copysign]:
@@ -423,6 +457,7 @@ copysign_tx(double x, double y);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [copysignf()][posix::copysignf].
  *
  * [posix::copysignf]:
@@ -436,6 +471,7 @@ copysignf_tx(float x, float y);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [copysignl()][posix::copysignl].
  *
  * [posix::copysignl]:
@@ -449,6 +485,7 @@ copysignl_tx(long double x, long double y);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [cos()][posix::cos].
  *
  * [posix::cos]:
@@ -462,6 +499,7 @@ cos_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [cosf()][posix::cosf].
  *
  * [posix::cosf]:
@@ -475,6 +513,7 @@ cosf_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [cosh()][posix::cosh].
  *
  * [posix::cosh]:
@@ -488,6 +527,7 @@ cosh_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [coshf()][posix::coshf].
  *
  * [posix::coshf]:
@@ -501,6 +541,7 @@ coshf_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [coshl()][posix::coshl].
  *
  * [posix::coshl]:
@@ -514,6 +555,7 @@ coshl_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [cosl()][posix::cosl].
  *
  * [posix::cosl]:
@@ -527,6 +569,7 @@ cosl_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [erf()][posix::erf].
  *
  * [posix::erf]:
@@ -540,6 +583,7 @@ erf_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [erfc()][posix::erfc].
  *
  * [posix::erfc]:
@@ -553,6 +597,7 @@ erfc_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [erfcf()][posix::erfcf].
  *
  * [posix::erfcf]:
@@ -566,6 +611,7 @@ erfcf_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [erfcl()][posix::erfcl].
  *
  * [posix::erfcl]:
@@ -579,6 +625,7 @@ erfcl_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [erff()][posix::erff].
  *
  * [posix::erff]:
@@ -592,6 +639,7 @@ erff_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [erfl()][posix::erfl].
  *
  * [posix::erfl]:
@@ -605,6 +653,7 @@ erfl_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [exp()][posix::exp].
  *
  * [posix::exp]:
@@ -618,6 +667,7 @@ exp_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [exp2()][posix::exp2].
  *
  * [posix::exp2]:
@@ -631,6 +681,7 @@ exp2_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [exp2f()][posix::exp2f].
  *
  * [posix::exp2f]:
@@ -644,6 +695,7 @@ exp2f_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [exp2l()][posix::exp2l].
  *
  * [posix::exp2l]:
@@ -657,6 +709,7 @@ exp2l_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [expf()][posix::expf].
  *
  * [posix::expf]:
@@ -670,6 +723,7 @@ expf_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [expl()][posix::expl].
  *
  * [posix::expl]:
@@ -683,6 +737,7 @@ expl_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [expm1()][posix::expm1].
  *
  * [posix::expm1]:
@@ -696,6 +751,7 @@ expm1_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [expm1f()][posix::expm1f].
  *
  * [posix::expm1f]:
@@ -709,6 +765,7 @@ expm1f_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [expm1l()][posix::expm1l].
  *
  * [posix::expm1l]:
@@ -722,6 +779,7 @@ expm1l_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [fabs()][posix::fabs].
  *
  * [posix::fabs]:
@@ -735,6 +793,7 @@ fabs_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [fabsf()][posix::fabsf].
  *
  * [posix::fabsf]:
@@ -748,6 +807,7 @@ fabsf_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [fabsl()][posix::fabsl].
  *
  * [posix::fabsl]:
@@ -761,6 +821,7 @@ fabsl_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [fdim()][posix::fdim].
  *
  * [posix::fdim]:
@@ -774,6 +835,7 @@ fdim_tx(double x, double y);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [fdimf()][posix::fdimf].
  *
  * [posix::fdimf]:
@@ -787,6 +849,7 @@ fdimf_tx(float x, float y);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [fdiml()][posix::fdiml].
  *
  * [posix::fdiml]:
@@ -800,6 +863,7 @@ fdiml_tx(long double x, long double y);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [floor()][posix::floor].
  *
  * [posix::floor]:
@@ -813,6 +877,7 @@ floor_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [floorf()][posix::floorf].
  *
  * [posix::floorf]:
@@ -826,6 +891,7 @@ floorf_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [floorl()][posix::floorl].
  *
  * [posix::floorl]:
@@ -839,6 +905,7 @@ floorl_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [fma()][posix::fma].
  *
  * [posix::fma]:
@@ -852,6 +919,7 @@ fma_tx(double x, double y, double z);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [fmaf()][posix::fmaf].
  *
  * [posix::fmaf]:
@@ -865,6 +933,7 @@ fmaf_tx(float x, float y, float z);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [fmal()][posix::fmal].
  *
  * [posix::fmal]:
@@ -878,6 +947,7 @@ fmal_tx(long double x, long double y, long double z);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [fmax()][posix::fmax].
  *
  * [posix::fmax]:
@@ -891,6 +961,7 @@ fmax_tx(double x, double y);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [fmaxf()][posix::fmaxf].
  *
  * [posix::fmaxf]:
@@ -904,6 +975,7 @@ fmaxf_tx(float x, float y);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [fmaxl()][posix::fmaxl].
  *
  * [posix::fmaxl]:
@@ -917,6 +989,7 @@ fmaxl_tx(long double x, long double y);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [fmin()][posix::fmin].
  *
  * [posix::fmin]:
@@ -930,6 +1003,7 @@ fmin_tx(double x, double y);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [fminf()][posix::fminf].
  *
  * [posix::fminf]:
@@ -943,6 +1017,7 @@ fminf_tx(float x, float y);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [fminl()][posix::fminl].
  *
  * [posix::fminl]:
@@ -956,6 +1031,7 @@ fminl_tx(long double x, long double y);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [fmod()][posix::fmod].
  *
  * [posix::fmod]:
@@ -969,6 +1045,7 @@ fmod_tx(double x, double y);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [fmodf()][posix::fmodf].
  *
  * [posix::fmodf]:
@@ -982,6 +1059,7 @@ fmodf_tx(float x, float y);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [fmodl()][posix::fmodl].
  *
  * [posix::fmodl]:
@@ -995,6 +1073,7 @@ fmodl_tx(long double x, long double y);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [frexp()][posix::frexp].
  *
  * [posix::frexp]:
@@ -1008,6 +1087,7 @@ frexp_tx(double num, int* exp);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [frexpf()][posix::frexpf].
  *
  * [posix::frexpf]:
@@ -1021,6 +1101,7 @@ frexpf_tx(float num, int* exp);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [frexpl()][posix::frexpl].
  *
  * [posix::frexpl]:
@@ -1034,6 +1115,7 @@ frexpl_tx(long double num, int* exp);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [hypot()][posix::hypot].
  *
  * [posix::hypot]:
@@ -1047,6 +1129,7 @@ hypot_tx(double x, double y);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [hypotf()][posix::hypotf].
  *
  * [posix::hypotf]:
@@ -1060,6 +1143,7 @@ hypotf_tx(float x, float y);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [hypotl()][posix::hypotl].
  *
  * [posix::hypotl]:
@@ -1073,6 +1157,7 @@ hypotl_tx(long double x, long double y);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [ilogb()][posix::ilogb].
  *
  * [posix::ilogb]:
@@ -1086,6 +1171,7 @@ ilogb_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [ilogbf()][posix::ilogbf].
  *
  * [posix::ilogbf]:
@@ -1099,6 +1185,7 @@ ilogbf_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [ilogbl()][posix::ilogbl].
  *
  * [posix::ilogbl]:
@@ -1112,6 +1199,7 @@ ilogbl_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [j0()][posix::j0].
  *
  * [posix::j0]:
@@ -1125,6 +1213,7 @@ j0_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [j1()][posix::j1].
  *
  * [posix::j1]:
@@ -1138,6 +1227,7 @@ j1_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [jn()][posix::jn].
  *
  * [posix::jn]:
@@ -1151,6 +1241,7 @@ jn_tx(int n, double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [ldexp()][posix::ldexp].
  *
  * [posix::ldexp]:
@@ -1164,6 +1255,7 @@ ldexp_tx(double x, int exp);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [ldexpf()][posix::ldexpf].
  *
  * [posix::ldexpf]:
@@ -1177,6 +1269,7 @@ ldexpf_tx(float x, int exp);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [ldexpl()][posix::ldexpl].
  *
  * [posix::ldexpl]:
@@ -1190,6 +1283,7 @@ ldexpl_tx(long double x, int exp);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [lgamma()][posix::lgamma].
  *
  * [posix::lgamma]:
@@ -1203,6 +1297,7 @@ lgamma_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [lgammaf()][posix::lgammaf].
  *
  * [posix::lgammaf]:
@@ -1216,6 +1311,7 @@ lgammaf_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [lgammal()][posix::lgammal].
  *
  * [posix::lgammal]:
@@ -1229,6 +1325,7 @@ lgammal_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [llrint()][posix::llrint].
  *
  * [posix::llrint]:
@@ -1242,6 +1339,7 @@ llrint_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [llrintf()][posix::llrintf].
  *
  * [posix::llrintf]:
@@ -1255,6 +1353,7 @@ llrintf_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [llrintl()][posix::llrintl].
  *
  * [posix::llrintl]:
@@ -1268,6 +1367,7 @@ llrintl_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [llround()][posix::llround].
  *
  * [posix::llround]:
@@ -1281,6 +1381,7 @@ llround_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [llroundf()][posix::llroundf].
  *
  * [posix::llroundf]:
@@ -1294,6 +1395,7 @@ llroundf_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [llroundl()][posix::llroundl].
  *
  * [posix::llroundl]:
@@ -1307,6 +1409,7 @@ llroundl_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [log()][posix::log].
  *
  * [posix::log]:
@@ -1320,6 +1423,7 @@ log_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [log10()][posix::log10].
  *
  * [posix::log10]:
@@ -1333,6 +1437,7 @@ log10_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [log10f()][posix::log10f].
  *
  * [posix::log10f]:
@@ -1346,6 +1451,7 @@ log10f_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [log10l()][posix::log10l].
  *
  * [posix::log10l]:
@@ -1359,6 +1465,7 @@ log10l_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [log1p()][posix::log1p].
  *
  * [posix::log1p]:
@@ -1372,6 +1479,7 @@ log1p_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [log1pf()][posix::log1pf].
  *
  * [posix::log1pf]:
@@ -1385,6 +1493,7 @@ log1pf_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [log1pl()][posix::log1pl].
  *
  * [posix::log1pl]:
@@ -1398,6 +1507,7 @@ log1pl_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [log2()][posix::log2].
  *
  * [posix::log2]:
@@ -1411,6 +1521,7 @@ log2_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [log2f()][posix::log2f].
  *
  * [posix::log2f]:
@@ -1424,6 +1535,7 @@ log2f_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [log2l()][posix::log2l].
  *
  * [posix::log2l]:
@@ -1437,6 +1549,7 @@ log2l_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [logb()][posix::logb].
  *
  * [posix::logb]:
@@ -1450,6 +1563,7 @@ logb_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [logbf()][posix::logbf].
  *
  * [posix::logbf]:
@@ -1463,6 +1577,7 @@ logbf_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [logbl()][posix::logbl].
  *
  * [posix::logbl]:
@@ -1476,6 +1591,7 @@ logbl_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [logf()][posix::logf].
  *
  * [posix::logf]:
@@ -1489,6 +1605,7 @@ logf_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [logl()][posix::logl].
  *
  * [posix::logl]:
@@ -1502,6 +1619,7 @@ logl_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [lrint()][posix::lrint].
  *
  * [posix::lrint]:
@@ -1515,6 +1633,7 @@ lrint_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [lrintf()][posix::lrintf].
  *
  * [posix::lrintf]:
@@ -1528,6 +1647,7 @@ lrintf_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [lrintl()][posix::lrintl].
  *
  * [posix::lrintl]:
@@ -1541,6 +1661,7 @@ lrintl_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [lround()][posix::lround].
  *
  * [posix::lround]:
@@ -1554,6 +1675,7 @@ lround_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [lroundf()][posix::lroundf].
  *
  * [posix::lroundf]:
@@ -1567,6 +1689,7 @@ lroundf_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [lroundl()][posix::lroundl].
  *
  * [posix::lroundl]:
@@ -1580,6 +1703,7 @@ lroundl_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [modf()][posix::modf].
  *
  * [posix::modf]:
@@ -1593,6 +1717,7 @@ modf_tx(double x, double* iptr);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [modff()][posix::modff].
  *
  * [posix::modff]:
@@ -1606,6 +1731,7 @@ modff_tx(float x, float* iptr);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [modfl()][posix::modfl].
  *
  * [posix::modfl]:
@@ -1619,6 +1745,7 @@ modfl_tx(long double x, long double* iptr);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [nan()][posix::nan].
  *
  * [posix::nan]:
@@ -1632,6 +1759,7 @@ nan_tx(const char* tagp);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [nanf()][posix::nanf].
  *
  * [posix::nanf]:
@@ -1645,6 +1773,7 @@ nanf_tx(const char* tagp);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [nanl()][posix::nanl].
  *
  * [posix::nanl]:
@@ -1658,6 +1787,7 @@ nanl_tx(const char* tagp);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [nearbyint()][posix::nearbyint].
  *
  * [posix::nearbyint]:
@@ -1671,6 +1801,7 @@ nearbyint_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [nearbyintf()][posix::nearbyintf].
  *
  * [posix::nearbyintf]:
@@ -1684,6 +1815,7 @@ nearbyintf_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [nearbyintl()][posix::nearbyintl].
  *
  * [posix::nearbyintl]:
@@ -1697,6 +1829,7 @@ nearbyintl_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [nextafter()][posix::nextafter].
  *
  * [posix::nextafter]:
@@ -1710,6 +1843,7 @@ nextafter_tx(double x, double y);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [nearafterf()][posix::nearafterf].
  *
  * [posix::nearafterf]:
@@ -1723,6 +1857,7 @@ nextafterf_tx(float x, float y);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [nearafterl()][posix::nearafterl].
  *
  * [posix::nearafterl]:
@@ -1736,6 +1871,7 @@ nextafterl_tx(long double x, long double y);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [nexttoward()][posix::nexttoward].
  *
  * [posix::nexttoward]:
@@ -1749,6 +1885,7 @@ nexttoward_tx(double x, long double y);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [nexttowardf()][posix::nexttowardf].
  *
  * [posix::nexttowardf]:
@@ -1762,6 +1899,7 @@ nexttowardf_tx(float x, long double y);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [nexttowardl()][posix::nexttowardl].
  *
  * [posix::nexttowardl]:
@@ -1775,6 +1913,7 @@ nexttowardl_tx(long double x, long double y);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [pow()][posix::pow].
  *
  * [posix::pow]:
@@ -1788,6 +1927,7 @@ pow_tx(double x, double y);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [powf()][posix::powf].
  *
  * [posix::powf]:
@@ -1801,6 +1941,7 @@ powf_tx(float x, float y);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [powl()][posix::powl].
  *
  * [posix::powl]:
@@ -1814,6 +1955,7 @@ powl_tx(long double x, long double y);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [remainder()][posix::remainder].
  *
  * [posix::remainder]:
@@ -1827,6 +1969,7 @@ remainder_tx(double x, double y);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [remainderf()][posix::remainderf].
  *
  * [posix::remainderf]:
@@ -1840,6 +1983,7 @@ remainderf_tx(float x, float y);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [remainderl()][posix::remainderl].
  *
  * [posix::remainderl]:
@@ -1853,6 +1997,7 @@ remainderl_tx(long double x, long double y);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [remquo()][posix::remquo].
  *
  * [posix::remquo]:
@@ -1866,6 +2011,7 @@ remquo_tx(double x, double y, int* quo);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [remquof()][posix::remquof].
  *
  * [posix::remquof]:
@@ -1879,6 +2025,7 @@ remquof_tx(float x, float y, int* quo);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [remquol()][posix::remquol].
  *
  * [posix::remquol]:
@@ -1892,6 +2039,7 @@ remquol_tx(long double x, long double y, int* quo);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [rint()][posix::rint].
  *
  * [posix::rint]:
@@ -1905,6 +2053,7 @@ rint_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [rintl()][posix::rintl].
  *
  * [posix::rintl]:
@@ -1918,6 +2067,7 @@ rintf_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [rintl()][posix::rintl].
  *
  * [posix::rintl]:
@@ -1931,6 +2081,7 @@ rintl_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [round()][posix::round].
  *
  * [posix::round]:
@@ -1944,6 +2095,7 @@ round_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [roundf()][posix::roundf].
  *
  * [posix::roundf]:
@@ -1957,6 +2109,7 @@ roundf_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [roundl()][posix::roundl].
  *
  * [posix::roundl]:
@@ -1970,6 +2123,7 @@ roundl_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [scalbln()][posix::scalbln].
  *
  * [posix::scalbln]:
@@ -1983,6 +2137,7 @@ scalbln_tx(double x, long n);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [scalblnf()][posix::scalblnf].
  *
  * [posix::scalblnf]:
@@ -1996,6 +2151,7 @@ scalblnf_tx(float x, long n);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [scalblnl()][posix::scalblnl].
  *
  * [posix::scalblnl]:
@@ -2009,6 +2165,7 @@ scalblnl_tx(long double x, long n);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [scalbn()][posix::scalbn].
  *
  * [posix::scalbn]:
@@ -2022,6 +2179,7 @@ scalbn_tx(double x, int n);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [scalbnf()][posix::scalbnf].
  *
  * [posix::scalbnf]:
@@ -2035,6 +2193,7 @@ scalbnf_tx(float x, int n);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [scalbnl()][posix::scalbnl].
  *
  * [posix::scalbnl]:
@@ -2048,6 +2207,7 @@ scalbnl_tx(long double x, int n);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [sin()][posix::sin].
  *
  * [posix::sin]:
@@ -2061,6 +2221,7 @@ sin_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [sinf()][posix::sinf].
  *
  * [posix::sinf]:
@@ -2074,6 +2235,7 @@ sinf_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [sinh()][posix::sinh].
  *
  * [posix::sinh]:
@@ -2087,6 +2249,7 @@ sinh_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [sinhf()][posix::sinhf].
  *
  * [posix::sinhf]:
@@ -2100,6 +2263,7 @@ sinhf_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [sinhl()][posix::sinhl].
  *
  * [posix::sinhl]:
@@ -2113,6 +2277,7 @@ sinhl_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [sinl()][posix::sinl].
  *
  * [posix::sinl]:
@@ -2126,6 +2291,7 @@ sinl_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [sqrt()][posix::sqrt].
  *
  * [posix::sqrt]:
@@ -2139,6 +2305,7 @@ sqrt_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [sqrtf()][posix::sqrtf].
  *
  * [posix::sqrtf]:
@@ -2152,6 +2319,7 @@ sqrtf_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [sqrtl()][posix::sqrtl].
  *
  * [posix::sqrtl]:
@@ -2165,6 +2333,7 @@ sqrtl_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [tan()][posix::tan].
  *
  * [posix::tan]:
@@ -2178,6 +2347,7 @@ tan_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [tanf()][posix::tanf].
  *
  * [posix::tanf]:
@@ -2191,6 +2361,7 @@ tanf_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [tanh()][posix::tanh].
  *
  * [posix::tanh]:
@@ -2204,6 +2375,7 @@ tanh_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [tanhf()][posix::tanhf].
  *
  * [posix::tanhf]:
@@ -2217,6 +2389,7 @@ tanhf_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [tanhl()][posix::tanhl].
  *
  * [posix::tanhl]:
@@ -2230,6 +2403,7 @@ tanhl_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [tanl()][posix::tanl].
  *
  * [posix::tanl]:
@@ -2243,6 +2417,7 @@ tanl_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [tgamma()][posix::tgamma].
  *
  * [posix::tgamma]:
@@ -2256,6 +2431,7 @@ tgamma_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [tgammaf()][posix::tgammaf].
  *
  * [posix::tgammaf]:
@@ -2269,6 +2445,7 @@ tgammaf_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [tgammal()][posix::tgammal].
  *
  * [posix::tgammal]:
@@ -2282,6 +2459,7 @@ tgammal_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [trunc()][posix::trunc].
  *
  * [posix::trunc]:
@@ -2295,6 +2473,7 @@ trunc_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [truncf()][posix::truncf].
  *
  * [posix::truncf]:
@@ -2308,6 +2487,7 @@ truncf_tx(float x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [truncl()][posix::truncl].
  *
  * [posix::truncl]:
@@ -2321,6 +2501,7 @@ truncl_tx(long double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [y0()][posix::y0].
  *
  * [posix::y0]:
@@ -2334,6 +2515,7 @@ y0_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [y1()][posix::y1].
  *
  * [posix::y1]:
@@ -2347,6 +2529,7 @@ y1_tx(double x);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * A transaction-safe implementation of [yn()][posix::yn].
  *
  * [posix::yn]:

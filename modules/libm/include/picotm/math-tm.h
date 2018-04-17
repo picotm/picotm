@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -42,6 +42,7 @@ PICOTM_BEGIN_DECLS
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * Variant of frexp_tx() that operates on transactional memory.
  */
 double
@@ -52,6 +53,7 @@ frexp_tm(double num, int* exp);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * Variant of frexpf_tx() that operates on transactional memory.
  */
 float
@@ -62,6 +64,7 @@ frexpf_tm(float num, int* exp);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * Variant of frexpl_tx() that operates on transactional memory.
  */
 long double
@@ -72,6 +75,7 @@ frexpl_tm(long double num, int* exp);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * Variant of modf_tx() that operates on transactional memory.
  */
 double
@@ -82,6 +86,7 @@ modf_tm(double x, double* iptr);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * Variant of modff_tx() that operates on transactional memory.
  */
 float
@@ -92,6 +97,7 @@ modff_tm(float x, float* iptr);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * Variant of modfl_tx() that operates on transactional memory.
  */
 long double
@@ -102,6 +108,7 @@ modfl_tm(long double x, long double* iptr);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * Variant of nan_tx() that operates on transactional memory.
  */
 double
@@ -112,6 +119,7 @@ nan_tm(const char* tagp);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * Variant of nanf_tx() that operates on transactional memory.
  */
 float
@@ -122,6 +130,7 @@ nanf_tm(const char* tagp);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * Variant of nanl_tx() that operates on transactional memory.
  */
 long double
@@ -132,6 +141,7 @@ nanl_tm(const char* tagp);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * Variant of remquo_tx() that operates on transactional memory.
  */
 double
@@ -142,6 +152,7 @@ remquo_tm(double x, double y, int* quo);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * Variant of remquof_tx() that operates on transactional memory.
  */
 float
@@ -152,6 +163,7 @@ remquof_tm(float x, float y, int* quo);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libm
  * Variant of remquol_tx() that operates on transactional memory.
  */
 long double
