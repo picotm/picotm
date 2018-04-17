@@ -39,7 +39,7 @@
 PICOTM_BEGIN_DECLS
 
 /**
- * \ingroup group_lib
+ * \ingroup group_core
  * \file
  *
  * \brief Main header file for picotm.
@@ -269,7 +269,7 @@ picotm_error_as_siginfo_t(void);
 PICOTM_END_DECLS
 
 /**
- * \defgroup group_lib The picotm Programming Interface
+ * \defgroup group_core The picotm Programming Interface
  *
  * \brief This section provides information for users of picotm. It explains
  *        the concept of transactions and how to run a transaction with
@@ -376,8 +376,8 @@ PICOTM_END_DECLS
  *
  * ## Table of Contents
  *
- *  -# \ref group_lib \n
- *      \copybrief group_lib
+ *  -# \ref group_core \n
+ *      \copybrief group_core
  *  -# \ref group_modules \n
  *      \copybrief group_modules
  *  -# \ref group_tm \n
