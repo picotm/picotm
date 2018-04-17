@@ -42,9 +42,12 @@ PICOTM_BEGIN_DECLS
 #if defined(PICOTM_LIBPTHREAD_HAVE_TYPE_PTHREAD_T) && \
             PICOTM_LIBPTHREAD_HAVE_TYPE_PTHREAD_T || \
     defined(__PICOTM_DOXYGEN)
+/** \addtogroup group_libpthread
+ * \{ */
 PICOTM_TM_LOAD_TX(pthread_t, pthread_t);
 PICOTM_TM_STORE_TX(pthread_t, pthread_t);
 PICOTM_TM_PRIVATIZE_TX(pthread_t, pthread_t);
+/** \} */
 #endif
 
 #if defined(PICOTM_LIBPTHREAD_HAVE_PTHREAD_EQUAL) && \
@@ -52,6 +55,7 @@ PICOTM_TM_PRIVATIZE_TX(pthread_t, pthread_t);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libpthread
  * A transaction-safe implementation of [pthread_equal()][posix::pthread_equal].
  *
  * [posix::pthread_equal]:
@@ -66,6 +70,7 @@ pthread_equal_tx(pthread_t t1, pthread_t t2);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libpthread
  * A transaction-safe implementation of [pthread_self()][posix::pthread_self].
  *
  * [posix::pthread_self]:
