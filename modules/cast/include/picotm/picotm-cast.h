@@ -39,6 +39,7 @@ PICOTM_BEGIN_DECLS
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_cast
  * Reports an overflow error to the transaction manager.
  * \warning This is an internal interface. Don't use it in application code.
  */
@@ -47,6 +48,7 @@ __picotm_cast_error_overflow_tx(void);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_cast
  * Reports an underflow error to the transaction manager.
  * \warning This is an internal interface. Don't use it in application code.
  */
@@ -54,6 +56,7 @@ void
 __picotm_cast_error_underflow_tx(void);
 
 /**
+ * \ingroup group_cast
  * Defines a C function that casts a value from a source type to a
  * destination type.
  * \param   __sname The name of the source type.
