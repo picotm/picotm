@@ -195,7 +195,7 @@ malloc_tx(size_t size);
 #if defined(PICOTM_LIBC_HAVE_MKDTEMP) && PICOTM_LIBC_HAVE_MKDTEMP && \
     !defined(__MACH__) || \
     defined(__PICOTM_DOXYGEN)
-PICOTM_EXPORT
+PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [mkdtemp()][posix::mkdtemp].
  *
@@ -208,7 +208,7 @@ mkdtemp_tx(char* template);
 
 #if defined(PICOTM_LIBC_HAVE_MKSTEMP) && PICOTM_LIBC_HAVE_MKSTEMP || \
     defined(__PICOTM_DOXYGEN)
-PICOTM_EXPORT
+PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [mkstemp()][posix::mkstemp].
  *
