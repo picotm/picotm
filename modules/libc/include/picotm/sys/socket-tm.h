@@ -42,6 +42,7 @@ PICOTM_BEGIN_DECLS
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of accept_tx() that operates on transactional memory.
  */
 int
@@ -52,6 +53,7 @@ accept_tm(int socket, struct sockaddr* address, socklen_t* address_len);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of bind_tx() that operates on transactional memory.
  */
 int
@@ -62,6 +64,7 @@ bind_tm(int socket, const struct sockaddr* address, socklen_t address_len);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of connect_tx() that operates on transactional memory.
  */
 int
@@ -72,6 +75,7 @@ connect_tm(int socket, const struct sockaddr* address, socklen_t address_len);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of recv_tx() that operates on transactional memory.
  */
 ssize_t
@@ -82,6 +86,7 @@ recv_tm(int socket, void* buffer, size_t length, int flags);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of send_tx() that operates on transactional memory.
  */
 ssize_t

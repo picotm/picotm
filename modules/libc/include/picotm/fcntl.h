@@ -42,6 +42,7 @@ PICOTM_BEGIN_DECLS
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [creat()][posix::creat].
  *
  * [posix::creat]:
@@ -55,6 +56,7 @@ creat_tx(const char* path, mode_t mode);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [fcntl()][posix::fcntl].
  *
  * [posix::fcntl]:
@@ -68,6 +70,7 @@ fcntl_tx(int fildes, int cmd, ...);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [open()][posix::open].
  *
  * [posix::open]:

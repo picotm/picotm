@@ -42,6 +42,7 @@ PICOTM_BEGIN_DECLS
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [sched_yield()][posix::sched_yield].
  *
  * [posix::sched_yield]:

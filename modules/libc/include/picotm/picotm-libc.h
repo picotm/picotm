@@ -45,6 +45,7 @@ struct picotm_error;
  */
 
 /**
+ * \ingroup group_libc
  * The error-recovery strategy for system calls.
  *
  * Each module detects errors and initiates recovery. Sometimes reported
@@ -68,6 +69,7 @@ enum picotm_libc_error_recovery {
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Sets the strategy for deciding when to recover from errors.
  * \param   recovery    The error-recovering strategy.
  */
@@ -76,6 +78,7 @@ picotm_libc_set_error_recovery(enum picotm_libc_error_recovery recovery);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Returns the strategy for deciding when to recover from errors.
  * \returns The current error-recovering strategy.
  */
@@ -87,6 +90,7 @@ picotm_libc_get_error_recovery(void);
  */
 
 /**
+ * \ingroup group_libc
  * File-type constants.
  */
 enum picotm_libc_file_type {
@@ -98,6 +102,7 @@ enum picotm_libc_file_type {
 };
 
 /**
+ * \ingroup group_libc
  * Concurrency-control mode for file-descriptor I/O.
  */
 enum picotm_libc_cc_mode {
@@ -108,6 +113,7 @@ enum picotm_libc_cc_mode {
 };
 
 /**
+ * \ingroup group_libc
  * File-descriptor I/O write mode.
  */
 enum picotm_libc_write_mode {
@@ -119,6 +125,7 @@ enum picotm_libc_write_mode {
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Saves the value of 'errno' during a transaction. Module authors should
  * call this function before invoking a function that might modify errno's
  * value.
@@ -128,6 +135,7 @@ picotm_libc_save_errno(void);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Sets the preferred mode of concurrency control for I/O on a specific
  * file type.
  * \param   file_type   The file type to set the CC mode for.
@@ -139,6 +147,7 @@ picotm_libc_set_file_type_cc_mode(enum picotm_libc_file_type file_type,
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Returns the currently preferred mode of concurrency control for I/O on
  * a specific file type.
  * \param   file_type   The file type to get the CC mode from.
@@ -153,6 +162,7 @@ picotm_libc_get_file_type_cc_mode(enum picotm_libc_file_type file_type);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * \brief Acquires the signal handler from the process.
  * \param       signum          The number of the signal to acquire.
  * \param       nontx_sigaction The signal-handler function for
@@ -171,6 +181,7 @@ picotm_libc_acquire_proc_signal(int signum,
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * \brief Releases a previously acquired signal to the process.
  * \param       signum  The number of the signal to release.
  * \param[out]  error   Returns an error to the caller.
@@ -184,6 +195,7 @@ picotm_libc_release_proc_signal(int signum, struct picotm_error* error);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * \brief Enable recovery for a UNIX signal.
  * \param       signum          The signal number.
  * \param       is_recoverable  Send a recoverable error to the transaction.
@@ -206,6 +218,7 @@ picotm_libc_add_signal(int signum, _Bool is_recoverable,
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * \brief Disable recovery for a UNIX signal.
  * \param   signum  The signal number.
  */
@@ -214,6 +227,7 @@ picotm_libc_remove_signal(int signum);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * \brief Disable recovery for all UNIX signals.
  */
 void

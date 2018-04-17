@@ -42,9 +42,12 @@ PICOTM_BEGIN_DECLS
 #if defined(PICOTM_LIBC_HAVE_TYPE_PTRDIFF_T) && \
             PICOTM_LIBC_HAVE_TYPE_PTRDIFF_T || \
     defined(__PICOTM_DOXYGEN)
+/** \addtogroup group_libc
+ * \{ */
 PICOTM_TM_LOAD_TX(ptrdiff_t, ptrdiff_t);
 PICOTM_TM_STORE_TX(ptrdiff_t, ptrdiff_t);
 PICOTM_TM_PRIVATIZE_TX(ptrdiff_t, ptrdiff_t);
+/** \} */
 #endif
 
 #if defined(PICOTM_LIBC_HAVE_TYPE_SIZE_T) && PICOTM_LIBC_HAVE_TYPE_SIZE_T || \
@@ -52,17 +55,26 @@ PICOTM_TM_PRIVATIZE_TX(ptrdiff_t, ptrdiff_t);
 #if !defined(__PICOTM_LOAD_SIZE_T_TX) || !__PICOTM_LOAD_SIZE_T_TX
 #undef __PICOTM_LOAD_SIZE_T_TX
 #define __PICOTM_LOAD_SIZE_T_TX     (1)
+/** \addtogroup group_libc
+ * \{ */
 PICOTM_TM_LOAD_TX(size_t, size_t);
+/** \} */
 #endif
 #if !defined(__PICOTM_STORE_SIZE_T_TX) || !__PICOTM_STORE_SIZE_T_TX
 #undef __PICOTM_STORE_SIZE_T_TX
 #define __PICOTM_STORE_SIZE_T_TX    (1)
+/** \addtogroup group_libc
+ * \{ */
 PICOTM_TM_STORE_TX(size_t, size_t);
+/** \} */
 #endif
 #if !defined(__PICOTM_PRIVATIZE_SIZE_T_TX) || !__PICOTM_PRIVATIZE_SIZE_T_TX
 #undef __PICOTM_PRIVATIZE_SIZE_T_TX
 #define __PICOTM_PRIVATIZE_SIZE_T_TX    (1)
+/** \addtogroup group_libc
+ * \{ */
 PICOTM_TM_PRIVATIZE_TX(size_t, size_t);
+/** \} */
 #endif
 #endif
 
@@ -72,18 +84,27 @@ PICOTM_TM_PRIVATIZE_TX(size_t, size_t);
 #if !defined(__PICOTM_LOAD_WCHAR_T_TX) || !__PICOTM_LOAD_WCHAR_T_TX
 #undef __PICOTM_LOAD_WCHAR_T_TX
 #define __PICOTM_LOAD_WCHAR_T_TX    (1)
+/** \addtogroup group_libc
+ * \{ */
 PICOTM_TM_LOAD_TX(wchar_t, wchar_t);
+/** \} */
 #endif
 #if !defined(__PICOTM_STORE_WCHAR_T_TX) || !__PICOTM_STORE_WCHAR_T_TX
 #undef __PICOTM_STORE_WCHAR_T_TX
 #define __PICOTM_STORE_WCHAR_T_TX   (1)
+/** \addtogroup group_libc
+ * \{ */
 PICOTM_TM_STORE_TX(wchar_t, wchar_t);
+/** \} */
 #endif
 #if !defined(__PICOTM_PRIVATIZE_WCHAR_T_TX) || \
     !__PICOTM_PRIVATIZE_WCHAR_T_TX
 #undef __PICOTM_PRIVATIZE_WCHAR_T_TX
 #define __PICOTM_PRIVATIZE_WCHAR_T_TX   (1)
+/** \addtogroup group_libc
+ * \{ */
 PICOTM_TM_PRIVATIZE_TX(wchar_t, wchar_t);
+/** \} */
 #endif
 #endif
 

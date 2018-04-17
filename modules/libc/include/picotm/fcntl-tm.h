@@ -42,6 +42,7 @@ PICOTM_BEGIN_DECLS
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of creat_tx() that operates on transactional memory.
  */
 int
@@ -52,6 +53,7 @@ creat_tm(const char* path, mode_t mode);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of fcntl_tx() that operates on transactional memory.
  */
 int
@@ -62,6 +64,7 @@ fcntl_tm(int fildes, int cmd, ...);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * Variant of open_tx() that operates on transactional memory.
  */
 int

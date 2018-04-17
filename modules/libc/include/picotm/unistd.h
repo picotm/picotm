@@ -42,6 +42,7 @@ PICOTM_BEGIN_DECLS
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW PICOTM_NORETURN
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [_exit()][posix::_exit].
  *
  * \bug Calling _exit() simply terminates the process. It probably should not
@@ -58,6 +59,7 @@ _exit_tx(int status);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [chdir()][posix::chdir].
  *
  * [posix::chdir]:
@@ -71,6 +73,7 @@ chdir_tx(const char* path);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [close()][posix::close].
  *
  * [posix::close]:
@@ -84,6 +87,7 @@ close_tx(int fildes);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [dup()][posix::dup].
  *
  * [posix::dup]:
@@ -97,6 +101,7 @@ dup_tx(int fildes);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [dup2()][posix::dup2].
  *
  * [posix::dup2]:
@@ -110,6 +115,7 @@ dup2_tx(int fildes, int fildes2);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [fchdir()][posix::fchdir].
  *
  * [posix::fchdir]:
@@ -123,6 +129,7 @@ fchdir_tx(int fildes);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [fsync()][posix::fsync].
  *
  * [posix::fsync]:
@@ -136,6 +143,7 @@ fsync_tx(int fildes);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [getcwd()][posix::getcwd].
  *
  * [posix::getcwd]:
@@ -149,6 +157,7 @@ getcwd_tx(char* buf, size_t size);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [link()][posix::link].
  *
  * [posix::link]:
@@ -162,6 +171,7 @@ link_tx(const char* path1, const char* path2);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [lseek()][posix::lseek].
  *
  * [posix::lseek]:
@@ -176,6 +186,7 @@ lseek_tx(int fildes, off_t offset, int whence);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [mkdtemp()][darwin::mkdtemp] on
  * Darwin system.
  *
@@ -190,6 +201,7 @@ mkdtemp_tx(char* template);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [pipe()][posix::pipe].
  *
  * [posix::pipe]:
@@ -203,6 +215,7 @@ pipe_tx(int fildes[2]);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [pread()][posix::pread].
  *
  * [posix::pread]:
@@ -216,6 +229,7 @@ pread_tx(int fildes, void* buf, size_t nbyte, off_t offset);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [pwrite()][posix::pwrite].
  *
  * [posix::pwrite]:
@@ -229,6 +243,7 @@ pwrite_tx(int fildes, const void* buf, size_t nbyte, off_t offset);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [read()][posix::read].
  *
  * [posix::read]:
@@ -242,6 +257,7 @@ read_tx(int fildes, void* buf, size_t nbyte);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [sleep()][posix::sleep].
  *
  * [posix::sleep]:
@@ -255,6 +271,7 @@ sleep_tx(unsigned seconds);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [sync()][posix::sync].
  *
  * [posix::sync]:
@@ -268,6 +285,7 @@ sync_tx(void);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [unlink()][posix::unlink].
  *
  * [posix::unlink]:
@@ -281,6 +299,7 @@ unlink_tx(const char* path);
     defined(__PICOTM_DOXYGEN)
 PICOTM_NOTHROW
 /**
+ * \ingroup group_libc
  * A transaction-safe implementation of [write()][posix::write].
  *
  * [posix::write]:
