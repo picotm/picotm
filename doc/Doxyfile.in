@@ -29,7 +29,38 @@ ALWAYS_DETAILED_SEC    = NO
 INLINE_INHERITED_MEMB  = NO
 FULL_PATH_NAMES        = YES
 STRIP_FROM_PATH        = @abs_top_srcdir@
-STRIP_FROM_INC_PATH    =
+STRIP_FROM_INC_PATH    = @abs_top_builddir@/include \
+                         @abs_top_srcdir@/include \
+                         @abs_top_builddir@/modules/cast/include \
+                         @abs_top_srcdir@/modules/cast/include \
+                         @abs_top_builddir@/modules/cast/src \
+                         @abs_top_srcdir@/modules/cast/src \
+                         @abs_top_builddir@/modules/libc/include \
+                         @abs_top_srcdir@/modules/libc/include \
+                         @abs_top_builddir@/modules/libc/src \
+                         @abs_top_srcdir@/modules/libc/src \
+                         @abs_top_builddir@/modules/libm/include \
+                         @abs_top_srcdir@/modules/libm/include \
+                         @abs_top_builddir@/modules/libm/src \
+                         @abs_top_srcdir@/modules/libm/src \
+                         @abs_top_builddir@/modules/libpthread/include \
+                         @abs_top_srcdir@/modules/libpthread/include \
+                         @abs_top_builddir@/modules/libpthread/src \
+                         @abs_top_srcdir@/modules/libpthread/src \
+                         @abs_top_builddir@/modules/arithmetic/include \
+                         @abs_top_srcdir@/modules/arithmetic/include \
+                         @abs_top_builddir@/modules/arithmetic/src \
+                         @abs_top_srcdir@/modules/arithmetic/src \
+                         @abs_top_builddir@/modules/tm/include \
+                         @abs_top_srcdir@/modules/tm/include \
+                         @abs_top_builddir@/modules/tm/src \
+                         @abs_top_srcdir@/modules/tm/src \
+                         @abs_top_builddir@/modules/txlib/include \
+                         @abs_top_srcdir@/modules/txlib/include \
+                         @abs_top_builddir@/modules/txlib/src \
+                         @abs_top_srcdir@/modules/txlib/src \
+                         @abs_top_builddir@/src \
+                         @abs_top_srcdir@/src
 SHORT_NAMES            = YES
 JAVADOC_AUTOBRIEF      = NO
 QT_AUTOBRIEF           = NO
