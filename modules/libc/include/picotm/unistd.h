@@ -174,7 +174,7 @@ lseek_tx(int fildes, off_t offset, int whence);
 #if defined(PICOTM_LIBC_HAVE_MKDTEMP) && PICOTM_LIBC_HAVE_MKDTEMP && \
     defined(__MACH__) || \
     defined(__PICOTM_DOXYGEN)
-PICOTM_EXPORT
+PICOTM_NOTHROW
 /**
  * A transaction-safe implementation of [mkdtemp()][darwin::mkdtemp] on
  * Darwin system.

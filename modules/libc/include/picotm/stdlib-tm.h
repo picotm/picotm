@@ -51,7 +51,7 @@ free_tm(void* ptr);
 #if defined(PICOTM_LIBC_HAVE_MKDTEMP) && PICOTM_LIBC_HAVE_MKDTEMP && \
     !defined(__MACH__) || \
     defined(__PICOTM_DOXYGEN)
-PICOTM_EXPORT
+PICOTM_NOTHROW
 /**
  * Variant of mkdtemp_tx() that operates on transactional memory.
  */
@@ -61,7 +61,7 @@ mkdtemp_tm(char* template);
 
 #if defined(PICOTM_LIBC_HAVE_MKSTEMP) && PICOTM_LIBC_HAVE_MKSTEMP || \
     defined(__PICOTM_DOXYGEN)
-PICOTM_EXPORT
+PICOTM_NOTHROW
 /**
  * Variant of mkstemp_tx() that operates on transactional memory.
  */
