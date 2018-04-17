@@ -27,7 +27,6 @@
 
 /**
  * \ingroup group_core
- * \ingroup group_modules
  * \file
  *
  * \brief Contains picotm error constants.
