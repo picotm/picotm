@@ -104,10 +104,16 @@ enum __picotm_mode {
  * macro saves the signal mask.
  * \warning This is an internal interface. Don't use it in application code.
  */
-#define __picotm_setjmp(env_)   (enum __picotm_mode)sigsetjmp(env_, 1)
+#define __picotm_setjmp(env_)   ((enum __picotm_mode)sigsetjmp(env_, 1))
+/* Performs a non-local goto. For systems with Unix signals, the macro
+ * restores the signal mask.
+ * \warning This is an internal interface. Don't use it in application code.
+ */
+#define __picotm_longjmp(env_, val_)    siglongjmp(env_, val_)
 #else /* systems without Unix signals */
-#define __picotm_jmp_buf        jmp_buf
-#define __picotm_setjmp(env_)   (enum __picotm_mode)setjmp(env_)
+#define __picotm_jmp_buf                jmp_buf
+#define __picotm_setjmp(env_)           ((enum __picotm_mode)setjmp(env_))
+#define __picotm_longjmp(env_, val_)    longjmp(env_, val_)
 #endif
 
 PICOTM_NOTHROW
