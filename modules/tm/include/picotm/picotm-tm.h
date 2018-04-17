@@ -39,14 +39,16 @@ PICOTM_BEGIN_DECLS
  * \brief Public interfaces of picotm's Transactional Memory module.
  */
 
-/*
+/**
+ * \ingroup group_tm
  * Marks a value as TM value; required for load/store ops.
  * \warning This is an internal interface. Don't use it in application code.
  */
 #define __PICOTM_TM_ADDRESS(__value) ((uintptr_t)(__value))
 
 PICOTM_NOTHROW
-/*
+/**
+ * \ingroup group_tm
  * Loads the memory at address into buffer.
  * \warning This is an internal interface. Don't use it in application code.
  */
@@ -54,6 +56,7 @@ void
 __picotm_tm_load(uintptr_t addr, void* buf, size_t siz);
 
 /**
+ * \ingroup group_tm
  * Loads the memory at address into a buffer.
  * \param   addr    The address to load from.
  * \param   buf     The transaction-local buffer to store the loaded value in.
@@ -66,6 +69,7 @@ load_tx(const void* addr, void* buf, size_t siz)
 }
 
 /**
+ * \ingroup group_tm
  * Loads a pointer with transactional semantics.
  * \param   addr    The address to load from.
  * \returns The transaction-local pointer.
@@ -79,6 +83,7 @@ load_ptr_tx(const void* addr)
 }
 
 /**
+ * \ingroup group_tm
  * Defines a C function for conveniently loading a value of a specific type
  * into a transaction. The helper function's name is load_<__name>_tx.
  * \param   __name  The name of the type.
@@ -99,7 +104,8 @@ load_ptr_tx(const void* addr)
     }
 
 PICOTM_NOTHROW
-/*
+/**
+ * \ingroup group_tm
  * Stores the buffer at address in memory.
  * \warning This is an internal interface. Don't use it in application code.
  */
@@ -107,6 +113,7 @@ void
 __picotm_tm_store(uintptr_t addr, const void* buf, size_t siz);
 
 /**
+ * \ingroup group_tm
  * Stores the buffer at address in memory.
  * \param   addr    The address to store to.
  * \param   buf     The transaction-local buffer to load the loaded value from.
@@ -119,6 +126,7 @@ store_tx(void* addr, const void* buf, size_t siz)
 }
 
 /**
+ * \ingroup group_tm
  * Stores the pointer in memory.
  * \param   addr    The address to store to.
  * \param   ptr     The pointer value to store.
@@ -130,6 +138,7 @@ store_ptr_tx(void* addr, const void* ptr)
 }
 
 /**
+ * \ingroup group_tm
  * Defines a C function for conveniently storing a value of a specific type
  * into a transaction. The helper function's name is store_<__name>_tx.
  * \param   __name  The name of the type.
@@ -148,7 +157,8 @@ store_ptr_tx(void* addr, const void* ptr)
     }
 
 PICOTM_NOTHROW
-/*
+/**
+ * \ingroup group_tm
  * Copies data between memory regions.
  * \warning This is an internal interface. Don't use it in application code.
  */
@@ -156,6 +166,7 @@ void
 __picotm_tm_loadstore(uintptr_t laddr, uintptr_t saddr, size_t siz);
 
 /**
+ * \ingroup group_tm
  * Copies data between non-transactional memory regions.
  * \param   laddr   The address of the source region.
  * \param   saddr   The address of the destination region.
@@ -168,7 +179,10 @@ loadstore_tx(const void* laddr, void* saddr, size_t siz)
                           __PICOTM_TM_ADDRESS(saddr), siz);
 }
 
-/** Flags for memory privatizations. */
+/**
+ * \ingroup group_tm
+ * Flags for memory privatizations.
+ */
 enum {
     /** Privatizes a memory region for loading. */
     PICOTM_TM_PRIVATIZE_LOAD = 1 << 0,
@@ -176,11 +190,15 @@ enum {
     PICOTM_TM_PRIVATIZE_STORE = 1 << 1
 };
 
-/** Privatizes a memory region for loading and storing. */
+/**
+ * \ingroup group_tm
+ * Privatizes a memory region for loading and storing.
+ */
 #define PICOTM_TM_PRIVATIZE_LOADSTORE    \
     (PICOTM_TM_PRIVATIZE_LOAD | PICOTM_TM_PRIVATIZE_STORE)
 
-/*
+/**
+ * \ingroup group_tm
  * Privatizes the memory region starting at address.
  * \warning This is an internal interface. Don't use it in application code.
  */
@@ -188,7 +206,8 @@ void
 __picotm_tm_privatize(uintptr_t addr, size_t siz, unsigned long flags);
 
 PICOTM_NOTHROW
-/*
+/**
+ * \ingroup group_tm
  * Privatizes the memory region starting at address, ending
  * at character 'c'.
  * \warning This is an internal interface. Don't use it in application code.
@@ -197,6 +216,7 @@ void
 __picotm_tm_privatize_c(uintptr_t addr, int c, unsigned long flags);
 
 /**
+ * \ingroup group_tm
  * Privatizes the memory region starting at address.
  * \param   addr    The address to privatize.
  * \param   siz     The number of bytes to privatize.
@@ -210,6 +230,7 @@ privatize_tx(const void* addr, size_t siz, unsigned long flags)
 }
 
 /**
+ * \ingroup group_tm
  * Privatizes the memory region starting at address, ending
  * at character 'c'.
  * \param   addr    The address to privatize.
@@ -224,6 +245,7 @@ privatize_c_tx(const void* addr, int c, unsigned long flags)
 }
 
 /**
+ * \ingroup group_tm
  * Defines a C function for conveniently privatizing a value of a specific
  * type into a transaction. The helper function's name is store_<__name>_tx.
  * \param   __name  The name of the type.
