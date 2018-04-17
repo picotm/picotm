@@ -26,7 +26,7 @@
 #pragma once
 
 /**
- * \ingroup group_lib
+ * \ingroup group_core
  * \ingroup group_modules
  * \file
  *
