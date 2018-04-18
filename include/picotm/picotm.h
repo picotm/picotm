@@ -209,7 +209,7 @@ PICOTM_NOTHROW
  *
  * \returns The current error status.
  */
-bool
+_Bool
 picotm_error_is_non_recoverable(void);
 
 PICOTM_NOTHROW
