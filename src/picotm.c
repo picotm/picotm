@@ -474,7 +474,7 @@ picotm_error_status()
 }
 
 PICOTM_EXPORT
-bool
+_Bool
 picotm_error_is_non_recoverable()
 {
     return get_non_null_error()->is_non_recoverable;
