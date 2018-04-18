@@ -461,3 +461,12 @@ PICOTM_END_DECLS
  * an undo. The free operation doesn't actually free the memory immediately,
  * but creates an event to free the memory during a commit.
  */
+
+/**
+ * \defgroup group_lib The Module Helper Library
+ *
+ * \brief Different modules often share a number of fundamental requirements
+ *        and concepts. Picotm comes with a large number of data structures
+ *        and functions for modules to re-use. This includes locks, tree
+ *        maps, arrays, reference-counting and more.
+ */

@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -30,7 +30,7 @@
 #include "compiler.h"
 
 /**
- * \ingroup group_modules
+ * \ingroup group_lib
  * \file
  */
 
@@ -39,6 +39,7 @@ PICOTM_BEGIN_DECLS
 struct picotm_error;
 
 /**
+ * \ingroup group_lib
  * \brief A reader-writer lock.
  *
  * The `struct picotm_rwlock` data structure implements a reader-writer
@@ -107,6 +108,7 @@ struct picotm_rwlock {
 };
 
 /**
+ * \ingroup group_lib
  * \brief Initializer macro for R/W state variables.
  */
 #define PICOTM_RWLOCK_INITIALIZER   \
@@ -116,6 +118,7 @@ struct picotm_rwlock {
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_lib
  * Initializes a reader-writer lock.
  *
  * \param self  The reader-writer lock to initialize.
@@ -125,6 +128,7 @@ picotm_rwlock_init(struct picotm_rwlock* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_lib
  * Uninitializes a reader-writer lock.
  *
  * \param self  The reader-writer lock to uninitialize.
@@ -134,6 +138,7 @@ picotm_rwlock_uninit(struct picotm_rwlock* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_lib
  * Tries to acquire a read lock. If the lock could not be acquired, the
  * error parameter will return a conflict.
  *
@@ -146,6 +151,7 @@ picotm_rwlock_try_rdlock(struct picotm_rwlock* self,
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_lib
  * Tries to acquire a writer lock or upgrade an acquired reader lock to
  * a writer lock. If the lock could not be acquired, the error parameter
  * will return a conflict.
@@ -160,6 +166,7 @@ picotm_rwlock_try_wrlock(struct picotm_rwlock* self, bool upgrade,
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_lib
  * Releases a reader-writer lock.
  *
  * \param   self    The reader-writer lock to release.

@@ -30,13 +30,14 @@
 #include <stdint.h>
 
 /**
- * \ingroup group_modules
+ * \ingroup group_lib
  * \file
  */
 
 PICOTM_BEGIN_DECLS
 
 /**
+ * \ingroup group_lib
  * \brief Rounds an address downwards to the nearest address with the given
  *        alignment.
  * \param   addr    A memory address.
@@ -50,6 +51,7 @@ picotm_address_floor(uintptr_t addr, size_t algn)
 }
 
 /**
+ * \ingroup group_lib
  * \brief Rounds an address upwards to the nearest address with the given
  *        alignment.
  * \param   addr    A memory address.
@@ -64,6 +66,7 @@ picotm_address_ceil(uintptr_t addr, size_t algn)
 }
 
 /**
+ * \ingroup group_lib
  * Returns the container of a data structure.
  * \param   ptr     A pointer to a data structure.
  * \param   type    The type of the container.
@@ -74,6 +77,7 @@ picotm_address_ceil(uintptr_t addr, size_t algn)
     ((type*)(((unsigned char*)(ptr)) - offsetof(type, member)))
 
 /**
+ * \ingroup group_lib
  * \brief Rounds a memory location upwards to the nearest address
  *        with the given alignment.
  * \param   ptr     A pointer to a memory location.
@@ -87,6 +91,7 @@ picotm_ptr_ceil(const void* ptr, size_t algn)
 }
 
 /**
+ * \ingroup group_lib
  * \brief Subtracts two memory locations and returns the number of
  *        raw bytes between them.
  * \param hi    The higher memory location.
@@ -100,6 +105,7 @@ picotm_ptr_diff(const void* hi, const void* lo)
 }
 
 /**
+ * \ingroup group_lib
  * \brief Rounds a memory location downwards to the nearest address
  *        with the given alignment.
  * \param   ptr     A pointer to a memory location.
@@ -113,6 +119,7 @@ picotm_ptr_floor(const void* ptr, size_t algn)
 }
 
 /**
+ * \ingroup group_lib
  * \brief Returns the number of size and alignment bytes of a given type.
  * \param   __type  The type.
  * \returns The number of bytes to hold a value of the given type and

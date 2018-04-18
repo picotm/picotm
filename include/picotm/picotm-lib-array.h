@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -28,40 +28,46 @@
 #include "compiler.h"
 
 /**
- * \ingroup group_modules
+ * \ingroup group_lib
  * \file
  */
 
 PICOTM_BEGIN_DECLS
 
 /**
+ * \ingroup group_lib
  * Computes the number of elements in a static C array.
  */
 #define picotm_arraylen(_array) (sizeof(_array) / sizeof((_array)[0]))
 
 /**
+ * \ingroup group_lib
  * Returns the beginning of a static C array.
  */
 #define picotm_arraybeg(_array) (_array)
 
 /**
+ * \ingroup group_lib
  * Returns the address of the element at the specified index in a
  * static C array.
  */
 #define picotm_arrayat(_array, _i)  (picotm_arraybeg(_array) + (_i))
 
 /**
+ * \ingroup group_lib
  * Returns the address after a static C array.
  */
 #define picotm_arrayend(_array) \
     picotm_arrayat(_array, picotm_arraylen(_array))
 
 /**
+ * \ingroup group_lib
  * Returns the address of the first element in a static C array.
  */
 #define picotm_arrayfirst(_array)   (_array)
 
 /**
+ * \ingroup group_lib
  * Returns the address of the last element in a static C array.
  */
 #define picotm_arraylast(_array)    (picotm_arrayend(_array) - 1)
