@@ -34,7 +34,7 @@
 #include <signal.h>
 #endif
 #include "compiler.h"
-#include "picotm-error.h"
+#include "picotm-error-base.h"
 
 PICOTM_BEGIN_DECLS
 
