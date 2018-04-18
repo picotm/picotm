@@ -40,6 +40,7 @@ PICOTM_BEGIN_DECLS
 PICOTM_NOTHROW
 /**
  * \ingroup group_arithmetic
+ * \internal
  * Reports a division-by-zero error to the transaction manager.
  * \warning This is an internal interface. Don't use it in application code.
  */
@@ -49,6 +50,7 @@ __picotm_arithmetic_error_divbyzero_tx(void);
 PICOTM_NOTHROW
 /**
  * \ingroup group_arithmetic
+ * \internal
  * Reports an overflow error to the transaction manager.
  * \warning This is an internal interface. Don't use it in application code.
  */
@@ -58,6 +60,7 @@ __picotm_arithmetic_error_overflow_tx(void);
 PICOTM_NOTHROW
 /**
  * \ingroup group_arithmetic
+ * \internal
  * Reports an underflow error to the transaction manager.
  * \warning This is an internal interface. Don't use it in application code.
  */
@@ -66,6 +69,7 @@ __picotm_arithmetic_error_underflow_tx(void);
 
 /**
  * \ingroup group_arithmetic
+ * \internal
  * Tests if a signed type uses two's complement.
  * \warning This is an internal interface. Don't use it in application code.
  */
@@ -75,6 +79,7 @@ __picotm_arithmetic_error_underflow_tx(void);
 
 /**
  * \ingroup group_arithmetic
+ * \internal
  * Tests if a type is unsigned.
  * \warning This is an internal interface. Don't use it in application code.
  */
