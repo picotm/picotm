@@ -40,6 +40,7 @@ PICOTM_BEGIN_DECLS
 PICOTM_NOTHROW
 /**
  * \ingroup group_cast
+ * \internal
  * Reports an overflow error to the transaction manager.
  * \warning This is an internal interface. Don't use it in application code.
  */
@@ -49,6 +50,7 @@ __picotm_cast_error_overflow_tx(void);
 PICOTM_NOTHROW
 /**
  * \ingroup group_cast
+ * \internal
  * Reports an underflow error to the transaction manager.
  * \warning This is an internal interface. Don't use it in application code.
  */
