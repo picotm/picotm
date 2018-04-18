@@ -48,6 +48,7 @@ struct picotm_ref16 {
 
 /**
  * \ingroup group_lib
+ * \internal
  * Initializes the counter with the given value.
  * \warning This is an internal interface. Don't use it in application code.
  */
@@ -59,6 +60,7 @@ __picotm_ref16_init(struct picotm_ref16* self, unsigned long count)
 
 /**
  * \ingroup group_lib
+ * \internal
  * Increments a reference counter.
  * \warning This is an internal interface. Don't use it in application code.
  */
@@ -73,6 +75,7 @@ __picotm_ref16_up(struct picotm_ref16* self)
 
 /**
  * \ingroup group_lib
+ * \internal
  * Decrements a reference counter.
  * \warning This is an internal interface. Don't use it in application code.
  */
@@ -87,6 +90,7 @@ __picotm_ref16_down(struct picotm_ref16* self)
 
 /**
  * \ingroup group_lib
+ * \internal
  * Reads the reference counter's value.
  * \warning This is an internal interface. Don't use it in application code.
  */
@@ -116,6 +120,7 @@ struct picotm_shared_ref16 {
 
 /**
  * \ingroup group_lib
+ * \internal
  * Initializes the counter with the given value.
  * \warning This is an internal interface. Don't use it in application code.
  */
@@ -127,6 +132,7 @@ __picotm_shared_ref16_init(struct picotm_shared_ref16* self, uint16_t count)
 
 /**
  * \ingroup group_lib
+ * \internal
  * Increments a reference counter.
  * \warning This is an internal interface. Don't use it in application code.
  */
@@ -142,6 +148,7 @@ __picotm_shared_ref16_up(struct picotm_shared_ref16* self)
 
 /**
  * \ingroup group_lib
+ * \internal
  * Decrements a reference counter.
  * \warning This is an internal interface. Don't use it in application code.
  */
@@ -157,6 +164,7 @@ __picotm_shared_ref16_down(struct picotm_shared_ref16* self)
 
 /**
  * \ingroup group_lib
+ * \internal
  * Reads the reference counter's value.
  * \warning This is an internal interface. Don't use it in application code.
  */
