@@ -41,6 +41,7 @@ PICOTM_BEGIN_DECLS
 
 /**
  * \ingroup group_tm
+ * \internal
  * Marks a value as TM value; required for load/store ops.
  * \warning This is an internal interface. Don't use it in application code.
  */
@@ -49,6 +50,7 @@ PICOTM_BEGIN_DECLS
 PICOTM_NOTHROW
 /**
  * \ingroup group_tm
+ * \internal
  * Loads the memory at address into buffer.
  * \warning This is an internal interface. Don't use it in application code.
  */
@@ -106,6 +108,7 @@ load_ptr_tx(const void* addr)
 PICOTM_NOTHROW
 /**
  * \ingroup group_tm
+ * \internal
  * Stores the buffer at address in memory.
  * \warning This is an internal interface. Don't use it in application code.
  */
@@ -159,6 +162,7 @@ store_ptr_tx(void* addr, const void* ptr)
 PICOTM_NOTHROW
 /**
  * \ingroup group_tm
+ * \internal
  * Copies data between memory regions.
  * \warning This is an internal interface. Don't use it in application code.
  */
@@ -199,6 +203,7 @@ enum {
 
 /**
  * \ingroup group_tm
+ * \internal
  * Privatizes the memory region starting at address.
  * \warning This is an internal interface. Don't use it in application code.
  */
@@ -208,6 +213,7 @@ __picotm_tm_privatize(uintptr_t addr, size_t siz, unsigned long flags);
 PICOTM_NOTHROW
 /**
  * \ingroup group_tm
+ * \internal
  * Privatizes the memory region starting at address, ending
  * at character 'c'.
  * \warning This is an internal interface. Don't use it in application code.
