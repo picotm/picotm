@@ -50,6 +50,7 @@ PICOTM_BEGIN_DECLS
  */
 
 /**
+ * \ingroup group_core
  * Marks a non-transactional variable in a function.
  *
  * When restarting a transaction, picotm uses non-local goto, based on
@@ -83,7 +84,9 @@ PICOTM_BEGIN_DECLS
  */
 #define picotm_safe volatile
 
-/* The transaction start mode.
+/**
+ * \ingroup group_core
+ * The transaction start mode.
  * \warning This is an internal interface. Don't use it in application code.
  */
 enum __picotm_mode {
@@ -96,16 +99,22 @@ enum __picotm_mode {
 
 #if defined(PICOTM_HAVE_TYPE_SIGJMP_BUF) && PICOTM_HAVE_TYPE_SIGJMP_BUF ||  \
     defined(__PICOTM_DOXYGEN)
-/* The type of the jump-buffer variable.
+/**
+ * \ingroup group_core
+ * The type of the jump-buffer variable.
  * \warning This is an internal interface. Don't use it in application code.
  */
 #define __picotm_jmp_buf        sigjmp_buf
-/* Sets a non-local goto target. For systems with Unix signals, the
+/**
+ * \ingroup group_core
+ * Sets a non-local goto target. For systems with Unix signals, the
  * macro saves the signal mask.
  * \warning This is an internal interface. Don't use it in application code.
  */
 #define __picotm_setjmp(env_)   ((enum __picotm_mode)sigsetjmp(env_, 1))
-/* Performs a non-local goto. For systems with Unix signals, the macro
+/**
+ * \ingroup group_core
+ * Performs a non-local goto. For systems with Unix signals, the macro
  * restores the signal mask.
  * \warning This is an internal interface. Don't use it in application code.
  */
@@ -117,13 +126,16 @@ enum __picotm_mode {
 #endif
 
 PICOTM_NOTHROW
-/* Begins or restarts a transaction, or handles an error.
+/**
+ * \ingroup group_core
+ * Begins or restarts a transaction, or handles an error.
  * \warning This is an internal interface. Don't use it in application code.
  */
 _Bool
 __picotm_begin(enum __picotm_mode mode, __picotm_jmp_buf* env);
 
 /**
+ * \ingroup group_core
  * Starts a new transaction.
  *
  * Invoking ::picotm_begin starts a new transaction. Any code between
@@ -138,7 +150,8 @@ __picotm_begin(enum __picotm_mode mode, __picotm_jmp_buf* env);
         {
 
 PICOTM_NOTHROW
-/*
+/**
+ * \ingroup group_core
  * Commits the current transaction.
  * \warning This is an internal interface. Don't use it in application code.
  */
@@ -146,6 +159,7 @@ void
 __picotm_commit(void);
 
 /**
+ * \ingroup group_core
  * Commits the current transaction.
  *
  * This macro commits the currently running transaction. Picotm will validate
@@ -161,6 +175,7 @@ __picotm_commit(void);
         } else {
 
 /**
+ * \ingroup group_core
  * Ends the current transaction.
  */
 #define picotm_end  \
@@ -169,6 +184,7 @@ __picotm_commit(void);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_core
  * Restarts the current transaction.
  */
 void
@@ -176,6 +192,7 @@ picotm_restart(void);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_core
  * Returns the number of restarts of the thread's most recent transaction.
  */
 unsigned long
@@ -184,12 +201,14 @@ picotm_number_of_restarts(void);
 PICOTM_NOTHROW
 void
 /**
+ * \ingroup group_core
  * Releases all resources of picotm on the current thread.
  */
 picotm_release(void);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_core
  * Returns the current error status.
  *
  * \attention This function is only valid during the transaction's recovery
@@ -202,6 +221,7 @@ picotm_error_status();
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_core
  * Returns the current error's recoverable status.
  *
  * \attention This function is only valid during the transaction's recovery
@@ -214,6 +234,7 @@ picotm_error_is_non_recoverable(void);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_core
  * Returns the current picotm error code.
  *
  * \attention This function is only valid during the transaction's recovery
@@ -226,6 +247,7 @@ picotm_error_as_error_code(void);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_core
  * Returns the current picotm errno code.
  *
  * \attention This function is only valid during the transaction's recovery
@@ -240,6 +262,7 @@ picotm_error_as_errno(void);
         PICOTM_HAVE_TYPE_KERN_RETURN_T || \
     defined(__PICOTM_DOXYGEN)
 /**
+ * \ingroup group_core
  * Returns the current picotm kern_return_t value.
  *
  * \attention This function is only valid during the transaction's recovery
@@ -255,6 +278,7 @@ picotm_error_as_kern_return_t(void);
             PICOTM_HAVE_TYPE_SIGINFO_T || \
     defined(__PICOTM_DOXYGEN)
 /**
+ * \ingroup group_core
  * Returns the current error's siginfo_t value.
  *
  * \attention This function is only valid during the transaction's recovery

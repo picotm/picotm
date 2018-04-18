@@ -39,6 +39,7 @@
 #endif
 
 /**
+ * \ingroup group_core
  * \def PICOTM_BEGIN_DECLS
  * Begin interface declarations
  */
@@ -49,6 +50,7 @@
 #endif
 
 /**
+ * \ingroup group_core
  * \def PICOTM_END_DECLS
  * End interface declarations
  */
@@ -59,6 +61,7 @@
 #endif
 
 /**
+ * \ingroup group_core
  * \def PICOTM_NORETURN
  * Exported function does not return.
  */
@@ -69,6 +72,7 @@
 #endif
 
 /**
+ * \ingroup group_core
  * \def PICOTM_NOTHROW
  * Exported function does not throw exceptions.
  */
@@ -79,6 +83,7 @@
 #endif
 
 /**
+ * \ingroup group_core
  * \def PICOTM_EXPORT
  * Export interface from binary object.
  */
@@ -93,6 +98,7 @@
 #if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112l) || \
     defined(__PICOTM_DOXYGEN)
     /**
+     * \ingroup group_core
      * Provides a portable static assertion.
      * \brief   _cond   The compile-time assertion.
      * \brief   _errmsg An error message that is printed if the condition
