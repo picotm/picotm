@@ -86,6 +86,7 @@ PICOTM_BEGIN_DECLS
 
 /**
  * \ingroup group_core
+ * \internal
  * The transaction start mode.
  * \warning This is an internal interface. Don't use it in application code.
  */
@@ -101,12 +102,14 @@ enum __picotm_mode {
     defined(__PICOTM_DOXYGEN)
 /**
  * \ingroup group_core
+ * \internal
  * The type of the jump-buffer variable.
  * \warning This is an internal interface. Don't use it in application code.
  */
 #define __picotm_jmp_buf        sigjmp_buf
 /**
  * \ingroup group_core
+ * \internal
  * Sets a non-local goto target. For systems with Unix signals, the
  * macro saves the signal mask.
  * \warning This is an internal interface. Don't use it in application code.
@@ -114,6 +117,7 @@ enum __picotm_mode {
 #define __picotm_setjmp(env_)   ((enum __picotm_mode)sigsetjmp(env_, 1))
 /**
  * \ingroup group_core
+ * \internal
  * Performs a non-local goto. For systems with Unix signals, the macro
  * restores the signal mask.
  * \warning This is an internal interface. Don't use it in application code.
@@ -128,6 +132,7 @@ enum __picotm_mode {
 PICOTM_NOTHROW
 /**
  * \ingroup group_core
+ * \internal
  * Begins or restarts a transaction, or handles an error.
  * \warning This is an internal interface. Don't use it in application code.
  */
@@ -152,6 +157,7 @@ __picotm_begin(enum __picotm_mode mode, __picotm_jmp_buf* env);
 PICOTM_NOTHROW
 /**
  * \ingroup group_core
+ * \internal
  * Commits the current transaction.
  * \warning This is an internal interface. Don't use it in application code.
  */
