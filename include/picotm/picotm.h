@@ -316,7 +316,7 @@ PICOTM_END_DECLS
  * ::picotm_commit. This is called the transaction's *execution phase.*
  * Operations listed in the execution phase are subject to speculative
  * execution. This means that an operation might be executed, but it's
- * effects are not be permanent until the transaction commits.
+ * effects are not permanent until the transaction commits.
  *
  * The transaction performs a commit when the user invokes ::picotm_commit.
  * This is called the *commit phase.* It is completely implemented by
