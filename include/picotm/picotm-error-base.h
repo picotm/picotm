@@ -38,6 +38,7 @@
 PICOTM_BEGIN_DECLS
 
 /**
+ * \ingroup group_core
  * Signals detected errors to picotm.
  *
  * If a component detects an error, it should prefer setting the system-
@@ -57,6 +58,7 @@ enum picotm_error_code {
 };
 
 /**
+ * \ingroup group_core
  * Signals error status to picotm.
  */
 enum picotm_error_status {
