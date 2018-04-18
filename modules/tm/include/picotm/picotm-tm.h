@@ -66,7 +66,7 @@ load_tx(const void* addr, void* buf, size_t siz)
 }
 
 /**
- * Loads a pointer into a buffer.
+ * Loads a pointer with transactional semantics.
  * \param   addr    The address to load from.
  * \returns The transaction-local pointer.
  */
