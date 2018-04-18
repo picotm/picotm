@@ -24,6 +24,7 @@
  */
 
 #include "picotm/picotm.h"
+#include "picotm/picotm-error.h"
 #include "picotm/picotm-libc.h"
 #include <pthread.h>
 #include "ptr.h"
