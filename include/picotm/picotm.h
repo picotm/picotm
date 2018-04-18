@@ -429,6 +429,8 @@ PICOTM_END_DECLS
  *
  *  - \ref group_modules \n
  *      \copybrief group_modules
+ *  - \ref group_lib \n
+ *      \copybrief group_lib
  *
  * [license:mit]:   http://opensource.org/licenses/MIT
  */

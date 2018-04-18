@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -30,7 +30,7 @@
 #include "picotm-lib-spinlock.h"
 
 /**
- * \ingroup group_modules
+ * \ingroup group_lib
  * \file
  * \brief Contains `struct picotm_shared_ref16_obj` and helper functions.
  *
@@ -182,6 +182,10 @@ PICOTM_BEGIN_DECLS
 
 struct picotm_error;
 
+/**
+ * \ingroup group_lib
+ * A shared reference-counted object.
+ */
 struct picotm_shared_ref16_obj {
 
     /** Internal lock. */
@@ -192,6 +196,7 @@ struct picotm_shared_ref16_obj {
 };
 
 /**
+ * \ingroup group_lib
  * Invoked by picotm's shared-ref16 object to test if a reference shall
  * be acquired ore released.
  * \param   ref_obj     The shared-ref16 object.
@@ -205,6 +210,7 @@ typedef bool (*picotm_shared_ref16_obj_condition_function)(
     struct picotm_error* error);
 
 /**
+ * \ingroup group_lib
  * Invoked by picotm's shared-ref16 object to initialize the object after
  * acquiring the first refrence.
  * \param       ref_obj The shared-ref16 object.
@@ -217,6 +223,7 @@ typedef void (*picotm_shared_ref16_obj_first_ref_function)(
     struct picotm_error* error);
 
 /**
+ * \ingroup group_lib
  * Invoked by picotm's shared-ref16 object to finalize an object after
  * releasing the final refrence.
  * \param       ref_obj The shared-ref16 object.
@@ -229,6 +236,7 @@ typedef void (*picotm_shared_ref16_obj_final_ref_function)(
     struct picotm_error* error);
 
 /**
+ * \ingroup group_lib
  * Initializes a statically allocated shared-ref16 object.
  */
 #define PICOTM_SHARED_REF16_OBJ_INITIALIZER     \
@@ -238,6 +246,7 @@ typedef void (*picotm_shared_ref16_obj_final_ref_function)(
 }
 
 /**
+ * \ingroup group_lib
  * Initializes a shared-ref16 object.
  * \param       self    The shared-ref16 object.
  * \param[out]  error   Returns an error to the caller.
@@ -247,6 +256,7 @@ picotm_shared_ref16_obj_init(struct picotm_shared_ref16_obj* self,
                              struct picotm_error* error);
 
 /**
+ * \ingroup group_lib
  * Uninitializes a shared-ref16 object.
  * \param   self    The shared-ref16 object.
  */
@@ -254,6 +264,7 @@ void
 picotm_shared_ref16_obj_uninit(struct picotm_shared_ref16_obj* self);
 
 /**
+ * \ingroup group_lib
  * Acquires a reference on the shared-ref16 object.
  * \param       self        The shared-ref16 object.
  * \param       data        User data.
@@ -274,6 +285,7 @@ picotm_shared_ref16_obj_up(struct picotm_shared_ref16_obj* self, void* data,
                            struct picotm_error* error);
 
 /**
+ * \ingroup group_lib
  * Releases a reference on the shared-ref16 object.
  * \param   self        The shared-ref16 object.
  * \param   data        User data.
@@ -292,6 +304,7 @@ picotm_shared_ref16_obj_down(struct picotm_shared_ref16_obj* self, void* data,
                              picotm_shared_ref16_obj_final_ref_function final_ref);
 
 /**
+ * \ingroup group_lib
  * Reads the value of a shared-ref16 object's counter.
  * \param   self    The shared-ref16 object.
  * \returns The current value of the reference counter.

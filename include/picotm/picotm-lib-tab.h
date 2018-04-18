@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -26,7 +26,7 @@
 #pragma once
 
 /**
- * \ingroup group_modules
+ * \ingroup group_lib
  * \file
  */
 
@@ -38,6 +38,7 @@ PICOTM_BEGIN_DECLS
 struct picotm_error;
 
 /**
+ * \ingroup group_lib
  * Invoked by table functions when walking over the elements of a table.
  * \param       data0   The table element.
  * \param[out]  error   Returns an error from the module.
@@ -47,6 +48,7 @@ typedef size_t (*picotm_tabwalk_1_function)(void* data0,
                                             struct picotm_error* error);
 
 /**
+ * \ingroup group_lib
  * Invoked by table functions when walking over the elements of a table.
  * \param       data0   The table element.
  * \param       data1   An additional argument.
@@ -57,6 +59,7 @@ typedef size_t (*picotm_tabwalk_2_function)(void* data0, void* data1,
                                             struct picotm_error* error);
 
 /**
+ * \ingroup group_lib
  * Invoked by table functions when walking over the elements of a table.
  * \param       data0   The table element.
  * \param       data1   An additional argument.
@@ -69,6 +72,7 @@ typedef size_t (*picotm_tabwalk_3_function)(void* data0, void* data1,
                                             struct picotm_error* error);
 
 /**
+ * \ingroup group_lib
  * Invoked by table functions for comparing two elements.
  * \param   data0   A table element.
  * \param   data1   A table element.
@@ -80,6 +84,7 @@ typedef int (*picotm_tab_compare_function)(const void* data0,
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_lib
  * Allocate or resize table.
  * \param       base        A pointer to the table's first element.
  * \param       nelems      The number of elements in the table.
@@ -94,6 +99,7 @@ picotm_tabresize(void* base, size_t nelems, size_t newnelems, size_t siz,
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_lib
  * Free table memory.
  * \param   base    A pointer to the table's first element.
  */
@@ -102,6 +108,7 @@ picotm_tabfree(void* base);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_lib
  * Walk over table elements.
  * \param       base    A pointer to the table's first element.
  * \param       nelems  The number of elements in the table.
@@ -117,6 +124,7 @@ picotm_tabwalk_1(void* base, size_t nelems, size_t siz,
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_lib
  * Walk over table elements.
  * \param       base    A pointer to the table's first element.
  * \param       nelems  The number of elements in the table.
@@ -133,6 +141,7 @@ picotm_tabwalk_2(void* base, size_t nelems, size_t siz,
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_lib
  * Walk over table elements.
  * \param       base    A pointer to the table's first element.
  * \param       nelems  The number of elements in the table.
@@ -150,6 +159,7 @@ picotm_tabwalk_3(void* base, size_t nelems, size_t siz,
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_lib
  * Walk over table in reversed order.
  * \param       base    A pointer to the table's first element.
  * \param       nelems  The number of elements in the table.
@@ -165,6 +175,7 @@ picotm_tabrwalk_1(void* base, size_t nelems, size_t siz,
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_lib
  * Walk over table in reversed order.
  * \param       base    A pointer to the table's first element.
  * \param       nelems  The number of elements in the table.
@@ -181,6 +192,7 @@ picotm_tabrwalk_2(void* base, size_t nelems, size_t siz,
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_lib
  * Filters out duplicate elements
  * \param       base    A pointer to the table's first element.
  * \param       nelems  The number of elements in the table.

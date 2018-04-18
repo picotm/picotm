@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -30,7 +30,7 @@
 #include "compiler.h"
 
 /**
- * \ingroup group_modules
+ * \ingroup group_lib
  * \file
  * \brief Contains `struct picotm_shared_treemap` and helper functions.
  *
@@ -109,6 +109,7 @@ PICOTM_BEGIN_DECLS
 struct picotm_error;
 
 /**
+ * \ingroup group_lib
  * \brief Maps keys to values.
  */
 struct picotm_shared_treemap {
@@ -133,6 +134,7 @@ struct picotm_shared_treemap {
 };
 
 /**
+ * \ingroup group_lib
  * Invoked by picotm's shared treemap to create a new shared value.
  * \param       key     The value's key.
  * \param       treemap The value's shared treemap.
@@ -145,6 +147,7 @@ typedef uintptr_t (*picotm_shared_treemap_value_create_function)(
     struct picotm_error* error);
 
 /**
+ * \ingroup group_lib
  * Invoked by picotm's shared treemap to destroy a value.
  * \param   value   The value to destroy.
  * \param   treemap The value's shared treemap.
@@ -154,6 +157,7 @@ typedef void (*picotm_shared_treemap_value_destroy_function)(
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_lib
  * Initializes a shared treemap.
  * \param   self        The shared treemap to initialize.
  * \param   key_nbits   The maximum number of bits per key.
@@ -166,6 +170,7 @@ picotm_shared_treemap_init(struct picotm_shared_treemap* self,
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_lib
  * Uninitializes a shared treemap.
  * \param   self            The shared treemap to initialize.
  * \param   value_destroy   The destroy function for shared values.
@@ -177,6 +182,7 @@ picotm_shared_treemap_uninit(
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_lib
  * Retrieves the value for a key from a shared treemap.
  * \param       self            The shared treemap.
  * \param       key             The value's key.

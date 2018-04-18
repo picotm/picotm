@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -26,7 +26,7 @@
 #pragma once
 
 /**
- * \ingroup group_modules
+ * \ingroup group_lib
  * \file
  * \brief Contains `struct picotm_spinlock` and helper functions.
  *
@@ -95,6 +95,7 @@
 PICOTM_BEGIN_DECLS
 
 /**
+ * \ingroup group_lib
  * \brief Provides an operating-system-neutral, non-recursive spin-lock type.
  */
 struct picotm_spinlock {
@@ -102,6 +103,7 @@ struct picotm_spinlock {
 };
 
 /**
+ * \ingroup group_lib
  * \brief Initializer macro for picotm spin locks.
  */
 #define PICOTM_SPINLOCK_INITIALIZER \

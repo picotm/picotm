@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -28,7 +28,7 @@
 #include "compiler.h"
 
 /**
- * \ingroup group_modules
+ * \ingroup group_lib
  * \file
  *
  * \brief Contains `struct picotm_rwstate` and helpers.
@@ -146,6 +146,7 @@ struct picotm_error;
 struct picotm_rwlock;
 
 /**
+ * \ingroup group_lib
  * Signals a shared state's status wrt. a transaction
  */
 enum picotm_rwstate_status {
@@ -158,6 +159,7 @@ enum picotm_rwstate_status {
 };
 
 /**
+ * \ingroup group_lib
  * Represents shared state that can be read or written by a transaction.
  */
 struct picotm_rwstate {
@@ -169,6 +171,7 @@ struct picotm_rwstate {
 };
 
 /**
+ * \ingroup group_lib
  * \brief Initializer macro for R/W state variables.
  */
 #define PICOTM_RWSTATE_INITIALIZER  \
@@ -178,6 +181,7 @@ struct picotm_rwstate {
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_lib
  * Initializes a reader-writer state.
  *
  * \param self  The reader-writer state to initialize.
@@ -187,6 +191,7 @@ picotm_rwstate_init(struct picotm_rwstate* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_lib
  * Uninitializes a reader-writer state.
  *
  * \param self  The reader-writer state to uninitialize.
@@ -196,6 +201,7 @@ picotm_rwstate_uninit(struct picotm_rwstate* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_lib
  * Sets a reader/writer state's status.
  *
  * \param   self    The reader/writer state.
@@ -208,6 +214,7 @@ picotm_rwstate_set_status(struct picotm_rwstate* self,
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_lib
  * Returns a reader/writer state's current status.
  *
  * \param   self    The reader/writer state.
@@ -218,6 +225,7 @@ picotm_rwstate_get_status(const struct picotm_rwstate* self);
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_lib
  * Tries to acquire a reader lock for the state variable. If the lock
  * could not be acquired, the error parameter will return a conflict.
  *
@@ -232,6 +240,7 @@ picotm_rwstate_try_rdlock(struct picotm_rwstate* self,
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_lib
  * Tries to acquire a writer lock for the state variable or upgrade
  * an acquired reader lock to a writer lock. If the lock could not be
  * acquired, the error parameter will return a conflict.
@@ -247,6 +256,7 @@ picotm_rwstate_try_wrlock(struct picotm_rwstate* self,
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_lib
  * Releases a reader-writer lock.
  *
  * \param   self    The reader/writer state.

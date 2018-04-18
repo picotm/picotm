@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -26,7 +26,7 @@
 #pragma once
 
 /**
- * \ingroup group_modules
+ * \ingroup group_lib
  * \file
  */
 
@@ -39,13 +39,16 @@
 PICOTM_BEGIN_DECLS
 
 /**
+ * \ingroup group_lib
  * A 16-bit thread-local reference counter.
  */
 struct picotm_ref16 {
     uint_fast16_t count;
 };
 
-/* Initializes the counter with the given value.
+/**
+ * \ingroup group_lib
+ * Initializes the counter with the given value.
  * \warning This is an internal interface. Don't use it in application code.
  */
 static inline void
@@ -54,7 +57,9 @@ __picotm_ref16_init(struct picotm_ref16* self, unsigned long count)
     self->count = count;
 }
 
-/* Increments a reference counter.
+/**
+ * \ingroup group_lib
+ * Increments a reference counter.
  * \warning This is an internal interface. Don't use it in application code.
  */
 static inline bool
@@ -66,7 +71,9 @@ __picotm_ref16_up(struct picotm_ref16* self)
     return (old_ref == 0);
 }
 
-/* Decrements a reference counter.
+/**
+ * \ingroup group_lib
+ * Decrements a reference counter.
  * \warning This is an internal interface. Don't use it in application code.
  */
 static inline bool
@@ -78,7 +85,9 @@ __picotm_ref16_down(struct picotm_ref16* self)
     return (old_ref == 1);
 }
 
-/* Reads the reference counter's value.
+/**
+ * \ingroup group_lib
+ * Reads the reference counter's value.
  * \warning This is an internal interface. Don't use it in application code.
  */
 static inline uint16_t
@@ -88,13 +97,16 @@ __picotm_ref16_count(const struct picotm_ref16* self)
 }
 
 /**
+ * \ingroup group_lib
  * A 16-bit shared reference counter.
  */
 struct picotm_shared_ref16 {
     atomic_uint_fast16_t count;
 };
 
-/* Initializes a static reference counter with the given value.
+/**
+ * \ingroup group_lib
+ * Initializes a static reference counter with the given value.
  * \param   count   The initial reference count
  */
 #define PICOTM_SHARED_REF16_INITIALIZER(count)  \
@@ -102,7 +114,9 @@ struct picotm_shared_ref16 {
     .count = ATOMIC_VAR_INIT(count)             \
 }
 
-/* Initializes the counter with the given value.
+/**
+ * \ingroup group_lib
+ * Initializes the counter with the given value.
  * \warning This is an internal interface. Don't use it in application code.
  */
 static inline void
@@ -111,7 +125,9 @@ __picotm_shared_ref16_init(struct picotm_shared_ref16* self, uint16_t count)
     atomic_init(&self->count, count);
 }
 
-/* Increments a reference counter.
+/**
+ * \ingroup group_lib
+ * Increments a reference counter.
  * \warning This is an internal interface. Don't use it in application code.
  */
 static inline bool
@@ -124,7 +140,9 @@ __picotm_shared_ref16_up(struct picotm_shared_ref16* self)
     return (old_ref == 0);
 }
 
-/* Decrements a reference counter.
+/**
+ * \ingroup group_lib
+ * Decrements a reference counter.
  * \warning This is an internal interface. Don't use it in application code.
  */
 static inline bool
@@ -137,7 +155,9 @@ __picotm_shared_ref16_down(struct picotm_shared_ref16* self)
     return (old_ref == 1);
 }
 
-/* Reads the reference counter's value.
+/**
+ * \ingroup group_lib
+ * Reads the reference counter's value.
  * \warning This is an internal interface. Don't use it in application code.
  */
 static inline uint16_t
@@ -151,7 +171,9 @@ __picotm_shared_ref16_count(const struct picotm_shared_ref16* self)
 #endif
 }
 
-/* Initializes a statically allocated reference counter with the given value.
+/**
+ * \ingroup group_lib
+ * Initializes a statically allocated reference counter with the given value.
  * \param   __count The initial reference count
  */
 #define PICOTM_REF_INITIALIZER(__count) \
@@ -159,7 +181,9 @@ __picotm_shared_ref16_count(const struct picotm_shared_ref16* self)
     .count = (__count)                  \
 }
 
-/* Initializes a statically allocated reference counter with the given value.
+/**
+ * \ingroup group_lib
+ * Initializes a statically allocated reference counter with the given value.
  * \param   __count The initial reference count
  */
 #define PICOTM_SHARED_REF_INITIALIZER(__count)  \
@@ -168,6 +192,7 @@ __picotm_shared_ref16_count(const struct picotm_shared_ref16* self)
 }
 
 /**
+ * \ingroup group_lib
  * Initializes a reference counter with the given value.
  *
  * \param   self    A reference counter
@@ -179,6 +204,7 @@ __picotm_shared_ref16_count(const struct picotm_shared_ref16* self)
     (self, count)
 
 /**
+ * \ingroup group_lib
  * Increments a reference counter.
  *
  * \param   self    A reference counter
@@ -190,6 +216,7 @@ __picotm_shared_ref16_count(const struct picotm_shared_ref16* self)
     (self)
 
 /**
+ * \ingroup group_lib
  * Decrements a reference counter.
  *
  * \param   self    A reference counter
@@ -201,6 +228,7 @@ __picotm_shared_ref16_count(const struct picotm_shared_ref16* self)
     (self)
 
 /**
+ * \ingroup group_lib
  * Reads a reference counter's value.
  *
  * \param   self     reference counter

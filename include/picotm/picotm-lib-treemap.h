@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -29,7 +29,7 @@
 #include "compiler.h"
 
 /**
- * \ingroup group_modules
+ * \ingroup group_lib
  * \file
  *
  * \brief Contains `struct picotm_treemap` and helpers.
@@ -125,6 +125,7 @@ PICOTM_BEGIN_DECLS
 struct picotm_error;
 
 /**
+ * \ingroup group_lib
  * \brief Maps keys to values.
  */
 struct picotm_treemap {
@@ -149,6 +150,7 @@ struct picotm_treemap {
 };
 
 /**
+ * \ingroup group_lib
  * Invoked by picotm's treemap to create a new value.
  * \param       key     The value's key.
  * \param       treemap The value's treemap.
@@ -161,6 +163,7 @@ typedef uintptr_t (*picotm_treemap_value_create_function)(
     struct picotm_error* error);
 
 /**
+ * \ingroup group_lib
  * Invoked by picotm's treemap to destroy a value.
  * \param   value   The value to destroy.
  * \param   treemap The value's treemap.
@@ -169,6 +172,7 @@ typedef void (*picotm_treemap_value_destroy_function)(
     uintptr_t value, struct picotm_treemap* treemap);
 
 /**
+ * \ingroup group_lib
  * Invoked by picotm's treemap to call a value.
  * \param       value   The value.
  * \param       key     The value's key.
@@ -183,6 +187,7 @@ typedef void (*picotm_treemap_value_call_function)(
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_lib
  * Initializes a treemap.
  * \param   self        The treemap to initialize.
  * \param   level_nbits The number of bits per directory level.
@@ -193,6 +198,7 @@ picotm_treemap_init(struct picotm_treemap* self,
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_lib
  * Uninitializes a treemap.
  * \param   self            The treemap to initialize.
  * \param   value_destroy   The destroy function for values.
@@ -203,6 +209,7 @@ picotm_treemap_uninit(struct picotm_treemap* self,
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_lib
  * Retrieves the value for a key from a treemap.
  * \param       self            The treemap.
  * \param       key             The value's key.
@@ -218,6 +225,7 @@ picotm_treemap_find_value(struct picotm_treemap* self,
 
 PICOTM_NOTHROW
 /**
+ * \ingroup group_lib
  * Iterates over all values stored in a treemap.
  * \param       self        The treemap.
  * \param       data        User data.
