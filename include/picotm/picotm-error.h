@@ -43,47 +43,11 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include "compiler.h"
+#include "picotm-error-base.h"
 
 PICOTM_BEGIN_DECLS
 
 struct picotm_rwlock;
-
-/**
- * Signals detected errors to picotm.
- *
- * If a component detects an error, it should prefer setting the system-
- * specific error code that was returned by the failed call. This is more
- * specific than the generic one's below. In some portable code, such as
- * the tm module, using the generic codes might be preferable.
- */
-enum picotm_error_code {
-    /** The exact error is unknown. */
-    PICOTM_GENERAL_ERROR = 0,
-    /** Out-of-Memory error. */
-    PICOTM_OUT_OF_MEMORY,
-    /** Invalid floating-point environment. */
-    PICOTM_INVALID_FENV,
-    /** Out-of-Bounds memory access. */
-    PICOTM_OUT_OF_BOUNDS
-};
-
-/**
- * Signals error status to picotm.
- */
-enum picotm_error_status {
-    /** Conflict among transactions detected. */
-    PICOTM_CONFLICTING = 1,
-    /** Transaction requires irrevocability to continue. */
-    PICOTM_REVOCABLE,
-    /** Error detected. Encoded as `enum picotm_error_code`. */
-    PICOTM_ERROR_CODE,
-    /** Error detected. Encoded as errno code. */
-    PICOTM_ERRNO,
-    /** Error detected. Encoded as `kern_return_t` value. */
-    PICOTM_KERN_RETURN_T,
-    /** Error detected. Encoded as signal's `siginfo_t` value. */
-    PICOTM_SIGINFO_T
-};
 
 /**
  * Describes an error.
