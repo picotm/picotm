@@ -91,6 +91,7 @@
  * example prints all key/value pairs to the terminal.
  *
  * ~~~ c
+ *      void
  *      call_value(uintptr_t value, unsigned long long key,
  *                 struct picotm_treemap* treemap, void* data,
  *                 struct picotm_error* error)
