@@ -406,24 +406,29 @@ PICOTM_END_DECLS
  *
  * ## Table of Contents
  *
- *  -# \ref group_core \n
+ * ### Writing Applications with picotm
+ *
+ *  - \ref group_core \n
  *      \copybrief group_core
- *  -# \ref group_modules \n
- *      \copybrief group_modules
- *  -# \ref group_tm \n
+ *  - \ref group_tm \n
  *      \copybrief group_tm
- *  -# \ref group_cast \n
+ *  - \ref group_cast \n
  *      \copybrief group_cast
- *  -# \ref group_arithmetic \n
+ *  - \ref group_arithmetic \n
  *      \copybrief group_arithmetic
- *  -# \ref group_txlib \n
+ *  - \ref group_txlib \n
  *      \copybrief group_txlib
- *  -# \ref group_libc \n
+ *  - \ref group_libc \n
  *      \copybrief group_libc
- *  -# \ref group_libm \n
+ *  - \ref group_libm \n
  *      \copybrief group_libm
- *  -# \ref group_libpthread \n
+ *  - \ref group_libpthread \n
  *      \copybrief group_libpthread
+ *
+ * ### Extending picotm
+ *
+ *  - \ref group_modules \n
+ *      \copybrief group_modules
  *
  * [license:mit]:   http://opensource.org/licenses/MIT
  */
