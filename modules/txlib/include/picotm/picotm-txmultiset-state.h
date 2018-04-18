@@ -53,6 +53,7 @@ struct txmultiset_entry {
 
 /**
  * \ingroup group_txlib
+ * \internal
  * \brief Initializer macro for `struct txmultiset_entry`.
  *
  * \warning This is an internal interface. Don't use it in application code.

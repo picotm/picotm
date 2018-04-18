@@ -51,6 +51,7 @@ struct txlist_entry {
 
 /**
  * \ingroup group_txlib
+ * \internal
  * \brief Initializer macro for `struct txlist_entry`.
  *
  * \warning This is an internal interface. Don't use it in application code.
