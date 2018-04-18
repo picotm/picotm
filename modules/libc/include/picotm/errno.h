@@ -43,6 +43,7 @@ PICOTM_BEGIN_DECLS
 PICOTM_NOTHROW
 /**
  * \ingroup group_libc
+ * \internal
  * Returns the address of 'errno'.
  * \warning This is an internal interface. Don't use it in application code.
  */

@@ -230,6 +230,7 @@ strdup_tm(const char* s);
 PICOTM_NOTHROW
 /**
  * \ingroup group_libc
+ * \internal
  * Variant of __strerror_r_gnu_tx() that operates on transactional memory.
  *
  * \warning This is an internal interface. Call strerror_r_tm() instead.
@@ -240,6 +241,7 @@ __strerror_r_gnu_tm(int errnum, char* buf, size_t buflen);
 PICOTM_NOTHROW
 /**
  * \ingroup group_libc
+ * \internal
  * Variant of __strerror_r_posix_tx() that operates on transactional memory.
  *
  * \warning This is an internal interface. Call strerror_r_tm() instead.

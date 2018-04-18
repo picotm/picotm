@@ -289,6 +289,7 @@ strdup_tx(const char* s);
 PICOTM_NOTHROW
 /**
  * \ingroup group_libc
+ * \internal
  * A transaction-safe implementation of [strerror_r()][gnu::strerror_r].
  *
  * \warning This is an internal interface. Call strerror_r_tx() instead.
@@ -302,6 +303,7 @@ __strerror_r_gnu_tx(int errnum, char* buf, size_t buflen);
 PICOTM_NOTHROW
 /**
  * \ingroup group_libc
+ * \internal
  * A transaction-safe implementation of [strerror_r()][posix::strerror_r].
  *
  * \warning This is an internal interface. Call strerror_r_tx() instead.
