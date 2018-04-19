@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -25,7 +25,6 @@
 
 #include "file_tx.h"
 #include <assert.h>
-#include <string.h>
 #include "file_tx_ops.h"
 
 void
@@ -34,14 +33,16 @@ file_tx_init(struct file_tx* self,  const struct file_tx_ops* ops)
     assert(self);
     assert(ops);
 
-    memset(&self->active_list, 0, sizeof(self->active_list));
+    picotm_slist_init_item(&self->active_list);
 
     self->ops = ops;
 }
 
 void
 file_tx_uninit(struct file_tx* self)
-{ }
+{
+    picotm_slist_uninit_item(&self->active_list);
+}
 
 enum picotm_libc_file_type
 file_tx_file_type(const struct file_tx* self)
