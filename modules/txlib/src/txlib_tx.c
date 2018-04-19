@@ -442,66 +442,44 @@ txlib_tx_undo_event(struct txlib_tx* self, unsigned short op,
 }
 
 static void
-finish_txlist_tx_entries(struct txlib_tx* self)
+cleanup_txlist_tx_entry(struct txlib_tx_entry* entry)
 {
-    while (!picotm_slist_is_empty(&self->acquired_list_tx)) {
-        struct txlib_tx_entry* entry = txlib_tx_entry_of_slist(
-            picotm_slist_front(&self->acquired_list_tx));
-        picotm_slist_dequeue_front(&self->acquired_list_tx);
-
-        txlist_tx_finish(&entry->data.list_tx);
-        txlist_tx_uninit(&entry->data.list_tx);
-
-        picotm_slist_enqueue_front(&self->allocated_entries,
-                                   &entry->slist_entry);
-    }
+    txlist_tx_finish(&entry->data.list_tx);
+    txlist_tx_uninit(&entry->data.list_tx);
 }
 
 static void
-finish_txmultiset_tx_entries(struct txlib_tx* self)
+cleanup_txmultiset_tx_entry(struct txlib_tx_entry* entry)
 {
-    while (!picotm_slist_is_empty(&self->acquired_multiset_tx)) {
-        struct txlib_tx_entry* entry = txlib_tx_entry_of_slist(
-            picotm_slist_front(&self->acquired_multiset_tx));
-        picotm_slist_dequeue_front(&self->acquired_multiset_tx);
-
-        txmultiset_tx_finish(&entry->data.multiset_tx);
-        txmultiset_tx_uninit(&entry->data.multiset_tx);
-
-        picotm_slist_enqueue_front(&self->allocated_entries,
-                                   &entry->slist_entry);
-    }
+    txmultiset_tx_finish(&entry->data.multiset_tx);
+    txmultiset_tx_uninit(&entry->data.multiset_tx);
 }
 
 static void
-finish_txqueue_tx_entries(struct txlib_tx* self)
+cleanup_txqueue_tx_entry(struct txlib_tx_entry* entry)
 {
-    while (!picotm_slist_is_empty(&self->acquired_queue_tx)) {
-        struct txlib_tx_entry* entry = txlib_tx_entry_of_slist(
-            picotm_slist_front(&self->acquired_queue_tx));
-        picotm_slist_dequeue_front(&self->acquired_queue_tx);
-
-        txqueue_tx_finish(&entry->data.queue_tx);
-        txqueue_tx_uninit(&entry->data.queue_tx);
-
-        picotm_slist_enqueue_front(&self->allocated_entries,
-                                   &entry->slist_entry);
-    }
+    txqueue_tx_finish(&entry->data.queue_tx);
+    txqueue_tx_uninit(&entry->data.queue_tx);
 }
 
 static void
-finish_txstack_tx_entries(struct txlib_tx* self)
+cleanup_txstack_tx_entry(struct txlib_tx_entry* entry)
 {
-    while (!picotm_slist_is_empty(&self->acquired_stack_tx)) {
-        struct txlib_tx_entry* entry = txlib_tx_entry_of_slist(
-            picotm_slist_front(&self->acquired_stack_tx));
-        picotm_slist_dequeue_front(&self->acquired_stack_tx);
+    txstack_tx_finish(&entry->data.stack_tx);
+    txstack_tx_uninit(&entry->data.stack_tx);
+}
 
-        txstack_tx_finish(&entry->data.stack_tx);
-        txstack_tx_uninit(&entry->data.stack_tx);
-
-        picotm_slist_enqueue_front(&self->allocated_entries,
-                                   &entry->slist_entry);
+static void
+finish_txlib_tx_entries(struct picotm_slist* head,
+                        struct picotm_slist* allocated_entries,
+                        void (*cleanup)(struct txlib_tx_entry*))
+{
+    while (!picotm_slist_is_empty(head)) {
+        struct txlib_tx_entry* entry =
+            txlib_tx_entry_of_slist(picotm_slist_front(head));
+        picotm_slist_dequeue_front(head);
+        cleanup(entry);
+        picotm_slist_enqueue_front(allocated_entries, &entry->slist_entry);
     }
 }
 
@@ -512,8 +490,16 @@ txlib_tx_finish(struct txlib_tx* self)
 
     self->nevents = 0;
 
-    finish_txlist_tx_entries(self);
-    finish_txmultiset_tx_entries(self);
-    finish_txqueue_tx_entries(self);
-    finish_txstack_tx_entries(self);
+    finish_txlib_tx_entries(&self->acquired_list_tx,
+                            &self->allocated_entries,
+                            cleanup_txlist_tx_entry);
+    finish_txlib_tx_entries(&self->acquired_multiset_tx,
+                            &self->allocated_entries,
+                            cleanup_txmultiset_tx_entry);
+    finish_txlib_tx_entries(&self->acquired_queue_tx,
+                            &self->allocated_entries,
+                            cleanup_txqueue_tx_entry);
+    finish_txlib_tx_entries(&self->acquired_stack_tx,
+                            &self->allocated_entries,
+                            cleanup_txstack_tx_entry);
 }
