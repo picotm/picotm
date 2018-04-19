@@ -23,7 +23,6 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include "picotm/picotm-libc.h"
 #include "picotm/picotm-module.h"
 #include <assert.h>
 #include <stdlib.h>
