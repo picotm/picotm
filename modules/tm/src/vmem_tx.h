@@ -25,10 +25,10 @@
 
 #pragma once
 
+#include "picotm/picotm-lib-slist.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <sys/queue.h>
 
 /**
  * \cond impl || tm_impl
@@ -42,8 +42,6 @@ struct tm_page;
 struct tm_vmem;
 struct tm_vmem_tx;
 
-SLIST_HEAD(tm_page_list, tm_page);
-
 /**
  * |struct tm_vmem_tx| represents a memory transaction.
  */
@@ -55,8 +53,8 @@ struct tm_vmem_tx {
     unsigned long module;
 
     /* page-allocator fields */
-    struct tm_page_list active_pages;
-    struct tm_page_list alloced_pages;
+    struct picotm_slist active_pages;
+    struct picotm_slist alloced_pages;
 };
 
 /**

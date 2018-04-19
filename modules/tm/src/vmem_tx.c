@@ -38,16 +38,17 @@ tm_vmem_tx_init(struct tm_vmem_tx* vmem_tx, struct tm_vmem* vmem,
     vmem_tx->vmem = vmem;
     vmem_tx->module = module;
 
-    SLIST_INIT(&vmem_tx->active_pages);
-    SLIST_INIT(&vmem_tx->alloced_pages);
+    picotm_slist_init_head(&vmem_tx->active_pages);
+    picotm_slist_init_head(&vmem_tx->alloced_pages);
 }
 
 static void
-free_page_list(struct tm_page_list* pages)
+free_page_list(struct picotm_slist* pages)
 {
-    while (!SLIST_EMPTY(pages)) {
-        struct tm_page* page = SLIST_FIRST(pages);
-        SLIST_REMOVE_HEAD(pages, list);
+    while (!picotm_slist_is_empty(pages)) {
+        struct tm_page* page = tm_page_of_slist(picotm_slist_front(pages));
+        picotm_slist_dequeue_front(pages);
+        picotm_slist_uninit_item(&page->list);
         free(page);
     }
 }
@@ -56,7 +57,10 @@ void
 tm_vmem_tx_release(struct tm_vmem_tx* vmem_tx)
 {
     free_page_list(&vmem_tx->active_pages);
+    picotm_slist_uninit_head(&vmem_tx->active_pages);
+
     free_page_list(&vmem_tx->alloced_pages);
+    picotm_slist_uninit_head(&vmem_tx->alloced_pages);
 }
 
 static struct tm_page*
@@ -64,15 +68,15 @@ alloc_page(struct tm_vmem_tx* vmem_tx, struct picotm_error* error)
 {
     struct tm_page* page;
 
-    if (SLIST_EMPTY(&vmem_tx->alloced_pages)) {
+    if (picotm_slist_is_empty(&vmem_tx->alloced_pages)) {
         page = malloc(sizeof(*page));
         if (!page) {
             picotm_error_set_error_code(error, PICOTM_OUT_OF_MEMORY);
             return NULL;
         }
     } else {
-        page = SLIST_FIRST(&vmem_tx->alloced_pages);
-        SLIST_REMOVE_HEAD(&vmem_tx->alloced_pages, list);
+        page = tm_page_of_slist(picotm_slist_front(&vmem_tx->alloced_pages));
+        picotm_slist_dequeue_front(&vmem_tx->alloced_pages);
     }
 
     return page;
@@ -81,7 +85,7 @@ alloc_page(struct tm_vmem_tx* vmem_tx, struct picotm_error* error)
 static void
 free_page(struct tm_vmem_tx* vmem_tx, struct tm_page* page)
 {
-    SLIST_INSERT_HEAD(&vmem_tx->alloced_pages, page, list);
+    picotm_slist_enqueue_front(&vmem_tx->alloced_pages, &page->list);
 }
 
 static struct tm_page*
@@ -90,10 +94,15 @@ acquire_page_by_block(struct tm_vmem_tx* vmem_tx, size_t block_index,
 {
     /* Return existing page, if there is one... */
 
-    struct tm_page* page;
     struct tm_page* prev = NULL;
 
-    SLIST_FOREACH(page, &vmem_tx->active_pages, list) {
+    const struct picotm_slist* end =
+        picotm_slist_end(&vmem_tx->active_pages);
+          struct picotm_slist* beg =
+        picotm_slist_begin(&vmem_tx->active_pages);
+
+    for (; beg != end; beg = picotm_slist_next(beg)) {
+        struct tm_page* page = tm_page_of_slist(beg);
         size_t page_block_index = tm_page_block_index(page);
         if (page_block_index == block_index) {
             return page;
@@ -103,9 +112,9 @@ acquire_page_by_block(struct tm_vmem_tx* vmem_tx, size_t block_index,
         prev = page;
     }
 
-    /* ...or create a new page that refers to the corresponing frame. */
+    /* ...or create a new page that refers to the corresponding frame. */
 
-    page = alloc_page(vmem_tx, error);
+    struct tm_page* page = alloc_page(vmem_tx, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
@@ -117,9 +126,9 @@ acquire_page_by_block(struct tm_vmem_tx* vmem_tx, size_t block_index,
      * at the list's beginning. */
 
     if (prev) {
-        SLIST_INSERT_AFTER(prev, page, list);
+        picotm_slist_enqueue_after(&prev->list, &page->list);
     } else {
-        SLIST_INSERT_HEAD(&vmem_tx->active_pages, page, list);
+        picotm_slist_enqueue_front(&vmem_tx->active_pages, &page->list);
     }
 
     return page;
@@ -130,21 +139,6 @@ acquire_page_by_address(struct tm_vmem_tx* vmem_tx, uintptr_t addr,
                         struct picotm_error* error)
 {
     return acquire_page_by_block(vmem_tx, tm_block_index_at(addr), error);
-}
-
-static void
-release_page(struct tm_vmem_tx* vmem_tx, struct tm_page* page,
-             struct picotm_error* error)
-{
-    if (tm_page_has_locked_frame(page)) {
-        tm_page_unlock_frame(page, vmem_tx->vmem, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
-    }
-    SLIST_REMOVE(&vmem_tx->active_pages, page, tm_page, list);
-    tm_page_uninit(page);
-    free_page(vmem_tx, page);
 }
 
 static unsigned long
@@ -584,8 +578,13 @@ tm_vmem_tx_validate(struct tm_vmem_tx* vmem_tx, bool eotx,
 void
 tm_vmem_tx_apply(struct tm_vmem_tx* vmem_tx, struct picotm_error* error)
 {
-    struct tm_page* page;
-    SLIST_FOREACH(page, &vmem_tx->active_pages, list) {
+    const struct picotm_slist* end =
+        picotm_slist_end(&vmem_tx->active_pages);
+          struct picotm_slist* beg =
+        picotm_slist_begin(&vmem_tx->active_pages);
+
+    for (; beg != end; beg = picotm_slist_next(beg)) {
+        struct tm_page* page = tm_page_of_slist(beg);
         if (tm_page_has_wrlocked_frame(page) &&
                 !(page->flags & TM_PAGE_FLAG_WRITE_THROUGH) &&
                 !(page->flags & TM_PAGE_FLAG_DISCARDED)) {
@@ -600,8 +599,13 @@ tm_vmem_tx_apply(struct tm_vmem_tx* vmem_tx, struct picotm_error* error)
 void
 tm_vmem_tx_undo(struct tm_vmem_tx* vmem_tx, struct picotm_error* error)
 {
-    struct tm_page* page;
-    SLIST_FOREACH(page, &vmem_tx->active_pages, list) {
+    const struct picotm_slist* end =
+        picotm_slist_end(&vmem_tx->active_pages);
+          struct picotm_slist* beg =
+        picotm_slist_begin(&vmem_tx->active_pages);
+
+    for (; beg != end; beg = picotm_slist_next(beg)) {
+        struct tm_page* page = tm_page_of_slist(beg);
         if (tm_page_has_wrlocked_frame(page) &&
                 (page->flags & TM_PAGE_FLAG_WRITE_THROUGH) &&
                !(page->flags & TM_PAGE_FLAG_DISCARDED)) {
@@ -616,11 +620,17 @@ tm_vmem_tx_undo(struct tm_vmem_tx* vmem_tx, struct picotm_error* error)
 void
 tm_vmem_tx_finish(struct tm_vmem_tx* vmem_tx, struct picotm_error* error)
 {
-    while (!SLIST_EMPTY(&vmem_tx->active_pages)) {
-        /* release_page() will remove page from queue */
-        release_page(vmem_tx, SLIST_FIRST(&vmem_tx->active_pages), error);
-        if (picotm_error_is_set(error)) {
-            return;
+    while (!picotm_slist_is_empty(&vmem_tx->active_pages)) {
+        struct tm_page* page =
+            tm_page_of_slist(picotm_slist_front(&vmem_tx->active_pages));
+        if (tm_page_has_locked_frame(page)) {
+            tm_page_unlock_frame(page, vmem_tx->vmem, error);
+            if (picotm_error_is_set(error)) {
+                return;
+            }
         }
+        picotm_slist_dequeue_front(&vmem_tx->active_pages);
+        tm_page_uninit(page);
+        free_page(vmem_tx, page);
     }
 }
