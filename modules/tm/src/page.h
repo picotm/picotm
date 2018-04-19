@@ -25,10 +25,11 @@
 
 #pragma once
 
+#include "picotm/picotm-lib-ptr.h"
 #include "picotm/picotm-lib-rwstate.h"
+#include "picotm/picotm-lib-slist.h"
 #include <stdbool.h>
 #include <stdint.h>
-#include <sys/queue.h>
 #include "block.h"
 
 struct tm_vmem;
@@ -56,8 +57,14 @@ struct tm_page {
     uint8_t buf_bits;
 
     /** Entry into allocator lists */
-    SLIST_ENTRY(tm_page) list;
+    struct picotm_slist list;
 };
+
+static inline struct tm_page*
+tm_page_of_slist(struct picotm_slist* item)
+{
+    return picotm_containerof(item, struct tm_page, list);
+}
 
 void
 tm_page_init(struct tm_page* page, size_t block_index);

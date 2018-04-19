@@ -36,7 +36,7 @@ tm_page_init(struct tm_page* page, size_t block_index)
     page->flags = block_index << TM_BLOCK_SIZE_BITS;
     picotm_rwstate_init(&page->rwstate);
     page->buf_bits = 0;
-    memset(&page->list, 0, sizeof(page->list));
+    picotm_slist_init_item(&page->list);
 }
 
 void
