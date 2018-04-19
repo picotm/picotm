@@ -52,7 +52,6 @@ struct pipeop;
 struct openop;
 
 SLIST_HEAD(file_tx_slist, file_tx);
-SLIST_HEAD(ofd_tx_slist, ofd_tx);
 
 struct fildes_tx {
 
@@ -88,7 +87,7 @@ struct fildes_tx {
     size_t        ofd_tx_max_index;
 
     /** Active instances of |struct ofd_tx| */
-    struct ofd_tx_slist ofd_tx_active_list;
+    struct picotm_slist ofd_tx_active_list;
 
     struct openop* openoptab;
     size_t         openoptablen;

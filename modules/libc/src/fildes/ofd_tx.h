@@ -25,9 +25,10 @@
 
 #pragma once
 
+#include "picotm/picotm-lib-ptr.h"
 #include "picotm/picotm-lib-ref.h"
 #include "picotm/picotm-lib-rwstate.h"
-#include <sys/queue.h>
+#include "picotm/picotm-lib-slist.h"
 #include "ofd.h"
 
 /**
@@ -47,7 +48,7 @@ struct ofd_tx {
 
     struct picotm_ref16 ref;
 
-    SLIST_ENTRY(ofd_tx) active_list;
+    struct picotm_slist active_list;
 
     struct ofd* ofd;
 
@@ -62,6 +63,12 @@ struct ofd_tx {
     /** State of the local reader/writer locks. */
     struct picotm_rwstate rwstate[NUMBER_OF_OFD_FIELDS];
 };
+
+static inline struct ofd_tx*
+ofd_tx_of_slist(struct picotm_slist* item)
+{
+    return picotm_containerof(item, struct ofd_tx, active_list);
+}
 
 /**
  * Init transaction-local open-file-description state.

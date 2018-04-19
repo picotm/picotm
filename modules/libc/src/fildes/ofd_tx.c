@@ -28,7 +28,6 @@
 #include "picotm/picotm-lib-array.h"
 #include <assert.h>
 #include <errno.h>
-#include <string.h>
 #include <unistd.h>
 #include "file_tx.h"
 #include "seekop.h"
@@ -72,7 +71,7 @@ ofd_tx_init(struct ofd_tx* self)
 
     picotm_ref_init(&self->ref, 0);
 
-    memset(&self->active_list, 0, sizeof(self->active_list));
+    picotm_slist_init_item(&self->active_list);
 
     self->ofd = NULL;
 
