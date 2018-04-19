@@ -74,7 +74,7 @@ fildes_tx_init(struct fildes_tx* self, struct fildes_log* log)
     self->dir_tx_max_index = 0;
     self->socket_tx_max_index = 0;
 
-    SLIST_INIT(&self->file_tx_active_list);
+    picotm_slist_init_head(&self->file_tx_active_list);
 
     self->ofd_tx_max_index = 0;
 
@@ -153,6 +153,7 @@ fildes_tx_uninit(struct fildes_tx* self)
 
     picotm_slist_uninit_head(&self->ofd_tx_active_list);
     picotm_slist_uninit_head(&self->fd_tx_active_list);
+    picotm_slist_uninit_head(&self->file_tx_active_list);
 }
 
 static struct chrdev_tx*
@@ -194,8 +195,8 @@ get_chrdev_tx_with_ref(struct fildes_tx* self, int fildes,
         goto err_chrdev_tx_ref_or_set_up;
     }
 
-    SLIST_INSERT_HEAD(&self->file_tx_active_list, &chrdev_tx->base,
-                      active_list);
+    picotm_slist_enqueue_front(&self->file_tx_active_list,
+                               &chrdev_tx->base.active_list);
 
 unref:
     chrdev_unref(chrdev);
@@ -245,8 +246,8 @@ get_fifo_tx_with_ref(struct fildes_tx* self, int fildes,
         goto err_fifo_tx_ref_or_set_up;
     }
 
-    SLIST_INSERT_HEAD(&self->file_tx_active_list, &fifo_tx->base,
-                      active_list);
+    picotm_slist_enqueue_front(&self->file_tx_active_list,
+                               &fifo_tx->base.active_list);
 
 unref:
     fifo_unref(fifo);
@@ -297,8 +298,8 @@ get_regfile_tx_with_ref(struct fildes_tx* self, int fildes,
         goto err_regfile_tx_ref_or_set_up;
     }
 
-    SLIST_INSERT_HEAD(&self->file_tx_active_list, &regfile_tx->base,
-                      active_list);
+    picotm_slist_enqueue_front(&self->file_tx_active_list,
+                               &regfile_tx->base.active_list);
 
 unref:
     regfile_unref(regfile);
@@ -348,8 +349,8 @@ get_dir_tx_with_ref(struct fildes_tx* self, int fildes,
         goto err_dir_tx_ref_or_set_up;
     }
 
-    SLIST_INSERT_HEAD(&self->file_tx_active_list, &dir_tx->base,
-                      active_list);
+    picotm_slist_enqueue_front(&self->file_tx_active_list,
+                               &dir_tx->base.active_list);
 
 unref:
     dir_unref(dir);
@@ -400,8 +401,8 @@ get_socket_tx_with_ref(struct fildes_tx* self, int fildes,
         goto err_socket_tx_ref_or_set_up;
     }
 
-    SLIST_INSERT_HEAD(&self->file_tx_active_list, &socket_tx->base,
-                      active_list);
+    picotm_slist_enqueue_front(&self->file_tx_active_list,
+                               &socket_tx->base.active_list);
 
 unref:
     socket_unref(socket);
@@ -2923,6 +2924,22 @@ lock_ofd_tx_cb(struct picotm_slist* item, void* data)
     return lock_ofd_tx(ofd_tx_of_slist(item), data);
 }
 
+static size_t
+lock_file_tx(struct file_tx* file_tx, struct picotm_error* error)
+{
+    file_tx_lock(file_tx, error);
+    if (picotm_error_is_set(error)) {
+        return 0;
+    }
+    return 1;
+}
+
+static size_t
+lock_file_tx_cb(struct picotm_slist* item, void* data)
+{
+    return lock_file_tx(file_tx_of_slist(item), data);
+}
+
 void
 fildes_tx_lock(struct fildes_tx* self, struct picotm_error* error)
 {
@@ -2936,13 +2953,9 @@ fildes_tx_lock(struct fildes_tx* self, struct picotm_error* error)
     }
 
     /* Lock files */
-
-    struct file_tx* file_tx;
-    SLIST_FOREACH(file_tx, &self->file_tx_active_list, active_list) {
-        file_tx_lock(file_tx, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
+    picotm_slist_walk_1(&self->file_tx_active_list, lock_file_tx_cb, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 }
 
@@ -2973,17 +2986,27 @@ unlock_ofd_tx_cb(struct picotm_slist* item)
     return unlock_ofd_tx(ofd_tx_of_slist(item));
 }
 
+static size_t
+unlock_file_tx(struct file_tx* file_tx)
+{
+    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+    file_tx_unlock(file_tx, &error);
+    return 1;
+}
+
+static size_t
+unlock_file_tx_cb(struct picotm_slist* item)
+{
+    return unlock_file_tx(file_tx_of_slist(item));
+}
+
 void
 fildes_tx_unlock(struct fildes_tx* self)
 {
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
     /* Unlock files */
-
-    struct file_tx* file_tx;
-    SLIST_FOREACH(file_tx, &self->file_tx_active_list, active_list) {
-        file_tx_unlock(file_tx, &error);
-    }
+    picotm_slist_walk_0(&self->file_tx_active_list, unlock_file_tx_cb);
 
     /* Unlock open file descriptions */
     picotm_slist_walk_0(&self->ofd_tx_active_list, unlock_ofd_tx_cb);
@@ -3024,6 +3047,22 @@ validate_ofd_tx_cb(struct picotm_slist* item, void* data)
     return validate_ofd_tx(ofd_tx_of_slist(item), data);
 }
 
+static size_t
+validate_file_tx(struct file_tx* file_tx, struct picotm_error* error)
+{
+    file_tx_validate(file_tx, error);
+    if (picotm_error_is_set(error)) {
+        return 0;
+    }
+    return 1;
+}
+
+static size_t
+validate_file_tx_cb(struct picotm_slist* item, void* data)
+{
+    return validate_file_tx(file_tx_of_slist(item), data);
+}
+
 void
 fildes_tx_validate(struct fildes_tx* self, int noundo,
                    struct picotm_error* error)
@@ -3041,13 +3080,10 @@ fildes_tx_validate(struct fildes_tx* self, int noundo,
     }
 
     /* Validate files */
-
-    struct file_tx* file_tx;
-    SLIST_FOREACH(file_tx, &self->file_tx_active_list, active_list) {
-        file_tx_validate(file_tx, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
+    picotm_slist_walk_1(&self->file_tx_active_list, validate_file_tx_cb,
+                        error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 }
 
@@ -3161,6 +3197,22 @@ update_ofd_tx_cc_cb(struct picotm_slist* item, void* data)
     return update_ofd_tx_cc(ofd_tx_of_slist(item), data);
 }
 
+static size_t
+update_file_tx_cc(struct file_tx* file_tx, struct picotm_error* error)
+{
+    file_tx_update_cc(file_tx, error);
+    if (picotm_error_is_set(error)) {
+        return 0;
+    }
+    return 1;
+}
+
+static size_t
+update_file_tx_cc_cb(struct picotm_slist* item, void* data)
+{
+    return update_file_tx_cc(file_tx_of_slist(item), data);
+}
+
 void
 fildes_tx_update_cc(struct fildes_tx* self, int noundo,
                     struct picotm_error* error)
@@ -3178,17 +3230,13 @@ fildes_tx_update_cc(struct fildes_tx* self, int noundo,
     }
 
     /* Update concurrency control on files */
-
-    struct file_tx* file_tx;
-    SLIST_FOREACH(file_tx, &self->file_tx_active_list, active_list) {
-        file_tx_update_cc(file_tx, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
+    picotm_slist_walk_1(&self->file_tx_active_list, update_file_tx_cc_cb,
+                        error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 
     /* Update concurrency control on file-descriptor table */
-
     fdtab_tx_update_cc(&self->fdtab_tx, error);
     if (picotm_error_is_set(error)) {
         return;
@@ -3227,6 +3275,22 @@ clear_ofd_tx_cc_cb(struct picotm_slist* item, void* data)
     return clear_ofd_tx_cc(ofd_tx_of_slist(item), data);
 }
 
+static size_t
+clear_file_tx_cc(struct file_tx* file_tx, struct picotm_error* error)
+{
+    file_tx_clear_cc(file_tx, error);
+    if (picotm_error_is_set(error)) {
+        return 0;
+    }
+    return 1;
+}
+
+static size_t
+clear_file_tx_cc_cb(struct picotm_slist* item, void* data)
+{
+    return clear_file_tx_cc(file_tx_of_slist(item), data);
+}
+
 void
 fildes_tx_clear_cc(struct fildes_tx* self, int noundo,
                    struct picotm_error* error)
@@ -3244,13 +3308,10 @@ fildes_tx_clear_cc(struct fildes_tx* self, int noundo,
     }
 
     /* Clear concurrency control on files */
-
-    struct file_tx* file_tx;
-    SLIST_FOREACH(file_tx, &self->file_tx_active_list, active_list) {
-        file_tx_clear_cc(file_tx, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
+    picotm_slist_walk_1(&self->file_tx_active_list, clear_file_tx_cc_cb,
+                        error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 
     /* Clear concurrency control on file-descriptor table */
@@ -3289,11 +3350,10 @@ void
 fildes_tx_finish(struct fildes_tx* self, struct picotm_error* error)
 {
     /* Unref files */
-
-    while (!SLIST_EMPTY(&self->file_tx_active_list)) {
-
-        struct file_tx* file_tx = SLIST_FIRST(&self->file_tx_active_list);
-        SLIST_REMOVE_HEAD(&self->file_tx_active_list, active_list);
+    while (!picotm_slist_is_empty(&self->file_tx_active_list)) {
+        struct file_tx* file_tx =
+            file_tx_of_slist(picotm_slist_front(&self->file_tx_active_list));
+        picotm_slist_dequeue_front(&self->file_tx_active_list);
 
         file_tx_unref(file_tx);
     }

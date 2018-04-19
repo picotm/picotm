@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -25,7 +25,8 @@
 
 #pragma once
 
-#include <sys/queue.h>
+#include "picotm/picotm-lib-ptr.h"
+#include "picotm/picotm-lib-slist.h"
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -42,10 +43,16 @@ struct picotm_error;
  */
 struct file_tx {
 
-    SLIST_ENTRY(file_tx) active_list;
+    struct picotm_slist active_list;
 
     const struct file_tx_ops* ops;
 };
+
+static inline struct file_tx*
+file_tx_of_slist(struct picotm_slist* item)
+{
+    return picotm_containerof(item, struct file_tx, active_list);
+}
 
 /**
  * \brief Init transaction-local file state.
