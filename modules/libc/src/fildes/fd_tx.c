@@ -98,7 +98,7 @@ fd_tx_init(struct fd_tx* self)
 
     picotm_ref_init(&self->ref, 0);
 
-    memset(&self->active_list, 0, sizeof(self->active_list));
+    picotm_slist_init_item(&self->active_list);
 
     self->fd = NULL;
     self->ofd_tx = NULL;
@@ -118,6 +118,8 @@ fd_tx_uninit(struct fd_tx* self)
 
     uninit_rwstates(picotm_arraybeg(self->rwstate),
                     picotm_arrayend(self->rwstate));
+
+    picotm_slist_uninit_item(&self->active_list);
 }
 
 void

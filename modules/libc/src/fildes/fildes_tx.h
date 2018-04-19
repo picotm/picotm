@@ -26,6 +26,7 @@
 #pragma once
 
 #include "picotm/picotm-error.h"
+#include "picotm/picotm-lib-slist.h"
 #include <sys/queue.h>
 #include <sys/time.h>
 #include "chrdev_tx.h"
@@ -50,7 +51,6 @@ struct fildes_log;
 struct pipeop;
 struct openop;
 
-SLIST_HEAD(fd_tx_slist, fd_tx);
 SLIST_HEAD(file_tx_slist, file_tx);
 SLIST_HEAD(ofd_tx_slist, ofd_tx);
 
@@ -64,7 +64,7 @@ struct fildes_tx {
     size_t       fd_tx_max_fildes;
 
     /** Active instances of |struct fd_tx| */
-    struct fd_tx_slist  fd_tx_active_list;
+    struct picotm_slist fd_tx_active_list;
 
     struct chrdev_tx chrdev_tx[MAXNUMFD];
     size_t           chrdev_tx_max_index;
