@@ -25,9 +25,10 @@
 
 #pragma once
 
+#include "picotm/picotm-lib-ptr.h"
+#include "picotm/picotm-lib-slist.h"
 #include <stddef.h>
 #include <stdint.h>
-#include <sys/queue.h>
 #include "txlist_tx.h"
 #include "txmultiset_tx.h"
 #include "txqueue_tx.h"
@@ -45,7 +46,7 @@ struct txlib_event;
 
 struct txlib_tx_entry {
 
-    SLIST_ENTRY(txlib_tx_entry) slist_entry;
+    struct picotm_slist slist_entry;
 
     union {
         struct txlist_tx list_tx;
@@ -55,14 +56,26 @@ struct txlib_tx_entry {
     } data;
 };
 
+static inline struct txlib_tx_entry*
+txlib_tx_entry_of_slist(struct picotm_slist* item)
+{
+    return picotm_containerof(item, struct txlib_tx_entry, slist_entry);
+}
+
+static inline const struct txlib_tx_entry*
+txlib_tx_entry_of_slist_const(const struct picotm_slist* item)
+{
+    return picotm_containerof(item, const struct txlib_tx_entry, slist_entry);
+}
+
 struct txlib_tx {
     unsigned long module;
 
-    SLIST_HEAD(, txlib_tx_entry) allocated_entries;
-    SLIST_HEAD(, txlib_tx_entry) acquired_list_tx;
-    SLIST_HEAD(, txlib_tx_entry) acquired_multiset_tx;
-    SLIST_HEAD(, txlib_tx_entry) acquired_queue_tx;
-    SLIST_HEAD(, txlib_tx_entry) acquired_stack_tx;
+    struct picotm_slist allocated_entries;
+    struct picotm_slist acquired_list_tx;
+    struct picotm_slist acquired_multiset_tx;
+    struct picotm_slist acquired_queue_tx;
+    struct picotm_slist acquired_stack_tx;
 
     struct txlib_event* event;
     size_t              nevents;
