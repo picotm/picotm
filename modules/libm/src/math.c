@@ -25,7 +25,6 @@
 
 #include "picotm/math.h"
 #include "picotm/picotm-tm-ctypes.h"
-#include "picotm/picotm-libc.h"
 #include "picotm/math-tm.h"
 #include <fenv.h>
 #include <math.h>
