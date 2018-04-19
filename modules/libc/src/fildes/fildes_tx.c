@@ -66,7 +66,7 @@ fildes_tx_init(struct fildes_tx* self, struct fildes_log* log)
 
     self->fd_tx_max_fildes = 0;
 
-    SLIST_INIT(&self->fd_tx_active_list);
+    picotm_slist_init_head(&self->fd_tx_active_list);
 
     self->chrdev_tx_max_index = 0;
     self->fifo_tx_max_index = 0;
@@ -150,6 +150,8 @@ fildes_tx_uninit(struct fildes_tx* self)
 
     pipeoptab_clear(&self->pipeoptab, &self->pipeoptablen);
     openoptab_clear(&self->openoptab, &self->openoptablen);
+
+    picotm_slist_uninit_head(&self->fd_tx_active_list);
 }
 
 static struct chrdev_tx*
@@ -627,7 +629,7 @@ find_fd_tx_with_ref(struct fildes_tx* self, int fildes, int ofd_fildes,
         goto err_fd_tx_ref;
     }
 
-    SLIST_INSERT_HEAD(&self->fd_tx_active_list, fd_tx, active_list);
+    picotm_slist_enqueue_front(&self->fd_tx_active_list, &fd_tx->active_list);
 
     fd_unref(fd);
 
@@ -2890,15 +2892,24 @@ undo_write(struct fildes_tx* self, int fildes, int cookie,
  * Module interface
  */
 
+static size_t
+lock_fd_tx(struct fd_tx* fd_tx)
+{
+    fd_tx_lock(fd_tx);
+    return 1;
+}
+
+static size_t
+lock_fd_tx_cb(struct picotm_slist* item)
+{
+    return lock_fd_tx(fd_tx_of_slist(item));
+}
+
 void
 fildes_tx_lock(struct fildes_tx* self, struct picotm_error* error)
 {
     /* Lock file descriptors */
-
-    struct fd_tx* fd_tx;
-    SLIST_FOREACH(fd_tx, &self->fd_tx_active_list, active_list) {
-        fd_tx_lock(fd_tx);
-    }
+    picotm_slist_walk_0(&self->fd_tx_active_list, lock_fd_tx_cb);
 
     /* Lock open file descriptions */
 
@@ -2921,6 +2932,19 @@ fildes_tx_lock(struct fildes_tx* self, struct picotm_error* error)
     }
 }
 
+static size_t
+unlock_fd_tx(struct fd_tx* fd_tx)
+{
+    fd_tx_unlock(fd_tx);
+    return 1;
+}
+
+static size_t
+unlock_fd_tx_cb(struct picotm_slist* item)
+{
+    return unlock_fd_tx(fd_tx_of_slist(item));
+}
+
 void
 fildes_tx_unlock(struct fildes_tx* self)
 {
@@ -2941,11 +2965,23 @@ fildes_tx_unlock(struct fildes_tx* self)
     }
 
     /* Unlock file descriptors */
+    picotm_slist_walk_0(&self->fd_tx_active_list, unlock_fd_tx_cb);
+}
 
-    struct fd_tx* fd_tx;
-    SLIST_FOREACH(fd_tx, &self->fd_tx_active_list, active_list) {
-        fd_tx_unlock(fd_tx);
+static size_t
+validate_fd_tx(struct fd_tx* fd_tx, struct picotm_error* error)
+{
+    fd_tx_validate(fd_tx, error);
+    if (picotm_error_is_set(error)) {
+        return 0;
     }
+    return 1;
+}
+
+static size_t
+validate_fd_tx_cb(struct picotm_slist* item, void* data)
+{
+    return validate_fd_tx(fd_tx_of_slist(item), data);
 }
 
 void
@@ -2953,13 +2989,9 @@ fildes_tx_validate(struct fildes_tx* self, int noundo,
                    struct picotm_error* error)
 {
     /* Validate file-descriptor state */
-
-    struct fd_tx* fd_tx;
-    SLIST_FOREACH(fd_tx, &self->fd_tx_active_list, active_list) {
-        fd_tx_validate(fd_tx, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
+    picotm_slist_walk_1(&self->fd_tx_active_list, validate_fd_tx_cb, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 
     /* Validate open file descriptions */
@@ -3061,18 +3093,30 @@ fildes_tx_undo_event(struct fildes_tx* self, enum fildes_op op, int fildes,
     }
 }
 
+static size_t
+update_fd_tx_cc(struct fd_tx* fd_tx, struct picotm_error* error)
+{
+    fd_tx_update_cc(fd_tx, error);
+    if (picotm_error_is_set(error)) {
+        return 0;
+    }
+    return 1;
+}
+
+static size_t
+update_fd_tx_cc_cb(struct picotm_slist* item, void* data)
+{
+    return update_fd_tx_cc(fd_tx_of_slist(item), data);
+}
+
 void
 fildes_tx_update_cc(struct fildes_tx* self, int noundo,
                     struct picotm_error* error)
 {
     /* Update concurrency control on file descriptors */
-
-    struct fd_tx* fd_tx;
-    SLIST_FOREACH(fd_tx, &self->fd_tx_active_list, active_list) {
-        fd_tx_update_cc(fd_tx, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
+    picotm_slist_walk_1(&self->fd_tx_active_list, update_fd_tx_cc_cb, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 
     /* Update concurrency control on open file descriptions */
@@ -3103,18 +3147,30 @@ fildes_tx_update_cc(struct fildes_tx* self, int noundo,
     }
 }
 
+static size_t
+clear_fd_tx_cc(struct fd_tx* fd_tx, struct picotm_error* error)
+{
+    fd_tx_clear_cc(fd_tx, error);
+    if (picotm_error_is_set(error)) {
+        return 0;
+    }
+    return 1;
+}
+
+static size_t
+clear_fd_tx_cc_cb(struct picotm_slist* item, void* data)
+{
+    return clear_fd_tx_cc(fd_tx_of_slist(item), data);
+}
+
 void
 fildes_tx_clear_cc(struct fildes_tx* self, int noundo,
                    struct picotm_error* error)
 {
     /* Clear concurrency control on file descriptors */
-
-    struct fd_tx* fd_tx;
-    SLIST_FOREACH(fd_tx, &self->fd_tx_active_list, active_list) {
-        fd_tx_clear_cc(fd_tx, error);
-        if (picotm_error_is_set(error)) {
-            return;
-        }
+    picotm_slist_walk_1(&self->fd_tx_active_list, clear_fd_tx_cc_cb, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 
     /* Clear concurrency control on open file descriptions */
@@ -3170,10 +3226,10 @@ fildes_tx_finish(struct fildes_tx* self, struct picotm_error* error)
 
     /* Unref file descriptors */
 
-    while (!SLIST_EMPTY(&self->fd_tx_active_list)) {
-
-        struct fd_tx* fd_tx = SLIST_FIRST(&self->fd_tx_active_list);
-        SLIST_REMOVE_HEAD(&self->fd_tx_active_list, active_list);
+    while (!picotm_slist_is_empty(&self->fd_tx_active_list)) {
+        struct fd_tx* fd_tx =
+            fd_tx_of_slist(picotm_slist_front(&self->fd_tx_active_list));
+        picotm_slist_dequeue_front(&self->fd_tx_active_list);
 
         fd_tx_unref(fd_tx);
     }

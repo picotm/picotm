@@ -25,13 +25,14 @@
 
 #pragma once
 
+#include "picotm/picotm-lib-ptr.h"
 #include "picotm/picotm-lib-ref.h"
 #include "picotm/picotm-lib-rwstate.h"
+#include "picotm/picotm-lib-slist.h"
 #include "picotm/picotm-libc.h"
 #include <stdatomic.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <sys/queue.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include "fd.h"
@@ -60,7 +61,7 @@ struct fd_tx {
 
     struct picotm_ref16 ref;
 
-    SLIST_ENTRY(fd_tx) active_list;
+    struct picotm_slist active_list;
 
     struct fd* fd;
 
@@ -73,6 +74,12 @@ struct fd_tx {
     struct fcntlop* fcntltab;
     size_t          fcntltablen;
 };
+
+static inline struct fd_tx*
+fd_tx_of_slist(struct picotm_slist* item)
+{
+    return picotm_containerof(item, struct fd_tx, active_list);
+}
 
 /**
  * Init transaction-local file-descriptor state
