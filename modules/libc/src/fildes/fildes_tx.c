@@ -3201,6 +3201,18 @@ fildes_tx_clear_cc(struct fildes_tx* self, int noundo,
     }
 }
 
+static void
+finish_fd_tx(struct fd_tx* fd_tx)
+{
+    fd_tx_unref(fd_tx);
+}
+
+static void
+finish_fd_tx_cb(struct picotm_slist* item)
+{
+    finish_fd_tx(fd_tx_of_slist(item));
+}
+
 void
 fildes_tx_finish(struct fildes_tx* self, struct picotm_error* error)
 {
@@ -3225,12 +3237,5 @@ fildes_tx_finish(struct fildes_tx* self, struct picotm_error* error)
     }
 
     /* Unref file descriptors */
-
-    while (!picotm_slist_is_empty(&self->fd_tx_active_list)) {
-        struct fd_tx* fd_tx =
-            fd_tx_of_slist(picotm_slist_front(&self->fd_tx_active_list));
-        picotm_slist_dequeue_front(&self->fd_tx_active_list);
-
-        fd_tx_unref(fd_tx);
-    }
+    picotm_slist_cleanup_0(&self->fd_tx_active_list, finish_fd_tx_cb);
 }
