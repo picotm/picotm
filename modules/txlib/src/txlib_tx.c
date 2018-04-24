@@ -51,15 +51,22 @@ txlib_tx_init(struct txlib_tx* self, unsigned long module)
 }
 
 static void
+free_entry(struct txlib_tx_entry* entry)
+{
+    picotm_slist_uninit_item(&entry->slist_entry);
+    free(entry);
+}
+
+static void
+free_entry_cb(struct picotm_slist* item)
+{
+    free_entry(txlib_tx_entry_of_slist(item));
+}
+
+static void
 free_allocated_txlib_tx_entries(struct txlib_tx* self)
 {
-    while (!picotm_slist_is_empty(&self->allocated_entries)) {
-        struct txlib_tx_entry* entry = txlib_tx_entry_of_slist(
-            picotm_slist_front(&self->allocated_entries));
-        picotm_slist_dequeue_front(&self->allocated_entries);
-        picotm_slist_uninit_item(&entry->slist_entry);
-        free(entry);
-    }
+    picotm_slist_cleanup_0(&self->allocated_entries, free_entry_cb);
 }
 
 void
@@ -125,9 +132,9 @@ txlib_tx_acquire_txlist_of_state(struct txlib_tx* self,
 {
     assert(self);
 
-    struct picotm_slist* item = picotm_slist_find1(&self->acquired_list_tx,
-                                                   has_txlist_state_cb,
-                                                   list_state);
+    struct picotm_slist* item = picotm_slist_find_1(&self->acquired_list_tx,
+                                                    has_txlist_state_cb,
+                                                    list_state);
     if (item != picotm_slist_end(&self->acquired_list_tx)) {
         struct txlib_tx_entry* entry = txlib_tx_entry_of_slist(item);
         return &entry->data.list_tx;
@@ -165,9 +172,10 @@ txlib_tx_acquire_txmultiset_of_state(struct txlib_tx* self,
 {
     assert(self);
 
-    struct picotm_slist* item = picotm_slist_find1(&self->acquired_multiset_tx,
-                                                   has_txmultiset_state_cb,
-                                                   multiset_state);
+    struct picotm_slist* item = picotm_slist_find_1(
+        &self->acquired_multiset_tx,
+        has_txmultiset_state_cb,
+        multiset_state);
     if (item != picotm_slist_end(&self->acquired_multiset_tx)) {
         struct txlib_tx_entry* entry = txlib_tx_entry_of_slist(item);
         return &entry->data.multiset_tx;
@@ -206,9 +214,9 @@ txlib_tx_acquire_txqueue_of_state(struct txlib_tx* self,
 {
     assert(self);
 
-    struct picotm_slist* item = picotm_slist_find1(&self->acquired_queue_tx,
-                                                   has_txqueue_state_cb,
-                                                   queue_state);
+    struct picotm_slist* item = picotm_slist_find_1(&self->acquired_queue_tx,
+                                                    has_txqueue_state_cb,
+                                                    queue_state);
     if (item != picotm_slist_end(&self->acquired_queue_tx)) {
         struct txlib_tx_entry* entry = txlib_tx_entry_of_slist(item);
         return &entry->data.queue_tx;
@@ -246,9 +254,9 @@ txlib_tx_acquire_txstack_of_state(struct txlib_tx* self,
 {
     assert(self);
 
-    struct picotm_slist* item = picotm_slist_find1(&self->acquired_stack_tx,
-                                                   has_txstack_state_cb,
-                                                   stack_state);
+    struct picotm_slist* item = picotm_slist_find_1(&self->acquired_stack_tx,
+                                                    has_txstack_state_cb,
+                                                    stack_state);
     if (item != picotm_slist_end(&self->acquired_stack_tx)) {
         struct txlib_tx_entry* entry = txlib_tx_entry_of_slist(item);
         return &entry->data.stack_tx;
@@ -470,17 +478,27 @@ cleanup_txstack_tx_entry(struct txlib_tx_entry* entry)
 }
 
 static void
+finish_txlib_tx_entry(struct txlib_tx_entry* entry,
+                      struct picotm_slist* allocated_entries,
+                      void (*cleanup)(struct txlib_tx_entry*))
+{
+    cleanup(entry);
+    picotm_slist_enqueue_front(allocated_entries, &entry->slist_entry);
+}
+
+static void
+finish_txlib_tx_entry_cb(struct picotm_slist* item, void* data1, void* data2)
+{
+    finish_txlib_tx_entry(txlib_tx_entry_of_slist(item), data1, data2);
+}
+
+static void
 finish_txlib_tx_entries(struct picotm_slist* head,
                         struct picotm_slist* allocated_entries,
                         void (*cleanup)(struct txlib_tx_entry*))
 {
-    while (!picotm_slist_is_empty(head)) {
-        struct txlib_tx_entry* entry =
-            txlib_tx_entry_of_slist(picotm_slist_front(head));
-        picotm_slist_dequeue_front(head);
-        cleanup(entry);
-        picotm_slist_enqueue_front(allocated_entries, &entry->slist_entry);
-    }
+    picotm_slist_cleanup_2(head, finish_txlib_tx_entry_cb,
+                           allocated_entries, cleanup);
 }
 
 void
