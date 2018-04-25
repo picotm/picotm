@@ -40,6 +40,16 @@ is_cygwin()
 }
 
 _Bool
+is_cygwin64()
+{
+#if defined(__x86_64__)
+    return is_cygwin();
+#else
+    return false;
+#endif
+}
+
+_Bool
 is_freebsd()
 {
 #if defined(__FreeBSD__)
