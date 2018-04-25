@@ -31,6 +31,9 @@ _Bool
 is_cygwin(void);
 
 _Bool
+is_cygwin64(void);
+
+_Bool
 is_freebsd(void);
 
 _Bool
