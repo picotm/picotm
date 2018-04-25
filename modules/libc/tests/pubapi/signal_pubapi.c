@@ -29,9 +29,20 @@
 #include <pthread.h>
 #include "ptr.h"
 #include "safeblk.h"
+#include "sysenv.h"
 #include "taputils.h"
 #include "test.h"
 #include "testhlp.h"
+
+/* Windows reports program errors, such as segmentation faults, as
+ * exception. Cygwin translates each exception to its corresponding
+ * Unix signal, which it then reports to the program. This is broken
+ * on 64-bit systems. We therefore skip the tests until the bug has
+ * been resolved.
+ *
+ * Asynchronous signals use a different mechanism, which works on
+ * 64-bit implementations as well.
+ */
 
 /* Optimization breaks some of the signal generator
  * functions. We disable it in these functions. */
@@ -64,8 +75,15 @@ signal_test_post(int signum)
 }
 
 static void
-signal_test_func(int signum, bool is_recoverable, void (*gen_signal)(int))
+signal_test_func(int signum, bool is_recoverable, bool cond,
+                 void (*gen_signal)(int))
 {
+    if (!cond) {
+        tap_info("skipping test for signal %d;"
+                 " condition failed", signum);
+        return;
+    }
+
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
     picotm_libc_add_signal(signum, is_recoverable, &error);
     if (picotm_error_is_set(&error)) {
@@ -148,7 +166,7 @@ static void
 signal_test_SIGFPE(unsigned int tid)
 {
     /* UNSAFE: signals should usually *not* be recoverable. */
-    signal_test_func(SIGFPE, true, gen_SIGFPE);
+    signal_test_func(SIGFPE, true, !is_cygwin64(), gen_SIGFPE);
 }
 
 /*
@@ -173,7 +191,7 @@ static void
 signal_test_SIGUSR1(unsigned int tid)
 {
     /* UNSAFE: signals should usually *not* be recoverable. */
-    signal_test_func(SIGUSR1, true, gen_signal_by_signum);
+    signal_test_func(SIGUSR1, true, true, gen_signal_by_signum);
 }
 
 /*
@@ -206,7 +224,7 @@ static void
 signal_test_SIGSEGV(unsigned int tid)
 {
     /* UNSAFE: signals should usually *not* be recoverable. */
-    signal_test_func(SIGSEGV, true, gen_SIGSEGV);
+    signal_test_func(SIGSEGV, true, !is_cygwin64(), gen_SIGSEGV);
 }
 
 static const struct test_func signal_test[] = {
