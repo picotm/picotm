@@ -23,7 +23,7 @@
 # SPDX-License-Identifier: MIT
 
 current = 0
-revision = 2
+revision = 3
 age = 0
 
 lib_LTLIBRARIES =

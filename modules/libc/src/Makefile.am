@@ -22,9 +22,9 @@
 #
 # SPDX-License-Identifier: MIT
 
-current = 3
-revision = 2
-age = 2
+current = 4
+revision = 0
+age = 0
 
 lib_LTLIBRARIES =
 if ENABLE_MODULE_LIBC
