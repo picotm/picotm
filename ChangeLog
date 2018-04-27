@@ -1,4 +1,29 @@
 
+picotm 0.12.0 (2018-04-27)
+-------------
+
+    * Optional modules: Modules can now be disabled at compile time.
+      With this change, platforms that don't provide all of the required
+      features can still be supported to some extend. Users can also
+      disable a module and provide an alternative implementation instead.
+      By default, all modules are enabled.
+
+    * Transaction-aware signal handling: The new signal component of the
+      libc module adds support for Unix signals. Transactions that receive
+      a signal will jump to recovery. With this new feature application
+      errors, such as segmenation faults or divisions by zero, can be
+      handled in a coordinated way.
+
+    * Errors during casts or arithmetic operations are now recoverable.
+
+    * The license of the libc module's fileid.{c,h} has been fixed to MIT.
+
+    * Improved documentation.
+
+    * Bug fix: Generator scripts for the release tarball now create a
+      buildable package.
+
+
 picotm 0.11.0 (2018-02-27)
 -------------
 

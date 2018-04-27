@@ -23,7 +23,7 @@ dnl
 dnl SPDX-License-Identifier: MIT
 
 AC_PREREQ([2.69])
-AC_INIT([picotm], [0.11.0], [bugs@picotm.org], [], [http://picotm.org])
+AC_INIT([picotm], [0.12.0], [bugs@picotm.org], [], [http://picotm.org])
 
 dnl Internal configuration header
 AH_TOP([/* SPDX-License-Identifier: MIT */])
