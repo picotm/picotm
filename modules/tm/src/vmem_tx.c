@@ -85,6 +85,27 @@ free_page(struct tm_vmem_tx* vmem_tx, struct tm_page* page)
     picotm_slist_enqueue_front(&vmem_tx->alloced_pages, &page->list);
 }
 
+static _Bool
+find_page_by_block_index(const struct tm_page* page, size_t block_index,
+                         struct tm_page** prev)
+{
+    if (tm_page_block_index(page) >= block_index) {
+        return true; /* stop iterating */
+    }
+    *prev = (struct tm_page*)page;
+    return false;
+}
+
+static _Bool
+find_page_by_block_index_cb(const struct picotm_slist* item,
+                            void* data1, void* data2)
+{
+    const struct tm_page* page = tm_page_of_const_slist(item);
+    size_t* block_index = data1;
+    struct tm_page** prev = data2;
+    return find_page_by_block_index(page, *block_index, prev);
+}
+
 static struct tm_page*
 acquire_page_by_block(struct tm_vmem_tx* vmem_tx, size_t block_index,
                       struct picotm_error* error)
@@ -93,20 +114,14 @@ acquire_page_by_block(struct tm_vmem_tx* vmem_tx, size_t block_index,
 
     struct tm_page* prev = NULL;
 
-    const struct picotm_slist* end =
-        picotm_slist_end(&vmem_tx->active_pages);
-          struct picotm_slist* beg =
-        picotm_slist_begin(&vmem_tx->active_pages);
-
-    for (; beg != end; beg = picotm_slist_next(beg)) {
-        struct tm_page* page = tm_page_of_slist(beg);
-        size_t page_block_index = tm_page_block_index(page);
-        if (page_block_index == block_index) {
+    struct picotm_slist* pos = picotm_slist_find_2(&vmem_tx->active_pages,
+                                                   find_page_by_block_index_cb,
+                                                   &block_index, &prev);
+    if (pos != picotm_slist_end(&vmem_tx->active_pages)) {
+        struct tm_page* page = tm_page_of_slist(pos);
+        if (tm_page_block_index(page) == block_index) {
             return page;
-        } else if (page_block_index > block_index) {
-            break;
         }
-        prev = page;
     }
 
     /* ...or create a new page that refers to the corresponding frame. */
