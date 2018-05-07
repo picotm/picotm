@@ -3323,6 +3323,18 @@ fildes_tx_clear_cc(struct fildes_tx* self, int noundo,
 }
 
 static void
+finish_file_tx(struct file_tx* file_tx)
+{
+    file_tx_unref(file_tx);
+}
+
+static void
+finish_file_tx_cb(struct picotm_slist* item)
+{
+    finish_file_tx(file_tx_of_slist(item));
+}
+
+static void
 finish_ofd_tx(struct ofd_tx* ofd_tx)
 {
     ofd_tx_unref(ofd_tx);
@@ -3350,13 +3362,7 @@ void
 fildes_tx_finish(struct fildes_tx* self, struct picotm_error* error)
 {
     /* Unref files */
-    while (!picotm_slist_is_empty(&self->file_tx_active_list)) {
-        struct file_tx* file_tx =
-            file_tx_of_slist(picotm_slist_front(&self->file_tx_active_list));
-        picotm_slist_dequeue_front(&self->file_tx_active_list);
-
-        file_tx_unref(file_tx);
-    }
+    picotm_slist_cleanup_0(&self->file_tx_active_list, finish_file_tx_cb);
 
     /* Unref open file descriptions */
     picotm_slist_cleanup_0(&self->ofd_tx_active_list, finish_ofd_tx_cb);
