@@ -614,25 +614,32 @@ tm_vmem_tx_apply(struct tm_vmem_tx* vmem_tx, struct picotm_error* error)
                         vmem_tx->vmem, error);
 }
 
+static size_t
+undo_page(struct tm_page* page, struct tm_vmem* vmem,
+          struct picotm_error* error)
+{
+    if (tm_page_has_wrlocked_frame(page) &&
+        (page->flags & TM_PAGE_FLAG_WRITE_THROUGH) &&
+        !(page->flags & TM_PAGE_FLAG_DISCARDED)) {
+        tm_page_st(page, copy_all_bits(), vmem, error);
+        if (picotm_error_is_set(error)) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+static size_t
+undo_page_cb(struct picotm_slist* item, void* data1, void* data2)
+{
+    return undo_page(tm_page_of_slist(item), data1, data2);
+}
+
 void
 tm_vmem_tx_undo(struct tm_vmem_tx* vmem_tx, struct picotm_error* error)
 {
-    const struct picotm_slist* end =
-        picotm_slist_end(&vmem_tx->active_pages);
-          struct picotm_slist* beg =
-        picotm_slist_begin(&vmem_tx->active_pages);
-
-    for (; beg != end; beg = picotm_slist_next(beg)) {
-        struct tm_page* page = tm_page_of_slist(beg);
-        if (tm_page_has_wrlocked_frame(page) &&
-                (page->flags & TM_PAGE_FLAG_WRITE_THROUGH) &&
-               !(page->flags & TM_PAGE_FLAG_DISCARDED)) {
-            tm_page_st(page, copy_all_bits(), vmem_tx->vmem, error);
-            if (picotm_error_is_set(error)) {
-                return;
-            }
-        }
-    }
+    picotm_slist_walk_2(&vmem_tx->active_pages, undo_page_cb,
+                        vmem_tx->vmem, error);
 }
 
 static void
