@@ -66,6 +66,12 @@ tm_page_of_slist(struct picotm_slist* item)
     return picotm_containerof(item, struct tm_page, list);
 }
 
+static inline const struct tm_page*
+tm_page_of_const_slist(const struct picotm_slist* item)
+{
+    return picotm_containerof(item, const struct tm_page, list);
+}
+
 void
 tm_page_init(struct tm_page* page, size_t block_index);
 
