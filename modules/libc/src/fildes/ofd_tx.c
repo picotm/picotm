@@ -95,6 +95,8 @@ ofd_tx_uninit(struct ofd_tx* self)
 
     uninit_rwstates(picotm_arraybeg(self->rwstate),
                     picotm_arrayend(self->rwstate));
+
+    picotm_slist_uninit_item(&self->active_list);
 }
 
 bool
