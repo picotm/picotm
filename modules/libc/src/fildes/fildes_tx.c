@@ -151,6 +151,7 @@ fildes_tx_uninit(struct fildes_tx* self)
     pipeoptab_clear(&self->pipeoptab, &self->pipeoptablen);
     openoptab_clear(&self->openoptab, &self->openoptablen);
 
+    picotm_slist_uninit_head(&self->ofd_tx_active_list);
     picotm_slist_uninit_head(&self->fd_tx_active_list);
 }
 
@@ -3261,6 +3262,18 @@ fildes_tx_clear_cc(struct fildes_tx* self, int noundo,
 }
 
 static void
+finish_ofd_tx(struct ofd_tx* ofd_tx)
+{
+    ofd_tx_unref(ofd_tx);
+}
+
+static void
+finish_ofd_tx_cb(struct picotm_slist* item)
+{
+    finish_ofd_tx(ofd_tx_of_slist(item));
+}
+
+static void
 finish_fd_tx(struct fd_tx* fd_tx)
 {
     fd_tx_unref(fd_tx);
@@ -3286,14 +3299,7 @@ fildes_tx_finish(struct fildes_tx* self, struct picotm_error* error)
     }
 
     /* Unref open file descriptions */
-
-    while (!picotm_slist_is_empty(&self->ofd_tx_active_list)) {
-        struct ofd_tx* ofd_tx =
-            ofd_tx_of_slist(picotm_slist_front(&self->ofd_tx_active_list));
-        picotm_slist_dequeue_front(&self->ofd_tx_active_list);
-
-        ofd_tx_unref(ofd_tx);
-    }
+    picotm_slist_cleanup_0(&self->ofd_tx_active_list, finish_ofd_tx_cb);
 
     /* Unref file descriptors */
     picotm_slist_cleanup_0(&self->fd_tx_active_list, finish_fd_tx_cb);
