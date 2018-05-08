@@ -91,24 +91,6 @@ struct tm_module {
 };
 
 static void
-lock(struct tm_module* module, struct picotm_error* error)
-{
-    tm_vmem_tx_lock(&module->tx, error);
-}
-
-static void
-unlock(struct tm_module* module, struct picotm_error* error)
-{
-    tm_vmem_tx_unlock(&module->tx, error);
-}
-
-static void
-validate(struct tm_module* module, bool eotx, struct picotm_error* error)
-{
-    tm_vmem_tx_validate(&module->tx, eotx, error);
-}
-
-static void
 apply(struct tm_module* module, struct picotm_error* error)
 {
     tm_vmem_tx_apply(&module->tx, error);
@@ -138,24 +120,6 @@ uninit(struct tm_module* module)
  */
 
 static void
-lock_cb(void* data, struct picotm_error* error)
-{
-    lock(data, error);
-}
-
-static void
-unlock_cb(void* data, struct picotm_error* error)
-{
-    unlock(data, error);
-}
-
-static void
-validate_cb(void* data, int eotx, struct picotm_error* error)
-{
-    validate(data, !!eotx, error);
-}
-
-static void
 apply_cb(void* data, struct picotm_error* error)
 {
     apply(data, error);
@@ -183,9 +147,6 @@ static struct tm_vmem_tx*
 get_vmem_tx(bool initialize, struct picotm_error* error)
 {
     static const struct picotm_module_ops g_ops = {
-        .lock = lock_cb,
-        .unlock = unlock_cb,
-        .validate = validate_cb,
         .apply = apply_cb,
         .undo = undo_cb,
         .finish = finish_cb,

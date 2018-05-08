@@ -567,26 +567,6 @@ tm_vmem_tx_privatize_c(struct tm_vmem_tx* vmem_tx, uintptr_t addr, int c,
     }
 }
 
-void
-tm_vmem_tx_lock(struct tm_vmem_tx* vmem_tx, struct picotm_error* error)
-{
-    /* We've already locked all frames. */
-}
-
-void
-tm_vmem_tx_unlock(struct tm_vmem_tx* vmem_tx, struct picotm_error* error)
-{
-    /* The lock() function is a NO-OP, so this is as well. */
-}
-
-void
-tm_vmem_tx_validate(struct tm_vmem_tx* vmem_tx, bool eotx,
-                    struct picotm_error* error)
-{
-    /* We've locked all frames during execution phase, so we
-     * already know that they are in a consistent state. */
-}
-
 static size_t
 apply_page(struct tm_page* page, struct tm_vmem* vmem, struct picotm_error* error)
 {
