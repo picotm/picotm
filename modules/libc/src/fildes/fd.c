@@ -130,12 +130,6 @@ fd_is_open_nl(const struct fd* self)
 	return self->state == FD_STATE_INUSE;
 }
 
-void
-fd_validate(struct fd* self, struct picotm_error* error)
-{
-    assert(self);
-}
-
 /*
  * Referencing
  */
