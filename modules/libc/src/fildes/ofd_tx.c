@@ -254,18 +254,7 @@ ofd_tx_try_wrlock_field(struct ofd_tx* self, enum ofd_field field,
  */
 
 void
-ofd_tx_update_cc(struct ofd_tx* self, struct picotm_error* error)
-{
-    assert(self);
-
-    /* release reader/writer locks on open-file-description state */
-    unlock_rwstates(picotm_arraybeg(self->rwstate),
-                    picotm_arrayend(self->rwstate),
-                    self->ofd);
-}
-
-void
-ofd_tx_clear_cc(struct ofd_tx* self, struct picotm_error* error)
+ofd_tx_finish(struct ofd_tx* self)
 {
     assert(self);
 

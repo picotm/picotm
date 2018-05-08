@@ -217,18 +217,13 @@ ofd_tx_try_rdlock_field(struct ofd_tx* self, enum ofd_field field,
 void
 ofd_tx_try_wrlock_field(struct ofd_tx* self, enum ofd_field field,
                         struct picotm_error* error);
+
 /*
  * Module interface
  */
 
 /**
- * Updates the data structures for concurrency control after a successful apply
+ * Cleans up the data structures for at the end of a transaction.
  */
 void
-ofd_tx_update_cc(struct ofd_tx* self, struct picotm_error* error);
-
-/**
- * Clears the data structures for concurrency control after a successful undo
- */
-void
-ofd_tx_clear_cc(struct ofd_tx* self, struct picotm_error* error);
+ofd_tx_finish(struct ofd_tx* self);
