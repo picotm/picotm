@@ -2893,9 +2893,9 @@ undo_write(struct fildes_tx* self, int fildes, int cookie,
  */
 
 static size_t
-validate_fd_tx(struct fd_tx* fd_tx, struct picotm_error* error)
+prepare_commit_fd_tx(struct fd_tx* fd_tx, struct picotm_error* error)
 {
-    fd_tx_validate(fd_tx, error);
+    fd_tx_prepare_commit(fd_tx, error);
     if (picotm_error_is_set(error)) {
         return 0;
     }
@@ -2903,17 +2903,18 @@ validate_fd_tx(struct fd_tx* fd_tx, struct picotm_error* error)
 }
 
 static size_t
-validate_fd_tx_cb(struct picotm_slist* item, void* data)
+prepare_commit_fd_tx_cb(struct picotm_slist* item, void* data)
 {
-    return validate_fd_tx(fd_tx_of_slist(item), data);
+    return prepare_commit_fd_tx(fd_tx_of_slist(item), data);
 }
 
 void
-fildes_tx_validate(struct fildes_tx* self, int noundo,
-                   struct picotm_error* error)
+fildes_tx_prepare_commit(struct fildes_tx* self, int noundo,
+                         struct picotm_error* error)
 {
     /* Validate file-descriptor state */
-    picotm_slist_walk_1(&self->fd_tx_active_list, validate_fd_tx_cb, error);
+    picotm_slist_walk_1(&self->fd_tx_active_list, prepare_commit_fd_tx_cb,
+                        error);
 }
 
 void

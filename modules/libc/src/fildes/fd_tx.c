@@ -193,10 +193,6 @@ fd_tx_signal_close(struct fd_tx* self)
     fd_close(self->fd);
 }
 
-/*
- * Module interface
- */
-
 void
 fd_tx_validate(struct fd_tx* self, struct picotm_error* error)
 {
@@ -211,6 +207,18 @@ fd_tx_validate(struct fd_tx* self, struct picotm_error* error)
         picotm_error_set_conflicting(error, NULL);
         return;
     }
+}
+
+/*
+ * Module interface
+ */
+
+void
+fd_tx_prepare_commit(struct fd_tx* self, struct picotm_error* error)
+{
+    assert(self);
+
+    fd_tx_validate(self, error);
 }
 
 void

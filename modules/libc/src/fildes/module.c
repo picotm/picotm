@@ -43,7 +43,7 @@ validate_cb(void* data, int noundo, struct picotm_error* error)
 {
     struct fildes_module* module = data;
 
-    fildes_tx_validate(&module->tx, noundo, error);
+    fildes_tx_prepare_commit(&module->tx, noundo, error);
 }
 
 static void
