@@ -115,18 +115,6 @@ module_undo_event(struct module* module, uint16_t head, uintptr_t tail,
 }
 
 static void
-module_update_cc(struct module* module, struct picotm_error* error)
-{
-    cwd_tx_update_cc(&module->tx, error);
-}
-
-static void
-module_clear_cc(struct module* module, struct picotm_error* error)
-{
-    cwd_tx_clear_cc(&module->tx, error);
-}
-
-static void
 module_finish(struct module* module)
 {
     cwd_tx_finish(&module->tx);
@@ -161,18 +149,6 @@ undo_event_cb(uint16_t head, uintptr_t tail, void* data,
 }
 
 static void
-update_cc_cb(void* data, int noundo, struct picotm_error* error)
-{
-    module_update_cc(data, error);
-}
-
-static void
-clear_cc_cb(void* data, int noundo, struct picotm_error* error)
-{
-    module_clear_cc(data, error);
-}
-
-static void
 finish_cb(void* data, struct picotm_error* error)
 {
     module_finish(data);
@@ -190,8 +166,6 @@ get_cwd_tx(bool initialize, struct picotm_error* error)
     static const struct picotm_module_ops g_ops = {
         .apply_event = apply_event_cb,
         .undo_event = undo_event_cb,
-        .update_cc = update_cc_cb,
-        .clear_cc = clear_cc_cb,
         .finish = finish_cb,
         .uninit = uninit_cb
     };

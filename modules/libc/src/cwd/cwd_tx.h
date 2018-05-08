@@ -116,10 +116,4 @@ cwd_tx_undo_event(struct cwd_tx* self, enum cwd_op op, char* alloced,
                   struct picotm_error* error);
 
 void
-cwd_tx_update_cc(struct cwd_tx* self, struct picotm_error* error);
-
-void
-cwd_tx_clear_cc(struct cwd_tx* self, struct picotm_error* error);
-
-void
 cwd_tx_finish(struct cwd_tx* self);
