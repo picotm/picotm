@@ -71,22 +71,6 @@ undo_event_cb(uint16_t head, uintptr_t tail, void *data,
 }
 
 static void
-update_cc_cb(void* data, int noundo, struct picotm_error* error)
-{
-    struct fildes_module* module = data;
-
-    fildes_tx_update_cc(&module->tx, noundo, error);
-}
-
-static void
-clear_cc_cb(void* data, int noundo, struct picotm_error* error)
-{
-    struct fildes_module* module = data;
-
-    fildes_tx_clear_cc(&module->tx, noundo, error);
-}
-
-static void
 finish_cb(void* data, struct picotm_error* error)
 {
     struct fildes_module* module = data;
@@ -113,8 +97,6 @@ get_fildes_tx(bool initialize, struct picotm_error* error)
         .prepare_commit = prepare_commit_cb,
         .apply_event = apply_event_cb,
         .undo_event = undo_event_cb,
-        .update_cc = update_cc_cb,
-        .clear_cc = clear_cc_cb,
         .finish = finish_cb,
         .uninit = uninit_cb
     };
