@@ -63,8 +63,7 @@ struct file_tx_ops {
      * Module interfaces
      */
 
-    void (*update_cc)(struct file_tx*, struct picotm_error*);
-    void (*clear_cc)(struct file_tx*, struct picotm_error*);
+    void (*finish)(struct file_tx*);
 
     /*
      * accept()

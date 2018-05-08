@@ -428,25 +428,8 @@ write_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
  * Public interfaces
  */
 
-/* Update CC
- */
-
 static void
-update_cc(struct file_tx* base, struct picotm_error* error)
-{
-    struct fifo_tx* self = fifo_tx_of_file_tx(base);
-
-    /* release reader/writer locks on FIFO state */
-    unlock_rwstates(picotm_arraybeg(self->rwstate),
-                    picotm_arrayend(self->rwstate),
-                    self->fifo);
-}
-
-/* Clear CC
- */
-
-static void
-clear_cc(struct file_tx* base, struct picotm_error* error)
+finish(struct file_tx* base)
 {
     struct fifo_tx* self = fifo_tx_of_file_tx(base);
 
@@ -466,8 +449,7 @@ static const struct file_tx_ops fifo_tx_ops = {
     ref,
     unref,
     /* module interfaces */
-    update_cc,
-    clear_cc,
+    finish,
     /* file ops */
     file_tx_op_accept_exec_enotsock,
     NULL,

@@ -1049,28 +1049,8 @@ write_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
  * Public interface
  */
 
-/* Update CC
- */
-
 static void
-update_cc(struct file_tx* base, struct picotm_error* error)
-{
-    struct regfile_tx* self = regfile_tx_of_file_tx(base);
-
-    /* release record locks */
-    regfile_tx_2pl_release_locks(self);
-
-    /* release reader/writer locks on file state */
-    unlock_rwstates(picotm_arraybeg(self->rwstate),
-                    picotm_arrayend(self->rwstate),
-                    self->regfile);
-}
-
-/* Clear CC
- */
-
-static void
-clear_cc(struct file_tx* base, struct picotm_error* error)
+finish(struct file_tx* base)
 {
     struct regfile_tx* self = regfile_tx_of_file_tx(base);
 
@@ -1093,8 +1073,7 @@ static const struct file_tx_ops regfile_tx_ops = {
     ref,
     unref,
     /* module interfaces */
-    update_cc,
-    clear_cc,
+    finish,
     /* file ops */
     file_tx_op_accept_exec_enotsock,
     NULL,

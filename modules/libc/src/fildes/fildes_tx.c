@@ -3027,22 +3027,6 @@ update_ofd_tx_cc_cb(struct picotm_slist* item, void* data)
     return update_ofd_tx_cc(ofd_tx_of_slist(item), data);
 }
 
-static size_t
-update_file_tx_cc(struct file_tx* file_tx, struct picotm_error* error)
-{
-    file_tx_update_cc(file_tx, error);
-    if (picotm_error_is_set(error)) {
-        return 0;
-    }
-    return 1;
-}
-
-static size_t
-update_file_tx_cc_cb(struct picotm_slist* item, void* data)
-{
-    return update_file_tx_cc(file_tx_of_slist(item), data);
-}
-
 void
 fildes_tx_update_cc(struct fildes_tx* self, int noundo,
                     struct picotm_error* error)
@@ -3055,13 +3039,6 @@ fildes_tx_update_cc(struct fildes_tx* self, int noundo,
 
     /* Update concurrency control on open file descriptions */
     picotm_slist_walk_1(&self->ofd_tx_active_list, update_ofd_tx_cc_cb, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
-
-    /* Update concurrency control on files */
-    picotm_slist_walk_1(&self->file_tx_active_list, update_file_tx_cc_cb,
-                        error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -3105,22 +3082,6 @@ clear_ofd_tx_cc_cb(struct picotm_slist* item, void* data)
     return clear_ofd_tx_cc(ofd_tx_of_slist(item), data);
 }
 
-static size_t
-clear_file_tx_cc(struct file_tx* file_tx, struct picotm_error* error)
-{
-    file_tx_clear_cc(file_tx, error);
-    if (picotm_error_is_set(error)) {
-        return 0;
-    }
-    return 1;
-}
-
-static size_t
-clear_file_tx_cc_cb(struct picotm_slist* item, void* data)
-{
-    return clear_file_tx_cc(file_tx_of_slist(item), data);
-}
-
 void
 fildes_tx_clear_cc(struct fildes_tx* self, int noundo,
                    struct picotm_error* error)
@@ -3137,13 +3098,6 @@ fildes_tx_clear_cc(struct fildes_tx* self, int noundo,
         return;
     }
 
-    /* Clear concurrency control on files */
-    picotm_slist_walk_1(&self->file_tx_active_list, clear_file_tx_cc_cb,
-                        error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
-
     /* Clear concurrency control on file-descriptor table */
 
     fdtab_tx_update_cc(&self->fdtab_tx, error);
@@ -3155,6 +3109,7 @@ fildes_tx_clear_cc(struct fildes_tx* self, int noundo,
 static void
 finish_file_tx(struct file_tx* file_tx)
 {
+    file_tx_finish(file_tx);
     file_tx_unref(file_tx);
 }
 
