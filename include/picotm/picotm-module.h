@@ -337,8 +337,9 @@ PICOTM_END_DECLS
  *
  * # Registering Your Module
  *
- * To register a module, call picotm_register_module(). The call receives a
- * number of module-specific call-back functions and module data, and returns
+ * To register a module, call `picotm_register_module()`. The call receives
+ * an instance of `struct picotm_module_ops`, which stores a number of
+ * module-specific call-back functions, and variable module data. It returns
  * a unique module number. The call-back functions are invoked by picotm to
  * instruct the module during different phases of a transaction. The returned
  * module number is later required when inserting events into the transaction
@@ -348,22 +349,14 @@ PICOTM_END_DECLS
  * module might look like this.
  *
  * ~~~{.c}
+ *  static const struct picotm_module_ops ops = {
+ *      .apply_event = apply, // See below.
+ *      .undo_event = undo  // See below.
+ *  };
+ *
  *  struct picotm_error error = PICOTM_ERROR_INITIALIZER;
  *
- *  unsigned long module_number =
- *      picotm_register_module(NULL,
- *                             NULL,
- *                             NULL,
- *                             NULL,
- *                             NULL,
- *                             apply, // See below.
- *                             undo,  // See below.
- *                             NULL,
- *                             NULL,
- *                             NULL,
- *                             NULL,
- *                             NULL,
- *                             &error);
+ *  unsigned long module_number = picotm_register_module(&ops, NULL, &error);
  *  if (picotm_error_is_set(&error)) {
  *      // abort with an error
  *  }
