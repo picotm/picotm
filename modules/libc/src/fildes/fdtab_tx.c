@@ -90,15 +90,7 @@ fdtab_tx_ref_fildes(struct fdtab_tx* self, int fildes,
  */
 
 void
-fdtab_tx_update_cc(struct fdtab_tx* self, struct picotm_error* error)
-{
-    assert(self);
-
-    fdtab_unlock(&self->rwstate);
-}
-
-void
-fdtab_tx_clear_cc(struct fdtab_tx* self, struct picotm_error* error)
+fdtab_tx_finish(struct fdtab_tx* self)
 {
     assert(self);
 
