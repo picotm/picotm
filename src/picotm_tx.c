@@ -245,45 +245,12 @@ err_picotm_lock_owner_reset_timestamp:
 }
 
 static size_t
-lock_cb(void* module, struct picotm_error* error)
-{
-    picotm_module_lock(module, error);
-    return picotm_error_is_set(error) ? 0 : 1;
-}
-
-static void
-lock_modules(struct picotm_module* module, unsigned long nmodules,
-             struct picotm_error* error)
-{
-    tabwalk_1(module, nmodules, sizeof(*module), lock_cb, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
-}
-
-static size_t
-unlock_cb(void* module, struct picotm_error* error)
-{
-    picotm_module_unlock(module, error);
-    return picotm_error_is_set(error) ? 0 : 1;
-}
-
-static void
-unlock_modules(struct picotm_module* module, unsigned long nmodules,
-               struct picotm_error* error)
-{
-    tabrwalk_1(module, nmodules, sizeof(*module), unlock_cb, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
-}
-
-static size_t
-validate_cb(void* module, void* is_irrevocable, struct picotm_error* error)
+prepare_commit_cb(void* module, void* is_irrevocable,
+                  struct picotm_error* error)
 {
     assert(is_irrevocable);
 
-    picotm_module_validate(module, *((bool*)is_irrevocable), error);
+    picotm_module_prepare_commit(module, *((bool*)is_irrevocable), error);
     if (picotm_error_is_set(error)) {
         return 0;
     }
@@ -291,11 +258,11 @@ validate_cb(void* module, void* is_irrevocable, struct picotm_error* error)
 }
 
 static void
-validate_modules(struct picotm_module* module, unsigned long nmodules,
-                 bool is_irrevocable, struct picotm_error* error)
+prepare_commit_modules(struct picotm_module* module, unsigned long nmodules,
+                       bool is_irrevocable, struct picotm_error* error)
 {
-    tabwalk_2(module, nmodules, sizeof(*module), validate_cb, &is_irrevocable,
-              error);
+    tabwalk_2(module, nmodules, sizeof(*module), prepare_commit_cb,
+              &is_irrevocable, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -445,14 +412,10 @@ picotm_tx_commit(struct picotm_tx* self, struct picotm_error* error)
     bool is_irrevocable = picotm_tx_is_irrevocable(self);
     bool is_non_recoverable = false;
 
-    lock_modules(self->module, self->nmodules, error);
+    prepare_commit_modules(self->module, self->nmodules, is_irrevocable,
+                           error);
     if (picotm_error_is_set(error)) {
-        goto err_lock_modules;
-    }
-
-    validate_modules(self->module, self->nmodules, is_irrevocable, error);
-    if (picotm_error_is_set(error)) {
-        goto err_validate_modules;
+        goto err_prepare_commit_modules;
     }
 
     /* Point of no return! After we began to apply events, we cannot
@@ -476,11 +439,6 @@ picotm_tx_commit(struct picotm_tx* self, struct picotm_error* error)
         goto err_update_modules_cc;
     }
 
-    unlock_modules(self->module, self->nmodules, error);
-    if (picotm_error_is_set(error)) {
-        goto err;
-    }
-
     finish_modules(self->module, self->nmodules, error);
     if (picotm_error_is_set(error)) {
         goto err;
@@ -493,12 +451,7 @@ picotm_tx_commit(struct picotm_tx* self, struct picotm_error* error)
 err_update_modules_cc:
 err_apply_events:
 err_apply_modules:
-err_validate_modules:
-    {
-        struct picotm_error err_error = PICOTM_ERROR_INITIALIZER;
-        unlock_modules(self->module, self->nmodules, &err_error);
-    }
-err_lock_modules:
+err_prepare_commit_modules:
 err:
     if (is_non_recoverable) {
         picotm_error_mark_as_non_recoverable(error);

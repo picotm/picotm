@@ -60,16 +60,8 @@ picotm_module_begin(const struct picotm_module* self,
                     struct picotm_error* error);
 
 void
-picotm_module_lock(const struct picotm_module* self,
-                   struct picotm_error* error);
-
-void
-picotm_module_unlock(const struct picotm_module* self,
-                     struct picotm_error* error);
-
-void
-picotm_module_validate(const struct picotm_module* self, bool noundo,
-                       struct picotm_error* error);
+picotm_module_prepare_commit(const struct picotm_module* self, bool noundo,
+                             struct picotm_error* error);
 
 void
 picotm_module_apply(const struct picotm_module* self,

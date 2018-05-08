@@ -49,7 +49,7 @@ struct txlib_module {
 };
 
 static void
-lock(struct txlib_module* module, struct picotm_error* error)
+prepare_commit(struct txlib_module* module, struct picotm_error* error)
 {
     txlib_tx_prepare_commit(&module->tx, error);
 }
@@ -86,9 +86,9 @@ uninit(struct txlib_module* module)
  */
 
 static void
-lock_cb(void* data, struct picotm_error* error)
+prepare_commit_cb(void* data, int is_irrevocable, struct picotm_error* error)
 {
-    lock(data, error);
+    prepare_commit(data, error);
 }
 
 static void
@@ -121,7 +121,7 @@ static struct txlib_tx*
 get_txl_tx(bool initialize, struct picotm_error* error)
 {
     static const struct picotm_module_ops g_ops = {
-        .lock = lock_cb,
+        .prepare_commit = prepare_commit_cb,
         .apply_event = apply_event_cb,
         .undo_event = undo_event_cb,
         .finish = finish_cb,
