@@ -2924,22 +2924,6 @@ lock_ofd_tx_cb(struct picotm_slist* item, void* data)
     return lock_ofd_tx(ofd_tx_of_slist(item), data);
 }
 
-static size_t
-lock_file_tx(struct file_tx* file_tx, struct picotm_error* error)
-{
-    file_tx_lock(file_tx, error);
-    if (picotm_error_is_set(error)) {
-        return 0;
-    }
-    return 1;
-}
-
-static size_t
-lock_file_tx_cb(struct picotm_slist* item, void* data)
-{
-    return lock_file_tx(file_tx_of_slist(item), data);
-}
-
 void
 fildes_tx_lock(struct fildes_tx* self, struct picotm_error* error)
 {
@@ -2948,12 +2932,6 @@ fildes_tx_lock(struct fildes_tx* self, struct picotm_error* error)
 
     /* Lock open file descriptions */
     picotm_slist_walk_1(&self->ofd_tx_active_list, lock_ofd_tx_cb, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
-
-    /* Lock files */
-    picotm_slist_walk_1(&self->file_tx_active_list, lock_file_tx_cb, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -2986,27 +2964,10 @@ unlock_ofd_tx_cb(struct picotm_slist* item)
     return unlock_ofd_tx(ofd_tx_of_slist(item));
 }
 
-static size_t
-unlock_file_tx(struct file_tx* file_tx)
-{
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    file_tx_unlock(file_tx, &error);
-    return 1;
-}
-
-static size_t
-unlock_file_tx_cb(struct picotm_slist* item)
-{
-    return unlock_file_tx(file_tx_of_slist(item));
-}
-
 void
 fildes_tx_unlock(struct fildes_tx* self)
 {
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-    /* Unlock files */
-    picotm_slist_walk_0(&self->file_tx_active_list, unlock_file_tx_cb);
 
     /* Unlock open file descriptions */
     picotm_slist_walk_0(&self->ofd_tx_active_list, unlock_ofd_tx_cb);
@@ -3047,22 +3008,6 @@ validate_ofd_tx_cb(struct picotm_slist* item, void* data)
     return validate_ofd_tx(ofd_tx_of_slist(item), data);
 }
 
-static size_t
-validate_file_tx(struct file_tx* file_tx, struct picotm_error* error)
-{
-    file_tx_validate(file_tx, error);
-    if (picotm_error_is_set(error)) {
-        return 0;
-    }
-    return 1;
-}
-
-static size_t
-validate_file_tx_cb(struct picotm_slist* item, void* data)
-{
-    return validate_file_tx(file_tx_of_slist(item), data);
-}
-
 void
 fildes_tx_validate(struct fildes_tx* self, int noundo,
                    struct picotm_error* error)
@@ -3075,13 +3020,6 @@ fildes_tx_validate(struct fildes_tx* self, int noundo,
 
     /* Validate open file descriptions */
     picotm_slist_walk_1(&self->ofd_tx_active_list, validate_ofd_tx_cb, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
-
-    /* Validate files */
-    picotm_slist_walk_1(&self->file_tx_active_list, validate_file_tx_cb,
-                        error);
     if (picotm_error_is_set(error)) {
         return;
     }

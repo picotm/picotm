@@ -428,21 +428,6 @@ write_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
  * Public interfaces
  */
 
-static void
-lock(struct file_tx* base, struct picotm_error* error)
-{ }
-
-static void
-unlock(struct file_tx* base, struct picotm_error* error)
-{ }
-
-/* Validation
- */
-
-static void
-validate(struct file_tx* base, struct picotm_error* error)
-{ }
-
 /* Update CC
  */
 
@@ -481,9 +466,6 @@ static const struct file_tx_ops fifo_tx_ops = {
     ref,
     unref,
     /* module interfaces */
-    lock,
-    unlock,
-    validate,
     update_cc,
     clear_cc,
     /* file ops */

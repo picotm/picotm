@@ -97,30 +97,6 @@ file_tx_unref(struct file_tx* self);
  */
 
 /**
- * Locks the transaction-local file state before commit or validation.
- * \param   self        The transaction-local file state.
- * \param[out]  error   Returns an error to the caller.
- */
-void
-file_tx_lock(struct file_tx* self, struct picotm_error* error);
-
-/**
- * Unlocks the transaction-local file state after commit or validation.
- * \param   self        The transaction-local file state.
- * \param[out]  error   Returns an error to the caller.
- */
-void
-file_tx_unlock(struct file_tx* self, struct picotm_error* error);
-
-/**
- * Validates the transaction-local file state.
- * \param       self    The transaction-local file state.
- * \param[out]  error   Returns an error to the caller.
- */
-void
-file_tx_validate(struct file_tx* self, struct picotm_error* error);
-
-/**
  * \brief Updates the concurrency control on transaction-local file state
  *        after a successful apply.
  * \param       self    The transaction-local file state.
