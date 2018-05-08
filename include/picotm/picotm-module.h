@@ -300,14 +300,6 @@ picotm_recover_from_error(const struct picotm_error* error);
 
 PICOTM_NOTHROW
 /**
- * Validates the transaction state.
- * \returns True if the transaction state is valid, false otherwise.
- */
-bool
-picotm_is_valid(void);
-
-PICOTM_NOTHROW
-/**
  * Makes the current transaction irrevocable.
  */
 void

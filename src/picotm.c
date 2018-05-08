@@ -420,13 +420,6 @@ picotm_restart()
 }
 
 PICOTM_EXPORT
-bool
-picotm_is_valid()
-{
-    return picotm_tx_is_valid(get_non_null_tx());
-}
-
-PICOTM_EXPORT
 void
 picotm_irrevocable()
 {

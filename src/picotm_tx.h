@@ -94,6 +94,3 @@ picotm_tx_commit(struct picotm_tx* self, struct picotm_error* error);
 
 void
 picotm_tx_rollback(struct picotm_tx* self, struct picotm_error* error);
-
-bool
-picotm_tx_is_valid(struct picotm_tx* self);

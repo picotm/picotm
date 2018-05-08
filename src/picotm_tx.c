@@ -540,18 +540,3 @@ err:
     picotm_error_mark_as_non_recoverable(error);
     picotm_lock_manager_release_irrevocability(self->lm);
 }
-
-bool
-picotm_tx_is_valid(struct picotm_tx* self)
-{
-    assert(self);
-
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    validate_modules(self->module, self->nmodules,
-                     picotm_tx_is_irrevocable(self),
-                     &error);
-    if (picotm_error_is_set(&error)) {
-        return false;
-    }
-    return true;
-}
