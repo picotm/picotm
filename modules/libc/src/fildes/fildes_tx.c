@@ -604,13 +604,10 @@ find_fd_tx_with_ref(struct fildes_tx* self, int fildes, int ofd_fildes,
     if (fd_tx_holds_ref(fd_tx)) {
 
         /* Validate reference or return error if fd has been closed */
-        fd_tx_lock(fd_tx);
         fd_tx_validate(fd_tx, error);
         if (picotm_error_is_set(error)) {
-            fd_tx_unlock(fd_tx);
             return NULL;
         }
-        fd_tx_unlock(fd_tx);
 
         return fd_tx;
     }
@@ -2894,48 +2891,6 @@ undo_write(struct fildes_tx* self, int fildes, int cookie,
 /*
  * Module interface
  */
-
-static size_t
-lock_fd_tx(struct fd_tx* fd_tx)
-{
-    fd_tx_lock(fd_tx);
-    return 1;
-}
-
-static size_t
-lock_fd_tx_cb(struct picotm_slist* item)
-{
-    return lock_fd_tx(fd_tx_of_slist(item));
-}
-
-void
-fildes_tx_lock(struct fildes_tx* self, struct picotm_error* error)
-{
-    /* Lock file descriptors */
-    picotm_slist_walk_0(&self->fd_tx_active_list, lock_fd_tx_cb);
-}
-
-static size_t
-unlock_fd_tx(struct fd_tx* fd_tx)
-{
-    fd_tx_unlock(fd_tx);
-    return 1;
-}
-
-static size_t
-unlock_fd_tx_cb(struct picotm_slist* item)
-{
-    return unlock_fd_tx(fd_tx_of_slist(item));
-}
-
-void
-fildes_tx_unlock(struct fildes_tx* self)
-{
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-    /* Unlock file descriptors */
-    picotm_slist_walk_0(&self->fd_tx_active_list, unlock_fd_tx_cb);
-}
 
 static size_t
 validate_fd_tx(struct fd_tx* fd_tx, struct picotm_error* error)

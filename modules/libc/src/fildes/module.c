@@ -39,22 +39,6 @@ struct fildes_module {
 };
 
 static void
-lock_cb(void* data, struct picotm_error* error)
-{
-    struct fildes_module* module = data;
-
-    fildes_tx_lock(&module->tx, error);
-}
-
-static void
-unlock_cb(void* data, struct picotm_error* error)
-{
-    struct fildes_module* module = data;
-
-    fildes_tx_unlock(&module->tx);
-}
-
-static void
 validate_cb(void* data, int noundo, struct picotm_error* error)
 {
     struct fildes_module* module = data;
@@ -126,8 +110,6 @@ static struct fildes_tx*
 get_fildes_tx(bool initialize, struct picotm_error* error)
 {
     static const struct picotm_module_ops g_ops = {
-        .lock = lock_cb,
-        .unlock = unlock_cb,
         .validate = validate_cb,
         .apply_event = apply_event_cb,
         .undo_event = undo_event_cb,
