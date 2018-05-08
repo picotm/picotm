@@ -99,6 +99,12 @@ fd_tx_uninit(struct fd_tx* self);
 void
 fd_tx_validate(struct fd_tx* self, struct picotm_error* error);
 
+/**
+ * Prepare transaction-local state for commit
+ */
+void
+fd_tx_prepare_commit(struct fd_tx* self, struct picotm_error* error);
+
 void
 fd_tx_update_cc(struct fd_tx* self, struct picotm_error* error);
 

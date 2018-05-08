@@ -245,8 +245,8 @@ fildes_tx_exec_write(struct fildes_tx* self, int fildes, const void* buf,
  */
 
 void
-fildes_tx_validate(struct fildes_tx* self, int noundo,
-                   struct picotm_error* error);
+fildes_tx_prepare_commit(struct fildes_tx* self, int noundo,
+                         struct picotm_error* error);
 
 void
 fildes_tx_apply_event(struct fildes_tx* self, enum fildes_op op, int fildes,
