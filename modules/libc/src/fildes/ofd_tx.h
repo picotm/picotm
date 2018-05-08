@@ -222,24 +222,6 @@ ofd_tx_try_wrlock_field(struct ofd_tx* self, enum ofd_field field,
  */
 
 /**
- * Prepares the open file description for commit
- */
-void
-ofd_tx_lock(struct ofd_tx* self, struct picotm_error* error);
-
-/**
- * Finishes commit for open file description
- */
-void
-ofd_tx_unlock(struct ofd_tx* self, struct picotm_error* error);
-
-/**
- * Validate the local state
- */
-void
-ofd_tx_validate(struct ofd_tx* self, struct picotm_error* error);
-
-/**
  * Updates the data structures for concurrency control after a successful apply
  */
 void
