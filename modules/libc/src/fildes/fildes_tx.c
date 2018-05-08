@@ -2908,33 +2908,11 @@ lock_fd_tx_cb(struct picotm_slist* item)
     return lock_fd_tx(fd_tx_of_slist(item));
 }
 
-static size_t
-lock_ofd_tx(struct ofd_tx* ofd_tx, struct picotm_error* error)
-{
-    ofd_tx_lock(ofd_tx, error);
-    if (picotm_error_is_set(error)) {
-        return 0;
-    }
-    return 1;
-}
-
-static size_t
-lock_ofd_tx_cb(struct picotm_slist* item, void* data)
-{
-    return lock_ofd_tx(ofd_tx_of_slist(item), data);
-}
-
 void
 fildes_tx_lock(struct fildes_tx* self, struct picotm_error* error)
 {
     /* Lock file descriptors */
     picotm_slist_walk_0(&self->fd_tx_active_list, lock_fd_tx_cb);
-
-    /* Lock open file descriptions */
-    picotm_slist_walk_1(&self->ofd_tx_active_list, lock_ofd_tx_cb, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
 }
 
 static size_t
@@ -2950,27 +2928,10 @@ unlock_fd_tx_cb(struct picotm_slist* item)
     return unlock_fd_tx(fd_tx_of_slist(item));
 }
 
-static size_t
-unlock_ofd_tx(struct ofd_tx* ofd_tx)
-{
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    ofd_tx_unlock(ofd_tx, &error);
-    return 1;
-}
-
-static size_t
-unlock_ofd_tx_cb(struct picotm_slist* item)
-{
-    return unlock_ofd_tx(ofd_tx_of_slist(item));
-}
-
 void
 fildes_tx_unlock(struct fildes_tx* self)
 {
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-    /* Unlock open file descriptions */
-    picotm_slist_walk_0(&self->ofd_tx_active_list, unlock_ofd_tx_cb);
 
     /* Unlock file descriptors */
     picotm_slist_walk_0(&self->fd_tx_active_list, unlock_fd_tx_cb);
@@ -2992,37 +2953,12 @@ validate_fd_tx_cb(struct picotm_slist* item, void* data)
     return validate_fd_tx(fd_tx_of_slist(item), data);
 }
 
-static size_t
-validate_ofd_tx(struct ofd_tx* ofd_tx, struct picotm_error* error)
-{
-    ofd_tx_validate(ofd_tx, error);
-    if (picotm_error_is_set(error)) {
-        return 0;
-    }
-    return 1;
-}
-
-static size_t
-validate_ofd_tx_cb(struct picotm_slist* item, void* data)
-{
-    return validate_ofd_tx(ofd_tx_of_slist(item), data);
-}
-
 void
 fildes_tx_validate(struct fildes_tx* self, int noundo,
                    struct picotm_error* error)
 {
     /* Validate file-descriptor state */
     picotm_slist_walk_1(&self->fd_tx_active_list, validate_fd_tx_cb, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
-
-    /* Validate open file descriptions */
-    picotm_slist_walk_1(&self->ofd_tx_active_list, validate_ofd_tx_cb, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
 }
 
 void

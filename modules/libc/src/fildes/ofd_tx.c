@@ -254,28 +254,6 @@ ofd_tx_try_wrlock_field(struct ofd_tx* self, enum ofd_field field,
  */
 
 void
-ofd_tx_lock(struct ofd_tx* self, struct picotm_error* error)
-{
-    assert(self);
-}
-
-void
-ofd_tx_unlock(struct ofd_tx* self, struct picotm_error* error)
-{
-    assert(self);
-}
-
-void
-ofd_tx_validate(struct ofd_tx* self, struct picotm_error* error)
-{
-    /* Locked regions are ours, so we do not need to validate here. All
-     * conflicting transactions will have aborted on encountering our locks.
-     *
-     * The state of the OFD itself is guarded by ofd::rwlock.
-     */
-}
-
-void
 ofd_tx_update_cc(struct ofd_tx* self, struct picotm_error* error)
 {
     assert(self);
