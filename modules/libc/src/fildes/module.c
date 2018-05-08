@@ -39,7 +39,7 @@ struct fildes_module {
 };
 
 static void
-validate_cb(void* data, int noundo, struct picotm_error* error)
+prepare_commit_cb(void* data, int noundo, struct picotm_error* error)
 {
     struct fildes_module* module = data;
 
@@ -110,7 +110,7 @@ static struct fildes_tx*
 get_fildes_tx(bool initialize, struct picotm_error* error)
 {
     static const struct picotm_module_ops g_ops = {
-        .validate = validate_cb,
+        .prepare_commit = prepare_commit_cb,
         .apply_event = apply_event_cb,
         .undo_event = undo_event_cb,
         .update_cc = update_cc_cb,

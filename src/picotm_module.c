@@ -71,42 +71,16 @@ picotm_module_begin(const struct picotm_module* self,
 }
 
 void
-picotm_module_lock(const struct picotm_module* self,
-                   struct picotm_error* error)
+picotm_module_prepare_commit(const struct picotm_module* self, bool noundo,
+                             struct picotm_error* error)
 {
     assert(self);
     assert(self->ops);
 
-    if (!self->ops->lock) {
+    if (!self->ops->prepare_commit) {
         return;
     }
-    self->ops->lock(self->data, error);
-}
-
-void
-picotm_module_unlock(const struct picotm_module* self,
-                     struct picotm_error* error)
-{
-    assert(self);
-    assert(self->ops);
-
-    if (!self->ops->unlock) {
-        return;
-    }
-    self->ops->unlock(self->data, error);
-}
-
-void
-picotm_module_validate(const struct picotm_module* self, bool noundo,
-                       struct picotm_error* error)
-{
-    assert(self);
-    assert(self->ops);
-
-    if (!self->ops->validate) {
-        return;
-    }
-    self->ops->validate(self->data, noundo, error);
+    self->ops->prepare_commit(self->data, noundo, error);
 }
 
 void

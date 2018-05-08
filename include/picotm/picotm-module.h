@@ -63,32 +63,15 @@ typedef void (*picotm_module_begin_function)(void* data,
                                              struct picotm_error* error);
 
 /**
- * Invoked by picotm to lock a module's resources at the beginning
- * of a commit.
- * \param       data    The pointer to module-specific data.
- * \param[out]  error   Returns an error from the module.
- */
-typedef void (*picotm_module_lock_function)(void* data,
-                                            struct picotm_error* error);
-
-/**
- * Invoked by picotm to unlock a module's resources. This is the inverse
- * of picotm_module_lock_function.
- * \param       data    The pointer to module-specific data.
- * \param[out]  error   Returns an error from the module.
- */
-typedef void (*picotm_module_unlock_function)(void* data,
-                                              struct picotm_error* error);
-
-/**
- * Invoked by picotm to validate a module's resources.
+ * Invoked by picotm to prepare a module's resources for commit.
  * \param       data            The pointer to module-specific data.
  * \param       is_irrevocable  True if the transaction is irrevocable, false otherwise.
  * \param[out]  error           Returns an error from the module.
  */
-typedef void (*picotm_module_validate_function)(void* data,
-                                                int is_irrevocable,
-                                                struct picotm_error* error);
+typedef void (*picotm_module_prepare_commit_function)(
+    void* data,
+    int is_irrevocable,
+    struct picotm_error* error);
 
 /**
  * Invoked by picotm during the commit phase to apply changes of a
@@ -175,9 +158,7 @@ typedef void (*picotm_module_uninit_function)(void* data);
  */
 struct picotm_module_ops {
     picotm_module_begin_function begin;
-    picotm_module_lock_function lock;
-    picotm_module_unlock_function unlock;
-    picotm_module_validate_function validate;
+    picotm_module_prepare_commit_function prepare_commit;
     picotm_module_apply_function apply;
     picotm_module_undo_function undo;
     picotm_module_apply_event_function apply_event;
