@@ -3011,34 +3011,12 @@ update_fd_tx_cc_cb(struct picotm_slist* item, void* data)
     return update_fd_tx_cc(fd_tx_of_slist(item), data);
 }
 
-static size_t
-update_ofd_tx_cc(struct ofd_tx* ofd_tx, struct picotm_error* error)
-{
-    ofd_tx_update_cc(ofd_tx, error);
-    if (picotm_error_is_set(error)) {
-        return 0;
-    }
-    return 1;
-}
-
-static size_t
-update_ofd_tx_cc_cb(struct picotm_slist* item, void* data)
-{
-    return update_ofd_tx_cc(ofd_tx_of_slist(item), data);
-}
-
 void
 fildes_tx_update_cc(struct fildes_tx* self, int noundo,
                     struct picotm_error* error)
 {
     /* Update concurrency control on file descriptors */
     picotm_slist_walk_1(&self->fd_tx_active_list, update_fd_tx_cc_cb, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
-
-    /* Update concurrency control on open file descriptions */
-    picotm_slist_walk_1(&self->ofd_tx_active_list, update_ofd_tx_cc_cb, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -3066,34 +3044,12 @@ clear_fd_tx_cc_cb(struct picotm_slist* item, void* data)
     return clear_fd_tx_cc(fd_tx_of_slist(item), data);
 }
 
-static size_t
-clear_ofd_tx_cc(struct ofd_tx* ofd_tx, struct picotm_error* error)
-{
-    ofd_tx_clear_cc(ofd_tx, error);
-    if (picotm_error_is_set(error)) {
-        return 0;
-    }
-    return 1;
-}
-
-static size_t
-clear_ofd_tx_cc_cb(struct picotm_slist* item, void* data)
-{
-    return clear_ofd_tx_cc(ofd_tx_of_slist(item), data);
-}
-
 void
 fildes_tx_clear_cc(struct fildes_tx* self, int noundo,
                    struct picotm_error* error)
 {
     /* Clear concurrency control on file descriptors */
     picotm_slist_walk_1(&self->fd_tx_active_list, clear_fd_tx_cc_cb, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
-
-    /* Clear concurrency control on open file descriptions */
-    picotm_slist_walk_1(&self->ofd_tx_active_list, clear_ofd_tx_cc_cb, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -3122,6 +3078,7 @@ finish_file_tx_cb(struct picotm_slist* item)
 static void
 finish_ofd_tx(struct ofd_tx* ofd_tx)
 {
+    ofd_tx_finish(ofd_tx);
     ofd_tx_unref(ofd_tx);
 }
 
