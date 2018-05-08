@@ -222,19 +222,7 @@ fd_tx_prepare_commit(struct fd_tx* self, struct picotm_error* error)
 }
 
 void
-fd_tx_update_cc(struct fd_tx* self, struct picotm_error* error)
-{
-    assert(self);
-    assert(fd_tx_holds_ref(self));
-
-    /* release reader/writer locks on file-descriptor state */
-    unlock_rwstates(picotm_arraybeg(self->rwstate),
-                    picotm_arrayend(self->rwstate),
-                    self->fd);
-}
-
-void
-fd_tx_clear_cc(struct fd_tx* self, struct picotm_error* error)
+fd_tx_finish(struct fd_tx* self)
 {
     assert(self);
     assert(fd_tx_holds_ref(self));

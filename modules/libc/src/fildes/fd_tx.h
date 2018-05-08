@@ -106,10 +106,7 @@ void
 fd_tx_prepare_commit(struct fd_tx* self, struct picotm_error* error);
 
 void
-fd_tx_update_cc(struct fd_tx* self, struct picotm_error* error);
-
-void
-fd_tx_clear_cc(struct fd_tx* self, struct picotm_error* error);
+fd_tx_finish(struct fd_tx* self);
 
 /**
  * Aquire a reference on file-descriptor state
