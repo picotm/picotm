@@ -73,21 +73,11 @@ file_tx_unref(struct file_tx* self)
  */
 
 void
-file_tx_update_cc(struct file_tx* self, struct picotm_error* error)
+file_tx_finish(struct file_tx* self)
 {
     assert(self);
     assert(self->ops);
-    assert(self->ops->update_cc);
+    assert(self->ops->finish);
 
-    self->ops->update_cc(self, error);
-}
-
-void
-file_tx_clear_cc(struct file_tx* self, struct picotm_error* error)
-{
-    assert(self);
-    assert(self->ops);
-    assert(self->ops->clear_cc);
-
-    self->ops->clear_cc(self, error);
+    self->ops->finish(self);
 }

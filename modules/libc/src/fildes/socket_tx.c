@@ -694,25 +694,8 @@ write_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
  * Public interface
  */
 
-/* Update CC
- */
-
 static void
-update_cc(struct file_tx* base, struct picotm_error* error)
-{
-    struct socket_tx* self = socket_tx_of_file_tx(base);
-
-    /* release reader/writer locks on socket state */
-    unlock_rwstates(picotm_arraybeg(self->rwstate),
-                    picotm_arrayend(self->rwstate),
-                    self->socket);
-}
-
-/* Clear CC
- */
-
-static void
-clear_cc(struct file_tx* base, struct picotm_error* error)
+finish(struct file_tx* base)
 {
     struct socket_tx* self = socket_tx_of_file_tx(base);
 
@@ -732,8 +715,7 @@ static const struct file_tx_ops socket_tx_ops = {
     ref,
     unref,
     /* module interfaces */
-    update_cc,
-    clear_cc,
+    finish,
     /* file ops */
     accept_exec,
     file_tx_op_apply,

@@ -323,25 +323,8 @@ fsync_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
  * Module interface
  */
 
-/* Update CC
- */
-
 static void
-update_cc(struct file_tx* base, struct picotm_error* error)
-{
-    struct dir_tx* self = dir_tx_of_file_tx(base);
-
-    /* release reader/writer locks on directory state */
-    unlock_rwstates(picotm_arraybeg(self->rwstate),
-                    picotm_arrayend(self->rwstate),
-                    self->dir);
-}
-
-/* Clear CC
- */
-
-static void
-clear_cc(struct file_tx* base, struct picotm_error* error)
+finish(struct file_tx* base)
 {
     struct dir_tx* self = dir_tx_of_file_tx(base);
 
@@ -361,8 +344,7 @@ static const struct file_tx_ops dir_tx_ops = {
     ref,
     unref,
     /* module interfaces */
-    update_cc,
-    clear_cc,
+    finish,
     /* file ops */
     file_tx_op_accept_exec_enotsock,
     NULL,

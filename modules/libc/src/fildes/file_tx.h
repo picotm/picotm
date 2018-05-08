@@ -97,19 +97,9 @@ file_tx_unref(struct file_tx* self);
  */
 
 /**
- * \brief Updates the concurrency control on transaction-local file state
- *        after a successful apply.
- * \param       self    The transaction-local file state.
- * \param[out]  error   Returns an error to the caller.
+ * \brief Finishes the transaction-local file state at the end of a
+ *        transaction.
+ * \param   self    The transaction-local file state.
  */
 void
-file_tx_update_cc(struct file_tx* self, struct picotm_error* error);
-
-/**
- * \brief Clears the concurrency control on transaction-local file state
- *        after a successful apply.
- * \param       self    The transaction-local file state.
- * \param[out]  error   Returns an error to the caller.
- */
-void
-file_tx_clear_cc(struct file_tx* self, struct picotm_error* error);
+file_tx_finish(struct file_tx* self);
