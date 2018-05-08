@@ -2998,25 +2998,12 @@ fildes_tx_undo_event(struct fildes_tx* self, enum fildes_op op, int fildes,
 void
 fildes_tx_update_cc(struct fildes_tx* self, int noundo,
                     struct picotm_error* error)
-{
-    /* Update concurrency control on file-descriptor table */
-    fdtab_tx_update_cc(&self->fdtab_tx, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
-}
+{ }
 
 void
 fildes_tx_clear_cc(struct fildes_tx* self, int noundo,
                    struct picotm_error* error)
-{
-    /* Clear concurrency control on file-descriptor table */
-
-    fdtab_tx_update_cc(&self->fdtab_tx, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
-}
+{ }
 
 static void
 finish_file_tx(struct file_tx* file_tx)
@@ -3068,4 +3055,7 @@ fildes_tx_finish(struct fildes_tx* self, struct picotm_error* error)
 
     /* Unref file descriptors */
     picotm_slist_cleanup_0(&self->fd_tx_active_list, finish_fd_tx_cb);
+
+    /* Clear concurrency control on file-descriptor table */
+    fdtab_tx_finish(&self->fdtab_tx);
 }

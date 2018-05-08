@@ -55,7 +55,4 @@ fdtab_tx_ref_fildes(struct fdtab_tx* self, int fildes,
  */
 
 void
-fdtab_tx_update_cc(struct fdtab_tx* self, struct picotm_error* error);
-
-void
-fdtab_tx_clear_cc(struct fdtab_tx* self, struct picotm_error* error);
+fdtab_tx_finish(struct fdtab_tx* self);
