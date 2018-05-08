@@ -63,9 +63,6 @@ struct file_tx_ops {
      * Module interfaces
      */
 
-    void (*lock)(struct file_tx*, struct picotm_error*);
-    void (*unlock)(struct file_tx*, struct picotm_error*);
-    void (*validate)(struct file_tx*, struct picotm_error*r);
     void (*update_cc)(struct file_tx*, struct picotm_error*);
     void (*clear_cc)(struct file_tx*, struct picotm_error*);
 

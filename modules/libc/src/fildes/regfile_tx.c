@@ -1049,27 +1049,6 @@ write_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
  * Public interface
  */
 
-static void
-lock(struct file_tx* base, struct picotm_error* error)
-{ }
-
-static void
-unlock(struct file_tx* base, struct picotm_error* error)
-{ }
-
-/* Validation
- */
-
-static void
-validate(struct file_tx* base, struct picotm_error* error)
-{
-    /* Locked regions are ours, so we do not need to validate here. All
-     * conflicting transactions will have aborted on encountering our locks.
-     *
-     * The state of the OFD itself is guarded by regfile::rwlock.
-     */
-}
-
 /* Update CC
  */
 
@@ -1114,9 +1093,6 @@ static const struct file_tx_ops regfile_tx_ops = {
     ref,
     unref,
     /* module interfaces */
-    lock,
-    unlock,
-    validate,
     update_cc,
     clear_cc,
     /* file ops */
