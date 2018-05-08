@@ -340,29 +340,12 @@ cwd_tx_undo_event(struct cwd_tx* self, enum cwd_op op, char* alloced,
 }
 
 void
-cwd_tx_update_cc(struct cwd_tx* self, struct picotm_error* error)
-{
-    assert(self);
-
-    /* release reader/writer locks on current working directory */
-    unlock_rwstates(picotm_arraybeg(self->rwstate),
-                    picotm_arrayend(self->rwstate),
-                    self->cwd);
-}
-
-void
-cwd_tx_clear_cc(struct cwd_tx* self, struct picotm_error* error)
-{
-    assert(self);
-
-    /* release reader/writer locks on current working directory */
-    unlock_rwstates(picotm_arraybeg(self->rwstate),
-                    picotm_arrayend(self->rwstate),
-                    self->cwd);
-}
-
-void
 cwd_tx_finish(struct cwd_tx* self)
 {
     assert(self);
+
+    /* release reader/writer locks on current working directory */
+    unlock_rwstates(picotm_arraybeg(self->rwstate),
+                    picotm_arrayend(self->rwstate),
+                    self->cwd);
 }
