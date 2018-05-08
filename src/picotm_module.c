@@ -138,32 +138,6 @@ picotm_module_undo_event(const struct picotm_module* self,
 }
 
 void
-picotm_module_update_cc(const struct picotm_module* self, bool noundo,
-                        struct picotm_error* error)
-{
-    assert(self);
-    assert(self->ops);
-
-    if (!self->ops->update_cc) {
-        return;
-    }
-    self->ops->update_cc(self->data, noundo, error);
-}
-
-void
-picotm_module_clear_cc(const struct picotm_module* self, bool noundo,
-                       struct picotm_error* error)
-{
-    assert(self);
-    assert(self->ops);
-
-    if (!self->ops->clear_cc) {
-        return;
-    }
-    self->ops->clear_cc(self->data, noundo, error);
-}
-
-void
 picotm_module_finish(const struct picotm_module* self,
                      struct picotm_error* error)
 {

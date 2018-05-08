@@ -118,26 +118,6 @@ typedef void (*picotm_module_undo_event_function)(
     struct picotm_error* error);
 
 /**
- * Invoked by picotm to update a module's concurrency control during a commit.
- * \param       data            The pointer to module-specific data.
- * \param       is_irrevocable  True if the transaction is irrevocable, false otherwise.
- * \param[out]  error           Returns an error from the module.
- */
-typedef void (*picotm_module_update_cc_function)(void* data,
-                                                 int is_irrevocable,
-                                                 struct picotm_error* error);
-
-/**
- * Invoked by picotm to clear a module's concurrency control during an abort.
- * \param       data            The pointer to module-specific data.
- * \param       is_irrevocable  True if the transaction is irrevocable, false otherwise.
- * \param[out]  error           Returns an error from the module.
- */
-typedef void (*picotm_module_clear_cc_function)(void* data,
-                                                int is_irrevocable,
-                                                struct picotm_error* error);
-
-/**
  * Invoked by picotm to clean up a module's resources at the end of a
  * transaction.
  * \param       data    The pointer to module-specific data.
@@ -163,8 +143,6 @@ struct picotm_module_ops {
     picotm_module_undo_function undo;
     picotm_module_apply_event_function apply_event;
     picotm_module_undo_event_function undo_event;
-    picotm_module_update_cc_function update_cc;
-    picotm_module_clear_cc_function clear_cc;
     picotm_module_finish_function finish;
     picotm_module_uninit_function uninit;
 };
