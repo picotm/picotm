@@ -82,13 +82,5 @@ picotm_module_undo_event(const struct picotm_module* self,
                          struct picotm_error* error);
 
 void
-picotm_module_update_cc(const struct picotm_module* self, bool noundo,
-                        struct picotm_error* error);
-
-void
-picotm_module_clear_cc(const struct picotm_module* self, bool noundo,
-                       struct picotm_error* error);
-
-void
 picotm_module_finish(const struct picotm_module* self,
                      struct picotm_error* error);

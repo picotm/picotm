@@ -308,52 +308,6 @@ undo_modules(struct picotm_module* module, unsigned long nmodules,
     }
 }
 
-static size_t
-update_cc_cb(void* module, void* is_irrevocable, struct picotm_error* error)
-{
-    assert(is_irrevocable);
-
-    picotm_module_update_cc(module, *((bool*)is_irrevocable), error);
-    if (picotm_error_is_set(error)) {
-        return 0;
-    }
-    return 1;
-}
-
-static void
-update_modules_cc(struct picotm_module* module, unsigned long nmodules,
-                  bool is_irrevocable, struct picotm_error* error)
-{
-    tabwalk_2(module, nmodules, sizeof(*module), update_cc_cb,
-              &is_irrevocable, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
-}
-
-static size_t
-clear_cc_cb(void* module, void* is_irrevocable, struct picotm_error* error)
-{
-    assert(is_irrevocable);
-
-    picotm_module_clear_cc(module, *((bool*)is_irrevocable), error);
-    if (picotm_error_is_set(error)) {
-        return 0;
-    }
-    return 1;
-}
-
-static void
-clear_modules_cc(struct picotm_module* module, unsigned long nmodules,
-                 bool is_irrevocable, struct picotm_error* error)
-{
-    tabwalk_2(module, nmodules, sizeof(*module), clear_cc_cb, &is_irrevocable,
-              error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
-}
-
 static void
 apply_event(struct picotm_tx* tx, const struct picotm_event* event,
             struct picotm_error* error)
@@ -434,11 +388,6 @@ picotm_tx_commit(struct picotm_tx* self, struct picotm_error* error)
         goto err_apply_events;
     }
 
-    update_modules_cc(self->module, self->nmodules, is_irrevocable, error);
-    if (picotm_error_is_set(error)) {
-        goto err_update_modules_cc;
-    }
-
     finish_modules(self->module, self->nmodules, error);
     if (picotm_error_is_set(error)) {
         goto err;
@@ -448,7 +397,6 @@ picotm_tx_commit(struct picotm_tx* self, struct picotm_error* error)
 
     return;
 
-err_update_modules_cc:
 err_apply_events:
 err_apply_modules:
 err_prepare_commit_modules:
@@ -471,11 +419,6 @@ picotm_tx_rollback(struct picotm_tx* self, struct picotm_error* error)
     }
 
     undo_events(self, error);
-    if (picotm_error_is_set(error)) {
-        goto err;
-    }
-
-    clear_modules_cc(self->module, self->nmodules, is_irrevocable, error);
     if (picotm_error_is_set(error)) {
         goto err;
     }
