@@ -245,12 +245,6 @@ fildes_tx_exec_write(struct fildes_tx* self, int fildes, const void* buf,
  */
 
 void
-fildes_tx_lock(struct fildes_tx* self, struct picotm_error* error);
-
-void
-fildes_tx_unlock(struct fildes_tx* self);
-
-void
 fildes_tx_validate(struct fildes_tx* self, int noundo,
                    struct picotm_error* error);
 
