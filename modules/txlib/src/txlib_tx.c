@@ -406,7 +406,7 @@ lock_txstack_tx_entries(struct txlib_tx* self, struct picotm_error* error)
 }
 
 void
-txlib_tx_lock(struct txlib_tx* self, struct picotm_error* error)
+txlib_tx_prepare_commit(struct txlib_tx* self, struct picotm_error* error)
 {
     /* Currently, no locking is required for lists and multisets. Both
      * data structures acquire their locks during the transaction's

@@ -51,7 +51,7 @@ struct txlib_module {
 static void
 lock(struct txlib_module* module, struct picotm_error* error)
 {
-    txlib_tx_lock(&module->tx, error);
+    txlib_tx_prepare_commit(&module->tx, error);
 }
 
 static void
