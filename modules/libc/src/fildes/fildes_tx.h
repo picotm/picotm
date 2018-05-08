@@ -257,12 +257,4 @@ fildes_tx_undo_event(struct fildes_tx* self, enum fildes_op op, int fildes,
                      int cookie, struct picotm_error* error);
 
 void
-fildes_tx_update_cc(struct fildes_tx* self, int noundo,
-                    struct picotm_error* error);
-
-void
-fildes_tx_clear_cc(struct fildes_tx* self, int noundo,
-                   struct picotm_error* error);
-
-void
 fildes_tx_finish(struct fildes_tx* self, struct picotm_error* error);
