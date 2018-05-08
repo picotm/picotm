@@ -122,10 +122,6 @@ void
 fd_unlock_field(struct fd* self, enum fd_field field,
                 struct picotm_rwstate* state);
 
-/** \brief Validates a file descriptor. */
-void
-fd_validate(struct fd* self, struct picotm_error* error);
-
 /** \brief Aquires a reference on the file dscriptor */
 void
 fd_ref(struct fd* self, struct picotm_error* error);
