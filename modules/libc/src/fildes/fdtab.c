@@ -33,10 +33,21 @@
 #include <pthread.h>
 #include "fd.h"
 
-static struct fd                fdtab[MAXNUMFD];
-static size_t                   fdtab_len = 0;
-static pthread_rwlock_t         fdtab_rwlock = PTHREAD_RWLOCK_INITIALIZER;
-static struct picotm_rwlock     fdtab_lock;
+struct fildes_fdtab {
+    struct fd                tab[MAXNUMFD];
+    size_t                   len;
+    pthread_rwlock_t         rwlock;
+    struct picotm_rwlock     lock;
+};
+
+#define FILDES_FDTAB_INITIALIZER            \
+{                                           \
+    .len = 0,                               \
+    .rwlock = PTHREAD_RWLOCK_INITIALIZER,   \
+    .lock = PICOTM_RWLOCK_INITIALIZER       \
+}
+
+static struct fildes_fdtab fdtab = FILDES_FDTAB_INITIALIZER;
 
 /* Destructor */
 
@@ -54,10 +65,11 @@ fdtab_uninit(void)
 {
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    picotm_tabwalk_1(fdtab, sizeof(fdtab)/sizeof(fdtab[0]), sizeof(fdtab[0]),
-                     fdtab_fd_uninit_walk, &error);
+    picotm_tabwalk_1(fdtab.tab, picotm_arraylen(fdtab.tab),
+                     sizeof(fdtab.tab[0]), fdtab_fd_uninit_walk,
+                     &error);
 
-    pthread_rwlock_destroy(&fdtab_rwlock);
+    pthread_rwlock_destroy(&fdtab.rwlock);
 }
 
 /* End of destructor */
@@ -65,7 +77,7 @@ fdtab_uninit(void)
 static void
 rdlock_fdtab(struct picotm_error* error)
 {
-    int err = pthread_rwlock_rdlock(&fdtab_rwlock);
+    int err = pthread_rwlock_rdlock(&fdtab.rwlock);
     if (err) {
         picotm_error_set_errno(error, err);
         return;
@@ -75,7 +87,7 @@ rdlock_fdtab(struct picotm_error* error)
 static void
 wrlock_fdtab(struct picotm_error* error)
 {
-    int err = pthread_rwlock_wrlock(&fdtab_rwlock);
+    int err = pthread_rwlock_wrlock(&fdtab.rwlock);
     if (err) {
         picotm_error_set_errno(error, err);
         return;
@@ -86,7 +98,7 @@ static void
 unlock_fdtab(void)
 {
     do {
-        int err = pthread_rwlock_unlock(&fdtab_rwlock);
+        int err = pthread_rwlock_unlock(&fdtab.rwlock);
         if (err) {
             struct picotm_error error = PICOTM_ERROR_INITIALIZER;
             picotm_error_set_errno(&error, err);
@@ -102,11 +114,11 @@ unlock_fdtab(void)
 static struct fd*
 find_by_id(int fildes, struct picotm_error* error)
 {
-    if (fdtab_len <= (size_t)fildes) {
+    if (fdtab.len <= (size_t)fildes) {
         return NULL;
     }
 
-    struct fd* fd = fdtab + fildes;
+    struct fd* fd = fdtab.tab + fildes;
 
     fd_ref_or_set_up(fd, fildes, error);
     if (picotm_error_is_set(error)) {
@@ -120,8 +132,8 @@ find_by_id(int fildes, struct picotm_error* error)
 static struct fd*
 search_by_id(int fildes, struct picotm_error* error)
 {
-    struct fd* fd_beg = picotm_arrayat(fdtab, fdtab_len);
-    const struct fd* fd_end = picotm_arrayat(fdtab, fildes + 1);
+    struct fd* fd_beg = picotm_arrayat(fdtab.tab, fdtab.len);
+    const struct fd* fd_end = picotm_arrayat(fdtab.tab, fildes + 1);
 
     while (fd_beg < fd_end) {
 
@@ -130,11 +142,11 @@ search_by_id(int fildes, struct picotm_error* error)
             return NULL;
         }
 
-        ++fdtab_len;
+        ++fdtab.len;
         ++fd_beg;
     }
 
-    struct fd* fd = fdtab + fildes;
+    struct fd* fd = fdtab.tab + fildes;
 
     fd_ref_or_set_up(fd, fildes, error);
     if (picotm_error_is_set(error)) {
@@ -195,25 +207,25 @@ err_find_by_id:
 struct fd*
 fdtab_get_fd(int fildes)
 {
-    return fdtab + fildes;
+    return fdtab.tab + fildes;
 }
 
 void
 fdtab_try_rdlock(struct picotm_rwstate* lock_state,
                  struct picotm_error* error)
 {
-    picotm_rwstate_try_rdlock(lock_state, &fdtab_lock, error);
+    picotm_rwstate_try_rdlock(lock_state, &fdtab.lock, error);
 }
 
 void
 fdtab_try_wrlock(struct picotm_rwstate* lock_state,
                  struct picotm_error* error)
 {
-    picotm_rwstate_try_wrlock(lock_state, &fdtab_lock, error);
+    picotm_rwstate_try_wrlock(lock_state, &fdtab.lock, error);
 }
 
 void
 fdtab_unlock(struct picotm_rwstate* lock_state)
 {
-    picotm_rwstate_unlock(lock_state, &fdtab_lock);
+    picotm_rwstate_unlock(lock_state, &fdtab.lock);
 }
