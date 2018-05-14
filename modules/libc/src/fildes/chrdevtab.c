@@ -33,9 +33,19 @@
 #include "chrdev.h"
 #include "range.h"
 
-static struct chrdev    chrdevtab[MAXNUMFD];
-static size_t           chrdevtab_len = 0;
-static pthread_rwlock_t chrdevtab_rwlock = PTHREAD_RWLOCK_INITIALIZER;
+struct fildes_chrdevtab {
+    struct chrdev    tab[MAXNUMFD];
+    size_t           len;
+    pthread_rwlock_t rwlock;
+};
+
+#define FILDES_CHRDEVTAB_INITIALIZER        \
+{                                           \
+    .len = 0,                               \
+    .rwlock = PTHREAD_RWLOCK_INITIALIZER    \
+}
+
+static struct fildes_chrdevtab chrdevtab = FILDES_CHRDEVTAB_INITIALIZER;
 
 /* Destructor */
 
@@ -53,10 +63,10 @@ chrdevtab_uninit(void)
 {
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    picotm_tabwalk_1(chrdevtab, chrdevtab_len, sizeof(chrdevtab[0]),
+    picotm_tabwalk_1(chrdevtab.tab, chrdevtab.len, sizeof(chrdevtab.tab[0]),
                      chrdevtab_chrdev_uninit_walk, &error);
 
-    pthread_rwlock_destroy(&chrdevtab_rwlock);
+    pthread_rwlock_destroy(&chrdevtab.rwlock);
 }
 
 /* End of destructor */
@@ -64,7 +74,7 @@ chrdevtab_uninit(void)
 static void
 rdlock_chrdevtab(struct picotm_error* error)
 {
-    int err = pthread_rwlock_rdlock(&chrdevtab_rwlock);
+    int err = pthread_rwlock_rdlock(&chrdevtab.rwlock);
     if (err) {
         picotm_error_set_errno(error, err);
         return;
@@ -74,7 +84,7 @@ rdlock_chrdevtab(struct picotm_error* error)
 static void
 wrlock_chrdevtab(struct picotm_error* error)
 {
-    int err = pthread_rwlock_wrlock(&chrdevtab_rwlock);
+    int err = pthread_rwlock_wrlock(&chrdevtab.rwlock);
     if (err) {
         picotm_error_set_errno(error, err);
         return;
@@ -85,7 +95,7 @@ static void
 unlock_chrdevtab(void)
 {
     do {
-        int err = pthread_rwlock_unlock(&chrdevtab_rwlock);
+        int err = pthread_rwlock_unlock(&chrdevtab.rwlock);
         if (err) {
             struct picotm_error error = PICOTM_ERROR_INITIALIZER;
             picotm_error_set_errno(&error, err);
@@ -101,20 +111,20 @@ unlock_chrdevtab(void)
 static struct chrdev*
 append_empty_chrdev(struct picotm_error* error)
 {
-    if (chrdevtab_len == picotm_arraylen(chrdevtab)) {
+    if (chrdevtab.len == picotm_arraylen(chrdevtab.tab)) {
         /* Return error if not enough ids available */
         picotm_error_set_conflicting(error, NULL);
         return NULL;
     }
 
-    struct chrdev* chrdev = chrdevtab + chrdevtab_len;
+    struct chrdev* chrdev = chrdevtab.tab + chrdevtab.len;
 
     chrdev_init(chrdev, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
 
-    ++chrdevtab_len;
+    ++chrdevtab.len;
 
     return chrdev;
 }
@@ -123,8 +133,9 @@ append_empty_chrdev(struct picotm_error* error)
 static struct chrdev*
 find_by_id(const struct file_id* id)
 {
-    struct chrdev *chrdev_beg = picotm_arraybeg(chrdevtab);
-    const struct chrdev* chrdev_end = picotm_arrayat(chrdevtab, chrdevtab_len);
+    struct chrdev *chrdev_beg = picotm_arraybeg(chrdevtab.tab);
+    const struct chrdev* chrdev_end = picotm_arrayat(chrdevtab.tab,
+                                                     chrdevtab.len);
 
     while (chrdev_beg < chrdev_end) {
 
@@ -143,8 +154,9 @@ find_by_id(const struct file_id* id)
 static struct chrdev*
 search_by_id(const struct file_id* id, int fildes, struct picotm_error* error)
 {
-    struct chrdev* chrdev_beg = picotm_arraybeg(chrdevtab);
-    const struct chrdev* chrdev_end = picotm_arrayat(chrdevtab, chrdevtab_len);
+    struct chrdev* chrdev_beg = picotm_arraybeg(chrdevtab.tab);
+    const struct chrdev* chrdev_end = picotm_arrayat(chrdevtab.tab,
+                                                     chrdevtab.len);
 
     while (chrdev_beg < chrdev_end) {
 
@@ -247,5 +259,5 @@ err_search_by_id:
 size_t
 chrdevtab_index(struct chrdev* chrdev)
 {
-    return chrdev - chrdevtab;
+    return chrdev - chrdevtab.tab;
 }
