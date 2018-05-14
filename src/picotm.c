@@ -78,13 +78,6 @@ PICOTM_GLOBAL_STATE_STATIC_IMPL(global_state)
 struct thread_state {
 
     /**
-     * The thread-local error structure holds error codes even across
-     * transaction restarts, such that during recovery the previous run's
-     * error can still be retrieved.
-     */
-    struct picotm_error error;
-
-    /**
      * Signals that the thread's transaction state has already been
      * initialized.
      */
@@ -98,7 +91,6 @@ struct thread_state {
 
 #define THREAD_STATE_INITIALIZER        \
 {                                       \
-    .error = PICOTM_ERROR_INITIALIZER,  \
     .fields_are_initialized = false     \
 }
 
@@ -189,12 +181,21 @@ get_non_null_tx(void)
     };
 }
 
+/*
+ * Thread-local error state
+ */
+
 static struct picotm_error*
 get_non_null_error(void)
 {
-    struct thread_state* thread = get_thread_state();
+    /**
+     * The thread-local error structure holds error codes even across
+     * transaction restarts, such that during recovery the previous run's
+     * error can still be retrieved.
+     */
+    static __thread struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    return &thread->error;
+    return &error;
 }
 
 /*
