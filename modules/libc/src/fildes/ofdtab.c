@@ -34,9 +34,19 @@
 #include "range.h"
 #include "ofd.h"
 
-static struct ofd       ofdtab[MAXNUMFD];
-static size_t           ofdtab_len = 0;
-static pthread_rwlock_t ofdtab_rwlock = PTHREAD_RWLOCK_INITIALIZER;
+struct fildes_ofdtab {
+    struct ofd       tab[MAXNUMFD];
+    size_t           len;
+    pthread_rwlock_t rwlock;
+};
+
+#define FILDES_OFDTAB_INITIALIZER           \
+{                                           \
+    .len = 0,                               \
+    .rwlock = PTHREAD_RWLOCK_INITIALIZER    \
+}
+
+static struct fildes_ofdtab ofdtab = FILDES_OFDTAB_INITIALIZER;
 
 /* Destructor */
 
@@ -54,10 +64,10 @@ ofdtab_uninit(void)
 {
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    picotm_tabwalk_1(ofdtab, ofdtab_len, sizeof(ofdtab[0]),
+    picotm_tabwalk_1(ofdtab.tab, ofdtab.len, sizeof(ofdtab.tab[0]),
                      ofdtab_ofd_uninit_walk, &error);
 
-    pthread_rwlock_destroy(&ofdtab_rwlock);
+    pthread_rwlock_destroy(&ofdtab.rwlock);
 }
 
 /* End of destructor */
@@ -65,7 +75,7 @@ ofdtab_uninit(void)
 static void
 rdlock_ofdtab(struct picotm_error* error)
 {
-    int err = pthread_rwlock_rdlock(&ofdtab_rwlock);
+    int err = pthread_rwlock_rdlock(&ofdtab.rwlock);
     if (err) {
         picotm_error_set_errno(error, err);
         return;
@@ -75,7 +85,7 @@ rdlock_ofdtab(struct picotm_error* error)
 static void
 wrlock_ofdtab(struct picotm_error* error)
 {
-    int err = pthread_rwlock_wrlock(&ofdtab_rwlock);
+    int err = pthread_rwlock_wrlock(&ofdtab.rwlock);
     if (err) {
         picotm_error_set_errno(error, err);
         return;
@@ -86,7 +96,7 @@ static void
 unlock_ofdtab(void)
 {
     do {
-        int err = pthread_rwlock_unlock(&ofdtab_rwlock);
+        int err = pthread_rwlock_unlock(&ofdtab.rwlock);
         if (err) {
             struct picotm_error error = PICOTM_ERROR_INITIALIZER;
             picotm_error_set_errno(&error, err);
@@ -102,20 +112,20 @@ unlock_ofdtab(void)
 static struct ofd*
 append_empty_ofd(struct picotm_error* error)
 {
-    if (ofdtab_len == picotm_arraylen(ofdtab)) {
+    if (ofdtab.len == picotm_arraylen(ofdtab.tab)) {
         /* Return error if not enough ids available */
         picotm_error_set_conflicting(error, NULL);
         return NULL;
     }
 
-    struct ofd* ofd = ofdtab + ofdtab_len;
+    struct ofd* ofd = ofdtab.tab + ofdtab.len;
 
     ofd_init(ofd, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
 
-    ++ofdtab_len;
+    ++ofdtab.len;
 
     return ofd;
 }
@@ -127,8 +137,8 @@ find_by_id(const struct ofd_id* id, bool error_ne_fildes,
 {
     struct picotm_error saved_error = PICOTM_ERROR_INITIALIZER;
 
-    struct ofd *ofd_beg = picotm_arraybeg(ofdtab);
-    const struct ofd* ofd_end = picotm_arrayat(ofdtab, ofdtab_len);
+    struct ofd *ofd_beg = picotm_arraybeg(ofdtab.tab);
+    const struct ofd* ofd_end = picotm_arrayat(ofdtab.tab, ofdtab.len);
 
     while (ofd_beg < ofd_end) {
 
@@ -160,8 +170,8 @@ find_by_id(const struct ofd_id* id, bool error_ne_fildes,
 static struct ofd*
 search_by_id(const struct ofd_id* id, int fildes, struct picotm_error* error)
 {
-    struct ofd* ofd_beg = picotm_arraybeg(ofdtab);
-    const struct ofd* ofd_end = picotm_arrayat(ofdtab, ofdtab_len);
+    struct ofd* ofd_beg = picotm_arraybeg(ofdtab.tab);
+    const struct ofd* ofd_end = picotm_arrayat(ofdtab.tab, ofdtab.len);
 
     while (ofd_beg < ofd_end) {
 
@@ -280,5 +290,5 @@ err_find_by_id_1:
 size_t
 ofdtab_index(struct ofd* ofd)
 {
-    return ofd - ofdtab;
+    return ofd - ofdtab.tab;
 }
