@@ -24,60 +24,107 @@
  */
 
 #include "module.h"
+#include "picotm/picotm-lib-ptr.h"
+#include "picotm/picotm-lib-shared-ref-obj.h"
 #include "picotm/picotm-lib-spinlock.h"
 #include "picotm/picotm-module.h"
-#include <assert.h>
-#include <errno.h>
-#include <stdatomic.h>
-#include <stdlib.h>
 #include "vmem.h"
 #include "vmem_tx.h"
 
 /*
- * Global data
+ * Shared state
  */
 
-static struct tm_vmem* get_vmem(struct picotm_error* error);
+struct tm_shared_state {
+    struct picotm_shared_ref16_obj ref_obj;
+    struct tm_vmem vmem;
+};
 
-static void
-vmem_atexit_cb(void)
-{
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    struct tm_vmem* vmem = get_vmem(&error);
-    tm_vmem_uninit(vmem);
+#define TM_SHARED_STATE_INITIALIZER                 \
+{                                                   \
+    .ref_obj = PICOTM_SHARED_REF16_OBJ_INITIALIZER  \
 }
 
-static struct tm_vmem*
-get_vmem(struct picotm_error* error)
+static void
+init_tm_shared_state_fields(struct tm_shared_state* shared)
 {
-    static atomic_bool    g_vmem_is_initialized;
-    static struct tm_vmem g_vmem;
+    tm_vmem_init(&shared->vmem);
+}
 
-    if (atomic_load_explicit(&g_vmem_is_initialized, memory_order_acquire)) {
-        return &g_vmem;
+static void
+uninit_tm_shared_state_fields(struct tm_shared_state* shared)
+{
+    tm_vmem_uninit(&shared->vmem);
+}
+
+static void
+first_ref_tm_shared_state_cb(struct picotm_shared_ref16_obj* ref_obj,
+                             void* data, struct picotm_error* error)
+{
+    struct tm_shared_state* shared =
+        picotm_containerof(ref_obj, struct tm_shared_state, ref_obj);
+    init_tm_shared_state_fields(shared);
+}
+
+static void
+tm_shared_state_ref(struct tm_shared_state* self, struct picotm_error* error)
+{
+    picotm_shared_ref16_obj_up(&self->ref_obj, NULL, NULL,
+                               first_ref_tm_shared_state_cb,
+                               error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
-
-    static struct picotm_spinlock lock = PICOTM_SPINLOCK_INITIALIZER;
-
-    picotm_spinlock_lock(&lock);
-
-    if (atomic_load_explicit(&g_vmem_is_initialized, memory_order_acquire)) {
-        /* Another transaction initialized the vmem structure
-         * concurrently; we're done. */
-        goto out;
-    }
-
-    tm_vmem_init(&g_vmem);
-
-    atexit(vmem_atexit_cb); /* ignore errors */
-
-    atomic_store_explicit(&g_vmem_is_initialized, true, memory_order_release);
-
-out:
-    picotm_spinlock_unlock(&lock);
-
-    return &g_vmem;
 };
+
+static void
+final_ref_tm_shared_state_cb(struct picotm_shared_ref16_obj* ref_obj,
+                             void* data, struct picotm_error* error)
+{
+    struct tm_shared_state* shared =
+        picotm_containerof(ref_obj, struct tm_shared_state, ref_obj);
+    uninit_tm_shared_state_fields(shared);
+}
+
+static void
+tm_shared_state_unref(struct tm_shared_state* self)
+{
+    picotm_shared_ref16_obj_down(&self->ref_obj, NULL, NULL,
+                                 final_ref_tm_shared_state_cb);
+}
+
+/*
+ * Global state
+ */
+
+/* Returns the statically allocated global state. Callers *must* already
+ * hold a reference. */
+static struct tm_shared_state*
+get_tm_global_state(void)
+{
+    static struct tm_shared_state s_global = TM_SHARED_STATE_INITIALIZER;
+    return &s_global;
+}
+
+static struct tm_shared_state*
+ref_tm_global_state(struct picotm_error* error)
+{
+    struct tm_shared_state* global = get_tm_global_state();
+
+    tm_shared_state_ref(global, error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+
+    return global;
+};
+
+static void
+unref_tm_global_state(void)
+{
+    struct tm_shared_state* global = get_tm_global_state();
+    tm_shared_state_unref(global);
+}
 
 /*
  * Module interface
@@ -113,6 +160,8 @@ uninit(struct tm_module* module)
 {
     tm_vmem_tx_release(&module->tx);
     module->is_initialized = false;
+
+    unref_tm_global_state();
 }
 
 /*
@@ -165,12 +214,12 @@ get_vmem_tx(bool initialize, struct picotm_error* error)
         return NULL;
     }
 
-    struct tm_vmem* vmem = get_vmem(error);
+    struct tm_shared_state* global = ref_tm_global_state(error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
 
-    tm_vmem_tx_init(&t_module.tx, vmem, module);
+    tm_vmem_tx_init(&t_module.tx, &global->vmem, module);
 
     t_module.is_initialized = true;
 
