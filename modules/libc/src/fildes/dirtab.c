@@ -31,6 +31,18 @@
 #include <errno.h>
 #include "range.h"
 
+void
+fildes_dirtab_init(struct fildes_dirtab* self, struct picotm_error* error)
+{
+    self->len = 0;
+
+    int err = pthread_rwlock_init(&self->rwlock, NULL);
+    if (err) {
+        picotm_error_set_errno(error, err);
+        return;
+    }
+}
+
 static size_t
 dir_uninit_walk_cb(void* dir, struct picotm_error* error)
 {

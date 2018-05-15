@@ -31,6 +31,19 @@
 #include <errno.h>
 #include "range.h"
 
+void
+fildes_chrdevtab_init(struct fildes_chrdevtab* self,
+                      struct picotm_error* error)
+{
+    self->len = 0;
+
+    int err = pthread_rwlock_init(&self->rwlock, NULL);
+    if (err) {
+        picotm_error_set_errno(error, err);
+        return;
+    }
+}
+
 static size_t
 chrdev_uninit_walk_cb(void* chrdev, struct picotm_error* error)
 {

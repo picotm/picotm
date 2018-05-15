@@ -53,6 +53,9 @@ struct fildes_ofdtab {
 }
 
 void
+fildes_ofdtab_init(struct fildes_ofdtab* self, struct picotm_error* error);
+
+void
 fildes_ofdtab_uninit(struct fildes_ofdtab* self);
 
 /**

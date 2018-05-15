@@ -31,6 +31,20 @@
 #include "picotm/picotm-module.h"
 #include "fd.h"
 
+void
+fildes_fdtab_init(struct fildes_fdtab* self, struct picotm_error* error)
+{
+    self->len = 0;
+
+    int err = pthread_rwlock_init(&self->rwlock, NULL);
+    if (err) {
+        picotm_error_set_errno(error, err);
+        return;
+    }
+
+    picotm_rwlock_init(&self->lock);
+}
+
 static size_t
 fd_uninit_walk_cb(void* fd, struct picotm_error* error)
 {

@@ -65,7 +65,7 @@ fildes_tx_init(struct fildes_tx* self, struct fildes* fildes,
     self->fildes = fildes;
     self->log = log;
 
-    fdtab_tx_init(&self->fdtab_tx);
+    fdtab_tx_init(&self->fdtab_tx, fildes);
 
     self->fd_tx_max_fildes = 0;
 
@@ -177,13 +177,13 @@ static struct chrdev_tx*
 get_chrdev_tx_with_ref(struct fildes_tx* self, int fildes,
                        struct picotm_error* error)
 {
-    struct chrdev* chrdev = chrdevtab_ref_fildes(fildes, error);
+    struct chrdev* chrdev = fildes_ref_chrdev(self->fildes, fildes, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
 
-    struct chrdev_tx* chrdev_tx = get_chrdev_tx(self,
-                                                chrdevtab_index(chrdev));
+    struct chrdev_tx* chrdev_tx =
+        get_chrdev_tx(self, fildes_chrdev_index(self->fildes, chrdev));
 
     /* In |struct fildes_tx| we hold at most one reference to the
      * transaction state of each character device. This reference is
@@ -229,12 +229,13 @@ static struct fifo_tx*
 get_fifo_tx_with_ref(struct fildes_tx* self, int fildes,
                      struct picotm_error* error)
 {
-    struct fifo* fifo = fifotab_ref_fildes(fildes, error);
+    struct fifo* fifo = fildes_ref_fifo(self->fildes, fildes, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
 
-    struct fifo_tx* fifo_tx = get_fifo_tx(self, fifotab_index(fifo));
+    struct fifo_tx* fifo_tx =
+        get_fifo_tx(self, fildes_fifo_index(self->fildes, fifo));
 
     /* In |struct fildes_tx| we hold at most one reference to the
      * transaction state of each FIFO. This reference is released
@@ -280,13 +281,13 @@ static struct regfile_tx*
 get_regfile_tx_with_ref(struct fildes_tx* self, int fildes,
                         struct picotm_error* error)
 {
-    struct regfile* regfile = regfiletab_ref_fildes(fildes, error);
+    struct regfile* regfile = fildes_ref_regfile(self->fildes, fildes, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
 
-    struct regfile_tx* regfile_tx = get_regfile_tx(self,
-                                                   regfiletab_index(regfile));
+    struct regfile_tx* regfile_tx =
+        get_regfile_tx(self, fildes_regfile_index(self->fildes, regfile));
 
     /* In |struct fildes_tx| we hold at most one reference to the
      * transaction state of each regular file. This reference is
@@ -332,12 +333,13 @@ static struct dir_tx*
 get_dir_tx_with_ref(struct fildes_tx* self, int fildes,
                     struct picotm_error* error)
 {
-    struct dir* dir = dirtab_ref_fildes(fildes, error);
+    struct dir* dir = fildes_ref_dir(self->fildes, fildes, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
 
-    struct dir_tx* dir_tx = get_dir_tx(self, dirtab_index(dir));
+    struct dir_tx* dir_tx =
+        get_dir_tx(self, fildes_dir_index(self->fildes, dir));
 
     /* In |struct fildes_tx| we hold at most one reference to the
      * transaction state of each directory. This reference is
@@ -383,13 +385,13 @@ static struct socket_tx*
 get_socket_tx_with_ref(struct fildes_tx* self, int fildes,
                        struct picotm_error* error)
 {
-    struct socket* socket = sockettab_ref_fildes(fildes, error);
+    struct socket* socket = fildes_ref_socket(self->fildes, fildes, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
 
-    struct socket_tx* socket_tx = get_socket_tx(self,
-                                                sockettab_index(socket));
+    struct socket_tx* socket_tx =
+        get_socket_tx(self, fildes_socket_index(self->fildes, socket));
 
     /* In |struct fildes_tx| we hold at most one reference to the
      * transaction state of each socket. This reference is released
@@ -547,7 +549,8 @@ get_ofd_tx_with_ref(struct fildes_tx* self, int fildes, bool newly_created,
         goto err_get_file_tx_with_ref;
     }
 
-    struct ofd* ofd = ofdtab_ref_fildes(fildes, newly_created, error);
+    struct ofd* ofd = fildes_ref_ofd(self->fildes, fildes, newly_created,
+                                     error);
     if (picotm_error_is_set(error)) {
         goto err_ofdtab_ref_fildes;
     }
