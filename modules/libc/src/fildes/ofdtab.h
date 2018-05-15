@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -25,8 +25,10 @@
 
 #pragma once
 
+#include <pthread.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include "ofd.h"
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -37,11 +39,25 @@
  */
 
 struct picotm_error;
-struct ofd;
+
+struct fildes_ofdtab {
+    struct ofd       tab[MAXNUMFD];
+    size_t           len;
+    pthread_rwlock_t rwlock;
+};
+
+#define FILDES_OFDTAB_INITIALIZER           \
+{                                           \
+    .len = 0,                               \
+    .rwlock = PTHREAD_RWLOCK_INITIALIZER    \
+}
+
+void
+fildes_ofdtab_uninit(struct fildes_ofdtab* self);
 
 /**
  * Returns a reference to an ofd structure for the given file descriptor.
- *
+ * \param       self            The ofd table.
  * \param       fildes          A file descriptor.
  * \param       newly_created   True if the open file description has been
  *                              newly created.
@@ -64,13 +80,14 @@ struct ofd;
  * and open file descriptions.
  */
 struct ofd*
-ofdtab_ref_fildes(int fildes, bool newly_created, struct picotm_error* error);
+fildes_ofdtab_ref_fildes(struct fildes_ofdtab* self, int fildes,
+                         bool newly_created, struct picotm_error* error);
 
 /**
  * Returns the index of an ofd structure within the ofd table.
- *
- * \param   ofd An ofd structure.
+ * \param   self    The ofd table.
+ * \param   ofd     An ofd structure.
  * \returns The ofd structure's index in the ofd table.
  */
 size_t
-ofdtab_index(struct ofd* ofd);
+fildes_ofdtab_index(struct fildes_ofdtab* self, struct ofd* ofd);

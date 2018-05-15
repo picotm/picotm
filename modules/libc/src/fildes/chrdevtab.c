@@ -29,21 +29,7 @@
 #include "picotm/picotm-lib-tab.h"
 #include "picotm/picotm-module.h"
 #include <errno.h>
-#include <pthread.h>
-#include "chrdev.h"
 #include "range.h"
-
-struct fildes_chrdevtab {
-    struct chrdev    tab[MAXNUMFD];
-    size_t           len;
-    pthread_rwlock_t rwlock;
-};
-
-#define FILDES_CHRDEVTAB_INITIALIZER        \
-{                                           \
-    .len = 0,                               \
-    .rwlock = PTHREAD_RWLOCK_INITIALIZER    \
-}
 
 static size_t
 chrdev_uninit_walk_cb(void* chrdev, struct picotm_error* error)
@@ -52,7 +38,7 @@ chrdev_uninit_walk_cb(void* chrdev, struct picotm_error* error)
     return 1;
 }
 
-static void
+void
 fildes_chrdevtab_uninit(struct fildes_chrdevtab* self)
 {
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
@@ -171,7 +157,7 @@ search_by_id(struct fildes_chrdevtab* chrdevtab, const struct file_id* id,
     return NULL;
 }
 
-static struct chrdev*
+struct chrdev*
 fildes_chrdevtab_ref_fildes(struct fildes_chrdevtab* self, int fildes,
                             struct picotm_error* error)
 {
@@ -253,32 +239,8 @@ err_search_by_id:
     return NULL;
 }
 
-static size_t
+size_t
 fildes_chrdevtab_index(struct fildes_chrdevtab* self, struct chrdev* chrdev)
 {
     return chrdev - self->tab;
-}
-
-/*
- * Global state
- */
-
-static struct fildes_chrdevtab chrdevtab = FILDES_CHRDEVTAB_INITIALIZER;
-
-static __attribute__((destructor)) void
-chrdevtab_uninit(void)
-{
-    fildes_chrdevtab_uninit(&chrdevtab);
-}
-
-struct chrdev*
-chrdevtab_ref_fildes(int fildes, struct picotm_error* error)
-{
-    return fildes_chrdevtab_ref_fildes(&chrdevtab, fildes, error);
-}
-
-size_t
-chrdevtab_index(struct chrdev* chrdev)
-{
-    return fildes_chrdevtab_index(&chrdevtab, chrdev);
 }

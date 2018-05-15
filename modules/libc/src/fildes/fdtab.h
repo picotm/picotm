@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -25,6 +25,11 @@
 
 #pragma once
 
+#include "picotm/picotm-lib-rwlock.h"
+#include <stddef.h>
+#include <pthread.h>
+#include "fd.h"
+
 /**
  * \cond impl || libc_impl || libc_impl_fd
  * \ingroup libc_impl
@@ -37,20 +42,41 @@ struct fd;
 struct picotm_error;
 struct picotm_rwstate;
 
+struct fildes_fdtab {
+    struct fd                tab[MAXNUMFD];
+    size_t                   len;
+    pthread_rwlock_t         rwlock;
+    struct picotm_rwlock     lock;
+};
+
+#define FILDES_FDTAB_INITIALIZER            \
+{                                           \
+    .len = 0,                               \
+    .rwlock = PTHREAD_RWLOCK_INITIALIZER,   \
+    .lock = PICOTM_RWLOCK_INITIALIZER       \
+}
+
+void
+fildes_fdtab_uninit(struct fildes_fdtab* self);
+
 struct fd*
-fdtab_ref_fildes(int fildes, struct picotm_rwstate* lock_state,
-                 struct picotm_error* error);
+fildes_fdtab_ref_fildes(struct fildes_fdtab* self, int fildes,
+                        struct picotm_rwstate* lock_state,
+                        struct picotm_error* error);
 
 struct fd*
-fdtab_get_fd(int fildes);
+fildes_fdtab_get_fd(struct fildes_fdtab* self, int fildes);
 
 void
-fdtab_try_rdlock(struct picotm_rwstate* lock_state,
-                 struct picotm_error* error);
+fildes_fdtab_try_rdlock(struct fildes_fdtab* self,
+                        struct picotm_rwstate* lock_state,
+                        struct picotm_error* error);
 
 void
-fdtab_try_wrlock(struct picotm_rwstate* lock_state,
-                 struct picotm_error* error);
+fildes_fdtab_try_wrlock(struct fildes_fdtab* self,
+                        struct picotm_rwstate* lock_state,
+                        struct picotm_error* error);
 
 void
-fdtab_unlock(struct picotm_rwstate* lock_state);
+fildes_fdtab_unlock(struct fildes_fdtab* self,
+                    struct picotm_rwstate* lock_state);

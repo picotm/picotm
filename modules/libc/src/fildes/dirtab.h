@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -25,7 +25,9 @@
 
 #pragma once
 
+#include <pthread.h>
 #include <stddef.h>
+#include "dir.h"
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -35,25 +37,40 @@
  * \endcond
  */
 
-struct dir;
 struct picotm_error;
+
+struct fildes_dirtab {
+    struct dir       tab[MAXNUMFD];
+    size_t           len;
+    pthread_rwlock_t rwlock;
+};
+
+#define FILDES_DIRTAB_INITIALIZER           \
+{                                           \
+    .len = 0,                               \
+    .rwlock = PTHREAD_RWLOCK_INITIALIZER    \
+}
+
+void
+fildes_dirtab_uninit(struct fildes_dirtab* self);
 
 /**
  * Returns a reference to a dir structure for the given file descriptor.
- *
+ * \param       self    The dir table.
  * \param       fildes  A file descriptor.
  * \param[out]  error   Returns an error to the caller.
  * \returns A referenced instance of `struct dir` that refers to the file
  *          descriptor's directory.
  */
 struct dir*
-dirtab_ref_fildes(int fildes, struct picotm_error* error);
+fildes_dirtab_ref_fildes(struct fildes_dirtab* self, int fildes,
+                         struct picotm_error* error);
 
 /**
  * Returns the index of a dir structure within the dir table.
- *
- * \param   dir An dir structure.
+ * \param   self    The dir table.
+ * \param   dir     An dir structure.
  * \returns The dir structure's index in the dir table.
  */
 size_t
-dirtab_index(struct dir* dir);
+fildes_dirtab_index(struct fildes_dirtab* self, struct dir* dir);

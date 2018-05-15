@@ -29,21 +29,7 @@
 #include "picotm/picotm-lib-tab.h"
 #include "picotm/picotm-module.h"
 #include <errno.h>
-#include <pthread.h>
-#include "fifo.h"
 #include "range.h"
-
-struct fildes_fifotab {
-    struct fifo      tab[MAXNUMFD];
-    size_t           len;
-    pthread_rwlock_t rwlock;
-};
-
-#define FILDES_FIFOTAB_INITIALIZER          \
-{                                           \
-    .len = 0,                               \
-    .rwlock = PTHREAD_RWLOCK_INITIALIZER    \
-}
 
 static size_t
 fifo_uninit_walk_cb(void* fifo, struct picotm_error* error)
@@ -52,7 +38,7 @@ fifo_uninit_walk_cb(void* fifo, struct picotm_error* error)
     return 1;
 }
 
-static void
+void
 fildes_fifotab_uninit(struct fildes_fifotab* self)
 {
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
@@ -166,7 +152,7 @@ search_by_id(struct fildes_fifotab* fifotab, const struct file_id* id,
     return NULL;
 }
 
-static struct fifo*
+struct fifo*
 fildes_fifotab_ref_fildes(struct fildes_fifotab* self, int fildes,
                           struct picotm_error* error)
 {
@@ -248,32 +234,8 @@ err_search_by_id:
     return NULL;
 }
 
-static size_t
+size_t
 fildes_fifotab_index(struct fildes_fifotab* self, struct fifo* fifo)
 {
     return fifo - self->tab;
-}
-
-/*
- * Global state
- */
-
-static struct fildes_fifotab fifotab = FILDES_FIFOTAB_INITIALIZER;
-
-static __attribute__((destructor)) void
-fifotab_uninit(void)
-{
-    fildes_fifotab_uninit(&fifotab);
-}
-
-struct fifo*
-fifotab_ref_fildes(int fildes, struct picotm_error* error)
-{
-    return fildes_fifotab_ref_fildes(&fifotab, fildes, error);
-}
-
-size_t
-fifotab_index(struct fifo* fifo)
-{
-    return fildes_fifotab_index(&fifotab, fifo);
 }

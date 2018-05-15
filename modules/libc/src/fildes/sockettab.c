@@ -29,21 +29,7 @@
 #include "picotm/picotm-lib-tab.h"
 #include "picotm/picotm-module.h"
 #include <errno.h>
-#include <pthread.h>
 #include "range.h"
-#include "socket.h"
-
-struct fildes_sockettab {
-    struct socket    tab[MAXNUMFD];
-    size_t           len;
-    pthread_rwlock_t rwlock;
-};
-
-#define FILDES_SOCKETTAB_INITIALIZER        \
-{                                           \
-    .len = 0,                               \
-    .rwlock = PTHREAD_RWLOCK_INITIALIZER    \
-}
 
 static size_t
 socket_uninit_walk_cb(void* socket, struct picotm_error* error)
@@ -52,7 +38,7 @@ socket_uninit_walk_cb(void* socket, struct picotm_error* error)
     return 1;
 }
 
-static void
+void
 fildes_sockettab_uninit(struct fildes_sockettab* self)
 {
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
@@ -171,7 +157,7 @@ search_by_id(struct fildes_sockettab* sockettab, const struct file_id* id,
     return NULL;
 }
 
-static struct socket*
+struct socket*
 fildes_sockettab_ref_fildes(struct fildes_sockettab* self, int fildes,
                             struct picotm_error* error)
 {
@@ -253,32 +239,8 @@ err_search_by_id:
     return NULL;
 }
 
-static size_t
+size_t
 fildes_sockettab_index(struct fildes_sockettab* self, struct socket* socket)
 {
     return socket - self->tab;
-}
-
-/*
- * Global state
- */
-
-static struct fildes_sockettab sockettab = FILDES_SOCKETTAB_INITIALIZER;
-
-static __attribute__((destructor)) void
-sockettab_uninit(void)
-{
-    fildes_sockettab_uninit(&sockettab);
-}
-
-struct socket*
-sockettab_ref_fildes(int fildes, struct picotm_error* error)
-{
-    return fildes_sockettab_ref_fildes(&sockettab, fildes, error);
-}
-
-size_t
-sockettab_index(struct socket* socket)
-{
-    return fildes_sockettab_index(&sockettab, socket);
 }

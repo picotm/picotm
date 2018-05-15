@@ -29,22 +29,8 @@
 #include "picotm/picotm-lib-tab.h"
 #include "picotm/picotm-module.h"
 #include <errno.h>
-#include <pthread.h>
 #include <string.h>
 #include "range.h"
-#include "ofd.h"
-
-struct fildes_ofdtab {
-    struct ofd       tab[MAXNUMFD];
-    size_t           len;
-    pthread_rwlock_t rwlock;
-};
-
-#define FILDES_OFDTAB_INITIALIZER           \
-{                                           \
-    .len = 0,                               \
-    .rwlock = PTHREAD_RWLOCK_INITIALIZER    \
-}
 
 static size_t
 ofd_uninit_walk_cb(void* ofd, struct picotm_error* error)
@@ -53,7 +39,7 @@ ofd_uninit_walk_cb(void* ofd, struct picotm_error* error)
     return 1;
 }
 
-static void
+void
 fildes_ofdtab_uninit(struct fildes_ofdtab* self)
 {
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
@@ -285,28 +271,4 @@ size_t
 fildes_ofdtab_index(struct fildes_ofdtab* self, struct ofd* ofd)
 {
     return ofd - self->tab;
-}
-
-/*
- * Global state
- */
-
-static struct fildes_ofdtab ofdtab = FILDES_OFDTAB_INITIALIZER;
-
-static __attribute__ ((destructor)) void
-ofdtab_uninit(void)
-{
-    fildes_ofdtab_uninit(&ofdtab);
-}
-
-struct ofd*
-ofdtab_ref_fildes(int fildes, bool newly_created, struct picotm_error* error)
-{
-    return fildes_ofdtab_ref_fildes(&ofdtab, fildes, newly_created, error);
-}
-
-size_t
-ofdtab_index(struct ofd* ofd)
-{
-    return fildes_ofdtab_index(&ofdtab, ofd);
 }

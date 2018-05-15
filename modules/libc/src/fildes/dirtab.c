@@ -29,21 +29,7 @@
 #include "picotm/picotm-lib-tab.h"
 #include "picotm/picotm-module.h"
 #include <errno.h>
-#include <pthread.h>
-#include "dir.h"
 #include "range.h"
-
-struct fildes_dirtab {
-    struct dir       tab[MAXNUMFD];
-    size_t           len;
-    pthread_rwlock_t rwlock;
-};
-
-#define FILDES_DIRTAB_INITIALIZER           \
-{                                           \
-    .len = 0,                               \
-    .rwlock = PTHREAD_RWLOCK_INITIALIZER    \
-}
 
 static size_t
 dir_uninit_walk_cb(void* dir, struct picotm_error* error)
@@ -52,7 +38,7 @@ dir_uninit_walk_cb(void* dir, struct picotm_error* error)
     return 1;
 }
 
-static void
+void
 fildes_dirtab_uninit(struct fildes_dirtab* self)
 {
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
@@ -166,7 +152,7 @@ search_by_id(struct fildes_dirtab* dirtab, const struct file_id* id,
     return NULL;
 }
 
-static struct dir*
+struct dir*
 fildes_dirtab_ref_fildes(struct fildes_dirtab* self, int fildes,
                          struct picotm_error* error)
 {
@@ -247,32 +233,8 @@ err_search_by_id:
     return NULL;
 }
 
-static size_t
+size_t
 fildes_dirtab_index(struct fildes_dirtab* self, struct dir* dir)
 {
     return dir - self->tab;
-}
-
-/*
- * Global state
- */
-
-static struct fildes_dirtab dirtab = FILDES_DIRTAB_INITIALIZER;
-
-static __attribute__((destructor)) void
-dirtab_uninit(void)
-{
-    fildes_dirtab_uninit(&dirtab);
-}
-
-struct dir*
-dirtab_ref_fildes(int fildes, struct picotm_error* error)
-{
-    return fildes_dirtab_ref_fildes(&dirtab, fildes, error);
-}
-
-size_t
-dirtab_index(struct dir* dir)
-{
-    return fildes_dirtab_index(&dirtab, dir);
 }

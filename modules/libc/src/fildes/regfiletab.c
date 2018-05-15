@@ -29,21 +29,7 @@
 #include "picotm/picotm-lib-tab.h"
 #include "picotm/picotm-module.h"
 #include <errno.h>
-#include <pthread.h>
 #include "range.h"
-#include "regfile.h"
-
-struct fildes_regfiletab {
-    struct regfile   tab[MAXNUMFD];
-    size_t           len;
-    pthread_rwlock_t rwlock;
-};
-
-#define FILDES_REGFILETAB_INITIALIZER       \
-{                                           \
-    .len = 0,                               \
-    .rwlock = PTHREAD_RWLOCK_INITIALIZER    \
-}
 
 static size_t
 regfile_uninit_walk_cb(void* regfile, struct picotm_error* error)
@@ -52,7 +38,7 @@ regfile_uninit_walk_cb(void* regfile, struct picotm_error* error)
     return 1;
 }
 
-static void
+void
 fildes_regfiletab_uninit(struct fildes_regfiletab* self)
 {
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
@@ -171,7 +157,7 @@ search_by_id(struct fildes_regfiletab* regfiletab, const struct file_id* id,
     return NULL;
 }
 
-static struct regfile*
+struct regfile*
 fildes_regfiletab_ref_fildes(struct fildes_regfiletab* self, int fildes,
                              struct picotm_error* error)
 {
@@ -254,33 +240,9 @@ err_search_by_id:
     return NULL;
 }
 
-static size_t
+size_t
 fildes_regfiletab_index(struct fildes_regfiletab* self,
                         struct regfile* regfile)
 {
     return regfile - self->tab;
-}
-
-/*
- * Global state
- */
-
-static struct fildes_regfiletab regfiletab = FILDES_REGFILETAB_INITIALIZER;
-
-static __attribute__((destructor)) void
-regfiletab_uninit(void)
-{
-    fildes_regfiletab_uninit(&regfiletab);
-}
-
-struct regfile*
-regfiletab_ref_fildes(int fildes, struct picotm_error* error)
-{
-    return fildes_regfiletab_ref_fildes(&regfiletab, fildes, error);
-}
-
-size_t
-regfiletab_index(struct regfile* regfile)
-{
-    return fildes_regfiletab_index(&regfiletab, regfile);
 }
