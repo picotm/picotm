@@ -45,37 +45,29 @@ struct fildes_regfiletab {
     .rwlock = PTHREAD_RWLOCK_INITIALIZER    \
 }
 
-static struct fildes_regfiletab regfiletab = FILDES_REGFILETAB_INITIALIZER;
-
-/* Destructor */
-
-static void regfiletab_uninit(void) __attribute__ ((destructor));
-
 static size_t
-regfiletab_regfile_uninit_walk(void* regfile, struct picotm_error* error)
+regfile_uninit_walk_cb(void* regfile, struct picotm_error* error)
 {
     regfile_uninit(regfile);
     return 1;
 }
 
 static void
-regfiletab_uninit(void)
+fildes_regfiletab_uninit(struct fildes_regfiletab* self)
 {
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    picotm_tabwalk_1(regfiletab.tab, regfiletab.len,
-                     sizeof(regfiletab.tab[0]),
-                     regfiletab_regfile_uninit_walk, &error);
+    picotm_tabwalk_1(self->tab, self->len, sizeof(self->tab[0]),
+                     regfile_uninit_walk_cb, &error);
 
-    pthread_rwlock_destroy(&regfiletab.rwlock);
+    pthread_rwlock_destroy(&self->rwlock);
 }
 
-/* End of destructor */
-
 static void
-rdlock_regfiletab(struct picotm_error* error)
+rdlock_regfiletab(struct fildes_regfiletab* regfiletab,
+                  struct picotm_error* error)
 {
-    int err = pthread_rwlock_rdlock(&regfiletab.rwlock);
+    int err = pthread_rwlock_rdlock(&regfiletab->rwlock);
     if (err) {
         picotm_error_set_errno(error, err);
         return;
@@ -83,9 +75,10 @@ rdlock_regfiletab(struct picotm_error* error)
 }
 
 static void
-wrlock_regfiletab(struct picotm_error* error)
+wrlock_regfiletab(struct fildes_regfiletab* regfiletab,
+                  struct picotm_error* error)
 {
-    int err = pthread_rwlock_wrlock(&regfiletab.rwlock);
+    int err = pthread_rwlock_wrlock(&regfiletab->rwlock);
     if (err) {
         picotm_error_set_errno(error, err);
         return;
@@ -93,10 +86,10 @@ wrlock_regfiletab(struct picotm_error* error)
 }
 
 static void
-unlock_regfiletab(void)
+unlock_regfiletab(struct fildes_regfiletab* regfiletab)
 {
     do {
-        int err = pthread_rwlock_unlock(&regfiletab.rwlock);
+        int err = pthread_rwlock_unlock(&regfiletab->rwlock);
         if (err) {
             struct picotm_error error = PICOTM_ERROR_INITIALIZER;
             picotm_error_set_errno(&error, err);
@@ -110,33 +103,34 @@ unlock_regfiletab(void)
 
 /* requires a writer lock */
 static struct regfile*
-append_empty_regfile(struct picotm_error* error)
+append_empty_regfile(struct fildes_regfiletab* regfiletab,
+                     struct picotm_error* error)
 {
-    if (regfiletab.len == picotm_arraylen(regfiletab.tab)) {
+    if (regfiletab->len == picotm_arraylen(regfiletab->tab)) {
         /* Return error if not enough ids available */
         picotm_error_set_conflicting(error, NULL);
         return NULL;
     }
 
-    struct regfile* regfile = regfiletab.tab + regfiletab.len;
+    struct regfile* regfile = regfiletab->tab + regfiletab->len;
 
     regfile_init(regfile, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
 
-    ++regfiletab.len;
+    ++regfiletab->len;
 
     return regfile;
 }
 
 /* requires reader lock */
 static struct regfile*
-find_by_id(const struct file_id* id)
+find_by_id(struct fildes_regfiletab* regfiletab, const struct file_id* id)
 {
-    struct regfile *regfile_beg = picotm_arraybeg(regfiletab.tab);
-    const struct regfile* regfile_end = picotm_arrayat(regfiletab.tab,
-                                                       regfiletab.len);
+    struct regfile *regfile_beg = picotm_arraybeg(regfiletab->tab);
+    const struct regfile* regfile_end = picotm_arrayat(regfiletab->tab,
+                                                       regfiletab->len);
 
     while (regfile_beg < regfile_end) {
 
@@ -153,11 +147,12 @@ find_by_id(const struct file_id* id)
 
 /* requires writer lock */
 static struct regfile*
-search_by_id(const struct file_id* id, int fildes, struct picotm_error* error)
+search_by_id(struct fildes_regfiletab* regfiletab, const struct file_id* id,
+             int fildes, struct picotm_error* error)
 {
-    struct regfile* regfile_beg = picotm_arraybeg(regfiletab.tab);
-    const struct regfile* regfile_end = picotm_arrayat(regfiletab.tab,
-                                                       regfiletab.len);
+    struct regfile* regfile_beg = picotm_arraybeg(regfiletab->tab);
+    const struct regfile* regfile_end = picotm_arrayat(regfiletab->tab,
+                                                       regfiletab->len);
 
     while (regfile_beg < regfile_end) {
 
@@ -176,8 +171,9 @@ search_by_id(const struct file_id* id, int fildes, struct picotm_error* error)
     return NULL;
 }
 
-struct regfile*
-regfiletab_ref_fildes(int fildes, struct picotm_error* error)
+static struct regfile*
+fildes_regfiletab_ref_fildes(struct fildes_regfiletab* self, int fildes,
+                             struct picotm_error* error)
 {
     struct file_id id;
     file_id_init_from_fildes(&id, fildes, error);
@@ -189,29 +185,29 @@ regfiletab_ref_fildes(int fildes, struct picotm_error* error)
      * a new element was not explicitly requested.
      */
 
-    rdlock_regfiletab(error);
+    rdlock_regfiletab(self, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
 
-    struct regfile* regfile = find_by_id(&id);
+    struct regfile* regfile = find_by_id(self, &id);
     if (regfile) {
         goto unlock; /* found regfile for id; return */
     }
 
-    unlock_regfiletab();
+    unlock_regfiletab(self);
 
     /* Not found entry; acquire writer lock to create a new entry in
      * the regfile table.
      */
 
-    wrlock_regfiletab(error);
+    wrlock_regfiletab(self, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
 
     /* Re-try find operation; maybe element was added meanwhile. */
-    regfile = find_by_id(&id);
+    regfile = find_by_id(self, &id);
     if (regfile) {
         goto unlock; /* found regfile for id; return */
     }
@@ -223,7 +219,7 @@ regfiletab_ref_fildes(int fildes, struct picotm_error* error)
     struct file_id empty_id;
     file_id_clear(&empty_id);
 
-    regfile = search_by_id(&empty_id, fildes, error);
+    regfile = search_by_id(self, &empty_id, fildes, error);
     if (picotm_error_is_set(error)) {
         goto err_search_by_id;
     } else if (regfile) {
@@ -234,7 +230,7 @@ regfiletab_ref_fildes(int fildes, struct picotm_error* error)
      * end of the table.
      */
 
-    regfile = append_empty_regfile(error);
+    regfile = append_empty_regfile(self, error);
     if (picotm_error_is_set(error)) {
         goto err_append_empty_regfile;
     }
@@ -247,19 +243,44 @@ regfiletab_ref_fildes(int fildes, struct picotm_error* error)
     }
 
 unlock:
-    unlock_regfiletab();
+    unlock_regfiletab(self);
 
     return regfile;
 
 err_regfile_ref_or_set_up:
 err_append_empty_regfile:
 err_search_by_id:
-    unlock_regfiletab();
+    unlock_regfiletab(self);
     return NULL;
+}
+
+static size_t
+fildes_regfiletab_index(struct fildes_regfiletab* self,
+                        struct regfile* regfile)
+{
+    return regfile - self->tab;
+}
+
+/*
+ * Global state
+ */
+
+static struct fildes_regfiletab regfiletab = FILDES_REGFILETAB_INITIALIZER;
+
+static __attribute__((destructor)) void
+regfiletab_uninit(void)
+{
+    fildes_regfiletab_uninit(&regfiletab);
+}
+
+struct regfile*
+regfiletab_ref_fildes(int fildes, struct picotm_error* error)
+{
+    return fildes_regfiletab_ref_fildes(&regfiletab, fildes, error);
 }
 
 size_t
 regfiletab_index(struct regfile* regfile)
 {
-    return regfile - regfiletab.tab;
+    return fildes_regfiletab_index(&regfiletab, regfile);
 }
