@@ -28,15 +28,121 @@
 #include "picotm/picotm-module.h"
 #include <assert.h>
 #include <stdlib.h>
+#include "fildes.h"
 #include "fildes_event.h"
 #include "fildes_log.h"
 #include "fildes_tx.h"
+
+/*
+ * Shared state
+ */
+
+struct fildes_shared_state {
+    struct picotm_shared_ref16_obj ref_obj;
+    struct fildes fildes;
+};
+
+#define FILDES_SHARED_STATE_INITIALIZER             \
+{                                                   \
+    .ref_obj = PICOTM_SHARED_REF16_OBJ_INITIALIZER  \
+}
+
+static void
+init_fildes_shared_state_fields(struct fildes_shared_state* shared)
+{
+    fildes_init(&shared->fildes);
+}
+
+static void
+uninit_fildes_shared_state_fields(struct fildes_shared_state* shared)
+{
+    fildes_uninit(&shared->fildes);
+}
+
+static void
+first_ref_fildes_shared_state_cb(struct picotm_shared_ref16_obj* ref_obj,
+                                 void* data, struct picotm_error* error)
+{
+    struct fildes_shared_state* shared =
+        picotm_containerof(ref_obj, struct fildes_shared_state, ref_obj);
+    init_fildes_shared_state_fields(shared);
+}
+
+static void
+fildes_shared_state_ref(struct fildes_shared_state* self,
+                        struct picotm_error* error)
+{
+    picotm_shared_ref16_obj_up(&self->ref_obj, NULL, NULL,
+                               first_ref_fildes_shared_state_cb,
+                               error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
+};
+
+static void
+final_ref_fildes_shared_state_cb(struct picotm_shared_ref16_obj* ref_obj,
+                                 void* data, struct picotm_error* error)
+{
+    struct fildes_shared_state* shared =
+        picotm_containerof(ref_obj, struct fildes_shared_state, ref_obj);
+    uninit_fildes_shared_state_fields(shared);
+}
+
+static void
+fildes_shared_state_unref(struct fildes_shared_state* self)
+{
+    picotm_shared_ref16_obj_down(&self->ref_obj, NULL, NULL,
+                                 final_ref_fildes_shared_state_cb);
+}
+
+/*
+ * Global data
+ */
+
+/* Returns the statically allocated global state. Callers *must* already
+ * hold a reference. */
+static struct fildes_shared_state*
+get_fildes_global_state(void)
+{
+    static struct fildes_shared_state s_global =
+        FILDES_SHARED_STATE_INITIALIZER;
+    return &s_global;
+}
+
+static struct fildes_shared_state*
+ref_fildes_global_state(struct picotm_error* error)
+{
+    struct fildes_shared_state* global = get_fildes_global_state();
+
+    fildes_shared_state_ref(global, error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+
+    return global;
+};
+
+static void
+unref_fildes_global_state(void)
+{
+    struct fildes_shared_state* global = get_fildes_global_state();
+    fildes_shared_state_unref(global);
+}
+
+/*
+ * Module interface
+ */
 
 struct fildes_module {
     bool          is_initialized;
     struct fildes_log log;
     struct fildes_tx tx;
 };
+
+/*
+ * Thread-local data
+ */
 
 static void
 prepare_commit_cb(void* data, int noundo, struct picotm_error* error)
@@ -88,6 +194,8 @@ uninit_cb(void* data)
     fildes_log_uninit(&module->log);
 
     module->is_initialized = false;
+
+    unref_fildes_global_state();
 }
 
 static struct fildes_tx*
@@ -108,17 +216,26 @@ get_fildes_tx(bool initialize, struct picotm_error* error)
         return NULL;
     }
 
-    unsigned long module = picotm_register_module(&g_ops, &t_module, error);
+    struct fildes_shared_state* global = ref_fildes_global_state(error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
 
+    unsigned long module = picotm_register_module(&g_ops, &t_module, error);
+    if (picotm_error_is_set(error)) {
+        goto err_picotm_register_module;
+    }
+
     fildes_log_init(&t_module.log, module);
-    fildes_tx_init(&t_module.tx, &t_module.log);
+    fildes_tx_init(&t_module.tx, &global->fildes, &t_module.log);
 
     t_module.is_initialized = true;
 
     return &t_module.tx;
+
+err_picotm_register_module:
+    unref_fildes_global_state();
+    return NULL;
 }
 
 static struct fildes_tx*
@@ -139,7 +256,7 @@ get_non_null_fildes_tx(void)
 }
 
 /*
- * Module interface
+ * Public interface
  */
 
 int

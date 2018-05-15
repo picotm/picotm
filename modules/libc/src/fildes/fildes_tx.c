@@ -57,10 +57,12 @@
 #include "sockettab.h"
 
 void
-fildes_tx_init(struct fildes_tx* self, struct fildes_log* log)
+fildes_tx_init(struct fildes_tx* self, struct fildes* fildes,
+               struct fildes_log* log)
 {
     assert(self);
 
+    self->fildes = fildes;
     self->log = log;
 
     fdtab_tx_init(&self->fdtab_tx);

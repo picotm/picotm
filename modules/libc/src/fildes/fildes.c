@@ -32,6 +32,14 @@
 #include "regfiletab.h"
 #include "sockettab.h"
 
+void
+fildes_init(struct fildes* self)
+{ }
+
+void
+fildes_uninit(struct fildes* self)
+{ }
+
 /*
  * fdtab
  */

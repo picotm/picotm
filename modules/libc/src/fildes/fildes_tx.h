@@ -52,6 +52,8 @@ struct openop;
 
 struct fildes_tx {
 
+    struct fildes* fildes;
+
     struct fildes_log* log;
 
     struct fdtab_tx fdtab_tx;
@@ -94,7 +96,8 @@ struct fildes_tx {
 };
 
 void
-fildes_tx_init(struct fildes_tx* self, struct fildes_log* log);
+fildes_tx_init(struct fildes_tx* self, struct fildes* fildes,
+               struct fildes_log* log);
 
 void
 fildes_tx_uninit(struct fildes_tx* self);
