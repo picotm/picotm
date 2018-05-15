@@ -45,36 +45,29 @@ struct fildes_sockettab {
     .rwlock = PTHREAD_RWLOCK_INITIALIZER    \
 }
 
-static struct fildes_sockettab sockettab = FILDES_SOCKETTAB_INITIALIZER;
-
-/* Destructor */
-
-static void sockettab_uninit(void) __attribute__ ((destructor));
-
 static size_t
-sockettab_socket_uninit_walk(void* socket, struct picotm_error* error)
+socket_uninit_walk_cb(void* socket, struct picotm_error* error)
 {
     socket_uninit(socket);
     return 1;
 }
 
 static void
-sockettab_uninit(void)
+fildes_sockettab_uninit(struct fildes_sockettab* self)
 {
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    picotm_tabwalk_1(sockettab.tab, sockettab.len, sizeof(sockettab.tab[0]),
-                     sockettab_socket_uninit_walk, &error);
+    picotm_tabwalk_1(self->tab, self->len, sizeof(self->tab[0]),
+                     socket_uninit_walk_cb, &error);
 
-    pthread_rwlock_destroy(&sockettab.rwlock);
+    pthread_rwlock_destroy(&self->rwlock);
 }
 
-/* End of destructor */
-
 static void
-rdlock_sockettab(struct picotm_error* error)
+rdlock_sockettab(struct fildes_sockettab* sockettab,
+                 struct picotm_error* error)
 {
-    int err = pthread_rwlock_rdlock(&sockettab.rwlock);
+    int err = pthread_rwlock_rdlock(&sockettab->rwlock);
     if (err) {
         picotm_error_set_errno(error, err);
         return;
@@ -82,9 +75,10 @@ rdlock_sockettab(struct picotm_error* error)
 }
 
 static void
-wrlock_sockettab(struct picotm_error* error)
+wrlock_sockettab(struct fildes_sockettab* sockettab,
+                 struct picotm_error* error)
 {
-    int err = pthread_rwlock_wrlock(&sockettab.rwlock);
+    int err = pthread_rwlock_wrlock(&sockettab->rwlock);
     if (err) {
         picotm_error_set_errno(error, err);
         return;
@@ -92,10 +86,10 @@ wrlock_sockettab(struct picotm_error* error)
 }
 
 static void
-unlock_sockettab(void)
+unlock_sockettab(struct fildes_sockettab* sockettab)
 {
     do {
-        int err = pthread_rwlock_unlock(&sockettab.rwlock);
+        int err = pthread_rwlock_unlock(&sockettab->rwlock);
         if (err) {
             struct picotm_error error = PICOTM_ERROR_INITIALIZER;
             picotm_error_set_errno(&error, err);
@@ -109,33 +103,34 @@ unlock_sockettab(void)
 
 /* requires a writer lock */
 static struct socket*
-append_empty_socket(struct picotm_error* error)
+append_empty_socket(struct fildes_sockettab* sockettab,
+                    struct picotm_error* error)
 {
-    if (sockettab.len == picotm_arraylen(sockettab.tab)) {
+    if (sockettab->len == picotm_arraylen(sockettab->tab)) {
         /* Return error if not enough ids available */
         picotm_error_set_conflicting(error, NULL);
         return NULL;
     }
 
-    struct socket* socket = sockettab.tab + sockettab.len;
+    struct socket* socket = sockettab->tab + sockettab->len;
 
     socket_init(socket, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
 
-    ++sockettab.len;
+    ++sockettab->len;
 
     return socket;
 }
 
 /* requires reader lock */
 static struct socket*
-find_by_id(const struct file_id* id)
+find_by_id(struct fildes_sockettab* sockettab, const struct file_id* id)
 {
-    struct socket *socket_beg = picotm_arraybeg(sockettab.tab);
-    const struct socket* socket_end = picotm_arrayat(sockettab.tab,
-                                                     sockettab.len);
+    struct socket *socket_beg = picotm_arraybeg(sockettab->tab);
+    const struct socket* socket_end = picotm_arrayat(sockettab->tab,
+                                                     sockettab->len);
 
     while (socket_beg < socket_end) {
 
@@ -152,16 +147,17 @@ find_by_id(const struct file_id* id)
 
 /* requires writer lock */
 static struct socket*
-search_by_id(const struct file_id* id, int fildes, struct picotm_error* error)
+search_by_id(struct fildes_sockettab* sockettab, const struct file_id* id,
+             int fildes, struct picotm_error* error)
 {
-    struct socket* socket_beg = picotm_arraybeg(sockettab.tab);
-    const struct socket* socket_end = picotm_arrayat(sockettab.tab,
-                                                     sockettab.len);
+    struct socket* socket_beg = picotm_arraybeg(sockettab->tab);
+    const struct socket* socket_end = picotm_arrayat(sockettab->tab,
+                                                     sockettab->len);
 
     while (socket_beg < socket_end) {
 
         const int cmp = socket_cmp_and_ref_or_set_up(socket_beg, id, fildes,
-                                                      error);
+                                                     error);
         if (!cmp) {
             if (picotm_error_is_set(error)) {
                 return NULL;
@@ -175,8 +171,9 @@ search_by_id(const struct file_id* id, int fildes, struct picotm_error* error)
     return NULL;
 }
 
-struct socket*
-sockettab_ref_fildes(int fildes, struct picotm_error* error)
+static struct socket*
+fildes_sockettab_ref_fildes(struct fildes_sockettab* self, int fildes,
+                            struct picotm_error* error)
 {
     struct file_id id;
     file_id_init_from_fildes(&id, fildes, error);
@@ -187,29 +184,29 @@ sockettab_ref_fildes(int fildes, struct picotm_error* error)
     /* Try to find an existing socket structure with the given id.
      */
 
-    rdlock_sockettab(error);
+    rdlock_sockettab(self, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
 
-    struct socket* socket = find_by_id(&id);
+    struct socket* socket = find_by_id(self, &id);
     if (socket) {
         goto unlock; /* found socket for id; return */
     }
 
-    unlock_sockettab();
+    unlock_sockettab(self);
 
     /* Not found entry; acquire writer lock to create a new entry in
      * the socket table.
      */
 
-    wrlock_sockettab(error);
+    wrlock_sockettab(self, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
 
     /* Re-try find operation; maybe element was added meanwhile. */
-    socket = find_by_id(&id);
+    socket = find_by_id(self, &id);
     if (socket) {
         goto unlock; /* found socket for id; return */
     }
@@ -221,7 +218,7 @@ sockettab_ref_fildes(int fildes, struct picotm_error* error)
     struct file_id empty_id;
     file_id_clear(&empty_id);
 
-    socket = search_by_id(&empty_id, fildes, error);
+    socket = search_by_id(self, &empty_id, fildes, error);
     if (picotm_error_is_set(error)) {
         goto err_search_by_id;
     } else if (socket) {
@@ -232,7 +229,7 @@ sockettab_ref_fildes(int fildes, struct picotm_error* error)
      * end of the table.
      */
 
-    socket = append_empty_socket(error);
+    socket = append_empty_socket(self, error);
     if (picotm_error_is_set(error)) {
         goto err_append_empty_socket;
     }
@@ -245,19 +242,43 @@ sockettab_ref_fildes(int fildes, struct picotm_error* error)
     }
 
 unlock:
-    unlock_sockettab();
+    unlock_sockettab(self);
 
     return socket;
 
 err_socket_ref_or_set_up:
 err_append_empty_socket:
 err_search_by_id:
-    unlock_sockettab();
+    unlock_sockettab(self);
     return NULL;
+}
+
+static size_t
+fildes_sockettab_index(struct fildes_sockettab* self, struct socket* socket)
+{
+    return socket - self->tab;
+}
+
+/*
+ * Global state
+ */
+
+static struct fildes_sockettab sockettab = FILDES_SOCKETTAB_INITIALIZER;
+
+static __attribute__((destructor)) void
+sockettab_uninit(void)
+{
+    fildes_sockettab_uninit(&sockettab);
+}
+
+struct socket*
+sockettab_ref_fildes(int fildes, struct picotm_error* error)
+{
+    return fildes_sockettab_ref_fildes(&sockettab, fildes, error);
 }
 
 size_t
 sockettab_index(struct socket* socket)
 {
-    return socket - sockettab.tab;
+    return fildes_sockettab_index(&sockettab, socket);
 }
