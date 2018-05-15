@@ -46,6 +46,15 @@ struct picotm_rwstate;
 struct regfile;
 struct socket;
 
+struct fildes {
+};
+
+void
+fildes_init(struct fildes* self);
+
+void
+fildes_uninit(struct fildes* self);
+
 /*
  * fdtab
  */
