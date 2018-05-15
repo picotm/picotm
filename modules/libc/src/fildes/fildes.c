@@ -24,207 +24,207 @@
  */
 
 #include "fildes.h"
-#include "chrdevtab.h"
-#include "dirtab.h"
-#include "fdtab.h"
-#include "fifotab.h"
-#include "ofdtab.h"
-#include "regfiletab.h"
-#include "sockettab.h"
+#include "picotm/picotm-error.h"
 
 void
-fildes_init(struct fildes* self)
-{ }
+fildes_init(struct fildes* self, struct picotm_error* error)
+{
+    fildes_fdtab_init(&self->fdtab, error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
+
+    fildes_ofdtab_init(&self->ofdtab, error);
+    if (picotm_error_is_set(error)) {
+        goto err_fildes_ofdtab_init;
+    }
+
+    fildes_chrdevtab_init(&self->chrdevtab, error);
+    if (picotm_error_is_set(error)) {
+        goto err_fildes_chrdevtab_init;
+    }
+    fildes_dirtab_init(&self->dirtab, error);
+    if (picotm_error_is_set(error)) {
+        goto err_fildes_dirtab_init;
+    }
+    fildes_fifotab_init(&self->fifotab, error);
+    if (picotm_error_is_set(error)) {
+        goto err_fildes_fifotab_init;
+    }
+    fildes_regfiletab_init(&self->regfiletab, error);
+    if (picotm_error_is_set(error)) {
+        goto err_fildes_regfiletab_init;
+    }
+    fildes_sockettab_init(&self->sockettab, error);
+    if (picotm_error_is_set(error)) {
+        goto err_fildes_sockettab_init;
+    }
+
+    return;
+
+err_fildes_sockettab_init:
+    fildes_regfiletab_uninit(&self->regfiletab);
+err_fildes_regfiletab_init:
+    fildes_fifotab_uninit(&self->fifotab);
+err_fildes_fifotab_init:
+    fildes_dirtab_uninit(&self->dirtab);
+err_fildes_dirtab_init:
+    fildes_chrdevtab_uninit(&self->chrdevtab);
+err_fildes_chrdevtab_init:
+    fildes_ofdtab_uninit(&self->ofdtab);
+err_fildes_ofdtab_init:
+    fildes_fdtab_uninit(&self->fdtab);
+}
 
 void
 fildes_uninit(struct fildes* self)
-{ }
+{
+    fildes_sockettab_uninit(&self->sockettab);
+    fildes_regfiletab_uninit(&self->regfiletab);
+    fildes_fifotab_uninit(&self->fifotab);
+    fildes_dirtab_uninit(&self->dirtab);
+    fildes_chrdevtab_uninit(&self->chrdevtab);
+
+    fildes_ofdtab_uninit(&self->ofdtab);
+
+    fildes_fdtab_uninit(&self->fdtab);
+}
 
 /*
  * fdtab
  */
 
-static struct fildes_fdtab fdtab = FILDES_FDTAB_INITIALIZER;
-
-static __attribute__((destructor)) void
-fdtab_uninit(void)
+struct fd*
+fildes_ref_fd(struct fildes* self, int fildes,
+              struct picotm_rwstate* lock_state,
+              struct picotm_error* error)
 {
-    fildes_fdtab_uninit(&fdtab);
+    return fildes_fdtab_ref_fildes(&self->fdtab, fildes, lock_state, error);
 }
 
 struct fd*
-fdtab_ref_fildes(int fildes, struct picotm_rwstate* lock_state,
-                 struct picotm_error* error)
+fildes_get_fd(struct fildes* self, int fildes)
 {
-    return fildes_fdtab_ref_fildes(&fdtab, fildes, lock_state, error);
-}
-
-struct fd*
-fdtab_get_fd(int fildes)
-{
-    return fildes_fdtab_get_fd(&fdtab, fildes);
+    return fildes_fdtab_get_fd(&self->fdtab, fildes);
 }
 
 void
-fdtab_try_rdlock(struct picotm_rwstate* lock_state,
-                 struct picotm_error* error)
+fildes_try_rdlock_fdtab(struct fildes* self,
+                        struct picotm_rwstate* lock_state,
+                        struct picotm_error* error)
 {
-    fildes_fdtab_try_rdlock(&fdtab, lock_state, error);
+    fildes_fdtab_try_rdlock(&self->fdtab, lock_state, error);
 }
 
 void
-fdtab_try_wrlock(struct picotm_rwstate* lock_state,
-                 struct picotm_error* error)
+fildes_try_wrlock_fdtab(struct fildes* self,
+                        struct picotm_rwstate* lock_state,
+                        struct picotm_error* error)
 {
-    fildes_fdtab_try_wrlock(&fdtab, lock_state, error);
+    fildes_fdtab_try_wrlock(&self->fdtab, lock_state, error);
 }
 
 void
-fdtab_unlock(struct picotm_rwstate* lock_state)
+fildes_unlock_fdtab(struct fildes* self, struct picotm_rwstate* lock_state)
 {
-    fildes_fdtab_unlock(&fdtab, lock_state);
+    fildes_fdtab_unlock(&self->fdtab, lock_state);
 }
 
 /*
  * ofdtab
  */
 
-static struct fildes_ofdtab ofdtab = FILDES_OFDTAB_INITIALIZER;
-
-static __attribute__ ((destructor)) void
-ofdtab_uninit(void)
-{
-    fildes_ofdtab_uninit(&ofdtab);
-}
-
 struct ofd*
-ofdtab_ref_fildes(int fildes, bool newly_created, struct picotm_error* error)
+fildes_ref_ofd(struct fildes* self, int fildes, bool newly_created,
+               struct picotm_error* error)
 {
-    return fildes_ofdtab_ref_fildes(&ofdtab, fildes, newly_created, error);
+    return fildes_ofdtab_ref_fildes(&self->ofdtab, fildes, newly_created,
+                                    error);
 }
 
 size_t
-ofdtab_index(struct ofd* ofd)
+fildes_ofd_index(struct fildes* self, struct ofd* ofd)
 {
-    return fildes_ofdtab_index(&ofdtab, ofd);
+    return fildes_ofdtab_index(&self->ofdtab, ofd);
 }
 
 /*
  * chrdevtab
  */
 
-static struct fildes_chrdevtab chrdevtab = FILDES_CHRDEVTAB_INITIALIZER;
-
-static __attribute__((destructor)) void
-chrdevtab_uninit(void)
-{
-    fildes_chrdevtab_uninit(&chrdevtab);
-}
-
 struct chrdev*
-chrdevtab_ref_fildes(int fildes, struct picotm_error* error)
+fildes_ref_chrdev(struct fildes* self, int fildes, struct picotm_error* error)
 {
-    return fildes_chrdevtab_ref_fildes(&chrdevtab, fildes, error);
+    return fildes_chrdevtab_ref_fildes(&self->chrdevtab, fildes, error);
 }
 
 size_t
-chrdevtab_index(struct chrdev* chrdev)
+fildes_chrdev_index(struct fildes* self, struct chrdev* chrdev)
 {
-    return fildes_chrdevtab_index(&chrdevtab, chrdev);
+    return fildes_chrdevtab_index(&self->chrdevtab, chrdev);
 }
 
 /*
  * dirtab
  */
 
-static struct fildes_dirtab dirtab = FILDES_DIRTAB_INITIALIZER;
-
-static __attribute__((destructor)) void
-dirtab_uninit(void)
-{
-    fildes_dirtab_uninit(&dirtab);
-}
-
 struct dir*
-dirtab_ref_fildes(int fildes, struct picotm_error* error)
+fildes_ref_dir(struct fildes* self, int fildes, struct picotm_error* error)
 {
-    return fildes_dirtab_ref_fildes(&dirtab, fildes, error);
+    return fildes_dirtab_ref_fildes(&self->dirtab, fildes, error);
 }
 
 size_t
-dirtab_index(struct dir* dir)
+fildes_dir_index(struct fildes* self, struct dir* dir)
 {
-    return fildes_dirtab_index(&dirtab, dir);
+    return fildes_dirtab_index(&self->dirtab, dir);
 }
 
 /*
  * fifotab
  */
 
-static struct fildes_fifotab fifotab = FILDES_FIFOTAB_INITIALIZER;
-
-static __attribute__((destructor)) void
-fifotab_uninit(void)
-{
-    fildes_fifotab_uninit(&fifotab);
-}
-
 struct fifo*
-fifotab_ref_fildes(int fildes, struct picotm_error* error)
+fildes_ref_fifo(struct fildes* self, int fildes, struct picotm_error* error)
 {
-    return fildes_fifotab_ref_fildes(&fifotab, fildes, error);
+    return fildes_fifotab_ref_fildes(&self->fifotab, fildes, error);
 }
 
 size_t
-fifotab_index(struct fifo* fifo)
+fildes_fifo_index(struct fildes* self, struct fifo* fifo)
 {
-    return fildes_fifotab_index(&fifotab, fifo);
+    return fildes_fifotab_index(&self->fifotab, fifo);
 }
 
 /*
  * regfiletab
  */
 
-static struct fildes_regfiletab regfiletab = FILDES_REGFILETAB_INITIALIZER;
-
-static __attribute__((destructor)) void
-regfiletab_uninit(void)
-{
-    fildes_regfiletab_uninit(&regfiletab);
-}
-
 struct regfile*
-regfiletab_ref_fildes(int fildes, struct picotm_error* error)
+fildes_ref_regfile(struct fildes* self, int fildes,
+                   struct picotm_error* error)
 {
-    return fildes_regfiletab_ref_fildes(&regfiletab, fildes, error);
+    return fildes_regfiletab_ref_fildes(&self->regfiletab, fildes, error);
 }
 
 size_t
-regfiletab_index(struct regfile* regfile)
+fildes_regfile_index(struct fildes* self, struct regfile* regfile)
 {
-    return fildes_regfiletab_index(&regfiletab, regfile);
+    return fildes_regfiletab_index(&self->regfiletab, regfile);
 }
 
 /*
  * sockettab
  */
 
-static struct fildes_sockettab sockettab = FILDES_SOCKETTAB_INITIALIZER;
-
-static __attribute__((destructor)) void
-sockettab_uninit(void)
-{
-    fildes_sockettab_uninit(&sockettab);
-}
-
 struct socket*
-sockettab_ref_fildes(int fildes, struct picotm_error* error)
+fildes_ref_socket(struct fildes* self, int fildes, struct picotm_error* error)
 {
-    return fildes_sockettab_ref_fildes(&sockettab, fildes, error);
+    return fildes_sockettab_ref_fildes(&self->sockettab, fildes, error);
 }
 
 size_t
-sockettab_index(struct socket* socket)
+fildes_socket_index(struct fildes* self, struct socket* socket)
 {
-    return fildes_sockettab_index(&sockettab, socket);
+    return fildes_sockettab_index(&self->sockettab, socket);
 }

@@ -29,11 +29,13 @@
 #include "fildes.h"
 
 void
-fdtab_tx_init(struct fdtab_tx* self)
+fdtab_tx_init(struct fdtab_tx* self, struct fildes* fildes)
 {
     assert(self);
 
     picotm_rwstate_init(&self->rwstate);
+
+    self->fildes = fildes;
 }
 
 void
@@ -49,7 +51,7 @@ fdtab_tx_try_rdlock(struct fdtab_tx* self, struct picotm_error* error)
 {
     assert(self);
 
-    fdtab_try_rdlock(&self->rwstate, error);
+    fildes_try_rdlock_fdtab(self->fildes, &self->rwstate, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -60,7 +62,7 @@ fdtab_tx_try_wrlock(struct fdtab_tx* self, struct picotm_error* error)
 {
     assert(self);
 
-    fdtab_try_wrlock(&self->rwstate, error);
+    fildes_try_wrlock_fdtab(self->fildes, &self->rwstate, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -72,12 +74,13 @@ fdtab_tx_ref_fildes(struct fdtab_tx* self, int fildes,
 {
     assert(self);
 
-    fdtab_try_rdlock(&self->rwstate, error);
+    fildes_try_rdlock_fdtab(self->fildes, &self->rwstate, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
 
-    struct fd* fd = fdtab_ref_fildes(fildes, &self->rwstate, error);
+    struct fd* fd = fildes_ref_fd(self->fildes, fildes, &self->rwstate,
+                                  error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
@@ -94,5 +97,5 @@ fdtab_tx_finish(struct fdtab_tx* self)
 {
     assert(self);
 
-    fdtab_unlock(&self->rwstate);
+    fildes_unlock_fdtab(self->fildes, &self->rwstate);
 }

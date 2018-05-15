@@ -52,6 +52,9 @@ struct fildes_fifotab {
 }
 
 void
+fildes_fifotab_init(struct fildes_fifotab* self, struct picotm_error* error);
+
+void
 fildes_fifotab_uninit(struct fildes_fifotab* self);
 
 /**

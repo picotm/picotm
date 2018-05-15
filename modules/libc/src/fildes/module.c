@@ -48,9 +48,10 @@ struct fildes_shared_state {
 }
 
 static void
-init_fildes_shared_state_fields(struct fildes_shared_state* shared)
+init_fildes_shared_state_fields(struct fildes_shared_state* shared,
+                                struct picotm_error* error)
 {
-    fildes_init(&shared->fildes);
+    fildes_init(&shared->fildes, error);
 }
 
 static void
@@ -65,7 +66,7 @@ first_ref_fildes_shared_state_cb(struct picotm_shared_ref16_obj* ref_obj,
 {
     struct fildes_shared_state* shared =
         picotm_containerof(ref_obj, struct fildes_shared_state, ref_obj);
-    init_fildes_shared_state_fields(shared);
+    init_fildes_shared_state_fields(shared, error);
 }
 
 static void

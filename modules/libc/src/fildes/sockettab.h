@@ -52,6 +52,10 @@ struct fildes_sockettab {
 }
 
 void
+fildes_sockettab_init(struct fildes_sockettab* self,
+                      struct picotm_error* error);
+
+void
 fildes_sockettab_uninit(struct fildes_sockettab* self);
 
 /**

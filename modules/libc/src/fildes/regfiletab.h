@@ -52,6 +52,10 @@ struct fildes_regfiletab {
 }
 
 void
+fildes_regfiletab_init(struct fildes_regfiletab* self,
+                       struct picotm_error* error);
+
+void
 fildes_regfiletab_uninit(struct fildes_regfiletab* self);
 
 /**

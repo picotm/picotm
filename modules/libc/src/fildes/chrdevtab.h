@@ -53,6 +53,10 @@ struct fildes_chrdevtab {
 }
 
 void
+fildes_chrdevtab_init(struct fildes_chrdevtab* self,
+                      struct picotm_error* error);
+
+void
 fildes_chrdevtab_uninit(struct fildes_chrdevtab* self);
 
 /**

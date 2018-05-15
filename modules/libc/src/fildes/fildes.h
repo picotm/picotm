@@ -25,8 +25,13 @@
 
 #pragma once
 
-#include <stdbool.h>
-#include <stddef.h>
+#include "chrdevtab.h"
+#include "dirtab.h"
+#include "fdtab.h"
+#include "fifotab.h"
+#include "ofdtab.h"
+#include "regfiletab.h"
+#include "sockettab.h"
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -47,10 +52,19 @@ struct regfile;
 struct socket;
 
 struct fildes {
+    struct fildes_fdtab fdtab;
+
+    struct fildes_ofdtab ofdtab;
+
+    struct fildes_chrdevtab chrdevtab;
+    struct fildes_dirtab dirtab;
+    struct fildes_fifotab fifotab;
+    struct fildes_regfiletab regfiletab;
+    struct fildes_sockettab sockettab;
 };
 
 void
-fildes_init(struct fildes* self);
+fildes_init(struct fildes* self, struct picotm_error* error);
 
 void
 fildes_uninit(struct fildes* self);
@@ -60,22 +74,25 @@ fildes_uninit(struct fildes* self);
  */
 
 struct fd*
-fdtab_ref_fildes(int fildes, struct picotm_rwstate* lock_state,
-                 struct picotm_error* error);
+fildes_ref_fd(struct fildes* self, int fildes,
+              struct picotm_rwstate* lock_state,
+              struct picotm_error* error);
 
 struct fd*
-fdtab_get_fd(int fildes);
+fildes_get_fd(struct fildes* self, int fildes);
 
 void
-fdtab_try_rdlock(struct picotm_rwstate* lock_state,
-                 struct picotm_error* error);
+fildes_try_rdlock_fdtab(struct fildes* self,
+                        struct picotm_rwstate* lock_state,
+                        struct picotm_error* error);
 
 void
-fdtab_try_wrlock(struct picotm_rwstate* lock_state,
-                 struct picotm_error* error);
+fildes_try_wrlock_fdtab(struct fildes* self,
+                        struct picotm_rwstate* lock_state,
+                        struct picotm_error* error);
 
 void
-fdtab_unlock(struct picotm_rwstate* lock_state);
+fildes_unlock_fdtab(struct fildes* self, struct picotm_rwstate* lock_state);
 
 /*
  * ofdtab
@@ -106,7 +123,8 @@ fdtab_unlock(struct picotm_rwstate* lock_state);
  * and open file descriptions.
  */
 struct ofd*
-ofdtab_ref_fildes(int fildes, bool newly_created, struct picotm_error* error);
+fildes_ref_ofd(struct fildes* self, int fildes, bool newly_created,
+               struct picotm_error* error);
 
 /**
  * Returns the index of an ofd structure within the ofd table.
@@ -115,7 +133,7 @@ ofdtab_ref_fildes(int fildes, bool newly_created, struct picotm_error* error);
  * \returns The ofd structure's index in the ofd table.
  */
 size_t
-ofdtab_index(struct ofd* ofd);
+fildes_ofd_index(struct fildes* self, struct ofd* ofd);
 
 /*
  * chrdevtab
@@ -130,7 +148,8 @@ ofdtab_index(struct ofd* ofd);
  *          descriptor's character device.
  */
 struct chrdev*
-chrdevtab_ref_fildes(int fildes, struct picotm_error* error);
+fildes_ref_chrdev(struct fildes* self, int fildes,
+                  struct picotm_error* error);
 
 /**
  * Returns the index of an chrdev structure within the chrdev table.
@@ -139,7 +158,7 @@ chrdevtab_ref_fildes(int fildes, struct picotm_error* error);
  * \returns The chrdev structure's index in the chrdev table.
  */
 size_t
-chrdevtab_index(struct chrdev* chrdev);
+fildes_chrdev_index(struct fildes* self, struct chrdev* chrdev);
 
 /*
  * dirtab
@@ -154,7 +173,7 @@ chrdevtab_index(struct chrdev* chrdev);
  *          descriptor's directory.
  */
 struct dir*
-dirtab_ref_fildes(int fildes, struct picotm_error* error);
+fildes_ref_dir(struct fildes* self, int fildes, struct picotm_error* error);
 
 /**
  * Returns the index of a dir structure within the dir table.
@@ -163,7 +182,7 @@ dirtab_ref_fildes(int fildes, struct picotm_error* error);
  * \returns The dir structure's index in the dir table.
  */
 size_t
-dirtab_index(struct dir* dir);
+fildes_dir_index(struct fildes* self, struct dir* dir);
 
 /*
  * fifotab
@@ -178,7 +197,7 @@ dirtab_index(struct dir* dir);
  *          descriptor's FIFO buffer.
  */
 struct fifo*
-fifotab_ref_fildes(int fildes, struct picotm_error* error);
+fildes_ref_fifo(struct fildes* self, int fildes, struct picotm_error* error);
 
 /**
  * Returns the index of an fifo structure within the fifo table.
@@ -187,7 +206,7 @@ fifotab_ref_fildes(int fildes, struct picotm_error* error);
  * \returns The fifo structure's index in the fifo table.
  */
 size_t
-fifotab_index(struct fifo* fifo);
+fildes_fifo_index(struct fildes* self, struct fifo* fifo);
 
 /*
  * regfiletab
@@ -202,7 +221,8 @@ fifotab_index(struct fifo* fifo);
  *          descriptor's regular file.
  */
 struct regfile*
-regfiletab_ref_fildes(int fildes, struct picotm_error* error);
+fildes_ref_regfile(struct fildes* self, int fildes,
+                   struct picotm_error* error);
 
 /**
  * Returns the index of an regfile structure within the regfile table.
@@ -211,7 +231,7 @@ regfiletab_ref_fildes(int fildes, struct picotm_error* error);
  * \returns The regfile structure's index in the regfile table.
  */
 size_t
-regfiletab_index(struct regfile* regfile);
+fildes_regfile_index(struct fildes* self, struct regfile* regfile);
 
 /*
  * sockettab
@@ -226,7 +246,8 @@ regfiletab_index(struct regfile* regfile);
  *          descriptor's socket.
  */
 struct socket*
-sockettab_ref_fildes(int fildes, struct picotm_error* error);
+fildes_ref_socket(struct fildes* self, int fildes,
+                  struct picotm_error* error);
 
 /**
  * Returns the index of an socket structure within the socket table.
@@ -235,4 +256,4 @@ sockettab_ref_fildes(int fildes, struct picotm_error* error);
  * \returns The socket structure's index in the socket table.
  */
 size_t
-sockettab_index(struct socket* socket);
+fildes_socket_index(struct fildes* self, struct socket* socket);

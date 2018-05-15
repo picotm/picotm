@@ -52,6 +52,9 @@ struct fildes_dirtab {
 }
 
 void
+fildes_dirtab_init(struct fildes_dirtab* self, struct picotm_error* error);
+
+void
 fildes_dirtab_uninit(struct fildes_dirtab* self);
 
 /**

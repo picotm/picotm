@@ -32,6 +32,18 @@
 #include <string.h>
 #include "range.h"
 
+void
+fildes_ofdtab_init(struct fildes_ofdtab* self, struct picotm_error* error)
+{
+    self->len = 0;
+
+    int err = pthread_rwlock_init(&self->rwlock, NULL);
+    if (err) {
+        picotm_error_set_errno(error, err);
+        return;
+    }
+}
+
 static size_t
 ofd_uninit_walk_cb(void* ofd, struct picotm_error* error)
 {

@@ -28,14 +28,17 @@
 #include "picotm/picotm-lib-rwstate.h"
 #include <stdbool.h>
 
+struct fildes;
 struct picotm_error;
 
 struct fdtab_tx {
     struct picotm_rwstate rwstate;
+
+    struct fildes* fildes;
 };
 
 void
-fdtab_tx_init(struct fdtab_tx* self);
+fdtab_tx_init(struct fdtab_tx* self, struct fildes* fildes);
 
 void
 fdtab_tx_uninit(struct fdtab_tx* self);
