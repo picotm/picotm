@@ -33,9 +33,19 @@
 #include "range.h"
 #include "regfile.h"
 
-static struct regfile   regfiletab[MAXNUMFD];
-static size_t           regfiletab_len = 0;
-static pthread_rwlock_t regfiletab_rwlock = PTHREAD_RWLOCK_INITIALIZER;
+struct fildes_regfiletab {
+    struct regfile   tab[MAXNUMFD];
+    size_t           len;
+    pthread_rwlock_t rwlock;
+};
+
+#define FILDES_REGFILETAB_INITIALIZER       \
+{                                           \
+    .len = 0,                               \
+    .rwlock = PTHREAD_RWLOCK_INITIALIZER    \
+}
+
+static struct fildes_regfiletab regfiletab = FILDES_REGFILETAB_INITIALIZER;
 
 /* Destructor */
 
@@ -53,10 +63,11 @@ regfiletab_uninit(void)
 {
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    picotm_tabwalk_1(regfiletab, regfiletab_len, sizeof(regfiletab[0]),
+    picotm_tabwalk_1(regfiletab.tab, regfiletab.len,
+                     sizeof(regfiletab.tab[0]),
                      regfiletab_regfile_uninit_walk, &error);
 
-    pthread_rwlock_destroy(&regfiletab_rwlock);
+    pthread_rwlock_destroy(&regfiletab.rwlock);
 }
 
 /* End of destructor */
@@ -64,7 +75,7 @@ regfiletab_uninit(void)
 static void
 rdlock_regfiletab(struct picotm_error* error)
 {
-    int err = pthread_rwlock_rdlock(&regfiletab_rwlock);
+    int err = pthread_rwlock_rdlock(&regfiletab.rwlock);
     if (err) {
         picotm_error_set_errno(error, err);
         return;
@@ -74,7 +85,7 @@ rdlock_regfiletab(struct picotm_error* error)
 static void
 wrlock_regfiletab(struct picotm_error* error)
 {
-    int err = pthread_rwlock_wrlock(&regfiletab_rwlock);
+    int err = pthread_rwlock_wrlock(&regfiletab.rwlock);
     if (err) {
         picotm_error_set_errno(error, err);
         return;
@@ -85,7 +96,7 @@ static void
 unlock_regfiletab(void)
 {
     do {
-        int err = pthread_rwlock_unlock(&regfiletab_rwlock);
+        int err = pthread_rwlock_unlock(&regfiletab.rwlock);
         if (err) {
             struct picotm_error error = PICOTM_ERROR_INITIALIZER;
             picotm_error_set_errno(&error, err);
@@ -101,20 +112,20 @@ unlock_regfiletab(void)
 static struct regfile*
 append_empty_regfile(struct picotm_error* error)
 {
-    if (regfiletab_len == picotm_arraylen(regfiletab)) {
+    if (regfiletab.len == picotm_arraylen(regfiletab.tab)) {
         /* Return error if not enough ids available */
         picotm_error_set_conflicting(error, NULL);
         return NULL;
     }
 
-    struct regfile* regfile = regfiletab + regfiletab_len;
+    struct regfile* regfile = regfiletab.tab + regfiletab.len;
 
     regfile_init(regfile, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
 
-    ++regfiletab_len;
+    ++regfiletab.len;
 
     return regfile;
 }
@@ -123,9 +134,9 @@ append_empty_regfile(struct picotm_error* error)
 static struct regfile*
 find_by_id(const struct file_id* id)
 {
-    struct regfile *regfile_beg = picotm_arraybeg(regfiletab);
-    const struct regfile* regfile_end = picotm_arrayat(regfiletab,
-                                                       regfiletab_len);
+    struct regfile *regfile_beg = picotm_arraybeg(regfiletab.tab);
+    const struct regfile* regfile_end = picotm_arrayat(regfiletab.tab,
+                                                       regfiletab.len);
 
     while (regfile_beg < regfile_end) {
 
@@ -144,9 +155,9 @@ find_by_id(const struct file_id* id)
 static struct regfile*
 search_by_id(const struct file_id* id, int fildes, struct picotm_error* error)
 {
-    struct regfile* regfile_beg = picotm_arraybeg(regfiletab);
-    const struct regfile* regfile_end = picotm_arrayat(regfiletab,
-                                                       regfiletab_len);
+    struct regfile* regfile_beg = picotm_arraybeg(regfiletab.tab);
+    const struct regfile* regfile_end = picotm_arrayat(regfiletab.tab,
+                                                       regfiletab.len);
 
     while (regfile_beg < regfile_end) {
 
@@ -250,5 +261,5 @@ err_search_by_id:
 size_t
 regfiletab_index(struct regfile* regfile)
 {
-    return regfile - regfiletab;
+    return regfile - regfiletab.tab;
 }
