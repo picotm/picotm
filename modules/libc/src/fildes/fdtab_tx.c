@@ -26,7 +26,7 @@
 #include "fdtab_tx.h"
 #include "picotm/picotm-error.h"
 #include <assert.h>
-#include "fdtab.h"
+#include "fildes.h"
 
 void
 fdtab_tx_init(struct fdtab_tx* self)

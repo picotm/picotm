@@ -96,6 +96,8 @@ libpicotm_c_la_SOURCES = allocator/allocator_event.c \
                          fildes/fifotab.h \
                          fildes/fifo_tx.c \
                          fildes/fifo_tx.h \
+                         fildes/fildes.c \
+                         fildes/fildes.h \
                          fildes/fildes_event.c \
                          fildes/fildes_event.h \
                          fildes/fildes_log.c \

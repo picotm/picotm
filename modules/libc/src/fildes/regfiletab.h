@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -25,7 +25,9 @@
 
 #pragma once
 
+#include <pthread.h>
 #include <stddef.h>
+#include "regfile.h"
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -36,24 +38,40 @@
  */
 
 struct picotm_error;
-struct regfile;
+
+struct fildes_regfiletab {
+    struct regfile   tab[MAXNUMFD];
+    size_t           len;
+    pthread_rwlock_t rwlock;
+};
+
+#define FILDES_REGFILETAB_INITIALIZER       \
+{                                           \
+    .len = 0,                               \
+    .rwlock = PTHREAD_RWLOCK_INITIALIZER    \
+}
+
+void
+fildes_regfiletab_uninit(struct fildes_regfiletab* self);
 
 /**
  * Returns a reference to a regfile structure for the given file descriptor.
- *
+ * \param       self    The regfile table.
  * \param       fildes  A file descriptor.
  * \param[out]  error   Returns an error to the caller.
  * \returns A referenced instance of `struct regfile` that refers to the file
  *          descriptor's regular file.
  */
 struct regfile*
-regfiletab_ref_fildes(int fildes, struct picotm_error* error);
+fildes_regfiletab_ref_fildes(struct fildes_regfiletab* self, int fildes,
+                             struct picotm_error* error);
 
 /**
  * Returns the index of an regfile structure within the regfile table.
- *
+ * \param   self    The regfile table.
  * \param   regfile An regfile structure.
  * \returns The regfile structure's index in the regfile table.
  */
 size_t
-regfiletab_index(struct regfile* regfile);
+fildes_regfiletab_index(struct fildes_regfiletab* self,
+                        struct regfile* regfile);

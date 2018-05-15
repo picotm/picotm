@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -25,7 +25,9 @@
 
 #pragma once
 
+#include <pthread.h>
 #include <stddef.h>
+#include "socket.h"
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -36,24 +38,39 @@
  */
 
 struct picotm_error;
-struct socket;
+
+struct fildes_sockettab {
+    struct socket    tab[MAXNUMFD];
+    size_t           len;
+    pthread_rwlock_t rwlock;
+};
+
+#define FILDES_SOCKETTAB_INITIALIZER        \
+{                                           \
+    .len = 0,                               \
+    .rwlock = PTHREAD_RWLOCK_INITIALIZER    \
+}
+
+void
+fildes_sockettab_uninit(struct fildes_sockettab* self);
 
 /**
  * Returns a reference to a socket structure for the given file descriptor.
- *
+ * \param       self    The socket table.
  * \param       fildes  A file descriptor.
  * \param[out]  error   Returns an error to caller.
  * \returns A referenced instance of `struct socket` that refers to the file
  *          descriptor's socket.
  */
 struct socket*
-sockettab_ref_fildes(int fildes, struct picotm_error* error);
+fildes_sockettab_ref_fildes(struct fildes_sockettab* self, int fildes,
+                            struct picotm_error* error);
 
 /**
  * Returns the index of an socket structure within the socket table.
- *
- * \param   socket An socket structure.
+ * \param   self    The socket table.
+ * \param   socket  An socket structure.
  * \returns The socket structure's index in the socket table.
  */
 size_t
-sockettab_index(struct socket* socket);
+fildes_sockettab_index(struct fildes_sockettab* self, struct socket* socket);

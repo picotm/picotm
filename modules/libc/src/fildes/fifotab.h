@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -25,7 +25,9 @@
 
 #pragma once
 
+#include <pthread.h>
 #include <stddef.h>
+#include "fifo.h"
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -35,25 +37,40 @@
  * \endcond
  */
 
-struct fifo;
 struct picotm_error;
+
+struct fildes_fifotab {
+    struct fifo      tab[MAXNUMFD];
+    size_t           len;
+    pthread_rwlock_t rwlock;
+};
+
+#define FILDES_FIFOTAB_INITIALIZER          \
+{                                           \
+    .len = 0,                               \
+    .rwlock = PTHREAD_RWLOCK_INITIALIZER    \
+}
+
+void
+fildes_fifotab_uninit(struct fildes_fifotab* self);
 
 /**
  * Returns a reference to a fifo structure for the given file descriptor.
- *
+ * \param       self    The fifo table.
  * \param       fildes  A file descriptor.
  * \param[out]  error   Returns an errorto the caller.
  * \returns A referenced instance of `struct fifo` that refers to the file
  *          descriptor's FIFO buffer.
  */
 struct fifo*
-fifotab_ref_fildes(int fildes, struct picotm_error* error);
+fildes_fifotab_ref_fildes(struct fildes_fifotab* self, int fildes,
+                          struct picotm_error* error);
 
 /**
  * Returns the index of an fifo structure within the fifo table.
- *
- * \param   fifo An fifo structure.
+ * \param   self    The fifo table.
+ * \param   fifo    An fifo structure.
  * \returns The fifo structure's index in the fifo table.
  */
 size_t
-fifotab_index(struct fifo* fifo);
+fildes_fifotab_index(struct fildes_fifotab* self, struct fifo* fifo);

@@ -26,26 +26,10 @@
 #include "fdtab.h"
 #include "picotm/picotm-error.h"
 #include "picotm/picotm-lib-array.h"
-#include "picotm/picotm-lib-rwlock.h"
 #include "picotm/picotm-lib-rwstate.h"
 #include "picotm/picotm-lib-tab.h"
 #include "picotm/picotm-module.h"
-#include <pthread.h>
 #include "fd.h"
-
-struct fildes_fdtab {
-    struct fd                tab[MAXNUMFD];
-    size_t                   len;
-    pthread_rwlock_t         rwlock;
-    struct picotm_rwlock     lock;
-};
-
-#define FILDES_FDTAB_INITIALIZER            \
-{                                           \
-    .len = 0,                               \
-    .rwlock = PTHREAD_RWLOCK_INITIALIZER,   \
-    .lock = PICOTM_RWLOCK_INITIALIZER       \
-}
 
 static size_t
 fd_uninit_walk_cb(void* fd, struct picotm_error* error)
@@ -54,7 +38,7 @@ fd_uninit_walk_cb(void* fd, struct picotm_error* error)
     return 1;
 }
 
-static void
+void
 fildes_fdtab_uninit(struct fildes_fdtab* self)
 {
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
@@ -225,49 +209,4 @@ fildes_fdtab_unlock(struct fildes_fdtab* self,
                     struct picotm_rwstate* lock_state)
 {
     picotm_rwstate_unlock(lock_state, &self->lock);
-}
-
-/*
- * Global state
- */
-
-static struct fildes_fdtab fdtab = FILDES_FDTAB_INITIALIZER;
-
-static __attribute__((destructor)) void
-fdtab_uninit(void)
-{
-    fildes_fdtab_uninit(&fdtab);
-}
-
-struct fd*
-fdtab_ref_fildes(int fildes, struct picotm_rwstate* lock_state,
-                 struct picotm_error* error)
-{
-    return fildes_fdtab_ref_fildes(&fdtab, fildes, lock_state, error);
-}
-
-struct fd*
-fdtab_get_fd(int fildes)
-{
-    return fildes_fdtab_get_fd(&fdtab, fildes);
-}
-
-void
-fdtab_try_rdlock(struct picotm_rwstate* lock_state,
-                 struct picotm_error* error)
-{
-    fildes_fdtab_try_rdlock(&fdtab, lock_state, error);
-}
-
-void
-fdtab_try_wrlock(struct picotm_rwstate* lock_state,
-                 struct picotm_error* error)
-{
-    fildes_fdtab_try_wrlock(&fdtab, lock_state, error);
-}
-
-void
-fdtab_unlock(struct picotm_rwstate* lock_state)
-{
-    fildes_fdtab_unlock(&fdtab, lock_state);
 }

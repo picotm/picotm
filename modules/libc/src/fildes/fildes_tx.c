@@ -43,6 +43,7 @@
 #include "dirtab.h"
 #include "fifo.h"
 #include "fifotab.h"
+#include "fildes.h"
 #include "fildes_log.h"
 #include "ofdtab.h"
 #include "openop.h"
