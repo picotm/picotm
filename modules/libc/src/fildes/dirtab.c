@@ -33,9 +33,19 @@
 #include "dir.h"
 #include "range.h"
 
-static struct dir       dirtab[MAXNUMFD];
-static size_t           dirtab_len = 0;
-static pthread_rwlock_t dirtab_rwlock = PTHREAD_RWLOCK_INITIALIZER;
+struct fildes_dirtab {
+    struct dir       tab[MAXNUMFD];
+    size_t           len;
+    pthread_rwlock_t rwlock;
+};
+
+#define FILDES_DIRTAB_INITIALIZER           \
+{                                           \
+    .len = 0,                               \
+    .rwlock = PTHREAD_RWLOCK_INITIALIZER    \
+}
+
+static struct fildes_dirtab dirtab = FILDES_DIRTAB_INITIALIZER;
 
 /* Destructor */
 
@@ -53,10 +63,10 @@ dirtab_uninit(void)
 {
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    picotm_tabwalk_1(dirtab, dirtab_len, sizeof(dirtab[0]),
+    picotm_tabwalk_1(dirtab.tab, dirtab.len, sizeof(dirtab.tab[0]),
                      dirtab_dir_uninit_walk, &error);
 
-    pthread_rwlock_destroy(&dirtab_rwlock);
+    pthread_rwlock_destroy(&dirtab.rwlock);
 }
 
 /* End of destructor */
@@ -64,7 +74,7 @@ dirtab_uninit(void)
 static void
 rdlock_dirtab(struct picotm_error* error)
 {
-    int err = pthread_rwlock_rdlock(&dirtab_rwlock);
+    int err = pthread_rwlock_rdlock(&dirtab.rwlock);
     if (err) {
         picotm_error_set_errno(error, err);
         return;
@@ -74,7 +84,7 @@ rdlock_dirtab(struct picotm_error* error)
 static void
 wrlock_dirtab(struct picotm_error* error)
 {
-    int err = pthread_rwlock_wrlock(&dirtab_rwlock);
+    int err = pthread_rwlock_wrlock(&dirtab.rwlock);
     if (err) {
         picotm_error_set_errno(error, err);
         return;
@@ -85,7 +95,7 @@ static void
 unlock_dirtab(void)
 {
     do {
-        int err = pthread_rwlock_unlock(&dirtab_rwlock);
+        int err = pthread_rwlock_unlock(&dirtab.rwlock);
         if (err) {
             struct picotm_error error = PICOTM_ERROR_INITIALIZER;
             picotm_error_set_errno(&error, err);
@@ -101,20 +111,20 @@ unlock_dirtab(void)
 static struct dir*
 append_empty_dir(struct picotm_error* error)
 {
-    if (dirtab_len == picotm_arraylen(dirtab)) {
+    if (dirtab.len == picotm_arraylen(dirtab.tab)) {
         /* Return error if not enough ids available */
         picotm_error_set_conflicting(error, NULL);
         return NULL;
     }
 
-    struct dir* dir = dirtab + dirtab_len;
+    struct dir* dir = dirtab.tab + dirtab.len;
 
     dir_init(dir, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
 
-    ++dirtab_len;
+    ++dirtab.len;
 
     return dir;
 }
@@ -123,8 +133,8 @@ append_empty_dir(struct picotm_error* error)
 static struct dir*
 find_by_id(const struct file_id* id)
 {
-    struct dir *dir_beg = picotm_arraybeg(dirtab);
-    const struct dir* dir_end = picotm_arrayat(dirtab, dirtab_len);
+    struct dir *dir_beg = picotm_arraybeg(dirtab.tab);
+    const struct dir* dir_end = picotm_arrayat(dirtab.tab, dirtab.len);
 
     while (dir_beg < dir_end) {
 
@@ -143,8 +153,8 @@ find_by_id(const struct file_id* id)
 static struct dir*
 search_by_id(const struct file_id* id, int fildes, struct picotm_error* error)
 {
-    struct dir* dir_beg = picotm_arraybeg(dirtab);
-    const struct dir* dir_end = picotm_arrayat(dirtab, dirtab_len);
+    struct dir* dir_beg = picotm_arraybeg(dirtab.tab);
+    const struct dir* dir_end = picotm_arrayat(dirtab.tab, dirtab.len);
 
     while (dir_beg < dir_end) {
 
@@ -246,5 +256,5 @@ err_search_by_id:
 size_t
 dirtab_index(struct dir* dir)
 {
-    return dir - dirtab;
+    return dir - dirtab.tab;
 }
