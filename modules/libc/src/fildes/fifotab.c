@@ -45,36 +45,28 @@ struct fildes_fifotab {
     .rwlock = PTHREAD_RWLOCK_INITIALIZER    \
 }
 
-static struct fildes_fifotab fifotab = FILDES_FIFOTAB_INITIALIZER;
-
-/* Destructor */
-
-static void fifotab_uninit(void) __attribute__ ((destructor));
-
 static size_t
-fifotab_fifo_uninit_walk(void* fifo, struct picotm_error* error)
+fifo_uninit_walk_cb(void* fifo, struct picotm_error* error)
 {
     fifo_uninit(fifo);
     return 1;
 }
 
 static void
-fifotab_uninit(void)
+fildes_fifotab_uninit(struct fildes_fifotab* self)
 {
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    picotm_tabwalk_1(fifotab.tab, fifotab.len, sizeof(fifotab.tab[0]),
-                     fifotab_fifo_uninit_walk, &error);
+    picotm_tabwalk_1(self->tab, self->len, sizeof(self->tab[0]),
+                     fifo_uninit_walk_cb, &error);
 
-    pthread_rwlock_destroy(&fifotab.rwlock);
+    pthread_rwlock_destroy(&self->rwlock);
 }
 
-/* End of destructor */
-
 static void
-rdlock_fifotab(struct picotm_error* error)
+rdlock_fifotab(struct fildes_fifotab* fifotab, struct picotm_error* error)
 {
-    int err = pthread_rwlock_rdlock(&fifotab.rwlock);
+    int err = pthread_rwlock_rdlock(&fifotab->rwlock);
     if (err) {
         picotm_error_set_errno(error, err);
         return;
@@ -82,9 +74,9 @@ rdlock_fifotab(struct picotm_error* error)
 }
 
 static void
-wrlock_fifotab(struct picotm_error* error)
+wrlock_fifotab(struct fildes_fifotab* fifotab, struct picotm_error* error)
 {
-    int err = pthread_rwlock_wrlock(&fifotab.rwlock);
+    int err = pthread_rwlock_wrlock(&fifotab->rwlock);
     if (err) {
         picotm_error_set_errno(error, err);
         return;
@@ -92,10 +84,10 @@ wrlock_fifotab(struct picotm_error* error)
 }
 
 static void
-unlock_fifotab(void)
+unlock_fifotab(struct fildes_fifotab* fifotab)
 {
     do {
-        int err = pthread_rwlock_unlock(&fifotab.rwlock);
+        int err = pthread_rwlock_unlock(&fifotab->rwlock);
         if (err) {
             struct picotm_error error = PICOTM_ERROR_INITIALIZER;
             picotm_error_set_errno(&error, err);
@@ -109,32 +101,32 @@ unlock_fifotab(void)
 
 /* requires a writer lock */
 static struct fifo*
-append_empty_fifo(struct picotm_error* error)
+append_empty_fifo(struct fildes_fifotab* fifotab, struct picotm_error* error)
 {
-    if (fifotab.len == picotm_arraylen(fifotab.tab)) {
+    if (fifotab->len == picotm_arraylen(fifotab->tab)) {
         /* Return error if not enough ids available */
         picotm_error_set_conflicting(error, NULL);
         return NULL;
     }
 
-    struct fifo* fifo = fifotab.tab + fifotab.len;
+    struct fifo* fifo = fifotab->tab + fifotab->len;
 
     fifo_init(fifo, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
 
-    ++fifotab.len;
+    ++fifotab->len;
 
     return fifo;
 }
 
 /* requires reader lock */
 static struct fifo*
-find_by_id(const struct file_id* id)
+find_by_id(struct fildes_fifotab* fifotab, const struct file_id* id)
 {
-    struct fifo *fifo_beg = picotm_arraybeg(fifotab.tab);
-    const struct fifo* fifo_end = picotm_arrayat(fifotab.tab, fifotab.len);
+    struct fifo *fifo_beg = picotm_arraybeg(fifotab->tab);
+    const struct fifo* fifo_end = picotm_arrayat(fifotab->tab, fifotab->len);
 
     while (fifo_beg < fifo_end) {
 
@@ -151,15 +143,16 @@ find_by_id(const struct file_id* id)
 
 /* requires writer lock */
 static struct fifo*
-search_by_id(const struct file_id* id, int fildes, struct picotm_error* error)
+search_by_id(struct fildes_fifotab* fifotab, const struct file_id* id,
+             int fildes, struct picotm_error* error)
 {
-    struct fifo* fifo_beg = picotm_arraybeg(fifotab.tab);
-    const struct fifo* fifo_end = picotm_arrayat(fifotab.tab, fifotab.len);
+    struct fifo* fifo_beg = picotm_arraybeg(fifotab->tab);
+    const struct fifo* fifo_end = picotm_arrayat(fifotab->tab, fifotab->len);
 
     while (fifo_beg < fifo_end) {
 
         const int cmp = fifo_cmp_and_ref_or_set_up(fifo_beg, id, fildes,
-                                                     error);
+                                                   error);
         if (!cmp) {
             if (picotm_error_is_set(error)) {
                 return NULL;
@@ -173,8 +166,9 @@ search_by_id(const struct file_id* id, int fildes, struct picotm_error* error)
     return NULL;
 }
 
-struct fifo*
-fifotab_ref_fildes(int fildes, struct picotm_error* error)
+static struct fifo*
+fildes_fifotab_ref_fildes(struct fildes_fifotab* self, int fildes,
+                          struct picotm_error* error)
 {
     struct file_id id;
     file_id_init_from_fildes(&id, fildes, error);
@@ -182,33 +176,32 @@ fifotab_ref_fildes(int fildes, struct picotm_error* error)
         return NULL;
     }
 
-
     /* Try to find an existing fifo structure with the given id.
      */
 
-    rdlock_fifotab(error);
+    rdlock_fifotab(self, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
 
-    struct fifo* fifo = find_by_id(&id);
+    struct fifo* fifo = find_by_id(self, &id);
     if (fifo) {
         goto unlock; /* found fifo for id; return */
     }
 
-    unlock_fifotab();
+    unlock_fifotab(self);
 
     /* Not found entry; acquire writer lock to create a new entry in
      * the fifo table.
      */
 
-    wrlock_fifotab(error);
+    wrlock_fifotab(self, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
 
     /* Re-try find operation; maybe element was added meanwhile. */
-    fifo = find_by_id(&id);
+    fifo = find_by_id(self, &id);
     if (fifo) {
         goto unlock; /* found fifo for id; return */
     }
@@ -220,7 +213,7 @@ fifotab_ref_fildes(int fildes, struct picotm_error* error)
     struct file_id empty_id;
     file_id_clear(&empty_id);
 
-    fifo = search_by_id(&empty_id, fildes, error);
+    fifo = search_by_id(self, &empty_id, fildes, error);
     if (picotm_error_is_set(error)) {
         goto err_search_by_id;
     } else if (fifo) {
@@ -231,7 +224,7 @@ fifotab_ref_fildes(int fildes, struct picotm_error* error)
      * end of the table.
      */
 
-    fifo = append_empty_fifo(error);
+    fifo = append_empty_fifo(self, error);
     if (picotm_error_is_set(error)) {
         goto err_append_empty_fifo;
     }
@@ -244,19 +237,43 @@ fifotab_ref_fildes(int fildes, struct picotm_error* error)
     }
 
 unlock:
-    unlock_fifotab();
+    unlock_fifotab(self);
 
     return fifo;
 
 err_fifo_ref_or_set_up:
 err_append_empty_fifo:
 err_search_by_id:
-    unlock_fifotab();
+    unlock_fifotab(self);
     return NULL;
+}
+
+static size_t
+fildes_fifotab_index(struct fildes_fifotab* self, struct fifo* fifo)
+{
+    return fifo - self->tab;
+}
+
+/*
+ * Global state
+ */
+
+static struct fildes_fifotab fifotab = FILDES_FIFOTAB_INITIALIZER;
+
+static __attribute__((destructor)) void
+fifotab_uninit(void)
+{
+    fildes_fifotab_uninit(&fifotab);
+}
+
+struct fifo*
+fifotab_ref_fildes(int fildes, struct picotm_error* error)
+{
+    return fildes_fifotab_ref_fildes(&fifotab, fildes, error);
 }
 
 size_t
 fifotab_index(struct fifo* fifo)
 {
-    return fifo - fifotab.tab;
+    return fildes_fifotab_index(&fifotab, fifo);
 }
