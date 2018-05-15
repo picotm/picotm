@@ -33,9 +33,19 @@
 #include "range.h"
 #include "socket.h"
 
-static struct socket    sockettab[MAXNUMFD];
-static size_t           sockettab_len = 0;
-static pthread_rwlock_t sockettab_rwlock = PTHREAD_RWLOCK_INITIALIZER;
+struct fildes_sockettab {
+    struct socket    tab[MAXNUMFD];
+    size_t           len;
+    pthread_rwlock_t rwlock;
+};
+
+#define FILDES_SOCKETTAB_INITIALIZER        \
+{                                           \
+    .len = 0,                               \
+    .rwlock = PTHREAD_RWLOCK_INITIALIZER    \
+}
+
+static struct fildes_sockettab sockettab = FILDES_SOCKETTAB_INITIALIZER;
 
 /* Destructor */
 
@@ -53,10 +63,10 @@ sockettab_uninit(void)
 {
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    picotm_tabwalk_1(sockettab, sockettab_len, sizeof(sockettab[0]),
+    picotm_tabwalk_1(sockettab.tab, sockettab.len, sizeof(sockettab.tab[0]),
                      sockettab_socket_uninit_walk, &error);
 
-    pthread_rwlock_destroy(&sockettab_rwlock);
+    pthread_rwlock_destroy(&sockettab.rwlock);
 }
 
 /* End of destructor */
@@ -64,7 +74,7 @@ sockettab_uninit(void)
 static void
 rdlock_sockettab(struct picotm_error* error)
 {
-    int err = pthread_rwlock_rdlock(&sockettab_rwlock);
+    int err = pthread_rwlock_rdlock(&sockettab.rwlock);
     if (err) {
         picotm_error_set_errno(error, err);
         return;
@@ -74,7 +84,7 @@ rdlock_sockettab(struct picotm_error* error)
 static void
 wrlock_sockettab(struct picotm_error* error)
 {
-    int err = pthread_rwlock_wrlock(&sockettab_rwlock);
+    int err = pthread_rwlock_wrlock(&sockettab.rwlock);
     if (err) {
         picotm_error_set_errno(error, err);
         return;
@@ -85,7 +95,7 @@ static void
 unlock_sockettab(void)
 {
     do {
-        int err = pthread_rwlock_unlock(&sockettab_rwlock);
+        int err = pthread_rwlock_unlock(&sockettab.rwlock);
         if (err) {
             struct picotm_error error = PICOTM_ERROR_INITIALIZER;
             picotm_error_set_errno(&error, err);
@@ -101,20 +111,20 @@ unlock_sockettab(void)
 static struct socket*
 append_empty_socket(struct picotm_error* error)
 {
-    if (sockettab_len == picotm_arraylen(sockettab)) {
+    if (sockettab.len == picotm_arraylen(sockettab.tab)) {
         /* Return error if not enough ids available */
         picotm_error_set_conflicting(error, NULL);
         return NULL;
     }
 
-    struct socket* socket = sockettab + sockettab_len;
+    struct socket* socket = sockettab.tab + sockettab.len;
 
     socket_init(socket, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
 
-    ++sockettab_len;
+    ++sockettab.len;
 
     return socket;
 }
@@ -123,9 +133,9 @@ append_empty_socket(struct picotm_error* error)
 static struct socket*
 find_by_id(const struct file_id* id)
 {
-    struct socket *socket_beg = picotm_arraybeg(sockettab);
-    const struct socket* socket_end = picotm_arrayat(sockettab,
-                                                     sockettab_len);
+    struct socket *socket_beg = picotm_arraybeg(sockettab.tab);
+    const struct socket* socket_end = picotm_arrayat(sockettab.tab,
+                                                     sockettab.len);
 
     while (socket_beg < socket_end) {
 
@@ -144,9 +154,9 @@ find_by_id(const struct file_id* id)
 static struct socket*
 search_by_id(const struct file_id* id, int fildes, struct picotm_error* error)
 {
-    struct socket* socket_beg = picotm_arraybeg(sockettab);
-    const struct socket* socket_end = picotm_arrayat(sockettab,
-                                                     sockettab_len);
+    struct socket* socket_beg = picotm_arraybeg(sockettab.tab);
+    const struct socket* socket_end = picotm_arrayat(sockettab.tab,
+                                                     sockettab.len);
 
     while (socket_beg < socket_end) {
 
@@ -249,5 +259,5 @@ err_search_by_id:
 size_t
 sockettab_index(struct socket* socket)
 {
-    return socket - sockettab;
+    return socket - sockettab.tab;
 }
