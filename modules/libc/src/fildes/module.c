@@ -24,7 +24,8 @@
  */
 
 #include "module.h"
-#include "picotm/picotm.h"
+#include "picotm/picotm-error.h"
+#include "picotm/picotm-lib-shared-state.h"
 #include "picotm/picotm-module.h"
 #include <assert.h>
 #include <stdlib.h>
@@ -37,65 +38,23 @@
  * Shared state
  */
 
-struct fildes_shared_state {
-    struct picotm_shared_ref16_obj ref_obj;
-    struct fildes fildes;
-};
-
-#define FILDES_SHARED_STATE_INITIALIZER             \
-{                                                   \
-    .ref_obj = PICOTM_SHARED_REF16_OBJ_INITIALIZER  \
-}
-
 static void
-init_fildes_shared_state_fields(struct fildes_shared_state* shared,
+init_fildes_shared_state_fields(struct fildes* fildes,
                                 struct picotm_error* error)
 {
-    fildes_init(&shared->fildes, error);
+    fildes_init(fildes, error);
 }
 
 static void
-uninit_fildes_shared_state_fields(struct fildes_shared_state* shared)
+uninit_fildes_shared_state_fields(struct fildes* fildes)
 {
-    fildes_uninit(&shared->fildes);
+    fildes_uninit(fildes);
 }
 
-static void
-first_ref_fildes_shared_state_cb(struct picotm_shared_ref16_obj* ref_obj,
-                                 void* data, struct picotm_error* error)
-{
-    struct fildes_shared_state* shared =
-        picotm_containerof(ref_obj, struct fildes_shared_state, ref_obj);
-    init_fildes_shared_state_fields(shared, error);
-}
-
-static void
-fildes_shared_state_ref(struct fildes_shared_state* self,
-                        struct picotm_error* error)
-{
-    picotm_shared_ref16_obj_up(&self->ref_obj, NULL, NULL,
-                               first_ref_fildes_shared_state_cb,
-                               error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
-};
-
-static void
-final_ref_fildes_shared_state_cb(struct picotm_shared_ref16_obj* ref_obj,
-                                 void* data, struct picotm_error* error)
-{
-    struct fildes_shared_state* shared =
-        picotm_containerof(ref_obj, struct fildes_shared_state, ref_obj);
-    uninit_fildes_shared_state_fields(shared);
-}
-
-static void
-fildes_shared_state_unref(struct fildes_shared_state* self)
-{
-    picotm_shared_ref16_obj_down(&self->ref_obj, NULL, NULL,
-                                 final_ref_fildes_shared_state_cb);
-}
+PICOTM_SHARED_STATE(fildes, struct fildes);
+PICOTM_SHARED_STATE_STATIC_IMPL(fildes,
+                                init_fildes_shared_state_fields,
+                                uninit_fildes_shared_state_fields)
 
 /*
  * Global data
@@ -103,32 +62,30 @@ fildes_shared_state_unref(struct fildes_shared_state* self)
 
 /* Returns the statically allocated global state. Callers *must* already
  * hold a reference. */
-static struct fildes_shared_state*
+static PICOTM_SHARED_STATE_TYPE(fildes)*
 get_fildes_global_state(void)
 {
-    static struct fildes_shared_state s_global =
-        FILDES_SHARED_STATE_INITIALIZER;
+    static PICOTM_SHARED_STATE_TYPE(fildes) s_global =
+        PICOTM_SHARED_STATE_INITIALIZER;
     return &s_global;
 }
 
-static struct fildes_shared_state*
+static PICOTM_SHARED_STATE_TYPE(fildes)*
 ref_fildes_global_state(struct picotm_error* error)
 {
-    struct fildes_shared_state* global = get_fildes_global_state();
-
-    fildes_shared_state_ref(global, error);
+    PICOTM_SHARED_STATE_TYPE(fildes)* global = get_fildes_global_state();
+    PICOTM_SHARED_STATE_REF(fildes, global, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
-
     return global;
 };
 
 static void
 unref_fildes_global_state(void)
 {
-    struct fildes_shared_state* global = get_fildes_global_state();
-    fildes_shared_state_unref(global);
+    PICOTM_SHARED_STATE_TYPE(fildes)* global = get_fildes_global_state();
+    PICOTM_SHARED_STATE_UNREF(fildes, global);
 }
 
 /*
@@ -217,7 +174,7 @@ get_fildes_tx(bool initialize, struct picotm_error* error)
         return NULL;
     }
 
-    struct fildes_shared_state* global = ref_fildes_global_state(error);
+    PICOTM_SHARED_STATE_TYPE(fildes)* global = ref_fildes_global_state(error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
