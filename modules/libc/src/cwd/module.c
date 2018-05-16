@@ -24,9 +24,8 @@
  */
 
 #include "module.h"
-#include "picotm/picotm-lib-ptr.h"
-#include "picotm/picotm-lib-shared-ref-obj.h"
-#include "picotm/picotm-lib-spinlock.h"
+#include "picotm/picotm-error.h"
+#include "picotm/picotm-lib-shared-state.h"
 #include "picotm/picotm-module.h"
 #include "cwd.h"
 #include "cwd_log.h"
@@ -36,64 +35,22 @@
  * Shared state
  */
 
-struct cwd_shared_state {
-    struct picotm_shared_ref16_obj ref_obj;
-    struct cwd cwd;
-};
-
-#define CWD_SHARED_STATE_INITIALIZER                \
-{                                                   \
-    .ref_obj = PICOTM_SHARED_REF16_OBJ_INITIALIZER  \
+static void
+init_cwd_shared_state_fields(struct cwd* cwd, struct picotm_error* error)
+{
+    cwd_init(cwd);
 }
 
 static void
-init_cwd_shared_state_fields(struct cwd_shared_state* shared)
+uninit_cwd_shared_state_fields(struct cwd* cwd)
 {
-    cwd_init(&shared->cwd);
+    cwd_uninit(cwd);
 }
 
-static void
-uninit_cwd_shared_state_fields(struct cwd_shared_state* shared)
-{
-    cwd_uninit(&shared->cwd);
-}
-
-static void
-first_ref_cwd_shared_state_cb(struct picotm_shared_ref16_obj* ref_obj,
-                              void* data, struct picotm_error* error)
-{
-    struct cwd_shared_state* shared =
-        picotm_containerof(ref_obj, struct cwd_shared_state, ref_obj);
-    init_cwd_shared_state_fields(shared);
-}
-
-static void
-cwd_shared_state_ref(struct cwd_shared_state* self,
-                     struct picotm_error* error)
-{
-    picotm_shared_ref16_obj_up(&self->ref_obj, NULL, NULL,
-                               first_ref_cwd_shared_state_cb,
-                               error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
-};
-
-static void
-final_ref_cwd_shared_state_cb(struct picotm_shared_ref16_obj* ref_obj,
-                              void* data, struct picotm_error* error)
-{
-    struct cwd_shared_state* shared =
-        picotm_containerof(ref_obj, struct cwd_shared_state, ref_obj);
-    uninit_cwd_shared_state_fields(shared);
-}
-
-static void
-cwd_shared_state_unref(struct cwd_shared_state* self)
-{
-    picotm_shared_ref16_obj_down(&self->ref_obj, NULL, NULL,
-                                 final_ref_cwd_shared_state_cb);
-}
+PICOTM_SHARED_STATE(cwd, struct cwd);
+PICOTM_SHARED_STATE_STATIC_IMPL(cwd,
+                                init_cwd_shared_state_fields,
+                                uninit_cwd_shared_state_fields)
 
 /*
  * Global data
@@ -101,31 +58,30 @@ cwd_shared_state_unref(struct cwd_shared_state* self)
 
 /* Returns the statically allocated global state. Callers *must* already
  * hold a reference. */
-static struct cwd_shared_state*
+static PICOTM_SHARED_STATE_TYPE(cwd)*
 get_cwd_global_state(void)
 {
-    static struct cwd_shared_state s_global = CWD_SHARED_STATE_INITIALIZER;
+    static PICOTM_SHARED_STATE_TYPE(cwd) s_global =
+        PICOTM_SHARED_STATE_INITIALIZER;
     return &s_global;
 }
 
-static struct cwd_shared_state*
+static PICOTM_SHARED_STATE_TYPE(cwd)*
 ref_cwd_global_state(struct picotm_error* error)
 {
-    struct cwd_shared_state* global = get_cwd_global_state();
-
-    cwd_shared_state_ref(global, error);
+    PICOTM_SHARED_STATE_TYPE(cwd)* global = get_cwd_global_state();
+    PICOTM_SHARED_STATE_REF(cwd, global, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
-
     return global;
 };
 
 static void
 unref_cwd_global_state(void)
 {
-    struct cwd_shared_state* global = get_cwd_global_state();
-    cwd_shared_state_unref(global);
+    PICOTM_SHARED_STATE_TYPE(cwd)* global = get_cwd_global_state();
+    PICOTM_SHARED_STATE_UNREF(cwd, global);
 }
 
 /*
@@ -232,7 +188,7 @@ get_cwd_tx(bool initialize, struct picotm_error* error)
         return NULL;
     }
 
-    struct cwd_shared_state* global = ref_cwd_global_state(error);
+    PICOTM_SHARED_STATE_TYPE(cwd)* global = ref_cwd_global_state(error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
