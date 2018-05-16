@@ -31,8 +31,9 @@ nobase_include_HEADERS = picotm/compiler.h \
                          picotm/picotm-lib-ref.h \
                          picotm/picotm-lib-rwlock.h \
                          picotm/picotm-lib-rwstate.h \
-                         picotm/picotm-lib-shared-treemap.h \
                          picotm/picotm-lib-shared-ref-obj.h \
+                         picotm/picotm-lib-shared-state.h \
+                         picotm/picotm-lib-shared-treemap.h \
                          picotm/picotm-lib-slist.h \
                          picotm/picotm-lib-spinlock.h \
                          picotm/picotm-lib-tab.h \
