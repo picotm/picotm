@@ -39,7 +39,7 @@
  * Shared state
  */
 
-struct picotm {
+struct global_state {
     /**
      * The global lock manager for all transactional locks. Register your
      * transaction's lock-owner instance with this object.
@@ -48,28 +48,28 @@ struct picotm {
 };
 
 static void
-init_picotm_shared_state_fields(struct picotm* picotm,
+init_global_shared_state_fields(struct global_state* global,
                                 struct picotm_error* error)
 {
-    picotm_lock_manager_init(&picotm->lm, error);
+    picotm_lock_manager_init(&global->lm, error);
 }
 
 static void
-uninit_picotm_shared_state_fields(struct picotm* picotm)
+uninit_global_shared_state_fields(struct global_state* global)
 {
-    picotm_lock_manager_uninit(&picotm->lm);
+    picotm_lock_manager_uninit(&global->lm);
 }
 
-PICOTM_SHARED_STATE(picotm, struct picotm);
-PICOTM_SHARED_STATE_STATIC_IMPL(picotm, struct picotm,
-                                init_picotm_shared_state_fields,
-                                uninit_picotm_shared_state_fields)
+PICOTM_SHARED_STATE(global_state, struct global_state);
+PICOTM_SHARED_STATE_STATIC_IMPL(global_state, struct global_state,
+                                init_global_shared_state_fields,
+                                uninit_global_shared_state_fields)
 
 /*
  * Global data
  */
 
-PICOTM_GLOBAL_STATE_STATIC_IMPL(picotm)
+PICOTM_GLOBAL_STATE_STATIC_IMPL(global_state)
 
 /*
  * Thread-local data
@@ -109,7 +109,8 @@ init_thread_state_fields(struct thread_state* thread,
     assert(thread);
     assert(!thread->fields_are_initialized);
 
-    struct picotm* global = PICOTM_GLOBAL_STATE_REF(picotm, error);
+    struct global_state* global = PICOTM_GLOBAL_STATE_REF(global_state,
+                                                          error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -124,7 +125,7 @@ init_thread_state_fields(struct thread_state* thread,
     return;
 
 err_picotm_tx_init:
-    PICOTM_GLOBAL_STATE_UNREF(picotm);
+    PICOTM_GLOBAL_STATE_UNREF(global_state);
 }
 
 static void
@@ -140,7 +141,7 @@ uninit_thread_state_fields(struct thread_state* thread)
      * address never changes, there's no need to store it in the thread
      * state. */
 
-    PICOTM_GLOBAL_STATE_UNREF(picotm);
+    PICOTM_GLOBAL_STATE_UNREF(global_state);
 
     thread->fields_are_initialized = false;
 }
