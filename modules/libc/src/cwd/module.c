@@ -25,6 +25,7 @@
 
 #include "module.h"
 #include "picotm/picotm-error.h"
+#include "picotm/picotm-lib-global-state.h"
 #include "picotm/picotm-lib-shared-state.h"
 #include "picotm/picotm-module.h"
 #include "cwd.h"
@@ -53,36 +54,10 @@ PICOTM_SHARED_STATE_STATIC_IMPL(cwd,
                                 uninit_cwd_shared_state_fields)
 
 /*
- * Global data
+ * Global state
  */
 
-/* Returns the statically allocated global state. Callers *must* already
- * hold a reference. */
-static PICOTM_SHARED_STATE_TYPE(cwd)*
-get_cwd_global_state(void)
-{
-    static PICOTM_SHARED_STATE_TYPE(cwd) s_global =
-        PICOTM_SHARED_STATE_INITIALIZER;
-    return &s_global;
-}
-
-static PICOTM_SHARED_STATE_TYPE(cwd)*
-ref_cwd_global_state(struct picotm_error* error)
-{
-    PICOTM_SHARED_STATE_TYPE(cwd)* global = get_cwd_global_state();
-    PICOTM_SHARED_STATE_REF(cwd, global, error);
-    if (picotm_error_is_set(error)) {
-        return NULL;
-    }
-    return global;
-};
-
-static void
-unref_cwd_global_state(void)
-{
-    PICOTM_SHARED_STATE_TYPE(cwd)* global = get_cwd_global_state();
-    PICOTM_SHARED_STATE_UNREF(cwd, global);
-}
+PICOTM_GLOBAL_STATE_STATIC_IMPL(cwd)
 
 /*
  * Module interface
@@ -133,7 +108,7 @@ module_uninit(struct module* module)
 
     module->is_initialized = false;
 
-    unref_cwd_global_state();
+    PICOTM_GLOBAL_STATE_UNREF(cwd);
 }
 
 /*
@@ -183,14 +158,15 @@ get_cwd_tx(bool initialize, struct picotm_error* error)
         return NULL;
     }
 
-    unsigned long module = picotm_register_module(&g_ops, &t_module, error);
+    PICOTM_SHARED_STATE_TYPE(cwd)* global =
+        PICOTM_GLOBAL_STATE_REF(cwd, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
 
-    PICOTM_SHARED_STATE_TYPE(cwd)* global = ref_cwd_global_state(error);
+    unsigned long module = picotm_register_module(&g_ops, &t_module, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        goto err_picotm_register_module;
     }
 
     cwd_log_init(&t_module.log, module);
@@ -199,6 +175,10 @@ get_cwd_tx(bool initialize, struct picotm_error* error)
     t_module.is_initialized = true;
 
     return &t_module.tx;
+
+err_picotm_register_module:
+    PICOTM_GLOBAL_STATE_UNREF(cwd);
+    return NULL;
 }
 
 static struct cwd_tx*
