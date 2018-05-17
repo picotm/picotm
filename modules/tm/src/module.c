@@ -25,6 +25,7 @@
 
 #include "module.h"
 #include "picotm/picotm-error.h"
+#include "picotm/picotm-lib-global-state.h"
 #include "picotm/picotm-lib-shared-state.h"
 #include "picotm/picotm-module.h"
 #include "vmem.h"
@@ -56,33 +57,7 @@ PICOTM_SHARED_STATE_STATIC_IMPL(vmem,
  * Global state
  */
 
-/* Returns the statically allocated global state. Callers *must* already
- * hold a reference. */
-static PICOTM_SHARED_STATE_TYPE(vmem)*
-get_tm_global_state(void)
-{
-    static PICOTM_SHARED_STATE_TYPE(vmem) s_global =
-        PICOTM_SHARED_STATE_INITIALIZER;
-    return &s_global;
-}
-
-static PICOTM_SHARED_STATE_TYPE(vmem)*
-ref_tm_global_state(struct picotm_error* error)
-{
-    PICOTM_SHARED_STATE_TYPE(vmem)* global = get_tm_global_state();
-    PICOTM_SHARED_STATE_REF(vmem, global, error);
-    if (picotm_error_is_set(error)) {
-        return NULL;
-    }
-    return global;
-};
-
-static void
-unref_tm_global_state(void)
-{
-    PICOTM_SHARED_STATE_TYPE(vmem)* global = get_tm_global_state();
-    PICOTM_SHARED_STATE_UNREF(vmem, global);
-}
+PICOTM_GLOBAL_STATE_STATIC_IMPL(vmem)
 
 /*
  * Module interface
@@ -119,7 +94,7 @@ uninit(struct tm_module* module)
     tm_vmem_tx_release(&module->tx);
     module->is_initialized = false;
 
-    unref_tm_global_state();
+    PICOTM_GLOBAL_STATE_UNREF(vmem);
 }
 
 /*
@@ -167,14 +142,15 @@ get_vmem_tx(bool initialize, struct picotm_error* error)
         return NULL;
     }
 
-    unsigned long module = picotm_register_module(&g_ops, &t_module, error);
+    PICOTM_SHARED_STATE_TYPE(vmem)* global =
+        PICOTM_GLOBAL_STATE_REF(vmem, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
 
-    PICOTM_SHARED_STATE_TYPE(vmem)* global = ref_tm_global_state(error);
+    unsigned long module = picotm_register_module(&g_ops, &t_module, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        goto err_picotm_register_module;
     }
 
     tm_vmem_tx_init(&t_module.tx, &global->vmem, module);
@@ -182,6 +158,10 @@ get_vmem_tx(bool initialize, struct picotm_error* error)
     t_module.is_initialized = true;
 
     return &t_module.tx;
+
+err_picotm_register_module:
+    PICOTM_GLOBAL_STATE_UNREF(vmem);
+    return NULL;
 }
 
 static struct tm_vmem_tx*
