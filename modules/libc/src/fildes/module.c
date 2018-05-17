@@ -25,6 +25,7 @@
 
 #include "module.h"
 #include "picotm/picotm-error.h"
+#include "picotm/picotm-lib-global-state.h"
 #include "picotm/picotm-lib-shared-state.h"
 #include "picotm/picotm-module.h"
 #include <assert.h>
@@ -57,36 +58,10 @@ PICOTM_SHARED_STATE_STATIC_IMPL(fildes,
                                 uninit_fildes_shared_state_fields)
 
 /*
- * Global data
+ * Global state
  */
 
-/* Returns the statically allocated global state. Callers *must* already
- * hold a reference. */
-static PICOTM_SHARED_STATE_TYPE(fildes)*
-get_fildes_global_state(void)
-{
-    static PICOTM_SHARED_STATE_TYPE(fildes) s_global =
-        PICOTM_SHARED_STATE_INITIALIZER;
-    return &s_global;
-}
-
-static PICOTM_SHARED_STATE_TYPE(fildes)*
-ref_fildes_global_state(struct picotm_error* error)
-{
-    PICOTM_SHARED_STATE_TYPE(fildes)* global = get_fildes_global_state();
-    PICOTM_SHARED_STATE_REF(fildes, global, error);
-    if (picotm_error_is_set(error)) {
-        return NULL;
-    }
-    return global;
-};
-
-static void
-unref_fildes_global_state(void)
-{
-    PICOTM_SHARED_STATE_TYPE(fildes)* global = get_fildes_global_state();
-    PICOTM_SHARED_STATE_UNREF(fildes, global);
-}
+PICOTM_GLOBAL_STATE_STATIC_IMPL(fildes)
 
 /*
  * Module interface
@@ -153,7 +128,7 @@ uninit_cb(void* data)
 
     module->is_initialized = false;
 
-    unref_fildes_global_state();
+    PICOTM_GLOBAL_STATE_UNREF(fildes);
 }
 
 static struct fildes_tx*
@@ -174,7 +149,8 @@ get_fildes_tx(bool initialize, struct picotm_error* error)
         return NULL;
     }
 
-    PICOTM_SHARED_STATE_TYPE(fildes)* global = ref_fildes_global_state(error);
+    PICOTM_SHARED_STATE_TYPE(fildes)* global =
+        PICOTM_GLOBAL_STATE_REF(fildes, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
@@ -192,7 +168,7 @@ get_fildes_tx(bool initialize, struct picotm_error* error)
     return &t_module.tx;
 
 err_picotm_register_module:
-    unref_fildes_global_state();
+    PICOTM_GLOBAL_STATE_UNREF(fildes);
     return NULL;
 }
 
