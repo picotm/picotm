@@ -79,8 +79,7 @@
  * ~~~{.c}
  *  struct picotm_error error = PICOTM_ERROR_INITIALIZER;
  *
- *  PICOTM_SHARED_STATE_TYPE(shared)* state =
- *      PICOTM_GLOBAL_STATE_REF(shared, &error);
+ *  struct shared* state = PICOTM_GLOBAL_STATE_REF(shared, &error);
  *  if (picotm_error_is_set(&error)) {
  *      // perform error handling
  *  }
@@ -126,7 +125,7 @@ struct picotm_error;
 /**
  * \warning This is an internal interface. Don't use it in application code.
  */
-#define __PICOTM_GLOBAL_STATE_IMPL(_static, _name)                  \
+#define __PICOTM_GLOBAL_STATE_IMPL(_static, _name, _type)           \
     _static PICOTM_SHARED_STATE_TYPE(_name)*                        \
     __PICOTM_GLOBAL_STATE_GET(_name)(void)                          \
     {                                                               \
@@ -134,7 +133,7 @@ struct picotm_error;
             PICOTM_SHARED_STATE_INITIALIZER;                        \
         return &s_global;                                           \
     }                                                               \
-    _static PICOTM_SHARED_STATE_TYPE(_name)*                        \
+    _static _type*                                                  \
     __PICOTM_GLOBAL_STATE_REF(_name)(struct picotm_error* error)    \
     {                                                               \
         PICOTM_SHARED_STATE_TYPE(_name)* global =                   \
@@ -153,24 +152,27 @@ struct picotm_error;
  * \ingroup group_lib
  * Expands to the implementation of a global state.
  * \param   _name   The state name.
+ * \param   _type   The state type.
  */
-#define PICOTM_GLOBAL_STATE_STATIC_IMPL(_name)  \
-    __PICOTM_GLOBAL_STATE_IMPL(static, _name)
+#define PICOTM_GLOBAL_STATE_STATIC_IMPL(_name, _type)   \
+    __PICOTM_GLOBAL_STATE_IMPL(static, _name, _type)
 
 /**
  * \ingroup group_lib
  * Returns the statically allocated global state. Callers *must* already
  * hold a reference.
  * \param   _name   The state name.
+ * \returns The state.
  */
 #define PICOTM_GLOBAL_STATE_GET(_name)      \
-    __PICOTM_GLOBAL_STATE_GET(_name)()
+    (&(__PICOTM_GLOBAL_STATE_GET(_name)()->_name))
 
 /**
  * \ingroup group_lib
  * Acquires a reference to an instance of a global state.
  * \param       _name   The state name.
  * \param[out]  _error  Returns an error to the caller.
+ * \returns The acquired state on success, or NULL on error.
  */
 #define PICOTM_GLOBAL_STATE_REF(_name, _error)  \
     __PICOTM_GLOBAL_STATE_REF(_name)(_error)
