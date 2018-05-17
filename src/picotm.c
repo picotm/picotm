@@ -61,7 +61,7 @@ uninit_picotm_shared_state_fields(struct picotm* picotm)
 }
 
 PICOTM_SHARED_STATE(picotm, struct picotm);
-PICOTM_SHARED_STATE_STATIC_IMPL(picotm,
+PICOTM_SHARED_STATE_STATIC_IMPL(picotm, struct picotm,
                                 init_picotm_shared_state_fields,
                                 uninit_picotm_shared_state_fields)
 
@@ -69,7 +69,7 @@ PICOTM_SHARED_STATE_STATIC_IMPL(picotm,
  * Global data
  */
 
-PICOTM_GLOBAL_STATE_STATIC_IMPL(picotm)
+PICOTM_GLOBAL_STATE_STATIC_IMPL(picotm, struct picotm)
 
 /*
  * Thread-local data
@@ -109,13 +109,12 @@ init_thread_state_fields(struct thread_state* thread,
     assert(thread);
     assert(!thread->fields_are_initialized);
 
-    PICOTM_SHARED_STATE_TYPE(picotm)* global =
-        PICOTM_GLOBAL_STATE_REF(picotm, error);
+    struct picotm* global = PICOTM_GLOBAL_STATE_REF(picotm, error);
     if (picotm_error_is_set(error)) {
         return;
     }
 
-    picotm_tx_init(&thread->tx, &global->picotm.lm, error);
+    picotm_tx_init(&thread->tx, &global->lm, error);
     if (picotm_error_is_set(error)) {
         goto err_picotm_tx_init;
     }

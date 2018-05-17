@@ -49,7 +49,7 @@ uninit_vmem_shared_state_fields(struct tm_vmem* vmem)
 }
 
 PICOTM_SHARED_STATE(vmem, struct tm_vmem);
-PICOTM_SHARED_STATE_STATIC_IMPL(vmem,
+PICOTM_SHARED_STATE_STATIC_IMPL(vmem, struct tm_vmem,
                                 init_vmem_shared_state_fields,
                                 uninit_vmem_shared_state_fields)
 
@@ -57,7 +57,7 @@ PICOTM_SHARED_STATE_STATIC_IMPL(vmem,
  * Global state
  */
 
-PICOTM_GLOBAL_STATE_STATIC_IMPL(vmem)
+PICOTM_GLOBAL_STATE_STATIC_IMPL(vmem, struct tm_vmem)
 
 /*
  * Module interface
@@ -142,8 +142,7 @@ get_vmem_tx(bool initialize, struct picotm_error* error)
         return NULL;
     }
 
-    PICOTM_SHARED_STATE_TYPE(vmem)* global =
-        PICOTM_GLOBAL_STATE_REF(vmem, error);
+    struct tm_vmem* vmem = PICOTM_GLOBAL_STATE_REF(vmem, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
@@ -153,7 +152,7 @@ get_vmem_tx(bool initialize, struct picotm_error* error)
         goto err_picotm_register_module;
     }
 
-    tm_vmem_tx_init(&t_module.tx, &global->vmem, module);
+    tm_vmem_tx_init(&t_module.tx, vmem, module);
 
     t_module.is_initialized = true;
 

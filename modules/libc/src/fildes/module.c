@@ -53,7 +53,7 @@ uninit_fildes_shared_state_fields(struct fildes* fildes)
 }
 
 PICOTM_SHARED_STATE(fildes, struct fildes);
-PICOTM_SHARED_STATE_STATIC_IMPL(fildes,
+PICOTM_SHARED_STATE_STATIC_IMPL(fildes, struct fildes,
                                 init_fildes_shared_state_fields,
                                 uninit_fildes_shared_state_fields)
 
@@ -61,7 +61,7 @@ PICOTM_SHARED_STATE_STATIC_IMPL(fildes,
  * Global state
  */
 
-PICOTM_GLOBAL_STATE_STATIC_IMPL(fildes)
+PICOTM_GLOBAL_STATE_STATIC_IMPL(fildes, struct fildes)
 
 /*
  * Module interface
@@ -149,8 +149,7 @@ get_fildes_tx(bool initialize, struct picotm_error* error)
         return NULL;
     }
 
-    PICOTM_SHARED_STATE_TYPE(fildes)* global =
-        PICOTM_GLOBAL_STATE_REF(fildes, error);
+    struct fildes* fildes = PICOTM_GLOBAL_STATE_REF(fildes, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
@@ -161,7 +160,7 @@ get_fildes_tx(bool initialize, struct picotm_error* error)
     }
 
     fildes_log_init(&t_module.log, module);
-    fildes_tx_init(&t_module.tx, &global->fildes, &t_module.log);
+    fildes_tx_init(&t_module.tx, fildes, &t_module.log);
 
     t_module.is_initialized = true;
 

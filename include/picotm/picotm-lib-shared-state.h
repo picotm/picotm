@@ -83,18 +83,21 @@
  *
  * A call to `PICOTM_SHARED_STATE_REF()` acquires a reference, a call to
  * `PICOTM_SHARED_STATE_UNREF()` releases a previously acquired reference.
+ * For convenience, `PICOTM_SHARED_STATE_REF()` returns a pointer to the
+ * shared state.
  *
  * ~~~{.c}
  *  struct picotm_error error = PICOTM_ERROR_INITIALIZER;
  *
- *  PICOTM_SHARED_STATE_REF(shared, &shared_var, &error);
+ *  struct shared* shared =
+ *      PICOTM_SHARED_STATE_REF(shared, &shared_var, &error);
  *  if (picotm_error_is_set(&error)) {
  *      // perform error handling
  *  }
  *
  *  // ...
  *
- *  // do something with shared_var
+ *  // do something with 'shared'
  *
  *  // ...
  *
@@ -186,61 +189,62 @@ struct picotm_error;
  * \internal
  * \warning This is an internal interface. Don't use it in application code.
  */
-#define __PICOTM_SHARED_STATE_IMPL(_static, _name, _init, _uninit)      \
-    _static void                                                        \
-    __PICOTM_SHARED_STATE_FIRST_REF_CB(_name)(                          \
-        struct picotm_shared_ref16_obj* ref_obj, void* data,            \
-        struct picotm_error* error)                                     \
-    {                                                                   \
-        PICOTM_SHARED_STATE_TYPE(_name)* shared =                       \
-            picotm_containerof(ref_obj,                                 \
-                               PICOTM_SHARED_STATE_TYPE(_name),         \
-                               ref_obj);                                \
-        (_init)(&(shared->_name), error);                               \
-    }                                                                   \
-    _static PICOTM_SHARED_STATE_TYPE(_name)*                            \
-    __PICOTM_SHARED_STATE_REF(_name)(                                   \
-        PICOTM_SHARED_STATE_TYPE(_name)* self,                          \
-        struct picotm_error* error)                                     \
-    {                                                                   \
-        picotm_shared_ref16_obj_up(                                     \
-            &self->ref_obj, NULL, NULL,                                 \
-            __PICOTM_SHARED_STATE_FIRST_REF_CB(_name),                  \
-            error);                                                     \
-        if (picotm_error_is_set(error)) {                               \
-            return NULL;                                                \
-        }                                                               \
-        return self;                                                    \
-    }                                                                   \
-    _static void                                                        \
-    __PICOTM_SHARED_STATE_FINAL_REF_CB(_name)(                          \
-        struct picotm_shared_ref16_obj* ref_obj, void* data,            \
-        struct picotm_error* error)                                     \
-    {                                                                   \
-        PICOTM_SHARED_STATE_TYPE(_name)* shared =                       \
-            picotm_containerof(ref_obj,                                 \
-                               PICOTM_SHARED_STATE_TYPE(_name),         \
-                               ref_obj);                                \
-        (_uninit)(&(shared->_name));                                    \
-    }                                                                   \
-    _static void                                                        \
-    __PICOTM_SHARED_STATE_UNREF(_name)(                                 \
-        PICOTM_SHARED_STATE_TYPE(_name)* self)                          \
-    {                                                                   \
-        picotm_shared_ref16_obj_down(                                   \
-            &self->ref_obj, NULL, NULL,                                 \
-            __PICOTM_SHARED_STATE_FINAL_REF_CB(_name));                 \
+#define __PICOTM_SHARED_STATE_IMPL(_static, _name, _type, _init, _uninit)   \
+    _static void                                                            \
+    __PICOTM_SHARED_STATE_FIRST_REF_CB(_name)(                              \
+        struct picotm_shared_ref16_obj* ref_obj, void* data,                \
+        struct picotm_error* error)                                         \
+    {                                                                       \
+        PICOTM_SHARED_STATE_TYPE(_name)* shared =                           \
+            picotm_containerof(ref_obj,                                     \
+                               PICOTM_SHARED_STATE_TYPE(_name),             \
+                               ref_obj);                                    \
+        (_init)(&(shared->_name), error);                                   \
+    }                                                                       \
+    _static _type*                                                          \
+    __PICOTM_SHARED_STATE_REF(_name)(                                       \
+        PICOTM_SHARED_STATE_TYPE(_name)* self,                              \
+        struct picotm_error* error)                                         \
+    {                                                                       \
+        picotm_shared_ref16_obj_up(                                         \
+            &self->ref_obj, NULL, NULL,                                     \
+            __PICOTM_SHARED_STATE_FIRST_REF_CB(_name),                      \
+            error);                                                         \
+        if (picotm_error_is_set(error)) {                                   \
+            return NULL;                                                    \
+        }                                                                   \
+        return &(self->_name);                                              \
+    }                                                                       \
+    _static void                                                            \
+    __PICOTM_SHARED_STATE_FINAL_REF_CB(_name)(                              \
+        struct picotm_shared_ref16_obj* ref_obj, void* data,                \
+        struct picotm_error* error)                                         \
+    {                                                                       \
+        PICOTM_SHARED_STATE_TYPE(_name)* shared =                           \
+            picotm_containerof(ref_obj,                                     \
+                               PICOTM_SHARED_STATE_TYPE(_name),             \
+                               ref_obj);                                    \
+        (_uninit)(&(shared->_name));                                        \
+    }                                                                       \
+    _static void                                                            \
+    __PICOTM_SHARED_STATE_UNREF(_name)(                                     \
+        PICOTM_SHARED_STATE_TYPE(_name)* self)                              \
+    {                                                                       \
+        picotm_shared_ref16_obj_down(                                       \
+            &self->ref_obj, NULL, NULL,                                     \
+            __PICOTM_SHARED_STATE_FINAL_REF_CB(_name));                     \
     }
 
 /**
  * \ingroup group_lib
  * Expands to the implementation of a shared state.
  * \param   _name   The state name.
+ * \param   _type   The state type.
  * \param   _init   The state's initializer function.
  * \param   _uninit The state's clean-up function.
  */
-#define PICOTM_SHARED_STATE_STATIC_IMPL(_name, _init, _uninit)  \
-    __PICOTM_SHARED_STATE_IMPL(static, _name, _init, _uninit)
+#define PICOTM_SHARED_STATE_STATIC_IMPL(_name, _type, _init, _uninit)   \
+    __PICOTM_SHARED_STATE_IMPL(static, _name, _type, _init, _uninit)
 
 /**
  * \ingroup group_lib
@@ -248,6 +252,7 @@ struct picotm_error;
  * \param       _name   The state name.
  * \param       _self   The state's instance.
  * \param[out]  _error  Returns an error to the caller.
+ * \returns The acquired state on success, or NULL on error.
  */
 #define PICOTM_SHARED_STATE_REF(_name, _self, _error)   \
     __PICOTM_SHARED_STATE_REF(_name)(_self, _error)

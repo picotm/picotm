@@ -49,7 +49,7 @@ uninit_cwd_shared_state_fields(struct cwd* cwd)
 }
 
 PICOTM_SHARED_STATE(cwd, struct cwd);
-PICOTM_SHARED_STATE_STATIC_IMPL(cwd,
+PICOTM_SHARED_STATE_STATIC_IMPL(cwd, struct cwd,
                                 init_cwd_shared_state_fields,
                                 uninit_cwd_shared_state_fields)
 
@@ -57,7 +57,7 @@ PICOTM_SHARED_STATE_STATIC_IMPL(cwd,
  * Global state
  */
 
-PICOTM_GLOBAL_STATE_STATIC_IMPL(cwd)
+PICOTM_GLOBAL_STATE_STATIC_IMPL(cwd, struct cwd)
 
 /*
  * Module interface
@@ -158,8 +158,7 @@ get_cwd_tx(bool initialize, struct picotm_error* error)
         return NULL;
     }
 
-    PICOTM_SHARED_STATE_TYPE(cwd)* global =
-        PICOTM_GLOBAL_STATE_REF(cwd, error);
+    struct cwd* cwd = PICOTM_GLOBAL_STATE_REF(cwd, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
@@ -170,7 +169,7 @@ get_cwd_tx(bool initialize, struct picotm_error* error)
     }
 
     cwd_log_init(&t_module.log, module);
-    cwd_tx_init(&t_module.tx, &t_module.log, &global->cwd);
+    cwd_tx_init(&t_module.tx, &t_module.log, cwd);
 
     t_module.is_initialized = true;
 
