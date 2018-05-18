@@ -27,6 +27,8 @@
 #include "picotm/picotm-error.h"
 #include "picotm/picotm-lib-global-state.h"
 #include "picotm/picotm-lib-shared-state.h"
+#include "picotm/picotm-lib-state.h"
+#include "picotm/picotm-lib-thread-state.h"
 #include "picotm/picotm-module.h"
 #include <assert.h>
 #include <stdlib.h>
@@ -68,14 +70,17 @@ PICOTM_GLOBAL_STATE_STATIC_IMPL(fildes)
  */
 
 struct fildes_module {
-    bool          is_initialized;
     struct fildes_log log;
     struct fildes_tx tx;
 };
 
 /*
- * Thread-local data
+ * Thread-local state
  */
+
+PICOTM_STATE(fildes_module, struct fildes_module);
+PICOTM_STATE_STATIC_DECL(fildes_module, struct fildes_module)
+PICOTM_THREAD_STATE_STATIC_DECL(fildes_module)
 
 static void
 prepare_commit_cb(void* data, int noundo, struct picotm_error* error)
@@ -121,54 +126,62 @@ finish_cb(void* data, struct picotm_error* error)
 static void
 uninit_cb(void* data)
 {
-    struct fildes_module* module = data;
-
-    fildes_tx_uninit(&module->tx);
-    fildes_log_uninit(&module->log);
-
-    module->is_initialized = false;
-
-    PICOTM_GLOBAL_STATE_UNREF(fildes);
+    PICOTM_THREAD_STATE_RELEASE(fildes_module);
 }
 
-static struct fildes_tx*
-get_fildes_tx(bool initialize, struct picotm_error* error)
+static void
+init_fildes_module(struct fildes_module* module, struct picotm_error* error)
 {
-    static const struct picotm_module_ops g_ops = {
+    static const struct picotm_module_ops s_ops = {
         .prepare_commit = prepare_commit_cb,
         .apply_event = apply_event_cb,
         .undo_event = undo_event_cb,
         .finish = finish_cb,
         .uninit = uninit_cb
     };
-    static __thread struct fildes_module t_module;
-
-    if (t_module.is_initialized) {
-        return &t_module.tx;
-    } else if (!initialize) {
-        return NULL;
-    }
 
     struct fildes* fildes = PICOTM_GLOBAL_STATE_REF(fildes, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return;
     }
 
-    unsigned long module = picotm_register_module(&g_ops, &t_module, error);
+    unsigned long module_id = picotm_register_module(&s_ops, module, error);
     if (picotm_error_is_set(error)) {
         goto err_picotm_register_module;
     }
 
-    fildes_log_init(&t_module.log, module);
-    fildes_tx_init(&t_module.tx, fildes, &t_module.log);
+    fildes_log_init(&module->log, module_id);
+    fildes_tx_init(&module->tx, fildes, &module->log);
 
-    t_module.is_initialized = true;
-
-    return &t_module.tx;
+    return;
 
 err_picotm_register_module:
     PICOTM_GLOBAL_STATE_UNREF(fildes);
-    return NULL;
+}
+
+static void
+uninit_fildes_module(struct fildes_module* module)
+{
+    fildes_tx_uninit(&module->tx);
+    fildes_log_uninit(&module->log);
+
+    PICOTM_GLOBAL_STATE_UNREF(fildes);
+}
+
+PICOTM_STATE_STATIC_IMPL(fildes_module, struct fildes_module,
+                         init_fildes_module,
+                         uninit_fildes_module)
+PICOTM_THREAD_STATE_STATIC_IMPL(fildes_module)
+
+static struct fildes_tx*
+get_fildes_tx(struct picotm_error* error)
+{
+    struct fildes_module* module = PICOTM_THREAD_STATE_ACQUIRE(fildes_module,
+                                                               true, error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+    return &module->tx;
 }
 
 static struct fildes_tx*
@@ -177,7 +190,7 @@ get_non_null_fildes_tx(void)
     do {
         struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-        struct fildes_tx* fildes_tx = get_fildes_tx(true, &error);
+        struct fildes_tx* fildes_tx = get_fildes_tx(&error);
 
         if (!picotm_error_is_set(&error)) {
             assert(fildes_tx);
