@@ -24,19 +24,20 @@
  */
 
 #include "module.h"
+#include "picotm/picotm-lib-state.h"
+#include "picotm/picotm-lib-thread-state.h"
 #include "picotm/picotm-module.h"
 #include <assert.h>
 #include <stdlib.h>
 #include "error_tx.h"
 
-struct error_module {
-    struct error_tx tx;
-    bool            is_initialized;
-};
-
 /*
  * Module interface
  */
+
+struct error_module {
+    struct error_tx tx;
+};
 
 static void
 errno_undo(struct error_module* module, struct picotm_error* error)
@@ -54,12 +55,15 @@ static void
 errno_release(struct error_module* module)
 {
     error_tx_uninit(&module->tx);
-    module->is_initialized = false;
 }
 
 /*
- * Thread-local data
+ * Thread-local state
  */
+
+PICOTM_STATE(error_module, struct error_module);
+PICOTM_STATE_STATIC_DECL(error_module, struct error_module)
+PICOTM_THREAD_STATE_STATIC_DECL(error_module)
 
 static void
 undo_cb(void* data, struct picotm_error* error)
@@ -76,35 +80,46 @@ finish_cb(void* data, struct picotm_error* error)
 static void
 uninit_cb(void* data)
 {
-    errno_release(data);
+    PICOTM_THREAD_STATE_RELEASE(error_module);
 }
 
-static struct error_tx*
-get_error_tx(bool initialize, struct picotm_error* error)
+static void
+init_error_module(struct error_module* module, struct picotm_error* error)
 {
-    static const struct picotm_module_ops g_ops = {
+    static const struct picotm_module_ops s_ops = {
         .undo = undo_cb,
         .finish = finish_cb,
         .uninit = uninit_cb
     };
-    static __thread struct error_module t_module;
 
-    if (t_module.is_initialized) {
-        return &t_module.tx;
-    } else if (!initialize) {
-        return NULL;
+    unsigned long module_id = picotm_register_module(&s_ops, module, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 
-    unsigned long module = picotm_register_module(&g_ops, &t_module, error);
+    error_tx_init(&module->tx, module_id);
+}
+
+static void
+uninit_error_module(struct error_module* module)
+{
+    errno_release(module);
+}
+
+PICOTM_STATE_STATIC_IMPL(error_module, struct error_module,
+                         init_error_module,
+                         uninit_error_module)
+PICOTM_THREAD_STATE_STATIC_IMPL(error_module)
+
+static struct error_tx*
+get_error_tx(struct picotm_error* error)
+{
+    struct error_module* module = PICOTM_THREAD_STATE_ACQUIRE(error_module,
+                                                              true, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
-
-    error_tx_init(&t_module.tx, module);
-
-    t_module.is_initialized = true;
-
-    return &t_module.tx;
+    return &module->tx;
 }
 
 static struct error_tx*
@@ -113,7 +128,7 @@ get_non_null_error_tx(void)
     do {
         struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-        struct error_tx* error_tx = get_error_tx(true, &error);
+        struct error_tx* error_tx = get_error_tx(&error);
 
         if (!picotm_error_is_set(&error)) {
             /* assert here as there's no legal way that error_tx
