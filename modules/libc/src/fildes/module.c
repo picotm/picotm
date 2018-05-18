@@ -61,7 +61,7 @@ PICOTM_SHARED_STATE_STATIC_IMPL(fildes, struct fildes,
  * Global state
  */
 
-PICOTM_GLOBAL_STATE_STATIC_IMPL(fildes, struct fildes)
+PICOTM_GLOBAL_STATE_STATIC_IMPL(fildes)
 
 /*
  * Module interface

@@ -69,7 +69,7 @@ PICOTM_SHARED_STATE_STATIC_IMPL(picotm, struct picotm,
  * Global data
  */
 
-PICOTM_GLOBAL_STATE_STATIC_IMPL(picotm, struct picotm)
+PICOTM_GLOBAL_STATE_STATIC_IMPL(picotm)
 
 /*
  * Thread-local data

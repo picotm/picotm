@@ -57,7 +57,7 @@ PICOTM_SHARED_STATE_STATIC_IMPL(cwd, struct cwd,
  * Global state
  */
 
-PICOTM_GLOBAL_STATE_STATIC_IMPL(cwd, struct cwd)
+PICOTM_GLOBAL_STATE_STATIC_IMPL(cwd)
 
 /*
  * Module interface
