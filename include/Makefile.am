@@ -27,6 +27,7 @@ nobase_include_HEADERS = picotm/compiler.h \
                          picotm/picotm-error-base.h \
                          picotm/picotm-error.h \
                          picotm/picotm-lib-array.h \
+                         picotm/picotm-lib-global-state.h \
                          picotm/picotm-lib-ptr.h \
                          picotm/picotm-lib-ref.h \
                          picotm/picotm-lib-rwlock.h \
