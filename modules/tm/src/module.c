@@ -27,6 +27,8 @@
 #include "picotm/picotm-error.h"
 #include "picotm/picotm-lib-global-state.h"
 #include "picotm/picotm-lib-shared-state.h"
+#include "picotm/picotm-lib-state.h"
+#include "picotm/picotm-lib-thread-state.h"
 #include "picotm/picotm-module.h"
 #include "vmem.h"
 #include "vmem_tx.h"
@@ -65,9 +67,6 @@ PICOTM_GLOBAL_STATE_STATIC_IMPL(vmem)
 
 struct tm_module {
     struct tm_vmem_tx tx;
-
-    /* True if module structure has been initialized, false otherwise */
-    bool is_initialized;
 };
 
 static void
@@ -92,14 +91,15 @@ static void
 uninit(struct tm_module* module)
 {
     tm_vmem_tx_release(&module->tx);
-    module->is_initialized = false;
-
-    PICOTM_GLOBAL_STATE_UNREF(vmem);
 }
 
 /*
- * Thread-local data
+ * Thread-local state
  */
+
+PICOTM_STATE(tm_module, struct tm_module);
+PICOTM_STATE_STATIC_DECL(tm_module, struct tm_module)
+PICOTM_THREAD_STATE_STATIC_DECL(tm_module)
 
 static void
 apply_cb(void* data, struct picotm_error* error)
@@ -122,45 +122,58 @@ finish_cb(void* data, struct picotm_error* error)
 static void
 uninit_cb(void* data)
 {
-    uninit(data);
+    PICOTM_THREAD_STATE_RELEASE(tm_module);
 }
 
-static struct tm_vmem_tx*
-get_vmem_tx(bool initialize, struct picotm_error* error)
+static void
+init_tm_module(struct tm_module* module, struct picotm_error* error)
 {
-    static const struct picotm_module_ops g_ops = {
+    static const struct picotm_module_ops s_ops = {
         .apply = apply_cb,
         .undo = undo_cb,
         .finish = finish_cb,
         .uninit = uninit_cb
     };
-    static __thread struct tm_module t_module;
-
-    if (t_module.is_initialized) {
-        return &t_module.tx;
-    } else if (!initialize) {
-        return NULL;
-    }
 
     struct tm_vmem* vmem = PICOTM_GLOBAL_STATE_REF(vmem, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return;
     }
 
-    unsigned long module = picotm_register_module(&g_ops, &t_module, error);
+    unsigned long module_id = picotm_register_module(&s_ops, module, error);
     if (picotm_error_is_set(error)) {
         goto err_picotm_register_module;
     }
 
-    tm_vmem_tx_init(&t_module.tx, vmem, module);
+    tm_vmem_tx_init(&module->tx, vmem, module_id);
 
-    t_module.is_initialized = true;
-
-    return &t_module.tx;
+    return;
 
 err_picotm_register_module:
     PICOTM_GLOBAL_STATE_UNREF(vmem);
-    return NULL;
+}
+
+static void
+uninit_tm_module(struct tm_module* module)
+{
+    uninit(module);
+    PICOTM_GLOBAL_STATE_UNREF(vmem);
+}
+
+PICOTM_STATE_STATIC_IMPL(tm_module, struct tm_module,
+                         init_tm_module,
+                         uninit_tm_module)
+PICOTM_THREAD_STATE_STATIC_IMPL(tm_module)
+
+static struct tm_vmem_tx*
+get_vmem_tx(struct picotm_error* error)
+{
+    struct tm_module* module = PICOTM_THREAD_STATE_ACQUIRE(tm_module, true,
+                                                           error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+    return &module->tx;
 }
 
 static struct tm_vmem_tx*
@@ -169,7 +182,7 @@ get_non_null_vmem_tx(void)
     do {
         struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-        struct tm_vmem_tx* vmem_tx = get_vmem_tx(true, &error);
+        struct tm_vmem_tx* vmem_tx = get_vmem_tx(&error);
 
         if (!picotm_error_is_set(&error)) {
             assert(vmem_tx);
