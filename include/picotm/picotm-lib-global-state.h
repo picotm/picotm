@@ -58,7 +58,7 @@
  *      // nothing to do
  *  }
  *
- *  PICOTM_SHARED_STATE(shared, struct shared)
+ *  PICOTM_SHARED_STATE(shared, struct shared);
  *  PICOTM_SHARED_STATE_STATIC_IMPL(shared,
  *                                  init_shared_fields,
  *                                  uninit_shared_fields)
@@ -69,7 +69,7 @@
  * of the shared state and expands to an implementation.
  *
  * ~~~{.c}
- *  PICOTM_GLOBAL_STATE(shared)
+ *  PICOTM_GLOBAL_STATE_STATIC_IMPL(shared)
  * ~~~
  *
  * Users acquire a reference to the global state with
