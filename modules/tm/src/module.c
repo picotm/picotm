@@ -57,7 +57,7 @@ PICOTM_SHARED_STATE_STATIC_IMPL(vmem, struct tm_vmem,
  * Global state
  */
 
-PICOTM_GLOBAL_STATE_STATIC_IMPL(vmem, struct tm_vmem)
+PICOTM_GLOBAL_STATE_STATIC_IMPL(vmem)
 
 /*
  * Module interface

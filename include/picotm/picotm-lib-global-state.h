@@ -125,37 +125,22 @@ struct picotm_error;
 /**
  * \warning This is an internal interface. Don't use it in application code.
  */
-#define __PICOTM_GLOBAL_STATE_IMPL(_static, _name, _type)           \
-    _static PICOTM_SHARED_STATE_TYPE(_name)*                        \
-    __PICOTM_GLOBAL_STATE_GET(_name)(void)                          \
-    {                                                               \
-        static PICOTM_SHARED_STATE_TYPE(_name) s_global =           \
-            PICOTM_SHARED_STATE_INITIALIZER;                        \
-        return &s_global;                                           \
-    }                                                               \
-    _static _type*                                                  \
-    __PICOTM_GLOBAL_STATE_REF(_name)(struct picotm_error* error)    \
-    {                                                               \
-        PICOTM_SHARED_STATE_TYPE(_name)* global =                   \
-            __PICOTM_GLOBAL_STATE_GET(_name)();                     \
-        return PICOTM_SHARED_STATE_REF(_name, global, error);       \
-    }                                                               \
-    _static void                                                    \
-    __PICOTM_GLOBAL_STATE_UNREF(_name)(void)                        \
-    {                                                               \
-        PICOTM_SHARED_STATE_TYPE(_name)* global =                   \
-            __PICOTM_GLOBAL_STATE_GET(_name)();                     \
-        PICOTM_SHARED_STATE_UNREF(_name, global);                   \
+#define __PICOTM_GLOBAL_STATE_IMPL(_static, _name)          \
+    _static PICOTM_SHARED_STATE_TYPE(_name)*                \
+    __PICOTM_GLOBAL_STATE_GET(_name)(void)                  \
+    {                                                       \
+        static PICOTM_SHARED_STATE_TYPE(_name) s_global =   \
+            PICOTM_SHARED_STATE_INITIALIZER;                \
+        return &s_global;                                   \
     }
 
 /**
  * \ingroup group_lib
  * Expands to the implementation of a global state.
  * \param   _name   The state name.
- * \param   _type   The state type.
  */
-#define PICOTM_GLOBAL_STATE_STATIC_IMPL(_name, _type)   \
-    __PICOTM_GLOBAL_STATE_IMPL(static, _name, _type)
+#define PICOTM_GLOBAL_STATE_STATIC_IMPL(_name)  \
+    __PICOTM_GLOBAL_STATE_IMPL(static, _name)
 
 /**
  * \ingroup group_lib
@@ -174,15 +159,16 @@ struct picotm_error;
  * \param[out]  _error  Returns an error to the caller.
  * \returns The acquired state on success, or NULL on error.
  */
-#define PICOTM_GLOBAL_STATE_REF(_name, _error)  \
-    __PICOTM_GLOBAL_STATE_REF(_name)(_error)
+#define PICOTM_GLOBAL_STATE_REF(_name, _error)                          \
+    PICOTM_SHARED_STATE_REF(_name, __PICOTM_GLOBAL_STATE_GET(_name)(),  \
+                            _error)
 
 /**
  * \ingroup group_lib
  * Releases a reference to an instance of a global state.
  * \param   _name   The state name.
  */
-#define PICOTM_GLOBAL_STATE_UNREF(_name)    \
-    __PICOTM_GLOBAL_STATE_UNREF(_name)()
+#define PICOTM_GLOBAL_STATE_UNREF(_name)                                    \
+    PICOTM_SHARED_STATE_UNREF(_name, __PICOTM_GLOBAL_STATE_GET(_name)())
 
 PICOTM_END_DECLS
