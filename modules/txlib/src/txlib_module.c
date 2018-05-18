@@ -24,7 +24,8 @@
  */
 
 #include "txlib_module.h"
-#include "picotm/picotm-lib-spinlock.h"
+#include "picotm/picotm-lib-state.h"
+#include "picotm/picotm-lib-thread-state.h"
 #include "picotm/picotm-module.h"
 #include <assert.h>
 #include <errno.h>
@@ -41,11 +42,7 @@
  */
 
 struct txlib_module {
-
     struct txlib_tx tx;
-
-    /* True if module structure has been initialized, false otherwise */
-    bool is_initialized;
 };
 
 static void
@@ -78,12 +75,15 @@ static void
 uninit(struct txlib_module* module)
 {
     txlib_tx_uninit(&module->tx);
-    module->is_initialized = false;
 }
 
 /*
- * Thread-local data
+ * Thread-local state
  */
+
+PICOTM_STATE(txlib_module, struct txlib_module);
+PICOTM_STATE_STATIC_DECL(txlib_module, struct txlib_module)
+PICOTM_THREAD_STATE_STATIC_DECL(txlib_module)
 
 static void
 prepare_commit_cb(void* data, int is_irrevocable, struct picotm_error* error)
@@ -114,37 +114,48 @@ finish_cb(void* data, struct picotm_error* error)
 static void
 uninit_cb(void* data)
 {
-    uninit(data);
+    PICOTM_THREAD_STATE_RELEASE(txlib_module);
 }
 
-static struct txlib_tx*
-get_txl_tx(bool initialize, struct picotm_error* error)
+static void
+init_txlib_module(struct txlib_module* module, struct picotm_error* error)
 {
-    static const struct picotm_module_ops g_ops = {
+    static const struct picotm_module_ops s_ops = {
         .prepare_commit = prepare_commit_cb,
         .apply_event = apply_event_cb,
         .undo_event = undo_event_cb,
         .finish = finish_cb,
         .uninit = uninit_cb
     };
-    static __thread struct txlib_module t_module;
 
-    if (t_module.is_initialized) {
-        return &t_module.tx;
-    } else if (!initialize) {
-        return NULL;
+    unsigned long module_id = picotm_register_module(&s_ops, module, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 
-    unsigned long module = picotm_register_module(&g_ops, &t_module, error);
+    txlib_tx_init(&module->tx, module_id);
+}
+
+static void
+uninit_txlib_module(struct txlib_module* module)
+{
+    uninit(module);
+}
+
+PICOTM_STATE_STATIC_IMPL(txlib_module, struct txlib_module,
+                         init_txlib_module,
+                         uninit_txlib_module)
+PICOTM_THREAD_STATE_STATIC_IMPL(txlib_module)
+
+static struct txlib_tx*
+get_txl_tx(struct picotm_error* error)
+{
+    struct txlib_module* module = PICOTM_THREAD_STATE_ACQUIRE(txlib_module,
+                                                              true, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
-
-    txlib_tx_init(&t_module.tx, module);
-
-    t_module.is_initialized = true;
-
-    return &t_module.tx;
+    return &module->tx;
 }
 
 static struct txlib_tx*
@@ -153,7 +164,7 @@ get_non_null_txl_tx(void)
     do {
         struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-        struct txlib_tx* txl_tx = get_txl_tx(true, &error);
+        struct txlib_tx* txl_tx = get_txl_tx(&error);
 
         if (!picotm_error_is_set(&error)) {
             assert(txl_tx);
