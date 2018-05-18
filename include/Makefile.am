@@ -39,6 +39,7 @@ nobase_include_HEADERS = picotm/compiler.h \
                          picotm/picotm-lib-spinlock.h \
                          picotm/picotm-lib-state.h \
                          picotm/picotm-lib-tab.h \
+                         picotm/picotm-lib-thread-state.h \
                          picotm/picotm-lib-treemap.h \
                          picotm/picotm-module.h \
                          picotm/picotm.h
