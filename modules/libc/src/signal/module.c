@@ -24,6 +24,8 @@
  */
 
 #include "module.h"
+#include "picotm/picotm-lib-state.h"
+#include "picotm/picotm-lib-thread-state.h"
 #include "picotm/picotm-module.h"
 #include "signal_tx.h"
 #include "sigstate.h"
@@ -34,9 +36,6 @@
 
 struct module {
     struct signal_tx tx;
-
-    /* True if module structure has been initialized, false otherwise */
-    volatile sig_atomic_t is_initialized;
 };
 
 static void
@@ -55,13 +54,15 @@ static void
 module_uninit(struct module* module)
 {
     signal_tx_uninit(&module->tx);
-
-    module->is_initialized = false;
 }
 
 /*
  * Thread-local data
  */
+
+PICOTM_STATE(signal_module, struct module);
+PICOTM_STATE_STATIC_DECL(signal_module, struct module)
+PICOTM_THREAD_STATE_STATIC_DECL(signal_module)
 
 static void
 begin_cb(void* data, struct picotm_error* error)
@@ -78,36 +79,49 @@ finish_cb(void* data, struct picotm_error* error)
 static void
 uninit_cb(void* data)
 {
-    module_uninit(data);
+    PICOTM_THREAD_STATE_RELEASE(signal_module);
 }
 
-static struct signal_tx*
-get_signal_tx(bool initialize, struct picotm_error* error)
+static void
+init_signal_module(struct module* module, struct picotm_error* error)
 {
-    static const struct picotm_module_ops g_ops = {
+    static const struct picotm_module_ops s_ops = {
         .begin = begin_cb,
         .finish = finish_cb,
         .uninit = uninit_cb
     };
-    static __thread struct module t_module;
 
-    if (t_module.is_initialized) {
-        return &t_module.tx;
-    } else if (!initialize) {
-        return NULL;
+    unsigned long module_id = picotm_register_module(&s_ops, module, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 
-    unsigned long module = picotm_register_module(&g_ops, &t_module, error);
+    signal_tx_init(&module->tx, module_id);
+}
+
+static void
+uninit_signal_module(struct module* module)
+{
+    module_uninit(module);
+}
+
+PICOTM_STATE_STATIC_IMPL(signal_module, struct module,
+                         init_signal_module,
+                         uninit_signal_module)
+PICOTM_THREAD_STATE_STATIC_IMPL(signal_module)
+
+static struct signal_tx*
+get_signal_tx(bool initialize, struct picotm_error* error)
+{
+    struct module* module = PICOTM_THREAD_STATE_ACQUIRE(signal_module,
+                                                        initialize,
+                                                        error);
     if (picotm_error_is_set(error)) {
         return NULL;
+    } else if (!module) {
+        return NULL; /* not yet initialized */
     }
-
-    signal_tx_init(&t_module.tx, module);
-
-    /* Final step; not to be re-ordered with other instructions */
-    t_module.is_initialized = true;
-
-    return &t_module.tx;
+    return &module->tx;
 }
 
 /*
