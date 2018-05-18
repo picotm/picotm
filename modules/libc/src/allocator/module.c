@@ -24,6 +24,8 @@
  */
 
 #include "module.h"
+#include "picotm/picotm-lib-state.h"
+#include "picotm/picotm-lib-thread-state.h"
 #include "picotm/picotm-module.h"
 #include <assert.h>
 #include <stdbool.h>
@@ -31,10 +33,17 @@
 #include "allocator_tx.h"
 
 struct allocator_module {
-    bool                is_initialized;
     struct allocator_log log;
     struct allocator_tx tx;
 };
+
+/*
+ * Thread-local state
+ */
+
+PICOTM_STATE(allocator_module, struct allocator_module);
+PICOTM_STATE_STATIC_DECL(allocator_module, struct allocator_module)
+PICOTM_THREAD_STATE_STATIC_DECL(allocator_module)
 
 static void
 apply_event_cb(uint16_t head, uintptr_t tail, void* data,
@@ -74,40 +83,50 @@ uninit_cb(void* data)
 {
     struct allocator_module* module = data;
 
-    allocator_tx_uninit(&module->tx);
-    allocator_log_uninit(&module->log);
-
-    module->is_initialized = false;
+    PICOTM_THREAD_STATE_RELEASE(allocator_module);
 }
 
-static struct allocator_tx*
-get_allocator_tx(bool initialize, struct picotm_error* error)
+void
+init_allocator_module(struct allocator_module* module,
+                      struct picotm_error* error)
 {
-    static const struct picotm_module_ops g_ops = {
+    static const struct picotm_module_ops s_ops = {
         .apply_event = apply_event_cb,
         .undo_event = undo_event_cb,
         .finish = finish_cb,
         .uninit = uninit_cb
     };
-    static __thread struct allocator_module t_module;
 
-    if (t_module.is_initialized) {
-        return &t_module.tx;
-    } else if (!initialize) {
-        return NULL;
+    unsigned long module_id = picotm_register_module(&s_ops, module, error);
+    if (picotm_error_is_set(error)) {
+        return;
     }
 
-    unsigned long module = picotm_register_module(&g_ops, &t_module, error);
+    allocator_log_init(&module->log, module_id);
+    allocator_tx_init(&module->tx, &module->log);
+}
+
+static void
+uninit_allocator_module(struct allocator_module* module)
+{
+    allocator_tx_uninit(&module->tx);
+    allocator_log_uninit(&module->log);
+}
+
+PICOTM_STATE_STATIC_IMPL(allocator_module, struct allocator_module,
+                         init_allocator_module,
+                         uninit_allocator_module)
+PICOTM_THREAD_STATE_STATIC_IMPL(allocator_module)
+
+static struct allocator_tx*
+get_allocator_tx(struct picotm_error* error)
+{
+    struct allocator_module* module =
+        PICOTM_THREAD_STATE_ACQUIRE(allocator_module, true, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
-
-    allocator_log_init(&t_module.log, module);
-    allocator_tx_init(&t_module.tx, &t_module.log);
-
-    t_module.is_initialized = true;
-
-    return &t_module.tx;
+    return &module->tx;
 }
 
 static struct allocator_tx*
@@ -116,7 +135,7 @@ get_non_null_allocator_tx(void)
     do {
         struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-        struct allocator_tx* allocator_tx = get_allocator_tx(true, &error);
+        struct allocator_tx* allocator_tx = get_allocator_tx(&error);
         if (!picotm_error_is_set(&error)) {
             /* assert() here as there's no legal way that allocator_tx
              * could be NULL */
