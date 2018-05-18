@@ -2,7 +2,7 @@
  * MIT License
  * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
-  Permission is hereby granted, free of charge, to any person obtaining a
+ * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
  * the rights to use, copy, modify, merge, publish, distribute, sublicense,
@@ -26,6 +26,8 @@
 #include "picotm.h"
 #include "picotm/picotm-lib-global-state.h"
 #include "picotm/picotm-lib-shared-state.h"
+#include "picotm/picotm-lib-state.h"
+#include "picotm/picotm-lib-thread-state.h"
 #include <assert.h>
 #include <errno.h>
 #include <stdatomic.h>
@@ -76,30 +78,17 @@ PICOTM_GLOBAL_STATE_STATIC_IMPL(global_state)
  */
 
 struct thread_state {
-
-    /**
-     * Signals that the thread's transaction state has already been
-     * initialized.
-     */
-    bool fields_are_initialized;
-
     /**
      * The thread-local transaction state.
      */
     struct picotm_tx tx;
 };
 
-#define THREAD_STATE_INITIALIZER        \
-{                                       \
-    .fields_are_initialized = false     \
-}
-
 static void
 init_thread_state_fields(struct thread_state* thread,
                          struct picotm_error* error)
 {
     assert(thread);
-    assert(!thread->fields_are_initialized);
 
     struct global_state* global = PICOTM_GLOBAL_STATE_REF(global_state,
                                                           error);
@@ -112,8 +101,6 @@ init_thread_state_fields(struct thread_state* thread,
         goto err_picotm_tx_init;
     }
 
-    thread->fields_are_initialized = true;
-
     return;
 
 err_picotm_tx_init:
@@ -124,7 +111,6 @@ static void
 uninit_thread_state_fields(struct thread_state* thread)
 {
     assert(thread);
-    assert(thread->fields_are_initialized);
 
     picotm_tx_release(&thread->tx);
 
@@ -134,34 +120,30 @@ uninit_thread_state_fields(struct thread_state* thread)
      * state. */
 
     PICOTM_GLOBAL_STATE_UNREF(global_state);
-
-    thread->fields_are_initialized = false;
 }
 
-static struct thread_state*
-get_thread_state(void)
-{
-    static __thread struct thread_state t_thread = THREAD_STATE_INITIALIZER;
+PICOTM_STATE(thread_state, struct thread_state);
+PICOTM_STATE_STATIC_IMPL(thread_state, struct thread_state,
+                         init_thread_state_fields,
+                         uninit_thread_state_fields)
 
-    return &t_thread;
-}
+/*
+ * Thread state
+ */
+
+PICOTM_THREAD_STATE_STATIC_IMPL(thread_state)
 
 static struct picotm_tx*
 get_tx(bool initialize, struct picotm_error* error)
 {
-    struct thread_state* thread = get_thread_state();
-
-    if (thread->fields_are_initialized) {
-        return &thread->tx;
-    } else if (!initialize) {
-        return NULL;
-    }
-
-    init_thread_state_fields(thread, error);
+    struct thread_state* thread = PICOTM_THREAD_STATE_ACQUIRE(thread_state,
+                                                              initialize,
+                                                              error);
     if (picotm_error_is_set(error)) {
         return NULL;
+    } else if (!thread) {
+        return NULL; /* not yet initialized */
     }
-
     return &thread->tx;
 }
 
@@ -375,11 +357,7 @@ PICOTM_EXPORT
 void
 picotm_release()
 {
-    struct thread_state* thread = get_thread_state();
-    if (!thread->fields_are_initialized) {
-        return; /* Thread did not execute a transaction; not an error. */
-    }
-    uninit_thread_state_fields(thread);
+    PICOTM_THREAD_STATE_RELEASE(thread_state);
 }
 
 PICOTM_EXPORT
