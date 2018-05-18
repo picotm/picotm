@@ -67,7 +67,7 @@
  *      // nothing to do
  *  }
  *
- *  PICOTM_SHARED_STATE(shared, struct shared)
+ *  PICOTM_SHARED_STATE(shared, struct shared);
  *  PICOTM_SHARED_STATE_STATIC_IMPL(shared,
  *                                  init_shared_fields,
  *                                  uninit_shared_fields)
