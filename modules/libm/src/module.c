@@ -78,7 +78,7 @@ finish_cb(void* data, struct picotm_error* error)
 }
 
 static void
-uninit_cb(void* data)
+release_cb(void* data)
 {
     PICOTM_THREAD_STATE_RELEASE(fpu_module);
 }
@@ -89,7 +89,7 @@ init_fpu_module(struct fpu_module* module, struct picotm_error* error)
     static const struct picotm_module_ops s_ops = {
         .undo = undo_cb,
         .finish = finish_cb,
-        .uninit = uninit_cb
+        .release = release_cb
     };
 
     unsigned long module_id = picotm_register_module(&s_ops, module, error);

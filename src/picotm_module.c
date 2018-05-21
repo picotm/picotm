@@ -39,13 +39,13 @@ picotm_module_init(struct picotm_module* self,
 }
 
 void
-picotm_module_uninit(struct picotm_module* self)
+picotm_module_release(struct picotm_module* self)
 {
     assert(self);
     assert(self->ops);
 
-    if (self->ops->uninit) {
-        self->ops->uninit(self->data);
+    if (self->ops->release) {
+        self->ops->release(self->data);
     }
 }
 

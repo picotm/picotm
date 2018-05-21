@@ -130,7 +130,7 @@ typedef void (*picotm_module_finish_function)(void* data,
  * Invoked by picotm to clean up a module's resources when the thread exists.
  * \param   data    The pointer to module-specific data.
  */
-typedef void (*picotm_module_uninit_function)(void* data);
+typedef void (*picotm_module_release_function)(void* data);
 
 /**
  * The module structure contains call-back functions for each
@@ -144,7 +144,7 @@ struct picotm_module_ops {
     picotm_module_apply_event_function apply_event;
     picotm_module_undo_event_function undo_event;
     picotm_module_finish_function finish;
-    picotm_module_uninit_function uninit;
+    picotm_module_release_function release;
 };
 
 PICOTM_NOTHROW

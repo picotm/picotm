@@ -135,7 +135,7 @@ finish_cb(void* data, struct picotm_error* error)
 }
 
 static void
-uninit_cb(void* data)
+release_cb(void* data)
 {
     PICOTM_THREAD_STATE_RELEASE(cwd_module);
 }
@@ -147,7 +147,7 @@ init_cwd_module(struct module* module, struct picotm_error* error)
         .apply_event = apply_event_cb,
         .undo_event = undo_event_cb,
         .finish = finish_cb,
-        .uninit = uninit_cb
+        .release = release_cb
     };
 
     struct cwd* cwd = PICOTM_GLOBAL_STATE_REF(cwd, error);

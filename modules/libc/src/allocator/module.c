@@ -79,10 +79,8 @@ finish_cb(void* data, struct picotm_error* error)
 }
 
 static void
-uninit_cb(void* data)
+release_cb(void* data)
 {
-    struct allocator_module* module = data;
-
     PICOTM_THREAD_STATE_RELEASE(allocator_module);
 }
 
@@ -94,7 +92,7 @@ init_allocator_module(struct allocator_module* module,
         .apply_event = apply_event_cb,
         .undo_event = undo_event_cb,
         .finish = finish_cb,
-        .uninit = uninit_cb
+        .release = release_cb
     };
 
     unsigned long module_id = picotm_register_module(&s_ops, module, error);

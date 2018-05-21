@@ -120,7 +120,7 @@ finish_cb(void* data, struct picotm_error* error)
 }
 
 static void
-uninit_cb(void* data)
+release_cb(void* data)
 {
     PICOTM_THREAD_STATE_RELEASE(tm_module);
 }
@@ -132,7 +132,7 @@ init_tm_module(struct tm_module* module, struct picotm_error* error)
         .apply = apply_cb,
         .undo = undo_cb,
         .finish = finish_cb,
-        .uninit = uninit_cb
+        .release = release_cb
     };
 
     struct tm_vmem* vmem = PICOTM_GLOBAL_STATE_REF(vmem, error);

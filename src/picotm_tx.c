@@ -87,7 +87,7 @@ picotm_tx_release(struct picotm_tx* self)
     const struct picotm_module* module_end = self->module + self->nmodules;
 
     while (module < module_end) {
-        picotm_module_uninit(module);
+        picotm_module_release(module);
         ++module;
     }
 }
