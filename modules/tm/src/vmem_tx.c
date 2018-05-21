@@ -51,7 +51,7 @@ cleanup_page(struct picotm_slist* item)
 }
 
 void
-tm_vmem_tx_release(struct tm_vmem_tx* vmem_tx)
+tm_vmem_tx_uninit(struct tm_vmem_tx* vmem_tx)
 {
     picotm_slist_cleanup_0(&vmem_tx->active_pages, cleanup_page);
     picotm_slist_uninit_head(&vmem_tx->active_pages);

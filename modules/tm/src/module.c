@@ -79,7 +79,7 @@ tm_module_init(struct tm_module* self, struct tm_vmem* vmem,
 static void
 tm_module_uninit(struct tm_module* self)
 {
-    tm_vmem_tx_release(&self->tx);
+    tm_vmem_tx_uninit(&self->tx);
 }
 
 static void
