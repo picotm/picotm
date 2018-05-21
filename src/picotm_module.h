@@ -50,7 +50,7 @@ picotm_module_init(struct picotm_module* self,
                    void* data);
 
 void
-picotm_module_uninit(struct picotm_module* self);
+picotm_module_release(struct picotm_module* self);
 
 void *
 picotm_module_get_data(const struct picotm_module* self);

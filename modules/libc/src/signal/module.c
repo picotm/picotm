@@ -77,7 +77,7 @@ finish_cb(void* data, struct picotm_error* error)
 }
 
 static void
-uninit_cb(void* data)
+release_cb(void* data)
 {
     PICOTM_THREAD_STATE_RELEASE(signal_module);
 }
@@ -88,7 +88,7 @@ init_signal_module(struct module* module, struct picotm_error* error)
     static const struct picotm_module_ops s_ops = {
         .begin = begin_cb,
         .finish = finish_cb,
-        .uninit = uninit_cb
+        .release = release_cb
     };
 
     unsigned long module_id = picotm_register_module(&s_ops, module, error);
