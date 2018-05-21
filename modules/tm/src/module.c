@@ -70,27 +70,34 @@ struct tm_module {
 };
 
 static void
-apply(struct tm_module* module, struct picotm_error* error)
+tm_module_init(struct tm_module* self, struct tm_vmem* vmem,
+               unsigned long module_id)
 {
-    tm_vmem_tx_apply(&module->tx, error);
+    tm_vmem_tx_init(&self->tx, vmem, module_id);
 }
 
 static void
-undo(struct tm_module* module, struct picotm_error* error)
+tm_module_uninit(struct tm_module* self)
 {
-    tm_vmem_tx_undo(&module->tx, error);
+    tm_vmem_tx_release(&self->tx);
 }
 
 static void
-finish(struct tm_module* module, struct picotm_error* error)
+tm_module_apply(struct tm_module* self, struct picotm_error* error)
 {
-    tm_vmem_tx_finish(&module->tx, error);
+    tm_vmem_tx_apply(&self->tx, error);
 }
 
 static void
-uninit(struct tm_module* module)
+tm_module_undo(struct tm_module* self, struct picotm_error* error)
 {
-    tm_vmem_tx_release(&module->tx);
+    tm_vmem_tx_undo(&self->tx, error);
+}
+
+static void
+tm_module_finish(struct tm_module* self, struct picotm_error* error)
+{
+    tm_vmem_tx_finish(&self->tx, error);
 }
 
 /*
@@ -104,19 +111,22 @@ PICOTM_THREAD_STATE_STATIC_DECL(tm_module)
 static void
 apply_cb(void* data, struct picotm_error* error)
 {
-    apply(data, error);
+    struct tm_module* module = data;
+    tm_module_apply(data, error);
 }
 
 static void
 undo_cb(void* data, struct picotm_error* error)
 {
-    undo(data, error);
+    struct tm_module* module = data;
+    tm_module_undo(data, error);
 }
 
 static void
 finish_cb(void* data, struct picotm_error* error)
 {
-    finish(data, error);
+    struct tm_module* module = data;
+    tm_module_finish(data, error);
 }
 
 static void
@@ -145,7 +155,7 @@ init_tm_module(struct tm_module* module, struct picotm_error* error)
         goto err_picotm_register_module;
     }
 
-    tm_vmem_tx_init(&module->tx, vmem, module_id);
+    tm_module_init(module, vmem, module_id);
 
     return;
 
@@ -156,7 +166,7 @@ err_picotm_register_module:
 static void
 uninit_tm_module(struct tm_module* module)
 {
-    uninit(module);
+    tm_module_uninit(module);
     PICOTM_GLOBAL_STATE_UNREF(vmem);
 }
 
