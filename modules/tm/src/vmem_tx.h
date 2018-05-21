@@ -65,11 +65,10 @@ tm_vmem_tx_init(struct tm_vmem_tx* vmem_tx, struct tm_vmem* vmem,
                 unsigned long module);
 
 /**
- * Releases all memory and resources allocated by the transaction. The
- * transaction's data structure will remain initialized and useable after
- * this call returned.
+ * Releases all memory and resources allocated by the transaction.
  */
-void tm_vmem_tx_release(struct tm_vmem_tx* vmem_tx);
+void
+tm_vmem_tx_uninit(struct tm_vmem_tx* vmem_tx);
 
 /**
  * Executes a load operation.
@@ -119,7 +118,8 @@ void
 tm_vmem_tx_undo(struct tm_vmem_tx* vmem_tx, struct picotm_error* error);
 
 /**
- * Cleans up a transcation's resources.
+ * Cleans up a transcation's resources. The transaction's data structure
+ * will remain initialized and useable after this call returned.
  */
 void
 tm_vmem_tx_finish(struct tm_vmem_tx* vmem_tx, struct picotm_error* error);
