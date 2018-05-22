@@ -40,21 +40,35 @@ struct error_module {
 };
 
 static void
-errno_undo(struct error_module* module, struct picotm_error* error)
+error_module_init(struct error_module* self, unsigned long module_id)
 {
-    error_tx_undo(&module->tx, error);
+    assert(self);
+
+    error_tx_init(&self->tx, module_id);
 }
 
 static void
-errno_finish(struct error_module* module, struct picotm_error* error)
+error_module_uninit(struct error_module* self)
 {
-    error_tx_finish(&module->tx, error);
+    assert(self);
+
+    error_tx_uninit(&self->tx);
 }
 
 static void
-errno_release(struct error_module* module)
+error_module_undo(struct error_module* self, struct picotm_error* error)
 {
-    error_tx_uninit(&module->tx);
+    assert(self);
+
+    error_tx_undo(&self->tx, error);
+}
+
+static void
+error_module_finish(struct error_module* self, struct picotm_error* error)
+{
+    assert(self);
+
+    error_tx_finish(&self->tx, error);
 }
 
 /*
@@ -68,13 +82,15 @@ PICOTM_THREAD_STATE_STATIC_DECL(error_module)
 static void
 undo_cb(void* data, struct picotm_error* error)
 {
-    errno_undo(data, error);
+    struct error_module* module = data;
+    error_module_undo(module, error);
 }
 
 static void
 finish_cb(void* data, struct picotm_error* error)
 {
-    errno_finish(data, error);
+    struct error_module* module = data;
+    error_module_finish(module, error);
 }
 
 static void
@@ -97,13 +113,13 @@ init_error_module(struct error_module* module, struct picotm_error* error)
         return;
     }
 
-    error_tx_init(&module->tx, module_id);
+    error_module_init(module, module_id);
 }
 
 static void
 uninit_error_module(struct error_module* module)
 {
-    errno_release(module);
+    error_module_uninit(module);
 }
 
 PICOTM_STATE_STATIC_IMPL(error_module, struct error_module,
