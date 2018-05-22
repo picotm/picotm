@@ -40,21 +40,36 @@ struct fpu_module {
 };
 
 static void
-fpu_module_undo(struct fpu_module* module, struct picotm_error* error)
+fpu_module_init(struct fpu_module* self, unsigned long module_id,
+                struct picotm_error* error)
 {
-    fpu_tx_undo(&module->tx, error);
+    assert(self);
+
+    fpu_tx_init(&self->tx, module_id, error);
 }
 
 static void
-fpu_module_finish(struct fpu_module* module, struct picotm_error* error)
+fpu_module_uninit(struct fpu_module* self)
 {
-    fpu_tx_finish(&module->tx);
+    assert(self);
+
+    fpu_tx_uninit(&self->tx);
 }
 
 static void
-fpu_module_uninit(struct fpu_module* module)
+fpu_module_undo(struct fpu_module* self, struct picotm_error* error)
 {
-    fpu_tx_uninit(&module->tx);
+    assert(self);
+
+    fpu_tx_undo(&self->tx, error);
+}
+
+static void
+fpu_module_finish(struct fpu_module* self, struct picotm_error* error)
+{
+    assert(self);
+
+    fpu_tx_finish(&self->tx);
 }
 
 /*
@@ -68,13 +83,15 @@ PICOTM_THREAD_STATE_STATIC_DECL(fpu_module)
 static void
 undo_cb(void* data, struct picotm_error* error)
 {
-    fpu_module_undo(data, error);
+    struct fpu_module* module = data;
+    fpu_module_undo(module, error);
 }
 
 static void
 finish_cb(void* data, struct picotm_error* error)
 {
-    fpu_module_finish(data, error);
+    struct fpu_module* module = data;
+    fpu_module_finish(module, error);
 }
 
 static void
@@ -97,7 +114,7 @@ init_fpu_module(struct fpu_module* module, struct picotm_error* error)
         return;
     }
 
-    fpu_tx_init(&module->tx, module_id, error);
+    fpu_module_init(module, module_id, error);
     if (picotm_error_is_set(error)) {
         return;
     }
