@@ -74,6 +74,69 @@ struct fildes_module {
     struct fildes_tx tx;
 };
 
+static void
+fildes_module_init(struct fildes_module* self, struct fildes* fildes,
+                   unsigned long module_id)
+{
+    assert(self);
+
+    fildes_log_init(&self->log, module_id);
+    fildes_tx_init(&self->tx, fildes, &self->log);
+}
+
+static void
+fildes_module_uninit(struct fildes_module* self)
+{
+    assert(self);
+
+    fildes_tx_uninit(&self->tx);
+    fildes_log_uninit(&self->log);
+}
+
+static void
+fildes_module_prepare_commit(struct fildes_module* self, int noundo,
+                             struct picotm_error* error)
+{
+    assert(self);
+
+    fildes_tx_prepare_commit(&self->tx, noundo, error);
+}
+
+static void
+fildes_module_apply_event(struct fildes_module* self, uint16_t head,
+                          uintptr_t tail, struct picotm_error* error)
+{
+    assert(self);
+
+    struct fildes_event* event = fildes_log_at(&self->log, tail);
+    assert(event);
+
+    fildes_tx_apply_event(&self->tx, head, event->fildes, event->cookie,
+                          error);
+}
+
+static void
+fildes_module_undo_event(struct fildes_module* self, uint16_t head,
+                         uintptr_t tail, struct picotm_error* error)
+{
+    assert(self);
+
+    struct fildes_event* event = fildes_log_at(&self->log, tail);
+    assert(event);
+
+    fildes_tx_undo_event(&self->tx, head, event->fildes, event->cookie,
+                         error);
+}
+
+static void
+fildes_module_finish(struct fildes_module* self, struct picotm_error* error)
+{
+    assert(self);
+
+    fildes_tx_finish(&self->tx, error);
+    fildes_log_clear(&self->log);
+}
+
 /*
  * Thread-local state
  */
@@ -86,8 +149,7 @@ static void
 prepare_commit_cb(void* data, int noundo, struct picotm_error* error)
 {
     struct fildes_module* module = data;
-
-    fildes_tx_prepare_commit(&module->tx, noundo, error);
+    fildes_module_prepare_commit(module, noundo, error);
 }
 
 static void
@@ -95,11 +157,7 @@ apply_event_cb(uint16_t head, uintptr_t tail, void* data,
                struct picotm_error* error)
 {
     struct fildes_module* module = data;
-
-    struct fildes_event* event = fildes_log_at(&module->log, tail);
-
-    fildes_tx_apply_event(&module->tx, head, event->fildes, event->cookie,
-                          error);
+    fildes_module_apply_event(module, head, tail, error);
 }
 
 static void
@@ -107,20 +165,14 @@ undo_event_cb(uint16_t head, uintptr_t tail, void *data,
               struct picotm_error* error)
 {
     struct fildes_module* module = data;
-
-    struct fildes_event* event = fildes_log_at(&module->log, tail);
-
-    fildes_tx_undo_event(&module->tx, head, event->fildes, event->cookie,
-                         error);
+    fildes_module_undo_event(module, head, tail, error);
 }
 
 static void
 finish_cb(void* data, struct picotm_error* error)
 {
     struct fildes_module* module = data;
-
-    fildes_tx_finish(&module->tx, error);
-    fildes_log_clear(&module->log);
+    fildes_module_finish(module, error);
 }
 
 static void
@@ -150,8 +202,7 @@ init_fildes_module(struct fildes_module* module, struct picotm_error* error)
         goto err_picotm_register_module;
     }
 
-    fildes_log_init(&module->log, module_id);
-    fildes_tx_init(&module->tx, fildes, &module->log);
+    fildes_module_init(module, fildes, module_id);
 
     return;
 
@@ -162,9 +213,7 @@ err_picotm_register_module:
 static void
 uninit_fildes_module(struct fildes_module* module)
 {
-    fildes_tx_uninit(&module->tx);
-    fildes_log_uninit(&module->log);
-
+    fildes_module_uninit(module);
     PICOTM_GLOBAL_STATE_UNREF(fildes);
 }
 
