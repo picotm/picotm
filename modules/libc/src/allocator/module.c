@@ -32,10 +32,70 @@
 #include "allocator_log.h"
 #include "allocator_tx.h"
 
+/*
+ * Module interface
+ */
+
 struct allocator_module {
     struct allocator_log log;
     struct allocator_tx tx;
 };
+
+static void
+allocator_module_init(struct allocator_module* self, unsigned long module_id)
+{
+    assert(self);
+
+    allocator_log_init(&self->log, module_id);
+    allocator_tx_init(&self->tx, &self->log);
+}
+
+static void
+allocator_module_uninit(struct allocator_module* self)
+{
+    assert(self);
+
+    allocator_tx_uninit(&self->tx);
+    allocator_log_uninit(&self->log);
+}
+
+static void
+allocator_module_apply_event(struct allocator_module* self,
+                             uint16_t head, uintptr_t tail,
+                             struct picotm_error* error)
+{
+    assert(self);
+
+    const struct allocator_event* event =
+        allocator_log_at(&self->log, tail);
+    assert(event);
+
+    allocator_tx_apply_event(&self->tx, head, event->ptr, error);
+}
+
+static void
+allocator_module_undo_event(struct allocator_module* self,
+                            uint16_t head, uintptr_t tail,
+                            struct picotm_error* error)
+{
+    assert(self);
+
+    const struct allocator_event* event =
+        allocator_log_at(&self->log, tail);
+    assert(event);
+
+    allocator_tx_undo_event(&self->tx, head, event->ptr, error);
+}
+
+static void
+allocator_module_finish(struct allocator_module* self)
+{
+    assert(self);
+
+    allocator_tx_finish(&self->tx);
+    allocator_log_clear(&self->log);
+}
+
 
 /*
  * Thread-local state
@@ -50,11 +110,7 @@ apply_event_cb(uint16_t head, uintptr_t tail, void* data,
                struct picotm_error* error)
 {
     struct allocator_module* module = data;
-
-    const struct allocator_event* event =
-        allocator_log_at(&module->log, tail);
-
-    allocator_tx_apply_event(&module->tx, head, event->ptr, error);
+    allocator_module_apply_event(module, head, tail, error);
 }
 
 static void
@@ -62,20 +118,14 @@ undo_event_cb(uint16_t head, uintptr_t tail, void* data,
               struct picotm_error* error)
 {
     struct allocator_module* module = data;
-
-    const struct allocator_event* event =
-        allocator_log_at(&module->log, tail);
-
-    allocator_tx_undo_event(&module->tx, head, event->ptr, error);
+    allocator_module_undo_event(module, head, tail, error);
 }
 
 static void
 finish_cb(void* data, struct picotm_error* error)
 {
     struct allocator_module* module = data;
-
-    allocator_tx_finish(&module->tx);
-    allocator_log_clear(&module->log);
+    allocator_module_finish(module);
 }
 
 static void
@@ -100,15 +150,13 @@ init_allocator_module(struct allocator_module* module,
         return;
     }
 
-    allocator_log_init(&module->log, module_id);
-    allocator_tx_init(&module->tx, &module->log);
+    allocator_module_init(module, module_id);
 }
 
 static void
 uninit_allocator_module(struct allocator_module* module)
 {
-    allocator_tx_uninit(&module->tx);
-    allocator_log_uninit(&module->log);
+    allocator_module_uninit(module);
 }
 
 PICOTM_STATE_STATIC_IMPL(allocator_module, struct allocator_module,
