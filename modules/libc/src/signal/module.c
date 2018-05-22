@@ -34,46 +34,62 @@
  * Module interface
  */
 
-struct module {
+struct signal_module {
     struct signal_tx tx;
 };
 
 static void
-module_begin(struct module* module, struct picotm_error* error)
+signal_module_init(struct signal_module* self, unsigned long module_id)
 {
-    signal_tx_begin(&module->tx, error);
+    assert(self);
+
+    signal_tx_init(&self->tx, module_id);
 }
 
 static void
-module_finish(struct module* module, struct picotm_error* error)
+signal_module_uninit(struct signal_module* self)
 {
-    signal_tx_finish(&module->tx, error);
+    assert(self);
+
+    signal_tx_uninit(&self->tx);
 }
 
 static void
-module_uninit(struct module* module)
+signal_module_begin(struct signal_module* self, struct picotm_error* error)
 {
-    signal_tx_uninit(&module->tx);
+    assert(self);
+
+    signal_tx_begin(&self->tx, error);
+}
+
+static void
+signal_module_finish(struct signal_module* self, struct picotm_error* error)
+{
+    assert(self);
+
+    signal_tx_finish(&self->tx, error);
 }
 
 /*
  * Thread-local data
  */
 
-PICOTM_STATE(signal_module, struct module);
-PICOTM_STATE_STATIC_DECL(signal_module, struct module)
+PICOTM_STATE(signal_module, struct signal_module);
+PICOTM_STATE_STATIC_DECL(signal_module, struct signal_module)
 PICOTM_THREAD_STATE_STATIC_DECL(signal_module)
 
 static void
 begin_cb(void* data, struct picotm_error* error)
 {
-    module_begin(data, error);
+    struct signal_module* module = data;
+    signal_module_begin(module, error);
 }
 
 static void
 finish_cb(void* data, struct picotm_error* error)
 {
-    module_finish(data, error);
+    struct signal_module* module = data;
+    signal_module_finish(module, error);
 }
 
 static void
@@ -83,7 +99,7 @@ release_cb(void* data)
 }
 
 static void
-init_signal_module(struct module* module, struct picotm_error* error)
+init_signal_module(struct signal_module* module, struct picotm_error* error)
 {
     static const struct picotm_module_ops s_ops = {
         .begin = begin_cb,
@@ -96,16 +112,16 @@ init_signal_module(struct module* module, struct picotm_error* error)
         return;
     }
 
-    signal_tx_init(&module->tx, module_id);
+    signal_module_init(module, module_id);
 }
 
 static void
-uninit_signal_module(struct module* module)
+uninit_signal_module(struct signal_module* module)
 {
-    module_uninit(module);
+    signal_module_uninit(module);
 }
 
-PICOTM_STATE_STATIC_IMPL(signal_module, struct module,
+PICOTM_STATE_STATIC_IMPL(signal_module, struct signal_module,
                          init_signal_module,
                          uninit_signal_module)
 PICOTM_THREAD_STATE_STATIC_IMPL(signal_module)
@@ -113,9 +129,9 @@ PICOTM_THREAD_STATE_STATIC_IMPL(signal_module)
 static struct signal_tx*
 get_signal_tx(bool initialize, struct picotm_error* error)
 {
-    struct module* module = PICOTM_THREAD_STATE_ACQUIRE(signal_module,
-                                                        initialize,
-                                                        error);
+    struct signal_module* module = PICOTM_THREAD_STATE_ACQUIRE(signal_module,
+                                                               initialize,
+                                                               error);
     if (picotm_error_is_set(error)) {
         return NULL;
     } else if (!module) {
