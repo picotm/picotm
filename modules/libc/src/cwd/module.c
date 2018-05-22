@@ -65,73 +65,92 @@ PICOTM_GLOBAL_STATE_STATIC_IMPL(cwd)
  * Module interface
  */
 
-struct module {
+struct cwd_module {
     struct cwd_log log;
     struct cwd_tx tx;
 };
 
 static void
-module_apply_event(struct module* module, uint16_t head, uintptr_t tail,
-                   struct picotm_error* error)
+cwd_module_init(struct cwd_module* self, struct cwd* cwd,
+                unsigned long module_id)
 {
-    assert(module);
+    assert(self);
 
-    const struct cwd_event* event = cwd_log_at(&module->log, tail);
-
-    cwd_tx_apply_event(&module->tx, head, event->alloced, error);
+    cwd_log_init(&self->log, module_id);
+    cwd_tx_init(&self->tx, &self->log, cwd);
 }
 
 static void
-module_undo_event(struct module* module, uint16_t head, uintptr_t tail,
-                  struct picotm_error* error)
+cwd_module_uninit(struct cwd_module* self)
 {
-    assert(module);
+    assert(self);
 
-    const struct cwd_event* event = cwd_log_at(&module->log, tail);
-
-    cwd_tx_undo_event(&module->tx, head, event->alloced, error);
+    cwd_tx_uninit(&self->tx);
+    cwd_log_uninit(&self->log);
 }
 
 static void
-module_finish(struct module* module)
+cwd_module_apply_event(struct cwd_module* self, uint16_t head, uintptr_t tail,
+                       struct picotm_error* error)
 {
-    cwd_tx_finish(&module->tx);
-    cwd_log_clear(&module->log);
+    assert(self);
+
+    const struct cwd_event* event = cwd_log_at(&self->log, tail);
+    assert(event);
+
+    cwd_tx_apply_event(&self->tx, head, event->alloced, error);
 }
 
 static void
-module_uninit(struct module* module)
+cwd_module_undo_event(struct cwd_module* self, uint16_t head, uintptr_t tail,
+                      struct picotm_error* error)
 {
-    cwd_tx_uninit(&module->tx);
-    cwd_log_uninit(&module->log);
+    assert(self);
+
+    const struct cwd_event* event = cwd_log_at(&self->log, tail);
+    assert(event);
+
+    cwd_tx_undo_event(&self->tx, head, event->alloced, error);
+}
+
+static void
+cwd_module_finish(struct cwd_module* self)
+{
+    assert(self);
+
+    cwd_tx_finish(&self->tx);
+    cwd_log_clear(&self->log);
 }
 
 /*
  * Thread-local state
  */
 
-PICOTM_STATE(cwd_module, struct module);
-PICOTM_STATE_STATIC_DECL(cwd_module, struct module)
+PICOTM_STATE(cwd_module, struct cwd_module);
+PICOTM_STATE_STATIC_DECL(cwd_module, struct cwd_module)
 PICOTM_THREAD_STATE_STATIC_DECL(cwd_module)
 
 static void
 apply_event_cb(uint16_t head, uintptr_t tail, void* data,
                struct picotm_error* error)
 {
-    module_apply_event(data, head, tail, error);
+    struct cwd_module* module = data;
+    cwd_module_apply_event(module, head, tail, error);
 }
 
 static void
 undo_event_cb(uint16_t head, uintptr_t tail, void* data,
               struct picotm_error* error)
 {
-    module_undo_event(data, head, tail, error);
+    struct cwd_module* module = data;
+    cwd_module_undo_event(module, head, tail, error);
 }
 
 static void
 finish_cb(void* data, struct picotm_error* error)
 {
-    module_finish(data);
+    struct cwd_module* module = data;
+    cwd_module_finish(module);
 }
 
 static void
@@ -141,7 +160,7 @@ release_cb(void* data)
 }
 
 static void
-init_cwd_module(struct module* module, struct picotm_error* error)
+init_cwd_module(struct cwd_module* module, struct picotm_error* error)
 {
     static const struct picotm_module_ops s_ops = {
         .apply_event = apply_event_cb,
@@ -160,8 +179,7 @@ init_cwd_module(struct module* module, struct picotm_error* error)
         goto err_picotm_register_module;
     }
 
-    cwd_log_init(&module->log, module_id);
-    cwd_tx_init(&module->tx, &module->log, cwd);
+    cwd_module_init(module, cwd, module_id);
 
     return;
 
@@ -170,13 +188,13 @@ err_picotm_register_module:
 }
 
 static void
-uninit_cwd_module(struct module* module)
+uninit_cwd_module(struct cwd_module* module)
 {
-    module_uninit(module);
+    cwd_module_uninit(module);
     PICOTM_GLOBAL_STATE_UNREF(cwd);
 }
 
-PICOTM_STATE_STATIC_IMPL(cwd_module, struct module,
+PICOTM_STATE_STATIC_IMPL(cwd_module, struct cwd_module,
                          init_cwd_module,
                          uninit_cwd_module)
 PICOTM_THREAD_STATE_STATIC_IMPL(cwd_module)
@@ -184,8 +202,8 @@ PICOTM_THREAD_STATE_STATIC_IMPL(cwd_module)
 static struct cwd_tx*
 get_cwd_tx(struct picotm_error* error)
 {
-    struct module* module = PICOTM_THREAD_STATE_ACQUIRE(cwd_module, true,
-                                                        error);
+    struct cwd_module* module = PICOTM_THREAD_STATE_ACQUIRE(cwd_module, true,
+                                                            error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
