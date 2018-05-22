@@ -46,35 +46,54 @@ struct txlib_module {
 };
 
 static void
-prepare_commit(struct txlib_module* module, struct picotm_error* error)
+txlib_module_init(struct txlib_module* self, unsigned long module_id)
 {
-    txlib_tx_prepare_commit(&module->tx, error);
+    assert(self);
+
+    txlib_tx_init(&self->tx, module_id);
 }
 
 static void
-apply_event(struct txlib_module* module, uint16_t head, uintptr_t tail,
-            struct picotm_error* error)
+txlib_module_uninit(struct txlib_module* self)
 {
-    txlib_tx_apply_event(&module->tx, head, tail, error);
+    assert(self);
+
+    txlib_tx_uninit(&self->tx);
 }
 
 static void
-undo_event(struct txlib_module* module, uint16_t head, uintptr_t tail,
-           struct picotm_error* error)
+txlib_module_prepare_commit(struct txlib_module* self,
+                            struct picotm_error* error)
 {
-    txlib_tx_undo_event(&module->tx, head, tail, error);
+    assert(self);
+
+    txlib_tx_prepare_commit(&self->tx, error);
 }
 
 static void
-finish(struct txlib_module* module, struct picotm_error* error)
+txlib_module_apply_event(struct txlib_module* self, uint16_t head,
+                         uintptr_t tail, struct picotm_error* error)
 {
-    txlib_tx_finish(&module->tx);
+    assert(self);
+
+    txlib_tx_apply_event(&self->tx, head, tail, error);
 }
 
 static void
-uninit(struct txlib_module* module)
+txlib_module_undo_event(struct txlib_module* self, uint16_t head,
+                        uintptr_t tail, struct picotm_error* error)
 {
-    txlib_tx_uninit(&module->tx);
+    assert(self);
+
+    txlib_tx_undo_event(&self->tx, head, tail, error);
+}
+
+static void
+txlib_module_finish(struct txlib_module* self)
+{
+    assert(self);
+
+    txlib_tx_finish(&self->tx);
 }
 
 /*
@@ -88,27 +107,31 @@ PICOTM_THREAD_STATE_STATIC_DECL(txlib_module)
 static void
 prepare_commit_cb(void* data, int is_irrevocable, struct picotm_error* error)
 {
-    prepare_commit(data, error);
+    struct txlib_module* module = data;
+    txlib_module_prepare_commit(module, error);
 }
 
 static void
 apply_event_cb(uint16_t head, uintptr_t tail, void* data,
                struct picotm_error* error)
 {
-    apply_event(data, head, tail, error);
+    struct txlib_module* module = data;
+    txlib_module_apply_event(module, head, tail, error);
 }
 
 static void
 undo_event_cb(uint16_t head, uintptr_t tail, void* data,
               struct picotm_error* error)
 {
-    undo_event(data, head, tail, error);
+    struct txlib_module* module = data;
+    txlib_module_undo_event(module, head, tail, error);
 }
 
 static void
 finish_cb(void* data, struct picotm_error* error)
 {
-    finish(data, error);
+    struct txlib_module* module = data;
+    txlib_module_finish(module);
 }
 
 static void
@@ -133,13 +156,13 @@ init_txlib_module(struct txlib_module* module, struct picotm_error* error)
         return;
     }
 
-    txlib_tx_init(&module->tx, module_id);
+    txlib_module_init(module, module_id);
 }
 
 static void
 uninit_txlib_module(struct txlib_module* module)
 {
-    uninit(module);
+    txlib_module_uninit(module);
 }
 
 PICOTM_STATE_STATIC_IMPL(txlib_module, struct txlib_module,
