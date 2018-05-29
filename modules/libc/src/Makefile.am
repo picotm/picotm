@@ -175,6 +175,7 @@ libpicotm_c_la_SOURCES = allocator/allocator_event.c \
                          sys_socket-tm.c \
                          sys_stat.c \
                          sys_stat-tm.c \
+                         time.c \
                          unistd.c \
                          unistd-tm.c
 

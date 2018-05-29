@@ -329,6 +329,28 @@ AC_DEFUN([_CHECK_LIBC_SYS_TYPES_H], [
     ])
 ])
 
+AC_DEFUN([_CHECK_LIBC_TIME_H], [
+    AC_CHECK_HEADERS([time.h])
+    AS_VAR_IF([ac_cv_header_time_h], [yes], [
+
+        #
+        # Types
+        #
+
+        _CHECK_MODULE_TYPE([libc], [struct itimerspec], [[@%:@include <time.h>]])
+        _CHECK_MODULE_TYPE([libc], [struct timespec],   [[@%:@include <time.h>]])
+        _CHECK_MODULE_TYPE([libc], [struct tm],         [[@%:@include <time.h>]])
+
+        #
+        # Public interfaces
+        #
+
+        _CHECK_MODULE_INTF([libc], [strftime],   [[@%:@include <time.h>]])
+        _CHECK_MODULE_INTF([libc], [strftime_l], [[@%:@include <time.h>]])
+        _CHECK_MODULE_INTF([libc], [strptime],   [[@%:@include <time.h>]])
+    ])
+])
+
 AC_DEFUN([_CHECK_LIBC_UNISTD_H], [
     AC_CHECK_HEADERS([unistd.h])
     AS_VAR_IF([ac_cv_header_unistd_h], [yes], [
@@ -405,6 +427,7 @@ AC_DEFUN([_CONFIG_LIBC], [
         _CHECK_LIBC_SYS_SOCKET_H
         _CHECK_LIBC_SYS_STAT_H
         _CHECK_LIBC_SYS_TYPES_H
+        _CHECK_LIBC_TIME_H
         _CHECK_LIBC_UNISTD_H
     ])
 ])
