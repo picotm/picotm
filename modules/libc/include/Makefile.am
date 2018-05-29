@@ -38,6 +38,7 @@ nobase_include_HEADERS = picotm/config/picotm-libc-config.h \
                          picotm/sys/stat-tm.h \
                          picotm/sys/stat.h \
                          picotm/sys/types.h \
+                         picotm/time.h \
                          picotm/picotm-libc.h \
                          picotm/unistd-tm.h \
                          picotm/unistd.h
