@@ -29,7 +29,10 @@ PUBAPI_TESTS = allocator-pubapi-t1.test \
                fildes-pubapi-t4.test \
                signal-pubapi-t1.test \
                signal-pubapi-t1-valgrind.test \
-               signal-pubapi-t4.test
+               signal-pubapi-t4.test \
+               time_h-pubapi-t1.test \
+               time_h-pubapi-t1-valgrind.test \
+               time_h-pubapi-t4.test
 
 TESTS =
 if ENABLE_MODULE_LIBC
@@ -53,7 +56,8 @@ if ENABLE_MODULE_LIBC
 check_PROGRAMS = allocator-pubapi \
                  cwd-pubapi \
                  fildes-pubapi \
-                 signal-pubapi
+                 signal-pubapi \
+                 time_h-pubapi
 endif
 
 allocator_pubapi_SOURCES = allocator_pubapi.c
@@ -63,6 +67,8 @@ cwd_pubapi_SOURCES = cwd_pubapi.c
 fildes_pubapi_SOURCES = fildes_pubapi.c
 
 signal_pubapi_SOURCES = signal_pubapi.c
+
+time_h_pubapi_SOURCES = time_h_pubapi.c
 
 AM_LDFLAGS = -static
 
