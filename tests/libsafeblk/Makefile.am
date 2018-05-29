@@ -40,6 +40,8 @@ libpicotm_safeblk_la_SOURCES = compat/pthread_barrier.c \
                                safe_sys_stat.h \
                                safe_sys_time.c \
                                safe_sys_time.h \
+                               safe_time.c \
+                               safe_time.h \
                                safe_unistd.c \
                                safe_unistd.h
 
