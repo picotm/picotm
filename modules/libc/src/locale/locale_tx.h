@@ -21,6 +21,7 @@
 #pragma once
 
 #include "picotm/picotm-lib-rwstate.h"
+#include "picotm/picotm-lib-slist.h"
 #include <stddef.h>
 #include <stdint.h>
 #include "locale.h"
@@ -43,7 +44,9 @@ struct locale_tx {
 
     struct locale* locale;
 
-    struct picotm_rwstate   rwstate[NUMBER_OF_LOCALE_FIELDS];
+    struct picotm_slist locales;
+
+    struct picotm_rwstate rwstate[NUMBER_OF_LOCALE_FIELDS];
 };
 
 void
@@ -76,11 +79,36 @@ locale_tx_try_wrlock_field(struct locale_tx* self, enum locale_field field,
                            struct picotm_error* error);
 
 /*
+ * duplocale()
+ */
+
+locale_t
+locale_tx_duplocale_exec(struct locale_tx* self, locale_t locobj,
+                         struct picotm_error* error);
+
+/*
+ * freelocale()
+ */
+
+void
+locale_tx_freelocale_exec(struct locale_tx* self, locale_t locobj,
+                          struct picotm_error* error);
+
+/*
  * localeconv()
  */
 
 struct lconv*
 locale_tx_localeconv_exec(struct locale_tx* self, struct picotm_error* error);
+
+/*
+ * newlocale()
+ */
+
+locale_t
+locale_tx_newlocale_exec(struct locale_tx* self, int category_mask,
+                         const char* locale, locale_t base,
+                         struct picotm_error* error);
 
 /*
  * setlocale()
@@ -89,6 +117,14 @@ locale_tx_localeconv_exec(struct locale_tx* self, struct picotm_error* error);
 char*
 locale_tx_setlocale_exec(struct locale_tx* self, int category,
                          const char* locale, struct picotm_error* error);
+
+/*
+ * uselocale()
+ */
+
+locale_t
+locale_tx_uselocale_exec(struct locale_tx* self, locale_t newloc,
+                         struct picotm_error* error);
 
 /*
  * Module interface

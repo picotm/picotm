@@ -49,6 +49,7 @@ locale_init(struct locale* self)
 
     init_rwlocks(picotm_arraybeg(self->rwlock),
                  picotm_arrayend(self->rwlock));
+    picotm_spinlock_init(&self->locale_state_lock);
 }
 
 void
@@ -56,6 +57,7 @@ locale_uninit(struct locale* self)
 {
     assert(self);
 
+    picotm_spinlock_uninit(&self->locale_state_lock);
     uninit_rwlocks(picotm_arraybeg(self->rwlock),
                    picotm_arrayend(self->rwlock));
 }

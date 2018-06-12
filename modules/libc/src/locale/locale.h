@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include "picotm/picotm-lib-spinlock.h"
 #include "picotm/picotm-lib-rwlock.h"
 
 /**
@@ -51,6 +52,8 @@ enum locale_field {
  */
 struct locale {
     struct picotm_rwlock    rwlock[NUMBER_OF_LOCALE_FIELDS];
+
+    struct picotm_spinlock locale_state_lock;
 };
 
 /**

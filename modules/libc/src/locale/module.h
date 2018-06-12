@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <locale.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -33,9 +34,22 @@
 
 struct picotm_error;
 
+locale_t
+locale_module_duplocale(locale_t locobj, struct picotm_error* error);
+
+void
+locale_module_freelocale(locale_t locobj, struct picotm_error* error);
+
 struct lconv*
 locale_module_localeconv(struct picotm_error* error);
+
+locale_t
+locale_module_newlocale(int category_mask, const char* locale,
+                        locale_t base, struct picotm_error* error);
 
 char*
 locale_module_setlocale(int category, const char* locale,
                         struct picotm_error* error);
+
+locale_t
+locale_module_uselocale(locale_t newloc, struct picotm_error* error);

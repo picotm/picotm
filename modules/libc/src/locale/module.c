@@ -227,12 +227,38 @@ get_non_null_locale_tx(void)
  * Public interface
  */
 
+locale_t
+locale_module_duplocale(locale_t locobj, struct picotm_error* error)
+{
+    struct locale_tx* locale_tx = get_non_null_locale_tx();
+
+    return locale_tx_duplocale_exec(locale_tx, locobj, error);
+}
+
+void
+locale_module_freelocale(locale_t locobj, struct picotm_error* error)
+{
+    struct locale_tx* locale_tx = get_non_null_locale_tx();
+
+    return locale_tx_freelocale_exec(locale_tx, locobj, error);
+}
+
 struct lconv*
 locale_module_localeconv(struct picotm_error* error)
 {
     struct locale_tx* locale_tx = get_non_null_locale_tx();
 
     return locale_tx_localeconv_exec(locale_tx, error);
+}
+
+locale_t
+locale_module_newlocale(int category_mask, const char* locale, locale_t base,
+                        struct picotm_error* error)
+{
+    struct locale_tx* locale_tx = get_non_null_locale_tx();
+
+    return locale_tx_newlocale_exec(locale_tx, category_mask, locale, base,
+                                    error);
 }
 
 char*
@@ -242,4 +268,12 @@ locale_module_setlocale(int category, const char* locale,
     struct locale_tx* locale_tx = get_non_null_locale_tx();
 
     return locale_tx_setlocale_exec(locale_tx, category, locale, error);
+}
+
+locale_t
+locale_module_uselocale(locale_t newloc, struct picotm_error* error)
+{
+    struct locale_tx* locale_tx = get_non_null_locale_tx();
+
+    return locale_tx_uselocale_exec(locale_tx, newloc, error);
 }

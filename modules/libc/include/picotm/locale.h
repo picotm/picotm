@@ -34,6 +34,36 @@ PICOTM_BEGIN_DECLS
  * \brief Transactional wrappers for interfaces of <locale.h>.
  */
 
+#if defined(PICOTM_LIBC_HAVE_TYPE_LOCALE_T) && \
+            PICOTM_LIBC_HAVE_TYPE_LOCALE_T || \
+    defined(__PICOTM_DOXYGEN)
+#if !defined(__PICOTM_LOAD_LOCALE_T_TX) || \
+            !__PICOTM_LOAD_LOCALE_T_TX
+#undef __PICOTM_LOAD_LOCALE_T_TX
+#define __PICOTM_LOAD_LOCALE_T_TX   (1)
+/** \addtogroup group_libc
+ * \{ */
+PICOTM_TM_LOAD_TX(locale_t, locale_t);
+/** \} */
+#endif
+#if !defined(__PICOTM_STORE_LOCALE_T_TX) || \
+            !__PICOTM_STORE_LOCALE_T_TX
+#undef __PICOTM_STORE_LOCALE_T_TX
+#define __PICOTM_STORE_LOCALE_T_TX  (1)
+/** \addtogroup group_libc
+ * \{ */
+PICOTM_TM_STORE_TX(locale_t, locale_t);
+/** \} */
+#endif
+#if !defined(__PICOTM_PRIVATIZE_LOCALE_T_TX) || \
+            !__PICOTM_PRIVATIZE_LOCALE_T_TX
+#undef __PICOTM_PRIVATIZE_LOCALE_T_TX
+#define __PICOTM_PRIVATIZE_LOCALE_T_TX  (1)
+PICOTM_TM_PRIVATIZE_TX(locale_t, locale_t);
+/** \} */
+#endif
+#endif
+
 #if defined(PICOTM_LIBC_HAVE_TYPE_STRUCT_LCONV) && \
             PICOTM_LIBC_HAVE_TYPE_STRUCT_LCONV || \
     defined(__PICOTM_DOXYGEN)
@@ -64,6 +94,36 @@ PICOTM_TM_PRIVATIZE_TX(struct_lconv, struct lconv);
 #endif
 #endif
 
+#if defined(PICOTM_LIBC_HAVE_DUPLOCALE) && \
+            PICOTM_LIBC_HAVE_DUPLOCALE || \
+    defined(__PICOTM_DOXYGEN)
+PICOTM_NOTHROW
+/**
+ * \ingroup group_libc
+ * A transaction-safe implementation of [duplocale()][posix::duplocale].
+ *
+ * [posix::duplocale]:
+ *  http://pubs.opengroup.org/onlinepubs/9699919799/functions/duplocale.html
+ */
+locale_t
+duplocale_tx(locale_t locobj);
+#endif
+
+#if defined(PICOTM_LIBC_HAVE_FREELOCALE) && \
+            PICOTM_LIBC_HAVE_FREELOCALE || \
+    defined(__PICOTM_DOXYGEN)
+PICOTM_NOTHROW
+/**
+ * \ingroup group_libc
+ * A transaction-safe implementation of [freelocale()][posix::freelocale].
+ *
+ * [posix::freelocale]:
+ *  http://pubs.opengroup.org/onlinepubs/9699919799/functions/freelocale.html
+ */
+void
+freelocale_tx(locale_t locobj);
+#endif
+
 #if defined(PICOTM_LIBC_HAVE_LOCALECONV) && \
             PICOTM_LIBC_HAVE_LOCALECONV || \
     defined(__PICOTM_DOXYGEN)
@@ -79,6 +139,21 @@ struct lconv*
 localeconv_tx(void);
 #endif
 
+#if defined(PICOTM_LIBC_HAVE_NEWLOCALE) && \
+            PICOTM_LIBC_HAVE_NEWLOCALE || \
+    defined(__PICOTM_DOXYGEN)
+PICOTM_NOTHROW
+/**
+ * \ingroup group_libc
+ * A transaction-safe implementation of [newlocale()][posix::newlocale].
+ *
+ * [posix::newlocale]:
+ *  http://pubs.opengroup.org/onlinepubs/9699919799/functions/newlocale.html
+ */
+locale_t
+newlocale_tx(int category_mask, const char* locale, locale_t base);
+#endif
+
 #if defined(PICOTM_LIBC_HAVE_SETLOCALE) && \
             PICOTM_LIBC_HAVE_SETLOCALE || \
     defined(__PICOTM_DOXYGEN)
@@ -92,6 +167,21 @@ PICOTM_NOTHROW
  */
 char*
 setlocale_tx(int category, const char* locale);
+#endif
+
+#if defined(PICOTM_LIBC_HAVE_USELOCALE) && \
+            PICOTM_LIBC_HAVE_USELOCALE || \
+    defined(__PICOTM_DOXYGEN)
+PICOTM_NOTHROW
+/**
+ * \ingroup group_libc
+ * A transaction-safe implementation of [uselocale()][posix::uselocale].
+ *
+ * [posix::uselocale]:
+ *  http://pubs.opengroup.org/onlinepubs/9699919799/functions/uselocale.html
+ */
+locale_t
+uselocale_tx(locale_t newloc);
 #endif
 
 PICOTM_END_DECLS
