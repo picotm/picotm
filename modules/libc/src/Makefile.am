@@ -158,6 +158,18 @@ libpicotm_c_la_SOURCES = allocator/allocator_event.c \
                          fildes/socket_tx.h \
                          libc.c \
                          libc.h \
+                         locale-tm.c \
+                         locale.c \
+                         locale/locale.c \
+                         locale/locale.h \
+                         locale/locale_event.c \
+                         locole/locale_event.h \
+                         locale/locale_log.c \
+                         locale/locale_log.h \
+                         locale/locale_tx.c \
+                         locale/locale_tx.h \
+                         locale/module.c \
+                         locale/module.h \
                          sched.c \
                          signal/module.c \
                          signal/module.h \
