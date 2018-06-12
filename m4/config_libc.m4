@@ -50,6 +50,25 @@ AC_DEFUN([_CHECK_LIBC_FCNTL_H], [
     ])
 ])
 
+AC_DEFUN([_CHECK_LIBC_LOCALE_H], [
+    AC_CHECK_HEADERS([locale.h])
+    AS_VAR_IF([ac_cv_header_locale_h], [yes], [
+
+        #
+        # Types
+        #
+
+        _CHECK_MODULE_TYPE([libc], [struct lconv], [[@%:@include <locale.h>]])
+
+        #
+        # Public interfaces
+        #
+
+        _CHECK_MODULE_INTF([libc], [localeconv], [[@%:@include <locale.h>]])
+        _CHECK_MODULE_INTF([libc], [setlocale],  [[@%:@include <locale.h>]])
+    ])
+])
+
 AC_DEFUN([_CHECK_LIBC_MALLOC_H], [
     AC_CHECK_HEADERS([malloc.h])
     AS_VAR_IF([ac_cv_header_malloc_h], [yes], [
@@ -414,6 +433,7 @@ AC_DEFUN([_CONFIG_LIBC], [
 
         _CHECK_LIBC_ERRNO_H
         _CHECK_LIBC_FCNTL_H
+        _CHECK_LIBC_LOCALE_H
         _CHECK_LIBC_MALLOC_H
         _CHECK_LIBC_MALLOC_MALLOC_H
         _CHECK_LIBC_MALLOC_NP_H
