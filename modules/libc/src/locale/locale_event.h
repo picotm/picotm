@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <locale.h>
+
 /**
  * \cond impl || libc_impl || libc_impl_locale
  * \ingroup libc_impl
@@ -34,8 +36,16 @@ struct locale_tx;
  * \brief Opcodes for locale events.
  */
 enum locale_op {
+    /** \brief Represents a duplocale() operation. */
+    LOCALE_OP_DUPLOCALE,
+    /** \brief Represents a freelocale() operation. */
+    LOCALE_OP_FREELOCALE,
+    /** \brief Represents a newlocale() operation. */
+    LOCALE_OP_NEWLOCALE,
     /** \brief Represents a setlocale() operation. */
     LOCALE_OP_SETLOCALE,
+    /** \brief Represents a uselocale() operation. */
+    LOCALE_OP_USELOCALE,
     /** \brief The number of locale operations. */
     LAST_LOCALE_OP
 };
@@ -46,8 +56,20 @@ enum locale_op {
 struct locale_event {
     union {
         struct {
+            locale_t result;
+        } duplocale;
+        struct {
+            locale_t locobj;
+        } freelocale;
+        struct {
+            locale_t result;
+        } newlocale;
+        struct {
             void* oldlocale;
             int category;
         } setlocale;
+        struct {
+            locale_t oldloc;
+        } uselocale;
     } arg;
 };

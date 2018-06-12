@@ -23,8 +23,43 @@
 #include <errno.h>
 #include <stdarg.h>
 #include <string.h>
+#include "error/module.h"
 #include "locale/module.h"
 #include "picotm/locale-tm.h"
+
+#if defined(PICOTM_LIBC_HAVE_DUPLOCALE) && PICOTM_LIBC_HAVE_DUPLOCALE
+PICOTM_EXPORT
+locale_t
+duplocale_tx(locale_t locobj)
+{
+    error_module_save_errno();
+
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        locale_t newloc = locale_module_duplocale(locobj, &error);
+        if (!picotm_error_is_set(&error)) {
+            return newloc;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
+}
+#endif
+
+#if defined(PICOTM_LIBC_HAVE_FREELOCALE) && PICOTM_LIBC_HAVE_FREELOCALE
+PICOTM_EXPORT
+void
+freelocale_tx(locale_t locobj)
+{
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        locale_module_freelocale(locobj, &error);
+        if (!picotm_error_is_set(&error)) {
+            return;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
+}
+#endif
 
 #if defined(PICOTM_LIBC_HAVE_LOCALECONV) && PICOTM_LIBC_HAVE_LOCALECONV
 PICOTM_EXPORT
@@ -42,6 +77,16 @@ localeconv_tx()
 }
 #endif
 
+#if defined(PICOTM_LIBC_HAVE_NEWLOCALE) && PICOTM_LIBC_HAVE_NEWLOCALE
+PICOTM_EXPORT
+locale_t
+newlocale_tx(int category_mask, const char* locale, locale_t base)
+{
+    privatize_c_tx(locale, '\0', PICOTM_TM_PRIVATIZE_LOAD);
+    return newlocale_tm(category_mask, locale, base);
+}
+#endif
+
 #if defined(PICOTM_LIBC_HAVE_SETLOCALE) && PICOTM_LIBC_HAVE_SETLOCALE
 PICOTM_EXPORT
 char*
@@ -52,5 +97,23 @@ setlocale_tx(int category, const char* locale)
         privatize_c_tx(locale, '\0', PICOTM_TM_PRIVATIZE_LOAD);
     }
     return setlocale_tm(category, locale);
+}
+#endif
+
+#if defined(PICOTM_LIBC_HAVE_USELOCALE) && PICOTM_LIBC_HAVE_USELOCALE
+PICOTM_EXPORT
+locale_t
+uselocale_tx(locale_t newloc)
+{
+    error_module_save_errno();
+
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        locale_t oldloc = locale_module_uselocale(newloc, &error);
+        if (!picotm_error_is_set(&error)) {
+            return oldloc;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 #endif

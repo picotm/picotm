@@ -23,6 +23,25 @@
 #include "error/module.h"
 #include "locale/module.h"
 
+#if defined(PICOTM_LIBC_HAVE_NEWLOCALE) && PICOTM_LIBC_HAVE_NEWLOCALE
+PICOTM_EXPORT
+locale_t
+newlocale_tm(int category_mask, const char* locale, locale_t base)
+{
+    error_module_save_errno();
+
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        locale_t newloc = locale_module_newlocale(category_mask, locale,
+                                                  base, &error);
+        if (!picotm_error_is_set(&error)) {
+            return newloc;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
+}
+#endif
+
 #if defined(PICOTM_LIBC_HAVE_SETLOCALE) && PICOTM_LIBC_HAVE_SETLOCALE
 PICOTM_EXPORT
 char*

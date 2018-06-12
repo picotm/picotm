@@ -33,6 +33,18 @@ PICOTM_BEGIN_DECLS
  * \brief Transactional wrappers for interfaces of <locale.h>.
  */
 
+#if defined(PICOTM_LIBC_HAVE_NEWLOCALE) && \
+            PICOTM_LIBC_HAVE_NEWLOCALE || \
+    defined(__PICOTM_DOXYGEN)
+PICOTM_NOTHROW
+/**
+ * \ingroup group_libc
+ * Variant of newlocale_tx() that operates on transactional memory.
+ */
+locale_t
+newlocale_tm(int category_mask, const char* locale, locale_t base);
+#endif
+
 #if defined(PICOTM_LIBC_HAVE_SETLOCALE) && \
             PICOTM_LIBC_HAVE_SETLOCALE || \
     defined(__PICOTM_DOXYGEN)

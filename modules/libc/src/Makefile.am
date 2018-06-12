@@ -197,6 +197,8 @@ AM_CPPFLAGS = -iquote $(top_builddir)/modules/libc/include \
               -iquote $(top_srcdir)/modules/libc/include \
               -iquote $(top_builddir)/modules/tm/include \
               -iquote $(top_srcdir)/modules/tm/include \
+              -iquote $(top_builddir)/modules/ptrdata/include \
+              -iquote $(top_srcdir)/modules/ptrdata/include \
               -iquote $(top_builddir)/include \
               -iquote $(top_srcdir)/include \
               -include config.h

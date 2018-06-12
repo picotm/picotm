@@ -58,14 +58,19 @@ AC_DEFUN([_CHECK_LIBC_LOCALE_H], [
         # Types
         #
 
+        _CHECK_MODULE_TYPE([libc], [locale_t],     [[@%:@include <locale.h>]])
         _CHECK_MODULE_TYPE([libc], [struct lconv], [[@%:@include <locale.h>]])
 
         #
         # Public interfaces
         #
 
+        _CHECK_MODULE_INTF([libc], [duplocale],  [[@%:@include <locale.h>]])
+        _CHECK_MODULE_INTF([libc], [freelocale], [[@%:@include <locale.h>]])
         _CHECK_MODULE_INTF([libc], [localeconv], [[@%:@include <locale.h>]])
+        _CHECK_MODULE_INTF([libc], [newlocale],  [[@%:@include <locale.h>]])
         _CHECK_MODULE_INTF([libc], [setlocale],  [[@%:@include <locale.h>]])
+        _CHECK_MODULE_INTF([libc], [uselocale],  [[@%:@include <locale.h>]])
     ])
 ])
 
