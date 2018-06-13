@@ -155,6 +155,10 @@ dnl
 dnl Modules
 dnl
 
+AC_CONFIG_HEADERS(
+    [modules/ptrdata/include/picotm/config/picotm-ptrdata-config.h])
+CONFIG_PTRDATA
+
 AC_CONFIG_HEADERS([modules/cast/include/picotm/config/picotm-cast-config.h])
 CONFIG_CAST
 
@@ -256,6 +260,11 @@ AC_CONFIG_FILES([Makefile
                  modules/libpthread/Makefile
                  modules/libpthread/include/Makefile
                  modules/libpthread/src/Makefile
+                 modules/ptrdata/Makefile
+                 modules/ptrdata/include/Makefile
+                 modules/ptrdata/src/Makefile
+                 modules/ptrdata/tests/Makefile
+                 modules/ptrdata/tests/modapi/Makefile
                  modules/tm/Makefile
                  modules/tm/include/Makefile
                  modules/tm/src/Makefile
