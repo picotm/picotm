@@ -1,6 +1,6 @@
 #
 # picotm - A system-level transaction manager
-# Copyright (c) 2017-2018   Thomas Zimmermann <contact@tzimmermann.org>
+# Copyright (c) 2018    Thomas Zimmermann <contact@tzimmermann.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -18,11 +18,7 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
 #
 
-SUBDIRS = ptrdata \
-          arithmetic \
-          cast \
-          tm \
-          libc \
-          libm \
-          libpthread \
-          txlib
+if ENABLE_MODULE_PTRDATA
+nobase_include_HEADERS = picotm/config/picotm-ptrdata-config.h \
+                         picotm/picotm-ptrdata.h
+endif
