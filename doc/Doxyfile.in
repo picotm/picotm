@@ -40,6 +40,8 @@ STRIP_FROM_PATH        = @abs_top_builddir@/include \
                          @abs_top_srcdir@/modules/libpthread/include \
                          @abs_top_builddir@/modules/arithmetic/include \
                          @abs_top_srcdir@/modules/arithmetic/include \
+                         @abs_top_builddir@/modules/ptrdata/include \
+                         @abs_top_srcdir@/modules/ptrdata/include \
                          @abs_top_builddir@/modules/tm/include \
                          @abs_top_srcdir@/modules/tm/include \
                          @abs_top_builddir@/modules/txlib/include \
@@ -56,6 +58,8 @@ STRIP_FROM_INC_PATH    = @abs_top_builddir@/include \
                          @abs_top_srcdir@/modules/libpthread/include \
                          @abs_top_builddir@/modules/arithmetic/include \
                          @abs_top_srcdir@/modules/arithmetic/include \
+                         @abs_top_builddir@/modules/ptrdata/include \
+                         @abs_top_srcdir@/modules/ptrdata/include \
                          @abs_top_builddir@/modules/tm/include \
                          @abs_top_srcdir@/modules/tm/include \
                          @abs_top_builddir@/modules/txlib/include \
@@ -154,6 +158,8 @@ INPUT                  = @abs_top_builddir@/include \
                          @abs_top_srcdir@/modules/libpthread/include \
                          @abs_top_builddir@/modules/arithmetic/include \
                          @abs_top_srcdir@/modules/arithmetic/include \
+                         @abs_top_builddir@/modules/ptrdata/include \
+                         @abs_top_srcdir@/modules/ptrdata/include \
                          @abs_top_builddir@/modules/tm/include \
                          @abs_top_srcdir@/modules/tm/include \
                          @abs_top_builddir@/modules/txlib/include \
@@ -331,6 +337,8 @@ INCLUDE_PATH           = @abs_top_builddir@/include \
                          @abs_top_srcdir@/modules/libpthread/include \
                          @abs_top_builddir@/modules/arithmetic/include \
                          @abs_top_srcdir@/modules/arithmetic/include \
+                         @abs_top_builddir@/modules/ptrdata/include \
+                         @abs_top_srcdir@/modules/ptrdata/include \
                          @abs_top_builddir@/modules/tm/include \
                          @abs_top_srcdir@/modules/tm/include \
                          @abs_top_builddir@/modules/txlib/include \
