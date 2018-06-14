@@ -429,6 +429,8 @@ PICOTM_END_DECLS
  *      \copybrief group_modules
  *  - \ref group_lib \n
  *      \copybrief group_lib
+ *  - \ref group_ptrdata \n
+ *      \copybrief group_ptrdata
  *
  * [license:lgpl3]: https://www.gnu.org/licenses/
  */
