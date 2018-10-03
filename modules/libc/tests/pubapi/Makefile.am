@@ -27,6 +27,9 @@ PUBAPI_TESTS = allocator-pubapi-t1.test \
                fildes-pubapi-t1.test \
                fildes-pubapi-t1-valgrind.test \
                fildes-pubapi-t4.test \
+               locale_h-pubapi-t1.test \
+               locale_h-pubapi-t1-valgrind.test \
+               locale_h-pubapi-t4.test \
                signal-pubapi-t1.test \
                signal-pubapi-t1-valgrind.test \
                signal-pubapi-t4.test \
@@ -56,6 +59,7 @@ if ENABLE_MODULE_LIBC
 check_PROGRAMS = allocator-pubapi \
                  cwd-pubapi \
                  fildes-pubapi \
+                 locale_h-pubapi \
                  signal-pubapi \
                  time_h-pubapi
 endif
@@ -65,6 +69,8 @@ allocator_pubapi_SOURCES = allocator_pubapi.c
 cwd_pubapi_SOURCES = cwd_pubapi.c
 
 fildes_pubapi_SOURCES = fildes_pubapi.c
+
+locale_h_pubapi_SOURCES = locale_h_pubapi.c
 
 signal_pubapi_SOURCES = signal_pubapi.c
 
@@ -77,6 +83,7 @@ LDADD = $(top_builddir)/tests/libtests/libpicotm_tests.la \
         $(top_builddir)/tests/libtap/libpicotm_tap.la \
         $(top_builddir)/modules/libc/src/libpicotm-c.la \
         $(top_builddir)/modules/tm/src/libpicotm-tm.la \
+        $(top_builddir)/modules/ptrdata/src/libpicotm-ptrdata.la \
         $(top_builddir)/src/libpicotm.la
 
 AM_CPPFLAGS = -iquote $(top_builddir)/tests/libtests \
