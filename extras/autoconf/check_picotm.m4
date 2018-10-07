@@ -5,7 +5,7 @@
 #
 # LICENSE
 #
-#   Copyright (c) 2017 Thomas Zimmermann <tdz@users.sourceforge.net>
+#   Copyright (c) 2017 Thomas Zimmermann <contact@tzimmermann.org>
 #
 #   Copying and distribution of this file, with or without modification,
 #   are permitted in any medium without royalty provided the copyright

@@ -1,6 +1,6 @@
 dnl
 dnl MIT License
-dnl Copyright (c) 2017-2018 Thomas Zimmermann <tdz@users.sourceforge.net>
+dnl Copyright (c) 2017-2018 Thomas Zimmermann <contact@tzimmermann.org>
 dnl
 dnl Permission is hereby granted, free of charge, to any person obtaining a
 dnl copy of this software and associated documentation files (the "Software"),
