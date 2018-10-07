@@ -1,6 +1,6 @@
 /*
  * MIT License
- * Copyright (c) 2017   Thomas Zimmermann <tdz@users.sourceforge.net>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <tdz@users.sourceforge.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -257,6 +257,9 @@ lookup_value_entry(uintptr_t* entry_ptr, unsigned long depth,
                                                error);
         if (picotm_error_is_set(error)) {
             return NULL;
+        } else if (!dir) {
+            assert(!create_dirs);
+            return NULL;
         }
 
         entry_ptr = dir->entry + entry_index(key, depth, level_nbits);
@@ -311,6 +314,8 @@ picotm_treemap_find_value(struct picotm_treemap* self,
                                               key, !!(value_create),
                                               self->level_nbits, error);
     if (picotm_error_is_set(error)) {
+        return 0;
+    } else if (!entry_ptr) {
         return 0;
     }
 
