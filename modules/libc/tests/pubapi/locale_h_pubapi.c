@@ -110,13 +110,84 @@ locale_h_test_3(unsigned int tid)
 }
 
 /*
+ * Test POSIX locale interface
+ */
+
+static void
+locale_h_test_4(unsigned int tid)
+{
+    picotm_begin
+        locale_t locobj = newlocale_tx(LC_ALL, test_locale, (locale_t)0);
+        freelocale_tx(locobj);
+    picotm_commit
+        abort_transaction_on_error(__func__);
+    picotm_end
+}
+
+static void
+locale_h_test_5(unsigned int tid)
+{
+    picotm_begin
+        locale_t locobj1 = newlocale_tx(LC_ALL, test_locale, (locale_t)0);
+        locale_t locobj2 = duplocale_tx(locobj1);
+        freelocale_tx(locobj1);
+        freelocale_tx(locobj2);
+    picotm_commit
+        abort_transaction_on_error(__func__);
+    picotm_end
+}
+
+static void
+locale_h_test_6(unsigned int tid)
+{
+    locale_t locobj = (locale_t)0;
+
+    picotm_begin
+        locale_t tx_locobj = newlocale_tx(LC_ALL, test_locale, (locale_t)0);
+        uselocale_tx(tx_locobj);
+        store_locale_t_tx(&locobj, tx_locobj);
+    picotm_commit
+        abort_transaction_on_error(__func__);
+    picotm_end
+
+    if (locobj == (locale_t)0) {
+        tap_error("lobobj was not updated");
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        picotm_error_set_error_code(&error, PICOTM_GENERAL_ERROR);
+        picotm_error_mark_as_non_recoverable(&error);
+        picotm_recover_from_error(&error);
+    }
+
+    const locale_t cur_locobj = uselocale((locale_t)0);
+
+    if (cur_locobj != locobj) {
+        tap_error("thread-local locale was not set: %p != %p",
+                  cur_locobj, locobj);
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        picotm_error_set_error_code(&error, PICOTM_GENERAL_ERROR);
+        picotm_error_mark_as_non_recoverable(&error);
+        picotm_recover_from_error(&error);
+    }
+
+    picotm_begin
+        locale_t tx_locobj = load_locale_t_tx(&locobj);
+        freelocale_tx(tx_locobj);
+    picotm_commit
+        abort_transaction_on_error(__func__);
+    picotm_end
+}
+
+/*
  * Entry point
  */
 
 static const struct test_func locale_h_test[] = {
-    {"Test setlocale(NULL)",          locale_h_test_1, NULL, NULL},
-    {"Test setlocale(<test locale>)", locale_h_test_2, NULL, NULL},
-    {"Test localeconv()",             locale_h_test_3, NULL, NULL},
+    {"Test setlocale(NULL)",               locale_h_test_1, NULL, NULL},
+    {"Test setlocale(<test locale>)",      locale_h_test_2, NULL, NULL},
+    {"Test localeconv()",                  locale_h_test_3, NULL, NULL},
+    {"Create and free locale",             locale_h_test_4, NULL, NULL},
+    {"Create, duplicate and free locale",  locale_h_test_5, NULL, NULL},
+    {"Create and use thread-local locale", locale_h_test_6, NULL, NULL}
 };
 
 #include "opts.h"
