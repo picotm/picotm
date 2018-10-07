@@ -3,7 +3,7 @@
     "title": "picotm",
     "description": "A system-level transaction manager",
     "homepage": "http://picotm.org",
-    "license": "MITL",
+    "license": "GNU LGPLv3",
     "tags": "c, concurrency, development, distributedsystems, embedded, errorhandling, failsafe, framework, linux, lockless, manufacturing, multicore, multithreading, softwaretransactionalmemory, transactions",
     "releases": [
         {
