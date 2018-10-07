@@ -1,32 +1,28 @@
 dnl
-dnl MIT License
+dnl picotm - A system-level transaction manager
 dnl Copyright (c) 2017-2018 Thomas Zimmermann <contact@tzimmermann.org>
 dnl
-dnl Permission is hereby granted, free of charge, to any person obtaining a
-dnl copy of this software and associated documentation files (the "Software"),
-dnl to deal in the Software without restriction, including without limitation
-dnl the rights to use, copy, modify, merge, publish, distribute, sublicense,
-dnl and/or sell copies of the Software, and to permit persons to whom the
-dnl Software is furnished to do so, subject to the following conditions:
+dnl This program is free software: you can redistribute it and/or modify
+dnl it under the terms of the GNU Lesser General Public License as published by
+dnl the Free Software Foundation, either version 3 of the License, or
+dnl (at your option) any later version.
 dnl
-dnl The above copyright notice and this permission notice shall be included in
-dnl all copies or substantial portions of the Software.
+dnl This program is distributed in the hope that it will be useful,
+dnl but WITHOUT ANY WARRANTY; without even the implied warranty of
+dnl MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+dnl GNU Lesser General Public License for more details.
 dnl
-dnl THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-dnl IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-dnl FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-dnl THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-dnl LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-dnl FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-dnl DEALINGS IN THE SOFTWARE.
+dnl You should have received a copy of the GNU Lesser General Public License
+dnl along with this program.  If not, see <https://www.gnu.org/licenses/>.
 dnl
-dnl SPDX-License-Identifier: MIT
+dnl SPDX-License-Identifier: LGPL-3.0-or-later
+dnl
 
 AC_PREREQ([2.69])
 AC_INIT([picotm], [0.12.0], [bugs@picotm.org], [], [http://picotm.org])
 
 dnl Internal configuration header
-AH_TOP([/* SPDX-License-Identifier: MIT */])
+AH_TOP([/* SPDX-License-Identifier: LGPL-3.0-or-later */])
 AC_CONFIG_HEADERS([config/config.h])
 
 AC_CONFIG_SRCDIR([src/Makefile.am])
