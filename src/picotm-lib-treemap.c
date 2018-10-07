@@ -280,6 +280,10 @@ retrieve_value(
         return entry;
     }
 
+    if (!value_create) {
+        return 0; /* don't create new value */
+    }
+
     entry = value_create(key, treemap, error);
     if (picotm_error_is_set(error)) {
         return 0;
