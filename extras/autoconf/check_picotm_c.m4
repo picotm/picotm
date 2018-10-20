@@ -11,6 +11,8 @@
 #   are permitted in any medium without royalty provided the copyright
 #   notice and this notice are preserved.  This file is offered as-is,
 #   without any warranty.
+#
+#   SPDX-License-Identifier: FSFAP
 
 AC_DEFUN([CHECK_PICOTM_C], [
   AC_CHECK_LIB([picotm-c], [abort_tx])
