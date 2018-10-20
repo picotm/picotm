@@ -18,5 +18,6 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
 #
 
-EXTRA_DIST = GPL-3.0-or-later.txt \
+EXTRA_DIST = FSFAP.txt \
+             GPL-3.0-or-later.txt \
              LGPL-3.0-or-later.txt
