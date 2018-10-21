@@ -20,6 +20,7 @@
 
 aclocal_DATA = check_picotm.m4 \
                check_picotm_c.m4 \
-               check_picotm_tm.m4
+               check_picotm_tm.m4 \
+               check_picotm_txlib.m4
 
 aclocaldir = $(datadir)/aclocal
