@@ -1,6 +1,6 @@
 #
 # picotm - A system-level transaction manager
-# Copyright (c) 2017    Thomas Zimmermann <contact@tzimmermann.org>
+# Copyright (c) 2017-2018   Thomas Zimmermann <contact@tzimmermann.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -18,6 +18,8 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
 #
 
-EXTRA_DIST = check_picotm.m4 \
-             check_picotm_c.m4 \
-             check_picotm_tm.m4
+aclocal_DATA = check_picotm.m4 \
+               check_picotm_c.m4 \
+               check_picotm_tm.m4
+
+aclocaldir = $(datadir)/aclocal
