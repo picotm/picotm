@@ -208,6 +208,20 @@ AM_CONDITIONAL([HAVE_OPTIPNG], [test "x$OPTIPNG" != "x"])
 
 
 dnl
+dnl Error checking
+dnl
+dnl Some autoconf macros don't work well with -Wall and especially
+dnl -Werror. We set both options at the end of the configure script
+dnl to avoid problems during the earlier tests.
+dnl
+
+AX_CHECK_COMPILE_FLAG([-Wall],
+                      [AS_VAR_APPEND([CFLAGS], [" -Wall"])])
+AX_CHECK_COMPILE_FLAG([-Werror],
+                      [AS_VAR_APPEND([CFLAGS], [" -Werror"])])
+
+
+dnl
 dnl Output
 dnl
 
