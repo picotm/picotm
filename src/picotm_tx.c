@@ -406,8 +406,6 @@ picotm_tx_rollback(struct picotm_tx* self, struct picotm_error* error)
 {
     assert(self);
 
-    bool is_irrevocable = picotm_tx_is_irrevocable(self);
-
     undo_modules(self->module, self->nmodules, error);
     if (picotm_error_is_set(error)) {
         goto err;
