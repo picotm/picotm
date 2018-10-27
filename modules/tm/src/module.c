@@ -107,21 +107,21 @@ static void
 apply_cb(void* data, struct picotm_error* error)
 {
     struct tm_module* module = data;
-    tm_module_apply(data, error);
+    tm_module_apply(module, error);
 }
 
 static void
 undo_cb(void* data, struct picotm_error* error)
 {
     struct tm_module* module = data;
-    tm_module_undo(data, error);
+    tm_module_undo(module, error);
 }
 
 static void
 finish_cb(void* data, struct picotm_error* error)
 {
     struct tm_module* module = data;
-    tm_module_finish(data, error);
+    tm_module_finish(module, error);
 }
 
 static void
