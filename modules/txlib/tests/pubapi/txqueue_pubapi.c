@@ -96,6 +96,14 @@ txqueue_test_1(unsigned int tid)
 
         struct txqueue* queue = txqueue_of_state_tx(&queue_state);
 
+        if (!queue) {
+            tap_error("condition failed: no queue");
+            struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+            picotm_error_set_error_code(&error, PICOTM_GENERAL_ERROR);
+            picotm_error_mark_as_non_recoverable(&error);
+            picotm_recover_from_error(&error);
+        }
+
     picotm_commit
 
         abort_transaction_on_error(__func__);
