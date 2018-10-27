@@ -137,6 +137,14 @@ txmultiset_test_1(unsigned int tid)
 
         struct txmultiset* multiset = txmultiset_of_state_tx(&multiset_state);
 
+        if (!multiset) {
+            tap_error("condition failed: no multiset");
+            struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+            picotm_error_set_error_code(&error, PICOTM_GENERAL_ERROR);
+            picotm_error_mark_as_non_recoverable(&error);
+            picotm_recover_from_error(&error);
+        }
+
     picotm_commit
 
         abort_transaction_on_error(__func__);

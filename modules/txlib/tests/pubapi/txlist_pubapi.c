@@ -95,6 +95,14 @@ txlist_test_1(unsigned int tid)
 
         struct txlist* list = txlist_of_state_tx(&list_state);
 
+        if (!list) {
+            tap_error("condition failed: no list");
+            struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+            picotm_error_set_error_code(&error, PICOTM_GENERAL_ERROR);
+            picotm_error_mark_as_non_recoverable(&error);
+            picotm_recover_from_error(&error);
+        }
+
     picotm_commit
 
         abort_transaction_on_error(__func__);
