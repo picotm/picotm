@@ -233,7 +233,7 @@ AC_CONFIG_FILES([Makefile
                  doc/Doxyfile
                  doc/Makefile
                  extras/Makefile
-                 extras/autoconf/Makefile
+                 extras/aclocal/Makefile
                  include/Makefile
                  LICENSES/Makefile
                  modules/Makefile
