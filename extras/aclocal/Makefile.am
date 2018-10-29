@@ -18,8 +18,9 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
 #
 
-aclocal_DATA = check_picotm.m4 \
-               check_picotm_c.m4 \
+aclocal_DATA = check_picotm_c.m4 \
+               check_picotm.m4 \
+               check_picotm_ptrdata.m4 \
                check_picotm_tm.m4 \
                check_picotm_txlib.m4
 
