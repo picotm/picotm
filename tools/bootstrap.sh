@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # picotm - A system-level transaction manager
-# Copyright (c) 2017    Thomas Zimmermann <contact@tzimmermann.org>
+# Copyright (c) 2017-2018   Thomas Zimmermann <contact@tzimmermann.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,11 +19,14 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 
-# Run this script in the repository's top-level directory to generate
-# build infrastructure.
-
 # Fail immediately on errors
 set -e
+
+test -f configure.ac ||
+    (echo "Error: configure.ac could not be found. Run this script"\
+          "in the repository's top-level directory to generate the"\
+          "build infrastructure."
+     exit 1)
 
 test -d build-aux/ || mkdir -p build-aux/
 test -d config/ || mkdir -p config/
