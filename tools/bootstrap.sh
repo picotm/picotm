@@ -28,6 +28,15 @@ test -f configure.ac ||
           "build infrastructure."
      exit 1)
 
+test -d .git ||
+    (echo "Warning: Git repository could not be found. You should"\
+          "only have to bootstrap the build infrastructure if you"\
+          "intend to do development on picotm. This requires a copy"\
+          "of picotm's Git repository. With Git installed, you can"\
+          "get your copy by entering"\
+          "\`git clone https://github.com/picotm/picotm.git'. See the"\
+          "README for more information.")
+
 test -d build-aux/ || mkdir -p build-aux/
 test -d config/ || mkdir -p config/
 test -d m4/ || mkdir -p m4/
