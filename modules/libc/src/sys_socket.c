@@ -66,16 +66,14 @@ listen_tx(int socket, int backlog)
 {
     error_module_save_errno();
 
-    int res;
-
     do {
-        res = fildes_module_listen(socket, backlog);
-        if (res < 0) {
-            picotm_recover_from_errno(errno);
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        int res = fildes_module_listen(socket, backlog, &error);
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res < 0);
-
-    return res;
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 #endif
 
@@ -106,16 +104,14 @@ shutdown_tx(int socket, int how)
 {
     error_module_save_errno();
 
-    int res;
-
     do {
-        res = fildes_module_shutdown(socket, how);
-        if (res < 0) {
-            picotm_recover_from_errno(errno);
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        int res = fildes_module_shutdown(socket, how, &error);
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res < 0);
-
-    return res;
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 #endif
 
@@ -126,15 +122,13 @@ socket_tx(int domain, int type, int protocol)
 {
     error_module_save_errno();
 
-    int res;
-
     do {
-        res = fildes_module_socket(domain, type, protocol);
-        if (res < 0) {
-            picotm_recover_from_errno(errno);
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        int res = fildes_module_socket(domain, type, protocol, &error);
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res < 0);
-
-    return res;
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 #endif

@@ -31,16 +31,14 @@ chmod_tm(const char* path, mode_t mode)
 {
     error_module_save_errno();
 
-    int res;
-
     do {
-        res = fildes_module_chmod(path, mode);
-        if (res < 0) {
-            picotm_recover_from_errno(errno);
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        int res = fildes_module_chmod(path, mode, &error);
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res < 0);
-
-    return res;
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 #endif
 
@@ -51,16 +49,14 @@ fstat_tm(int fildes, struct stat* buf)
 {
     error_module_save_errno();
 
-    int res;
-
     do {
-        res = fildes_module_fstat(fildes, buf);
-        if (res < 0) {
-            picotm_recover_from_errno(errno);
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        int res = fildes_module_fstat(fildes, buf, &error);
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res < 0);
-
-    return res;
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 #endif
 
@@ -71,16 +67,14 @@ lstat_tm(const char* path, struct stat* buf)
 {
     error_module_save_errno();
 
-    int res;
-
     do {
-        res = fildes_module_lstat(path, buf);
-        if (res < 0) {
-            picotm_recover_from_errno(errno);
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        int res = fildes_module_lstat(path, buf, &error);
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res < 0);
-
-    return res;
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 #endif
 
@@ -91,16 +85,14 @@ mkdir_tm(const char* path, mode_t mode)
 {
     error_module_save_errno();
 
-    int res;
-
     do {
-        res = fildes_module_mkdir(path, mode);
-        if (res < 0) {
-            picotm_recover_from_errno(errno);
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        int res = fildes_module_mkdir(path, mode, &error);
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res < 0);
-
-    return res;
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 #endif
 
@@ -111,16 +103,14 @@ mkfifo_tm(const char* path, mode_t mode)
 {
     error_module_save_errno();
 
-    int res;
-
     do {
-        res = fildes_module_mkfifo(path, mode);
-        if (res < 0) {
-            picotm_recover_from_errno(errno);
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        int res = fildes_module_mkfifo(path, mode, &error);
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res < 0);
-
-    return res;
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 #endif
 
@@ -132,16 +122,14 @@ mknod_tm(const char* path, mode_t mode, dev_t dev)
 {
     error_module_save_errno();
 
-    int res;
-
     do {
-        res = fildes_module_mknod(path, mode, dev);
-        if (res < 0) {
-            picotm_recover_from_errno(errno);
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        int res = fildes_module_mknod(path, mode, dev, &error);
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res < 0);
-
-    return res;
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 #endif
 #endif
@@ -153,15 +141,13 @@ stat_tm(const char* path, struct stat* buf)
 {
     error_module_save_errno();
 
-    int res;
-
     do {
-        res = fildes_module_stat(path, buf);
-        if (res < 0) {
-            picotm_recover_from_errno(errno);
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        int res = fildes_module_stat(path, buf, &error);
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res < 0);
-
-    return res;
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 #endif
