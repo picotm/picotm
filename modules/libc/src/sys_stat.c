@@ -43,16 +43,14 @@ fchmod_tx(int fildes, mode_t mode)
 {
     error_module_save_errno();
 
-    int res;
-
     do {
-        res = fildes_module_fchmod(fildes, mode);
-        if (res < 0) {
-            picotm_recover_from_errno(errno);
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        int res = fildes_module_fchmod(fildes, mode, &error);
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res < 0);
-
-    return res;
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 #endif
 

@@ -45,18 +45,18 @@ fcntl_tm(int fildes, int cmd, ...)
 {
     error_module_save_errno();
 
-    int res;
-
     do {
+        int res;
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
         switch (cmd) {
             case F_DUPFD:
                 /* Handle like dup() */
-                res = fildes_module_dup_internal(fildes, false);
+                res = fildes_module_dup_internal(fildes, false, &error);
                 break;
 #if defined(F_DUPFD_CLOEXEC)
             case F_DUPFD_CLOEXEC:
                 /* Handle like dup() with CLOEXEC */
-                res = fildes_module_dup_internal(fildes, true);
+                res = fildes_module_dup_internal(fildes, true, &error);
                 break;
 #endif
             case F_SETFD:
@@ -68,7 +68,7 @@ fcntl_tm(int fildes, int cmd, ...)
                 val.arg0 = va_arg(arg, int);
                 va_end(arg);
 
-                res = fildes_module_fcntl(fildes, cmd, &val);
+                res = fildes_module_fcntl(fildes, cmd, &val, &error);
                 break;
             }
             case F_GETLK:
@@ -83,21 +83,18 @@ fcntl_tm(int fildes, int cmd, ...)
 
                 memcpy(&val.arg1, f, sizeof(val.arg1));
 
-                res = fildes_module_fcntl(fildes, cmd, &val);
+                res = fildes_module_fcntl(fildes, cmd, &val, &error);
                 break;
             }
             default:
-                res = fildes_module_fcntl(fildes, cmd, NULL);
+                res = fildes_module_fcntl(fildes, cmd, NULL, &error);
                 break;
         }
-        if (res < 0) {
-            picotm_recover_from_errno(errno);
-        } else {
-
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res < 0);
-
-    return res;
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 #endif
 
@@ -125,15 +122,13 @@ open_tm(const char* path, int oflag, ...)
         va_end(arg);
     }
 
-    int res;
-
     do {
-        res = fildes_module_open(path, oflag, mode);
-        if (res < 0) {
-            picotm_recover_from_errno(errno);
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        int res = fildes_module_open(path, oflag, mode, &error);
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res < 0);
-
-    return res;
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 #endif

@@ -26,19 +26,6 @@
 #include "error/module.h"
 #include "fildes/module.h"
 
-static bool
-perform_recovery(int errno_hint)
-{
-    enum picotm_libc_error_recovery recovery =
-        picotm_libc_get_error_recovery();
-
-    if (recovery == PICOTM_LIBC_ERROR_RECOVERY_FULL) {
-        return true;
-    }
-
-    return (errno_hint != EAGAIN) && (errno_hint != EWOULDBLOCK);
-}
-
 #if defined(PICOTM_LIBC_HAVE_CHDIR) && PICOTM_LIBC_HAVE_CHDIR
 PICOTM_EXPORT
 int
@@ -48,7 +35,6 @@ chdir_tm(const char* path)
 
     do {
         struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
         int res = cwd_module_chdir(path, &error);
         if (!picotm_error_is_set(&error)) {
             return res;
@@ -67,7 +53,6 @@ getcwd_tm(char* buf, size_t size)
 
     do {
         struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
         char* cwd = cwd_module_getcwd(buf, size, &error);
         if (!picotm_error_is_set(&error)) {
             return cwd;
@@ -84,16 +69,14 @@ link_tm(const char* path1, const char* path2)
 {
     error_module_save_errno();
 
-    int res;
-
     do {
-        res = fildes_module_link(path1, path2);
-        if (res < 0) {
-            picotm_recover_from_errno(errno);
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        int res = fildes_module_link(path1, path2, &error);
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res < 0);
-
-    return res;
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 #endif
 
@@ -125,16 +108,14 @@ pipe_tm(int fildes[2])
 {
     error_module_save_errno();
 
-    int res;
-
     do {
-        res = fildes_module_pipe(fildes);
-        if (res < 0) {
-            picotm_recover_from_errno(errno);
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        int res = fildes_module_pipe(fildes, &error);
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res < 0);
-
-    return res;
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 #endif
 
@@ -145,20 +126,14 @@ pread_tm(int fildes, void* buf, size_t nbyte, off_t offset)
 {
     error_module_save_errno();
 
-    ssize_t res;
-
     do {
-        res = fildes_module_pread(fildes, buf, nbyte, offset);
-        if (res < 0) {
-            if (perform_recovery(errno)) {
-                picotm_recover_from_errno(errno);
-            } else {
-                return res;
-            }
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        ssize_t res = fildes_module_pread(fildes, buf, nbyte, offset, &error);
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res < 0);
-
-    return res;
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 #endif
 
@@ -169,20 +144,15 @@ pwrite_tm(int fildes, const void* buf, size_t nbyte, off_t offset)
 {
     error_module_save_errno();
 
-    ssize_t res;
-
     do {
-        res = fildes_module_pwrite(fildes, buf, nbyte, offset);
-        if (res < 0) {
-            if (perform_recovery(errno)) {
-                picotm_recover_from_errno(errno);
-            } else {
-                return res;
-            }
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        ssize_t res = fildes_module_pwrite(fildes, buf, nbyte, offset,
+                                           &error);
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res < 0);
-
-    return res;
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 #endif
 
@@ -193,20 +163,14 @@ read_tm(int fildes, void* buf, size_t nbyte)
 {
     error_module_save_errno();
 
-    ssize_t res;
-
     do {
-        res = fildes_module_read(fildes, buf, nbyte);
-        if (res < 0) {
-            if (perform_recovery(errno)) {
-                picotm_recover_from_errno(errno);
-            } else {
-                return res;
-            }
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        ssize_t res = fildes_module_read(fildes, buf, nbyte, &error);
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res < 0);
-
-    return res;
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 #endif
 
@@ -217,16 +181,14 @@ unlink_tm(const char* path)
 {
     error_module_save_errno();
 
-    int res;
-
     do {
-        res = fildes_module_unlink(path);
-        if (res < 0) {
-            picotm_recover_from_errno(errno);
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        int res = fildes_module_unlink(path, &error);
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res < 0);
-
-    return res;
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 #endif
 
@@ -237,19 +199,13 @@ write_tm(int fildes, const void* buf, size_t nbyte)
 {
     error_module_save_errno();
 
-    int res;
-
     do {
-        res = fildes_module_write(fildes, buf, nbyte);
-        if (res < 0) {
-            if (perform_recovery(errno)) {
-                picotm_recover_from_errno(errno);
-            } else {
-                return res;
-            }
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        ssize_t res = fildes_module_write(fildes, buf, nbyte, &error);
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res < 0);
-
-    return res;
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 #endif

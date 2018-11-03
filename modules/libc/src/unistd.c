@@ -54,16 +54,14 @@ close_tx(int fildes)
 {
     error_module_save_errno();
 
-    int res;
-
     do {
-        res = fildes_module_close(fildes);
-        if (res < 0) {
-            picotm_recover_from_errno(errno);
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        int res = fildes_module_close(fildes, &error);
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res < 0);
-
-    return res;
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 #endif
 
@@ -74,16 +72,14 @@ dup_tx(int fildes)
 {
     error_module_save_errno();
 
-    int res;
-
     do {
-        res = fildes_module_dup(fildes);
-        if (res < 0) {
-            picotm_recover_from_errno(errno);
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        int res = fildes_module_dup(fildes, &error);
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res < 0);
-
-    return res;
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 #endif
 
@@ -95,16 +91,14 @@ dup2_tx(int fildes, int fildes2)
     picotm_irrevocable();
     error_module_save_errno();
 
-    int res;
-
     do {
-        res = dup2(fildes, fildes2);
-        if (res < 0) {
-            picotm_recover_from_errno(errno);
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        int res = dup2(fildes, fildes2);
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res < 0);
-
-    return res;
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 #endif
 
@@ -115,16 +109,14 @@ fchdir_tx(int fildes)
 {
     error_module_save_errno();
 
-    int res;
-
     do {
-        res = fildes_module_fchdir(fildes);
-        if (res < 0) {
-            picotm_recover_from_errno(errno);
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        int res = fildes_module_fchdir(fildes, &error);
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res < 0);
-
-    return res;
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 #endif
 
@@ -135,16 +127,14 @@ fsync_tx(int fildes)
 {
     error_module_save_errno();
 
-    int res;
-
     do {
-        res = fildes_module_fsync(fildes);
-        if (res < 0) {
-            picotm_recover_from_errno(errno);
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        int res = fildes_module_fsync(fildes, &error);
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res < 0);
-
-    return res;
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 #endif
 
@@ -176,16 +166,14 @@ lseek_tx(int fildes, off_t offset, int whence)
 {
     error_module_save_errno();
 
-    off_t res;
-
     do {
-        res = fildes_module_lseek(fildes, offset, whence);
-        if (res == (off_t)-1) {
-            picotm_recover_from_errno(errno);
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        off_t res = fildes_module_lseek(fildes, offset, whence, &error);
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res == (off_t)-1);
-
-    return res;
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 #endif
 
@@ -257,7 +245,14 @@ PICOTM_EXPORT
 void
 sync_tx()
 {
-    fildes_module_sync();
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        fildes_module_sync(&error);
+        if (!picotm_error_is_set(&error)) {
+            return;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 #endif
 

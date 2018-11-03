@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2017   Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -47,18 +47,18 @@ fcntl_tx(int fildes, int cmd, ...)
 {
     error_module_save_errno();
 
-    int res;
-
     do {
+        int res;
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
         switch (cmd) {
             case F_DUPFD:
                 /* Handle like dup() */
-                res = fildes_module_dup_internal(fildes, false);
+                res = fildes_module_dup_internal(fildes, false, &error);
                 break;
 #if defined(F_DUPFD_CLOEXEC)
             case F_DUPFD_CLOEXEC:
                 /* Handle like dup() with CLOEXEC */
-                res = fildes_module_dup_internal(fildes, true);
+                res = fildes_module_dup_internal(fildes, true, &error);
                 break;
 #endif
             case F_SETFD:
@@ -70,7 +70,7 @@ fcntl_tx(int fildes, int cmd, ...)
                 val.arg0 = va_arg(arg, int);
                 va_end(arg);
 
-                res = fildes_module_fcntl(fildes, cmd, &val);
+                res = fildes_module_fcntl(fildes, cmd, &val, &error);
                 break;
             }
             case F_GETLK:
@@ -86,19 +86,18 @@ fcntl_tx(int fildes, int cmd, ...)
                 privatize_tx(f, sizeof(val.arg1), PICOTM_TM_PRIVATIZE_LOAD);
                 memcpy(&val.arg1, f, sizeof(val.arg1));
 
-                res = fildes_module_fcntl(fildes, cmd, &val);
+                res = fildes_module_fcntl(fildes, cmd, &val, &error);
                 break;
             }
             default:
-                res = fildes_module_fcntl(fildes, cmd, NULL);
+                res = fildes_module_fcntl(fildes, cmd, NULL, &error);
                 break;
         }
-        if (res < 0) {
-            picotm_recover_from_errno(errno);
+        if (!picotm_error_is_set(&error)) {
+            return res;
         }
-    } while (res < 0);
-
-    return res;
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 #endif
 
