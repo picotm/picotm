@@ -22,6 +22,30 @@
 # Fail immediately on errors
 set -e
 
+test_aclocal_paths_for_filename () {
+
+    filename=$1
+
+    paths=`aclocal --print-ac-dir`
+    paths="${paths}:${ACLOCAL_PATH}"
+
+    i="1"
+    while :
+    do
+        path=`echo "${paths}" | cut -s -f${i} -d: -`
+        if [ -z "${path}" ]; then
+            # An empty string signals the end of the paths
+            # variable. Return failure.
+            return 1;
+        elif [ -f "${path}/${filename}" ]; then
+            # We've found the required file in one of the
+            # paths. Return success.
+            return 0
+        fi
+        i=$((i + 1))
+    done
+}
+
 test -f configure.ac ||
     (echo "Error: configure.ac could not be found. Run this script"\
           "in the repository's top-level directory to generate the"\
@@ -36,6 +60,15 @@ test -d .git ||
           "get your copy by entering"\
           "\`git clone https://github.com/picotm/picotm.git'. See the"\
           "README for more information.")
+
+test_aclocal_paths_for_filename "ax_pthread.m4" ||
+    (echo "Warning: Autoconf macro archive could not be found. The"\
+          "macros are provided in your Unix distribution's package"\
+          "repository. Add the path name of the directory containing"\
+          "ax_pthread.m4 to the environment variable ACLOCAL_PATH; it's"\
+          "usually something like /usr/share/aclocal or"\
+          "/usr/local/share/aclocal. See \`info automake' for more"\
+          "information.")
 
 test -d build-aux/ || mkdir -p build-aux/
 test -d config/ || mkdir -p config/
