@@ -218,6 +218,10 @@ dnl Some autoconf macros don't work well with -Wall and especially
 dnl -Werror. We set both options at the end of the configure script
 dnl to avoid problems during the earlier tests.
 dnl
+dnl Exceptions from error checking should be listed here and must
+dnl be documented. If you only need an exception for a very specfic
+dnl code location, consider using a GCC pragma instead.
+dnl
 
 AX_CHECK_COMPILE_FLAG([-Wall],
                       [AS_VAR_APPEND([CFLAGS], [" -Wall"])])
