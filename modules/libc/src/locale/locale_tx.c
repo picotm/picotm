@@ -31,6 +31,7 @@
 #include <string.h>
 #include "locale_log.h"
 
+#if defined(PICOTM_LIBC_HAVE_TYPE_LOCALE_T) && PICOTM_LIBC_HAVE_TYPE_LOCALE_T
 struct locale_state {
     unsigned long ref_count;
     struct picotm_rwlock rwlock;
@@ -88,6 +89,7 @@ locale_state_tx_uninit(struct locale_state_tx* self)
     picotm_rwstate_uninit(&self->rwstate);
     picotm_slist_uninit_item(&self->slist);
 }
+#endif
 
 static void
 init_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end)
@@ -167,6 +169,7 @@ locale_tx_try_wrlock_field(struct locale_tx* self, enum locale_field field,
                             error);
 }
 
+#if defined(PICOTM_LIBC_HAVE_TYPE_LOCALE_T) && PICOTM_LIBC_HAVE_TYPE_LOCALE_T
 static struct locale_state*
 acquire_locale_state(locale_t locobj, struct locale* global,
                      struct picotm_error* error)
@@ -307,6 +310,7 @@ release_locale_state_tx(struct locale_state_tx* lstate_tx,
     locale_state_tx_uninit(lstate_tx);
     free(lstate_tx);
 }
+#endif
 
 static void
 try_lock_locale_fields_by_category(int category, struct locale_tx* tx,
@@ -366,6 +370,7 @@ try_lock_locale_fields_by_category(int category, struct locale_tx* tx,
  * duplocale()
  */
 
+#if defined(PICOTM_LIBC_HAVE_DUPLOCALE) && PICOTM_LIBC_HAVE_DUPLOCALE
 locale_t
 locale_tx_duplocale_exec(struct locale_tx* self, locale_t locobj,
                          struct picotm_error* error)
@@ -422,11 +427,16 @@ undo_duplocale(struct locale_tx* self, const struct locale_event* arg,
 
     freelocale(arg->arg.duplocale.result);
 }
+#else
+#define apply_duplocale NULL
+#define undo_duplocale  NULL
+#endif
 
 /*
  * freelocale()
  */
 
+#if defined(PICOTM_LIBC_HAVE_FREELOCALE) && PICOTM_LIBC_HAVE_FREELOCALE
 void
 locale_tx_freelocale_exec(struct locale_tx* self, locale_t locobj,
                           struct picotm_error* error)
@@ -471,6 +481,10 @@ static void
 undo_freelocale(struct locale_tx* self, const struct locale_event* arg,
                 struct picotm_error* error)
 { }
+#else
+#define apply_freelocale    NULL
+#define undo_freelocale     NULL
+#endif
 
 /*
  * localeconv()
@@ -492,6 +506,7 @@ locale_tx_localeconv_exec(struct locale_tx* self, struct picotm_error* error)
  * newlocale()
  */
 
+#if defined(PICOTM_LIBC_HAVE_NEWLOCALE) && PICOTM_LIBC_HAVE_NEWLOCALE
 locale_t
 locale_tx_newlocale_exec(struct locale_tx* self, int category_mask,
                          const char* locale, locale_t base,
@@ -549,6 +564,10 @@ undo_newlocale(struct locale_tx* self, const struct locale_event* arg,
 
     freelocale(arg->arg.newlocale.result);
 }
+#else
+#define apply_newlocale NULL
+#define undo_newlocale  NULL
+#endif
 
 /*
  * setlocale()
@@ -657,6 +676,7 @@ undo_setlocale(struct locale_tx* self, const struct locale_event* arg,
  * uselocale()
  */
 
+#if defined(PICOTM_LIBC_HAVE_USELOCALE) && PICOTM_LIBC_HAVE_USELOCALE
 static locale_t
 uselocale_rd_exec(struct picotm_error* error)
 {
@@ -739,6 +759,10 @@ undo_uselocale(struct locale_tx* self, const struct locale_event* arg,
         return;
     }
 }
+#else
+#define apply_uselocale NULL
+#define undo_uselocale  NULL
+#endif
 
 /*
  * Module interface
@@ -797,6 +821,7 @@ locale_tx_finish(struct locale_tx* self)
 {
     assert(self);
 
+#if defined(PICOTM_LIBC_HAVE_TYPE_LOCALE_T) && PICOTM_LIBC_HAVE_TYPE_LOCALE_T
     while (!picotm_slist_is_empty(&self->locales)) {
 
         struct picotm_slist* pos = picotm_slist_front(&self->locales);
@@ -812,6 +837,7 @@ locale_tx_finish(struct locale_tx* self)
             picotm_recover_from_error(&error);
         } while (true);
     }
+#endif
 
     /* release reader/writer locks on locale fields */
     unlock_rwstates(picotm_arraybeg(self->rwstate),
