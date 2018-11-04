@@ -116,17 +116,22 @@ locale_h_test_3(unsigned int tid)
 static void
 locale_h_test_4(unsigned int tid)
 {
+#if defined(PICOTM_LIBC_HAVE_TYPE_LOCALE_T) && PICOTM_LIBC_HAVE_TYPE_LOCALE_T
     picotm_begin
         locale_t locobj = newlocale_tx(LC_ALL, test_locale, (locale_t)0);
         freelocale_tx(locobj);
     picotm_commit
         abort_transaction_on_error(__func__);
     picotm_end
+#else
+    tap_info("skipping test; locale_t not supported.");
+#endif
 }
 
 static void
 locale_h_test_5(unsigned int tid)
 {
+#if defined(PICOTM_LIBC_HAVE_TYPE_LOCALE_T) && PICOTM_LIBC_HAVE_TYPE_LOCALE_T
     picotm_begin
         locale_t locobj1 = newlocale_tx(LC_ALL, test_locale, (locale_t)0);
         locale_t locobj2 = duplocale_tx(locobj1);
@@ -135,11 +140,15 @@ locale_h_test_5(unsigned int tid)
     picotm_commit
         abort_transaction_on_error(__func__);
     picotm_end
+#else
+    tap_info("skipping test; locale_t not supported.");
+#endif
 }
 
 static void
 locale_h_test_6(unsigned int tid)
 {
+#if defined(PICOTM_LIBC_HAVE_TYPE_LOCALE_T) && PICOTM_LIBC_HAVE_TYPE_LOCALE_T
     locale_t locobj = (locale_t)0;
 
     picotm_begin
@@ -175,6 +184,9 @@ locale_h_test_6(unsigned int tid)
     picotm_commit
         abort_transaction_on_error(__func__);
     picotm_end
+#else
+    tap_info("skipping test; locale_t not supported.");
+#endif
 }
 
 /*

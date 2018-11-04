@@ -21,6 +21,7 @@
 #pragma once
 
 #include <locale.h>
+#include "picotm/config/picotm-libc-config.h"
 
 /**
  * \cond impl || libc_impl || libc_impl_locale
@@ -55,21 +56,29 @@ enum locale_op {
  */
 struct locale_event {
     union {
+#if defined(PICOTM_LIBC_HAVE_DUPLOCALE) && PICOTM_LIBC_HAVE_DUPLOCALE
         struct {
             locale_t result;
         } duplocale;
+#endif
+#if defined(PICOTM_LIBC_HAVE_FREELOCALE) && PICOTM_LIBC_HAVE_FREELOCALE
         struct {
             locale_t locobj;
         } freelocale;
+#endif
+#if defined(PICOTM_LIBC_HAVE_NEWLOCALE) && PICOTM_LIBC_HAVE_NEWLOCALE
         struct {
             locale_t result;
         } newlocale;
+#endif
         struct {
             void* oldlocale;
             int category;
         } setlocale;
+#if defined(PICOTM_LIBC_HAVE_USELOCALE) && PICOTM_LIBC_HAVE_USELOCALE
         struct {
             locale_t oldloc;
         } uselocale;
+#endif
     } arg;
 };

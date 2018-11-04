@@ -34,22 +34,30 @@
 
 struct picotm_error;
 
+#if defined(PICOTM_LIBC_HAVE_DUPLOCALE) && PICOTM_LIBC_HAVE_DUPLOCALE
 locale_t
 locale_module_duplocale(locale_t locobj, struct picotm_error* error);
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_FREELOCALE) && PICOTM_LIBC_HAVE_FREELOCALE
 void
 locale_module_freelocale(locale_t locobj, struct picotm_error* error);
+#endif
 
 struct lconv*
 locale_module_localeconv(struct picotm_error* error);
 
+#if defined(PICOTM_LIBC_HAVE_NEWLOCALE) && PICOTM_LIBC_HAVE_NEWLOCALE
 locale_t
 locale_module_newlocale(int category_mask, const char* locale,
                         locale_t base, struct picotm_error* error);
+#endif
 
 char*
 locale_module_setlocale(int category, const char* locale,
                         struct picotm_error* error);
 
+#if defined(PICOTM_LIBC_HAVE_USELOCALE) && PICOTM_LIBC_HAVE_USELOCALE
 locale_t
 locale_module_uselocale(locale_t newloc, struct picotm_error* error);
+#endif

@@ -227,6 +227,7 @@ get_non_null_locale_tx(void)
  * Public interface
  */
 
+#if defined(PICOTM_LIBC_HAVE_DUPLOCALE) && PICOTM_LIBC_HAVE_DUPLOCALE
 locale_t
 locale_module_duplocale(locale_t locobj, struct picotm_error* error)
 {
@@ -234,7 +235,9 @@ locale_module_duplocale(locale_t locobj, struct picotm_error* error)
 
     return locale_tx_duplocale_exec(locale_tx, locobj, error);
 }
+#endif
 
+#if defined(PICOTM_LIBC_HAVE_FREELOCALE) && PICOTM_LIBC_HAVE_FREELOCALE
 void
 locale_module_freelocale(locale_t locobj, struct picotm_error* error)
 {
@@ -242,6 +245,7 @@ locale_module_freelocale(locale_t locobj, struct picotm_error* error)
 
     return locale_tx_freelocale_exec(locale_tx, locobj, error);
 }
+#endif
 
 struct lconv*
 locale_module_localeconv(struct picotm_error* error)
@@ -251,6 +255,7 @@ locale_module_localeconv(struct picotm_error* error)
     return locale_tx_localeconv_exec(locale_tx, error);
 }
 
+#if defined(PICOTM_LIBC_HAVE_NEWLOCALE) && PICOTM_LIBC_HAVE_NEWLOCALE
 locale_t
 locale_module_newlocale(int category_mask, const char* locale, locale_t base,
                         struct picotm_error* error)
@@ -260,6 +265,7 @@ locale_module_newlocale(int category_mask, const char* locale, locale_t base,
     return locale_tx_newlocale_exec(locale_tx, category_mask, locale, base,
                                     error);
 }
+#endif
 
 char*
 locale_module_setlocale(int category, const char* locale,
@@ -270,6 +276,7 @@ locale_module_setlocale(int category, const char* locale,
     return locale_tx_setlocale_exec(locale_tx, category, locale, error);
 }
 
+#if defined(PICOTM_LIBC_HAVE_USELOCALE) && PICOTM_LIBC_HAVE_USELOCALE
 locale_t
 locale_module_uselocale(locale_t newloc, struct picotm_error* error)
 {
@@ -277,3 +284,4 @@ locale_module_uselocale(locale_t newloc, struct picotm_error* error)
 
     return locale_tx_uselocale_exec(locale_tx, newloc, error);
 }
+#endif

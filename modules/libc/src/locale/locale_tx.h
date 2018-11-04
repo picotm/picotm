@@ -82,17 +82,21 @@ locale_tx_try_wrlock_field(struct locale_tx* self, enum locale_field field,
  * duplocale()
  */
 
+#if defined(PICOTM_LIBC_HAVE_DUPLOCALE) && PICOTM_LIBC_HAVE_DUPLOCALE
 locale_t
 locale_tx_duplocale_exec(struct locale_tx* self, locale_t locobj,
                          struct picotm_error* error);
+#endif
 
 /*
  * freelocale()
  */
 
+#if defined(PICOTM_LIBC_HAVE_FREELOCALE) && PICOTM_LIBC_HAVE_FREELOCALE
 void
 locale_tx_freelocale_exec(struct locale_tx* self, locale_t locobj,
                           struct picotm_error* error);
+#endif
 
 /*
  * localeconv()
@@ -105,26 +109,32 @@ locale_tx_localeconv_exec(struct locale_tx* self, struct picotm_error* error);
  * newlocale()
  */
 
+#if defined(PICOTM_LIBC_HAVE_NEWLOCALE) && PICOTM_LIBC_HAVE_NEWLOCALE
 locale_t
 locale_tx_newlocale_exec(struct locale_tx* self, int category_mask,
                          const char* locale, locale_t base,
                          struct picotm_error* error);
+#endif
 
 /*
  * setlocale()
  */
 
+#if defined(PICOTM_LIBC_HAVE_SETLOCALE) && PICOTM_LIBC_HAVE_SETLOCALE
 char*
 locale_tx_setlocale_exec(struct locale_tx* self, int category,
                          const char* locale, struct picotm_error* error);
+#endif
 
 /*
  * uselocale()
  */
 
+#if defined(PICOTM_LIBC_HAVE_USELOCALE) && PICOTM_LIBC_HAVE_USELOCALE
 locale_t
 locale_tx_uselocale_exec(struct locale_tx* self, locale_t newloc,
                          struct picotm_error* error);
+#endif
 
 /*
  * Module interface
