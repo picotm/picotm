@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2017   Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -79,7 +79,10 @@ string_is_empty(const char* str)
 char*
 safe_mktemp(char* tmplate)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     char* filename = mktemp(tmplate);
+#pragma GCC diagnostic pop
     if (string_is_empty(filename)) {
         tap_error_errno("mktemp()", errno);
         abort_safe_block();
