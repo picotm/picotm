@@ -813,7 +813,7 @@ locale_tx_finish(struct locale_tx* self)
         } while (true);
     }
 
-    /* release reader/writer locks on current working directory */
+    /* release reader/writer locks on locale fields */
     unlock_rwstates(picotm_arraybeg(self->rwstate),
                     picotm_arrayend(self->rwstate),
                     self->locale);
