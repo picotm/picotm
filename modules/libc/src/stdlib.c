@@ -61,7 +61,14 @@ PICOTM_EXPORT
 void*
 calloc_tx(size_t nmemb, size_t size)
 {
-    error_module_save_errno();
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        error_module_save_errno(&error);
+        if (!picotm_error_is_set(&error)) {
+            break;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 
     size_t alloc_size = nmemb * size;
 
@@ -112,7 +119,15 @@ PICOTM_EXPORT
 void*
 malloc_tx(size_t size)
 {
-    error_module_save_errno();
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        error_module_save_errno(&error);
+        if (!picotm_error_is_set(&error)) {
+            break;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
+
     do {
         struct picotm_error error = PICOTM_ERROR_INITIALIZER;
         void* mem = allocator_module_malloc(size, &error);
@@ -187,7 +202,14 @@ realloc_tx(void* ptr, size_t size)
         privatize_tx(ptr, usiz, 0); /* discard memory region */
     }
 
-    error_module_save_errno();
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        error_module_save_errno(&error);
+        if (!picotm_error_is_set(&error)) {
+            break;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 
     void* mem = NULL;
 

@@ -21,6 +21,7 @@
 #include "libc.h"
 #include <stdatomic.h>
 #include "error/module.h"
+#include "picotm/picotm-module.h"
 #include "signal/module.h"
 
 /*
@@ -31,21 +32,43 @@ PICOTM_EXPORT
 void
 picotm_libc_save_errno()
 {
-    error_module_save_errno();
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        error_module_save_errno(&error);
+        if (!picotm_error_is_set(&error)) {
+            return;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 
 PICOTM_EXPORT
 void
 picotm_libc_set_error_recovery(enum picotm_libc_error_recovery recovery)
 {
-    return error_module_set_error_recovery(recovery);
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        error_module_set_error_recovery(recovery, &error);
+        if (!picotm_error_is_set(&error)) {
+            return;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 
 PICOTM_EXPORT
 enum picotm_libc_error_recovery
 picotm_libc_get_error_recovery()
 {
-    return error_module_get_error_recovery();
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        enum picotm_libc_error_recovery recovery =
+            error_module_get_error_recovery(&error);
+        if (!picotm_error_is_set(&error)) {
+            return recovery;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 
 /*

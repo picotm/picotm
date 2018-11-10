@@ -58,7 +58,14 @@ PICOTM_EXPORT
 char*
 mkdtemp_tm(char* template)
 {
-    error_module_save_errno();
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        error_module_save_errno(&error);
+        if (!picotm_error_is_set(&error)) {
+            break;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 
     char* str;
 
@@ -78,7 +85,14 @@ PICOTM_EXPORT
 int
 mkstemp_tm(char* template)
 {
-    error_module_save_errno();
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        error_module_save_errno(&error);
+        if (!picotm_error_is_set(&error)) {
+            break;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 
     do {
         struct picotm_error error = PICOTM_ERROR_INITIALIZER;
@@ -133,7 +147,14 @@ PICOTM_EXPORT
 void*
 realloc_tm(void* ptr, size_t size)
 {
-    error_module_save_errno();
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        error_module_save_errno(&error);
+        if (!picotm_error_is_set(&error)) {
+            break;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 
     size_t usiz = malloc_usable_size(ptr);
 

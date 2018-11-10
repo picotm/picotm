@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2017   Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -22,6 +22,8 @@
 
 #include "picotm/picotm-libc.h"
 
+struct picotm_error;
+
 /**
  * \cond impl || libc_impl || libc_impl_error
  * \ingroup libc_impl
@@ -31,13 +33,14 @@
  */
 
 void
-error_module_save_errno(void);
+error_module_save_errno(struct picotm_error* error);
 
 void
-error_module_set_error_recovery(enum picotm_libc_error_recovery recovery);
+error_module_set_error_recovery(enum picotm_libc_error_recovery recovery,
+                                struct picotm_error* error);
 
 enum picotm_libc_error_recovery
-error_module_get_error_recovery(void);
+error_module_get_error_recovery(struct picotm_error* error);
 
 /**
  * \cond impl || libc_impl || libc_impl_error

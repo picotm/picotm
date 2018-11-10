@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2017   Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -20,13 +20,20 @@
 
 #include "picotm/errno.h"
 #include "error/module.h"
+#include "picotm/picotm-module.h"
 
 #if defined(PICOTM_LIBC_HAVE_ERRNO) && PICOTM_LIBC_HAVE_ERRNO
 PICOTM_EXPORT
 int*
 __errno_location_tx()
 {
-    error_module_save_errno();
-    return &errno;
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        error_module_save_errno(&error);
+        if (!picotm_error_is_set(&error)) {
+            return &errno;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 #endif
