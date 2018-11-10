@@ -137,25 +137,6 @@ get_fpu_tx(struct picotm_error* error)
     return &module->tx;
 }
 
-static struct fpu_tx*
-get_non_null_fpu_tx(void)
-{
-    do {
-        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-        struct fpu_tx* fpu_tx = get_fpu_tx(&error);
-
-        if (!picotm_error_is_set(&error)) {
-            /* assert() here as there's no legal way that fpu_tx
-             * could be NULL */
-            assert(fpu_tx);
-            return fpu_tx;
-        }
-        picotm_recover_from_error(&error);
-
-    } while (true);
-}
-
 /*
  * Public interface
  */
@@ -163,7 +144,10 @@ get_non_null_fpu_tx(void)
 void
 fpu_module_save_fenv(struct picotm_error* error)
 {
-    struct fpu_tx* fpu_tx = get_non_null_fpu_tx();
+    struct fpu_tx* fpu_tx = get_fpu_tx(error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
 
     /* We have to save the floating-point enviroment
      * only once per transaction. */
@@ -177,7 +161,10 @@ fpu_module_save_fenv(struct picotm_error* error)
 void
 fpu_module_save_fexcept(struct picotm_error* error)
 {
-    struct fpu_tx* fpu_tx = get_non_null_fpu_tx();
+    struct fpu_tx* fpu_tx = get_fpu_tx(error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
 
     /* We have to save the floating-point status
      * flags only once per transaction. */
