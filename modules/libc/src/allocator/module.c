@@ -193,59 +193,26 @@ get_non_null_allocator_tx(void)
  */
 
 void
-allocator_module_free(void* mem, size_t usiz)
+allocator_module_free(void* mem, size_t usiz, struct picotm_error* error)
 {
     struct allocator_tx* data = get_non_null_allocator_tx();
-
-    do {
-        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-        allocator_tx_exec_free(data, mem, &error);
-
-        if (!picotm_error_is_set(&error)) {
-            return;
-        }
-        picotm_recover_from_error(&error);
-
-    } while (true);
+    allocator_tx_exec_free(data, mem, error);
 }
 
 void*
-allocator_module_malloc(size_t size)
+allocator_module_malloc(size_t size, struct picotm_error* error)
 {
     struct allocator_tx* data = get_non_null_allocator_tx();
-    assert(data);
-
-    do {
-        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-        void* mem = allocator_tx_exec_malloc(data, size, &error);
-
-        if (!picotm_error_is_set(&error)) {
-            return mem;
-        }
-        picotm_recover_from_error(&error);
-
-    } while (true);
+    return allocator_tx_exec_malloc(data, size, error);
 }
 
 #if defined(HAVE_POSIX_MEMALIGN) && HAVE_POSIX_MEMALIGN
-void
-allocator_module_posix_memalign(void** memptr, size_t alignment, size_t size)
+int
+allocator_module_posix_memalign(void** memptr, size_t alignment, size_t size,
+                                struct picotm_error* error)
 {
     struct allocator_tx* data = get_non_null_allocator_tx();
-    assert(data);
-
-    do {
-        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-        allocator_tx_exec_posix_memalign(data, memptr, alignment, size, &error);
-
-        if (!picotm_error_is_set(&error)) {
-            return;
-        }
-        picotm_recover_from_error(&error);
-
-    } while (true);
+    return allocator_tx_exec_posix_memalign(data, memptr, alignment, size,
+                                            error);
 }
 #endif

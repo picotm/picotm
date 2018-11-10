@@ -56,7 +56,7 @@ allocator_tx_exec_malloc(struct allocator_tx* self, size_t size,
                          struct picotm_error* error);
 
 #if defined(HAVE_POSIX_MEMALIGN) && HAVE_POSIX_MEMALIGN
-void
+int
 allocator_tx_exec_posix_memalign(struct allocator_tx* self, void** memptr,
                                  size_t alignment, size_t size,
                                  struct picotm_error* error);

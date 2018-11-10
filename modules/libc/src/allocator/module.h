@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2017   Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -22,6 +22,8 @@
 
 #include <stddef.h>
 
+struct picotm_error;
+
 /**
  * \cond impl || libc_impl || libc_impl_allocator
  * \ingroup libc_impl
@@ -31,14 +33,15 @@
  */
 
 void
-allocator_module_free(void* mem, size_t usiz);
+allocator_module_free(void* mem, size_t usiz, struct picotm_error* error);
 
 void*
-allocator_module_malloc(size_t size);
+allocator_module_malloc(size_t size, struct picotm_error* error);
 
 #if defined(HAVE_POSIX_MEMALIGN) && HAVE_POSIX_MEMALIGN
-void
-allocator_module_posix_memalign(void** memptr, size_t alignment, size_t size);
+int
+allocator_module_posix_memalign(void** memptr, size_t alignment, size_t size,
+                                struct picotm_error* error);
 #endif
 
 /**
