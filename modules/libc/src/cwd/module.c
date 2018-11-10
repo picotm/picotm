@@ -205,39 +205,27 @@ get_cwd_tx(struct picotm_error* error)
     return &module->tx;
 }
 
-static struct cwd_tx*
-get_non_null_cwd_tx(void)
-{
-    do {
-        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-        struct cwd_tx* cwd_tx = get_cwd_tx(&error);
-
-        if (!picotm_error_is_set(&error)) {
-            assert(cwd_tx);
-            return cwd_tx;
-        }
-        picotm_recover_from_error(&error);
-
-    } while (true);
-}
-
 /*
  * Public interface
  */
+
 int
 cwd_module_chdir(const char* path, struct picotm_error* error)
 {
-    struct cwd_tx* cwd_tx = get_non_null_cwd_tx();
-
+    struct cwd_tx* cwd_tx = get_cwd_tx(error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
     return cwd_tx_chdir_exec(cwd_tx, path, error);
 }
 
 char*
 cwd_module_getcwd(char* buf, size_t size, struct picotm_error* error)
 {
-    struct cwd_tx* cwd_tx = get_non_null_cwd_tx();
-
+    struct cwd_tx* cwd_tx = get_cwd_tx(error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
     return cwd_tx_getcwd_exec(cwd_tx, buf, size, error);
 }
 
@@ -245,7 +233,9 @@ char*
 cwd_module_realpath(const char* path, char* resolved_path,
                     struct picotm_error* error)
 {
-    struct cwd_tx* cwd_tx = get_non_null_cwd_tx();
-
+    struct cwd_tx* cwd_tx = get_cwd_tx(error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
     return cwd_tx_realpath_exec(cwd_tx, path, resolved_path, error);
 }
