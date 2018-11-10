@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2017   Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -20,38 +20,74 @@
 
 #include "picotm/picotm-tm.h"
 #include "module.h"
+#include "picotm/picotm-module.h"
 
 PICOTM_EXPORT
 void
 __picotm_tm_load(uintptr_t addr, void* buf, size_t siz)
 {
-    tm_module_load(addr, buf, siz);
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        tm_module_load(addr, buf, siz, &error);
+        if (!picotm_error_is_set(&error)) {
+            return;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 
 PICOTM_EXPORT
 void
 __picotm_tm_store(uintptr_t addr, const void* buf, size_t siz)
 {
-    tm_module_store(addr, buf, siz);
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        tm_module_store(addr, buf, siz, &error);
+        if (!picotm_error_is_set(&error)) {
+            return;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 
 PICOTM_EXPORT
 void
 __picotm_tm_loadstore(uintptr_t laddr, uintptr_t saddr, size_t siz)
 {
-    tm_module_loadstore(laddr, saddr, siz);
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        tm_module_loadstore(laddr, saddr, siz, &error);
+        if (!picotm_error_is_set(&error)) {
+            return;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 
 PICOTM_EXPORT
 void
 __picotm_tm_privatize(uintptr_t addr, size_t siz, unsigned long flags)
 {
-    tm_module_privatize(addr, siz, flags);
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        tm_module_privatize(addr, siz, flags, &error);
+        if (!picotm_error_is_set(&error)) {
+            return;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 
 PICOTM_EXPORT
 void
 __picotm_tm_privatize_c(uintptr_t addr, int c, unsigned long flags)
 {
-    tm_module_privatize_c(addr, c, flags);
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        tm_module_privatize_c(addr, c, flags, &error);
+        if (!picotm_error_is_set(&error)) {
+            return;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 }
