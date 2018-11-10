@@ -166,7 +166,7 @@ PICOTM_STATE_STATIC_IMPL(txlib_module, struct txlib_module,
 PICOTM_THREAD_STATE_STATIC_IMPL(txlib_module)
 
 static struct txlib_tx*
-get_txl_tx(struct picotm_error* error)
+get_txlib_tx(struct picotm_error* error)
 {
     struct txlib_module* module = PICOTM_THREAD_STATE_ACQUIRE(txlib_module,
                                                               true, error);
@@ -174,23 +174,6 @@ get_txl_tx(struct picotm_error* error)
         return NULL;
     }
     return &module->tx;
-}
-
-static struct txlib_tx*
-get_non_null_txl_tx(void)
-{
-    do {
-        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-        struct txlib_tx* txl_tx = get_txl_tx(&error);
-
-        if (!picotm_error_is_set(&error)) {
-            assert(txl_tx);
-            return txl_tx;
-        }
-        picotm_recover_from_error(&error);
-
-    } while (true);
 }
 
 /*
@@ -201,8 +184,10 @@ struct txlist_tx*
 txlib_module_acquire_txlist_of_state(struct txlist_state* list_state,
                                      struct picotm_error* error)
 {
-    struct txlib_tx* txl_tx = get_non_null_txl_tx();
-
+    struct txlib_tx* txl_tx = get_txlib_tx(error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
     struct txlist_tx* list_tx =
         txlib_tx_acquire_txlist_of_state(txl_tx, list_state, error);
     if (picotm_error_is_set(error)) {
@@ -216,8 +201,10 @@ txlib_module_acquire_txmultiset_of_state(
     struct txmultiset_state* multiset_state,
     struct picotm_error* error)
 {
-    struct txlib_tx* txl_tx = get_non_null_txl_tx();
-
+    struct txlib_tx* txl_tx = get_txlib_tx(error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
     struct txmultiset_tx* multiset_tx =
         txlib_tx_acquire_txmultiset_of_state(txl_tx, multiset_state, error);
     if (picotm_error_is_set(error)) {
@@ -230,8 +217,10 @@ struct txqueue_tx*
 txlib_module_acquire_txqueue_of_state(struct txqueue_state* queue_state,
                                       struct picotm_error* error)
 {
-    struct txlib_tx* txl_tx = get_non_null_txl_tx();
-
+    struct txlib_tx* txl_tx = get_txlib_tx(error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
     struct txqueue_tx* queue_tx =
         txlib_tx_acquire_txqueue_of_state(txl_tx, queue_state, error);
     if (picotm_error_is_set(error)) {
@@ -244,8 +233,10 @@ struct txstack_tx*
 txlib_module_acquire_txstack_of_state(struct txstack_state* stack_state,
                                       struct picotm_error* error)
 {
-    struct txlib_tx* txl_tx = get_non_null_txl_tx();
-
+    struct txlib_tx* txl_tx = get_txlib_tx(error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
     struct txstack_tx* stack_tx =
         txlib_tx_acquire_txstack_of_state(txl_tx, stack_state, error);
     if (picotm_error_is_set(error)) {
