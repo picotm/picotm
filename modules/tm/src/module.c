@@ -181,23 +181,6 @@ get_vmem_tx(struct picotm_error* error)
     return &module->tx;
 }
 
-static struct tm_vmem_tx*
-get_non_null_vmem_tx(void)
-{
-    do {
-        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-        struct tm_vmem_tx* vmem_tx = get_vmem_tx(&error);
-
-        if (!picotm_error_is_set(&error)) {
-            assert(vmem_tx);
-            return vmem_tx;
-        }
-        picotm_recover_from_error(&error);
-
-    } while (true);
-}
-
 /*
  * Public interface
  */
@@ -206,7 +189,10 @@ void
 tm_module_load(uintptr_t addr, void* buf, size_t siz,
                struct picotm_error* error)
 {
-    struct tm_vmem_tx* vmem_tx = get_non_null_vmem_tx();
+    struct tm_vmem_tx* vmem_tx = get_vmem_tx(error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
     tm_vmem_tx_ld(vmem_tx, addr, buf, siz, error);
 }
 
@@ -214,7 +200,10 @@ void
 tm_module_store(uintptr_t addr, const void* buf, size_t siz,
                 struct picotm_error* error)
 {
-    struct tm_vmem_tx* vmem_tx = get_non_null_vmem_tx();
+    struct tm_vmem_tx* vmem_tx = get_vmem_tx(error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
     tm_vmem_tx_st(vmem_tx, addr, buf, siz, error);
 }
 
@@ -222,7 +211,10 @@ void
 tm_module_loadstore(uintptr_t laddr, uintptr_t saddr, size_t siz,
                     struct picotm_error* error)
 {
-    struct tm_vmem_tx* vmem_tx = get_non_null_vmem_tx();
+    struct tm_vmem_tx* vmem_tx = get_vmem_tx(error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
     tm_vmem_tx_ldst(vmem_tx, laddr, saddr, siz, error);
 }
 
@@ -230,7 +222,10 @@ void
 tm_module_privatize(uintptr_t addr, size_t siz, unsigned long flags,
                     struct picotm_error* error)
 {
-    struct tm_vmem_tx* vmem_tx = get_non_null_vmem_tx();
+    struct tm_vmem_tx* vmem_tx = get_vmem_tx(error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
     tm_vmem_tx_privatize(vmem_tx, addr, siz, flags, error);
 }
 
@@ -238,6 +233,9 @@ void
 tm_module_privatize_c(uintptr_t addr, int c, unsigned long flags,
                       struct picotm_error* error)
 {
-    struct tm_vmem_tx* vmem_tx = get_non_null_vmem_tx();
+    struct tm_vmem_tx* vmem_tx = get_vmem_tx(error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
     tm_vmem_tx_privatize_c(vmem_tx, addr, c, flags, error);
 }
