@@ -125,7 +125,7 @@ undo_malloc(struct allocator_tx* self, void* mem,
  */
 
 #if defined(HAVE_POSIX_MEMALIGN) && HAVE_POSIX_MEMALIGN
-void
+int
 allocator_tx_exec_posix_memalign(struct allocator_tx* self, void** memptr,
                                  size_t alignment, size_t size,
                                  struct picotm_error* error)
@@ -137,7 +137,7 @@ allocator_tx_exec_posix_memalign(struct allocator_tx* self, void** memptr,
     int err = posix_memalign(&mem, alignment, rnd2wb(size));
     if (err) {
         picotm_error_set_errno(error, err);
-        return;
+        return err;
     }
 
     allocator_log_append(self->log, ALLOCATOR_OP_POSIX_MEMALIGN, mem, error);
@@ -147,10 +147,11 @@ allocator_tx_exec_posix_memalign(struct allocator_tx* self, void** memptr,
 
     *memptr = mem;
 
-    return;
+    return 0;
 
 err_allocator_log_append:
     free(mem);
+    return err;
 }
 #endif
 

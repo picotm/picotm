@@ -41,7 +41,14 @@ PICOTM_EXPORT
 void
 free_tm(void* ptr)
 {
-    allocator_module_free(ptr, malloc_usable_size(ptr));
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        allocator_module_free(ptr, malloc_usable_size(ptr), &error);
+        if (!picotm_error_is_set(&error)) {
+            return;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 #endif
 
@@ -90,8 +97,15 @@ PICOTM_EXPORT
 int
 posix_memalign_tm(void** memptr, size_t alignment, size_t size)
 {
-    allocator_module_posix_memalign(memptr, alignment, size);
-    return 0;
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        int res = allocator_module_posix_memalign(memptr, alignment, size,
+                                                  &error);
+        if (!picotm_error_is_set(&error)) {
+            return res;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 #endif
 
@@ -126,7 +140,14 @@ realloc_tm(void* ptr, size_t size)
     void* mem = NULL;
 
     if (size) {
-        mem = allocator_module_malloc(size);
+        do {
+            struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+            mem = allocator_module_malloc(size, &error);
+            if (!picotm_error_is_set(&error)) {
+                break;
+            }
+            picotm_recover_from_error(&error);
+        } while (true);
     }
 
     if (ptr && mem) {
@@ -140,7 +161,14 @@ realloc_tm(void* ptr, size_t size)
     }
 
     if (ptr) {
-        allocator_module_free(ptr, usiz);
+        do {
+            struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+            allocator_module_free(ptr, usiz, &error);
+            if (!picotm_error_is_set(&error)) {
+                break;
+            }
+            picotm_recover_from_error(&error);
+        } while (true);
     }
 
     return mem;

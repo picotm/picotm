@@ -733,12 +733,25 @@ absolute_path(const char* path, struct picotm_error* error)
     memcpy(abs_path + cwdlen + 1, path, pathlen);
     abs_path[cwdlen + 1 + pathlen] = '\0';
 
-    allocator_module_free(cwd, cwdlen);
+    allocator_module_free(cwd, cwdlen, error);
+    if (picotm_error_is_set(error)) {
+        goto err_allocator_module_free;
+    }
 
     return abs_path;
 
+err_allocator_module_free:
+    free(abs_path);
+    picotm_error_mark_as_non_recoverable(error);
+    return NULL;
 err_malloc:
-    allocator_module_free(cwd, strlen(cwd));
+    {
+        struct picotm_error tmp_error = PICOTM_ERROR_INITIALIZER;
+        allocator_module_free(cwd, cwdlen, &tmp_error);
+        if (picotm_error_is_set(&tmp_error)) {
+            picotm_error_mark_as_non_recoverable(error);
+        }
+    }
     return NULL;
 }
 
@@ -984,12 +997,24 @@ fildes_tx_exec_chmod(struct fildes_tx* self, const char* path, mode_t mode,
         goto err_chmod;
     }
 
-    allocator_module_free(real_path, strlen(real_path));
+    allocator_module_free(real_path, strlen(real_path), error);
+    if (picotm_error_is_set(error)) {
+        goto err_allocator_module_free;
+    }
 
     return res;
 
+err_allocator_module_free:
+    picotm_error_mark_as_non_recoverable(error);
+    return -1;
 err_chmod:
-    allocator_module_free(real_path, strlen(real_path));
+    {
+        struct picotm_error tmp_error = PICOTM_ERROR_INITIALIZER;
+        allocator_module_free(real_path, strlen(real_path), &tmp_error);
+        if (picotm_error_is_set(&tmp_error)) {
+            picotm_error_mark_as_non_recoverable(error);
+        }
+    }
     return -1;
 }
 
@@ -1601,14 +1626,27 @@ fildes_tx_exec_link(struct fildes_tx* self, const char* path1, const char* path2
     }
 
     free(abs_path2);
-    allocator_module_free(real_path1, strlen(real_path1));
+
+    allocator_module_free(real_path1, strlen(real_path1), error);
+    if (picotm_error_is_set(error)) {
+        goto err_allocator_module_free;
+    }
 
     return res;
 
+err_allocator_module_free:
+    picotm_error_mark_as_non_recoverable(error);
+    return -1;
 err_link:
     free(abs_path2);
 err_absolute_path:
-    allocator_module_free(real_path1, strlen(real_path1));
+    {
+        struct picotm_error tmp_error = PICOTM_ERROR_INITIALIZER;
+        allocator_module_free(real_path1, strlen(real_path1), &tmp_error);
+        if (picotm_error_is_set(&tmp_error)) {
+            picotm_error_mark_as_non_recoverable(error);
+        }
+    }
     return -1;
 }
 
@@ -1775,12 +1813,24 @@ fildes_tx_exec_lstat(struct fildes_tx* self, const char* path, struct stat* buf,
         goto err_lstat;
     }
 
-    allocator_module_free(real_path, strlen(real_path));
+    allocator_module_free(real_path, strlen(real_path), error);
+    if (picotm_error_is_set(error)) {
+        goto err_allocator_module_free;
+    }
 
     return res;
 
+err_allocator_module_free:
+    picotm_error_mark_as_non_recoverable(error);
+    return -1;
 err_lstat:
-    allocator_module_free(real_path, strlen(real_path));
+    {
+        struct picotm_error tmp_error = PICOTM_ERROR_INITIALIZER;
+        allocator_module_free(real_path, strlen(real_path), &tmp_error);
+        if (picotm_error_is_set(&tmp_error)) {
+            picotm_error_mark_as_non_recoverable(error);
+        }
+    }
     return -1;
 }
 
@@ -2747,12 +2797,24 @@ fildes_tx_exec_stat(struct fildes_tx* self, const char* path,
         goto err_stat;
     }
 
-    allocator_module_free(real_path, strlen(real_path));
+    allocator_module_free(real_path, strlen(real_path), error);
+    if (picotm_error_is_set(error)) {
+        goto err_allocator_module_free;
+    }
 
     return res;
 
+err_allocator_module_free:
+    picotm_error_mark_as_non_recoverable(error);
+    return -1;
 err_stat:
-    allocator_module_free(real_path, strlen(real_path));
+    {
+        struct picotm_error tmp_error = PICOTM_ERROR_INITIALIZER;
+        allocator_module_free(real_path, strlen(real_path), &tmp_error);
+        if (picotm_error_is_set(&tmp_error)) {
+            picotm_error_mark_as_non_recoverable(error);
+        }
+    }
     return -1;
 }
 
@@ -2808,12 +2870,23 @@ fildes_tx_exec_unlink(struct fildes_tx* self, const char* path,
         goto err_unlink;
     }
 
-    allocator_module_free(real_path, strlen(real_path));
+    allocator_module_free(real_path, strlen(real_path), error);
+    if (picotm_error_is_set(error)) {
+        picotm_error_mark_as_non_recoverable(error);
+        goto err;
+    }
 
     return res;
 
 err_unlink:
-    allocator_module_free(real_path, strlen(real_path));
+    {
+        struct picotm_error tmp_error = PICOTM_ERROR_INITIALIZER;
+        allocator_module_free(real_path, strlen(real_path), &tmp_error);
+        if (picotm_error_is_set(&tmp_error)) {
+            picotm_error_mark_as_non_recoverable(error);
+        }
+    }
+err:
     return -1;
 }
 
