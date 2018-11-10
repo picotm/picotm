@@ -29,7 +29,14 @@ PICOTM_EXPORT
 int
 chmod_tm(const char* path, mode_t mode)
 {
-    error_module_save_errno();
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        error_module_save_errno(&error);
+        if (!picotm_error_is_set(&error)) {
+            break;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 
     do {
         struct picotm_error error = PICOTM_ERROR_INITIALIZER;
@@ -47,7 +54,14 @@ PICOTM_EXPORT
 int
 fstat_tm(int fildes, struct stat* buf)
 {
-    error_module_save_errno();
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        error_module_save_errno(&error);
+        if (!picotm_error_is_set(&error)) {
+            break;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 
     do {
         struct picotm_error error = PICOTM_ERROR_INITIALIZER;
@@ -65,7 +79,14 @@ PICOTM_EXPORT
 int
 lstat_tm(const char* path, struct stat* buf)
 {
-    error_module_save_errno();
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        error_module_save_errno(&error);
+        if (!picotm_error_is_set(&error)) {
+            break;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 
     do {
         struct picotm_error error = PICOTM_ERROR_INITIALIZER;
@@ -83,7 +104,14 @@ PICOTM_EXPORT
 int
 mkdir_tm(const char* path, mode_t mode)
 {
-    error_module_save_errno();
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        error_module_save_errno(&error);
+        if (!picotm_error_is_set(&error)) {
+            break;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 
     do {
         struct picotm_error error = PICOTM_ERROR_INITIALIZER;
@@ -101,7 +129,14 @@ PICOTM_EXPORT
 int
 mkfifo_tm(const char* path, mode_t mode)
 {
-    error_module_save_errno();
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        error_module_save_errno(&error);
+        if (!picotm_error_is_set(&error)) {
+            break;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 
     do {
         struct picotm_error error = PICOTM_ERROR_INITIALIZER;
@@ -120,7 +155,14 @@ PICOTM_EXPORT
 int
 mknod_tm(const char* path, mode_t mode, dev_t dev)
 {
-    error_module_save_errno();
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        error_module_save_errno(&error);
+        if (!picotm_error_is_set(&error)) {
+            break;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 
     do {
         struct picotm_error error = PICOTM_ERROR_INITIALIZER;
@@ -139,7 +181,14 @@ PICOTM_EXPORT
 int
 stat_tm(const char* path, struct stat* buf)
 {
-    error_module_save_errno();
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        error_module_save_errno(&error);
+        if (!picotm_error_is_set(&error)) {
+            break;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 
     do {
         struct picotm_error error = PICOTM_ERROR_INITIALIZER;

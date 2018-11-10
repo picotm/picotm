@@ -64,7 +64,14 @@ PICOTM_EXPORT
 int
 listen_tx(int socket, int backlog)
 {
-    error_module_save_errno();
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        error_module_save_errno(&error);
+        if (!picotm_error_is_set(&error)) {
+            break;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 
     do {
         struct picotm_error error = PICOTM_ERROR_INITIALIZER;
@@ -102,7 +109,14 @@ PICOTM_EXPORT
 int
 shutdown_tx(int socket, int how)
 {
-    error_module_save_errno();
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        error_module_save_errno(&error);
+        if (!picotm_error_is_set(&error)) {
+            break;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 
     do {
         struct picotm_error error = PICOTM_ERROR_INITIALIZER;
@@ -120,7 +134,14 @@ PICOTM_EXPORT
 int
 socket_tx(int domain, int type, int protocol)
 {
-    error_module_save_errno();
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        error_module_save_errno(&error);
+        if (!picotm_error_is_set(&error)) {
+            break;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 
     do {
         struct picotm_error error = PICOTM_ERROR_INITIALIZER;

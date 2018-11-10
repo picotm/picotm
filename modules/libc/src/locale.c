@@ -32,7 +32,14 @@ PICOTM_EXPORT
 locale_t
 duplocale_tx(locale_t locobj)
 {
-    error_module_save_errno();
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        error_module_save_errno(&error);
+        if (!picotm_error_is_set(&error)) {
+            break;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 
     do {
         struct picotm_error error = PICOTM_ERROR_INITIALIZER;
@@ -105,7 +112,14 @@ PICOTM_EXPORT
 locale_t
 uselocale_tx(locale_t newloc)
 {
-    error_module_save_errno();
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        error_module_save_errno(&error);
+        if (!picotm_error_is_set(&error)) {
+            break;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 
     do {
         struct picotm_error error = PICOTM_ERROR_INITIALIZER;

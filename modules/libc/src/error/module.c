@@ -133,50 +133,41 @@ get_error_tx(struct picotm_error* error)
     return &module->tx;
 }
 
-static struct error_tx*
-get_non_null_error_tx(void)
-{
-    do {
-        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-        struct error_tx* error_tx = get_error_tx(&error);
-
-        if (!picotm_error_is_set(&error)) {
-            /* assert here as there's no legal way that error_tx
-             * could be NULL */
-            assert(error_tx);
-            return error_tx;
-        }
-
-        picotm_recover_from_error(&error);
-    } while (true);
-}
-
 /*
  * Public interface
  */
 
 void
-error_module_save_errno()
+error_module_save_errno(struct picotm_error* error)
 {
-    struct error_tx* error_tx = get_non_null_error_tx();
-
+    struct error_tx* error_tx = get_error_tx(error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
     /* We only have to save 'errno' once per transaction. */
     if (error_tx_errno_saved(error_tx)) {
         return;
     }
-
     error_tx_save_errno(error_tx);
 }
 
 void
-error_module_set_error_recovery(enum picotm_libc_error_recovery recovery)
+error_module_set_error_recovery(enum picotm_libc_error_recovery recovery,
+                                struct picotm_error* error)
 {
-    return error_tx_set_error_recovery(get_non_null_error_tx(), recovery);
+    struct error_tx* error_tx = get_error_tx(error);
+    if (picotm_error_is_set(error)) {
+        return;
+    }
+    return error_tx_set_error_recovery(error_tx, recovery);
 }
 
 enum picotm_libc_error_recovery
-error_module_get_error_recovery()
+error_module_get_error_recovery(struct picotm_error* error)
 {
-    return error_tx_get_error_recovery(get_non_null_error_tx());
+    struct error_tx* error_tx = get_error_tx(error);
+    if (picotm_error_is_set(error)) {
+        return PICOTM_LIBC_ERROR_RECOVERY_AUTO;
+    }
+    return error_tx_get_error_recovery(error_tx);
 }

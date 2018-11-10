@@ -58,7 +58,14 @@ PICOTM_EXPORT
 int
 vsnprintf_tm(char* s, size_t n, const char* format, va_list ap)
 {
-    error_module_save_errno();
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        error_module_save_errno(&error);
+        if (!picotm_error_is_set(&error)) {
+            break;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 
     do {
         int res = vsnprintf(s, n, format, ap);
@@ -76,7 +83,14 @@ PICOTM_EXPORT
 int
 vsscanf_tm(const char* s, const char* format, va_list arg)
 {
-    error_module_save_errno();
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        error_module_save_errno(&error);
+        if (!picotm_error_is_set(&error)) {
+            break;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 
     do {
         int res = vsscanf(s, format, arg);

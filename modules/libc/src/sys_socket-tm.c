@@ -29,7 +29,14 @@ PICOTM_EXPORT
 int
 accept_tm(int socket, struct sockaddr* address, socklen_t* address_len)
 {
-    error_module_save_errno();
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        error_module_save_errno(&error);
+        if (!picotm_error_is_set(&error)) {
+            break;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 
     do {
         struct picotm_error error = PICOTM_ERROR_INITIALIZER;
@@ -47,7 +54,14 @@ PICOTM_EXPORT
 int
 bind_tm(int socket, const struct sockaddr* address, socklen_t address_len)
 {
-    error_module_save_errno();
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        error_module_save_errno(&error);
+        if (!picotm_error_is_set(&error)) {
+            break;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 
     do {
         struct picotm_error error = PICOTM_ERROR_INITIALIZER;
@@ -65,7 +79,14 @@ PICOTM_EXPORT
 int
 connect_tm(int socket, const struct sockaddr* address, socklen_t address_len)
 {
-    error_module_save_errno();
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        error_module_save_errno(&error);
+        if (!picotm_error_is_set(&error)) {
+            break;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 
     do {
         struct picotm_error error = PICOTM_ERROR_INITIALIZER;
@@ -83,7 +104,14 @@ PICOTM_EXPORT
 ssize_t
 recv_tm(int socket, void* buffer, size_t length, int flags)
 {
-    error_module_save_errno();
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        error_module_save_errno(&error);
+        if (!picotm_error_is_set(&error)) {
+            break;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 
     do {
         struct picotm_error error = PICOTM_ERROR_INITIALIZER;
@@ -102,7 +130,14 @@ PICOTM_EXPORT
 ssize_t
 send_tm(int socket, const void* buffer, size_t length, int flags)
 {
-    error_module_save_errno();
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        error_module_save_errno(&error);
+        if (!picotm_error_is_set(&error)) {
+            break;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 
     do {
         struct picotm_error error = PICOTM_ERROR_INITIALIZER;

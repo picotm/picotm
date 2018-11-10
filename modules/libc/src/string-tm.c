@@ -181,7 +181,14 @@ PICOTM_EXPORT
 char*
 strdup_tm(const char* s)
 {
-    error_module_save_errno();
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        error_module_save_errno(&error);
+        if (!picotm_error_is_set(&error)) {
+            break;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 
     size_t len = strlen(s) + sizeof(*s);
 
@@ -341,7 +348,14 @@ PICOTM_EXPORT
 char*
 strndup_tm(const char* s, size_t n)
 {
-    error_module_save_errno();
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        error_module_save_errno(&error);
+        if (!picotm_error_is_set(&error)) {
+            break;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 
     size_t len = strlen(s) + sizeof(*s);
     if (n < len) {
