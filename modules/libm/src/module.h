@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2017   Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -20,6 +20,8 @@
 
 #pragma once
 
+struct picotm_error;
+
 /**
  * \cond impl || libm_impl
  * \ingroup libm_impl
@@ -28,10 +30,10 @@
  */
 
 void
-fpu_module_save_fenv(void);
+fpu_module_save_fenv(struct picotm_error* error);
 
 void
-fpu_module_save_fexcept(void);
+fpu_module_save_fexcept(struct picotm_error* error);
 
 /**
  * \cond impl || libm_impl

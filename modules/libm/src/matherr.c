@@ -39,7 +39,14 @@ matherr_save_and_clear(int except)
         errno = 0;
     }
     if (math_errhandling & MATH_ERREXCEPT) {
-        fpu_module_save_fexcept();
+        do {
+            struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+            fpu_module_save_fexcept(&error);
+            if (!picotm_error_is_set(&error)) {
+                return;
+            }
+            picotm_recover_from_error(&error);
+        } while (true);
         feclearexcept(except);
     }
 }

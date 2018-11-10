@@ -26,12 +26,26 @@ PICOTM_EXPORT
 void
 picotm_libm_save_fenv()
 {
-    fpu_module_save_fenv();
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        fpu_module_save_fenv(&error);
+        if (!picotm_error_is_set(&error)) {
+            return;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 }
 
 PICOTM_EXPORT
 void
 picotm_libm_save_fexcept()
 {
-    fpu_module_save_fexcept();
+    do {
+        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
+        fpu_module_save_fexcept(&error);
+        if (!picotm_error_is_set(&error)) {
+            return;
+        }
+        picotm_recover_from_error(&error);
+    } while (true);
 }

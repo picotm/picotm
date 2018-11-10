@@ -161,7 +161,7 @@ get_non_null_fpu_tx(void)
  */
 
 void
-fpu_module_save_fenv()
+fpu_module_save_fenv(struct picotm_error* error)
 {
     struct fpu_tx* fpu_tx = get_non_null_fpu_tx();
 
@@ -171,21 +171,11 @@ fpu_module_save_fenv()
         return;
     }
 
-    do {
-        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-        fpu_tx_save_fenv(fpu_tx, &error);
-
-        if (!picotm_error_is_set(&error)) {
-            return;
-        }
-        picotm_recover_from_error(&error);
-
-    } while (true);
+    fpu_tx_save_fenv(fpu_tx, error);
 }
 
 void
-fpu_module_save_fexcept()
+fpu_module_save_fexcept(struct picotm_error* error)
 {
     struct fpu_tx* fpu_tx = get_non_null_fpu_tx();
 
@@ -195,14 +185,5 @@ fpu_module_save_fexcept()
         return;
     }
 
-    do {
-        struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-
-        fpu_tx_save_fexcept(fpu_tx, &error);
-        if (!picotm_error_is_set(&error)) {
-            return;
-        }
-        picotm_recover_from_error(&error);
-
-    } while (true);
+    fpu_tx_save_fexcept(fpu_tx, error);
 }
