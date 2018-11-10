@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2017   Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2017-2018  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -23,6 +23,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+struct picotm_error;
+
 /**
  * \cond impl || tm_impl
  * \ingroup tm_impl
@@ -31,16 +33,21 @@
  */
 
 void
-tm_module_load(uintptr_t addr, void* buf, size_t siz);
+tm_module_load(uintptr_t addr, void* buf, size_t siz,
+               struct picotm_error* error);
 
 void
-tm_module_store(uintptr_t addr, const void* buf, size_t siz);
+tm_module_store(uintptr_t addr, const void* buf, size_t siz,
+                struct picotm_error* error);
 
 void
-tm_module_loadstore(uintptr_t laddr, uintptr_t saddr, size_t siz);
+tm_module_loadstore(uintptr_t laddr, uintptr_t saddr, size_t siz,
+                    struct picotm_error* error);
 
 void
-tm_module_privatize(uintptr_t addr, size_t siz, unsigned long flags);
+tm_module_privatize(uintptr_t addr, size_t siz, unsigned long flags,
+                    struct picotm_error* error);
 
 void
-tm_module_privatize_c(uintptr_t addr, int c, unsigned long flags);
+tm_module_privatize_c(uintptr_t addr, int c, unsigned long flags,
+                      struct picotm_error* error);
