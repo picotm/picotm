@@ -163,7 +163,7 @@ libpicotm_c_la_SOURCES = allocator/allocator_event.c \
                          locale/locale.c \
                          locale/locale.h \
                          locale/locale_event.c \
-                         locole/locale_event.h \
+                         locale/locale_event.h \
                          locale/locale_log.c \
                          locale/locale_log.h \
                          locale/locale_tx.c \
