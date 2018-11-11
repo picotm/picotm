@@ -7,6 +7,14 @@
     "tags": "c, concurrency, development, distributedsystems, embedded, errorhandling, failsafe, framework, linux, lockless, manufacturing, multicore, multithreading, softwaretransactionalmemory, transactions",
     "releases": [
         {
+            "version": "0.13.0",
+            "state": "beta",
+            "scope": "minor",
+            "changes": "GNU LGPLv3. Locale support. Pointer data. Time/string conversion. Bug fixes.",
+            "download": "https://github.com/picotm/picotm/releases/download/v0.13.0/picotm-0.13.0.tar.gz",
+            "published": "2018-11-11T12:19:15+00:00"
+        },
+        {
             "version": "0.12.0",
             "state": "beta",
             "scope": "minor",

@@ -19,7 +19,7 @@ dnl SPDX-License-Identifier: LGPL-3.0-or-later
 dnl
 
 AC_PREREQ([2.69])
-AC_INIT([picotm], [0.12.0], [bugs@picotm.org], [], [http://picotm.org])
+AC_INIT([picotm], [0.13.0], [bugs@picotm.org], [], [http://picotm.org])
 
 dnl Internal configuration header
 AH_TOP([/* SPDX-License-Identifier: LGPL-3.0-or-later */])

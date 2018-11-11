@@ -1,4 +1,33 @@
 
+picotm 0.13.0 (2018-11-11)
+-------------
+
+    * License change: picotm and its modules are now distributed under
+      the terms of the GNU Lesser General Public License, version 3 or
+      later. Test programs and scripts are distributed under the terms
+      of the GNU General Public License, version 3 or later.
+
+    * Time/string conversion: The libc module now provides the strftime()
+      and strptime() interfaces from <time.h>.
+
+    * Locale support: The libc module now provides support for locale
+      interfaces. This includes setlocale() from ISO and locale_t from
+      POSIX.
+
+    * Module-independent pointer-state: The new ptrdata module provides
+      global and thread-local pointer state. Modules can attach state
+      data to a memory address, or retrieve attached state. The locale
+      implementation uses these facilities.
+
+    * Mandate stricter error checking during build and in build scripts.
+      The build scripts now compile all source code with '-Wall -Werror'
+      flags.
+
+    * Bug fix: Treemap look-up operations for non-existent entries do no
+      longer result in undefined behavior but return a default
+      value. (#286)
+
+
 picotm 0.12.0 (2018-04-27)
 -------------
 
