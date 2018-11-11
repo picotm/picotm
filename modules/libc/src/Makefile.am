@@ -18,9 +18,9 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
 #
 
-current = 4
+current = 5
 revision = 0
-age = 0
+age = 1
 
 lib_LTLIBRARIES =
 if ENABLE_MODULE_LIBC

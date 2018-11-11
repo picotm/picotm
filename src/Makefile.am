@@ -18,7 +18,7 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
 #
 
-current = 7
+current = 8
 revision = 0
 age = 0
 

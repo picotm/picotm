@@ -19,7 +19,7 @@
 #
 
 current = 1
-revision = 2
+revision = 3
 age = 1
 
 lib_LTLIBRARIES =
