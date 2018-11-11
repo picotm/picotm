@@ -19,7 +19,7 @@
 #
 
 current = 0
-revision = 3
+revision = 4
 age = 0
 
 lib_LTLIBRARIES =
