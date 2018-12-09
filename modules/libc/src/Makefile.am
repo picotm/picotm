@@ -142,6 +142,8 @@ libpicotm_c_la_SOURCES = allocator/allocator_event.c \
                          fildes/regfiletab.h \
                          fildes/regfile_tx.c \
                          fildes/regfile_tx.h \
+                         fildes/regfile_tx_ops.c \
+                         fildes/regfile_tx_ops.h \
                          fildes/region.c \
                          fildes/region.h \
                          fildes/regiontab.c \
