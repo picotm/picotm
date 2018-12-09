@@ -72,6 +72,8 @@ libpicotm_c_la_SOURCES = allocator/allocator_event.c \
                          fildes/dirtab.h \
                          fildes/dir_tx.c \
                          fildes/dir_tx.h \
+                         fildes/dir_tx_ops.c \
+                         fildes/dir_tx_ops.h \
                          fildes/fchmodop.c \
                          fildes/fchmodop.h \
                          fildes/fchmodoptab.c \
