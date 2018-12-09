@@ -164,6 +164,8 @@ libpicotm_c_la_SOURCES = allocator/allocator_event.c \
                          fildes/sockettab.h \
                          fildes/socket_tx.c \
                          fildes/socket_tx.h \
+                         fildes/socket_tx_ops.c \
+                         fildes/socket_tx_ops.h \
                          libc.c \
                          libc.h \
                          locale-tm.c \
