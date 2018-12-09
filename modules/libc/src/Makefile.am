@@ -64,6 +64,8 @@ libpicotm_c_la_SOURCES = allocator/allocator_event.c \
                          fildes/chrdevtab.h \
                          fildes/chrdev_tx.c \
                          fildes/chrdev_tx.h \
+                         fildes/chrdev_tx_ops.c \
+                         fildes/chrdev_tx_ops.h \
                          fildes/dir.c \
                          fildes/dir.h \
                          fildes/dirtab.c \
