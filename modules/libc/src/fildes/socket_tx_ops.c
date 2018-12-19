@@ -22,11 +22,9 @@
 #include "picotm/picotm-error.h"
 #include "picotm/picotm-lib-array.h"
 #include "picotm/picotm-lib-ptr.h"
-#include "picotm/picotm-lib-tab.h"
 #include <assert.h>
 #include <errno.h>
 #include <stdlib.h>
-#include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include "compat/temp_failure_retry.h"
@@ -36,86 +34,6 @@
 #include "ioop.h"
 #include "iooptab.h"
 #include "socket_tx.h"
-
-static struct socket_tx*
-socket_tx_of_file_tx(struct file_tx* file_tx)
-{
-    assert(file_tx);
-    assert(file_tx_file_type(file_tx) == PICOTM_LIBC_FILE_TYPE_SOCKET);
-
-    return picotm_containerof(file_tx, struct socket_tx, base);
-}
-
-static void
-socket_tx_try_rdlock_field(struct socket_tx* self, enum socket_field field,
-                           struct picotm_error* error)
-{
-    assert(self);
-
-    socket_try_rdlock_field(self->socket, field, self->rwstate + field, error);
-}
-
-static void
-socket_tx_try_wrlock_field(struct socket_tx* self, enum socket_field field,
-                           struct picotm_error* error)
-{
-    assert(self);
-
-    socket_try_wrlock_field(self->socket, field, self->rwstate + field, error);
-}
-
-static off_t
-append_to_iobuffer(struct socket_tx* self, size_t nbyte, const void* buf,
-                   struct picotm_error* error)
-{
-    off_t bufoffset;
-
-    assert(self);
-
-    bufoffset = self->wrbuflen;
-
-    if (nbyte && buf) {
-
-        /* resize */
-        void* tmp = picotm_tabresize(self->wrbuf,
-                                     self->wrbuflen,
-                                     self->wrbuflen+nbyte,
-                                     sizeof(self->wrbuf[0]),
-                                     error);
-        if (picotm_error_is_set(error)) {
-            return (off_t)-1;
-        }
-        self->wrbuf = tmp;
-
-        /* append */
-        memcpy(self->wrbuf+self->wrbuflen, buf, nbyte);
-        self->wrbuflen += nbyte;
-    }
-
-    return bufoffset;
-}
-
-static int
-socket_tx_append_to_writeset(struct socket_tx* self, size_t nbyte, off_t offset,
-                             const void* buf, struct picotm_error* error)
-{
-    assert(self);
-
-    off_t bufoffset = append_to_iobuffer(self, nbyte, buf, error);
-    if (picotm_error_is_set(error)) {
-        return -1;
-    }
-
-    unsigned long res = iooptab_append(&self->wrtab,
-                                       &self->wrtablen,
-                                       &self->wrtabsiz,
-                                       nbyte, offset, bufoffset,
-                                       error);
-    if (picotm_error_is_set(error)) {
-        return -1;
-    }
-    return res;
-}
 
 /*
  * Reference counting
@@ -138,27 +56,9 @@ unref(struct file_tx* file_tx)
  */
 
 static void
-unlock_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end,
-                struct socket* socket)
-{
-    enum socket_field field = 0;
-
-    while (beg < end) {
-        socket_unlock_field(socket, field, beg);
-        ++field;
-        ++beg;
-    }
-}
-
-static void
 finish(struct file_tx* base)
 {
-    struct socket_tx* self = socket_tx_of_file_tx(base);
-
-    /* release reader/writer locks on socket state */
-    unlock_rwstates(picotm_arraybeg(self->rwstate),
-                    picotm_arrayend(self->rwstate),
-                    self->socket);
+    socket_tx_finish(socket_tx_of_file_tx(base));
 }
 
 /*

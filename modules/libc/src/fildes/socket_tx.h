@@ -66,6 +66,12 @@ struct socket_tx {
     struct picotm_rwstate rwstate[NUMBER_OF_SOCKET_FIELDS];
 };
 
+static inline struct socket_tx*
+socket_tx_of_file_tx(struct file_tx* file_tx)
+{
+    return picotm_containerof(file_tx, struct socket_tx, base);
+}
+
 /**
  * Init transaction-local open-file-description state
  */
@@ -102,3 +108,18 @@ socket_tx_unref(struct socket_tx* self);
  */
 bool
 socket_tx_holds_ref(struct socket_tx* self);
+
+void
+socket_tx_try_rdlock_field(struct socket_tx* self, enum socket_field field,
+                           struct picotm_error* error);
+
+void
+socket_tx_try_wrlock_field(struct socket_tx* self, enum socket_field field,
+                           struct picotm_error* error);
+
+int
+socket_tx_append_to_writeset(struct socket_tx* self, size_t nbyte, off_t offset,
+                             const void* buf, struct picotm_error* error);
+
+void
+socket_tx_finish(struct socket_tx* self);
