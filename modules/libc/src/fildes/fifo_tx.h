@@ -65,6 +65,12 @@ struct fifo_tx {
     struct picotm_rwstate rwstate[NUMBER_OF_FIFO_FIELDS];
 };
 
+static inline struct fifo_tx*
+fifo_tx_of_file_tx(struct file_tx* file_tx)
+{
+    return picotm_containerof(file_tx, struct fifo_tx, base);
+}
+
 /**
  * Init transaction-local open-file-description state
  */
@@ -101,3 +107,18 @@ fifo_tx_unref(struct fifo_tx* self);
  */
 bool
 fifo_tx_holds_ref(struct fifo_tx* self);
+
+void
+fifo_tx_try_rdlock_field(struct fifo_tx* self, enum fifo_field field,
+                         struct picotm_error* error);
+
+void
+fifo_tx_try_wrlock_field(struct fifo_tx* self, enum fifo_field field,
+                         struct picotm_error* error);
+
+int
+fifo_tx_append_to_writeset(struct fifo_tx* self, size_t nbyte, off_t offset,
+                          const void* buf, struct picotm_error* error);
+
+void
+fifo_tx_finish(struct fifo_tx* self);
