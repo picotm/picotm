@@ -255,25 +255,37 @@ regfile_tx_try_wrlock_field(struct regfile_tx* self, enum regfile_field field,
 }
 
 int
-regfile_tx_try_lock_region(struct regfile_tx* self, size_t nbyte, off_t offset,
-                           bool iswrite, struct picotm_error* error)
+regfile_tx_try_rdlock_region(struct regfile_tx* self, size_t nbyte,
+                             off_t offset, struct picotm_error* error)
 {
-    void (* const try_lock_region[])(struct regfile*,
-                                     off_t,
-                                     size_t,
-                                     struct rwcountermap*,
-                                     struct picotm_error*) = {
-        regfile_try_rdlock_region,
-        regfile_try_wrlock_region
-    };
-
     assert(self);
 
-    try_lock_region[iswrite](self->regfile,
-                             offset,
-                             nbyte,
-                             &self->rwcountermap,
-                             error);
+    regfile_try_rdlock_region(self->regfile, offset, nbyte,
+                              &self->rwcountermap, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+
+    int pos = regiontab_append(&self->locktab,
+                               &self->locktablen,
+                               &self->locktabsiz,
+                               nbyte, offset,
+                               error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+
+    return pos;
+}
+
+int
+regfile_tx_try_wrlock_region(struct regfile_tx* self, size_t nbyte,
+                             off_t offset, struct picotm_error* error)
+{
+    assert(self);
+
+    regfile_try_wrlock_region(self->regfile, offset, nbyte,
+                              &self->rwcountermap, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
