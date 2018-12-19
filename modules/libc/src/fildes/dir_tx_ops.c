@@ -38,33 +38,6 @@
 #include "fcntloptab.h"
 #include "file_tx.h"
 
-static struct dir_tx*
-dir_tx_of_file_tx(struct file_tx* file_tx)
-{
-    assert(file_tx);
-    assert(file_tx_file_type(file_tx) == PICOTM_LIBC_FILE_TYPE_DIR);
-
-    return picotm_containerof(file_tx, struct dir_tx, base);
-}
-
-static void
-dir_tx_try_rdlock_field(struct dir_tx* self, enum dir_field field,
-                        struct picotm_error* error)
-{
-    assert(self);
-
-    dir_try_rdlock_field(self->dir, field, self->rwstate + field, error);
-}
-
-static void
-dir_tx_try_wrlock_field(struct dir_tx* self, enum dir_field field,
-                        struct picotm_error* error)
-{
-    assert(self);
-
-    dir_try_wrlock_field(self->dir, field, self->rwstate + field, error);
-}
-
 /*
  * Reference counting
  */
@@ -86,27 +59,9 @@ unref(struct file_tx* file_tx)
  */
 
 static void
-unlock_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end,
-                struct dir* dir)
-{
-    enum dir_field field = 0;
-
-    while (beg < end) {
-        dir_unlock_field(dir, field, beg);
-        ++field;
-        ++beg;
-    }
-}
-
-static void
 finish(struct file_tx* base)
 {
-    struct dir_tx* self = dir_tx_of_file_tx(base);
-
-    /* release reader/writer locks on directory state */
-    unlock_rwstates(picotm_arraybeg(self->rwstate),
-                    picotm_arrayend(self->rwstate),
-                    self->dir);
+    dir_tx_finish(dir_tx_of_file_tx(base));
 }
 
 /*

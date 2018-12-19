@@ -150,3 +150,43 @@ dir_tx_holds_ref(struct dir_tx* self)
 
     return picotm_ref_count(&self->ref) > 0;
 }
+
+void
+dir_tx_try_rdlock_field(struct dir_tx* self, enum dir_field field,
+                        struct picotm_error* error)
+{
+    assert(self);
+
+    dir_try_rdlock_field(self->dir, field, self->rwstate + field, error);
+}
+
+void
+dir_tx_try_wrlock_field(struct dir_tx* self, enum dir_field field,
+                        struct picotm_error* error)
+{
+    assert(self);
+
+    dir_try_wrlock_field(self->dir, field, self->rwstate + field, error);
+}
+
+static void
+unlock_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end,
+                struct dir* dir)
+{
+    enum dir_field field = 0;
+
+    while (beg < end) {
+        dir_unlock_field(dir, field, beg);
+        ++field;
+        ++beg;
+    }
+}
+
+void
+dir_tx_finish(struct dir_tx* self)
+{
+    /* release reader/writer locks on directory state */
+    unlock_rwstates(picotm_arraybeg(self->rwstate),
+                    picotm_arrayend(self->rwstate),
+                    self->dir);
+}
