@@ -61,6 +61,12 @@ struct dir_tx {
     struct picotm_rwstate rwstate[NUMBER_OF_DIR_FIELDS];
 };
 
+static inline struct dir_tx*
+dir_tx_of_file_tx(struct file_tx* file_tx)
+{
+    return picotm_containerof(file_tx, struct dir_tx, base);
+}
+
 /**
  * Initialize transaction-local directory.
  * \param   self    The instance of `struct dir` to initialize.
@@ -99,3 +105,14 @@ dir_tx_unref(struct dir_tx* self);
  */
 bool
 dir_tx_holds_ref(struct dir_tx* self);
+
+void
+dir_tx_try_rdlock_field(struct dir_tx* self, enum dir_field field,
+                        struct picotm_error* error);
+
+void
+dir_tx_try_wrlock_field(struct dir_tx* self, enum dir_field field,
+                        struct picotm_error* error);
+
+void
+dir_tx_finish(struct dir_tx* self);
