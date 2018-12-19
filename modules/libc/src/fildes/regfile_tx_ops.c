@@ -22,7 +22,6 @@
 #include "picotm/picotm-error.h"
 #include "picotm/picotm-lib-array.h"
 #include "picotm/picotm-lib-ptr.h"
-#include "picotm/picotm-lib-tab.h"
 #include <assert.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -40,164 +39,8 @@
 #include "ofd_tx.h"
 #include "range.h"
 #include "regfile_tx.h"
-#include "region.h"
-#include "regiontab.h"
 #include "seekop.h"
 #include "seekoptab.h"
-
-static struct regfile_tx*
-regfile_tx_of_file_tx(struct file_tx* file_tx)
-{
-    assert(file_tx);
-    assert(file_tx_file_type(file_tx) == PICOTM_LIBC_FILE_TYPE_REGULAR);
-
-    return picotm_containerof(file_tx, struct regfile_tx, base);
-}
-
-static void
-regfile_tx_try_rdlock_field(struct regfile_tx* self, enum regfile_field field,
-                            struct picotm_error* error)
-{
-    assert(self);
-
-    regfile_try_rdlock_field(self->regfile, field, self->rwstate + field,
-                             error);
-}
-
-static void
-regfile_tx_try_wrlock_field(struct regfile_tx* self, enum regfile_field field,
-                            struct picotm_error* error)
-{
-    assert(self);
-
-    regfile_try_wrlock_field(self->regfile, field, self->rwstate + field,
-                             error);
-}
-
-static int
-regfile_tx_2pl_lock_region(struct regfile_tx* self, size_t nbyte, off_t offset,
-                           bool iswrite, struct picotm_error* error)
-{
-    void (* const try_lock_region[])(struct regfile*,
-                                     off_t,
-                                     size_t,
-                                     struct rwcountermap*,
-                                     struct picotm_error*) = {
-        regfile_try_rdlock_region,
-        regfile_try_wrlock_region
-    };
-
-    assert(self);
-
-    try_lock_region[iswrite](self->regfile,
-                             offset,
-                             nbyte,
-                             &self->rwcountermap,
-                             error);
-    if (picotm_error_is_set(error)) {
-        return -1;
-    }
-
-    int pos = regiontab_append(&self->locktab,
-                               &self->locktablen,
-                               &self->locktabsiz,
-                               nbyte, offset,
-                               error);
-    if (picotm_error_is_set(error)) {
-        return -1;
-    }
-
-    return pos;
-}
-
-static void
-regfile_tx_2pl_release_locks(struct regfile_tx* self)
-{
-    assert(self);
-
-    /* release all locks */
-
-    struct region* region = self->locktab;
-    const struct region* regionend = region+self->locktablen;
-
-    while (region < regionend) {
-        regfile_unlock_region(self->regfile,
-                              region->offset,
-                              region->nbyte,
-                              &self->rwcountermap);
-        ++region;
-    }
-}
-
-static off_t
-append_to_iobuffer(struct regfile_tx* self, size_t nbyte, const void* buf,
-                   struct picotm_error* error)
-{
-    off_t bufoffset;
-
-    assert(self);
-
-    bufoffset = self->wrbuflen;
-
-    if (nbyte && buf) {
-
-        /* resize */
-        void* tmp = picotm_tabresize(self->wrbuf,
-                                     self->wrbuflen,
-                                     self->wrbuflen+nbyte,
-                                     sizeof(self->wrbuf[0]),
-                                     error);
-        if (picotm_error_is_set(error)) {
-            return (off_t)-1;
-        }
-        self->wrbuf = tmp;
-
-        /* append */
-        memcpy(self->wrbuf+self->wrbuflen, buf, nbyte);
-        self->wrbuflen += nbyte;
-    }
-
-    return bufoffset;
-}
-
-static int
-regfile_tx_append_to_writeset(struct regfile_tx* self, size_t nbyte, off_t offset,
-                              const void* buf, struct picotm_error* error)
-{
-    assert(self);
-
-    off_t bufoffset = append_to_iobuffer(self, nbyte, buf, error);
-    if (picotm_error_is_set(error)) {
-        return -1;
-    }
-
-    unsigned long res = iooptab_append(&self->wrtab,
-                                       &self->wrtablen,
-                                       &self->wrtabsiz,
-                                       nbyte, offset, bufoffset,
-                                       error);
-    if (picotm_error_is_set(error)) {
-        return -1;
-    }
-    return res;
-}
-
-static int
-regfile_tx_append_to_readset(struct regfile_tx* self, size_t nbyte, off_t offset,
-                             const void* buf, struct picotm_error* error)
-{
-    assert(self);
-
-    unsigned long res = iooptab_append(&self->rdtab,
-                                       &self->rdtablen,
-                                       &self->rdtabsiz,
-                                       nbyte, offset, 0,
-                                       error);
-    if (picotm_error_is_set(error)) {
-        return -1;
-    }
-    return res;
-}
 
 /*
  * Reference counting
@@ -220,30 +63,9 @@ unref(struct file_tx* file_tx)
  */
 
 static void
-unlock_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end,
-                struct regfile* regfile)
-{
-    enum regfile_field field = 0;
-
-    while (beg < end) {
-        regfile_unlock_field(regfile, field, beg);
-        ++field;
-        ++beg;
-    }
-}
-
-static void
 finish(struct file_tx* base)
 {
-    struct regfile_tx* self = regfile_tx_of_file_tx(base);
-
-    /* release record locks */
-    regfile_tx_2pl_release_locks(self);
-
-    /* release reader/writer locks on file state */
-    unlock_rwstates(picotm_arraybeg(self->rwstate),
-                    picotm_arrayend(self->rwstate),
-                    self->regfile);
+    regfile_tx_finish(regfile_tx_of_file_tx(base));
 }
 
 /*
@@ -698,7 +520,7 @@ pread_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, void* buf,
     struct regfile_tx* self = regfile_tx_of_file_tx(base);
 
     /* lock region */
-    regfile_tx_2pl_lock_region(self, nbyte, offset, 0, error);
+    regfile_tx_try_lock_region(self, nbyte, offset, 0, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -802,7 +624,7 @@ pwrite_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
     }
 
     /* lock region */
-    regfile_tx_2pl_lock_region(self, nbyte, offset, 1, error);
+    regfile_tx_try_lock_region(self, nbyte, offset, 1, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -878,7 +700,7 @@ read_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, void* buf,
 
     /* read-lock region */
 
-    regfile_tx_2pl_lock_region(self, nbyte, offset, 0, error);
+    regfile_tx_try_lock_region(self, nbyte, offset, 0, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -974,7 +796,7 @@ write_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
     }
 
     /* write-lock region */
-    regfile_tx_2pl_lock_region(self, nbyte, offset, 1, error);
+    regfile_tx_try_lock_region(self, nbyte, offset, 1, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
