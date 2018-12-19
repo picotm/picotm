@@ -21,7 +21,9 @@
 #include "chrdev_tx.h"
 #include "picotm/picotm-error.h"
 #include "picotm/picotm-lib-array.h"
+#include "picotm/picotm-lib-tab.h"
 #include <stdlib.h>
+#include <string.h>
 #include "chrdev_tx_ops.h"
 #include "fcntloptab.h"
 #include "iooptab.h"
@@ -152,4 +154,97 @@ chrdev_tx_holds_ref(struct chrdev_tx* self)
     assert(self);
 
     return picotm_ref_count(&self->ref) > 0;
+}
+
+void
+chrdev_tx_try_rdlock_field(struct chrdev_tx* self, enum chrdev_field field,
+                           struct picotm_error* error)
+{
+    assert(self);
+
+    chrdev_try_rdlock_field(self->chrdev, field, self->rwstate + field, error);
+}
+
+void
+chrdev_tx_try_wrlock_field(struct chrdev_tx* self, enum chrdev_field field,
+                           struct picotm_error* error)
+{
+    assert(self);
+
+    chrdev_try_wrlock_field(self->chrdev, field, self->rwstate + field, error);
+}
+
+static off_t
+append_to_iobuffer(struct chrdev_tx* self, size_t nbyte, const void* buf,
+                   struct picotm_error* error)
+{
+    off_t bufoffset;
+
+    assert(self);
+
+    bufoffset = self->wrbuflen;
+
+    if (nbyte && buf) {
+
+        /* resize */
+        void* tmp = picotm_tabresize(self->wrbuf,
+                                     self->wrbuflen,
+                                     self->wrbuflen+nbyte,
+                                     sizeof(self->wrbuf[0]),
+                                     error);
+        if (picotm_error_is_set(error)) {
+            return (off_t)-1;
+        }
+        self->wrbuf = tmp;
+
+        /* append */
+        memcpy(self->wrbuf+self->wrbuflen, buf, nbyte);
+        self->wrbuflen += nbyte;
+    }
+
+    return bufoffset;
+}
+
+int
+chrdev_tx_append_to_writeset(struct chrdev_tx* self, size_t nbyte, off_t offset,
+                             const void* buf, struct picotm_error* error)
+{
+    assert(self);
+
+    off_t bufoffset = append_to_iobuffer(self, nbyte, buf, error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+
+    unsigned long res = iooptab_append(&self->wrtab,
+                                       &self->wrtablen,
+                                       &self->wrtabsiz,
+                                       nbyte, offset, bufoffset,
+                                       error);
+    if (picotm_error_is_set(error)) {
+        return -1;
+    }
+    return res;
+}
+
+static void
+unlock_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end,
+                struct chrdev* chrdev)
+{
+    enum chrdev_field field = 0;
+
+    while (beg < end) {
+        chrdev_unlock_field(chrdev, field, beg);
+        ++field;
+        ++beg;
+    }
+}
+
+void
+chrdev_tx_finish(struct chrdev_tx* self)
+{
+    /* release reader/writer locks on character-device state */
+    unlock_rwstates(picotm_arraybeg(self->rwstate),
+                    picotm_arrayend(self->rwstate),
+                    self->chrdev);
 }

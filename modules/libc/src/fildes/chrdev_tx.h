@@ -65,6 +65,12 @@ struct chrdev_tx {
     struct picotm_rwstate rwstate[NUMBER_OF_CHRDEV_FIELDS];
 };
 
+static inline struct chrdev_tx*
+chrdev_tx_of_file_tx(struct file_tx* file_tx)
+{
+    return picotm_containerof(file_tx, struct chrdev_tx, base);
+}
+
 /**
  * Initialize transaction-local character device.
  * \param   self    The instance of `struct chrdev` to initialize.
@@ -103,3 +109,21 @@ chrdev_tx_unref(struct chrdev_tx* self);
  */
 bool
 chrdev_tx_holds_ref(struct chrdev_tx* self);
+
+void
+chrdev_tx_try_rdlock_field(struct chrdev_tx* self, enum chrdev_field field,
+                           struct picotm_error* error);
+
+void
+chrdev_tx_try_wrlock_field(struct chrdev_tx* self, enum chrdev_field field,
+                           struct picotm_error* error);
+
+int
+chrdev_tx_append_to_writeset(struct chrdev_tx* self, size_t nbyte, off_t offset,
+                             const void* buf, struct picotm_error* error);
+
+/**
+ * Finish operation for transaction-local character device.
+ */
+void
+chrdev_tx_finish(struct chrdev_tx* self);
