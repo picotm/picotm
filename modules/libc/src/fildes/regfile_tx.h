@@ -158,8 +158,12 @@ regfile_tx_try_wrlock_field(struct regfile_tx* self, enum regfile_field field,
                             struct picotm_error* error);
 
 int
-regfile_tx_try_lock_region(struct regfile_tx* self, size_t nbyte, off_t offset,
-                           bool iswrite, struct picotm_error* error);
+regfile_tx_try_rdlock_region(struct regfile_tx* self, size_t nbyte,
+                             off_t offset, struct picotm_error* error);
+
+int
+regfile_tx_try_wrlock_region(struct regfile_tx* self, size_t nbyte,
+                             off_t offset, struct picotm_error* error);
 
 int
 regfile_tx_append_to_writeset(struct regfile_tx* self, size_t nbyte, off_t offset,

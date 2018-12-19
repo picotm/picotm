@@ -520,7 +520,7 @@ pread_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, void* buf,
     struct regfile_tx* self = regfile_tx_of_file_tx(base);
 
     /* lock region */
-    regfile_tx_try_lock_region(self, nbyte, offset, 0, error);
+    regfile_tx_try_rdlock_region(self, nbyte, offset, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -624,7 +624,7 @@ pwrite_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
     }
 
     /* lock region */
-    regfile_tx_try_lock_region(self, nbyte, offset, 1, error);
+    regfile_tx_try_wrlock_region(self, nbyte, offset, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -700,7 +700,7 @@ read_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, void* buf,
 
     /* read-lock region */
 
-    regfile_tx_try_lock_region(self, nbyte, offset, 0, error);
+    regfile_tx_try_rdlock_region(self, nbyte, offset, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -796,7 +796,7 @@ write_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
     }
 
     /* write-lock region */
-    regfile_tx_try_lock_region(self, nbyte, offset, 1, error);
+    regfile_tx_try_wrlock_region(self, nbyte, offset, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
