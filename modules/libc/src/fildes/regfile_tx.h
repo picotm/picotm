@@ -84,6 +84,12 @@ struct regfile_tx {
     size_t            locktabsiz;
 };
 
+static inline struct regfile_tx*
+regfile_tx_of_file_tx(struct file_tx* file_tx)
+{
+    return picotm_containerof(file_tx, struct regfile_tx, base);
+}
+
 /**
  * Init transaction-local open-file-description state
  */
@@ -142,3 +148,26 @@ regfile_tx_unref(struct regfile_tx* self);
  */
 bool
 regfile_tx_holds_ref(struct regfile_tx* self);
+
+void
+regfile_tx_try_rdlock_field(struct regfile_tx* self, enum regfile_field field,
+                            struct picotm_error* error);
+
+void
+regfile_tx_try_wrlock_field(struct regfile_tx* self, enum regfile_field field,
+                            struct picotm_error* error);
+
+int
+regfile_tx_try_lock_region(struct regfile_tx* self, size_t nbyte, off_t offset,
+                           bool iswrite, struct picotm_error* error);
+
+int
+regfile_tx_append_to_writeset(struct regfile_tx* self, size_t nbyte, off_t offset,
+                              const void* buf, struct picotm_error* error);
+
+int
+regfile_tx_append_to_readset(struct regfile_tx* self, size_t nbyte, off_t offset,
+                             const void* buf, struct picotm_error* error);
+
+void
+regfile_tx_finish(struct regfile_tx* self);
