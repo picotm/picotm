@@ -20,7 +20,6 @@
 
 #pragma once
 
-#include "picotm/picotm-lib-ref.h"
 #include "picotm/picotm-lib-rwstate.h"
 #include "picotm/picotm-libc.h"
 #include <sys/types.h>
@@ -41,8 +40,6 @@ struct picotm_error;
  * Holds transaction-local state for a character device.
  */
 struct chrdev_tx {
-
-    struct picotm_ref16 ref;
 
     struct file_tx base;
 
@@ -86,29 +83,17 @@ void
 chrdev_tx_uninit(struct chrdev_tx* self);
 
 /**
- * Acquire a reference on the open file description
+ * Acquire the first reference on a transaction-local character device.
  */
 void
-chrdev_tx_ref_or_set_up(struct chrdev_tx* self, struct chrdev* chrdev,
-                        struct picotm_error* error);
+chrdev_tx_acquire_chrdev(struct chrdev_tx* self, struct chrdev* chrdev,
+                         struct picotm_error* error);
 
 /**
- * Acquire a reference on the open file description
+ * Release reference on the current transaction-local character device.
  */
 void
-chrdev_tx_ref(struct chrdev_tx* self, struct picotm_error* error);
-
-/**
- * Release reference
- */
-void
-chrdev_tx_unref(struct chrdev_tx* self);
-
-/**
- * Returns true if transactions hold a reference
- */
-bool
-chrdev_tx_holds_ref(struct chrdev_tx* self);
+chrdev_tx_release_chrdev(struct chrdev_tx* self);
 
 void
 chrdev_tx_try_rdlock_field(struct chrdev_tx* self, enum chrdev_field field,

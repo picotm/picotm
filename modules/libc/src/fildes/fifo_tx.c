@@ -55,8 +55,6 @@ fifo_tx_init(struct fifo_tx* self)
 {
     assert(self);
 
-    picotm_ref_init(&self->ref, 0);
-
     file_tx_init(&self->base, &fifo_tx_ops);
 
     self->fifo = NULL;
@@ -91,69 +89,39 @@ fifo_tx_uninit(struct fifo_tx* self)
                     picotm_arrayend(self->rwstate));
 }
 
-/* Referencing
+/*
+ * File handling
  */
 
 void
-fifo_tx_ref_or_set_up(struct fifo_tx* self, struct fifo* fifo,
-                      struct picotm_error* error)
+fifo_tx_acquire_fifo(struct fifo_tx* self, struct fifo* fifo,
+                     struct picotm_error* error)
 {
     assert(self);
-    assert(fifo);
-
-    bool first_ref = picotm_ref_up(&self->ref);
-    if (!first_ref) {
-        return;
-    }
+    assert(!self->fifo);
 
     /* get reference on FIFO */
     fifo_ref(fifo, error);
     if (picotm_error_is_set(error)) {
-        goto err_fifo_ref;
-    }
-
-    /* setup fields */
-
-    self->fifo = fifo;
-
-    self->wrmode = PICOTM_LIBC_WRITE_BACK;
-
-    self->fcntltablen = 0;
-    self->wrtablen = 0;
-    self->wrbuflen = 0;
-
-    return;
-
-err_fifo_ref:
-    picotm_ref_down(&self->ref);
-}
-
-void
-fifo_tx_ref(struct fifo_tx* self, struct picotm_error* error)
-{
-    picotm_ref_up(&self->ref);
-}
-
-void
-fifo_tx_unref(struct fifo_tx* self)
-{
-    assert(self);
-
-    bool final_ref = picotm_ref_down(&self->ref);
-    if (!final_ref) {
         return;
     }
 
-    fifo_unref(self->fifo);
-    self->fifo = NULL;
+    /* setup fields */
+    self->fifo = fifo;
+    self->wrmode = PICOTM_LIBC_WRITE_BACK;
+    self->fcntltablen = 0;
+    self->wrtablen = 0;
+    self->wrbuflen = 0;
 }
 
-bool
-fifo_tx_holds_ref(struct fifo_tx* self)
+void
+fifo_tx_release_fifo(struct fifo_tx* self)
 {
     assert(self);
+    assert(self->fifo);
 
-    return picotm_ref_count(&self->ref) > 0;
+    fifo_unref(self->fifo);
+    self->fifo = NULL;
 }
 
 void

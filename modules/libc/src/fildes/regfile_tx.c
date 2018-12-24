@@ -60,8 +60,6 @@ regfile_tx_init(struct regfile_tx* self)
 {
     assert(self);
 
-    picotm_ref_init(&self->ref, 0);
-
     file_tx_init(&self->base, &regfile_tx_ops);
 
     self->regfile = NULL;
@@ -163,33 +161,25 @@ regfile_tx_set_file_size(struct regfile_tx* self, off_t size,
 }
 
 /*
- * Referencing
+ * File handling
  */
 
 void
-regfile_tx_ref_or_set_up(struct regfile_tx* self, struct regfile* regfile,
-                         struct picotm_error* error)
+regfile_tx_acquire_regfile(struct regfile_tx* self, struct regfile* regfile,
+                           struct picotm_error* error)
 {
     assert(self);
-    assert(regfile);
-
-    bool first_ref = picotm_ref_up(&self->ref);
-    if (!first_ref) {
-        return;
-    }
+    assert(!self->regfile);
 
     /* get reference on file */
     regfile_ref(regfile, error);
     if (picotm_error_is_set(error)) {
-        goto err_regfile_ref;
+        return;
     }
 
     /* setup fields */
-
     self->regfile = regfile;
-
     self->wrmode = PICOTM_LIBC_WRITE_BACK;
-
     self->file_size = 0;
 
     self->fchmodtablen = 0;
@@ -199,39 +189,16 @@ regfile_tx_ref_or_set_up(struct regfile_tx* self, struct regfile* regfile,
     self->wrbuflen = 0;
 
     self->locktablen = 0;
-
-    return;
-
-err_regfile_ref:
-    picotm_ref_down(&self->ref);
 }
 
 void
-regfile_tx_ref(struct regfile_tx* self, struct picotm_error* error)
-{
-    picotm_ref_up(&self->ref);
-}
-
-void
-regfile_tx_unref(struct regfile_tx* self)
+regfile_tx_release_regfile(struct regfile_tx* self)
 {
     assert(self);
-
-    bool final_ref = picotm_ref_down(&self->ref);
-    if (!final_ref) {
-        return;
-    }
+    assert(self->regfile);
 
     regfile_unref(self->regfile);
     self->regfile = NULL;
-}
-
-bool
-regfile_tx_holds_ref(struct regfile_tx* self)
-{
-    assert(self);
-
-    return picotm_ref_count(&self->ref) > 0;
 }
 
 void

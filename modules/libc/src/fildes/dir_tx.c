@@ -52,8 +52,6 @@ dir_tx_init(struct dir_tx* self)
 {
     assert(self);
 
-    picotm_ref_init(&self->ref, 0);
-
     file_tx_init(&self->base, &dir_tx_ops);
 
     self->dir = NULL;
@@ -83,25 +81,20 @@ dir_tx_uninit(struct dir_tx* self)
 }
 
 /*
- * Referencing
+ * File handling
  */
 
 void
-dir_tx_ref_or_set_up(struct dir_tx* self, struct dir* dir,
-                     struct picotm_error* error)
+dir_tx_acquire_dir(struct dir_tx* self, struct dir* dir,
+                   struct picotm_error* error)
 {
     assert(self);
-    assert(dir);
-
-    bool first_ref = picotm_ref_up(&self->ref);
-    if (!first_ref) {
-        return;
-    }
+    assert(!self->dir);
 
     /* acquire reference on directory */
     dir_ref(dir, error);
     if (picotm_error_is_set(error)) {
-        goto err_dir_ref;
+        return;
     }
 
     /* setup fields */
@@ -116,39 +109,16 @@ dir_tx_ref_or_set_up(struct dir_tx* self, struct dir* dir,
 
     self->fchmodtablen = 0;
     self->fcntltablen = 0;
-
-    return;
-
-err_dir_ref:
-    picotm_ref_down(&self->ref);
 }
 
 void
-dir_tx_ref(struct dir_tx* self, struct picotm_error* error)
-{
-    picotm_ref_up(&self->ref);
-}
-
-void
-dir_tx_unref(struct dir_tx* self)
+dir_tx_release_dir(struct dir_tx* self)
 {
     assert(self);
-
-    bool final_ref = picotm_ref_down(&self->ref);
-    if (!final_ref) {
-        return;
-    }
+    assert(self->dir);
 
     dir_unref(self->dir);
     self->dir = NULL;
-}
-
-bool
-dir_tx_holds_ref(struct dir_tx* self)
-{
-    assert(self);
-
-    return picotm_ref_count(&self->ref) > 0;
 }
 
 void

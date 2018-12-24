@@ -43,19 +43,19 @@
 #include "seekoptab.h"
 
 /*
- * Reference counting
+ * File handling
  */
 
 static void
-ref(struct file_tx* file_tx, struct picotm_error* error)
+acquire_file(struct file_tx* file_tx, void* file, struct picotm_error* error)
 {
-    regfile_tx_ref(regfile_tx_of_file_tx(file_tx), error);
+    regfile_tx_acquire_regfile(regfile_tx_of_file_tx(file_tx), file, error);
 }
 
 static void
-unref(struct file_tx* file_tx)
+release_file(struct file_tx* file_tx)
 {
-    regfile_tx_unref(regfile_tx_of_file_tx(file_tx));
+    regfile_tx_release_regfile(regfile_tx_of_file_tx(file_tx));
 }
 
 /*
@@ -869,9 +869,9 @@ write_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
 
 const struct file_tx_ops regfile_tx_ops = {
     PICOTM_LIBC_FILE_TYPE_REGULAR,
-    /* ref counting */
-    ref,
-    unref,
+    /* file handling */
+    acquire_file,
+    release_file,
     /* module interfaces */
     finish,
     /* file ops */

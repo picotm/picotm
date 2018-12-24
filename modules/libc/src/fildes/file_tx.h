@@ -21,6 +21,7 @@
 #pragma once
 
 #include "picotm/picotm-lib-ptr.h"
+#include "picotm/picotm-lib-ref.h"
 #include "picotm/picotm-lib-slist.h"
 
 /**
@@ -37,6 +38,8 @@ struct picotm_error;
  * Holds transaction-local state for a file.
  */
 struct file_tx {
+
+    struct picotm_ref16 ref;
 
     struct picotm_slist active_list;
 
@@ -72,6 +75,10 @@ file_tx_uninit(struct file_tx* self);
 enum picotm_libc_file_type
 file_tx_file_type(const struct file_tx* self);
 
+void
+file_tx_ref_or_set_up(struct file_tx* self, void* data,
+                      struct picotm_error* error);
+
 /**
  * Acquire a reference on a file transaction.
  * \param       self    A file transaction.
@@ -86,6 +93,13 @@ file_tx_ref(struct file_tx* self, struct picotm_error* error);
  */
 void
 file_tx_unref(struct file_tx* self);
+
+/**
+ * Returns true if the transactions holds a reference to the
+ * transaction-local file state.
+ */
+bool
+file_tx_holds_ref(struct file_tx* self);
 
 /*
  * Module interfaces
