@@ -39,19 +39,19 @@
 #include "file_tx.h"
 
 /*
- * Reference counting
+ * File handling
  */
 
 static void
-ref(struct file_tx* file_tx, struct picotm_error* error)
+acquire_file(struct file_tx* file_tx, void* file, struct picotm_error* error)
 {
-    dir_tx_ref(dir_tx_of_file_tx(file_tx), error);
+    dir_tx_acquire_dir(dir_tx_of_file_tx(file_tx), file, error);
 }
 
 static void
-unref(struct file_tx* file_tx)
+release_file(struct file_tx* file_tx)
 {
-    dir_tx_unref(dir_tx_of_file_tx(file_tx));
+    dir_tx_release_dir(dir_tx_of_file_tx(file_tx));
 }
 
 /*
@@ -277,9 +277,9 @@ fsync_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
 
 const struct file_tx_ops dir_tx_ops = {
     PICOTM_LIBC_FILE_TYPE_DIR,
-    /* ref counting */
-    ref,
-    unref,
+    /* file handling */
+    acquire_file,
+    release_file,
     /* module interfaces */
     finish,
     /* file ops */

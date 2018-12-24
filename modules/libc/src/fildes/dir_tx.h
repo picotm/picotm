@@ -20,7 +20,6 @@
 
 #pragma once
 
-#include "picotm/picotm-lib-ref.h"
 #include "picotm/picotm-lib-rwstate.h"
 #include "picotm/picotm-libc.h"
 #include <sys/types.h>
@@ -42,8 +41,6 @@ struct picotm_error;
  * Holds transaction-local state for a directory.
  */
 struct dir_tx {
-
-    struct picotm_ref16 ref;
 
     struct file_tx base;
 
@@ -82,29 +79,17 @@ void
 dir_tx_uninit(struct dir_tx* self);
 
 /**
- * Acquire a reference on the open file description
+ * Acquire the first reference on the transaction-local directory state.
  */
 void
-dir_tx_ref_or_set_up(struct dir_tx* self, struct dir* dir,
-                     struct picotm_error* error);
+dir_tx_acquire_dir(struct dir_tx* self, struct dir* dir,
+                   struct picotm_error* error);
 
 /**
- * Acquire a reference on the open file description
+ * Release final reference.
  */
 void
-dir_tx_ref(struct dir_tx* self, struct picotm_error* error);
-
-/**
- * Release reference
- */
-void
-dir_tx_unref(struct dir_tx* self);
-
-/**
- * Returns true if transactions hold a reference
- */
-bool
-dir_tx_holds_ref(struct dir_tx* self);
+dir_tx_release_dir(struct dir_tx* self);
 
 void
 dir_tx_try_rdlock_field(struct dir_tx* self, enum dir_field field,

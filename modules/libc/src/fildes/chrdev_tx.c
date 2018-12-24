@@ -55,8 +55,6 @@ chrdev_tx_init(struct chrdev_tx* self)
 {
     assert(self);
 
-    picotm_ref_init(&self->ref, 0);
-
     file_tx_init(&self->base, &chrdev_tx_ops);
 
     self->chrdev = NULL;
@@ -95,65 +93,34 @@ chrdev_tx_uninit(struct chrdev_tx* self)
  */
 
 void
-chrdev_tx_ref_or_set_up(struct chrdev_tx* self, struct chrdev* chrdev,
-                        struct picotm_error* error)
+chrdev_tx_acquire_chrdev(struct chrdev_tx* self, struct chrdev* chrdev,
+                         struct picotm_error* error)
 {
     assert(self);
-    assert(chrdev);
-
-    bool first_ref = picotm_ref_up(&self->ref);
-    if (!first_ref) {
-        return;
-    }
+    assert(!self->chrdev);
 
     /* acquire reference on character device */
     chrdev_ref(chrdev, error);
     if (picotm_error_is_set(error)) {
-        goto err_chrdev_ref;
-    }
-
-    /* setup fields */
-
-    self->chrdev = chrdev;
-
-    self->wrmode = PICOTM_LIBC_WRITE_BACK;
-
-    self->fcntltablen = 0;
-    self->wrtablen = 0;
-    self->wrbuflen = 0;
-
-    return;
-
-err_chrdev_ref:
-    picotm_ref_down(&self->ref);
-}
-
-void
-chrdev_tx_ref(struct chrdev_tx* self, struct picotm_error* error)
-{
-    picotm_ref_up(&self->ref);
-}
-
-void
-chrdev_tx_unref(struct chrdev_tx* self)
-{
-    assert(self);
-
-    bool final_ref = picotm_ref_down(&self->ref);
-    if (!final_ref) {
         return;
     }
 
-    chrdev_unref(self->chrdev);
-    self->chrdev = NULL;
+    /* setup fields */
+    self->chrdev = chrdev;
+    self->wrmode = PICOTM_LIBC_WRITE_BACK;
+    self->fcntltablen = 0;
+    self->wrtablen = 0;
+    self->wrbuflen = 0;
 }
 
-bool
-chrdev_tx_holds_ref(struct chrdev_tx* self)
+void
+chrdev_tx_release_chrdev(struct chrdev_tx* self)
 {
     assert(self);
+    assert(self->chrdev);
 
-    return picotm_ref_count(&self->ref) > 0;
+    chrdev_unref(self->chrdev);
+    self->chrdev = NULL;
 }
 
 void

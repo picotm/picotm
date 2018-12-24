@@ -20,7 +20,6 @@
 
 #pragma once
 
-#include "picotm/picotm-lib-ref.h"
 #include "picotm/picotm-lib-rwstate.h"
 #include <sys/types.h>
 #include "file_tx.h"
@@ -42,8 +41,6 @@ struct picotm_error;
  * Holds transaction-local reads and writes for a regular file.
  */
 struct regfile_tx {
-
-    struct picotm_ref16 ref;
 
     struct file_tx base;
 
@@ -125,29 +122,17 @@ regfile_tx_set_file_size(struct regfile_tx* self, off_t size,
                          struct picotm_error* error);
 
 /**
- * Acquire a reference on the open file description
+ * Acquire the first reference on the transaction-local regular-file state.
  */
 void
-regfile_tx_ref_or_set_up(struct regfile_tx* self, struct regfile* regfile,
-                         struct picotm_error* error);
+regfile_tx_acquire_regfile(struct regfile_tx* self, struct regfile* regfile,
+                           struct picotm_error* error);
 
 /**
- * Acquire a reference on the open file description
+ * Release reference.
  */
 void
-regfile_tx_ref(struct regfile_tx* self, struct picotm_error* error);
-
-/**
- * Release reference
- */
-void
-regfile_tx_unref(struct regfile_tx* self);
-
-/**
- * Returns true if transactions hold a reference
- */
-bool
-regfile_tx_holds_ref(struct regfile_tx* self);
+regfile_tx_release_regfile(struct regfile_tx* self);
 
 void
 regfile_tx_try_rdlock_field(struct regfile_tx* self, enum regfile_field field,

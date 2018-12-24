@@ -48,11 +48,11 @@ struct file_tx_ops {
     enum picotm_libc_file_type type;
 
     /*
-     * Reference counting
+     * File handling
      */
 
-    void (*ref)(struct file_tx*, struct picotm_error*);
-    void (*unref)(struct file_tx*);
+    void (*acquire_file)(struct file_tx*, void* file, struct picotm_error*);
+    void (*release_file)(struct file_tx*);
 
     /*
      * Module interfaces

@@ -43,8 +43,6 @@ struct picotm_error;
  */
 struct socket_tx {
 
-    struct picotm_ref16 ref;
-
     struct file_tx base;
 
     struct socket* socket;
@@ -85,29 +83,17 @@ void
 socket_tx_uninit(struct socket_tx* self);
 
 /**
- * Acquire a reference on the open file description
+ * Acquire the first reference on the transaction-local socket state.
  */
 void
-socket_tx_ref_or_set_up(struct socket_tx* self, struct socket* socket,
-                        struct picotm_error* error);
+socket_tx_acquire_socket(struct socket_tx* self, struct socket* socket,
+                         struct picotm_error* error);
 
 /**
- * Acquire a reference on the open file description
+ * Release final reference
  */
 void
-socket_tx_ref(struct socket_tx* self, struct picotm_error* error);
-
-/**
- * Release reference
- */
-void
-socket_tx_unref(struct socket_tx* self);
-
-/**
- * Returns true if transactions hold a reference
- */
-bool
-socket_tx_holds_ref(struct socket_tx* self);
+socket_tx_release_socket(struct socket_tx* self);
 
 void
 socket_tx_try_rdlock_field(struct socket_tx* self, enum socket_field field,

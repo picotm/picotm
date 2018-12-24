@@ -55,8 +55,6 @@ socket_tx_init(struct socket_tx* self)
 {
     assert(self);
 
-    picotm_ref_init(&self->ref, 0);
-
     file_tx_init(&self->base, &socket_tx_ops);
 
     self->socket = NULL;
@@ -91,68 +89,39 @@ socket_tx_uninit(struct socket_tx* self)
                     picotm_arrayend(self->rwstate));
 }
 
-/* Referencing
+/*
+ * File handling
  */
 
 void
-socket_tx_ref_or_set_up(struct socket_tx* self, struct socket* socket,
-                        struct picotm_error* error)
+socket_tx_acquire_socket(struct socket_tx* self, struct socket* socket,
+                         struct picotm_error* error)
 {
     assert(self);
-    assert(socket);
-
-    bool first_ref = picotm_ref_up(&self->ref);
-    if (!first_ref) {
-        return;
-    }
+    assert(!self->socket);
 
     /* get reference on socket */
     socket_ref(socket, error);
     if (picotm_error_is_set(error)) {
-        goto err_socket_ref;
-    }
-
-    /* setup fields */
-
-    self->socket = socket;
-    self->wrmode = PICOTM_LIBC_WRITE_BACK;
-
-    self->fcntltablen = 0;
-    self->wrtablen = 0;
-    self->wrbuflen = 0;
-
-    return;
-
-err_socket_ref:
-    picotm_ref_down(&self->ref);
-}
-
-void
-socket_tx_ref(struct socket_tx* self, struct picotm_error* error)
-{
-    picotm_ref_up(&self->ref);
-}
-
-void
-socket_tx_unref(struct socket_tx* self)
-{
-    assert(self);
-
-    bool final_ref = picotm_ref_down(&self->ref);
-    if (!final_ref) {
         return;
     }
 
-    socket_unref(self->socket);
-    self->socket = NULL;
+    /* setup fields */
+    self->socket = socket;
+    self->wrmode = PICOTM_LIBC_WRITE_BACK;
+    self->fcntltablen = 0;
+    self->wrtablen = 0;
+    self->wrbuflen = 0;
 }
 
-bool
-socket_tx_holds_ref(struct socket_tx* self)
+void
+socket_tx_release_socket(struct socket_tx* self)
 {
     assert(self);
+    assert(self->socket);
 
-    return picotm_ref_count(&self->ref) > 0;
+    socket_unref(self->socket);
+    self->socket = NULL;
 }
 
 void

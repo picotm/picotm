@@ -20,7 +20,6 @@
 
 #pragma once
 
-#include "picotm/picotm-lib-ref.h"
 #include "picotm/picotm-lib-rwstate.h"
 #include <sys/types.h>
 #include "fifo.h"
@@ -41,8 +40,6 @@ struct picotm_error;
  * Holds transaction-local state for an FIFO.
  */
 struct fifo_tx {
-
-    struct picotm_ref16 ref;
 
     struct file_tx base;
 
@@ -84,29 +81,17 @@ void
 fifo_tx_uninit(struct fifo_tx* self);
 
 /**
- * Acquire a reference on the open file description
+ * Acquire the first reference on the transaction-local FIFO state.
  */
 void
-fifo_tx_ref_or_set_up(struct fifo_tx* self, struct fifo* fifo,
-                      struct picotm_error* error);
+fifo_tx_acquire_fifo(struct fifo_tx* self, struct fifo* fifo,
+                     struct picotm_error* error);
 
 /**
- * Acquire a reference on the open file description
+ * Release final reference.
  */
 void
-fifo_tx_ref(struct fifo_tx* self, struct picotm_error* error);
-
-/**
- * Release reference
- */
-void
-fifo_tx_unref(struct fifo_tx* self);
-
-/**
- * Returns true if transactions hold a reference
- */
-bool
-fifo_tx_holds_ref(struct fifo_tx* self);
+fifo_tx_release_fifo(struct fifo_tx* self);
 
 void
 fifo_tx_try_rdlock_field(struct fifo_tx* self, enum fifo_field field,

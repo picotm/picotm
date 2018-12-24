@@ -184,13 +184,13 @@ get_chrdev_tx_with_ref(struct fildes_tx* self, int fildes,
      * transaction state of each character device. This reference is
      * released in fildes_tx_finish().
      */
-    if (chrdev_tx_holds_ref(chrdev_tx)) {
+    if (file_tx_holds_ref(&chrdev_tx->base)) {
         goto unref;
     }
 
-    chrdev_tx_ref_or_set_up(chrdev_tx, chrdev, error);
+    file_tx_ref_or_set_up(&chrdev_tx->base, chrdev, error);
     if (picotm_error_is_set(error)) {
-        goto err_chrdev_tx_ref_or_set_up;
+        goto err_file_tx_ref_or_set_up;
     }
 
     picotm_slist_enqueue_front(&self->file_tx_active_list,
@@ -201,7 +201,7 @@ unref:
 
     return chrdev_tx;
 
-err_chrdev_tx_ref_or_set_up:
+err_file_tx_ref_or_set_up:
     chrdev_unref(chrdev);
     return NULL;
 }
@@ -236,13 +236,13 @@ get_fifo_tx_with_ref(struct fildes_tx* self, int fildes,
      * transaction state of each FIFO. This reference is released
      * in fildes_tx_finish().
      */
-    if (fifo_tx_holds_ref(fifo_tx)) {
+    if (file_tx_holds_ref(&fifo_tx->base)) {
         goto unref;
     }
 
-    fifo_tx_ref_or_set_up(fifo_tx, fifo, error);
+    file_tx_ref_or_set_up(&fifo_tx->base, fifo, error);
     if (picotm_error_is_set(error)) {
-        goto err_fifo_tx_ref_or_set_up;
+        goto err_file_tx_ref_or_set_up;
     }
 
     picotm_slist_enqueue_front(&self->file_tx_active_list,
@@ -253,7 +253,7 @@ unref:
 
     return fifo_tx;
 
-err_fifo_tx_ref_or_set_up:
+err_file_tx_ref_or_set_up:
     fifo_unref(fifo);
     return NULL;
 }
@@ -288,13 +288,13 @@ get_regfile_tx_with_ref(struct fildes_tx* self, int fildes,
      * transaction state of each regular file. This reference is
      * released in fildes_tx_finish().
      */
-    if (regfile_tx_holds_ref(regfile_tx)) {
+    if (file_tx_holds_ref(&regfile_tx->base)) {
         goto unref;
     }
 
-    regfile_tx_ref_or_set_up(regfile_tx, regfile, error);
+    file_tx_ref_or_set_up(&regfile_tx->base, regfile, error);
     if (picotm_error_is_set(error)) {
-        goto err_regfile_tx_ref_or_set_up;
+        goto err_file_tx_ref_or_set_up;
     }
 
     picotm_slist_enqueue_front(&self->file_tx_active_list,
@@ -305,7 +305,7 @@ unref:
 
     return regfile_tx;
 
-err_regfile_tx_ref_or_set_up:
+err_file_tx_ref_or_set_up:
     regfile_unref(regfile);
     return NULL;
 }
@@ -340,13 +340,13 @@ get_dir_tx_with_ref(struct fildes_tx* self, int fildes,
      * transaction state of each directory. This reference is
      * released in fildes_tx_finish().
      */
-    if (dir_tx_holds_ref(dir_tx)) {
+    if (file_tx_holds_ref(&dir_tx->base)) {
         goto unref;
     }
 
-    dir_tx_ref_or_set_up(dir_tx, dir, error);
+    file_tx_ref_or_set_up(&dir_tx->base, dir, error);
     if (picotm_error_is_set(error)) {
-        goto err_dir_tx_ref_or_set_up;
+        goto err_file_tx_ref_or_set_up;
     }
 
     picotm_slist_enqueue_front(&self->file_tx_active_list,
@@ -357,7 +357,7 @@ unref:
 
     return dir_tx;
 
-err_dir_tx_ref_or_set_up:
+err_file_tx_ref_or_set_up:
     dir_unref(dir);
     return NULL;
 }
@@ -392,13 +392,13 @@ get_socket_tx_with_ref(struct fildes_tx* self, int fildes,
      * transaction state of each socket. This reference is released
      * in fildes_tx_finish().
      */
-    if (socket_tx_holds_ref(socket_tx)) {
+    if (file_tx_holds_ref(&socket_tx->base)) {
         goto unref;
     }
 
-    socket_tx_ref_or_set_up(socket_tx, socket, error);
+    file_tx_ref_or_set_up(&socket_tx->base, socket, error);
     if (picotm_error_is_set(error)) {
-        goto err_socket_tx_ref_or_set_up;
+        goto err_file_tx_ref_or_set_up;
     }
 
     picotm_slist_enqueue_front(&self->file_tx_active_list,
@@ -409,7 +409,7 @@ unref:
 
     return socket_tx;
 
-err_socket_tx_ref_or_set_up:
+err_file_tx_ref_or_set_up:
     socket_unref(socket);
     return NULL;
 }
