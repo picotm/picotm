@@ -301,12 +301,12 @@ get_regfile_tx_with_ref(struct fildes_tx* self, int fildes,
                                &regfile_tx->base.active_list);
 
 unref:
-    regfile_unref(regfile);
+    file_unref(&regfile->base);
 
     return regfile_tx;
 
 err_file_tx_ref_or_set_up:
-    regfile_unref(regfile);
+    file_unref(&regfile->base);
     return NULL;
 }
 
