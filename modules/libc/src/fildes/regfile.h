@@ -21,8 +21,7 @@
 #pragma once
 
 #include "picotm/picotm-lib-rwlock.h"
-#include "picotm/picotm-lib-shared-ref-obj.h"
-#include "fileid.h"
+#include "file.h"
 #include "rwlockmap.h"
 
 /**
@@ -52,11 +51,8 @@ enum regfile_field {
  */
 struct regfile {
 
-    /** Reference-counting base object. */
-    struct picotm_shared_ref16_obj ref_obj;
-
-    /** The file's unique id. */
-    struct file_id id;
+    /** Base object. */
+    struct file base;
 
     /** Reader/writer state locks. */
     struct picotm_rwlock  rwlock[NUMBER_OF_REGFILE_FIELDS];
@@ -79,58 +75,6 @@ regfile_init(struct regfile* self, struct picotm_error* error);
  */
 void
 regfile_uninit(struct regfile* self);
-
-/**
- * \brief Sets up an instance of `struct regfile` or acquires a reference
- *        on an already set-up instance.
- * \param       self    The file instance.
- * \param       fildes  The file's file descriptor.
- * \param[out]  error   Returns an error to the caller.
- */
-void
-regfile_ref_or_set_up(struct regfile* self, int fildes,
-                      struct picotm_error* error);
-
-/**
- * \brief Acquires a reference on an instance of `struct regfile`.
- * \param       self    The file instance.
- * \param[out]  error   Returns an error to the caller.
- */
-void
-regfile_ref(struct regfile* self, struct picotm_error* error);
-
-/**
- * \brief Compares the file's id to an id and acquires a reference if both
- *        id's are equal.
- * \param   self    The file instance.
- * \param   id      The id to compare to.
- * \returns A value less than, equal to, or greater than if the file's id
- *          is less than, equal to, or greater than the given id.
- */
-int
-regfile_cmp_and_ref(struct regfile* self, const struct file_id* id);
-
-/**
- * \brief Compares the file's id to an id and acquires a reference if both
- *        id's are equal. The file instance is set up from the provided
- *        file descriptor if necessary.
- * \param       self        The file instance.
- * \param       id          The id to compare to.
- * \param       fildes      The file's file descriptor.
- * \param[out]  error       Returns an error ot the caller.
- * \returns A value less than, equal to, or greater than if the ofd's id is
- *          less than, equal to, or greater than the given id.
- */
-int
-regfile_cmp_and_ref_or_set_up(struct regfile* self, const struct file_id* id,
-                              int fildes, struct picotm_error* error);
-
-/**
- * \brief Unreferences a file.
- * \param   self    The file instance.
- */
-void
-regfile_unref(struct regfile* self);
 
 /**
  * \brief Tries to acquire a reader lock on a file.

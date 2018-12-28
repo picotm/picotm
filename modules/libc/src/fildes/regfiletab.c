@@ -128,7 +128,7 @@ find_by_id(struct fildes_regfiletab* regfiletab, const struct file_id* id)
 
     while (regfile_beg < regfile_end) {
 
-        const int cmp = regfile_cmp_and_ref(regfile_beg, id);
+        const int cmp = file_ref_if_id(&regfile_beg->base, id);
         if (!cmp) {
             return regfile_beg;
         }
@@ -150,8 +150,8 @@ search_by_id(struct fildes_regfiletab* regfiletab, const struct file_id* id,
 
     while (regfile_beg < regfile_end) {
 
-        const int cmp = regfile_cmp_and_ref_or_set_up(regfile_beg, id, fildes,
-                                                      error);
+        const int cmp = file_ref_or_set_up_if_id(&regfile_beg->base,
+                                                 fildes, id, error);
         if (!cmp) {
             if (picotm_error_is_set(error)) {
                 return NULL;
@@ -231,7 +231,7 @@ fildes_regfiletab_ref_fildes(struct fildes_regfiletab* self, int fildes,
 
     /* To perform the setup, we must have acquired a writer lock at
      * this point. No other transaction may interfere. */
-    regfile_ref_or_set_up(regfile, fildes, error);
+    file_ref_or_set_up(&regfile->base, fildes, error);
     if (picotm_error_is_set(error)) {
         goto err_regfile_ref_or_set_up;
     }

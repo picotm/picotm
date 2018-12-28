@@ -172,7 +172,7 @@ regfile_tx_acquire_regfile(struct regfile_tx* self, struct regfile* regfile,
     assert(!self->regfile);
 
     /* get reference on file */
-    regfile_ref(regfile, error);
+    file_ref(&regfile->base, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -197,7 +197,7 @@ regfile_tx_release_regfile(struct regfile_tx* self)
     assert(self);
     assert(self->regfile);
 
-    regfile_unref(self->regfile);
+    file_unref(&self->regfile->base);
     self->regfile = NULL;
 }
 
