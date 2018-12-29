@@ -249,12 +249,12 @@ get_fifo_tx_with_ref(struct fildes_tx* self, int fildes,
                                &fifo_tx->base.active_list);
 
 unref:
-    fifo_unref(fifo);
+    file_unref(&fifo->base);
 
     return fifo_tx;
 
 err_file_tx_ref_or_set_up:
-    fifo_unref(fifo);
+    file_unref(&fifo->base);
     return NULL;
 }
 

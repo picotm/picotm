@@ -123,7 +123,7 @@ find_by_id(struct fildes_fifotab* fifotab, const struct file_id* id)
 
     while (fifo_beg < fifo_end) {
 
-        const int cmp = fifo_cmp_and_ref(fifo_beg, id);
+        const int cmp = file_ref_if_id(&fifo_beg->base, id);
         if (!cmp) {
             return fifo_beg;
         }
@@ -144,8 +144,8 @@ search_by_id(struct fildes_fifotab* fifotab, const struct file_id* id,
 
     while (fifo_beg < fifo_end) {
 
-        const int cmp = fifo_cmp_and_ref_or_set_up(fifo_beg, id, fildes,
-                                                   error);
+        const int cmp = file_ref_or_set_up_if_id(&fifo_beg->base,
+                                                 fildes, id, error);
         if (!cmp) {
             if (picotm_error_is_set(error)) {
                 return NULL;
@@ -224,7 +224,7 @@ fildes_fifotab_ref_fildes(struct fildes_fifotab* self, int fildes,
 
     /* To perform the setup, we must have acquired a writer lock at
      * this point. No other transaction may interfere. */
-    fifo_ref_or_set_up(fifo, fildes, error);
+    file_ref_or_set_up(&fifo->base, fildes, error);
     if (picotm_error_is_set(error)) {
         goto err_fifo_ref_or_set_up;
     }
