@@ -405,12 +405,12 @@ get_socket_tx_with_ref(struct fildes_tx* self, int fildes,
                                &socket_tx->base.active_list);
 
 unref:
-    socket_unref(socket);
+    file_unref(&socket->base);
 
     return socket_tx;
 
 err_file_tx_ref_or_set_up:
-    socket_unref(socket);
+    file_unref(&socket->base);
     return NULL;
 }
 

@@ -128,7 +128,7 @@ find_by_id(struct fildes_sockettab* sockettab, const struct file_id* id)
 
     while (socket_beg < socket_end) {
 
-        const int cmp = socket_cmp_and_ref(socket_beg, id);
+        const int cmp = file_ref_if_id(&socket_beg->base, id);
         if (!cmp) {
             return socket_beg;
         }
@@ -150,8 +150,8 @@ search_by_id(struct fildes_sockettab* sockettab, const struct file_id* id,
 
     while (socket_beg < socket_end) {
 
-        const int cmp = socket_cmp_and_ref_or_set_up(socket_beg, id, fildes,
-                                                     error);
+        const int cmp = file_ref_or_set_up_if_id(&socket_beg->base,
+                                                 fildes, id, error);
         if (!cmp) {
             if (picotm_error_is_set(error)) {
                 return NULL;
@@ -230,7 +230,7 @@ fildes_sockettab_ref_fildes(struct fildes_sockettab* self, int fildes,
 
     /* To perform the setup, we must have acquired a writer lock at
      * this point. No other transaction may interfere. */
-    socket_ref_or_set_up(socket, fildes, error);
+    file_ref_or_set_up(&socket->base, fildes, error);
     if (picotm_error_is_set(error)) {
         goto err_socket_ref_or_set_up;
     }

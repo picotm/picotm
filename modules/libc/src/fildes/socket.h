@@ -21,8 +21,7 @@
 #pragma once
 
 #include "picotm/picotm-lib-rwlock.h"
-#include "picotm/picotm-lib-shared-ref-obj.h"
-#include "fileid.h"
+#include "file.h"
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -51,11 +50,8 @@ enum socket_field {
  */
 struct socket {
 
-    /** Reference-counting base object. */
-    struct picotm_shared_ref16_obj ref_obj;
-
-    /** The socket's unique id. */
-    struct file_id id;
+    /** Base object. */
+    struct file base;
 
     /** Reader/writer state locks. */
     struct picotm_rwlock rwlock[NUMBER_OF_SOCKET_FIELDS];
@@ -75,58 +71,6 @@ socket_init(struct socket* self, struct picotm_error* error);
  */
 void
 socket_uninit(struct socket* self);
-
-/**
- * \brief Sets up an instance of `struct socket` or acquires a reference
- *        on an already set-up instance.
- * \param       self    The socket instance.
- * \param       fildes  The socket's file descriptor.
- * \param[out]  error   Returns an error to the caller.
- */
-void
-socket_ref_or_set_up(struct socket* self, int fildes,
-                     struct picotm_error* error);
-
-/**
- * \brief Acquires a reference on an instance of `struct socket`.
- * \param       self    The socket instance.
- * \param[out]  error   Returns an error to the caller.
- */
-void
-socket_ref(struct socket* self, struct picotm_error* error);
-
-/**
- * \brief Compares the socket's id to an id and acquires a reference if both
- *        id's are equal.
- * \param   self    The socket instance.
- * \param   id      The id to compare to.
- * \returns A value less than, equal to, or greater than if the socket's id
- *          is less than, equal to, or greater than the given id.
- */
-int
-socket_cmp_and_ref(struct socket* self, const struct file_id* id);
-
-/**
- * \brief Compares the socket's id to an id and acquires a reference if both
- *        id's are equal. The socket instance is set up from the provided
- *        file descriptor if necessary.
- * \param       self        The socket instance.
- * \param       id          The id to compare to.
- * \param       fildes      The socket's file descriptor.
- * \param[out]  error       Returns an error ot the caller.
- * \returns A value less than, equal to, or greater than if the ofd's id is
- *          less than, equal to, or greater than the given id.
- */
-int
-socket_cmp_and_ref_or_set_up(struct socket* self, const struct file_id* id,
-                             int fildes, struct picotm_error* error);
-
-/**
- * \brief Unreferences a socket.
- * \param   self    The socket instance.
- */
-void
-socket_unref(struct socket* self);
 
 /**
  * \brief Tries to acquire a reader lock on a socket.
