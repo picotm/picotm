@@ -44,8 +44,6 @@ struct regfile_tx {
 
     struct file_tx base;
 
-    struct regfile* regfile;
-
     enum picotm_libc_write_mode wrmode;
 
     unsigned char* wrbuf;
@@ -122,17 +120,18 @@ regfile_tx_set_file_size(struct regfile_tx* self, off_t size,
                          struct picotm_error* error);
 
 /**
- * Acquire the first reference on the transaction-local regular-file state.
+ * Prepare after acquiring the first reference on the transaction-local
+ * regular-file state.
  */
 void
-regfile_tx_acquire_regfile(struct regfile_tx* self, struct regfile* regfile,
-                           struct picotm_error* error);
+regfile_tx_prepare(struct regfile_tx* self, struct regfile* regfile,
+                   struct picotm_error* error);
 
 /**
- * Release reference.
+ * Clean up after releasing reference.
  */
 void
-regfile_tx_release_regfile(struct regfile_tx* self);
+regfile_tx_release(struct regfile_tx* self);
 
 void
 regfile_tx_try_rdlock_field(struct regfile_tx* self, enum regfile_field field,

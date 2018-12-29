@@ -57,8 +57,6 @@ fifo_tx_init(struct fifo_tx* self)
 
     file_tx_init(&self->base, &fifo_tx_ops);
 
-    self->fifo = NULL;
-
     self->wrmode = PICOTM_LIBC_WRITE_BACK;
 
     self->wrbuf = NULL;
@@ -94,20 +92,11 @@ fifo_tx_uninit(struct fifo_tx* self)
  */
 
 void
-fifo_tx_acquire_fifo(struct fifo_tx* self, struct fifo* fifo,
-                     struct picotm_error* error)
+fifo_tx_prepare(struct fifo_tx* self, struct fifo* fifo,
+                struct picotm_error* error)
 {
     assert(self);
-    assert(!self->fifo);
 
-    /* get reference on FIFO */
-    file_ref(&fifo->base, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
-
-    /* setup fields */
-    self->fifo = fifo;
     self->wrmode = PICOTM_LIBC_WRITE_BACK;
     self->fcntltablen = 0;
     self->wrtablen = 0;
@@ -115,14 +104,8 @@ fifo_tx_acquire_fifo(struct fifo_tx* self, struct fifo* fifo,
 }
 
 void
-fifo_tx_release_fifo(struct fifo_tx* self)
-{
-    assert(self);
-    assert(self->fifo);
-
-    file_unref(&self->fifo->base);
-    self->fifo = NULL;
-}
+fifo_tx_release(struct fifo_tx* self)
+{ }
 
 void
 fifo_tx_try_rdlock_field(struct fifo_tx* self, enum fifo_field field,
@@ -130,7 +113,8 @@ fifo_tx_try_rdlock_field(struct fifo_tx* self, enum fifo_field field,
 {
     assert(self);
 
-    fifo_try_rdlock_field(self->fifo, field, self->rwstate + field, error);
+    fifo_try_rdlock_field(fifo_of_base(self->base.file), field,
+                          self->rwstate + field, error);
 }
 
 void
@@ -139,7 +123,8 @@ fifo_tx_try_wrlock_field(struct fifo_tx* self, enum fifo_field field,
 {
     assert(self);
 
-    fifo_try_wrlock_field(self->fifo, field, self->rwstate + field, error);
+    fifo_try_wrlock_field(fifo_of_base(self->base.file), field,
+                          self->rwstate + field, error);
 }
 
 static off_t
@@ -214,5 +199,5 @@ fifo_tx_finish(struct fifo_tx* self)
     /* release reader/writer locks on FIFO state */
     unlock_rwstates(picotm_arraybeg(self->rwstate),
                     picotm_arrayend(self->rwstate),
-                    self->fifo);
+                    fifo_of_base(self->base.file));
 }

@@ -57,8 +57,6 @@ chrdev_tx_init(struct chrdev_tx* self)
 
     file_tx_init(&self->base, &chrdev_tx_ops);
 
-    self->chrdev = NULL;
-
     self->wrmode = PICOTM_LIBC_WRITE_BACK;
 
     self->wrbuf = NULL;
@@ -93,20 +91,12 @@ chrdev_tx_uninit(struct chrdev_tx* self)
  */
 
 void
-chrdev_tx_acquire_chrdev(struct chrdev_tx* self, struct chrdev* chrdev,
-                         struct picotm_error* error)
+chrdev_tx_prepare(struct chrdev_tx* self, struct chrdev* chrdev,
+                  struct picotm_error* error)
 {
     assert(self);
-    assert(!self->chrdev);
-
-    /* acquire reference on character device */
-    file_ref(&chrdev->base, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
 
     /* setup fields */
-    self->chrdev = chrdev;
     self->wrmode = PICOTM_LIBC_WRITE_BACK;
     self->fcntltablen = 0;
     self->wrtablen = 0;
@@ -114,14 +104,8 @@ chrdev_tx_acquire_chrdev(struct chrdev_tx* self, struct chrdev* chrdev,
 }
 
 void
-chrdev_tx_release_chrdev(struct chrdev_tx* self)
-{
-    assert(self);
-    assert(self->chrdev);
-
-    file_unref(&self->chrdev->base);
-    self->chrdev = NULL;
-}
+chrdev_tx_release(struct chrdev_tx* self)
+{ }
 
 void
 chrdev_tx_try_rdlock_field(struct chrdev_tx* self, enum chrdev_field field,
@@ -129,7 +113,8 @@ chrdev_tx_try_rdlock_field(struct chrdev_tx* self, enum chrdev_field field,
 {
     assert(self);
 
-    chrdev_try_rdlock_field(self->chrdev, field, self->rwstate + field, error);
+    chrdev_try_rdlock_field(chrdev_of_base(self->base.file), field,
+                            self->rwstate + field, error);
 }
 
 void
@@ -138,7 +123,8 @@ chrdev_tx_try_wrlock_field(struct chrdev_tx* self, enum chrdev_field field,
 {
     assert(self);
 
-    chrdev_try_wrlock_field(self->chrdev, field, self->rwstate + field, error);
+    chrdev_try_wrlock_field(chrdev_of_base(self->base.file), field,
+                            self->rwstate + field, error);
 }
 
 static off_t
@@ -213,5 +199,5 @@ chrdev_tx_finish(struct chrdev_tx* self)
     /* release reader/writer locks on character-device state */
     unlock_rwstates(picotm_arraybeg(self->rwstate),
                     picotm_arrayend(self->rwstate),
-                    self->chrdev);
+                    chrdev_of_base(self->base.file));
 }

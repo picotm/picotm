@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include "picotm/picotm-lib-ptr.h"
 #include "picotm/picotm-lib-rwlock.h"
 #include "file.h"
 #include "rwlockmap.h"
@@ -60,6 +61,12 @@ struct regfile {
     /** \brief Reader/writer region-lock table. */
     struct rwlockmap rwlockmap;
 };
+
+static inline struct regfile*
+regfile_of_base(struct file* base)
+{
+    return picotm_containerof(base, struct regfile, base);
+}
 
 /**
  * \brief Initializes a file instance.

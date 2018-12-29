@@ -33,6 +33,7 @@
  */
 
 struct picotm_error;
+struct file;
 
 /**
  * Holds transaction-local state for a file.
@@ -42,6 +43,8 @@ struct file_tx {
     struct picotm_ref16 ref;
 
     struct picotm_slist active_list;
+
+    struct file* file;
 
     const struct file_tx_ops* ops;
 };
@@ -76,7 +79,7 @@ enum picotm_libc_file_type
 file_tx_file_type(const struct file_tx* self);
 
 void
-file_tx_ref_or_set_up(struct file_tx* self, void* data,
+file_tx_ref_or_set_up(struct file_tx* self, struct file* file,
                       struct picotm_error* error);
 
 /**

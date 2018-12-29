@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include "picotm/picotm-lib-ptr.h"
 #include "picotm/picotm-lib-rwlock.h"
 #include "file.h"
 
@@ -56,6 +57,12 @@ struct socket {
     /** Reader/writer state locks. */
     struct picotm_rwlock rwlock[NUMBER_OF_SOCKET_FIELDS];
 };
+
+static inline struct socket*
+socket_of_base(struct file* base)
+{
+    return picotm_containerof(base, struct socket, base);
+}
 
 /**
  * \brief Initializes a socket instance.

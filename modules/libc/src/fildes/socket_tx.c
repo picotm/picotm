@@ -57,8 +57,6 @@ socket_tx_init(struct socket_tx* self)
 
     file_tx_init(&self->base, &socket_tx_ops);
 
-    self->socket = NULL;
-
     self->wrmode = PICOTM_LIBC_WRITE_BACK;
 
     self->wrbuf = NULL;
@@ -94,20 +92,11 @@ socket_tx_uninit(struct socket_tx* self)
  */
 
 void
-socket_tx_acquire_socket(struct socket_tx* self, struct socket* socket,
-                         struct picotm_error* error)
+socket_tx_prepare(struct socket_tx* self, struct socket* socket,
+                  struct picotm_error* error)
 {
     assert(self);
-    assert(!self->socket);
 
-    /* get reference on socket */
-    file_ref(&socket->base, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
-
-    /* setup fields */
-    self->socket = socket;
     self->wrmode = PICOTM_LIBC_WRITE_BACK;
     self->fcntltablen = 0;
     self->wrtablen = 0;
@@ -115,14 +104,8 @@ socket_tx_acquire_socket(struct socket_tx* self, struct socket* socket,
 }
 
 void
-socket_tx_release_socket(struct socket_tx* self)
-{
-    assert(self);
-    assert(self->socket);
-
-    file_unref(&self->socket->base);
-    self->socket = NULL;
-}
+socket_tx_release(struct socket_tx* self)
+{ }
 
 void
 socket_tx_try_rdlock_field(struct socket_tx* self, enum socket_field field,
@@ -130,7 +113,8 @@ socket_tx_try_rdlock_field(struct socket_tx* self, enum socket_field field,
 {
     assert(self);
 
-    socket_try_rdlock_field(self->socket, field, self->rwstate + field, error);
+    socket_try_rdlock_field(socket_of_base(self->base.file), field,
+                            self->rwstate + field, error);
 }
 
 void
@@ -139,7 +123,8 @@ socket_tx_try_wrlock_field(struct socket_tx* self, enum socket_field field,
 {
     assert(self);
 
-    socket_try_wrlock_field(self->socket, field, self->rwstate + field, error);
+    socket_try_wrlock_field(socket_of_base(self->base.file), field,
+                            self->rwstate + field, error);
 }
 
 static off_t
@@ -214,5 +199,5 @@ socket_tx_finish(struct socket_tx* self)
     /* release reader/writer locks on socket state */
     unlock_rwstates(picotm_arraybeg(self->rwstate),
                     picotm_arrayend(self->rwstate),
-                    self->socket);
+                    socket_of_base(self->base.file));
 }

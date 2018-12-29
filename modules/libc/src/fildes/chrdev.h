@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include "picotm/picotm-lib-ptr.h"
 #include "picotm/picotm-lib-rwlock.h"
 #include "file.h"
 
@@ -55,6 +56,12 @@ struct chrdev {
     /** Reader/writer state locks. */
     struct picotm_rwlock rwlock[NUMBER_OF_CHRDEV_FIELDS];
 };
+
+static inline struct chrdev*
+chrdev_of_base(struct file* base)
+{
+    return picotm_containerof(base, struct chrdev, base);
+}
 
 /**
  * \brief Initializes a chrdev instance.

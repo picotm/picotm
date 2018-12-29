@@ -45,8 +45,6 @@ struct socket_tx {
 
     struct file_tx base;
 
-    struct socket* socket;
-
     enum picotm_libc_write_mode wrmode;
 
     unsigned char* wrbuf;
@@ -83,17 +81,18 @@ void
 socket_tx_uninit(struct socket_tx* self);
 
 /**
- * Acquire the first reference on the transaction-local socket state.
+ * Preapre after acquiring the first reference on the transaction-local
+ * socket state.
  */
 void
-socket_tx_acquire_socket(struct socket_tx* self, struct socket* socket,
-                         struct picotm_error* error);
+socket_tx_prepare(struct socket_tx* self, struct socket* socket,
+                  struct picotm_error* error);
 
 /**
- * Release final reference
+ * Clean up after releasing final reference
  */
 void
-socket_tx_release_socket(struct socket_tx* self);
+socket_tx_release(struct socket_tx* self);
 
 void
 socket_tx_try_rdlock_field(struct socket_tx* self, enum socket_field field,
