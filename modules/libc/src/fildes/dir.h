@@ -21,8 +21,7 @@
 #pragma once
 
 #include "picotm/picotm-lib-rwlock.h"
-#include "picotm/picotm-lib-shared-ref-obj.h"
-#include "fileid.h"
+#include "file.h"
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -49,11 +48,8 @@ enum dir_field {
  */
 struct dir {
 
-    /** Reference-counting base object. */
-    struct picotm_shared_ref16_obj ref_obj;
-
-    /** The directory's unique id. */
-    struct file_id id;
+    /** Base object. */
+    struct file base;
 
     /** Reader/writer state locks. */
     struct picotm_rwlock rwlock[NUMBER_OF_DIR_FIELDS];
@@ -73,57 +69,6 @@ dir_init(struct dir* self, struct picotm_error* error);
  */
 void
 dir_uninit(struct dir* self);
-
-/**
- * \brief Sets up an instance of `struct dir` or acquires a reference
- *        on an already set-up instance.
- * \param       self    The dir instance.
- * \param       fildes  The directory's file descriptor.
- * \param[out]  error   Returns an error to the caller.
- */
-void
-dir_ref_or_set_up(struct dir* self, int fildes, struct picotm_error* error);
-
-/**
- * \brief Acquires a reference on an instance of `struct dir`.
- * \param       self    The dir instance.
- * \param[out]  error   Returns an error to the caller.
- */
-void
-dir_ref(struct dir* self, struct picotm_error* error);
-
-/**
- * \brief Compares the dir's id to an id and acquires a reference if both
- *        id's are equal.
- * \param   self    The dir instance.
- * \param   id      The id to compare to.
- * \returns A value less than, equal to, or greater than if the dir's id
- *          is less than, equal to, or greater than the given id.
- */
-int
-dir_cmp_and_ref(struct dir* self, const struct file_id* id);
-
-/**
- * \brief Compares the dir's id to an id and acquires a reference if both
- *        id's are equal. The dir instance is set up from the provided
- *        file descriptor if necessary.
- * \param       self        The dir instance.
- * \param       id          The id to compare to.
- * \param       fildes      The directory's file descriptor.
- * \param[out]  error       Returns an error ot the caller.
- * \returns A value less than, equal to, or greater than if the ofd's id is
- *          less than, equal to, or greater than the given id.
- */
-int
-dir_cmp_and_ref_or_set_up(struct dir* self, const struct file_id* id,
-                          int fildes, struct picotm_error* error);
-
-/**
- * \brief Unreferences a directory.
- * \param   self    The dir instance.
- */
-void
-dir_unref(struct dir* self);
 
 /**
  * \brief Tries to acquire a reader lock on a directory.

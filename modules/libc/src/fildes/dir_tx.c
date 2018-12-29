@@ -92,7 +92,7 @@ dir_tx_acquire_dir(struct dir_tx* self, struct dir* dir,
     assert(!self->dir);
 
     /* acquire reference on directory */
-    dir_ref(dir, error);
+    file_ref(&dir->base, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -117,7 +117,7 @@ dir_tx_release_dir(struct dir_tx* self)
     assert(self);
     assert(self->dir);
 
-    dir_unref(self->dir);
+    file_unref(&self->dir->base);
     self->dir = NULL;
 }
 

@@ -353,12 +353,12 @@ get_dir_tx_with_ref(struct fildes_tx* self, int fildes,
                                &dir_tx->base.active_list);
 
 unref:
-    dir_unref(dir);
+    file_unref(&dir->base);
 
     return dir_tx;
 
 err_file_tx_ref_or_set_up:
-    dir_unref(dir);
+    file_unref(&dir->base);
     return NULL;
 }
 
