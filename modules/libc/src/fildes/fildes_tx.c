@@ -197,12 +197,12 @@ get_chrdev_tx_with_ref(struct fildes_tx* self, int fildes,
                                &chrdev_tx->base.active_list);
 
 unref:
-    chrdev_unref(chrdev);
+    file_unref(&chrdev->base);
 
     return chrdev_tx;
 
 err_file_tx_ref_or_set_up:
-    chrdev_unref(chrdev);
+    file_unref(&chrdev->base);
     return NULL;
 }
 

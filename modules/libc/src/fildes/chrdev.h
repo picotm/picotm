@@ -21,8 +21,7 @@
 #pragma once
 
 #include "picotm/picotm-lib-rwlock.h"
-#include "picotm/picotm-lib-shared-ref-obj.h"
-#include "fileid.h"
+#include "file.h"
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -50,11 +49,8 @@ enum chrdev_field {
  */
 struct chrdev {
 
-    /** Reference-counting base object. */
-    struct picotm_shared_ref16_obj ref_obj;
-
-    /** The character device's unique id. */
-    struct file_id id;
+    /** Base object. */
+    struct file base;
 
     /** Reader/writer state locks. */
     struct picotm_rwlock rwlock[NUMBER_OF_CHRDEV_FIELDS];
@@ -74,58 +70,6 @@ chrdev_init(struct chrdev* self, struct picotm_error* error);
  */
 void
 chrdev_uninit(struct chrdev* self);
-
-/**
- * \brief Sets up an instance of `struct chrdev` or acquires a reference
- *        on an already set-up instance.
- * \param       self    The chrdev instance.
- * \param       fildes  The character device's file descriptor.
- * \param[out]  error   Returns an error to the caller.
- */
-void
-chrdev_ref_or_set_up(struct chrdev* self, int fildes,
-                     struct picotm_error* error);
-
-/**
- * \brief Acquires a reference on an instance of `struct chrdev`.
- * \param       self    The chrdev instance.
- * \param[out]  error   Returns an error to the caller.
- */
-void
-chrdev_ref(struct chrdev* self, struct picotm_error* error);
-
-/**
- * \brief Compares the chrdev's id to an id and acquires a reference if both
- *        id's are equal.
- * \param   self    The chrdev instance.
- * \param   id      The id to compare to.
- * \returns A value less than, equal to, or greater than if the chrdev's id
- *          is less than, equal to, or greater than the given id.
- */
-int
-chrdev_cmp_and_ref(struct chrdev* self, const struct file_id* id);
-
-/**
- * \brief Compares the chrdev's id to an id and acquires a reference if both
- *        id's are equal. The chrdev instance is set up from the provided
- *        file descriptor if necessary.
- * \param       self        The chrdev instance.
- * \param       id          The id to compare to.
- * \param       fildes      The character device's file descriptor.
- * \param[out]  error       Returns an error ot the caller.
- * \returns A value less than, equal to, or greater than if the ofd's id is
- *          less than, equal to, or greater than the given id.
- */
-int
-chrdev_cmp_and_ref_or_set_up(struct chrdev* self, const struct file_id* id,
-                             int fildes, struct picotm_error* error);
-
-/**
- * \brief Unreferences a character device.
- * \param   self    The chrdev instance.
- */
-void
-chrdev_unref(struct chrdev* self);
 
 /**
  * \brief Tries to acquire a reader lock on a character device.
