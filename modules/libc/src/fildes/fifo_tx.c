@@ -101,7 +101,7 @@ fifo_tx_acquire_fifo(struct fifo_tx* self, struct fifo* fifo,
     assert(!self->fifo);
 
     /* get reference on FIFO */
-    fifo_ref(fifo, error);
+    file_ref(&fifo->base, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -120,7 +120,7 @@ fifo_tx_release_fifo(struct fifo_tx* self)
     assert(self);
     assert(self->fifo);
 
-    fifo_unref(self->fifo);
+    file_unref(&self->fifo->base);
     self->fifo = NULL;
 }
 

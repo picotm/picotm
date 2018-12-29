@@ -21,8 +21,7 @@
 #pragma once
 
 #include "picotm/picotm-lib-rwlock.h"
-#include "picotm/picotm-lib-shared-ref-obj.h"
-#include "fileid.h"
+#include "file.h"
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -51,11 +50,8 @@ enum fifo_field {
  */
 struct fifo {
 
-    /** Reference-counting base object. */
-    struct picotm_shared_ref16_obj ref_obj;
-
-    /** The FIFO's unique id. */
-    struct file_id id;
+    /** Base object. */
+    struct file base;
 
     /** Reader/writer state locks. */
     struct picotm_rwlock  rwlock[NUMBER_OF_FIFO_FIELDS];
@@ -75,57 +71,6 @@ fifo_init(struct fifo* self, struct picotm_error* error);
  */
 void
 fifo_uninit(struct fifo* self);
-
-/**
- * \brief Sets up an instance of `struct fifo` or acquires a reference
- *        on an already set-up instance.
- * \param       self    The FIFO instance.
- * \param       fildes  The FIFO's file descriptor.
- * \param[out]  error   Returns an error to the caller.
- */
-void
-fifo_ref_or_set_up(struct fifo* self, int fildes, struct picotm_error* error);
-
-/**
- * \brief Acquires a reference on an instance of `struct fifo`.
- * \param       self    The FIFO instance.
- * \param[out]  error   Returns an error to the caller.
- */
-void
-fifo_ref(struct fifo* self, struct picotm_error* error);
-
-/**
- * \brief Compares the FIFO's id to an id and acquires a reference if both
- *        id's are equal.
- * \param   self    The FIFO instance.
- * \param   id      The id to compare to.
- * \returns A value less than, equal to, or greater than if the FIFO's id
- *          is less than, equal to, or greater than the given id.
- */
-int
-fifo_cmp_and_ref(struct fifo* self, const struct file_id* id);
-
-/**
- * \brief Compares the FIFO's id to an id and acquires a reference if both
- *        id's are equal. The FIFO instance is set up from the provided
- *        file descriptor if necessary.
- * \param       self        The FIFO instance.
- * \param       id          The id to compare to.
- * \param       fildes      The FIFO's file descriptor.
- * \param[out]  error       Returns an error ot the caller.
- * \returns A value less than, equal to, or greater than if the ofd's id is
- *          less than, equal to, or greater than the given id.
- */
-int
-fifo_cmp_and_ref_or_set_up(struct fifo* self, const struct file_id* id,
-                           int fildes, struct picotm_error* error);
-
-/**
- * \brief Unreferences a FIFO.
- * \param   self    The FIFO instance.
- */
-void
-fifo_unref(struct fifo* self);
 
 /**
  * \brief Tries to acquire a reader lock on a FIFO.
