@@ -100,7 +100,7 @@ chrdev_tx_acquire_chrdev(struct chrdev_tx* self, struct chrdev* chrdev,
     assert(!self->chrdev);
 
     /* acquire reference on character device */
-    chrdev_ref(chrdev, error);
+    file_ref(&chrdev->base, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -119,7 +119,7 @@ chrdev_tx_release_chrdev(struct chrdev_tx* self)
     assert(self);
     assert(self->chrdev);
 
-    chrdev_unref(self->chrdev);
+    file_unref(&self->chrdev->base);
     self->chrdev = NULL;
 }
 

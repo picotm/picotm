@@ -128,7 +128,7 @@ find_by_id(struct fildes_chrdevtab* chrdevtab, const struct file_id* id)
 
     while (chrdev_beg < chrdev_end) {
 
-        const int cmp = chrdev_cmp_and_ref(chrdev_beg, id);
+        const int cmp = file_ref_if_id(&chrdev_beg->base, id);
         if (!cmp) {
             return chrdev_beg;
         }
@@ -150,8 +150,8 @@ search_by_id(struct fildes_chrdevtab* chrdevtab, const struct file_id* id,
 
     while (chrdev_beg < chrdev_end) {
 
-        const int cmp = chrdev_cmp_and_ref_or_set_up(chrdev_beg, id, fildes,
-                                                     error);
+        const int cmp = file_ref_or_set_up_if_id(&chrdev_beg->base,
+                                                 fildes, id, error);
         if (!cmp) {
             if (picotm_error_is_set(error)) {
                 return NULL;
@@ -230,7 +230,7 @@ fildes_chrdevtab_ref_fildes(struct fildes_chrdevtab* self, int fildes,
 
     /* To perform the setup, we must have acquired a writer lock at
      * this point. No other transaction may interfere. */
-    chrdev_ref_or_set_up(chrdev, fildes, error);
+    file_ref_or_set_up(&chrdev->base, fildes, error);
     if (picotm_error_is_set(error)) {
         goto err_chrdev_ref_or_set_up;
     }
