@@ -101,7 +101,7 @@ socket_tx_acquire_socket(struct socket_tx* self, struct socket* socket,
     assert(!self->socket);
 
     /* get reference on socket */
-    socket_ref(socket, error);
+    file_ref(&socket->base, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -120,7 +120,7 @@ socket_tx_release_socket(struct socket_tx* self)
     assert(self);
     assert(self->socket);
 
-    socket_unref(self->socket);
+    file_unref(&self->socket->base);
     self->socket = NULL;
 }
 
