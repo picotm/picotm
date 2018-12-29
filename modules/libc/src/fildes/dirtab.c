@@ -123,7 +123,7 @@ find_by_id(struct fildes_dirtab* dirtab, const struct file_id* id)
 
     while (dir_beg < dir_end) {
 
-        const int cmp = dir_cmp_and_ref(dir_beg, id);
+        const int cmp = file_ref_if_id(&dir_beg->base, id);
         if (!cmp) {
             return dir_beg;
         }
@@ -144,8 +144,8 @@ search_by_id(struct fildes_dirtab* dirtab, const struct file_id* id,
 
     while (dir_beg < dir_end) {
 
-        const int cmp = dir_cmp_and_ref_or_set_up(dir_beg, id, fildes,
-                                                  error);
+        const int cmp = file_ref_or_set_up_if_id(&dir_beg->base,
+                                                 fildes, id, error);
         if (!cmp) {
             if (picotm_error_is_set(error)) {
                 return NULL;
@@ -223,7 +223,7 @@ fildes_dirtab_ref_fildes(struct fildes_dirtab* self, int fildes,
 
     /* To perform the setup, we must have acquired a writer lock at
      * this point. No other transaction may interfere. */
-    dir_ref_or_set_up(dir, fildes, error);
+    file_ref_or_set_up(&dir->base, fildes, error);
     if (picotm_error_is_set(error)) {
         goto err_dir_ref_or_set_up;
     }
