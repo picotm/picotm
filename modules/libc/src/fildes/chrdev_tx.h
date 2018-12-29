@@ -43,8 +43,6 @@ struct chrdev_tx {
 
     struct file_tx base;
 
-    struct chrdev* chrdev;
-
     enum picotm_libc_write_mode wrmode;
 
     unsigned char* wrbuf;
@@ -83,17 +81,18 @@ void
 chrdev_tx_uninit(struct chrdev_tx* self);
 
 /**
- * Acquire the first reference on a transaction-local character device.
+ * Prepare after acquiring the first reference on a transaction-local
+ * character device.
  */
 void
-chrdev_tx_acquire_chrdev(struct chrdev_tx* self, struct chrdev* chrdev,
-                         struct picotm_error* error);
+chrdev_tx_prepare(struct chrdev_tx* self, struct chrdev* chrdev,
+                  struct picotm_error* error);
 
 /**
- * Release reference on the current transaction-local character device.
+ * Clean up after releasing the current transaction-local character device.
  */
 void
-chrdev_tx_release_chrdev(struct chrdev_tx* self);
+chrdev_tx_release(struct chrdev_tx* self);
 
 void
 chrdev_tx_try_rdlock_field(struct chrdev_tx* self, enum chrdev_field field,

@@ -44,8 +44,6 @@ struct dir_tx {
 
     struct file_tx base;
 
-    struct dir* dir;
-
     enum picotm_libc_write_mode wrmode;
 
     struct fchmodop* fchmodtab;
@@ -79,17 +77,18 @@ void
 dir_tx_uninit(struct dir_tx* self);
 
 /**
- * Acquire the first reference on the transaction-local directory state.
+ * Prepare after acquiring the first reference on the transaction-local
+ * directory state.
  */
 void
-dir_tx_acquire_dir(struct dir_tx* self, struct dir* dir,
-                   struct picotm_error* error);
+dir_tx_prepare(struct dir_tx* self, struct dir* dir,
+               struct picotm_error* error);
 
 /**
- * Release final reference.
+ * Clean up after releasing final reference.
  */
 void
-dir_tx_release_dir(struct dir_tx* self);
+dir_tx_release(struct dir_tx* self);
 
 void
 dir_tx_try_rdlock_field(struct dir_tx* self, enum dir_field field,

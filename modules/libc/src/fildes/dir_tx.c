@@ -54,8 +54,6 @@ dir_tx_init(struct dir_tx* self)
 
     file_tx_init(&self->base, &dir_tx_ops);
 
-    self->dir = NULL;
-
     self->wrmode = PICOTM_LIBC_WRITE_THROUGH;
 
     self->fchmodtab = NULL;
@@ -85,21 +83,10 @@ dir_tx_uninit(struct dir_tx* self)
  */
 
 void
-dir_tx_acquire_dir(struct dir_tx* self, struct dir* dir,
-                   struct picotm_error* error)
+dir_tx_prepare(struct dir_tx* self, struct dir* dir,
+               struct picotm_error* error)
 {
     assert(self);
-    assert(!self->dir);
-
-    /* acquire reference on directory */
-    file_ref(&dir->base, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
-
-    /* setup fields */
-
-    self->dir = dir;
 
     /* Regular files use write-back mode, but a directory might contain
      * files in write-through mode. to ensure their fsyncs reach disk, we
@@ -112,14 +99,8 @@ dir_tx_acquire_dir(struct dir_tx* self, struct dir* dir,
 }
 
 void
-dir_tx_release_dir(struct dir_tx* self)
-{
-    assert(self);
-    assert(self->dir);
-
-    file_unref(&self->dir->base);
-    self->dir = NULL;
-}
+dir_tx_release(struct dir_tx* self)
+{ }
 
 void
 dir_tx_try_rdlock_field(struct dir_tx* self, enum dir_field field,
@@ -127,7 +108,8 @@ dir_tx_try_rdlock_field(struct dir_tx* self, enum dir_field field,
 {
     assert(self);
 
-    dir_try_rdlock_field(self->dir, field, self->rwstate + field, error);
+    dir_try_rdlock_field(dir_of_base(self->base.file), field,
+                         self->rwstate + field, error);
 }
 
 void
@@ -136,7 +118,8 @@ dir_tx_try_wrlock_field(struct dir_tx* self, enum dir_field field,
 {
     assert(self);
 
-    dir_try_wrlock_field(self->dir, field, self->rwstate + field, error);
+    dir_try_wrlock_field(dir_of_base(self->base.file), field,
+                         self->rwstate + field, error);
 }
 
 static void
@@ -158,5 +141,5 @@ dir_tx_finish(struct dir_tx* self)
     /* release reader/writer locks on directory state */
     unlock_rwstates(picotm_arraybeg(self->rwstate),
                     picotm_arrayend(self->rwstate),
-                    self->dir);
+                    dir_of_base(self->base.file));
 }

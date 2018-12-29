@@ -33,6 +33,7 @@
  * \endcond
  */
 
+struct file;
 struct file_tx;
 struct ofd_tx;
 struct picotm_error;
@@ -51,8 +52,8 @@ struct file_tx_ops {
      * File handling
      */
 
-    void (*acquire_file)(struct file_tx*, void* file, struct picotm_error*);
-    void (*release_file)(struct file_tx*);
+    void (*prepare)(struct file_tx*, struct file*, struct picotm_error*);
+    void (*release)(struct file_tx*);
 
     /*
      * Module interfaces

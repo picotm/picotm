@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include "picotm/picotm-lib-ptr.h"
 #include "picotm/picotm-lib-rwlock.h"
 #include "file.h"
 
@@ -56,6 +57,12 @@ struct fifo {
     /** Reader/writer state locks. */
     struct picotm_rwlock  rwlock[NUMBER_OF_FIFO_FIELDS];
 };
+
+static inline struct fifo*
+fifo_of_base(struct file* base)
+{
+    return picotm_containerof(base, struct fifo, base);
+}
 
 /**
  * \brief Initializes a FIFO instance.

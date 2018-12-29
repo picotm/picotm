@@ -41,15 +41,17 @@
  */
 
 static void
-acquire_file(struct file_tx* file_tx, void* file, struct picotm_error* error)
+prepare(struct file_tx* file_tx, struct file* file,
+        struct picotm_error* error)
 {
-    chrdev_tx_acquire_chrdev(chrdev_tx_of_file_tx(file_tx), file, error);
+    chrdev_tx_prepare(chrdev_tx_of_file_tx(file_tx), chrdev_of_base(file),
+                      error);
 }
 
 static void
-release_file(struct file_tx* file_tx)
+release(struct file_tx* file_tx)
 {
-    chrdev_tx_release_chrdev(chrdev_tx_of_file_tx(file_tx));
+    chrdev_tx_release(chrdev_tx_of_file_tx(file_tx));
 }
 
 /*
@@ -329,8 +331,8 @@ write_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
 const struct file_tx_ops chrdev_tx_ops = {
     PICOTM_LIBC_FILE_TYPE_CHRDEV,
     /* file handling */
-    acquire_file,
-    release_file,
+    prepare,
+    release,
     /* module interfaces */
     finish,
     /* file ops */

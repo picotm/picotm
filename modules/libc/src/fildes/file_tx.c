@@ -21,6 +21,7 @@
 #include "file_tx.h"
 #include "picotm/picotm-error.h"
 #include <assert.h>
+#include "file.h"
 #include "file_tx_ops.h"
 
 void
@@ -31,12 +32,16 @@ file_tx_init(struct file_tx* self,  const struct file_tx_ops* ops)
 
     picotm_ref_init(&self->ref, 0);
     picotm_slist_init_item(&self->active_list);
+    self->file = NULL;
     self->ops = ops;
 }
 
 void
 file_tx_uninit(struct file_tx* self)
 {
+    assert(self);
+    assert(!self->file);
+
     picotm_slist_uninit_item(&self->active_list);
 }
 
@@ -53,17 +58,26 @@ file_tx_file_type(const struct file_tx* self)
  */
 
 void
-file_tx_ref_or_set_up(struct file_tx* self, void* file,
+file_tx_ref_or_set_up(struct file_tx* self, struct file* file,
                       struct picotm_error* error)
 {
     assert(self);
+    assert(!self->file);
 
     bool first_ref = picotm_ref_up(&self->ref);
     if (!first_ref) {
         return;
     }
 
-    self->ops->acquire_file(self, file, error);
+    /* acquire reference on shared file state */
+    file_ref(file, error);
+    if (picotm_error_is_set(error)) {
+        goto err_file_ref;
+    }
+    self->file = file;
+
+    /* prepare file-type sub class */
+    self->ops->prepare(self, file, error);
     if (picotm_error_is_set(error)) {
         goto err_self_ops_acquire_file;
     }
@@ -71,6 +85,9 @@ file_tx_ref_or_set_up(struct file_tx* self, void* file,
     return;
 
 err_self_ops_acquire_file:
+    self->file = NULL;
+    file_unref(file);
+err_file_ref:
     picotm_ref_down(&self->ref);
 }
 
@@ -84,13 +101,17 @@ void
 file_tx_unref(struct file_tx* self)
 {
     assert(self);
+    assert(self->file);
 
     bool final_unref = picotm_ref_down(&self->ref);
     if (!final_unref) {
         return;
     }
 
-    self->ops->release_file(self);
+    self->ops->release(self);
+
+    file_unref(self->file);
+    self->file = NULL;
 }
 
 bool

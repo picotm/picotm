@@ -43,15 +43,16 @@
  */
 
 static void
-acquire_file(struct file_tx* file_tx, void* file, struct picotm_error* error)
+prepare(struct file_tx* file_tx, struct file* file,
+        struct picotm_error* error)
 {
-    dir_tx_acquire_dir(dir_tx_of_file_tx(file_tx), file, error);
+    dir_tx_prepare(dir_tx_of_file_tx(file_tx), dir_of_base(file), error);
 }
 
 static void
-release_file(struct file_tx* file_tx)
+release(struct file_tx* file_tx)
 {
-    dir_tx_release_dir(dir_tx_of_file_tx(file_tx));
+    dir_tx_release(dir_tx_of_file_tx(file_tx));
 }
 
 /*
@@ -278,8 +279,8 @@ fsync_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
 const struct file_tx_ops dir_tx_ops = {
     PICOTM_LIBC_FILE_TYPE_DIR,
     /* file handling */
-    acquire_file,
-    release_file,
+    prepare,
+    release,
     /* module interfaces */
     finish,
     /* file ops */

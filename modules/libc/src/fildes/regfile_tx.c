@@ -62,8 +62,6 @@ regfile_tx_init(struct regfile_tx* self)
 
     file_tx_init(&self->base, &regfile_tx_ops);
 
-    self->regfile = NULL;
-
     self->wrmode = PICOTM_LIBC_WRITE_BACK;
 
     self->wrbuf = NULL;
@@ -165,20 +163,11 @@ regfile_tx_set_file_size(struct regfile_tx* self, off_t size,
  */
 
 void
-regfile_tx_acquire_regfile(struct regfile_tx* self, struct regfile* regfile,
-                           struct picotm_error* error)
+regfile_tx_prepare(struct regfile_tx* self, struct regfile* regfile,
+                   struct picotm_error* error)
 {
     assert(self);
-    assert(!self->regfile);
 
-    /* get reference on file */
-    file_ref(&regfile->base, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
-
-    /* setup fields */
-    self->regfile = regfile;
     self->wrmode = PICOTM_LIBC_WRITE_BACK;
     self->file_size = 0;
 
@@ -192,14 +181,8 @@ regfile_tx_acquire_regfile(struct regfile_tx* self, struct regfile* regfile,
 }
 
 void
-regfile_tx_release_regfile(struct regfile_tx* self)
-{
-    assert(self);
-    assert(self->regfile);
-
-    file_unref(&self->regfile->base);
-    self->regfile = NULL;
-}
+regfile_tx_release(struct regfile_tx* self)
+{ }
 
 void
 regfile_tx_try_rdlock_field(struct regfile_tx* self, enum regfile_field field,
@@ -207,8 +190,8 @@ regfile_tx_try_rdlock_field(struct regfile_tx* self, enum regfile_field field,
 {
     assert(self);
 
-    regfile_try_rdlock_field(self->regfile, field, self->rwstate + field,
-                             error);
+    regfile_try_rdlock_field(regfile_of_base(self->base.file), field,
+                             self->rwstate + field, error);
 }
 
 void
@@ -217,8 +200,8 @@ regfile_tx_try_wrlock_field(struct regfile_tx* self, enum regfile_field field,
 {
     assert(self);
 
-    regfile_try_wrlock_field(self->regfile, field, self->rwstate + field,
-                             error);
+    regfile_try_wrlock_field(regfile_of_base(self->base.file), field,
+                             self->rwstate + field, error);
 }
 
 int
@@ -227,8 +210,8 @@ regfile_tx_try_rdlock_region(struct regfile_tx* self, size_t nbyte,
 {
     assert(self);
 
-    regfile_try_rdlock_region(self->regfile, offset, nbyte,
-                              &self->rwcountermap, error);
+    regfile_try_rdlock_region(regfile_of_base(self->base.file), offset,
+                              nbyte, &self->rwcountermap, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -251,8 +234,8 @@ regfile_tx_try_wrlock_region(struct regfile_tx* self, size_t nbyte,
 {
     assert(self);
 
-    regfile_try_wrlock_region(self->regfile, offset, nbyte,
-                              &self->rwcountermap, error);
+    regfile_try_wrlock_region(regfile_of_base(self->base.file), offset,
+                              nbyte, &self->rwcountermap, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -368,10 +351,10 @@ regfile_tx_finish(struct regfile_tx* self)
 {
     /* release record locks */
     unlock_regions(self->locktab, self->locktab + self->locktablen,
-                   self->regfile, &self->rwcountermap);
+                   regfile_of_base(self->base.file), &self->rwcountermap);
 
     /* release reader/writer locks on file state */
     unlock_rwstates(picotm_arraybeg(self->rwstate),
                     picotm_arrayend(self->rwstate),
-                    self->regfile);
+                    regfile_of_base(self->base.file));
 }

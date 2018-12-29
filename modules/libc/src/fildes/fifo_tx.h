@@ -43,8 +43,6 @@ struct fifo_tx {
 
     struct file_tx base;
 
-    struct fifo* fifo;
-
     enum picotm_libc_write_mode wrmode;
 
     unsigned char* wrbuf;
@@ -81,17 +79,18 @@ void
 fifo_tx_uninit(struct fifo_tx* self);
 
 /**
- * Acquire the first reference on the transaction-local FIFO state.
+ * Prepare after acquiring the first reference on the transaction-local
+ * FIFO state.
  */
 void
-fifo_tx_acquire_fifo(struct fifo_tx* self, struct fifo* fifo,
-                     struct picotm_error* error);
+fifo_tx_prepare(struct fifo_tx* self, struct fifo* fifo,
+                struct picotm_error* error);
 
 /**
- * Release final reference.
+ * Clean up after releasing final reference.
  */
 void
-fifo_tx_release_fifo(struct fifo_tx* self);
+fifo_tx_release(struct fifo_tx* self);
 
 void
 fifo_tx_try_rdlock_field(struct fifo_tx* self, enum fifo_field field,
