@@ -23,15 +23,10 @@
 #include "picotm/picotm-error.h"
 #include "picotm/picotm-lib-slist.h"
 #include <sys/time.h>
-#include "chrdev_tx.h"
-#include "dir_tx.h"
 #include "fdtab_tx.h"
 #include "fd_tx.h"
-#include "fifo_tx.h"
 #include "fildes_event.h"
 #include "ofd_tx.h"
-#include "regfile_tx.h"
-#include "socket_tx.h"
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -59,20 +54,8 @@ struct fildes_tx {
     /** Active instances of |struct fd_tx| */
     struct picotm_slist fd_tx_active_list;
 
-    struct chrdev_tx chrdev_tx[MAXNUMFD];
-    size_t           chrdev_tx_max_index;
-
-    struct fifo_tx fifo_tx[MAXNUMFD];
-    size_t         fifo_tx_max_index;
-
-    struct regfile_tx regfile_tx[MAXNUMFD];
-    size_t            regfile_tx_max_index;
-
-    struct dir_tx dir_tx[MAXNUMFD];
-    size_t        dir_tx_max_index;
-
-    struct socket_tx  socket_tx[MAXNUMFD];
-    size_t            socket_tx_max_index;
+    /** Allocated instances of `struct file_tx` */
+    struct picotm_slist  file_tx_alloced_list;
 
     /** Active instances of `struct file_tx` */
     struct picotm_slist  file_tx_active_list;

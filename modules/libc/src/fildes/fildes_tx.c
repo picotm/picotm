@@ -31,13 +31,13 @@
 #include <unistd.h>
 #include "allocator/module.h"
 #include "chrdev.h"
-#include "chrdevtab.h"
+#include "chrdev_tx.h"
 #include "compat/temp_failure_retry.h"
 #include "cwd/module.h"
 #include "dir.h"
-#include "dirtab.h"
+#include "dir_tx.h"
 #include "fifo.h"
-#include "fifotab.h"
+#include "fifo_tx.h"
 #include "fildes.h"
 #include "fildes_log.h"
 #include "ofdtab.h"
@@ -47,9 +47,140 @@
 #include "pipeoptab.h"
 #include "range.h"
 #include "regfile.h"
-#include "regfiletab.h"
+#include "regfile_tx.h"
 #include "socket.h"
-#include "sockettab.h"
+#include "socket_tx.h"
+
+struct file_tx_mem {
+    union {
+        struct chrdev_tx  chrdev_tx;
+        struct dir_tx     dir_tx;
+        struct fifo_tx    fifo_tx;
+        struct regfile_tx regfile_tx;
+        struct socket_tx  socket_tx;
+    } entry;
+};
+
+static struct file_tx_mem*
+file_tx_mem_of_entry_base(struct file_tx* base)
+{
+    switch (file_tx_file_type(base)) {
+        case PICOTM_LIBC_FILE_TYPE_CHRDEV:
+            return picotm_containerof(base, struct file_tx_mem,
+                                      entry.chrdev_tx.base);
+        case PICOTM_LIBC_FILE_TYPE_DIR:
+            return picotm_containerof(base, struct file_tx_mem,
+                                      entry.dir_tx.base);
+        case PICOTM_LIBC_FILE_TYPE_FIFO:
+            return picotm_containerof(base, struct file_tx_mem,
+                                      entry.fifo_tx.base);
+        case PICOTM_LIBC_FILE_TYPE_REGULAR:
+            return picotm_containerof(base, struct file_tx_mem,
+                                      entry.regfile_tx.base);
+        case PICOTM_LIBC_FILE_TYPE_SOCKET:
+            return picotm_containerof(base, struct file_tx_mem,
+                                      entry.socket_tx.base);
+    }
+    return NULL;
+}
+
+static struct file_tx*
+file_tx_create(enum picotm_libc_file_type type, struct picotm_error* error)
+{
+    struct file_tx_mem* mem = malloc(sizeof(*mem));
+    if (!mem) {
+        picotm_error_set_errno(error, errno);
+        return NULL;
+    }
+    switch (type) {
+        case PICOTM_LIBC_FILE_TYPE_CHRDEV:
+            chrdev_tx_init(&mem->entry.chrdev_tx);
+            return &mem->entry.chrdev_tx.base;
+        case PICOTM_LIBC_FILE_TYPE_DIR:
+            dir_tx_init(&mem->entry.dir_tx);
+            return &mem->entry.dir_tx.base;
+        case PICOTM_LIBC_FILE_TYPE_FIFO:
+            fifo_tx_init(&mem->entry.fifo_tx);
+            return &mem->entry.fifo_tx.base;
+        case PICOTM_LIBC_FILE_TYPE_REGULAR:
+            regfile_tx_init(&mem->entry.regfile_tx);
+            return &mem->entry.regfile_tx.base;
+        case PICOTM_LIBC_FILE_TYPE_SOCKET:
+            socket_tx_init(&mem->entry.socket_tx);
+            return &mem->entry.socket_tx.base;
+    }
+    return NULL;
+}
+
+static void
+file_tx_destroy(struct file_tx* self)
+{
+    struct file_tx_mem* mem = file_tx_mem_of_entry_base(self);
+    switch (file_tx_file_type(self)) {
+        case PICOTM_LIBC_FILE_TYPE_CHRDEV:
+            chrdev_tx_uninit(&mem->entry.chrdev_tx);
+            break;
+        case PICOTM_LIBC_FILE_TYPE_DIR:
+            dir_tx_uninit(&mem->entry.dir_tx);
+            break;
+        case PICOTM_LIBC_FILE_TYPE_FIFO:
+            fifo_tx_uninit(&mem->entry.fifo_tx);
+            break;
+        case PICOTM_LIBC_FILE_TYPE_REGULAR:
+            regfile_tx_uninit(&mem->entry.regfile_tx);
+            break;
+        case PICOTM_LIBC_FILE_TYPE_SOCKET:
+            socket_tx_uninit(&mem->entry.socket_tx);
+            break;
+    }
+    free(mem);
+}
+
+static void
+file_tx_retype(struct file_tx* self, enum picotm_libc_file_type type)
+{
+    enum picotm_libc_file_type cur_type = file_tx_file_type(self);
+    if (cur_type == type) {
+        return;
+    }
+
+    struct file_tx_mem* mem = file_tx_mem_of_entry_base(self);
+
+    switch (file_tx_file_type(self)) {
+        case PICOTM_LIBC_FILE_TYPE_CHRDEV:
+            chrdev_tx_uninit(&mem->entry.chrdev_tx);
+            break;
+        case PICOTM_LIBC_FILE_TYPE_DIR:
+            dir_tx_uninit(&mem->entry.dir_tx);
+            break;
+        case PICOTM_LIBC_FILE_TYPE_FIFO:
+            fifo_tx_uninit(&mem->entry.fifo_tx);
+            break;
+        case PICOTM_LIBC_FILE_TYPE_REGULAR:
+            regfile_tx_uninit(&mem->entry.regfile_tx);
+            break;
+        case PICOTM_LIBC_FILE_TYPE_SOCKET:
+            socket_tx_uninit(&mem->entry.socket_tx);
+            break;
+    }
+    switch (type) {
+        case PICOTM_LIBC_FILE_TYPE_CHRDEV:
+            chrdev_tx_init(&mem->entry.chrdev_tx);
+            break;
+        case PICOTM_LIBC_FILE_TYPE_DIR:
+            dir_tx_init(&mem->entry.dir_tx);
+            break;
+        case PICOTM_LIBC_FILE_TYPE_FIFO:
+            fifo_tx_init(&mem->entry.fifo_tx);
+            break;
+        case PICOTM_LIBC_FILE_TYPE_REGULAR:
+            regfile_tx_init(&mem->entry.regfile_tx);
+            break;
+        case PICOTM_LIBC_FILE_TYPE_SOCKET:
+            socket_tx_init(&mem->entry.socket_tx);
+            break;
+    }
+}
 
 void
 fildes_tx_init(struct fildes_tx* self, struct fildes* fildes,
@@ -66,12 +197,7 @@ fildes_tx_init(struct fildes_tx* self, struct fildes* fildes,
 
     picotm_slist_init_head(&self->fd_tx_active_list);
 
-    self->chrdev_tx_max_index = 0;
-    self->fifo_tx_max_index = 0;
-    self->regfile_tx_max_index = 0;
-    self->dir_tx_max_index = 0;
-    self->socket_tx_max_index = 0;
-
+    picotm_slist_init_head(&self->file_tx_alloced_list);
     picotm_slist_init_head(&self->file_tx_active_list);
 
     self->ofd_tx_max_index = 0;
@@ -85,48 +211,21 @@ fildes_tx_init(struct fildes_tx* self, struct fildes* fildes,
     self->pipeoptablen = 0;
 }
 
+static void
+cleanup_file_tx_alloced_list_cb(struct picotm_slist* item)
+{
+    struct file_tx* file_tx = file_tx_of_slist(item);
+    file_tx_destroy(file_tx);
+}
+
 void
 fildes_tx_uninit(struct fildes_tx* self)
 {
-    /* Uninit chrdev_txs */
-
-    for (struct chrdev_tx* chrdev_tx = self->chrdev_tx;
-                           chrdev_tx < self->chrdev_tx + self->chrdev_tx_max_index;
-                         ++chrdev_tx) {
-        chrdev_tx_uninit(chrdev_tx);
-    }
-
-    /* Uninit fifo_txs */
-
-    for (struct fifo_tx* fifo_tx = self->fifo_tx;
-                         fifo_tx < self->fifo_tx + self->fifo_tx_max_index;
-                       ++fifo_tx) {
-        fifo_tx_uninit(fifo_tx);
-    }
-
-    /* Uninit regfile_txs */
-
-    for (struct regfile_tx* regfile_tx = self->regfile_tx;
-                            regfile_tx < self->regfile_tx + self->regfile_tx_max_index;
-                          ++regfile_tx) {
-        regfile_tx_uninit(regfile_tx);
-    }
-
-    /* Uninit dir_txs */
-
-    for (struct dir_tx* dir_tx = self->dir_tx;
-                        dir_tx < self->dir_tx + self->dir_tx_max_index;
-                      ++dir_tx) {
-        dir_tx_uninit(dir_tx);
-    }
-
-    /* Uninit socket_txs */
-
-    for (struct socket_tx* socket_tx = self->socket_tx;
-                           socket_tx < self->socket_tx + self->socket_tx_max_index;
-                         ++socket_tx) {
-        socket_tx_uninit(socket_tx);
-    }
+    /* Uninit allocated instances of |struct file_tx| */
+    picotm_slist_cleanup_0(&self->file_tx_alloced_list,
+                           cleanup_file_tx_alloced_list_cb);
+    picotm_slist_uninit_head(&self->file_tx_alloced_list);
+    picotm_slist_uninit_head(&self->file_tx_active_list);
 
     /* Uninit ofd_txs */
 
@@ -151,41 +250,94 @@ fildes_tx_uninit(struct fildes_tx* self)
 
     picotm_slist_uninit_head(&self->ofd_tx_active_list);
     picotm_slist_uninit_head(&self->fd_tx_active_list);
-    picotm_slist_uninit_head(&self->file_tx_active_list);
+}
+
+static bool
+true_if_eq_id_cb(const struct picotm_slist* item, void* data)
+{
+    const struct file_tx* file_tx =
+        file_tx_of_slist((struct picotm_slist*)item);
+    assert(file_tx);
+
+    const struct file_id* id = data;
+    assert(id);
+
+    int cmp = file_id_cmp(&file_tx->file->id, id);
+    return !cmp;
+}
+
+static struct file_tx*
+get_file_tx(struct fildes_tx* self, int fildes,
+            enum picotm_libc_file_type type,
+            struct picotm_error* error)
+{
+    struct file_id id;
+    file_id_init_from_fildes(&id, fildes, error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+
+    /* Let's see if we already have the file in use.*/
+
+    struct picotm_slist* pos = picotm_slist_find_1(&self->file_tx_active_list,
+                                                   true_if_eq_id_cb, &id);
+    if (pos != picotm_slist_end(&self->file_tx_active_list)) {
+        struct file_tx* file_tx = file_tx_of_slist(pos);
+        assert(file_tx_file_type(file_tx) == type);
+        return file_tx;
+    }
+
+    /* If not, we allocate a new entry either from our LRU
+     * list, or from heap memory.
+     */
+
+    struct file_tx* file_tx;
+
+    pos = picotm_slist_front(&self->file_tx_alloced_list);
+    if (pos) {
+        picotm_slist_dequeue_front(&self->file_tx_alloced_list);
+        file_tx = file_tx_of_slist(pos);
+        file_tx_retype(file_tx, type);
+    } else {
+        file_tx = file_tx_create(type, error);
+        if (picotm_error_is_set(error)) {
+            return NULL;
+        }
+    }
+
+    return file_tx;
 }
 
 static struct chrdev_tx*
-get_chrdev_tx(struct fildes_tx* self, int index)
+get_chrdev_tx(struct fildes_tx* self, int fildes, struct picotm_error* error)
 {
-    for (struct chrdev_tx* chrdev_tx = self->chrdev_tx + self->chrdev_tx_max_index;
-                           chrdev_tx < self->chrdev_tx + index + 1;
-                         ++chrdev_tx) {
-        chrdev_tx_init(chrdev_tx);
+    struct file_tx* file_tx = get_file_tx(self, fildes,
+                                          PICOTM_LIBC_FILE_TYPE_CHRDEV,
+                                          error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
     }
-
-    self->chrdev_tx_max_index = lmax(index + 1, self->chrdev_tx_max_index);
-
-    return self->chrdev_tx + index;
+    return chrdev_tx_of_file_tx(file_tx);
 }
 
 static struct chrdev_tx*
 get_chrdev_tx_with_ref(struct fildes_tx* self, int fildes,
                        struct picotm_error* error)
 {
-    struct chrdev* chrdev = fildes_ref_chrdev(self->fildes, fildes, error);
+    struct chrdev_tx* chrdev_tx = get_chrdev_tx(self, fildes, error);
     if (picotm_error_is_set(error)) {
         return NULL;
+    } else if (file_tx_holds_ref(&chrdev_tx->base)) {
+        return chrdev_tx;
     }
-
-    struct chrdev_tx* chrdev_tx =
-        get_chrdev_tx(self, fildes_chrdev_index(self->fildes, chrdev));
 
     /* In |struct fildes_tx| we hold at most one reference to the
      * transaction state of each character device. This reference is
      * released in fildes_tx_finish().
      */
-    if (file_tx_holds_ref(&chrdev_tx->base)) {
-        goto unref;
+    struct chrdev* chrdev = fildes_ref_chrdev(self->fildes, fildes, error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
     }
 
     file_tx_ref_or_set_up(&chrdev_tx->base, &chrdev->base, error);
@@ -196,7 +348,6 @@ get_chrdev_tx_with_ref(struct fildes_tx* self, int fildes,
     picotm_slist_enqueue_front(&self->file_tx_active_list,
                                &chrdev_tx->base.active_list);
 
-unref:
     file_unref(&chrdev->base);
 
     return chrdev_tx;
@@ -207,37 +358,35 @@ err_file_tx_ref_or_set_up:
 }
 
 static struct fifo_tx*
-get_fifo_tx(struct fildes_tx* self, int index)
+get_fifo_tx(struct fildes_tx* self, int fildes, struct picotm_error* error)
 {
-    for (struct fifo_tx* fifo_tx = self->fifo_tx + self->fifo_tx_max_index;
-                         fifo_tx < self->fifo_tx + index + 1;
-                       ++fifo_tx) {
-        fifo_tx_init(fifo_tx);
+    struct file_tx* file_tx = get_file_tx(self, fildes,
+                                          PICOTM_LIBC_FILE_TYPE_FIFO,
+                                          error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
     }
-
-    self->fifo_tx_max_index = lmax(index + 1, self->fifo_tx_max_index);
-
-    return self->fifo_tx + index;
+    return fifo_tx_of_file_tx(file_tx);
 }
 
 static struct fifo_tx*
 get_fifo_tx_with_ref(struct fildes_tx* self, int fildes,
                      struct picotm_error* error)
 {
-    struct fifo* fifo = fildes_ref_fifo(self->fildes, fildes, error);
+    struct fifo_tx* fifo_tx = get_fifo_tx(self, fildes, error);
     if (picotm_error_is_set(error)) {
         return NULL;
+    } else if (file_tx_holds_ref(&fifo_tx->base)) {
+        return fifo_tx;
     }
-
-    struct fifo_tx* fifo_tx =
-        get_fifo_tx(self, fildes_fifo_index(self->fildes, fifo));
 
     /* In |struct fildes_tx| we hold at most one reference to the
      * transaction state of each FIFO. This reference is released
      * in fildes_tx_finish().
      */
-    if (file_tx_holds_ref(&fifo_tx->base)) {
-        goto unref;
+    struct fifo* fifo = fildes_ref_fifo(self->fildes, fildes, error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
     }
 
     file_tx_ref_or_set_up(&fifo_tx->base, &fifo->base, error);
@@ -248,7 +397,6 @@ get_fifo_tx_with_ref(struct fildes_tx* self, int fildes,
     picotm_slist_enqueue_front(&self->file_tx_active_list,
                                &fifo_tx->base.active_list);
 
-unref:
     file_unref(&fifo->base);
 
     return fifo_tx;
@@ -259,37 +407,35 @@ err_file_tx_ref_or_set_up:
 }
 
 static struct regfile_tx*
-get_regfile_tx(struct fildes_tx* self, int index)
+get_regfile_tx(struct fildes_tx* self, int fildes, struct picotm_error* error)
 {
-    for (struct regfile_tx* regfile_tx = self->regfile_tx + self->regfile_tx_max_index;
-                            regfile_tx < self->regfile_tx + index + 1;
-                          ++regfile_tx) {
-        regfile_tx_init(regfile_tx);
+    struct file_tx* file_tx = get_file_tx(self, fildes,
+                                          PICOTM_LIBC_FILE_TYPE_REGULAR,
+                                          error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
     }
-
-    self->regfile_tx_max_index = lmax(index + 1, self->regfile_tx_max_index);
-
-    return self->regfile_tx + index;
+    return regfile_tx_of_file_tx(file_tx);
 }
 
 static struct regfile_tx*
 get_regfile_tx_with_ref(struct fildes_tx* self, int fildes,
                         struct picotm_error* error)
 {
-    struct regfile* regfile = fildes_ref_regfile(self->fildes, fildes, error);
+    struct regfile_tx* regfile_tx = get_regfile_tx(self, fildes, error);
     if (picotm_error_is_set(error)) {
         return NULL;
+    } else if (file_tx_holds_ref(&regfile_tx->base)) {
+        return regfile_tx;
     }
-
-    struct regfile_tx* regfile_tx =
-        get_regfile_tx(self, fildes_regfile_index(self->fildes, regfile));
 
     /* In |struct fildes_tx| we hold at most one reference to the
      * transaction state of each regular file. This reference is
      * released in fildes_tx_finish().
      */
-    if (file_tx_holds_ref(&regfile_tx->base)) {
-        goto unref;
+    struct regfile* regfile = fildes_ref_regfile(self->fildes, fildes, error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
     }
 
     file_tx_ref_or_set_up(&regfile_tx->base, &regfile->base, error);
@@ -300,7 +446,6 @@ get_regfile_tx_with_ref(struct fildes_tx* self, int fildes,
     picotm_slist_enqueue_front(&self->file_tx_active_list,
                                &regfile_tx->base.active_list);
 
-unref:
     file_unref(&regfile->base);
 
     return regfile_tx;
@@ -311,37 +456,35 @@ err_file_tx_ref_or_set_up:
 }
 
 static struct dir_tx*
-get_dir_tx(struct fildes_tx* self, int index)
+get_dir_tx(struct fildes_tx* self, int fildes, struct picotm_error* error)
 {
-    for (struct dir_tx* dir_tx = self->dir_tx + self->dir_tx_max_index;
-                        dir_tx < self->dir_tx + index + 1;
-                      ++dir_tx) {
-        dir_tx_init(dir_tx);
+    struct file_tx* file_tx = get_file_tx(self, fildes,
+                                          PICOTM_LIBC_FILE_TYPE_DIR,
+                                          error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
     }
-
-    self->dir_tx_max_index = lmax(index + 1, self->dir_tx_max_index);
-
-    return self->dir_tx + index;
+    return dir_tx_of_file_tx(file_tx);
 }
 
 static struct dir_tx*
 get_dir_tx_with_ref(struct fildes_tx* self, int fildes,
                     struct picotm_error* error)
 {
-    struct dir* dir = fildes_ref_dir(self->fildes, fildes, error);
+    struct dir_tx* dir_tx = get_dir_tx(self, fildes, error);
     if (picotm_error_is_set(error)) {
         return NULL;
+    } else if (file_tx_holds_ref(&dir_tx->base)) {
+        return dir_tx;
     }
-
-    struct dir_tx* dir_tx =
-        get_dir_tx(self, fildes_dir_index(self->fildes, dir));
 
     /* In |struct fildes_tx| we hold at most one reference to the
      * transaction state of each directory. This reference is
      * released in fildes_tx_finish().
      */
-    if (file_tx_holds_ref(&dir_tx->base)) {
-        goto unref;
+    struct dir* dir = fildes_ref_dir(self->fildes, fildes, error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
     }
 
     file_tx_ref_or_set_up(&dir_tx->base, &dir->base, error);
@@ -352,7 +495,6 @@ get_dir_tx_with_ref(struct fildes_tx* self, int fildes,
     picotm_slist_enqueue_front(&self->file_tx_active_list,
                                &dir_tx->base.active_list);
 
-unref:
     file_unref(&dir->base);
 
     return dir_tx;
@@ -363,37 +505,35 @@ err_file_tx_ref_or_set_up:
 }
 
 static struct socket_tx*
-get_socket_tx(struct fildes_tx* self, int index)
+get_socket_tx(struct fildes_tx* self, int fildes, struct picotm_error* error)
 {
-    for (struct socket_tx* socket_tx = self->socket_tx + self->socket_tx_max_index;
-                           socket_tx < self->socket_tx + index + 1;
-                         ++socket_tx) {
-        socket_tx_init(socket_tx);
+    struct file_tx* file_tx = get_file_tx(self, fildes,
+                                          PICOTM_LIBC_FILE_TYPE_SOCKET,
+                                          error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
     }
-
-    self->socket_tx_max_index = lmax(index + 1, self->socket_tx_max_index);
-
-    return self->socket_tx + index;
+    return socket_tx_of_file_tx(file_tx);
 }
 
 static struct socket_tx*
 get_socket_tx_with_ref(struct fildes_tx* self, int fildes,
                        struct picotm_error* error)
 {
-    struct socket* socket = fildes_ref_socket(self->fildes, fildes, error);
+    struct socket_tx* socket_tx = get_socket_tx(self, fildes, error);
     if (picotm_error_is_set(error)) {
         return NULL;
+    } else if (file_tx_holds_ref(&socket_tx->base)) {
+        return socket_tx;
     }
-
-    struct socket_tx* socket_tx =
-        get_socket_tx(self, fildes_socket_index(self->fildes, socket));
 
     /* In |struct fildes_tx| we hold at most one reference to the
      * transaction state of each socket. This reference is released
      * in fildes_tx_finish().
      */
-    if (file_tx_holds_ref(&socket_tx->base)) {
-        goto unref;
+    struct socket* socket = fildes_ref_socket(self->fildes, fildes, error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
     }
 
     file_tx_ref_or_set_up(&socket_tx->base, &socket->base, error);
@@ -404,7 +544,6 @@ get_socket_tx_with_ref(struct fildes_tx* self, int fildes,
     picotm_slist_enqueue_front(&self->file_tx_active_list,
                                &socket_tx->base.active_list);
 
-unref:
     file_unref(&socket->base);
 
     return socket_tx;
@@ -3070,16 +3209,19 @@ fildes_tx_undo_event(struct fildes_tx* self, enum fildes_op op, int fildes,
 }
 
 static void
-finish_file_tx(struct file_tx* file_tx)
+finish_file_tx(struct file_tx* file_tx, struct fildes_tx* fildes_tx)
 {
     file_tx_finish(file_tx);
     file_tx_unref(file_tx);
+
+    picotm_slist_enqueue_front(&fildes_tx->file_tx_alloced_list,
+                               &file_tx->active_list);
 }
 
 static void
-finish_file_tx_cb(struct picotm_slist* item)
+finish_file_tx_cb(struct picotm_slist* item, void* data)
 {
-    finish_file_tx(file_tx_of_slist(item));
+    finish_file_tx(file_tx_of_slist(item), data);
 }
 
 static void
@@ -3112,7 +3254,8 @@ void
 fildes_tx_finish(struct fildes_tx* self, struct picotm_error* error)
 {
     /* Unref files */
-    picotm_slist_cleanup_0(&self->file_tx_active_list, finish_file_tx_cb);
+    picotm_slist_cleanup_1(&self->file_tx_active_list,
+                           finish_file_tx_cb, self);
 
     /* Unref open file descriptions */
     picotm_slist_cleanup_0(&self->ofd_tx_active_list, finish_ofd_tx_cb);
