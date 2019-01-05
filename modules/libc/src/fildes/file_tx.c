@@ -31,7 +31,7 @@ file_tx_init(struct file_tx* self,  const struct file_tx_ops* ops)
     assert(ops);
 
     picotm_ref_init(&self->ref, 0);
-    picotm_slist_init_item(&self->active_list);
+    picotm_slist_init_item(&self->list_entry);
     self->file = NULL;
     self->ops = ops;
 }
@@ -42,7 +42,7 @@ file_tx_uninit(struct file_tx* self)
     assert(self);
     assert(!self->file);
 
-    picotm_slist_uninit_item(&self->active_list);
+    picotm_slist_uninit_item(&self->list_entry);
 }
 
 enum picotm_libc_file_type

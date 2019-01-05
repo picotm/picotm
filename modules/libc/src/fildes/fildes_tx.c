@@ -214,7 +214,7 @@ fildes_tx_init(struct fildes_tx* self, struct fildes* fildes,
 static void
 cleanup_file_tx_alloced_list_cb(struct picotm_slist* item)
 {
-    struct file_tx* file_tx = file_tx_of_slist(item);
+    struct file_tx* file_tx = file_tx_of_list_entry(item);
     file_tx_destroy(file_tx);
 }
 
@@ -256,7 +256,7 @@ static bool
 true_if_eq_id_cb(const struct picotm_slist* item, void* data)
 {
     const struct file_tx* file_tx =
-        file_tx_of_slist((struct picotm_slist*)item);
+        file_tx_of_list_entry((struct picotm_slist*)item);
     assert(file_tx);
 
     const struct file_id* id = data;
@@ -282,7 +282,7 @@ get_file_tx(struct fildes_tx* self, int fildes,
     struct picotm_slist* pos = picotm_slist_find_1(&self->file_tx_active_list,
                                                    true_if_eq_id_cb, &id);
     if (pos != picotm_slist_end(&self->file_tx_active_list)) {
-        struct file_tx* file_tx = file_tx_of_slist(pos);
+        struct file_tx* file_tx = file_tx_of_list_entry(pos);
         assert(file_tx_file_type(file_tx) == type);
         return file_tx;
     }
@@ -296,7 +296,7 @@ get_file_tx(struct fildes_tx* self, int fildes,
     pos = picotm_slist_front(&self->file_tx_alloced_list);
     if (pos) {
         picotm_slist_dequeue_front(&self->file_tx_alloced_list);
-        file_tx = file_tx_of_slist(pos);
+        file_tx = file_tx_of_list_entry(pos);
         file_tx_retype(file_tx, type);
     } else {
         file_tx = file_tx_create(type, error);
@@ -346,7 +346,7 @@ get_chrdev_tx_with_ref(struct fildes_tx* self, int fildes,
     }
 
     picotm_slist_enqueue_front(&self->file_tx_active_list,
-                               &chrdev_tx->base.active_list);
+                               &chrdev_tx->base.list_entry);
 
     file_unref(&chrdev->base);
 
@@ -395,7 +395,7 @@ get_fifo_tx_with_ref(struct fildes_tx* self, int fildes,
     }
 
     picotm_slist_enqueue_front(&self->file_tx_active_list,
-                               &fifo_tx->base.active_list);
+                               &fifo_tx->base.list_entry);
 
     file_unref(&fifo->base);
 
@@ -444,7 +444,7 @@ get_regfile_tx_with_ref(struct fildes_tx* self, int fildes,
     }
 
     picotm_slist_enqueue_front(&self->file_tx_active_list,
-                               &regfile_tx->base.active_list);
+                               &regfile_tx->base.list_entry);
 
     file_unref(&regfile->base);
 
@@ -493,7 +493,7 @@ get_dir_tx_with_ref(struct fildes_tx* self, int fildes,
     }
 
     picotm_slist_enqueue_front(&self->file_tx_active_list,
-                               &dir_tx->base.active_list);
+                               &dir_tx->base.list_entry);
 
     file_unref(&dir->base);
 
@@ -542,7 +542,7 @@ get_socket_tx_with_ref(struct fildes_tx* self, int fildes,
     }
 
     picotm_slist_enqueue_front(&self->file_tx_active_list,
-                               &socket_tx->base.active_list);
+                               &socket_tx->base.list_entry);
 
     file_unref(&socket->base);
 
@@ -3215,13 +3215,13 @@ finish_file_tx(struct file_tx* file_tx, struct fildes_tx* fildes_tx)
     file_tx_unref(file_tx);
 
     picotm_slist_enqueue_front(&fildes_tx->file_tx_alloced_list,
-                               &file_tx->active_list);
+                               &file_tx->list_entry);
 }
 
 static void
 finish_file_tx_cb(struct picotm_slist* item, void* data)
 {
-    finish_file_tx(file_tx_of_slist(item), data);
+    finish_file_tx(file_tx_of_list_entry(item), data);
 }
 
 static void

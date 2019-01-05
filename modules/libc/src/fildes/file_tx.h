@@ -42,7 +42,7 @@ struct file_tx {
 
     struct picotm_ref16 ref;
 
-    struct picotm_slist active_list;
+    struct picotm_slist list_entry;
 
     struct file* file;
 
@@ -50,9 +50,9 @@ struct file_tx {
 };
 
 static inline struct file_tx*
-file_tx_of_slist(struct picotm_slist* item)
+file_tx_of_list_entry(struct picotm_slist* item)
 {
-    return picotm_containerof(item, struct file_tx, active_list);
+    return picotm_containerof(item, struct file_tx, list_entry);
 }
 
 /**
