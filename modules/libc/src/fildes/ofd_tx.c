@@ -66,7 +66,7 @@ ofd_tx_init(struct ofd_tx* self)
 
     picotm_ref_init(&self->ref, 0);
 
-    picotm_slist_init_item(&self->active_list);
+    picotm_slist_init_item(&self->list_entry);
 
     self->ofd = NULL;
 
@@ -91,7 +91,7 @@ ofd_tx_uninit(struct ofd_tx* self)
     uninit_rwstates(picotm_arraybeg(self->rwstate),
                     picotm_arrayend(self->rwstate));
 
-    picotm_slist_uninit_item(&self->active_list);
+    picotm_slist_uninit_item(&self->list_entry);
 }
 
 bool

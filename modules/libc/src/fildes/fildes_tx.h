@@ -60,11 +60,11 @@ struct fildes_tx {
     /** Active instances of `struct file_tx` */
     struct picotm_slist  file_tx_active_list;
 
-    struct ofd_tx ofd_tx[MAXNUMFD];
-    size_t        ofd_tx_max_index;
+    /** Allocated instances of `struct ofd_tx` */
+    struct picotm_slist  ofd_tx_alloced_list;
 
-    /** Active instances of |struct ofd_tx| */
-    struct picotm_slist ofd_tx_active_list;
+    /** Active instances of `struct ofd_tx` */
+    struct picotm_slist  ofd_tx_active_list;
 
     struct openop* openoptab;
     size_t         openoptablen;
