@@ -182,6 +182,25 @@ file_tx_retype(struct file_tx* self, enum picotm_libc_file_type type)
     }
 }
 
+static struct ofd_tx*
+ofd_tx_create(struct picotm_error* error)
+{
+    struct ofd_tx* ofd_tx = malloc(sizeof(*ofd_tx));
+    if (!ofd_tx) {
+        picotm_error_set_errno(error, errno);
+        return NULL;
+    }
+    ofd_tx_init(ofd_tx);
+    return ofd_tx;
+}
+
+static void
+ofd_tx_destroy(struct ofd_tx* self)
+{
+    ofd_tx_uninit(self);
+    free(self);
+}
+
 void
 fildes_tx_init(struct fildes_tx* self, struct fildes* fildes,
                struct fildes_log* log)
@@ -200,8 +219,7 @@ fildes_tx_init(struct fildes_tx* self, struct fildes* fildes,
     picotm_slist_init_head(&self->file_tx_alloced_list);
     picotm_slist_init_head(&self->file_tx_active_list);
 
-    self->ofd_tx_max_index = 0;
-
+    picotm_slist_init_head(&self->ofd_tx_alloced_list);
     picotm_slist_init_head(&self->ofd_tx_active_list);
 
     self->openoptab = NULL;
@@ -209,6 +227,13 @@ fildes_tx_init(struct fildes_tx* self, struct fildes* fildes,
 
     self->pipeoptab = NULL;
     self->pipeoptablen = 0;
+}
+
+static void
+cleanup_ofd_tx_alloced_list_cb(struct picotm_slist* item)
+{
+    struct ofd_tx* ofd_tx = ofd_tx_of_list_entry(item);
+    ofd_tx_destroy(ofd_tx);
 }
 
 static void
@@ -227,13 +252,11 @@ fildes_tx_uninit(struct fildes_tx* self)
     picotm_slist_uninit_head(&self->file_tx_alloced_list);
     picotm_slist_uninit_head(&self->file_tx_active_list);
 
-    /* Uninit ofd_txs */
-
-    for (struct ofd_tx* ofd_tx = self->ofd_tx;
-                        ofd_tx < self->ofd_tx + self->ofd_tx_max_index;
-                      ++ofd_tx) {
-        ofd_tx_uninit(ofd_tx);
-    }
+    /* Uninit allocated instances of |struct ofd_tx| */
+    picotm_slist_cleanup_0(&self->ofd_tx_alloced_list,
+                           cleanup_ofd_tx_alloced_list_cb);
+    picotm_slist_uninit_head(&self->ofd_tx_alloced_list);
+    picotm_slist_uninit_head(&self->ofd_tx_active_list);
 
     /* Uninit fd_txs */
 
@@ -248,7 +271,6 @@ fildes_tx_uninit(struct fildes_tx* self)
     pipeoptab_clear(&self->pipeoptab, &self->pipeoptablen);
     openoptab_clear(&self->openoptab, &self->openoptablen);
 
-    picotm_slist_uninit_head(&self->ofd_tx_active_list);
     picotm_slist_uninit_head(&self->fd_tx_active_list);
 }
 
@@ -616,47 +638,52 @@ get_file_tx_with_ref(struct fildes_tx* self, int fildes,
     }
 }
 
+static bool
+true_if_eq_ofd_id_cb(const struct picotm_slist* item, void* data)
+{
+    const struct ofd_tx* ofd_tx =
+        ofd_tx_of_list_entry((struct picotm_slist*)item);
+    assert(ofd_tx);
+    assert(ofd_tx->ofd);
+
+    const struct ofd_id* id = data;
+    assert(id);
+
+    return !ofd_id_cmp(&ofd_tx->ofd->id, id);
+}
+
 static struct ofd_tx*
 get_ofd_tx(struct fildes_tx* self, const struct ofd_id* id,
            struct picotm_error* error)
 {
-    struct ofd_tx* empty = NULL;
+    /* Let's see if we already have the open file description in use.*/
 
-    struct ofd_tx* beg = self->ofd_tx;
-    const struct ofd_tx* end = self->ofd_tx + self->ofd_tx_max_index;
+    struct picotm_slist* pos = picotm_slist_find_1(&self->ofd_tx_active_list,
+                                                   true_if_eq_ofd_id_cb,
+                                                   (void*)id);
+    if (pos != picotm_slist_end(&self->ofd_tx_active_list)) {
+        struct ofd_tx* ofd_tx = ofd_tx_of_list_entry(pos);
+        return ofd_tx;
+    }
 
-    for (; beg < end; ++beg) {
+    /* If not, we allocate a new entry either from our LRU
+     * list or from heap memory.
+     */
 
-        if (!ofd_tx_holds_ref(beg)) {
-            if (!empty) {
-                empty = beg;
-            }
-            continue;
+    struct ofd_tx* ofd_tx;
+
+    pos = picotm_slist_front(&self->ofd_tx_alloced_list);
+    if (pos) {
+        picotm_slist_dequeue_front(&self->ofd_tx_alloced_list);
+        ofd_tx = ofd_tx_of_list_entry(pos);
+    } else {
+        ofd_tx = ofd_tx_create(error);
+        if (picotm_error_is_set(error)) {
+            return NULL;
         }
-
-        int cmp = ofd_tx_cmp_with_id(beg, id);
-        if (!cmp) {
-            return beg; /* found correct entry; return */
-        }
     }
 
-    /* no entry found; return an empty element */
-
-    if (empty) {
-        return empty;
-    }
-
-    empty = self->ofd_tx + self->ofd_tx_max_index;
-
-    if (empty == picotm_arrayend(self->ofd_tx)) {
-        picotm_error_set_error_code(error, PICOTM_OUT_OF_MEMORY);
-        return NULL;
-    }
-
-    ofd_tx_init(empty);
-    ++self->ofd_tx_max_index;
-
-    return empty;
+    return ofd_tx;
 }
 
 static struct ofd_tx*
@@ -695,7 +722,7 @@ get_ofd_tx_with_ref(struct fildes_tx* self, int fildes, bool newly_created,
     }
 
     picotm_slist_enqueue_front(&self->ofd_tx_active_list,
-                               &ofd_tx->active_list);
+                               &ofd_tx->list_entry);
 
     /* In |struct fildes_tx| we hold at most one reference to the
      * transaction state of each open file description. This reference is
@@ -3225,16 +3252,19 @@ finish_file_tx_cb(struct picotm_slist* item, void* data)
 }
 
 static void
-finish_ofd_tx(struct ofd_tx* ofd_tx)
+finish_ofd_tx(struct ofd_tx* ofd_tx, struct fildes_tx* fildes_tx)
 {
     ofd_tx_finish(ofd_tx);
     ofd_tx_unref(ofd_tx);
+
+    picotm_slist_enqueue_front(&fildes_tx->ofd_tx_alloced_list,
+                               &ofd_tx->list_entry);
 }
 
 static void
-finish_ofd_tx_cb(struct picotm_slist* item)
+finish_ofd_tx_cb(struct picotm_slist* item, void* data)
 {
-    finish_ofd_tx(ofd_tx_of_slist(item));
+    finish_ofd_tx(ofd_tx_of_list_entry(item), data);
 }
 
 static void
@@ -3258,7 +3288,7 @@ fildes_tx_finish(struct fildes_tx* self, struct picotm_error* error)
                            finish_file_tx_cb, self);
 
     /* Unref open file descriptions */
-    picotm_slist_cleanup_0(&self->ofd_tx_active_list, finish_ofd_tx_cb);
+    picotm_slist_cleanup_1(&self->ofd_tx_active_list, finish_ofd_tx_cb, self);
 
     /* Unref file descriptors */
     picotm_slist_cleanup_0(&self->fd_tx_active_list, finish_fd_tx_cb);

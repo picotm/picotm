@@ -43,7 +43,7 @@ struct ofd_tx {
 
     struct picotm_ref16 ref;
 
-    struct picotm_slist active_list;
+    struct picotm_slist list_entry;
 
     struct ofd* ofd;
 
@@ -60,9 +60,9 @@ struct ofd_tx {
 };
 
 static inline struct ofd_tx*
-ofd_tx_of_slist(struct picotm_slist* item)
+ofd_tx_of_list_entry(struct picotm_slist* item)
 {
-    return picotm_containerof(item, struct ofd_tx, active_list);
+    return picotm_containerof(item, struct ofd_tx, list_entry);
 }
 
 /**
