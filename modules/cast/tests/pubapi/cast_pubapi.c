@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2018   Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2018-2019  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -62,7 +62,7 @@
         picotm_begin                                                        \
             _dtype result =                                                 \
                 cast_ ## _sname ## _to_ ## _dname ## _tx(value);            \
-            if (result != value) {                                          \
+            if (result != (_dtype)value) {                                  \
                 tap_error("mismatching value for cast from"                 \
                           " '" #_stype "' to '" #_dtype "'\n");             \
                 struct picotm_error error = PICOTM_ERROR_INITIALIZER;       \

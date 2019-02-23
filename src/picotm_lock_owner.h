@@ -1,6 +1,7 @@
 /*
  * picotm - A system-level transaction manager
  * Copyright (c) 2017   Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2019   Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -34,17 +35,12 @@
 
 struct picotm_error;
 
-/**
- * \brief Lock-owner state flags.
- */
-enum picotm_picotm_lock_owner_flags {
-    /** \brief Lock owner is waiting */
-    LOCK_OWNER_WT = 1ul << 29,
-    /** \brief Lock owner is waiting to acquire a reader lock */
-    LOCK_OWNER_RD = 1ul << 30,
-    /** \brief Lock owner is waiting to acquire a writer lock*/
-    LOCK_OWNER_WR = 1ul << 31
-};
+/** \brief Lock owner is waiting */
+static const unsigned long LOCK_OWNER_WT = 1ul << 29;
+/** \brief Lock owner is waiting to acquire a reader lock */
+static const unsigned long LOCK_OWNER_RD = 1ul << 30;
+/** \brief Lock owner is waiting to acquire a writer lock*/
+static const unsigned long LOCK_OWNER_WR = 1ul << 31;
 
 /**
  * \brief Represents the potential owner of a lock.
