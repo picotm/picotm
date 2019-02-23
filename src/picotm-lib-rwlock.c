@@ -1,6 +1,7 @@
 /*
  * picotm - A system-level transaction manager
  * Copyright (c) 2017   Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2019   Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -175,7 +176,7 @@ try_rdlock(struct picotm_rwlock* self)
         if (rw_counter(n) == WRITER_COUNTER) {
             /* writer present; cannot read-lock */
             return false;
-        } else if (rw_counter(n) == (WRITER_COUNTER - 1)) {
+        } else if (rw_counter(n) == (unsigned long)(WRITER_COUNTER - 1)) {
             /* maximum number of readers reached; cannot read-lock */
             return false;
         } else if (rw_index(n)) {

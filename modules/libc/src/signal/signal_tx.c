@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2018   Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2018-2019  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -55,7 +55,7 @@ signal_tx_add_signal(struct signal_tx* self, int signum, bool is_recoverable,
     if (signum < 0) {
         picotm_error_set_errno(error, EINVAL);
         return;
-    } else if (signum >= picotm_arraylen(self->signal_state)) {
+    } else if ((size_t)signum >= picotm_arraylen(self->signal_state)) {
         picotm_error_set_errno(error, EINVAL);
         return;
     }
@@ -71,7 +71,7 @@ signal_tx_remove_signal(struct signal_tx* self, int signum)
 {
     if (signum < 0) {
         return;
-    } else if (signum >= picotm_arraylen(self->signal_state)) {
+    } else if ((size_t)signum >= picotm_arraylen(self->signal_state)) {
         return;
     }
     self->signal_state[signum] = 0;
@@ -96,7 +96,7 @@ signal_tx_recover_from_signal(struct signal_tx* self, const siginfo_t* info)
         return;
     } else if (info->si_signo < 0) {
         return;
-    } else if (info->si_signo >= picotm_arraylen(self->signal_state)) {
+    } else if ((size_t)info->si_signo >= picotm_arraylen(self->signal_state)) {
         return;
     } else if (!self->signal_state[info->si_signo]) {
         return;

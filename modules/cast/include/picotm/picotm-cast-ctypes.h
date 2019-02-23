@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2018   Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2018-2019  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -27,6 +27,10 @@
 #include "picotm-cast.h"
 
 PICOTM_BEGIN_DECLS
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-compare"
+#pragma GCC diagnostic ignored "-Wtype-limits"
 
 /**
  * \ingroup group_cast
@@ -1677,5 +1681,7 @@ PICOTM_CAST_TX(ldouble, long double, double, double, -DBL_MAX, DBL_MAX)
 /** \} */
 #endif
 #endif
+
+#pragma GCC diagnostic pop
 
 PICOTM_END_DECLS

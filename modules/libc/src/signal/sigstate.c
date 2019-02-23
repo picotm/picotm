@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2018   Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2018-2019  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -189,7 +189,7 @@ sigstate_acquire_proc_signal(int signum,
     if (signum < 0) {
         picotm_error_set_errno(error, EINVAL);
         return;
-    } else if (signum >= picotm_arraylen(s_sigstate.entries)) {
+    } else if ((size_t)signum >= picotm_arraylen(s_sigstate.entries)) {
         picotm_error_set_errno(error, EINVAL);
         return;
     }
@@ -210,7 +210,7 @@ sigstate_release_proc_signal(int signum, struct picotm_error* error)
 {
     if (signum < 0) {
         return;
-    } else if (signum >= picotm_arraylen(s_sigstate.entries)) {
+    } else if ((size_t)signum >= picotm_arraylen(s_sigstate.entries)) {
         return;
     }
 
