@@ -1,6 +1,7 @@
 /*
  * picotm - A system-level transaction manager
  * Copyright (c) 2017   Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2019   Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -61,13 +62,16 @@ run_tests(const struct test_func* beg, const struct test_func* end,
 {
     tap_plan(end - beg);
 
-    for (unsigned long testnum = 1; beg < end; ++testnum, ++beg) {
+    volatile const struct test_func* pos = beg;
+
+    for (unsigned long testnum = 1; pos < end; ++testnum, ++pos) {
 
         int test_aborted = 0;
 
         begin_safe_block(test_aborted)
 
-            run_test(beg, nthreads, loop, btype, limit);
+            run_test((const struct test_func*)pos, nthreads,
+                     loop, btype, limit);
 
         end_safe_block
 

@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2018   Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2018-2019  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -94,7 +94,7 @@ signal_test_func(int signum, bool is_recoverable, bool cond,
     /* Trigger the signal multiple times to test repeating calls to
      * signal-handler module. */
 
-    for (unsigned long i = 0ul; i < 5ul; ++i) {
+    for (picotm_safe unsigned long i = 0ul; i < 5ul; ++i) {
 
         bool error_detected = false;
 

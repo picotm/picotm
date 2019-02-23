@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2017-2018  Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2017-2019  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -508,7 +508,7 @@ txlist_test_7(unsigned int tid)
         struct txlist_entry* end = txlist_end_tx(list);
         struct txlist_entry* pos = beg;
 
-        unsigned long value;
+        picotm_safe unsigned long value;
         unsigned long i = 0;
 
         while (pos != end) {
