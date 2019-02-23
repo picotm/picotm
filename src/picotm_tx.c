@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2017-2018  Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2017-2019  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -236,7 +236,7 @@ err_begin_modules: {
         }
     }
 err_picotm_lock_owner_reset_timestamp:
-    picotm_lock_manager_release_irrevocability(self->lm);
+    picotm_lock_manager_release_irrevocability(self->lm, &self->lo);
 }
 
 static size_t
@@ -388,7 +388,7 @@ picotm_tx_commit(struct picotm_tx* self, struct picotm_error* error)
         goto err;
     }
 
-    picotm_lock_manager_release_irrevocability(self->lm);
+    picotm_lock_manager_release_irrevocability(self->lm, &self->lo);
 
     return;
 
@@ -421,11 +421,11 @@ picotm_tx_rollback(struct picotm_tx* self, struct picotm_error* error)
         goto err;
     }
 
-    picotm_lock_manager_release_irrevocability(self->lm);
+    picotm_lock_manager_release_irrevocability(self->lm, &self->lo);
 
     return;
 
 err:
     picotm_error_mark_as_non_recoverable(error);
-    picotm_lock_manager_release_irrevocability(self->lm);
+    picotm_lock_manager_release_irrevocability(self->lm, &self->lo);
 }

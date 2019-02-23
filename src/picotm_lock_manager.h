@@ -1,6 +1,7 @@
 /*
  * picotm - A system-level transaction manager
  * Copyright (c) 2017   Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2019   Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -134,7 +135,8 @@ picotm_lock_manager_wait_irrevocable(struct picotm_lock_manager* self,
  * \param self The lock manager.
  */
 void
-picotm_lock_manager_release_irrevocability(struct picotm_lock_manager* self);
+picotm_lock_manager_release_irrevocability(struct picotm_lock_manager* self,
+                                           struct picotm_lock_owner* lo);
 
 /**
  * \brief Instructs a lock manager to setup a lock owner for waiting.
