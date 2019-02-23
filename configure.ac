@@ -227,6 +227,8 @@ AX_CHECK_COMPILE_FLAG([-Wall],
                       [AS_VAR_APPEND([CFLAGS], [" -Wall"])])
 AX_CHECK_COMPILE_FLAG([-Werror],
                       [AS_VAR_APPEND([CFLAGS], [" -Werror"])])
+AX_CHECK_COMPILE_FLAG([-Wextra],
+                      [AS_VAR_APPEND([CFLAGS], [" -Wextra"])])
 
 dnl Callback functions often receive arguments that are useful in the
 dnl general case, but not always used by all implementations. This is
