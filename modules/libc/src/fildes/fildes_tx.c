@@ -744,6 +744,16 @@ err_get_ofd_tx:
 }
 
 static struct fd_tx*
+get_existing_fd_tx(struct fildes_tx* self, int fildes)
+{
+    assert(self);
+    assert(fildes >= 0);
+    assert(fildes < (ssize_t)(self->fd_tx_max_fildes));
+
+    return self->fd_tx + fildes;
+}
+
+static struct fd_tx*
 get_fd_tx(struct fildes_tx* self, int fildes)
 {
     for (struct fd_tx* fd_tx = self->fd_tx + self->fd_tx_max_fildes;
@@ -1038,11 +1048,7 @@ static void
 apply_accept(struct fildes_tx* self, int fildes, int cookie,
              struct picotm_error* error)
 {
-    assert(self);
-    assert(fildes >= 0);
-    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
-
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     if (cookie != -1) {
@@ -1057,9 +1063,7 @@ static void
 undo_accept(struct fildes_tx* self, int fildes, int cookie,
             struct picotm_error* error)
 {
-    assert(self);
-
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     if (cookie != -1) {
@@ -1114,11 +1118,7 @@ static void
 apply_bind(struct fildes_tx* self, int fildes, int cookie,
            struct picotm_error* error)
 {
-    assert(self);
-    assert(fildes >= 0);
-    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
-
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     fd_tx_bind_apply(fd_tx, fildes, cookie, error);
@@ -1131,11 +1131,7 @@ static void
 undo_bind(struct fildes_tx* self, int fildes, int cookie,
           struct picotm_error* error)
 {
-    assert(self);
-    assert(fildes >= 0);
-    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
-
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     fd_tx_bind_undo(fd_tx, fildes, cookie, error);
@@ -1229,11 +1225,7 @@ static void
 apply_close(struct fildes_tx* self, int fildes, int cookie,
             struct picotm_error* error)
 {
-    assert(self);
-    assert(fildes >= 0);
-    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
-
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     fd_tx_close_apply(fd_tx, fildes, cookie, error);
@@ -1246,11 +1238,7 @@ static void
 undo_close(struct fildes_tx* self, int fildes, int cookie,
            struct picotm_error* error)
 {
-    assert(self);
-    assert(fildes >= 0);
-    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
-
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     fd_tx_close_undo(fd_tx, fildes, cookie, error);
@@ -1300,11 +1288,7 @@ static void
 apply_connect(struct fildes_tx* self, int fildes, int cookie,
               struct picotm_error* error)
 {
-    assert(self);
-    assert(fildes >= 0);
-    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
-
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     fd_tx_connect_apply(fd_tx, fildes, cookie, error);
@@ -1317,11 +1301,7 @@ static void
 undo_connect(struct fildes_tx* self, int fildes, int cookie,
              struct picotm_error* error)
 {
-    assert(self);
-    assert(fildes >= 0);
-    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
-
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     fd_tx_connect_undo(fd_tx, fildes, cookie, error);
@@ -1389,9 +1369,7 @@ static void
 apply_dup(struct fildes_tx* self, int fildes, int cookie,
           struct picotm_error* error)
 {
-    assert(self);
-
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     if (cookie >= 0) {
@@ -1406,11 +1384,7 @@ static void
 undo_dup(struct fildes_tx* self, int fildes, int cookie,
          struct picotm_error* error)
 {
-    assert(self);
-    assert(fildes >= 0);
-    assert(fildes < MAXNUMFD);
-
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     if (cookie >= 0) {
@@ -1511,11 +1485,7 @@ static void
 apply_fchmod(struct fildes_tx* self, int fildes, int cookie,
              struct picotm_error* error)
 {
-    assert(self);
-    assert(fildes >= 0);
-    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
-
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     fd_tx_fchmod_apply(fd_tx, fildes, cookie, error);
@@ -1528,11 +1498,7 @@ static void
 undo_fchmod(struct fildes_tx* self, int fildes, int cookie,
             struct picotm_error* error)
 {
-    assert(self);
-    assert(fildes >= 0);
-    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
-
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     fd_tx_fchmod_undo(fd_tx, fildes, cookie, error);
@@ -1593,11 +1559,7 @@ static void
 apply_fcntl(struct fildes_tx* self, int fildes, int cookie,
             struct picotm_error* error)
 {
-    assert(self);
-    assert(fildes >= 0);
-    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
-
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     fd_tx_fcntl_apply(fd_tx, fildes, cookie, error);
@@ -1610,11 +1572,7 @@ static void
 undo_fcntl(struct fildes_tx* self, int fildes, int cookie,
            struct picotm_error* error)
 {
-    assert(self);
-    assert(fildes >= 0);
-    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
-
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     fd_tx_fcntl_undo(fd_tx, fildes, cookie, error);
@@ -1665,11 +1623,7 @@ static void
 apply_fstat(struct fildes_tx* self, int fildes, int cookie,
             struct picotm_error* error)
 {
-    assert(self);
-    assert(fildes >= 0);
-    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
-
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     fd_tx_fstat_apply(fd_tx, fildes, cookie, error);
@@ -1682,11 +1636,7 @@ static void
 undo_fstat(struct fildes_tx* self, int fildes, int cookie,
            struct picotm_error* error)
 {
-    assert(self);
-    assert(fildes >= 0);
-    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
-
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     fd_tx_fstat_undo(fd_tx, fildes, cookie, error);
@@ -1737,11 +1687,7 @@ static void
 apply_fsync(struct fildes_tx* self, int fildes, int cookie,
             struct picotm_error* error)
 {
-    assert(self);
-    assert(fildes >= 0);
-    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
-
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     fd_tx_fsync_apply(fd_tx, fildes, cookie, error);
@@ -1754,11 +1700,7 @@ static void
 undo_fsync(struct fildes_tx* self, int fildes, int cookie,
            struct picotm_error* error)
 {
-    assert(self);
-    assert(fildes >= 0);
-    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
-
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     fd_tx_fsync_undo(fd_tx, fildes, cookie, error);
@@ -1858,11 +1800,7 @@ static void
 apply_listen(struct fildes_tx* self, int fildes, int cookie,
              struct picotm_error* error)
 {
-    assert(self);
-    assert(fildes >= 0);
-    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
-
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     fd_tx_listen_apply(fd_tx, fildes, cookie, error);
@@ -1875,11 +1813,7 @@ static void
 undo_listen(struct fildes_tx* self, int fildes, int cookie,
             struct picotm_error* error)
 {
-    assert(self);
-    assert(fildes >= 0);
-    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
-
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     fd_tx_listen_undo(fd_tx, fildes, cookie, error);
@@ -1930,11 +1864,7 @@ static void
 apply_lseek(struct fildes_tx* self, int fildes, int cookie,
             struct picotm_error* error)
 {
-    assert(self);
-    assert(fildes >= 0);
-    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
-
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     fd_tx_lseek_apply(fd_tx, fildes, cookie, error);
@@ -1947,11 +1877,7 @@ static void
 undo_lseek(struct fildes_tx* self, int fildes, int cookie,
            struct picotm_error* error)
 {
-    assert(self);
-    assert(fildes >= 0);
-    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
-
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     fd_tx_lseek_undo(fd_tx, fildes, cookie, error);
@@ -2244,8 +2170,6 @@ undo_open(struct fildes_tx* self, int fildes, int cookie,
           struct picotm_error* error)
 {
     assert(self);
-    assert(fildes >= 0);
-    assert(fildes < MAXNUMFD);
     assert(cookie < (ssize_t)self->openoptablen);
 
     if (self->openoptab[cookie].unlink) {
@@ -2254,7 +2178,7 @@ undo_open(struct fildes_tx* self, int fildes, int cookie,
         unlink_fildes(fildes, &ignored_error);
     }
 
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     /* Mark file descriptor to be closed */
@@ -2401,11 +2325,7 @@ static void
 apply_pread(struct fildes_tx* self, int fildes, int cookie,
             struct picotm_error* error)
 {
-    assert(self);
-    assert(fildes >= 0);
-    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
-
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     fd_tx_pread_apply(fd_tx, fildes, cookie, error);
@@ -2418,11 +2338,7 @@ static void
 undo_pread(struct fildes_tx* self, int fildes, int cookie,
            struct picotm_error* error)
 {
-    assert(self);
-    assert(fildes >= 0);
-    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
-
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     fd_tx_pread_undo(fd_tx, fildes, cookie, error);
@@ -2474,11 +2390,7 @@ static void
 apply_pwrite(struct fildes_tx* self, int fildes, int cookie,
              struct picotm_error* error)
 {
-    assert(self);
-    assert(fildes >= 0);
-    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
-
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     fd_tx_pwrite_apply(fd_tx, fildes, cookie, error);
@@ -2491,11 +2403,7 @@ static void
 undo_pwrite(struct fildes_tx* self, int fildes, int cookie,
             struct picotm_error* error)
 {
-    assert(self);
-    assert(fildes >= 0);
-    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
-
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     fd_tx_pwrite_undo(fd_tx, fildes, cookie, error);
@@ -2546,11 +2454,7 @@ static void
 apply_read(struct fildes_tx* self, int fildes, int cookie,
            struct picotm_error* error)
 {
-    assert(self);
-    assert(fildes >= 0);
-    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
-
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     fd_tx_read_apply(fd_tx, fildes, cookie, error);
@@ -2563,11 +2467,7 @@ static void
 undo_read(struct fildes_tx* self, int fildes, int cookie,
           struct picotm_error* error)
 {
-    assert(self);
-    assert(fildes >= 0);
-    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
-
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     fd_tx_read_undo(fd_tx, fildes, cookie, error);
@@ -2619,11 +2519,7 @@ static void
 apply_recv(struct fildes_tx* self, int fildes, int cookie,
            struct picotm_error* error)
 {
-    assert(self);
-    assert(fildes >= 0);
-    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
-
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     fd_tx_recv_apply(fd_tx, fildes, cookie, error);
@@ -2636,11 +2532,7 @@ static void
 undo_recv(struct fildes_tx* self, int fildes, int cookie,
           struct picotm_error* error)
 {
-    assert(self);
-    assert(fildes >= 0);
-    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
-
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     fd_tx_recv_undo(fd_tx, fildes, cookie, error);
@@ -2772,11 +2664,7 @@ static void
 apply_send(struct fildes_tx* self, int fildes, int cookie,
            struct picotm_error* error)
 {
-    assert(self);
-    assert(fildes >= 0);
-    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
-
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     fd_tx_send_apply(fd_tx, fildes, cookie, error);
@@ -2789,11 +2677,7 @@ static void
 undo_send(struct fildes_tx* self, int fildes, int cookie,
           struct picotm_error* error)
 {
-    assert(self);
-    assert(fildes >= 0);
-    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
-
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     fd_tx_send_undo(fd_tx, fildes, cookie, error);
@@ -2844,11 +2728,7 @@ static void
 apply_shutdown(struct fildes_tx* self, int fildes, int cookie,
                struct picotm_error* error)
 {
-    assert(self);
-    assert(fildes >= 0);
-    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
-
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     fd_tx_shutdown_apply(fd_tx, fildes, cookie, error);
@@ -2861,11 +2741,7 @@ static void
 undo_shutdown(struct fildes_tx* self, int fildes, int cookie,
               struct picotm_error* error)
 {
-    assert(self);
-    assert(fildes >= 0);
-    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
-
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     fd_tx_shutdown_undo(fd_tx, fildes, cookie, error);
@@ -2931,11 +2807,7 @@ static void
 undo_socket(struct fildes_tx* self, int fildes, int cookie,
             struct picotm_error* error)
 {
-    assert(self);
-    assert(fildes >= 0);
-    assert(fildes < MAXNUMFD);
-
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     /* Mark file descriptor to be closed. This works, because dup() occured
@@ -3098,11 +2970,7 @@ static void
 apply_write(struct fildes_tx* self, int fildes, int cookie,
             struct picotm_error* error)
 {
-    assert(self);
-    assert(fildes >= 0);
-    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
-
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     fd_tx_write_apply(fd_tx, fildes, cookie, error);
@@ -3115,11 +2983,7 @@ static void
 undo_write(struct fildes_tx* self, int fildes, int cookie,
            struct picotm_error* error)
 {
-    assert(self);
-    assert(fildes >= 0);
-    assert(fildes < (ssize_t)(sizeof(self->fd_tx)/sizeof(self->fd_tx[0])));
-
-    struct fd_tx* fd_tx = get_fd_tx(self, fildes);
+    struct fd_tx* fd_tx = get_existing_fd_tx(self, fildes);
     assert(fd_tx);
 
     fd_tx_write_undo(fd_tx, fildes, cookie, error);
