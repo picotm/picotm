@@ -1,6 +1,6 @@
 dnl
 dnl picotm - A system-level transaction manager
-dnl Copyright (c) 2017-2018 Thomas Zimmermann <contact@tzimmermann.org>
+dnl Copyright (c) 2017-2019 Thomas Zimmermann <contact@tzimmermann.org>
 dnl
 dnl This program is free software: you can redistribute it and/or modify
 dnl it under the terms of the GNU Lesser General Public License as published by
@@ -227,6 +227,12 @@ AX_CHECK_COMPILE_FLAG([-Wall],
                       [AS_VAR_APPEND([CFLAGS], [" -Wall"])])
 AX_CHECK_COMPILE_FLAG([-Werror],
                       [AS_VAR_APPEND([CFLAGS], [" -Werror"])])
+
+dnl Callback functions often receive arguments that are useful in the
+dnl general case, but not always used by all implementations. This is
+dnl intentional and not an error.
+AX_CHECK_COMPILE_FLAG([-Wno-unused-parameter],
+                      [AS_VAR_APPEND([CFLAGS], [" -Wno-unused-parameter"])])
 
 
 dnl
