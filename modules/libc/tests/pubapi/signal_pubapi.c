@@ -212,7 +212,8 @@ static void
 gen_SIGSEGV(int signum)
 {
     long* null_ptr = NULL;
-    *null_ptr = 1; /* triggers SIGSEGV */
+    if (*null_ptr == signum) /* triggers SIGSEGV */
+        *null_ptr = 0;
 }
 
 static void
