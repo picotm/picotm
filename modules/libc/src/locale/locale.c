@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2018   Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2018-2019  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -50,6 +50,7 @@ locale_init(struct locale* self)
     init_rwlocks(picotm_arraybeg(self->rwlock),
                  picotm_arrayend(self->rwlock));
     picotm_spinlock_init(&self->locale_state_lock);
+    picotm_spinlock_init(&self->setlocale_lock);
 }
 
 void
@@ -57,6 +58,7 @@ locale_uninit(struct locale* self)
 {
     assert(self);
 
+    picotm_spinlock_uninit(&self->setlocale_lock);
     picotm_spinlock_uninit(&self->locale_state_lock);
     uninit_rwlocks(picotm_arraybeg(self->rwlock),
                    picotm_arrayend(self->rwlock));
