@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2017-2018  Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2017-2019  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -207,7 +207,7 @@ static struct shared_treemap_dir*
 retrieve_dir(atomic_uintptr_t* entry_ptr, bool create_dirs,
              unsigned long level_nentries, struct picotm_error* error)
 {
-    uintptr_t entry = atomic_load_explicit(entry_ptr, memory_order_relaxed);
+    uintptr_t entry = atomic_load_explicit(entry_ptr, memory_order_acquire);
     if (entry) {
         return (struct shared_treemap_dir*)entry;
     }
@@ -233,7 +233,7 @@ retrieve_dir(atomic_uintptr_t* entry_ptr, bool create_dirs,
     if (!succ) {
         /* A concurrent transaction already created the level's directory. */
         dir_destroy(dir);
-        entry = atomic_load_explicit(entry_ptr, memory_order_relaxed);
+        entry = atomic_load_explicit(entry_ptr, memory_order_acquire);
     }
 
     return (struct shared_treemap_dir*)entry;
@@ -286,7 +286,7 @@ retrieve_value(
     picotm_shared_treemap_value_destroy_function value_destroy,
     struct picotm_error* error)
 {
-    uintptr_t entry = atomic_load_explicit(entry_ptr, memory_order_relaxed);
+    uintptr_t entry = atomic_load_explicit(entry_ptr, memory_order_acquire);
     if (entry) {
         return entry;
     }
@@ -311,7 +311,7 @@ retrieve_value(
     if (!succ) {
         /* A concurrent transaction already created the value. */
         value_destroy(entry, treemap);
-        entry = atomic_load_explicit(entry_ptr, memory_order_relaxed);
+        entry = atomic_load_explicit(entry_ptr, memory_order_acquire);
     }
 
     return entry;
