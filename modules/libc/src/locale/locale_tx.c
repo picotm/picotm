@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2018   Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2018-2019  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -583,7 +583,10 @@ setlocale_rd_exec(struct locale_tx* self, int category,
     if (picotm_error_is_set(error)) {
         return NULL;
     }
-    return setlocale(category, NULL);
+    picotm_spinlock_lock(&self->locale->setlocale_lock);
+    char* locale = setlocale(category, NULL);
+    picotm_spinlock_unlock(&self->locale->setlocale_lock);
+    return locale;
 }
 
 static char*
@@ -599,7 +602,9 @@ setlocale_wr_exec(struct locale_tx* self, int category, const char* locale,
         return NULL;
     }
 
+    picotm_spinlock_lock(&self->locale->setlocale_lock);
     char* curlocale = setlocale(category, NULL);
+    picotm_spinlock_unlock(&self->locale->setlocale_lock);
     if (!curlocale) {
         picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
         return NULL;
@@ -611,7 +616,9 @@ setlocale_wr_exec(struct locale_tx* self, int category, const char* locale,
         return NULL;
     }
 
+    picotm_spinlock_lock(&self->locale->setlocale_lock);
     curlocale = setlocale(category, locale);
+    picotm_spinlock_unlock(&self->locale->setlocale_lock);
     if (!curlocale) {
         picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
         goto err_setlocale;
@@ -629,7 +636,9 @@ setlocale_wr_exec(struct locale_tx* self, int category, const char* locale,
     return curlocale;
 
 err_locale_log_append:
+    picotm_spinlock_lock(&self->locale->setlocale_lock);
     curlocale = setlocale(category, oldlocale);
+    picotm_spinlock_unlock(&self->locale->setlocale_lock);
     if (!curlocale) {
         /* We keep the original error code. We mark the error
          * as non-recoverable, because the function's clean-up
@@ -663,8 +672,10 @@ static void
 undo_setlocale(struct locale_tx* self, const struct locale_event* arg,
                struct picotm_error* error)
 {
+    picotm_spinlock_lock(&self->locale->setlocale_lock);
     char* locale = setlocale(arg->arg.setlocale.category,
                              arg->arg.setlocale.oldlocale);
+    picotm_spinlock_unlock(&self->locale->setlocale_lock);
     if (!locale) {
         picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
     }

@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2018   Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2018-2019  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -54,6 +54,14 @@ struct locale {
     struct picotm_rwlock    rwlock[NUMBER_OF_LOCALE_FIELDS];
 
     struct picotm_spinlock locale_state_lock;
+
+    /* TSAN instrumentation reports a read/write race condition
+     * for setlocale() even if the function only gets called for
+     * reading. Apparantly even reading implies a write operation.
+     * to protect against this, we acquire this lock in every
+     * function that calls setlocale().
+     */
+    struct picotm_spinlock setlocale_lock;
 };
 
 /**
