@@ -586,7 +586,34 @@ setlocale_rd_exec(struct locale_tx* self, int category,
     picotm_spinlock_lock(&self->locale->setlocale_lock);
     char* locale = setlocale(category, NULL);
     picotm_spinlock_unlock(&self->locale->setlocale_lock);
-    return locale;
+
+    if (!locale)
+        return NULL; /* TODO: should this be an error? */
+
+    char* duplocale = strdup(locale);
+    if (!duplocale) {
+        picotm_error_set_errno(error, errno);
+        return NULL;
+    }
+
+    struct locale_event arg;
+    arg.arg.setlocale.category = category;
+    arg.arg.setlocale.oldlocale = duplocale;
+
+    locale_log_append(self->log, LOCALE_OP_SETLOCALE, &arg, error);
+    if (picotm_error_is_set(error))
+        goto err_free_duplocale;
+
+    /* The string returned by setlocale() is owned by setlocale()'s
+     * implementation. This interferes with TM operatons, such as
+     * privatization. We have to return a copy of the string to make
+     * it work reliably. The transaction's apply/undo phases will
+     * release the memory. */
+    return duplocale;
+
+err_free_duplocale:
+    free(duplocale);
+    return NULL;
 }
 
 static char*
