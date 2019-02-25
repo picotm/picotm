@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2017-2018  Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2017-2019  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,31 @@
 #include "test.h"
 #include "testhlp.h"
 #include "testmacro.h"
+
+/*
+ * Thread-safe wrappers
+ */
+
+static double wrap_lgamma(double x)
+{
+    int sign;
+    return lgamma_r(x, &sign);
+}
+#define wrap_lgamma_tx(x)   lgamma_tx(x)
+
+static float wrap_lgammaf(float x)
+{
+    int sign;
+    return lgammaf_r(x, &sign);
+}
+#define wrap_lgammaf_tx(x)  lgammaf_tx(x)
+
+static long double wrap_lgammal(long double x)
+{
+    int sign;
+    return lgammal_r(x, &sign);
+}
+#define wrap_lgammal_tx(x)  lgammal_tx(x)
 
 /*
  * Test interfaces of <picotm/math.h>
@@ -128,9 +153,9 @@ TEST_SUCCESS(double, jn, tid, tid)
 TEST_SUCCESS(double,      ldexp,  tid, tid)
 TEST_SUCCESS(float,       ldexpf, tid, tid)
 TEST_SUCCESS(long double, ldexpl, tid, tid)
-TEST_SUCCESS(double,      lgamma,  1 + tid)
-TEST_SUCCESS(float,       lgammaf, 1 + tid)
-TEST_SUCCESS(long double, lgammal, 1 + tid)
+TEST_SUCCESS(double,      wrap_lgamma,  1 + tid)
+TEST_SUCCESS(float,       wrap_lgammaf, 1 + tid)
+TEST_SUCCESS(long double, wrap_lgammal, 1 + tid)
 TEST_SUCCESS(long long,   llrint,  0.75 * tid)
 TEST_SUCCESS(long long,   llrintf, 0.75 * tid)
 TEST_SUCCESS(long long,   llrintl, 0.75 * tid)
@@ -583,9 +608,9 @@ static const struct test_func test[] = {
     TEST_SUCCESS_FUNC(ldexp),
     TEST_SUCCESS_FUNC(ldexpf),
     TEST_SUCCESS_FUNC(ldexpl),
-    TEST_SUCCESS_FUNC(lgamma),
-    TEST_SUCCESS_FUNC(lgammaf),
-    TEST_SUCCESS_FUNC(lgammal),
+    TEST_SUCCESS_FUNC(wrap_lgamma),
+    TEST_SUCCESS_FUNC(wrap_lgammaf),
+    TEST_SUCCESS_FUNC(wrap_lgammal),
     TEST_SUCCESS_FUNC(llrint),
     TEST_SUCCESS_FUNC(llrintf),
     TEST_SUCCESS_FUNC(llrintl),
