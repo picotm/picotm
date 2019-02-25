@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2018   Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2018-2019  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -88,7 +88,7 @@ ptrdata_set_shared_data(struct ptrdata* self, const void* ptr,
     }
     struct value* val = (struct value*)value;
 
-    atomic_store_explicit(&val->data, (uintptr_t)data, memory_order_relaxed);
+    atomic_store_explicit(&val->data, (uintptr_t)data, memory_order_release);
 }
 
 bool
@@ -111,7 +111,7 @@ ptrdata_test_and_set_shared_data(struct ptrdata* self, const void* ptr,
 
     return atomic_compare_exchange_strong_explicit(&val->data, &expected,
                                                    (uintptr_t)data,
-                                                   memory_order_relaxed,
+                                                   memory_order_acq_rel,
                                                    memory_order_relaxed);
 }
 
@@ -131,7 +131,7 @@ ptrdata_clear_shared_data(struct ptrdata* self, const void* ptr,
     }
     struct value* val = (struct value*)value;
 
-    atomic_store_explicit(&val->data, 0, memory_order_relaxed);
+    atomic_store_explicit(&val->data, 0, memory_order_release);
 }
 
 void*
@@ -148,5 +148,5 @@ ptrdata_get_shared_data(struct ptrdata* self, const void* ptr,
     }
     struct value* val = (struct value*)value;
 
-    return (void*)atomic_load_explicit(&val->data, memory_order_relaxed);
+    return (void*)atomic_load_explicit(&val->data, memory_order_acquire);
 }
