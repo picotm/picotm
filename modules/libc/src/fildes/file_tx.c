@@ -59,7 +59,7 @@ file_tx_file_type(const struct file_tx* self)
 
 void
 file_tx_ref_or_set_up(struct file_tx* self, struct file* file,
-                      struct picotm_error* error)
+                      void* data, struct picotm_error* error)
 {
     assert(self);
     assert(!self->file);
@@ -77,7 +77,7 @@ file_tx_ref_or_set_up(struct file_tx* self, struct file* file,
     self->file = file;
 
     /* prepare file-type sub class */
-    self->ops->prepare(self, file, error);
+    self->ops->prepare(self, file, data, error);
     if (picotm_error_is_set(error)) {
         goto err_self_ops_acquire_file;
     }

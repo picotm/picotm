@@ -41,7 +41,8 @@
  */
 
 static void
-prepare(struct file_tx* file_tx, struct file* file, struct picotm_error* error)
+prepare(struct file_tx* file_tx, struct file* file, void* data,
+        struct picotm_error* error)
 {
     fifo_tx_prepare(fifo_tx_of_file_tx(file_tx), fifo_of_base(file), error);
 }
