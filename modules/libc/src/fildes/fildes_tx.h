@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2017-2018  Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2017-2019  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -65,6 +65,12 @@ struct fildes_tx {
 
     /** Active instances of `struct ofd_tx` */
     struct picotm_slist  ofd_tx_active_list;
+
+    /** Allocated instances of `struct seekbuf_tx` */
+    struct picotm_slist  seekbuf_tx_alloced_list;
+
+    /** Active instances of `struct seekbuf_tx` */
+    struct picotm_slist  seekbuf_tx_active_list;
 
     struct openop* openoptab;
     size_t         openoptablen;

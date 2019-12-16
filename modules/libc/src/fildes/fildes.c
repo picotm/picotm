@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2018   Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2018-2019  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -55,8 +55,15 @@ fildes_init(struct fildes* self, struct picotm_error* error)
         goto err_fildes_sockettab_init;
     }
 
+    fildes_seekbuftab_init(&self->seekbuftab, error);
+    if (picotm_error_is_set(error)) {
+        goto err_fildes_seekbuftab_init;
+    }
+
     return;
 
+err_fildes_seekbuftab_init:
+    fildes_sockettab_uninit(&self->sockettab);
 err_fildes_sockettab_init:
     fildes_regfiletab_uninit(&self->regfiletab);
 err_fildes_regfiletab_init:
@@ -74,6 +81,8 @@ err_fildes_ofdtab_init:
 void
 fildes_uninit(struct fildes* self)
 {
+    fildes_seekbuftab_uninit(&self->seekbuftab);
+
     fildes_sockettab_uninit(&self->sockettab);
     fildes_regfiletab_uninit(&self->regfiletab);
     fildes_fifotab_uninit(&self->fifotab);
@@ -222,4 +231,20 @@ size_t
 fildes_socket_index(struct fildes* self, struct socket* socket)
 {
     return fildes_sockettab_index(&self->sockettab, socket);
+}
+
+/*
+ * seekbuftab
+ */
+
+struct seekbuf*
+fildes_ref_seekbuf(struct fildes* self, int fildes, struct picotm_error* error)
+{
+    return fildes_seekbuftab_ref_fildes(&self->seekbuftab, fildes, error);
+}
+
+size_t
+fildes_seekbuf_index(struct fildes* self, struct seekbuf* seekbuf)
+{
+    return fildes_seekbuftab_index(&self->seekbuftab, seekbuf);
 }

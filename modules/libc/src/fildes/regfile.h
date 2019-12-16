@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2017-2018  Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2017-2019  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -23,7 +23,6 @@
 #include "picotm/picotm-lib-ptr.h"
 #include "picotm/picotm-lib-rwlock.h"
 #include "file.h"
-#include "rwlockmap.h"
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -42,7 +41,6 @@ struct rwcountermap;
  */
 enum regfile_field {
     REGFILE_FIELD_FILE_MODE,
-    REGFILE_FIELD_FILE_SIZE,
     REGFILE_FIELD_STATE,
     NUMBER_OF_REGFILE_FIELDS
 };
@@ -57,9 +55,6 @@ struct regfile {
 
     /** Reader/writer state locks. */
     struct picotm_rwlock  rwlock[NUMBER_OF_REGFILE_FIELDS];
-
-    /** \brief Reader/writer region-lock table. */
-    struct rwlockmap rwlockmap;
 };
 
 static inline struct regfile*
@@ -116,40 +111,3 @@ regfile_try_wrlock_field(struct regfile* self, enum regfile_field field,
 void
 regfile_unlock_field(struct regfile* self, enum regfile_field field,
                      struct picotm_rwstate* rwstate);
-
-/**
- * \brief Tries to acquire a reader lock on a file region.
- * \param       self            The file instance.
- * \param       off             The region's offset.
- * \param       nbyte           The region's length.
- * \param       rwcountermap    The transaction's reader/writer counter map.
- * \param[out]  error           Returns an error ot the caller.
- */
-void
-regfile_try_rdlock_region(struct regfile* self, off_t off, size_t nbyte,
-                          struct rwcountermap* rwcountermap,
-                          struct picotm_error* error);
-
-/**
- * \brief Tries to acquire a writer lock on a file region.
- * \param       self            The file instance.
- * \param       off             The region's offset.
- * \param       nbyte           The region's length.
- * \param       rwcountermap    The transaction's reader/writer counter map.
- * \param[out]  error           Returns an error ot the caller.
- */
-void
-regfile_try_wrlock_region(struct regfile* self, off_t off, size_t nbyte,
-                          struct rwcountermap* rwcountermap,
-                          struct picotm_error* error);
-
-/**
- * \brief Releases a reader/writer lock on a file region.
- * \param   self            The file instance.
- * \param   off             The region's offset.
- * \param   nbyte           The region's length.
- * \param   rwcountermap    The transaction's reader/writer counter map.
- */
-void
-regfile_unlock_region(struct regfile* self, off_t off, size_t nbyte,
-                      struct rwcountermap* rwcountermap);
