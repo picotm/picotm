@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2017-2018  Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2017-2019  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -22,21 +22,6 @@
 #include "picotm/picotm-error.h"
 #include "picotm/picotm-lib-array.h"
 #include "picotm/picotm-lib-rwstate.h"
-#include "rwcountermap.h"
-
-#define RECSIZE (1ul << RECBITS)
-
-static off_t
-recoffset(off_t off)
-{
-    return off/RECSIZE;
-}
-
-static size_t
-reccount(size_t len)
-{
-    return 1 + len/RECSIZE;
-}
 
 static void
 init_rwlocks(struct picotm_rwlock* beg, const struct picotm_rwlock* end)
@@ -68,15 +53,11 @@ regfile_init(struct regfile* self, struct picotm_error* error)
 
     init_rwlocks(picotm_arraybeg(self->rwlock),
                  picotm_arrayend(self->rwlock));
-
-    rwlockmap_init(&self->rwlockmap);
 }
 
 void
 regfile_uninit(struct regfile* self)
 {
-    rwlockmap_uninit(&self->rwlockmap);
-
     uninit_rwlocks(picotm_arraybeg(self->rwlock),
                    picotm_arrayend(self->rwlock));
 
@@ -116,38 +97,4 @@ regfile_unlock_field(struct regfile* self, enum regfile_field field,
     assert(self);
 
     picotm_rwstate_unlock(rwstate, self->rwlock + field);
-}
-
-void
-regfile_try_rdlock_region(struct regfile* self, off_t off, size_t nbyte,
-                          struct rwcountermap* rwcountermap,
-                          struct picotm_error* error)
-{
-    assert(self);
-
-    rwcountermap_rdlock(rwcountermap, reccount(nbyte), recoffset(off),
-                        &self->rwlockmap, error);
-}
-
-void
-regfile_try_wrlock_region(struct regfile* self, off_t off, size_t nbyte,
-                          struct rwcountermap* rwcountermap,
-                          struct picotm_error* error)
-{
-    assert(self);
-
-    rwcountermap_wrlock(rwcountermap, reccount(nbyte), recoffset(off),
-                        &self->rwlockmap, error);
-}
-
-void
-regfile_unlock_region(struct regfile* self, off_t off, size_t nbyte,
-                      struct rwcountermap* rwcountermap)
-{
-    assert(self);
-
-    rwcountermap_unlock(rwcountermap,
-                        reccount(nbyte),
-                        recoffset(off),
-                        &self->rwlockmap);
 }

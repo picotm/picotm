@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2017-2018  Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2017-2019  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -48,8 +48,29 @@
 #include "range.h"
 #include "regfile.h"
 #include "regfile_tx.h"
+#include "seekbuf.h"
+#include "seekbuf_tx.h"
 #include "socket.h"
 #include "socket_tx.h"
+
+static struct seekbuf_tx*
+seekbuf_tx_create(struct picotm_error* error)
+{
+    struct seekbuf_tx* seekbuf_tx = malloc(sizeof(*seekbuf_tx));
+    if (!seekbuf_tx) {
+        picotm_error_set_errno(error, errno);
+        return NULL;
+    }
+    seekbuf_tx_init(seekbuf_tx);
+    return seekbuf_tx;
+}
+
+static void
+seekbuf_tx_destroy(struct seekbuf_tx* self)
+{
+    seekbuf_tx_uninit(self);
+    free(self);
+}
 
 struct file_tx_mem {
     union {
@@ -222,11 +243,21 @@ fildes_tx_init(struct fildes_tx* self, struct fildes* fildes,
     picotm_slist_init_head(&self->ofd_tx_alloced_list);
     picotm_slist_init_head(&self->ofd_tx_active_list);
 
+    picotm_slist_init_head(&self->seekbuf_tx_alloced_list);
+    picotm_slist_init_head(&self->seekbuf_tx_active_list);
+
     self->openoptab = NULL;
     self->openoptablen = 0;
 
     self->pipeoptab = NULL;
     self->pipeoptablen = 0;
+}
+
+static void
+cleanup_seekbuf_tx_alloced_list_cb(struct picotm_slist* item)
+{
+    struct seekbuf_tx* seekbuf_tx = seekbuf_tx_of_list_entry(item);
+    seekbuf_tx_destroy(seekbuf_tx);
 }
 
 static void
@@ -246,6 +277,12 @@ cleanup_file_tx_alloced_list_cb(struct picotm_slist* item)
 void
 fildes_tx_uninit(struct fildes_tx* self)
 {
+    /* Uninit allocated instances of |struct seekbuf_tx| */
+    picotm_slist_cleanup_0(&self->seekbuf_tx_alloced_list,
+                           cleanup_seekbuf_tx_alloced_list_cb);
+    picotm_slist_uninit_head(&self->seekbuf_tx_alloced_list);
+    picotm_slist_uninit_head(&self->seekbuf_tx_active_list);
+
     /* Uninit allocated instances of |struct file_tx| */
     picotm_slist_cleanup_0(&self->file_tx_alloced_list,
                            cleanup_file_tx_alloced_list_cb);
@@ -272,6 +309,100 @@ fildes_tx_uninit(struct fildes_tx* self)
     openoptab_clear(&self->openoptab, &self->openoptablen);
 
     picotm_slist_uninit_head(&self->fd_tx_active_list);
+}
+
+static bool
+true_if_eq_seekbuf_id_cb(const struct picotm_slist* item, void* data)
+{
+    const struct seekbuf_tx* seekbuf_tx =
+        seekbuf_tx_of_list_entry((struct picotm_slist*)item);
+    assert(seekbuf_tx);
+    assert(seekbuf_tx->seekbuf);
+
+    const struct filebuf_id* id = data;
+    assert(id);
+
+    return !filebuf_id_cmp(&seekbuf_tx->seekbuf->id, id);
+}
+
+static struct seekbuf_tx*
+get_seekbuf_tx(struct fildes_tx* self, const struct filebuf_id* id,
+               struct picotm_error* error)
+{
+    /* Let's see if we already have the seekbuf in use.*/
+
+    struct picotm_slist* pos = picotm_slist_find_1(&self->seekbuf_tx_active_list,
+                                                   true_if_eq_seekbuf_id_cb,
+                                                   (void*)id);
+    if (pos != picotm_slist_end(&self->seekbuf_tx_active_list)) {
+        struct seekbuf_tx* seekbuf_tx = seekbuf_tx_of_list_entry(pos);
+        return seekbuf_tx;
+    }
+
+    /* If not, we allocate a new entry either from our LRU
+     * list or from heap memory.
+     */
+
+    pos = picotm_slist_front(&self->seekbuf_tx_alloced_list);
+    if (pos) {
+        picotm_slist_dequeue_front(&self->seekbuf_tx_alloced_list);
+        return seekbuf_tx_of_list_entry(pos);
+    }
+
+    struct seekbuf_tx* seekbuf_tx = seekbuf_tx_create(error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+
+    return seekbuf_tx;
+}
+
+static struct seekbuf_tx*
+get_seekbuf_tx_with_ref(struct fildes_tx* self, int fildes,
+                        struct picotm_error* error)
+{
+    struct filebuf_id id;
+    filebuf_id_init_from_fildes(&id, fildes, error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+
+    struct seekbuf_tx* seekbuf_tx = get_seekbuf_tx(self, &id, error);
+    if (picotm_error_is_set(error)) {
+        goto err_get_seekbuf_tx;
+    }
+
+    if (seekbuf_tx_holds_ref(seekbuf_tx)) {
+        return seekbuf_tx; /* fast path: already holds a reference */
+    }
+
+    struct seekbuf* seekbuf = fildes_ref_seekbuf(self->fildes, fildes,
+                                                 error);
+    if (picotm_error_is_set(error)) {
+        goto err_fildes_ref_seekbuf;
+    }
+
+    seekbuf_tx_ref_or_set_up(seekbuf_tx, seekbuf, error);
+    if (picotm_error_is_set(error)) {
+        goto err_seekbuf_tx_ref_or_set_up;
+    }
+
+    picotm_slist_enqueue_front(&self->seekbuf_tx_active_list,
+                               &seekbuf_tx->list_entry);
+
+    /* In |struct fildes_tx| we hold at most one reference to the
+     * transaction state of each seekable buffer. This reference is
+     * released in fildes_tx_finish().
+     */
+    seekbuf_unref(seekbuf);
+
+    return seekbuf_tx;
+
+err_seekbuf_tx_ref_or_set_up:
+    seekbuf_unref(seekbuf);
+err_fildes_ref_seekbuf:
+err_get_seekbuf_tx:
+    return NULL;
 }
 
 static bool
@@ -460,10 +591,17 @@ get_regfile_tx_with_ref(struct fildes_tx* self, int fildes,
         return NULL;
     }
 
+    struct seekbuf_tx* seekbuf_tx = get_seekbuf_tx_with_ref(self, fildes,
+                                                            error);
+    if (picotm_error_is_set(error)) {
+        goto err_get_seekbuf_tx_with_ref;
+    }
+
     file_tx_ref_or_set_up(&regfile_tx->base, &regfile->base, NULL, error);
     if (picotm_error_is_set(error)) {
         goto err_file_tx_ref_or_set_up;
     }
+    regfile_tx->seekbuf_tx = seekbuf_tx;
 
     picotm_slist_enqueue_front(&self->file_tx_active_list,
                                &regfile_tx->base.list_entry);
@@ -473,6 +611,7 @@ get_regfile_tx_with_ref(struct fildes_tx* self, int fildes,
     return regfile_tx;
 
 err_file_tx_ref_or_set_up:
+err_get_seekbuf_tx_with_ref:
     file_unref(&regfile->base);
     return NULL;
 }
@@ -3100,6 +3239,22 @@ fildes_tx_undo_event(struct fildes_tx* self, enum fildes_op op, int fildes,
 }
 
 static void
+finish_seekbuf_tx(struct seekbuf_tx* seekbuf_tx, struct fildes_tx* fildes_tx)
+{
+    seekbuf_tx_finish(seekbuf_tx);
+    seekbuf_tx_unref(seekbuf_tx);
+
+    picotm_slist_enqueue_front(&fildes_tx->seekbuf_tx_alloced_list,
+                               &seekbuf_tx->list_entry);
+}
+
+static void
+finish_seekbuf_tx_cb(struct picotm_slist* item, void* data)
+{
+    finish_seekbuf_tx(seekbuf_tx_of_list_entry(item), data);
+}
+
+static void
 finish_file_tx(struct file_tx* file_tx, struct fildes_tx* fildes_tx)
 {
     file_tx_finish(file_tx);
@@ -3147,6 +3302,10 @@ finish_fd_tx_cb(struct picotm_slist* item)
 void
 fildes_tx_finish(struct fildes_tx* self, struct picotm_error* error)
 {
+    /* Unref seekable buffers */
+    picotm_slist_cleanup_1(&self->seekbuf_tx_active_list,
+                           finish_seekbuf_tx_cb, self);
+
     /* Unref files */
     picotm_slist_cleanup_1(&self->file_tx_active_list,
                            finish_file_tx_cb, self);

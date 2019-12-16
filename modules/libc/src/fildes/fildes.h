@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2018   Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2018-2019  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -26,6 +26,7 @@
 #include "fifotab.h"
 #include "ofdtab.h"
 #include "regfiletab.h"
+#include "seekbuftab.h"
 #include "sockettab.h"
 
 /**
@@ -56,6 +57,8 @@ struct fildes {
     struct fildes_fifotab fifotab;
     struct fildes_regfiletab regfiletab;
     struct fildes_sockettab sockettab;
+
+    struct fildes_seekbuftab seekbuftab;
 };
 
 void
@@ -252,3 +255,28 @@ fildes_ref_socket(struct fildes* self, int fildes,
  */
 size_t
 fildes_socket_index(struct fildes* self, struct socket* socket);
+
+/*
+ * seekbuftab
+ */
+
+/**
+ * Returns a reference to a seekbuf structure for the given file descriptor.
+ *
+ * \param       fildes  A file descriptor.
+ * \param[out]  error   Returns an error to caller.
+ * \returns A referenced instance of `struct seekbuf` that refers to the file
+ *          descriptor's seekable buffer.
+ */
+struct seekbuf*
+fildes_ref_seekbuf(struct fildes* self, int fildes,
+                   struct picotm_error* error);
+
+/**
+ * Returns the index of a seekbuf structure within the seekbuf table.
+ *
+ * \param   seekbuf An seekbuf structure.
+ * \returns The seekbuf structure's index in the seekbuf table.
+ */
+size_t
+fildes_seekbuf_index(struct fildes* self, struct seekbuf* seekbuf);

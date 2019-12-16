@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2018   Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2018-2019  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -39,6 +39,7 @@
 #include "ofd_tx.h"
 #include "range.h"
 #include "regfile_tx.h"
+#include "seekbuf_tx.h"
 #include "seekop.h"
 #include "seekoptab.h"
 
@@ -141,6 +142,7 @@ fcntl_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, int cmd,
            struct picotm_error* error)
 {
     struct regfile_tx* self = regfile_tx_of_file_tx(base);
+    struct seekbuf_tx* seekbuf_tx = self->seekbuf_tx;
 
     switch (cmd) {
         case F_GETFD:
@@ -164,7 +166,8 @@ fcntl_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, int cmd,
         case F_GETLK: {
 
             /* Read-lock regular file */
-            regfile_tx_try_rdlock_field(self, REGFILE_FIELD_STATE, error);
+            seekbuf_tx_try_rdlock_field(seekbuf_tx, SEEKBUF_FIELD_STATE,
+                                        error);
             if (picotm_error_is_set(error)) {
                 return -1;
             }
@@ -223,6 +226,7 @@ fstat_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
            struct picotm_error* error)
 {
     struct regfile_tx* self = regfile_tx_of_file_tx(base);
+    struct seekbuf_tx* seekbuf_tx = self->seekbuf_tx;
 
     /* Acquire reader locks. */
 
@@ -231,13 +235,13 @@ fstat_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
         picotm_error_set_errno(error, errno);
         return -1;
     }
-    regfile_tx_try_rdlock_field(self, REGFILE_FIELD_FILE_SIZE, error);
+    seekbuf_tx_try_rdlock_field(seekbuf_tx, SEEKBUF_FIELD_FILE_SIZE, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
 
     /* get transaction-local file size */
-    off_t file_size = regfile_tx_get_file_size(self, fildes, error);
+    off_t file_size = seekbuf_tx_get_file_size(seekbuf_tx, fildes, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -264,8 +268,9 @@ fsync_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
     assert(cookie);
 
     struct regfile_tx* self = regfile_tx_of_file_tx(base);
+    struct seekbuf_tx* seekbuf_tx = self->seekbuf_tx;
 
-    if (self->wrmode == PICOTM_LIBC_WRITE_BACK) {
+    if (seekbuf_tx->wrmode == PICOTM_LIBC_WRITE_BACK) {
         *cookie = 0; /* apply fsync() during commit */
         return 0;
     }
@@ -298,6 +303,8 @@ file_offset_after_lseek(struct regfile_tx* self, struct ofd_tx* ofd_tx,
                         int fildes, off_t offset, int whence,
                         struct picotm_error* error)
 {
+    struct seekbuf_tx* seekbuf_tx = self->seekbuf_tx;
+
     switch (whence) {
         case SEEK_SET:
             if (offset < 0) {
@@ -327,7 +334,7 @@ file_offset_after_lseek(struct regfile_tx* self, struct ofd_tx* ofd_tx,
             return pos + offset;
         }
         case SEEK_END: {
-            off_t size = regfile_tx_get_file_size(self, fildes, error);
+            off_t size = seekbuf_tx_get_file_size(seekbuf_tx, fildes, error);
             if (picotm_error_is_set(error)) {
                 return size;
             }
@@ -380,7 +387,9 @@ lseek_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
         return (off_t)-1;
     }
 
-    if (self->wrmode == PICOTM_LIBC_WRITE_THROUGH) {
+    struct seekbuf_tx* seekbuf_tx = self->seekbuf_tx;
+
+    if (seekbuf_tx->wrmode == PICOTM_LIBC_WRITE_THROUGH) {
         off_t res = lseek(fildes, to, SEEK_SET);
         if (res == (off_t)-1) {
             picotm_error_set_errno(error, errno);
@@ -406,8 +415,9 @@ lseek_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
             int cookie, struct picotm_error* error)
 {
     struct regfile_tx* self = regfile_tx_of_file_tx(base);
+    struct seekbuf_tx* seekbuf_tx = self->seekbuf_tx;
 
-    if (self->wrmode != PICOTM_LIBC_WRITE_BACK) {
+    if (seekbuf_tx->wrmode != PICOTM_LIBC_WRITE_BACK) {
         return;
     }
 
@@ -424,8 +434,9 @@ lseek_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
            int cookie, struct picotm_error* error)
 {
     struct regfile_tx* self = regfile_tx_of_file_tx(base);
+    struct seekbuf_tx* seekbuf_tx = self->seekbuf_tx;
 
-    if (self->wrmode != PICOTM_LIBC_WRITE_THROUGH) {
+    if (seekbuf_tx->wrmode != PICOTM_LIBC_WRITE_THROUGH) {
         return;
     }
 
@@ -520,9 +531,10 @@ pread_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, void* buf,
            struct picotm_error* error)
 {
     struct regfile_tx* self = regfile_tx_of_file_tx(base);
+    struct seekbuf_tx* seekbuf_tx = self->seekbuf_tx;
 
     /* lock region */
-    regfile_tx_try_rdlock_region(self, nbyte, offset, error);
+    seekbuf_tx_try_rdlock_region(seekbuf_tx, nbyte, offset, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -535,9 +547,9 @@ pread_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, void* buf,
     size_t len = res;
 
     /* read from local write set */
-    size_t len2 = iooptab_read(self->wrtab,
-                               self->wrtablen,
-                               buf, nbyte, offset, self->wrbuf);
+    size_t len2 = iooptab_read(seekbuf_tx->wrtab,
+                               seekbuf_tx->wrtablen,
+                               buf, nbyte, offset, seekbuf_tx->wrbuf);
 
     return llmax(len, len2);
 }
@@ -619,21 +631,22 @@ pwrite_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
     assert(cookie);
 
     struct regfile_tx* self = regfile_tx_of_file_tx(base);
+    struct seekbuf_tx* seekbuf_tx = self->seekbuf_tx;
 
-    if ((self->wrmode == PICOTM_LIBC_WRITE_THROUGH) && !isnoundo) {
+    if ((seekbuf_tx->wrmode == PICOTM_LIBC_WRITE_THROUGH) && !isnoundo) {
         picotm_error_set_revocable(error);
         return -1;
     }
 
     /* lock region */
-    regfile_tx_try_wrlock_region(self, nbyte, offset, error);
+    seekbuf_tx_try_wrlock_region(seekbuf_tx, nbyte, offset, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
 
     size_t len;
 
-    if (self->wrmode == PICOTM_LIBC_WRITE_THROUGH) {
+    if (seekbuf_tx->wrmode == PICOTM_LIBC_WRITE_THROUGH) {
         ssize_t res = do_pwrite(fildes, buf, nbyte, offset, error);
         if (picotm_error_is_set(error)) {
             return res;
@@ -641,7 +654,8 @@ pwrite_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
         len = res;
     } else {
         /* add data to write set */
-        *cookie = regfile_tx_append_to_writeset(self, nbyte, offset, buf, error);
+        *cookie = seekbuf_tx_append_to_writeset(seekbuf_tx, nbyte, offset,
+                                                buf, error);
         if (picotm_error_is_set(error)) {
             return -1;
         }
@@ -650,12 +664,12 @@ pwrite_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
 
     /* update file size if necessary */
 
-    off_t file_size = regfile_tx_get_file_size(self, fildes, error);
+    off_t file_size = seekbuf_tx_get_file_size(seekbuf_tx, fildes, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
     if (file_size < (off_t)(offset + len)) {
-        regfile_tx_set_file_size(self, offset + len, error);
+        seekbuf_tx_set_file_size(seekbuf_tx, offset + len, error);
         if (picotm_error_is_set(error)) {
             return -1;
         }
@@ -669,16 +683,17 @@ pwrite_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
              int cookie, struct picotm_error* error)
 {
     struct regfile_tx* self = regfile_tx_of_file_tx(base);
+    struct seekbuf_tx* seekbuf_tx = self->seekbuf_tx;
 
-    if (self->wrmode != PICOTM_LIBC_WRITE_BACK) {
+    if (seekbuf_tx->wrmode != PICOTM_LIBC_WRITE_BACK) {
         return;
     }
 
-    off_t  off = self->wrtab[cookie].off;
-    size_t nbyte = self->wrtab[cookie].nbyte;
-    off_t  bufoff = self->wrtab[cookie].bufoff;
+    off_t  off = seekbuf_tx->wrtab[cookie].off;
+    size_t nbyte = seekbuf_tx->wrtab[cookie].nbyte;
+    off_t  bufoff = seekbuf_tx->wrtab[cookie].bufoff;
 
-    do_pwrite(fildes, self->wrbuf + bufoff, nbyte, off, error);
+    do_pwrite(fildes, seekbuf_tx->wrbuf + bufoff, nbyte, off, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -694,6 +709,7 @@ read_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, void* buf,
           struct picotm_error* error)
 {
     struct regfile_tx* self = regfile_tx_of_file_tx(base);
+    struct seekbuf_tx* seekbuf_tx = self->seekbuf_tx;
 
     off_t offset = ofd_tx_get_file_offset(ofd_tx, fildes, error);
     if (picotm_error_is_set(error)) {
@@ -702,7 +718,7 @@ read_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, void* buf,
 
     /* read-lock region */
 
-    regfile_tx_try_rdlock_region(self, nbyte, offset, error);
+    seekbuf_tx_try_rdlock_region(seekbuf_tx, nbyte, offset, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -718,9 +734,9 @@ read_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, void* buf,
 
     /* read from local write set */
 
-    ssize_t len2 = iooptab_read(self->wrtab,
-                                self->wrtablen, buf, nbyte, offset,
-                                self->wrbuf);
+    ssize_t len2 = iooptab_read(seekbuf_tx->wrtab,
+                                seekbuf_tx->wrtablen, buf, nbyte, offset,
+                                seekbuf_tx->wrbuf);
 
     res = llmax(len, len2);
 
@@ -732,7 +748,8 @@ read_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, void* buf,
     }
 
     /* add buf to write set */
-    *cookie = regfile_tx_append_to_readset(self, nbyte, offset, buf, error);
+    *cookie = seekbuf_tx_append_to_readset(seekbuf_tx, nbyte, offset, buf,
+                                           error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -745,8 +762,10 @@ read_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
            int cookie, struct picotm_error* error)
 {
     struct regfile_tx* self = regfile_tx_of_file_tx(base);
+    struct seekbuf_tx* seekbuf_tx = self->seekbuf_tx;
 
-    off_t offset = self->rdtab[cookie].off + self->rdtab[cookie].nbyte;
+    off_t offset = seekbuf_tx->rdtab[cookie].off +
+                   seekbuf_tx->rdtab[cookie].nbyte;
 
     off_t res = lseek(fildes, offset, SEEK_SET);
     if (res == (off_t)-1) {
@@ -786,8 +805,9 @@ write_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
     assert(*cookie);
 
     struct regfile_tx* self = regfile_tx_of_file_tx(base);
+    struct seekbuf_tx* seekbuf_tx = self->seekbuf_tx;
 
-    if ((self->wrmode == PICOTM_LIBC_WRITE_THROUGH) && !isnoundo) {
+    if ((seekbuf_tx->wrmode == PICOTM_LIBC_WRITE_THROUGH) && !isnoundo) {
         picotm_error_set_revocable(error);
         return -1;
     }
@@ -798,14 +818,14 @@ write_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
     }
 
     /* write-lock region */
-    regfile_tx_try_wrlock_region(self, nbyte, offset, error);
+    seekbuf_tx_try_wrlock_region(seekbuf_tx, nbyte, offset, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
 
     size_t len;
 
-    if (self->wrmode == PICOTM_LIBC_WRITE_THROUGH) {
+    if (seekbuf_tx->wrmode == PICOTM_LIBC_WRITE_THROUGH) {
         ssize_t res = do_pwrite_and_lseek(fildes, buf, nbyte, offset, error);
         if (picotm_error_is_set(error)) {
             return res;
@@ -813,7 +833,8 @@ write_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
         len = res;
     } else {
         /* add buf to write set */
-        *cookie = regfile_tx_append_to_writeset(self, nbyte, offset, buf, error);
+        *cookie = seekbuf_tx_append_to_writeset(seekbuf_tx, nbyte, offset,
+                                                buf, error);
         if (picotm_error_is_set(error)) {
             return -1;
         }
@@ -828,13 +849,13 @@ write_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
 
     /* update file size if necessary */
 
-    off_t file_size = regfile_tx_get_file_size(self, fildes, error);
+    off_t file_size = seekbuf_tx_get_file_size(seekbuf_tx, fildes, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
 
     if (file_size < (off_t)(offset + len)) {
-        regfile_tx_set_file_size(self, offset + len, error);
+        seekbuf_tx_set_file_size(seekbuf_tx, offset + len, error);
         if (picotm_error_is_set(error)) {
             return -1;
         }
@@ -848,16 +869,18 @@ write_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
             int cookie, struct picotm_error* error)
 {
     struct regfile_tx* self = regfile_tx_of_file_tx(base);
+    struct seekbuf_tx* seekbuf_tx = self->seekbuf_tx;
 
-    if (self->wrmode != PICOTM_LIBC_WRITE_BACK) {
+    if (seekbuf_tx->wrmode != PICOTM_LIBC_WRITE_BACK) {
         return;
     }
 
-    off_t  off = self->wrtab[cookie].off;
-    size_t nbyte = self->wrtab[cookie].nbyte;
-    off_t  bufoff = self->wrtab[cookie].bufoff;
+    off_t  off = seekbuf_tx->wrtab[cookie].off;
+    size_t nbyte = seekbuf_tx->wrtab[cookie].nbyte;
+    off_t  bufoff = seekbuf_tx->wrtab[cookie].bufoff;
 
-    do_pwrite_and_lseek(fildes, self->wrbuf + bufoff, nbyte, off, error);
+    do_pwrite_and_lseek(fildes, seekbuf_tx->wrbuf + bufoff, nbyte, off,
+                        error);
     if (picotm_error_is_set(error)) {
         return;
     }

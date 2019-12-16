@@ -158,6 +158,12 @@ libpicotm_c_la_SOURCES = allocator/allocator_event.c \
                          fildes/rwcountermap.h \
                          fildes/rwlockmap.c \
                          fildes/rwlockmap.h \
+                         fildes/seekbuf.c \
+                         fildes/seekbuf.h \
+                         fildes/seekbuftab.c \
+                         fildes/seekbuftab.h \
+                         fildes/seekbuf_tx.c \
+                         fildes/seekbuf_tx.h \
                          fildes/seekop.c \
                          fildes/seekop.h \
                          fildes/seekoptab.c \
