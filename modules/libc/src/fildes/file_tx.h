@@ -78,9 +78,17 @@ file_tx_uninit(struct file_tx* self);
 enum picotm_libc_file_type
 file_tx_file_type(const struct file_tx* self);
 
+/**
+ * \brief Sets up a file transaction or acquires a reference on an
+ *        already set-up instance.
+ * \param       self    A file transaction.
+ * \param       ofd     The global file state.
+ * \param       data    User-data.
+ * \param[out]  error   Returns an error to the caller.
+ */
 void
 file_tx_ref_or_set_up(struct file_tx* self, struct file* file,
-                      struct picotm_error* error);
+                      void* data, struct picotm_error* error);
 
 /**
  * Acquire a reference on a file transaction.

@@ -362,7 +362,7 @@ get_chrdev_tx_with_ref(struct fildes_tx* self, int fildes,
         return NULL;
     }
 
-    file_tx_ref_or_set_up(&chrdev_tx->base, &chrdev->base, error);
+    file_tx_ref_or_set_up(&chrdev_tx->base, &chrdev->base, NULL, error);
     if (picotm_error_is_set(error)) {
         goto err_file_tx_ref_or_set_up;
     }
@@ -411,7 +411,7 @@ get_fifo_tx_with_ref(struct fildes_tx* self, int fildes,
         return NULL;
     }
 
-    file_tx_ref_or_set_up(&fifo_tx->base, &fifo->base, error);
+    file_tx_ref_or_set_up(&fifo_tx->base, &fifo->base, NULL, error);
     if (picotm_error_is_set(error)) {
         goto err_file_tx_ref_or_set_up;
     }
@@ -460,7 +460,7 @@ get_regfile_tx_with_ref(struct fildes_tx* self, int fildes,
         return NULL;
     }
 
-    file_tx_ref_or_set_up(&regfile_tx->base, &regfile->base, error);
+    file_tx_ref_or_set_up(&regfile_tx->base, &regfile->base, NULL, error);
     if (picotm_error_is_set(error)) {
         goto err_file_tx_ref_or_set_up;
     }
@@ -509,7 +509,7 @@ get_dir_tx_with_ref(struct fildes_tx* self, int fildes,
         return NULL;
     }
 
-    file_tx_ref_or_set_up(&dir_tx->base, &dir->base, error);
+    file_tx_ref_or_set_up(&dir_tx->base, &dir->base, NULL, error);
     if (picotm_error_is_set(error)) {
         goto err_file_tx_ref_or_set_up;
     }
@@ -558,7 +558,7 @@ get_socket_tx_with_ref(struct fildes_tx* self, int fildes,
         return NULL;
     }
 
-    file_tx_ref_or_set_up(&socket_tx->base, &socket->base, error);
+    file_tx_ref_or_set_up(&socket_tx->base, &socket->base, NULL, error);
     if (picotm_error_is_set(error)) {
         goto err_file_tx_ref_or_set_up;
     }

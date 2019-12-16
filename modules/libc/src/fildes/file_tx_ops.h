@@ -52,7 +52,7 @@ struct file_tx_ops {
      * File handling
      */
 
-    void (*prepare)(struct file_tx*, struct file*, struct picotm_error*);
+    void (*prepare)(struct file_tx*, struct file*, void*, struct picotm_error*);
     void (*release)(struct file_tx*);
 
     /*
