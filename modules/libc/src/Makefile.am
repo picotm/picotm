@@ -134,6 +134,12 @@ libpicotm_c_la_SOURCES = allocator/allocator_event.c \
                          fildes/openop.h \
                          fildes/openoptab.c \
                          fildes/openoptab.h \
+                         fildes/pipebuf.c \
+                         fildes/pipebuf.h \
+                         fildes/pipebuftab.c \
+                         fildes/pipebuftab.h \
+                         fildes/pipebuf_tx.c \
+                         fildes/pipebuf_tx.h \
                          fildes/pipeop.c \
                          fildes/pipeop.h \
                          fildes/pipeoptab.c \

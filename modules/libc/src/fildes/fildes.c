@@ -55,6 +55,10 @@ fildes_init(struct fildes* self, struct picotm_error* error)
         goto err_fildes_sockettab_init;
     }
 
+    fildes_pipebuftab_init(&self->pipebuftab, error);
+    if (picotm_error_is_set(error)) {
+        goto err_fildes_pipebuftab_init;
+    }
     fildes_seekbuftab_init(&self->seekbuftab, error);
     if (picotm_error_is_set(error)) {
         goto err_fildes_seekbuftab_init;
@@ -63,6 +67,8 @@ fildes_init(struct fildes* self, struct picotm_error* error)
     return;
 
 err_fildes_seekbuftab_init:
+    fildes_pipebuftab_uninit(&self->pipebuftab);
+err_fildes_pipebuftab_init:
     fildes_sockettab_uninit(&self->sockettab);
 err_fildes_sockettab_init:
     fildes_regfiletab_uninit(&self->regfiletab);
@@ -82,6 +88,7 @@ void
 fildes_uninit(struct fildes* self)
 {
     fildes_seekbuftab_uninit(&self->seekbuftab);
+    fildes_pipebuftab_uninit(&self->pipebuftab);
 
     fildes_sockettab_uninit(&self->sockettab);
     fildes_regfiletab_uninit(&self->regfiletab);
@@ -231,6 +238,23 @@ size_t
 fildes_socket_index(struct fildes* self, struct socket* socket)
 {
     return fildes_sockettab_index(&self->sockettab, socket);
+}
+
+/*
+ * pipebuftab
+ */
+
+struct pipebuf*
+fildes_ref_pipebuf(struct fildes* self, int fildes,
+                   struct picotm_error* error)
+{
+    return fildes_pipebuftab_ref_fildes(&self->pipebuftab, fildes, error);
+}
+
+size_t
+fildes_pipebuf_index(struct fildes* self, struct pipebuf* pipebuf)
+{
+    return fildes_pipebuftab_index(&self->pipebuftab, pipebuf);
 }
 
 /*

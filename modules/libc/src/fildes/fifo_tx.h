@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2017-2018  Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2017-2019  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -21,10 +21,10 @@
 #pragma once
 
 #include "picotm/picotm-lib-rwstate.h"
+#include "picotm/picotm-libc.h"
 #include <sys/types.h>
 #include "fifo.h"
 #include "file_tx.h"
-#include "picotm/picotm-libc.h"
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -43,15 +43,7 @@ struct fifo_tx {
 
     struct file_tx base;
 
-    enum picotm_libc_write_mode wrmode;
-
-    unsigned char* wrbuf;
-    size_t         wrbuflen;
-    size_t         wrbufsiz;
-
-    struct ioop* wrtab;
-    size_t       wrtablen;
-    size_t       wrtabsiz;
+    struct pipebuf_tx* pipebuf_tx;
 
     struct fcntlop* fcntltab;
     size_t          fcntltablen;
@@ -99,10 +91,6 @@ fifo_tx_try_rdlock_field(struct fifo_tx* self, enum fifo_field field,
 void
 fifo_tx_try_wrlock_field(struct fifo_tx* self, enum fifo_field field,
                          struct picotm_error* error);
-
-int
-fifo_tx_append_to_writeset(struct fifo_tx* self, size_t nbyte, off_t offset,
-                          const void* buf, struct picotm_error* error);
 
 void
 fifo_tx_finish(struct fifo_tx* self);

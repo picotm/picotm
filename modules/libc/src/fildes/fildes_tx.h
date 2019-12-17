@@ -66,6 +66,12 @@ struct fildes_tx {
     /** Active instances of `struct ofd_tx` */
     struct picotm_slist  ofd_tx_active_list;
 
+    /** Allocated instances of `struct pipebuf_tx` */
+    struct picotm_slist  pipebuf_tx_alloced_list;
+
+    /** Active instances of `struct pipebuf_tx` */
+    struct picotm_slist  pipebuf_tx_active_list;
+
     /** Allocated instances of `struct seekbuf_tx` */
     struct picotm_slist  seekbuf_tx_alloced_list;
 

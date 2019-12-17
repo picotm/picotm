@@ -43,6 +43,8 @@
 #include "ofdtab.h"
 #include "openop.h"
 #include "openoptab.h"
+#include "pipebuf.h"
+#include "pipebuf_tx.h"
 #include "pipeop.h"
 #include "pipeoptab.h"
 #include "range.h"
@@ -52,6 +54,25 @@
 #include "seekbuf_tx.h"
 #include "socket.h"
 #include "socket_tx.h"
+
+static struct pipebuf_tx*
+pipebuf_tx_create(struct picotm_error* error)
+{
+    struct pipebuf_tx* pipebuf_tx = malloc(sizeof(*pipebuf_tx));
+    if (!pipebuf_tx) {
+        picotm_error_set_errno(error, errno);
+        return NULL;
+    }
+    pipebuf_tx_init(pipebuf_tx);
+    return pipebuf_tx;
+}
+
+static void
+pipebuf_tx_destroy(struct pipebuf_tx* self)
+{
+    pipebuf_tx_uninit(self);
+    free(self);
+}
 
 static struct seekbuf_tx*
 seekbuf_tx_create(struct picotm_error* error)
@@ -243,6 +264,9 @@ fildes_tx_init(struct fildes_tx* self, struct fildes* fildes,
     picotm_slist_init_head(&self->ofd_tx_alloced_list);
     picotm_slist_init_head(&self->ofd_tx_active_list);
 
+    picotm_slist_init_head(&self->pipebuf_tx_alloced_list);
+    picotm_slist_init_head(&self->pipebuf_tx_active_list);
+
     picotm_slist_init_head(&self->seekbuf_tx_alloced_list);
     picotm_slist_init_head(&self->seekbuf_tx_active_list);
 
@@ -258,6 +282,13 @@ cleanup_seekbuf_tx_alloced_list_cb(struct picotm_slist* item)
 {
     struct seekbuf_tx* seekbuf_tx = seekbuf_tx_of_list_entry(item);
     seekbuf_tx_destroy(seekbuf_tx);
+}
+
+static void
+cleanup_pipebuf_tx_alloced_list_cb(struct picotm_slist* item)
+{
+    struct pipebuf_tx* pipebuf_tx = pipebuf_tx_of_list_entry(item);
+    pipebuf_tx_destroy(pipebuf_tx);
 }
 
 static void
@@ -282,6 +313,12 @@ fildes_tx_uninit(struct fildes_tx* self)
                            cleanup_seekbuf_tx_alloced_list_cb);
     picotm_slist_uninit_head(&self->seekbuf_tx_alloced_list);
     picotm_slist_uninit_head(&self->seekbuf_tx_active_list);
+
+    /* Uninit allocated instances of |struct pipebuf_tx| */
+    picotm_slist_cleanup_0(&self->pipebuf_tx_alloced_list,
+                           cleanup_pipebuf_tx_alloced_list_cb);
+    picotm_slist_uninit_head(&self->pipebuf_tx_alloced_list);
+    picotm_slist_uninit_head(&self->pipebuf_tx_active_list);
 
     /* Uninit allocated instances of |struct file_tx| */
     picotm_slist_cleanup_0(&self->file_tx_alloced_list,
@@ -309,6 +346,100 @@ fildes_tx_uninit(struct fildes_tx* self)
     openoptab_clear(&self->openoptab, &self->openoptablen);
 
     picotm_slist_uninit_head(&self->fd_tx_active_list);
+}
+
+static bool
+true_if_eq_pipebuf_id_cb(const struct picotm_slist* item, void* data)
+{
+    const struct pipebuf_tx* pipebuf_tx =
+        pipebuf_tx_of_list_entry((struct picotm_slist*)item);
+    assert(pipebuf_tx);
+    assert(pipebuf_tx->pipebuf);
+
+    const struct filebuf_id* id = data;
+    assert(id);
+
+    return !filebuf_id_cmp(&pipebuf_tx->pipebuf->id, id);
+}
+
+static struct pipebuf_tx*
+get_pipebuf_tx(struct fildes_tx* self, const struct filebuf_id* id,
+               struct picotm_error* error)
+{
+    /* Let's see if we already have the pipebuf in use.*/
+
+    struct picotm_slist* pos = picotm_slist_find_1(&self->pipebuf_tx_active_list,
+                                                   true_if_eq_pipebuf_id_cb,
+                                                   (void*)id);
+    if (pos != picotm_slist_end(&self->pipebuf_tx_active_list)) {
+        struct pipebuf_tx* pipebuf_tx = pipebuf_tx_of_list_entry(pos);
+        return pipebuf_tx;
+    }
+
+    /* If not, we allocate a new entry either from our LRU
+     * list or from heap memory.
+     */
+
+    pos = picotm_slist_front(&self->pipebuf_tx_alloced_list);
+    if (pos) {
+        picotm_slist_dequeue_front(&self->pipebuf_tx_alloced_list);
+        return pipebuf_tx_of_list_entry(pos);
+    }
+
+    struct pipebuf_tx* pipebuf_tx = pipebuf_tx_create(error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+
+    return pipebuf_tx;
+}
+
+static struct pipebuf_tx*
+get_pipebuf_tx_with_ref(struct fildes_tx* self, int fildes,
+                        struct picotm_error* error)
+{
+    struct filebuf_id id;
+    filebuf_id_init_from_fildes(&id, fildes, error);
+    if (picotm_error_is_set(error)) {
+        return NULL;
+    }
+
+    struct pipebuf_tx* pipebuf_tx = get_pipebuf_tx(self, &id, error);
+    if (picotm_error_is_set(error)) {
+        goto err_get_pipebuf_tx;
+    }
+
+    if (pipebuf_tx_holds_ref(pipebuf_tx)) {
+        return pipebuf_tx; /* fast path: already holds a reference */
+    }
+
+    struct pipebuf* pipebuf = fildes_ref_pipebuf(self->fildes, fildes,
+                                                       error);
+    if (picotm_error_is_set(error)) {
+        goto err_fildes_ref_pipebuf;
+    }
+
+    pipebuf_tx_ref_or_set_up(pipebuf_tx, pipebuf, error);
+    if (picotm_error_is_set(error)) {
+        goto err_pipebuf_tx_ref_or_set_up;
+    }
+
+    picotm_slist_enqueue_front(&self->pipebuf_tx_active_list,
+                               &pipebuf_tx->list_entry);
+
+    /* In |struct fildes_tx| we hold at most one reference to the
+     * transaction state of each seekable buffer. This reference is
+     * released in fildes_tx_finish().
+     */
+    pipebuf_unref(pipebuf);
+
+    return pipebuf_tx;
+
+err_pipebuf_tx_ref_or_set_up:
+    pipebuf_unref(pipebuf);
+err_fildes_ref_pipebuf:
+err_get_pipebuf_tx:
+    return NULL;
 }
 
 static bool
@@ -542,10 +673,18 @@ get_fifo_tx_with_ref(struct fildes_tx* self, int fildes,
         return NULL;
     }
 
+    struct pipebuf_tx* pipebuf_tx = get_pipebuf_tx_with_ref(self,
+                                                                  fildes,
+                                                                  error);
+    if (picotm_error_is_set(error)) {
+        goto err_get_pipebuf_tx_with_ref;
+    }
+
     file_tx_ref_or_set_up(&fifo_tx->base, &fifo->base, NULL, error);
     if (picotm_error_is_set(error)) {
         goto err_file_tx_ref_or_set_up;
     }
+    fifo_tx->pipebuf_tx = pipebuf_tx;
 
     picotm_slist_enqueue_front(&self->file_tx_active_list,
                                &fifo_tx->base.list_entry);
@@ -555,6 +694,7 @@ get_fifo_tx_with_ref(struct fildes_tx* self, int fildes,
     return fifo_tx;
 
 err_file_tx_ref_or_set_up:
+err_get_pipebuf_tx_with_ref:
     file_unref(&fifo->base);
     return NULL;
 }
@@ -3255,6 +3395,23 @@ finish_seekbuf_tx_cb(struct picotm_slist* item, void* data)
 }
 
 static void
+finish_pipebuf_tx(struct pipebuf_tx* pipebuf_tx,
+                    struct fildes_tx* fildes_tx)
+{
+    pipebuf_tx_finish(pipebuf_tx);
+    pipebuf_tx_unref(pipebuf_tx);
+
+    picotm_slist_enqueue_front(&fildes_tx->pipebuf_tx_alloced_list,
+                               &pipebuf_tx->list_entry);
+}
+
+static void
+finish_pipebuf_tx_cb(struct picotm_slist* item, void* data)
+{
+    finish_pipebuf_tx(pipebuf_tx_of_list_entry(item), data);
+}
+
+static void
 finish_file_tx(struct file_tx* file_tx, struct fildes_tx* fildes_tx)
 {
     file_tx_finish(file_tx);
@@ -3305,6 +3462,10 @@ fildes_tx_finish(struct fildes_tx* self, struct picotm_error* error)
     /* Unref seekable buffers */
     picotm_slist_cleanup_1(&self->seekbuf_tx_active_list,
                            finish_seekbuf_tx_cb, self);
+
+    /* Unref pipe buffers */
+    picotm_slist_cleanup_1(&self->pipebuf_tx_active_list,
+                           finish_pipebuf_tx_cb, self);
 
     /* Unref files */
     picotm_slist_cleanup_1(&self->file_tx_active_list,
