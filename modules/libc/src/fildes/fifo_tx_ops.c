@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2018   Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2018-2019  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -35,6 +35,7 @@
 #include "file_tx_ops.h"
 #include "ioop.h"
 #include "iooptab.h"
+#include "pipebuf_tx.h"
 
 /*
  * File handling
@@ -73,6 +74,7 @@ fcntl_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, int cmd,
            struct picotm_error* error)
 {
     struct fifo_tx* self = fifo_tx_of_file_tx(base);
+    struct pipebuf_tx* pipebuf_tx = self->pipebuf_tx;
 
     switch (cmd) {
         case F_GETFD:
@@ -96,7 +98,8 @@ fcntl_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, int cmd,
         case F_GETLK: {
 
             /* Read-lock FIFO */
-            fifo_tx_try_rdlock_field(self, FIFO_FIELD_STATE, error);
+            pipebuf_tx_try_rdlock_field(pipebuf_tx, PIPEBUF_FIELD_STATE,
+                                        error);
             if (picotm_error_is_set(error)) {
                 return -1;
             }
@@ -221,8 +224,10 @@ read_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, void* buf,
     }
 
     struct fifo_tx* self = fifo_tx_of_file_tx(base);
+    struct pipebuf_tx* pipebuf_tx = self->pipebuf_tx;
 
-    fifo_tx_try_wrlock_field(self, FIFO_FIELD_READ_END, error);
+    pipebuf_tx_try_wrlock_field(pipebuf_tx, PIPEBUF_FIELD_READ_END,
+                                error);
     if (picotm_error_is_set(error)) {
         return (off_t)-1;
     }
@@ -272,23 +277,25 @@ write_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
            struct picotm_error* error)
 {
     struct fifo_tx* self = fifo_tx_of_file_tx(base);
+    struct pipebuf_tx* pipebuf_tx = self->pipebuf_tx;
 
     if (isnoundo) {
-        self->wrmode = PICOTM_LIBC_WRITE_THROUGH;
-    } else if (self->wrmode == PICOTM_LIBC_WRITE_THROUGH) {
+        pipebuf_tx->wrmode = PICOTM_LIBC_WRITE_THROUGH;
+    } else if (pipebuf_tx->wrmode == PICOTM_LIBC_WRITE_THROUGH) {
         picotm_error_set_revocable(error);
         return -1;
     }
 
     /* Write-lock FIFO write end */
-    fifo_tx_try_wrlock_field(self, FIFO_FIELD_WRITE_END, error);
+    pipebuf_tx_try_wrlock_field(pipebuf_tx, PIPEBUF_FIELD_WRITE_END,
+                                error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
 
     ssize_t res;
 
-    if (self->wrmode == PICOTM_LIBC_WRITE_THROUGH) {
+    if (pipebuf_tx->wrmode == PICOTM_LIBC_WRITE_THROUGH) {
         res = do_write(fildes, buf, nbyte, error);
         if (picotm_error_is_set(error)) {
             return res;
@@ -296,7 +303,8 @@ write_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
     } else {
 
         /* Register write data */
-        *cookie = fifo_tx_append_to_writeset(self, nbyte, 0, buf, error);
+        *cookie = pipebuf_tx_append_to_writeset(pipebuf_tx, nbyte, 0,
+                                                buf, error);
         if (picotm_error_is_set(error)) {
             return -1;
         }
@@ -311,11 +319,12 @@ write_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
             int cookie, struct picotm_error* error)
 {
     struct fifo_tx* self = fifo_tx_of_file_tx(base);
+    struct pipebuf_tx* pipebuf_tx = self->pipebuf_tx;
 
-    if (self->wrmode == PICOTM_LIBC_WRITE_BACK) {
+    if (pipebuf_tx->wrmode == PICOTM_LIBC_WRITE_BACK) {
         do_write(fildes,
-                 self->wrbuf + self->wrtab[cookie].bufoff,
-                 self->wrtab[cookie].nbyte, error);
+                 pipebuf_tx->wrbuf + pipebuf_tx->wrtab[cookie].bufoff,
+                 pipebuf_tx->wrtab[cookie].nbyte, error);
         if (picotm_error_is_set(error)) {
             return;
         }
