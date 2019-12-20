@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2017-2018  Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2017-2019  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -21,8 +21,8 @@
 #pragma once
 
 #include "picotm/picotm-lib-rwstate.h"
-#include "picotm/picotm-libc.h"
 #include <sys/types.h>
+#include "picotm/picotm-libc.h"
 #include "chrdev.h"
 #include "file_tx.h"
 
@@ -43,15 +43,7 @@ struct chrdev_tx {
 
     struct file_tx base;
 
-    enum picotm_libc_write_mode wrmode;
-
-    unsigned char* wrbuf;
-    size_t         wrbuflen;
-    size_t         wrbufsiz;
-
-    struct ioop* wrtab;
-    size_t       wrtablen;
-    size_t       wrtabsiz;
+    struct seekbuf_tx* seekbuf_tx;
 
     struct fcntlop* fcntltab;
     size_t          fcntltablen;
@@ -101,10 +93,6 @@ chrdev_tx_try_rdlock_field(struct chrdev_tx* self, enum chrdev_field field,
 void
 chrdev_tx_try_wrlock_field(struct chrdev_tx* self, enum chrdev_field field,
                            struct picotm_error* error);
-
-int
-chrdev_tx_append_to_writeset(struct chrdev_tx* self, size_t nbyte, off_t offset,
-                             const void* buf, struct picotm_error* error);
 
 /**
  * Finish operation for transaction-local character device.

@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2018   Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2018-2019  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -35,6 +35,7 @@
 #include "file_tx.h"
 #include "ioop.h"
 #include "iooptab.h"
+#include "seekbuf_tx.h"
 
 /*
  * File handling
@@ -74,6 +75,7 @@ fcntl_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, int cmd,
            struct picotm_error* error)
 {
     struct chrdev_tx* self = chrdev_tx_of_file_tx(base);
+    struct seekbuf_tx* seekbuf_tx = self->seekbuf_tx;
 
     switch (cmd) {
         case F_GETFD:
@@ -97,7 +99,8 @@ fcntl_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, int cmd,
         case F_GETLK: {
 
             /* Read-lock character device */
-            chrdev_tx_try_rdlock_field(self, CHRDEV_FIELD_STATE, error);
+            seekbuf_tx_try_rdlock_field(seekbuf_tx, SEEKBUF_FIELD_STATE,
+                                        error);
             if (picotm_error_is_set(error)) {
                 return -1;
             }
@@ -223,7 +226,7 @@ read_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, void* buf,
 
     struct chrdev_tx* self = chrdev_tx_of_file_tx(base);
 
-    chrdev_tx_try_wrlock_field(self, CHRDEV_FIELD_FILE_OFFSET, error);
+    chrdev_tx_try_wrlock_field(self, CHRDEV_FIELD_STATE, error);
     if (picotm_error_is_set(error)) {
         return (off_t)-1;
     }
@@ -273,10 +276,11 @@ write_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
            struct picotm_error* error)
 {
     struct chrdev_tx* self = chrdev_tx_of_file_tx(base);
+    struct seekbuf_tx* seekbuf_tx = self->seekbuf_tx;
 
     if (isnoundo) {
-        self->wrmode = PICOTM_LIBC_WRITE_THROUGH;
-    } else if (self->wrmode == PICOTM_LIBC_WRITE_THROUGH) {
+        seekbuf_tx->wrmode = PICOTM_LIBC_WRITE_THROUGH;
+    } else if (seekbuf_tx->wrmode == PICOTM_LIBC_WRITE_THROUGH) {
         picotm_error_set_revocable(error);
         return -1;
     }
@@ -290,7 +294,7 @@ write_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
 
     ssize_t res;
 
-    if (self->wrmode == PICOTM_LIBC_WRITE_THROUGH) {
+    if (seekbuf_tx->wrmode == PICOTM_LIBC_WRITE_THROUGH) {
         res = do_write(fildes, buf, nbyte, error);
         if (picotm_error_is_set(error)) {
             return res;
@@ -298,7 +302,8 @@ write_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
     } else {
 
         /* Register write data */
-        *cookie = chrdev_tx_append_to_writeset(self, nbyte, 0, buf, error);
+        *cookie = seekbuf_tx_append_to_writeset(seekbuf_tx, nbyte, 0, buf,
+                                                error);
         if (picotm_error_is_set(error)) {
             return -1;
         }
@@ -313,11 +318,12 @@ write_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
             int cookie, struct picotm_error* error)
 {
     struct chrdev_tx* self = chrdev_tx_of_file_tx(base);
+    struct seekbuf_tx* seekbuf_tx = self->seekbuf_tx;
 
-    if (self->wrmode == PICOTM_LIBC_WRITE_BACK) {
+    if (seekbuf_tx->wrmode == PICOTM_LIBC_WRITE_BACK) {
         do_write(fildes,
-                 self->wrbuf + self->wrtab[cookie].bufoff,
-                 self->wrtab[cookie].nbyte, error);
+                 seekbuf_tx->wrbuf + seekbuf_tx->wrtab[cookie].bufoff,
+                 seekbuf_tx->wrtab[cookie].nbyte, error);
         if (picotm_error_is_set(error)) {
             return;
         }
