@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2017-2018  Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2017-2019  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -40,8 +40,6 @@ struct picotm_rwstate;
  */
 enum socket_field {
     SOCKET_FIELD_FILE_MODE,
-    SOCKET_FIELD_RECV_END,
-    SOCKET_FIELD_SEND_END,
     SOCKET_FIELD_STATE,
     NUMBER_OF_SOCKET_FIELDS
 };

@@ -174,6 +174,12 @@ libpicotm_c_la_SOURCES = allocator/allocator_event.c \
                          fildes/seekop.h \
                          fildes/seekoptab.c \
                          fildes/seekoptab.h \
+                         fildes/sockbuf.c \
+                         fildes/sockbuf.h \
+                         fildes/sockbuftab.c \
+                         fildes/sockbuftab.h \
+                         fildes/sockbuf_tx.c \
+                         fildes/sockbuf_tx.h \
                          fildes/socket.c \
                          fildes/socket.h \
                          fildes/sockettab.c \
