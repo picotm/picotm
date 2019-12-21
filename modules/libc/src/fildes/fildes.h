@@ -28,6 +28,7 @@
 #include "pipebuftab.h"
 #include "regfiletab.h"
 #include "seekbuftab.h"
+#include "sockbuftab.h"
 #include "sockettab.h"
 
 /**
@@ -61,6 +62,7 @@ struct fildes {
 
     struct fildes_pipebuftab pipebuftab;
     struct fildes_seekbuftab seekbuftab;
+    struct fildes_sockbuftab sockbuftab;
 };
 
 void
@@ -307,3 +309,28 @@ fildes_ref_seekbuf(struct fildes* self, int fildes,
  */
 size_t
 fildes_seekbuf_index(struct fildes* self, struct seekbuf* seekbuf);
+
+/*
+ * sockbuftab
+ */
+
+/**
+ * Returns a reference to a sockbuf structure for the given file descriptor.
+ *
+ * \param       fildes  A file descriptor.
+ * \param[out]  error   Returns an error to caller.
+ * \returns A referenced instance of `struct sockbuf` that refers to the file
+ *          descriptor's socket buffer.
+ */
+struct sockbuf*
+fildes_ref_sockbuf(struct fildes* self, int fildes,
+                   struct picotm_error* error);
+
+/**
+ * Returns the index of a sockbuf structure within the sockbuf table.
+ *
+ * \param   sockbuf An sockbuf structure.
+ * \returns The sockbuf structure's index in the sockbuf table.
+ */
+size_t
+fildes_sockbuf_index(struct fildes* self, struct sockbuf* sockbuf);

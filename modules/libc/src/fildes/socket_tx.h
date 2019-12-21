@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2017-2018  Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2017-2019  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -37,6 +37,7 @@
  */
 
 struct picotm_error;
+struct sockbuf;
 
 /**
  * Holds transaction-local reads and writes for an open file description
@@ -45,15 +46,7 @@ struct socket_tx {
 
     struct file_tx base;
 
-    enum picotm_libc_write_mode wrmode;
-
-    unsigned char* wrbuf;
-    size_t         wrbuflen;
-    size_t         wrbufsiz;
-
-    struct ioop* wrtab;
-    size_t       wrtablen;
-    size_t       wrtabsiz;
+    struct sockbuf_tx* sockbuf_tx;
 
     struct fcntlop* fcntltab;
     size_t          fcntltablen;
@@ -101,10 +94,6 @@ socket_tx_try_rdlock_field(struct socket_tx* self, enum socket_field field,
 void
 socket_tx_try_wrlock_field(struct socket_tx* self, enum socket_field field,
                            struct picotm_error* error);
-
-int
-socket_tx_append_to_writeset(struct socket_tx* self, size_t nbyte, off_t offset,
-                             const void* buf, struct picotm_error* error);
 
 void
 socket_tx_finish(struct socket_tx* self);

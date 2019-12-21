@@ -78,6 +78,12 @@ struct fildes_tx {
     /** Active instances of `struct seekbuf_tx` */
     struct picotm_slist  seekbuf_tx_active_list;
 
+    /** Allocated instances of `struct sockbuf_tx` */
+    struct picotm_slist  sockbuf_tx_alloced_list;
+
+    /** Active instances of `struct sockbuf_tx` */
+    struct picotm_slist  sockbuf_tx_active_list;
+
     struct openop* openoptab;
     size_t         openoptablen;
 

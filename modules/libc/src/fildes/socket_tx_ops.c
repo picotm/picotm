@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2018   Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2018-2019  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -33,6 +33,7 @@
 #include "file_tx_ops.h"
 #include "ioop.h"
 #include "iooptab.h"
+#include "sockbuf_tx.h"
 #include "socket_tx.h"
 
 /*
@@ -309,8 +310,9 @@ read_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, void* buf,
     }
 
     struct socket_tx* self = socket_tx_of_file_tx(base);
+    struct sockbuf_tx* sockbuf_tx = self->sockbuf_tx;
 
-    socket_tx_try_wrlock_field(self, SOCKET_FIELD_RECV_END, error);
+    sockbuf_tx_try_wrlock_field(sockbuf_tx, SOCKBUF_FIELD_RECV_END, error);
     if (picotm_error_is_set(error)) {
         return (off_t)-1;
     }
@@ -367,8 +369,9 @@ recv_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
     }
 
     struct socket_tx* self = socket_tx_of_file_tx(base);
+    struct sockbuf_tx* sockbuf_tx = self->sockbuf_tx;
 
-    socket_tx_try_wrlock_field(self, SOCKET_FIELD_RECV_END, error);
+    sockbuf_tx_try_wrlock_field(sockbuf_tx, SOCKBUF_FIELD_RECV_END, error);
     if (picotm_error_is_set(error)) {
         return (off_t)-1;
     }
@@ -418,11 +421,12 @@ send_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
           int* cookie, struct picotm_error* error)
 {
     struct socket_tx* self = socket_tx_of_file_tx(base);
+    struct sockbuf_tx* sockbuf_tx = self->sockbuf_tx;
 
     if (isnoundo) {
-        self->wrmode = PICOTM_LIBC_WRITE_THROUGH;
+        sockbuf_tx->wrmode = PICOTM_LIBC_WRITE_THROUGH;
     } else {
-        if (self->wrmode == PICOTM_LIBC_WRITE_THROUGH) {
+        if (sockbuf_tx->wrmode == PICOTM_LIBC_WRITE_THROUGH) {
             picotm_error_set_revocable(error);
             return -1;
         }
@@ -437,14 +441,14 @@ send_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
     }
 
     /* Write-lock socket write end */
-    socket_tx_try_wrlock_field(self, SOCKET_FIELD_SEND_END, error);
+    sockbuf_tx_try_wrlock_field(sockbuf_tx, SOCKBUF_FIELD_SEND_END, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
 
     ssize_t res;
 
-    if (self->wrmode == PICOTM_LIBC_WRITE_THROUGH) {
+    if (sockbuf_tx->wrmode == PICOTM_LIBC_WRITE_THROUGH) {
         res = do_send(sockfd, buffer, length, flags, error);
         if (picotm_error_is_set(error)) {
             return res;
@@ -452,7 +456,8 @@ send_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
     } else {
 
         /* Register write data */
-        *cookie = socket_tx_append_to_writeset(self, length, 0, buffer, error);
+        *cookie = sockbuf_tx_append_to_writeset(sockbuf_tx, length, 0, buffer,
+                                                error);
         if (picotm_error_is_set(error)) {
             return -1;
         }
@@ -469,11 +474,12 @@ send_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
     static const int flags = 0;
 
     struct socket_tx* self = socket_tx_of_file_tx(base);
+    struct sockbuf_tx* sockbuf_tx = self->sockbuf_tx;
 
-    if (self->wrmode == PICOTM_LIBC_WRITE_BACK) {
+    if (sockbuf_tx->wrmode == PICOTM_LIBC_WRITE_BACK) {
         do_send(sockfd,
-                self->wrbuf + self->wrtab[cookie].bufoff,
-                self->wrtab[cookie].nbyte, flags, error);
+                sockbuf_tx->wrbuf + sockbuf_tx->wrtab[cookie].bufoff,
+                sockbuf_tx->wrtab[cookie].nbyte, flags, error);
         if (picotm_error_is_set(error)) {
             return;
         }
@@ -539,23 +545,24 @@ write_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
            struct picotm_error* error)
 {
     struct socket_tx* self = socket_tx_of_file_tx(base);
+    struct sockbuf_tx* sockbuf_tx = self->sockbuf_tx;
 
     if (isnoundo) {
-        self->wrmode = PICOTM_LIBC_WRITE_THROUGH;
-    } else if (self->wrmode == PICOTM_LIBC_WRITE_THROUGH) {
+        sockbuf_tx->wrmode = PICOTM_LIBC_WRITE_THROUGH;
+    } else if (sockbuf_tx->wrmode == PICOTM_LIBC_WRITE_THROUGH) {
         picotm_error_set_revocable(error);
         return -1;
     }
 
     /* Write-lock socket write end */
-    socket_tx_try_wrlock_field(self, SOCKET_FIELD_SEND_END, error);
+    sockbuf_tx_try_wrlock_field(sockbuf_tx, SOCKBUF_FIELD_SEND_END, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
 
     ssize_t res;
 
-    if (self->wrmode == PICOTM_LIBC_WRITE_THROUGH) {
+    if (sockbuf_tx->wrmode == PICOTM_LIBC_WRITE_THROUGH) {
         res = do_write(fildes, buf, nbyte, error);
         if (picotm_error_is_set(error)) {
             return res;
@@ -563,7 +570,7 @@ write_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
     } else {
 
         /* Register write data */
-        *cookie = socket_tx_append_to_writeset(self, nbyte, 0, buf, error);
+        *cookie = sockbuf_tx_append_to_writeset(sockbuf_tx, nbyte, 0, buf, error);
         if (picotm_error_is_set(error)) {
             return -1;
         }
@@ -578,11 +585,12 @@ write_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
             int cookie, struct picotm_error* error)
 {
     struct socket_tx* self = socket_tx_of_file_tx(base);
+    struct sockbuf_tx* sockbuf_tx = self->sockbuf_tx;
 
-    if (self->wrmode == PICOTM_LIBC_WRITE_BACK) {
+    if (sockbuf_tx->wrmode == PICOTM_LIBC_WRITE_BACK) {
         do_write(fildes,
-                 self->wrbuf + self->wrtab[cookie].bufoff,
-                 self->wrtab[cookie].nbyte, error);
+                 sockbuf_tx->wrbuf + sockbuf_tx->wrtab[cookie].bufoff,
+                 sockbuf_tx->wrtab[cookie].nbyte, error);
         if (picotm_error_is_set(error)) {
             return;
         }
