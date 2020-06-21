@@ -1,6 +1,7 @@
 /*
  * picotm - A system-level transaction manager
  * Copyright (c) 2017-2018  Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2020       Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -145,7 +146,8 @@ search_by_id(struct fildes_fifotab* fifotab, const struct file_id* id,
     while (fifo_beg < fifo_end) {
 
         const int cmp = file_ref_or_set_up_if_id(&fifo_beg->base,
-                                                 fildes, id, error);
+                                                 fildes, false, id,
+                                                 error);
         if (!cmp) {
             if (picotm_error_is_set(error)) {
                 return NULL;
