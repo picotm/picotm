@@ -57,14 +57,16 @@ file_uninit(struct file* self)
 struct ref_obj_data {
     const struct file_id* id;
     int fildes;
+    bool new_file;
     int cmp;
 };
 
-#define REF_OBJ_DATA_INITIALIZER(id_, fildes_, cmp_)    \
-    {                                                   \
-        .id = (id_),                                    \
-        .fildes = (fildes_),                            \
-        .cmp = (cmp_),                                  \
+#define REF_OBJ_DATA_INITIALIZER(id_, fildes_, new_file_, cmp_) \
+    {                                                           \
+        .id = (id_),                                            \
+        .fildes = (fildes_),                                    \
+        .new_file = (new_file_),                                \
+        .cmp = (cmp_),                                          \
     }
 
 static void
@@ -88,7 +90,8 @@ file_ref_or_set_up(struct file* self, int fildes, struct picotm_error* error)
 {
     assert(self);
 
-    struct ref_obj_data data = REF_OBJ_DATA_INITIALIZER(NULL, fildes, 0);
+    struct ref_obj_data data = REF_OBJ_DATA_INITIALIZER(NULL, fildes,
+                                                        false, 0);
     picotm_shared_ref16_obj_up(&self->ref_obj, &data, NULL, first_ref,
                                error);
     if (picotm_error_is_set(error)) {
@@ -106,19 +109,26 @@ cond_ref(struct picotm_shared_ref16_obj* ref_obj, void* data,
     struct ref_obj_data* ref_obj_data = data;
     assert(ref_obj_data);
 
-    ref_obj_data->cmp = file_id_cmp(&self->id, ref_obj_data->id);
+    const struct file_id* lhs = &self->id;
+    const struct file_id* rhs = ref_obj_data->id;
+
+    if (ref_obj_data->new_file)
+        ref_obj_data->cmp = file_id_cmp_eq_fildes(lhs, rhs, error);
+    else
+        ref_obj_data->cmp = file_id_cmp(lhs, rhs);
 
     return !ref_obj_data->cmp;
 }
 
 int
-file_ref_or_set_up_if_id(struct file* self, int fildes,
+file_ref_or_set_up_if_id(struct file* self, int fildes, bool new_file,
                          const struct file_id* id,
                          struct picotm_error* error)
 {
     assert(self);
 
-    struct ref_obj_data data = REF_OBJ_DATA_INITIALIZER(id, fildes, 0);
+    struct ref_obj_data data = REF_OBJ_DATA_INITIALIZER(id, fildes,
+                                                        new_file, 0);
     picotm_shared_ref16_obj_up(&self->ref_obj, &data, cond_ref, first_ref,
                                error);
     if (picotm_error_is_set(error)) {
@@ -133,7 +143,7 @@ file_ref_if_id(struct file* self, const struct file_id* id)
 {
     assert(self);
 
-    struct ref_obj_data data = REF_OBJ_DATA_INITIALIZER(id, -1, 0);
+    struct ref_obj_data data = REF_OBJ_DATA_INITIALIZER(id, -1, false, 0);
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
     picotm_shared_ref16_obj_up(&self->ref_obj, &data, cond_ref, NULL, &error);
     if (picotm_error_is_set(&error)) {

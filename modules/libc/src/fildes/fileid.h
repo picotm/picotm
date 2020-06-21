@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include "picotm/picotm-error.h"
 #include <stdbool.h>
 #include <sys/types.h>
 
@@ -30,8 +31,6 @@
  * \file
  * \endcond
  */
-
-struct picotm_error;
 
 /**
  * A unique id for a file.
@@ -95,3 +94,18 @@ file_id_is_empty(const struct file_id* self);
  */
 int
 file_id_cmp(const struct file_id* lhs, const struct file_id* rhs);
+
+/**
+ * \brief Compares two file ids, returns value as for strcmp. Signals
+ *        an error if file descriptors are different.
+ * \param       lhs     The left-hand-side file id.
+ * \param       rhs     The right-hand-side file id.
+ * \param[out]  error   Returns an error to the caller.
+ * \returns A value less than, equal to or greater than zero if the value
+ *          of lhs is less than, equal to or greater than the value of
+ *          rhs.
+ */
+int
+file_id_cmp_eq_fildes(const struct file_id lhs[static 1],
+                      const struct file_id rhs[static 1],
+                      struct picotm_error error[static 1]);
