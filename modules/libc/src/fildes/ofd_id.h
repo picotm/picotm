@@ -1,6 +1,7 @@
 /*
  * picotm - A system-level transaction manager
  * Copyright (c) 2017   Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2020   Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -20,7 +21,7 @@
 
 #pragma once
 
-#include "fileid.h"
+#include <sys/types.h>
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -48,7 +49,8 @@ struct picotm_error;
  */
 struct ofd_id {
     int fildes;
-    struct file_id file_id;
+    dev_t dev;
+    ino_t ino;
 };
 
 /**

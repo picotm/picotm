@@ -1,6 +1,7 @@
 /*
  * picotm - A system-level transaction manager
  * Copyright (c) 2017-2018  Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2020       Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -30,7 +31,8 @@ set_ofd_id(struct ofd_id* self, int fildes, dev_t dev, ino_t ino)
     assert(self);
 
     self->fildes = fildes;
-    file_id_init(&self->file_id, dev, ino);
+    self->dev = dev;
+    self->ino = ino;
 }
 
 void
@@ -78,6 +80,18 @@ ofd_id_clear(struct ofd_id* self)
 }
 
 static int
+dev_t_cmp(dev_t lhs, dev_t rhs)
+{
+    return (lhs < rhs) - (lhs > rhs);
+}
+
+static int
+ino_t_cmp(ino_t lhs, ino_t rhs)
+{
+    return (lhs < rhs) - (lhs > rhs);
+}
+
+static int
 fildes_cmp(int lhs, int rhs)
 {
     return (lhs < rhs) - (lhs > rhs);
@@ -89,11 +103,13 @@ ofd_id_cmp(const struct ofd_id* lhs, const struct ofd_id* rhs)
     assert(lhs);
     assert(rhs);
 
-    int cmp_file_id = file_id_cmp(&lhs->file_id, &rhs->file_id);
+    int cmp = dev_t_cmp(lhs->dev, rhs->dev);
+    if (cmp)
+        return cmp;
 
-    if (cmp_file_id) {
-        return cmp_file_id; /* file ids are different; early out */
-    }
+    cmp = ino_t_cmp(lhs->ino, rhs->ino);
+    if (cmp)
+        return cmp;
 
     return fildes_cmp(lhs->fildes, rhs->fildes);
 }
@@ -105,18 +121,19 @@ ofd_id_cmp_ne_fildes(const struct ofd_id* lhs, const struct ofd_id* rhs,
     assert(lhs);
     assert(rhs);
 
-    int cmp_file_id = file_id_cmp(&lhs->file_id, &rhs->file_id);
+    int cmp = dev_t_cmp(lhs->dev, rhs->dev);
+    if (cmp)
+        return cmp;
 
-    if (cmp_file_id) {
-        return cmp_file_id; /* file ids are different; early out */
-    }
+    cmp = ino_t_cmp(lhs->ino, rhs->ino);
+    if (cmp)
+        return cmp;
 
-    int cmp_fildes = fildes_cmp(lhs->fildes, rhs->fildes);
-
-    if (cmp_fildes) {
+    cmp = fildes_cmp(lhs->fildes, rhs->fildes);
+    if (cmp) {
         /* file descriptors are different; return error */
         picotm_error_set_errno(error, EBADF);
-        return cmp_fildes;
+        return cmp;
     }
 
     return 0;
