@@ -35,10 +35,20 @@ struct picotm_error;
 
 /**
  * A unique id for a file.
+ *
+ * By default, an open file does not have an id by itself. Picotm
+ * constructs the id from the id of the file's file buffer and the
+ * file descriptor that refers to the file.
+ *
+ * If two file descriptors refer to the same file, they create two
+ * different ids. Even though the file may be the same, these ids
+ * must compare as *different.* It's a shortcoming resulting from the
+ * non-existence of unique ids for open files.
  */
 struct file_id {
     dev_t  dev;
     ino_t  ino;
+    int fildes;
 };
 
 /**

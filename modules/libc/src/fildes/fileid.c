@@ -1,6 +1,7 @@
 /*
  * picotm - A system-level transaction manager
  * Copyright (c) 2017-2018  Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2020       Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -47,7 +48,9 @@ file_id_init_from_fildes(struct file_id* self, int fildes,
         return;
     }
 
-    file_id_init(self, buf.st_dev, buf.st_ino);
+    self->dev = buf.st_dev;
+    self->ino = buf.st_ino;
+    self->fildes = fildes;
 }
 
 void
@@ -55,6 +58,7 @@ file_id_clear(struct file_id* self)
 {
     self->dev = (dev_t)-1;
     self->ino = (ino_t)-1;
+    self->fildes = -1;
 }
 
 bool
@@ -62,23 +66,39 @@ file_id_is_empty(const struct file_id* self)
 {
     assert(self);
 
-    return (self->dev  == (dev_t)-1) && (self->ino  == (ino_t)-1);
+    return (self->dev == (dev_t)-1) &&
+           (self->ino == (ino_t)-1) &&
+           (self->fildes == -1);
+}
+
+static int
+cmp_dev_t(dev_t lhs, dev_t rhs)
+{
+    return (lhs > rhs) - (lhs < rhs);
+}
+
+static int
+cmp_ino_t(ino_t lhs, ino_t rhs)
+{
+    return (lhs > rhs) - (lhs < rhs);
+}
+
+static int
+cmp_fildes(int lhs, int rhs)
+{
+    return (lhs > rhs) - (lhs < rhs);
 }
 
 int
 file_id_cmp(const struct file_id* lhs, const struct file_id* rhs)
 {
-    const long long diff_dev = lhs->dev - rhs->dev;
+    int cmp = cmp_dev_t(lhs->dev, rhs->dev);
+    if (cmp)
+        return cmp;
 
-    if (diff_dev) {
-        return (diff_dev > 0) - (diff_dev < 0);
-    }
+    cmp = cmp_ino_t(lhs->ino, rhs->ino);
+    if (cmp)
+        return cmp;
 
-    const long long diff_ino = lhs->ino - rhs->ino;
-
-    if (diff_ino) {
-        return (diff_ino > 0) - (diff_ino < 0);
-    }
-
-    return 0;
+    return cmp_fildes(lhs->fildes, rhs->fildes);
 }
