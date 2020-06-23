@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2018-2019  Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2018-2020  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -171,9 +171,11 @@ fildes_ofd_index(struct fildes* self, struct ofd* ofd)
  */
 
 struct chrdev*
-fildes_ref_chrdev(struct fildes* self, int fildes, struct picotm_error* error)
+fildes_ref_chrdev(struct fildes* self, int fildes, bool new_file,
+                  struct picotm_error* error)
 {
-    return fildes_chrdevtab_ref_fildes(&self->chrdevtab, fildes, error);
+    return fildes_chrdevtab_ref_fildes(&self->chrdevtab, fildes, new_file,
+                                       error);
 }
 
 size_t
@@ -187,9 +189,10 @@ fildes_chrdev_index(struct fildes* self, struct chrdev* chrdev)
  */
 
 struct dir*
-fildes_ref_dir(struct fildes* self, int fildes, struct picotm_error* error)
+fildes_ref_dir(struct fildes* self, int fildes, bool new_file,
+               struct picotm_error* error)
 {
-    return fildes_dirtab_ref_fildes(&self->dirtab, fildes, error);
+    return fildes_dirtab_ref_fildes(&self->dirtab, fildes, new_file, error);
 }
 
 size_t
@@ -203,9 +206,10 @@ fildes_dir_index(struct fildes* self, struct dir* dir)
  */
 
 struct fifo*
-fildes_ref_fifo(struct fildes* self, int fildes, struct picotm_error* error)
+fildes_ref_fifo(struct fildes* self, int fildes, bool new_file,
+                struct picotm_error* error)
 {
-    return fildes_fifotab_ref_fildes(&self->fifotab, fildes, error);
+    return fildes_fifotab_ref_fildes(&self->fifotab, fildes, new_file, error);
 }
 
 size_t
@@ -219,10 +223,11 @@ fildes_fifo_index(struct fildes* self, struct fifo* fifo)
  */
 
 struct regfile*
-fildes_ref_regfile(struct fildes* self, int fildes,
+fildes_ref_regfile(struct fildes* self, int fildes, bool new_file,
                    struct picotm_error* error)
 {
-    return fildes_regfiletab_ref_fildes(&self->regfiletab, fildes, error);
+    return fildes_regfiletab_ref_fildes(&self->regfiletab, fildes, new_file,
+                                        error);
 }
 
 size_t
@@ -236,9 +241,11 @@ fildes_regfile_index(struct fildes* self, struct regfile* regfile)
  */
 
 struct socket*
-fildes_ref_socket(struct fildes* self, int fildes, struct picotm_error* error)
+fildes_ref_socket(struct fildes* self, int fildes, bool new_file,
+                  struct picotm_error* error)
 {
-    return fildes_sockettab_ref_fildes(&self->sockettab, fildes, error);
+    return fildes_sockettab_ref_fildes(&self->sockettab, fildes, new_file,
+                                       error);
 }
 
 size_t
@@ -252,7 +259,7 @@ fildes_socket_index(struct fildes* self, struct socket* socket)
  */
 
 struct pipebuf*
-fildes_ref_pipebuf(struct fildes* self, int fildes,
+fildes_ref_pipebuf(struct fildes* self, int fildes, bool new_file,
                    struct picotm_error* error)
 {
     return fildes_pipebuftab_ref_fildes(&self->pipebuftab, fildes, error);
@@ -269,7 +276,8 @@ fildes_pipebuf_index(struct fildes* self, struct pipebuf* pipebuf)
  */
 
 struct seekbuf*
-fildes_ref_seekbuf(struct fildes* self, int fildes, struct picotm_error* error)
+fildes_ref_seekbuf(struct fildes* self, int fildes, bool new_file,
+                   struct picotm_error* error)
 {
     return fildes_seekbuftab_ref_fildes(&self->seekbuftab, fildes, error);
 }
@@ -285,7 +293,8 @@ fildes_seekbuf_index(struct fildes* self, struct seekbuf* seekbuf)
  */
 
 struct sockbuf*
-fildes_ref_sockbuf(struct fildes* self, int fildes, struct picotm_error* error)
+fildes_ref_sockbuf(struct fildes* self, int fildes, bool new_file,
+                   struct picotm_error* error)
 {
     return fildes_sockbuftab_ref_fildes(&self->sockbuftab, fildes, error);
 }

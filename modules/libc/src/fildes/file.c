@@ -139,14 +139,15 @@ file_ref_or_set_up_if_id(struct file* self, int fildes, bool new_file,
 }
 
 int
-file_ref_if_id(struct file* self, const struct file_id* id)
+file_ref_if_id(struct file* self, const struct file_id* id, bool new_file,
+               struct picotm_error* error)
 {
     assert(self);
 
-    struct ref_obj_data data = REF_OBJ_DATA_INITIALIZER(id, -1, false, 0);
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    picotm_shared_ref16_obj_up(&self->ref_obj, &data, cond_ref, NULL, &error);
-    if (picotm_error_is_set(&error)) {
+    struct ref_obj_data data = REF_OBJ_DATA_INITIALIZER(id, -1, new_file, 0);
+
+    picotm_shared_ref16_obj_up(&self->ref_obj, &data, cond_ref, NULL, error);
+    if (picotm_error_is_set(error)) {
         return 0;
     }
 

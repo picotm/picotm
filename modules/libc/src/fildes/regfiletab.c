@@ -25,6 +25,7 @@
 #include "picotm/picotm-lib-tab.h"
 #include "picotm/picotm-module.h"
 #include <errno.h>
+#include <string.h>
 #include "range.h"
 
 void
@@ -121,20 +122,36 @@ append_empty_regfile(struct fildes_regfiletab* regfiletab,
 
 /* requires reader lock */
 static struct regfile*
-find_by_id(struct fildes_regfiletab* regfiletab, const struct file_id* id)
+find_by_id(struct fildes_regfiletab* regfiletab, const struct file_id* id,
+           bool new_file, struct picotm_error* error)
 {
+    struct picotm_error saved_error = PICOTM_ERROR_INITIALIZER;
+
     struct regfile *regfile_beg = picotm_arraybeg(regfiletab->tab);
     const struct regfile* regfile_end = picotm_arrayat(regfiletab->tab,
                                                        regfiletab->len);
 
     while (regfile_beg < regfile_end) {
 
-        const int cmp = file_ref_if_id(&regfile_beg->base, id);
-        if (!cmp) {
+        struct picotm_error cmp_error = PICOTM_ERROR_INITIALIZER;
+
+        const int cmp = file_ref_if_id(&regfile_beg->base, id, new_file,
+                                       &cmp_error);
+        if (picotm_error_is_set(&cmp_error)) {
+            /* An error might be reported if the id's file descriptors don't
+             * match. We save the error, but continue the loops. If we later
+             * find a full match, the function succeeds. Otherwise, it reports
+             * the last error. */
+            memcpy(&saved_error, &cmp_error, sizeof(saved_error));
+        } else if (!cmp) {
             return regfile_beg;
         }
 
         ++regfile_beg;
+    }
+
+    if (picotm_error_is_set(&saved_error)) {
+        memcpy(error, &saved_error, sizeof(*error));
     }
 
     return NULL;
@@ -154,10 +171,9 @@ search_by_id(struct fildes_regfiletab* regfiletab, const struct file_id* id,
         const int cmp = file_ref_or_set_up_if_id(&regfile_beg->base,
                                                  fildes, false, id,
                                                  error);
-        if (!cmp) {
-            if (picotm_error_is_set(error)) {
-                return NULL;
-            }
+        if (picotm_error_is_set(error)) {
+            return NULL;
+        } else if (!cmp) {
             return regfile_beg; /* set-up regfile structure; return */
         }
 
@@ -167,9 +183,15 @@ search_by_id(struct fildes_regfiletab* regfiletab, const struct file_id* id,
     return NULL;
 }
 
+static bool
+error_ne_fildes(bool new_file)
+{
+    return !new_file;
+}
+
 struct regfile*
 fildes_regfiletab_ref_fildes(struct fildes_regfiletab* self, int fildes,
-                             struct picotm_error* error)
+                             bool new_file, struct picotm_error* error)
 {
     struct file_id id;
     file_id_init_from_fildes(&id, fildes, error);
@@ -177,35 +199,43 @@ fildes_regfiletab_ref_fildes(struct fildes_regfiletab* self, int fildes,
         return NULL;
     }
 
+    struct regfile* regfile;
+
     /* Try to find an existing regfile structure with the given id; iff
      * a new element was not explicitly requested.
      */
 
-    rdlock_regfiletab(self, error);
-    if (picotm_error_is_set(error)) {
-        return NULL;
+    if (!new_file) {
+        rdlock_regfiletab(self, error);
+        if (picotm_error_is_set(error)) {
+            return NULL;
+        }
+
+        regfile = find_by_id(self, &id, error_ne_fildes(new_file), error);
+        if (picotm_error_is_set(error)) {
+            goto err_find_by_id_1;
+        } else if (regfile) {
+            goto unlock; /* found regfile for id; return */
+        }
+
+        unlock_regfiletab(self);
     }
 
-    struct regfile* regfile = find_by_id(self, &id);
-    if (regfile) {
-        goto unlock; /* found regfile for id; return */
-    }
-
-    unlock_regfiletab(self);
-
-    /* Not found entry; acquire writer lock to create a new entry in
-     * the regfile table.
-     */
-
+    /* Not found or new entry is requested; acquire writer lock to
+     * create a new entry in the regfile table. */
     wrlock_regfiletab(self, error);
     if (picotm_error_is_set(error)) {
         return NULL;
     }
 
-    /* Re-try find operation; maybe element was added meanwhile. */
-    regfile = find_by_id(self, &id);
-    if (regfile) {
-        goto unlock; /* found regfile for id; return */
+    if (!new_file) {
+        /* Re-try find operation; maybe element was added meanwhile. */
+        regfile = find_by_id(self, &id, error_ne_fildes(new_file), error);
+        if (picotm_error_is_set(error)) {
+            goto err_find_by_id_2;
+        } else if (regfile) {
+            goto unlock; /* found regfile for id; return */
+        }
     }
 
     /* No entry with the id exists; try to set up an existing, but
@@ -246,6 +276,8 @@ unlock:
 err_regfile_ref_or_set_up:
 err_append_empty_regfile:
 err_search_by_id:
+err_find_by_id_2:
+err_find_by_id_1:
     unlock_regfiletab(self);
     return NULL;
 }

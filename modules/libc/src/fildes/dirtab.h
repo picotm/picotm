@@ -1,6 +1,7 @@
 /*
  * picotm - A system-level transaction manager
  * Copyright (c) 2017-2018  Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2020       Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -21,6 +22,7 @@
 #pragma once
 
 #include <pthread.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include "dir.h"
 
@@ -53,19 +55,35 @@ void
 fildes_dirtab_uninit(struct fildes_dirtab* self);
 
 /**
- * Returns a reference to a dir structure for the given file descriptor.
- * \param       self    The dir table.
- * \param       fildes  A file descriptor.
- * \param[out]  error   Returns an error to the caller.
+ * Returns a reference to an dir structure for the given file descriptor.
+ * \param       self        The dir table.
+ * \param       fildes      A file descriptor.
+ * \param       new_file    True if the open file description has been
+ *                          newly created.
+ * \param[out]  error       Returns an error.
  * \returns A referenced instance of `struct dir` that refers to the file
- *          descriptor's directory.
+ *          descriptor's open file description.
+ *
+ * We cannot distiguish between open file descriptions. Two
+ * file descriptors refering to the same buffer might share
+ * the same open file description, or not.
+ *
+ * As a workaround, we only allow one file descriptor per file
+ * buffer at the same time. If we see a second file descriptor
+ * refering to a buffer that is already in use, the look-up
+ * fails.
+ *
+ * For a solution, Linux (or any other Unix) has to provide a
+ * unique id for each open file description, or at least give
+ * us a way of figuring out the relationship between file descriptors
+ * and open file descriptions.
  */
 struct dir*
 fildes_dirtab_ref_fildes(struct fildes_dirtab* self, int fildes,
-                         struct picotm_error* error);
+                         bool new_file, struct picotm_error* error);
 
 /**
- * Returns the index of a dir structure within the dir table.
+ * Returns the index of an dir structure within the dir table.
  * \param   self    The dir table.
  * \param   dir     An dir structure.
  * \returns The dir structure's index in the dir table.
