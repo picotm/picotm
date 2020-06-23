@@ -1,6 +1,7 @@
 /*
  * picotm - A system-level transaction manager
  * Copyright (c) 2017-2018  Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2020       Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -21,6 +22,7 @@
 #pragma once
 
 #include <pthread.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include "fifo.h"
 
@@ -47,27 +49,44 @@ struct fildes_fifotab {
 }
 
 void
-fildes_fifotab_init(struct fildes_fifotab* self, struct picotm_error* error);
+fildes_fifotab_init(struct fildes_fifotab* self,
+                    struct picotm_error* error);
 
 void
 fildes_fifotab_uninit(struct fildes_fifotab* self);
 
 /**
- * Returns a reference to a fifo structure for the given file descriptor.
- * \param       self    The fifo table.
- * \param       fildes  A file descriptor.
- * \param[out]  error   Returns an errorto the caller.
+ * Returns a reference to an fifo structure for the given file descriptor.
+ * \param       self        The fifo table.
+ * \param       fildes      A file descriptor.
+ * \param       new_file    True if the open file description has been
+ *                          newly created.
+ * \param[out]  error       Returns an error.
  * \returns A referenced instance of `struct fifo` that refers to the file
- *          descriptor's FIFO buffer.
+ *          descriptor's open file description.
+ *
+ * We cannot distiguish between open file descriptions. Two
+ * file descriptors refering to the same buffer might share
+ * the same open file description, or not.
+ *
+ * As a workaround, we only allow one file descriptor per file
+ * buffer at the same time. If we see a second file descriptor
+ * refering to a buffer that is already in use, the look-up
+ * fails.
+ *
+ * For a solution, Linux (or any other Unix) has to provide a
+ * unique id for each open file description, or at least give
+ * us a way of figuring out the relationship between file descriptors
+ * and open file descriptions.
  */
 struct fifo*
 fildes_fifotab_ref_fildes(struct fildes_fifotab* self, int fildes,
-                          struct picotm_error* error);
+                         bool new_file, struct picotm_error* error);
 
 /**
  * Returns the index of an fifo structure within the fifo table.
  * \param   self    The fifo table.
- * \param   fifo    An fifo structure.
+ * \param   fifo     An fifo structure.
  * \returns The fifo structure's index in the fifo table.
  */
 size_t

@@ -99,13 +99,16 @@ file_ref(struct file* self, struct picotm_error* error);
 /**
  * \brief Compares the file's id to an id and acquires a reference if both
  *        id's are equal.
- * \param   self    The file instance.
- * \param   id      The id to compare to.
+ * \param   self        The file instance.
+ * \param   id          The id to compare to.
+ * \param   new_file    True if the file was create by the transaction;
+ *                      false otherwise.
  * \returns A value less than, equal to, or greater than if the file's id
  *          is less than, equal to, or greater than the given id.
  */
 int
-file_ref_if_id(struct file* self, const struct file_id* id);
+file_ref_if_id(struct file* self, const struct file_id* id, bool new_file,
+               struct picotm_error* error);
 
 /**
  * \brief Unreferences a file.

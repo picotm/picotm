@@ -21,6 +21,7 @@
 #pragma once
 
 #include <pthread.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include "chrdev.h"
 
@@ -32,7 +33,6 @@
  * \endcond
  */
 
-struct chrdev;
 struct picotm_error;
 
 struct fildes_chrdevtab {
@@ -56,20 +56,36 @@ fildes_chrdevtab_uninit(struct fildes_chrdevtab* self);
 
 /**
  * Returns a reference to an chrdev structure for the given file descriptor.
- * \param       self    The chrdev table.
- * \param       fildes  A file descriptor.
- * \param[out]  error   Returns an error to the caller.
+ * \param       self        The chrdev table.
+ * \param       fildes      A file descriptor.
+ * \param       new_file    True if the open file description has been
+ *                          newly created.
+ * \param[out]  error       Returns an error.
  * \returns A referenced instance of `struct chrdev` that refers to the file
- *          descriptor's character device.
+ *          descriptor's open file description.
+ *
+ * We cannot distiguish between open file descriptions. Two
+ * file descriptors refering to the same buffer might share
+ * the same open file description, or not.
+ *
+ * As a workaround, we only allow one file descriptor per file
+ * buffer at the same time. If we see a second file descriptor
+ * refering to a buffer that is already in use, the look-up
+ * fails.
+ *
+ * For a solution, Linux (or any other Unix) has to provide a
+ * unique id for each open file description, or at least give
+ * us a way of figuring out the relationship between file descriptors
+ * and open file descriptions.
  */
 struct chrdev*
 fildes_chrdevtab_ref_fildes(struct fildes_chrdevtab* self, int fildes,
-                            struct picotm_error* error);
+                            bool new_file, struct picotm_error* error);
 
 /**
  * Returns the index of an chrdev structure within the chrdev table.
  * \param   self    The chrdev table.
- * \param   chrdev  An chrdev structure.
+ * \param   chrdev     An chrdev structure.
  * \returns The chrdev structure's index in the chrdev table.
  */
 size_t

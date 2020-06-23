@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2018-2019  Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2018-2020  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -150,7 +150,7 @@ fildes_ofd_index(struct fildes* self, struct ofd* ofd);
  *          descriptor's character device.
  */
 struct chrdev*
-fildes_ref_chrdev(struct fildes* self, int fildes,
+fildes_ref_chrdev(struct fildes* self, int fildes, bool new_file,
                   struct picotm_error* error);
 
 /**
@@ -175,7 +175,8 @@ fildes_chrdev_index(struct fildes* self, struct chrdev* chrdev);
  *          descriptor's directory.
  */
 struct dir*
-fildes_ref_dir(struct fildes* self, int fildes, struct picotm_error* error);
+fildes_ref_dir(struct fildes* self, int fildes, bool new_file,
+               struct picotm_error* error);
 
 /**
  * Returns the index of a dir structure within the dir table.
@@ -199,7 +200,8 @@ fildes_dir_index(struct fildes* self, struct dir* dir);
  *          descriptor's FIFO buffer.
  */
 struct fifo*
-fildes_ref_fifo(struct fildes* self, int fildes, struct picotm_error* error);
+fildes_ref_fifo(struct fildes* self, int fildes, bool new_file,
+                struct picotm_error* error);
 
 /**
  * Returns the index of an fifo structure within the fifo table.
@@ -223,7 +225,7 @@ fildes_fifo_index(struct fildes* self, struct fifo* fifo);
  *          descriptor's regular file.
  */
 struct regfile*
-fildes_ref_regfile(struct fildes* self, int fildes,
+fildes_ref_regfile(struct fildes* self, int fildes, bool new_file,
                    struct picotm_error* error);
 
 /**
@@ -248,7 +250,7 @@ fildes_regfile_index(struct fildes* self, struct regfile* regfile);
  *          descriptor's socket.
  */
 struct socket*
-fildes_ref_socket(struct fildes* self, int fildes,
+fildes_ref_socket(struct fildes* self, int fildes, bool new_file,
                   struct picotm_error* error);
 
 /**
@@ -273,7 +275,7 @@ fildes_socket_index(struct fildes* self, struct socket* socket);
  *          descriptor's seekable buffer.
  */
 struct pipebuf*
-fildes_ref_pipebuf(struct fildes* self, int fildes,
+fildes_ref_pipebuf(struct fildes* self, int fildes, bool new_file,
                    struct picotm_error* error);
 
 /**
@@ -298,7 +300,7 @@ fildes_pipebuf_index(struct fildes* self, struct pipebuf* pipebuf);
  *          descriptor's seekable buffer.
  */
 struct seekbuf*
-fildes_ref_seekbuf(struct fildes* self, int fildes,
+fildes_ref_seekbuf(struct fildes* self, int fildes, bool new_file,
                    struct picotm_error* error);
 
 /**
@@ -323,7 +325,7 @@ fildes_seekbuf_index(struct fildes* self, struct seekbuf* seekbuf);
  *          descriptor's socket buffer.
  */
 struct sockbuf*
-fildes_ref_sockbuf(struct fildes* self, int fildes,
+fildes_ref_sockbuf(struct fildes* self, int fildes, bool new_file,
                    struct picotm_error* error);
 
 /**
