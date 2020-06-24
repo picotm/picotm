@@ -51,6 +51,9 @@ struct regfile_tx {
     struct fcntlop* fcntltab;
     size_t          fcntltablen;
 
+    struct seekop* seektab;
+    size_t         seektablen;
+
     /* Transaction-local file offset */
     off_t offset;
 

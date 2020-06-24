@@ -50,9 +50,6 @@ struct ofd_tx {
 
     struct file_tx* file_tx;
 
-    struct seekop* seektab;
-    size_t         seektablen;
-
     /** State of the local reader/writer locks. */
     struct picotm_rwstate rwstate[NUMBER_OF_OFD_FIELDS];
 };

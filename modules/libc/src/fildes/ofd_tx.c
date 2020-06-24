@@ -73,9 +73,6 @@ ofd_tx_init(struct ofd_tx* self)
 
     self->file_tx = NULL;
 
-    self->seektab = NULL;
-    self->seektablen = 0;
-
     init_rwstates(picotm_arraybeg(self->rwstate),
                   picotm_arrayend(self->rwstate));
 }
@@ -84,8 +81,6 @@ void
 ofd_tx_uninit(struct ofd_tx* self)
 {
     assert(self);
-
-    seekoptab_clear(&self->seektab, &self->seektablen);
 
     uninit_rwstates(picotm_arraybeg(self->rwstate),
                     picotm_arrayend(self->rwstate));
@@ -142,8 +137,6 @@ ofd_tx_ref_or_set_up(struct ofd_tx* self, struct ofd* ofd,
 
     self->ofd = ofd;
     self->file_tx = file_tx;
-
-    self->seektablen = 0;
 
     return;
 
