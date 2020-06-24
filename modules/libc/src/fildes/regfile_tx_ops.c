@@ -398,10 +398,10 @@ lseek_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
     }
 
     if (cookie) {
-        *cookie = seekoptab_append(&ofd_tx->seektab,
-                                   &ofd_tx->seektablen,
-                                    from, offset, whence,
-                                    error);
+        *cookie = seekoptab_append(&self->seektab,
+                                   &self->seektablen,
+                                   from, offset, whence,
+                                   error);
         if (picotm_error_is_set(error)) {
             return (off_t)-1;
         }
@@ -421,8 +421,8 @@ lseek_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
         return;
     }
 
-    off_t res = lseek(fildes, ofd_tx->seektab[cookie].offset,
-                              ofd_tx->seektab[cookie].whence);
+    off_t res = lseek(fildes, self->seektab[cookie].offset,
+                              self->seektab[cookie].whence);
     if (res == (off_t)-1) {
         picotm_error_set_errno(error, errno);
         return;
@@ -440,7 +440,7 @@ lseek_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
         return;
     }
 
-    off_t res = lseek(fildes, ofd_tx->seektab[cookie].from, SEEK_SET);
+    off_t res = lseek(fildes, self->seektab[cookie].from, SEEK_SET);
     if (res == (off_t)-1) {
         picotm_error_set_errno(error, errno);
         return;

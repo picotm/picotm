@@ -27,6 +27,7 @@
 #include "fchmodoptab.h"
 #include "fcntloptab.h"
 #include "regfile_tx_ops.h"
+#include "seekoptab.h"
 
 static void
 init_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end)
@@ -65,6 +66,9 @@ regfile_tx_init(struct regfile_tx* self)
     self->fcntltab = NULL;
     self->fcntltablen = 0;
 
+    self->seektab = NULL;
+    self->seektablen = 0;
+
     self->offset = 0;
 
     init_rwstates(picotm_arraybeg(self->rwstate),
@@ -76,6 +80,7 @@ regfile_tx_uninit(struct regfile_tx* self)
 {
     assert(self);
 
+    seekoptab_clear(&self->seektab, &self->seektablen);
     fcntloptab_clear(&self->fcntltab, &self->fcntltablen);
     fchmodoptab_clear(&self->fchmodtab, &self->fchmodtablen);
 
@@ -92,6 +97,7 @@ regfile_tx_prepare(struct regfile_tx* self, struct regfile* regfile,
     self->seekbuf_tx = NULL;
     self->fchmodtablen = 0;
     self->fcntltablen = 0;
+    self->seektablen = 0;
     self->offset = 0;
 }
 
