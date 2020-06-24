@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2018-2019  Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2018-2020  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -314,7 +314,7 @@ file_offset_after_lseek(struct regfile_tx* self, struct ofd_tx* ofd_tx,
             }
             return offset;
         case SEEK_CUR: {
-            off_t pos = ofd_tx_get_file_offset(ofd_tx, fildes, error);
+            off_t pos = regfile_tx_get_file_offset(self, fildes, error);
             if (picotm_error_is_set(error)) {
                 return pos;
             }
@@ -364,7 +364,9 @@ lseek_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
            off_t offset, int whence, bool isnoundo, int* cookie,
            struct picotm_error* error)
 {
-	off_t from = ofd_tx_get_file_offset(ofd_tx, fildes, error);
+    struct regfile_tx* self = regfile_tx_of_file_tx(base);
+
+	off_t from = regfile_tx_get_file_offset(self, fildes, error);
     if (picotm_error_is_set(error)) {
         return from;
     }
@@ -374,15 +376,13 @@ lseek_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
         return from;
 	}
 
-    struct regfile_tx* self = regfile_tx_of_file_tx(base);
-
     off_t to = file_offset_after_lseek(self, ofd_tx, fildes, offset,
                                        whence, error);
     if (picotm_error_is_set(error)) {
         return to;
     }
 
-    ofd_tx_set_file_offset(ofd_tx, to, error);
+    regfile_tx_set_file_offset(self, to, error);
     if (picotm_error_is_set(error)) {
         return (off_t)-1;
     }
@@ -711,7 +711,7 @@ read_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, void* buf,
     struct regfile_tx* self = regfile_tx_of_file_tx(base);
     struct seekbuf_tx* seekbuf_tx = self->seekbuf_tx;
 
-    off_t offset = ofd_tx_get_file_offset(ofd_tx, fildes, error);
+    off_t offset = regfile_tx_get_file_offset(self, fildes, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -742,7 +742,7 @@ read_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, void* buf,
 
     /* update file offset */
 
-    ofd_tx_set_file_offset(ofd_tx, offset + res, error);
+    regfile_tx_set_file_offset(self, offset + res, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -812,7 +812,7 @@ write_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
         return -1;
     }
 
-    off_t offset = ofd_tx_get_file_offset(ofd_tx, fildes, error);
+    off_t offset = regfile_tx_get_file_offset(self, fildes, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -842,7 +842,7 @@ write_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
     }
 
     /* update file offset */
-    ofd_tx_set_file_offset(ofd_tx, offset + len, error);
+    regfile_tx_set_file_offset(self, offset + len, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }

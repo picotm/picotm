@@ -1,6 +1,7 @@
 /*
  * picotm - A system-level transaction manager
  * Copyright (c) 2017-2018  Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2020       Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -52,9 +53,6 @@ struct ofd_tx {
     struct seekop* seektab;
     size_t         seektablen;
 
-    /** \brief Transaction-local file offset */
-    off_t offset;
-
     /** State of the local reader/writer locks. */
     struct picotm_rwstate rwstate[NUMBER_OF_OFD_FIELDS];
 };
@@ -99,29 +97,6 @@ ofd_tx_holds_ref(struct ofd_tx* self);
  */
 int
 ofd_tx_cmp_with_id(const struct ofd_tx* self, const struct ofd_id* id);
-
-/**
- * \brief Returns the current file offset of a transaction-local open file
- *        description.
- * \param       self    The transaction-local open-file-description state.
- * \param       fildes  The file descriptor.
- * \param[out]  error   Returns an error to the caller.
- * \returns The open file description's current file offset.
- */
-off_t
-ofd_tx_get_file_offset(struct ofd_tx* self, int fildes,
-                       struct picotm_error* error);
-
-/**
- * \brief Sets the current file offset of a transaction-local open file
- *        description.
- * \param       self    The transaction-local open-file-description state.
- * \param       offset  The new file offset.
- * \param[out]  error   Returns an error to the caller.
- */
-void
-ofd_tx_set_file_offset(struct ofd_tx* self, off_t offset,
-                       struct picotm_error* error);
 
 #define _ofd_tx_file_op(_op, _file_op, _ofd_tx, ...) \
     (_ofd_tx)->file_tx->ops->_op ## _ ## _file_op((_ofd_tx)->file_tx, \

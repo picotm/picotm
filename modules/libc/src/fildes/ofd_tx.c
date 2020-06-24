@@ -1,6 +1,7 @@
 /*
  * picotm - A system-level transaction manager
  * Copyright (c) 2017-2018  Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2020       Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -75,8 +76,6 @@ ofd_tx_init(struct ofd_tx* self)
     self->seektab = NULL;
     self->seektablen = 0;
 
-    self->offset = 0;
-
     init_rwstates(picotm_arraybeg(self->rwstate),
                   picotm_arrayend(self->rwstate));
 }
@@ -111,50 +110,6 @@ ofd_tx_cmp_with_id(const struct ofd_tx* self, const struct ofd_id* id)
     return ofd_id_cmp(&self->ofd->id, id);
 }
 
-off_t
-ofd_tx_get_file_offset(struct ofd_tx* self, int fildes,
-                       struct picotm_error* error)
-{
-    assert(self);
-
-    enum picotm_rwstate_status lock_status =
-        picotm_rwstate_get_status(self->rwstate + OFD_FIELD_FILE_OFFSET);
-
-    if (lock_status != PICOTM_RWSTATE_UNLOCKED) {
-        /* fast path: we have already read the file offset. */
-        return self->offset;
-    }
-
-    ofd_tx_try_rdlock_field(self, OFD_FIELD_FILE_OFFSET, error);
-    if (picotm_error_is_set(error)) {
-        return (off_t)-1;
-    }
-
-    /* read file offset from file descriptor */
-    off_t res = lseek(fildes, 0, SEEK_CUR);
-    if (res == (off_t)-1) {
-        picotm_error_set_errno(error, errno);
-        return res;
-    }
-    self->offset = res;
-
-    return self->offset;
-}
-
-void
-ofd_tx_set_file_offset(struct ofd_tx* self, off_t offset,
-                       struct picotm_error* error)
-{
-    assert(self);
-
-    ofd_tx_try_wrlock_field(self, OFD_FIELD_FILE_OFFSET, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
-
-    self->offset = offset;
-}
-
 /*
  * Reference counting
  */
@@ -187,8 +142,6 @@ ofd_tx_ref_or_set_up(struct ofd_tx* self, struct ofd* ofd,
 
     self->ofd = ofd;
     self->file_tx = file_tx;
-
-    self->offset = 0;
 
     self->seektablen = 0;
 
