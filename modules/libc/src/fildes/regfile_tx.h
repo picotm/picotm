@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2017-2019  Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2017-2020  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -51,6 +51,9 @@ struct regfile_tx {
     struct fcntlop* fcntltab;
     size_t          fcntltablen;
 
+    /* Transaction-local file offset */
+    off_t offset;
+
     /** State of the local reader/writer locks. */
     struct picotm_rwstate rwstate[NUMBER_OF_REGFILE_FIELDS];
 };
@@ -97,3 +100,11 @@ regfile_tx_try_wrlock_field(struct regfile_tx* self, enum regfile_field field,
 
 void
 regfile_tx_finish(struct regfile_tx* self);
+
+off_t
+regfile_tx_get_file_offset(struct regfile_tx* self, int fildes,
+                           struct picotm_error* error);
+
+void
+regfile_tx_set_file_offset(struct regfile_tx* self, off_t offset,
+                           struct picotm_error* error);

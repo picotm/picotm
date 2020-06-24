@@ -41,7 +41,6 @@ struct picotm_rwstate;
  * Enumerates fields of `struct ofd`.
  */
 enum ofd_field {
-    OFD_FIELD_FILE_OFFSET,
     OFD_FIELD_STATE,
     NUMBER_OF_OFD_FIELDS
 };

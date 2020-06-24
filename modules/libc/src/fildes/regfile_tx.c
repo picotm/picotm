@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2017-2019  Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2017-2020  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -22,6 +22,8 @@
 #include "picotm/picotm-error.h"
 #include "picotm/picotm-lib-array.h"
 #include "picotm/picotm-lib-tab.h"
+#include <errno.h>
+#include <unistd.h>
 #include "fchmodoptab.h"
 #include "fcntloptab.h"
 #include "regfile_tx_ops.h"
@@ -63,6 +65,8 @@ regfile_tx_init(struct regfile_tx* self)
     self->fcntltab = NULL;
     self->fcntltablen = 0;
 
+    self->offset = 0;
+
     init_rwstates(picotm_arraybeg(self->rwstate),
                   picotm_arrayend(self->rwstate));
 }
@@ -88,6 +92,7 @@ regfile_tx_prepare(struct regfile_tx* self, struct regfile* regfile,
     self->seekbuf_tx = NULL;
     self->fchmodtablen = 0;
     self->fcntltablen = 0;
+    self->offset = 0;
 }
 
 void
@@ -134,4 +139,43 @@ regfile_tx_finish(struct regfile_tx* self)
     unlock_rwstates(picotm_arraybeg(self->rwstate),
                     picotm_arrayend(self->rwstate),
                     regfile_of_base(self->base.file));
+}
+
+off_t
+regfile_tx_get_file_offset(struct regfile_tx* self, int fildes,
+                           struct picotm_error* error)
+{
+    assert(self);
+
+    enum picotm_rwstate_status lock_status =
+        picotm_rwstate_get_status(self->rwstate + REGFILE_FIELD_FILE_OFFSET);
+    if (lock_status != PICOTM_RWSTATE_UNLOCKED)
+        return self->offset; /* we have already read the file offset. */
+
+    regfile_tx_try_rdlock_field(self, REGFILE_FIELD_FILE_OFFSET, error);
+    if (picotm_error_is_set(error))
+        return (off_t)-1;
+
+    /* read file offset from file descriptor */
+    off_t res = lseek(fildes, 0, SEEK_CUR);
+    if (res == (off_t)-1) {
+        picotm_error_set_errno(error, errno);
+        return res;
+    }
+    self->offset = res;
+
+    return self->offset;
+}
+
+void
+regfile_tx_set_file_offset(struct regfile_tx* self, off_t offset,
+                           struct picotm_error* error)
+{
+    assert(self);
+
+    regfile_tx_try_wrlock_field(self, REGFILE_FIELD_FILE_OFFSET, error);
+    if (picotm_error_is_set(error))
+        return;
+
+    self->offset = offset;
 }
