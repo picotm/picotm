@@ -1,6 +1,7 @@
 /*
  * picotm - A system-level transaction manager
  * Copyright (c) 2017-2018  Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2020       Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -140,8 +141,9 @@ fd_tx_signal_close(struct fd_tx* self);
  */
 
 int
-fd_tx_accept_exec(struct fd_tx* self, int sockfd,
-                  struct sockaddr* address, socklen_t* address_len,
+fd_tx_accept_exec(struct fd_tx* self,
+                  int sockfd, struct sockaddr* address,
+                  socklen_t* address_len,
                   bool isnoundo, int* cookie, struct picotm_error* error);
 
 void
@@ -157,9 +159,10 @@ fd_tx_accept_undo(struct fd_tx* self, int sockfd, int cookie,
  */
 
 int
-fd_tx_bind_exec(struct fd_tx* self, int sockfd, const struct sockaddr *addr,
-                socklen_t addrlen, bool isnoundo, int* cookie,
-                struct picotm_error* error);
+fd_tx_bind_exec(struct fd_tx* self,
+                int sockfd, const struct sockaddr *addr,
+                socklen_t addrlen,
+                bool isnoundo, int* cookie, struct picotm_error* error);
 
 void
 fd_tx_bind_apply(struct fd_tx* self, int sockfd, int cookie,
@@ -174,8 +177,9 @@ fd_tx_bind_undo(struct fd_tx* self, int sockfd, int cookie,
  */
 
 int
-fd_tx_close_exec(struct fd_tx* self, int fildes, bool isnoundo, int* cookie,
-                 struct picotm_error* error);
+fd_tx_close_exec(struct fd_tx* self,
+                 int fildes,
+                 bool isnoundo, int* cookie, struct picotm_error* error);
 
 void
 fd_tx_close_apply(struct fd_tx* self, int fildes, int cookie,
@@ -190,8 +194,9 @@ fd_tx_close_undo(struct fd_tx* self, int fildes, int cookie,
  */
 
 int
-fd_tx_connect_exec(struct fd_tx* self, int sockfd,
-                   const struct sockaddr* serv_addr, socklen_t addrlen,
+fd_tx_connect_exec(struct fd_tx* self,
+                   int sockfd, const struct sockaddr* serv_addr,
+                   socklen_t addrlen,
                    bool isnoundo, int* cookie, struct picotm_error* error);
 
 void
@@ -207,9 +212,9 @@ fd_tx_connect_undo(struct fd_tx* self, int sockfd, int cookie,
  */
 
 int
-fd_tx_dup_exec(struct fd_tx* self, int fildes, bool cloexec,
-               bool isnoundo, int* cookie,
-               struct picotm_error* error);
+fd_tx_dup_exec(struct fd_tx* self,
+               int fildes, bool cloexec,
+               bool isnoundo, int* cookie, struct picotm_error* error);
 
 void
 fd_tx_dup_apply(struct fd_tx* self, int fildes, int cookie,
@@ -224,9 +229,9 @@ fd_tx_dup_undo(struct fd_tx* self, int fildes, int cookie,
  */
 
 int
-fd_tx_fchmod_exec(struct fd_tx* self, int fildes, mode_t mode,
-                  bool isnoundo, int* cookie,
-                  struct picotm_error* error);
+fd_tx_fchmod_exec(struct fd_tx* self,
+                  int fildes, mode_t mode,
+                  bool isnoundo, int* cookie, struct picotm_error* error);
 
 void
 fd_tx_fchmod_apply(struct fd_tx* self, int fildes, int cookie,
@@ -241,9 +246,9 @@ fd_tx_fchmod_undo(struct fd_tx* self, int fildes, int cookie,
  */
 
 int
-fd_tx_fcntl_exec(struct fd_tx* self, int fildes, int cmd,
-                 union fcntl_arg* arg, bool isnoundo, int* cookie,
-                 struct picotm_error* error);
+fd_tx_fcntl_exec(struct fd_tx* self,
+                 int fildes, int cmd, union fcntl_arg* arg,
+                 bool isnoundo, int* cookie, struct picotm_error* error);
 
 void
 fd_tx_fcntl_apply(struct fd_tx* self, int fildes, int cookie,
@@ -258,7 +263,8 @@ fd_tx_fcntl_undo(struct fd_tx* self, int fildes, int cookie,
  */
 
 int
-fd_tx_fstat_exec(struct fd_tx* self, int fildes, struct stat* buf,
+fd_tx_fstat_exec(struct fd_tx* self,
+                 int fildes, struct stat* buf,
                  bool isnoundo, int* cookie, struct picotm_error* error);
 
 void
@@ -274,8 +280,9 @@ fd_tx_fstat_undo(struct fd_tx* self, int fildes, int cookie,
  */
 
 int
-fd_tx_fsync_exec(struct fd_tx* self, int fildes, bool isnoundo, int* cookie,
-                 struct picotm_error* error);
+fd_tx_fsync_exec(struct fd_tx* self,
+                 int fildes,
+                 bool isnoundo, int* cookie, struct picotm_error* error);
 
 void
 fd_tx_fsync_apply(struct fd_tx* self, int fildes, int cookie,
@@ -290,8 +297,9 @@ fd_tx_fsync_undo(struct fd_tx* self, int fildes, int cookie,
  */
 
 int
-fd_tx_listen_exec(struct fd_tx* self, int sockfd, int backlog, bool isnoundo,
-                  int* cookie, struct picotm_error* error);
+fd_tx_listen_exec(struct fd_tx* self,
+                  int sockfd, int backlog,
+                  bool isnoundo, int* cookie, struct picotm_error* error);
 
 void
 fd_tx_listen_apply(struct fd_tx* self, int sockfd, int cookie,
@@ -306,7 +314,8 @@ fd_tx_listen_undo(struct fd_tx* self, int sockfd, int cookie,
  */
 
 off_t
-fd_tx_lseek_exec(struct fd_tx* self, int fildes, off_t offset, int whence,
+fd_tx_lseek_exec(struct fd_tx* self,
+                 int fildes, off_t offset, int whence,
                  bool isnoundo, int* cookie, struct picotm_error* error);
 
 void
@@ -322,9 +331,9 @@ fd_tx_lseek_undo(struct fd_tx* self, int fildes, int cookie,
  */
 
 ssize_t
-fd_tx_pread_exec(struct fd_tx* self, int fildes, void* buf, size_t nbyte,
-                 off_t off, bool isnoundo, int* cookie,
-                 struct picotm_error* error);
+fd_tx_pread_exec(struct fd_tx* self,
+                 int fildes, void* buf, size_t nbyte, off_t off,
+                 bool isnoundo, int* cookie, struct picotm_error* error);
 
 void
 fd_tx_pread_apply(struct fd_tx* self, int fildes, int cookie,
@@ -339,9 +348,9 @@ fd_tx_pread_undo(struct fd_tx* self, int fildes, int cookie,
  */
 
 ssize_t
-fd_tx_pwrite_exec(struct fd_tx* self, int fildes, const void* buf,
-                  size_t nbyte, off_t off, bool isnoundo, int* cookie,
-                  struct picotm_error* error);
+fd_tx_pwrite_exec(struct fd_tx* self,
+                  int fildes, const void* buf, size_t nbyte, off_t off,
+                  bool isnoundo, int* cookie, struct picotm_error* error);
 
 void
 fd_tx_pwrite_apply(struct fd_tx* self, int fildes, int cookie,
@@ -356,7 +365,8 @@ fd_tx_pwrite_undo(struct fd_tx* self, int fildes, int cookie,
  */
 
 ssize_t
-fd_tx_read_exec(struct fd_tx* self, int fildes, void *buf, size_t nbyte,
+fd_tx_read_exec(struct fd_tx* self,
+                int fildes, void* buf, size_t nbyte,
                 bool isnoundo, int* cookie, struct picotm_error* error);
 
 void
@@ -372,9 +382,9 @@ fd_tx_read_undo(struct fd_tx* self, int fildes, int cookie,
  */
 
 ssize_t
-fd_tx_recv_exec(struct fd_tx* self, int sockfd, void* buffer, size_t length,
-                int flags, bool isnoundo, int* cookie,
-                struct picotm_error* error);
+fd_tx_recv_exec(struct fd_tx* self,
+                int sockfd, void* buffer, size_t length, int flags,
+                bool isnoundo, int* cookie, struct picotm_error* error);
 
 void
 fd_tx_recv_apply(struct fd_tx* self, int sockfd, int cookie,
@@ -389,9 +399,9 @@ fd_tx_recv_undo(struct fd_tx* self, int sockfd, int cookie,
  */
 
 ssize_t
-fd_tx_send_exec(struct fd_tx* self, int sockfd, const void* buffer,
-                size_t length, int flags, bool isnoundo, int* cookie,
-                struct picotm_error* error);
+fd_tx_send_exec(struct fd_tx* self,
+                int sockfd, const void* buffer, size_t length, int flags,
+                bool isnoundo, int* cookie, struct picotm_error* error);
 
 void
 fd_tx_send_apply(struct fd_tx* self, int fildes, int cookie,
@@ -406,8 +416,9 @@ fd_tx_send_undo(struct fd_tx* self, int fildes, int cookie,
  */
 
 int
-fd_tx_shutdown_exec(struct fd_tx* self, int sockfd, int how, bool isnoundo,
-                    int* cookie, struct picotm_error* error);
+fd_tx_shutdown_exec(struct fd_tx* self,
+                    int sockfd, int how,
+                    bool isnoundo, int* cookie, struct picotm_error* error);
 
 void
 fd_tx_shutdown_apply(struct fd_tx* self, int fildes, int cookie,
@@ -422,9 +433,9 @@ fd_tx_shutdown_undo(struct fd_tx* self, int fildes, int cookie,
  */
 
 ssize_t
-fd_tx_write_exec(struct fd_tx* self, int fildes, const void* buf,
-                 size_t nbyte, bool isnoundo, int* cookie,
-                 struct picotm_error* error);
+fd_tx_write_exec(struct fd_tx* self,
+                 int fildes, const void* buf, size_t nbyte,
+                 bool isnoundo, int* cookie, struct picotm_error* error);
 
 void
 fd_tx_write_apply(struct fd_tx* self, int fildes, int cookie,

@@ -124,3 +124,19 @@ file_tx_holds_ref(struct file_tx* self);
  */
 void
 file_tx_finish(struct file_tx* self);
+
+/*
+ * Callback functions
+ */
+
+#define _file_tx_file_op(_op, _file_op, _file_tx, ...) \
+    (_file_tx)->ops->_op ## _ ## _file_op((_file_tx), __VA_ARGS__)
+
+#define file_tx_exec(_op, _file_tx, ...) \
+    _file_tx_file_op(_op, exec, (_file_tx), __VA_ARGS__)
+
+#define file_tx_apply(_op, _file_tx, _fildes, _cookie, _error) \
+    _file_tx_file_op(_op, apply, (_file_tx), (_fildes), (_cookie), (_error))
+
+#define file_tx_undo(_op, _file_tx, _fildes, _cookie, _error) \
+    _file_tx_file_op(_op, undo, (_file_tx), (_fildes), (_cookie), (_error))
