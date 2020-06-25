@@ -97,7 +97,6 @@ ofd_tx_cmp_with_id(const struct ofd_tx* self, const struct ofd_id* id);
 
 #define _ofd_tx_file_op(_op, _file_op, _ofd_tx, ...) \
     (_ofd_tx)->file_tx->ops->_op ## _ ## _file_op((_ofd_tx)->file_tx, \
-                                                  (_ofd_tx), \
                                                   __VA_ARGS__)
 
 /**

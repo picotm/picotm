@@ -1,6 +1,7 @@
 /*
  * picotm - A system-level transaction manager
  * Copyright (c) 2018   Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2020   Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -70,9 +71,9 @@ finish(struct file_tx* base)
  */
 
 static int
-fchmod_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-            mode_t mode, bool isnoundo, int* cookie,
-            struct picotm_error* error)
+fchmod_exec(struct file_tx* base,
+            int fildes, mode_t mode,
+            bool isnoundo, int* cookie, struct picotm_error* error)
 {
     assert(cookie);
 
@@ -112,8 +113,8 @@ fchmod_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
 }
 
 static void
-fchmod_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-            int cookie, struct picotm_error* error)
+fchmod_undo(struct file_tx* base, int fildes, int cookie,
+            struct picotm_error* error)
 {
     struct dir_tx* self = dir_tx_of_file_tx(base);
 
@@ -131,9 +132,9 @@ fchmod_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
  */
 
 static int
-fcntl_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, int cmd,
-           union fcntl_arg* arg, bool isnoundo, int* cookie,
-           struct picotm_error* error)
+fcntl_exec(struct file_tx* base,
+           int fildes, int cmd, union fcntl_arg* arg,
+           bool isnoundo, int* cookie, struct picotm_error* error)
 {
     struct dir_tx* self = dir_tx_of_file_tx(base);
 
@@ -213,9 +214,9 @@ fcntl_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, int cmd,
  */
 
 static int
-fstat_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-           struct stat* buf, bool isnoundo, int* cookie,
-           struct picotm_error* error)
+fstat_exec(struct file_tx* base,
+           int fildes, struct stat* buf,
+           bool isnoundo, int* cookie, struct picotm_error* error)
 {
     struct dir_tx* self = dir_tx_of_file_tx(base);
 
@@ -240,7 +241,8 @@ fstat_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
  */
 
 static int
-fsync_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
+fsync_exec(struct file_tx* base,
+           int fildes,
            bool isnoundo, int* cookie, struct picotm_error* error)
 {
     assert(cookie);
@@ -262,8 +264,8 @@ fsync_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
 }
 
 static void
-fsync_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-            int cookie, struct picotm_error* error)
+fsync_apply(struct file_tx* base,
+            int fildes, int cookie, struct picotm_error* error)
 {
     int res = fsync(fildes);
     if (res < 0) {
