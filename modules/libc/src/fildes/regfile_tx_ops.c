@@ -36,7 +36,6 @@
 #include "file_tx_ops.h"
 #include "ioop.h"
 #include "iooptab.h"
-#include "ofd_tx.h"
 #include "range.h"
 #include "regfile_tx.h"
 #include "seekbuf_tx.h"
@@ -76,9 +75,9 @@ finish(struct file_tx* base)
  */
 
 static int
-fchmod_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-            mode_t mode, bool isnoundo, int* cookie,
-            struct picotm_error* error)
+fchmod_exec(struct file_tx* base,
+            int fildes, mode_t mode,
+            bool isnoundo, int* cookie, struct picotm_error* error)
 {
     assert(cookie);
 
@@ -118,8 +117,8 @@ fchmod_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
 }
 
 static void
-fchmod_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-            int cookie, struct picotm_error* error)
+fchmod_undo(struct file_tx* base, int fildes, int cookie,
+            struct picotm_error* error)
 {
     struct regfile_tx* self = regfile_tx_of_file_tx(base);
 
@@ -137,9 +136,9 @@ fchmod_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
  */
 
 static int
-fcntl_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, int cmd,
-           union fcntl_arg* arg, bool isnoundo, int* cookie,
-           struct picotm_error* error)
+fcntl_exec(struct file_tx* base,
+           int fildes, int cmd, union fcntl_arg* arg,
+           bool isnoundo, int* cookie, struct picotm_error* error)
 {
     struct regfile_tx* self = regfile_tx_of_file_tx(base);
     struct seekbuf_tx* seekbuf_tx = self->seekbuf_tx;
@@ -221,9 +220,9 @@ fcntl_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, int cmd,
  */
 
 static int
-fstat_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-           struct stat* buf, bool isnoundo, int* cookie,
-           struct picotm_error* error)
+fstat_exec(struct file_tx* base,
+           int fildes, struct stat* buf,
+           bool isnoundo, int* cookie, struct picotm_error* error)
 {
     struct regfile_tx* self = regfile_tx_of_file_tx(base);
     struct seekbuf_tx* seekbuf_tx = self->seekbuf_tx;
@@ -262,7 +261,8 @@ fstat_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
  */
 
 static int
-fsync_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
+fsync_exec(struct file_tx* base,
+           int fildes,
            bool isnoundo, int* cookie, struct picotm_error* error)
 {
     assert(cookie);
@@ -284,8 +284,8 @@ fsync_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
 }
 
 static void
-fsync_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-            int cookie, struct picotm_error* error)
+fsync_apply(struct file_tx* base, int fildes, int cookie,
+            struct picotm_error* error)
 {
     int res = fsync(fildes);
     if (res < 0) {
@@ -299,9 +299,8 @@ fsync_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
  */
 
 static off_t
-file_offset_after_lseek(struct regfile_tx* self, struct ofd_tx* ofd_tx,
-                        int fildes, off_t offset, int whence,
-                        struct picotm_error* error)
+file_offset_after_lseek(struct regfile_tx* self, int fildes, off_t offset,
+                        int whence, struct picotm_error* error)
 {
     struct seekbuf_tx* seekbuf_tx = self->seekbuf_tx;
 
@@ -360,9 +359,9 @@ file_offset_after_lseek(struct regfile_tx* self, struct ofd_tx* ofd_tx,
 }
 
 static off_t
-lseek_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-           off_t offset, int whence, bool isnoundo, int* cookie,
-           struct picotm_error* error)
+lseek_exec(struct file_tx* base,
+           int fildes, off_t offset, int whence,
+           bool isnoundo, int* cookie, struct picotm_error* error)
 {
     struct regfile_tx* self = regfile_tx_of_file_tx(base);
 
@@ -376,8 +375,7 @@ lseek_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
         return from;
 	}
 
-    off_t to = file_offset_after_lseek(self, ofd_tx, fildes, offset,
-                                       whence, error);
+    off_t to = file_offset_after_lseek(self, fildes, offset, whence, error);
     if (picotm_error_is_set(error)) {
         return to;
     }
@@ -411,8 +409,8 @@ lseek_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
 }
 
 static void
-lseek_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-            int cookie, struct picotm_error* error)
+lseek_apply(struct file_tx* base, int fildes, int cookie,
+            struct picotm_error* error)
 {
     struct regfile_tx* self = regfile_tx_of_file_tx(base);
     struct seekbuf_tx* seekbuf_tx = self->seekbuf_tx;
@@ -430,8 +428,8 @@ lseek_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
 }
 
 static void
-lseek_undo(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-           int cookie, struct picotm_error* error)
+lseek_undo(struct file_tx* base, int fildes, int cookie,
+           struct picotm_error* error)
 {
     struct regfile_tx* self = regfile_tx_of_file_tx(base);
     struct seekbuf_tx* seekbuf_tx = self->seekbuf_tx;
@@ -526,9 +524,9 @@ do_pread(int fildes, void* buf, size_t nbyte, off_t offset,
 }
 
 static ssize_t
-pread_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, void* buf,
-           size_t nbyte, off_t offset, bool isnoundo, int* cookie,
-           struct picotm_error* error)
+pread_exec(struct file_tx* base,
+           int fildes, void* buf, size_t nbyte, off_t offset,
+           bool isnoundo, int* cookie, struct picotm_error* error)
 {
     struct regfile_tx* self = regfile_tx_of_file_tx(base);
     struct seekbuf_tx* seekbuf_tx = self->seekbuf_tx;
@@ -624,9 +622,9 @@ do_pwrite(int fildes, const void* buf, size_t nbyte, off_t offset,
 }
 
 static ssize_t
-pwrite_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-            const void* buf, size_t nbyte, off_t offset, bool isnoundo,
-            int* cookie, struct picotm_error* error)
+pwrite_exec(struct file_tx* base,
+            int fildes, const void* buf, size_t nbyte, off_t offset,
+            bool isnoundo, int* cookie, struct picotm_error* error)
 {
     assert(cookie);
 
@@ -679,8 +677,8 @@ pwrite_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
 }
 
 static void
-pwrite_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-             int cookie, struct picotm_error* error)
+pwrite_apply(struct file_tx* base, int fildes, int cookie,
+             struct picotm_error* error)
 {
     struct regfile_tx* self = regfile_tx_of_file_tx(base);
     struct seekbuf_tx* seekbuf_tx = self->seekbuf_tx;
@@ -704,9 +702,9 @@ pwrite_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
  */
 
 static ssize_t
-read_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, void* buf,
-          size_t nbyte, bool isnoundo, int* cookie,
-          struct picotm_error* error)
+read_exec(struct file_tx* base,
+          int fildes, void* buf, size_t nbyte,
+          bool isnoundo, int* cookie, struct picotm_error* error)
 {
     struct regfile_tx* self = regfile_tx_of_file_tx(base);
     struct seekbuf_tx* seekbuf_tx = self->seekbuf_tx;
@@ -758,8 +756,8 @@ read_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, void* buf,
 }
 
 static void
-read_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-           int cookie, struct picotm_error* error)
+read_apply(struct file_tx* base, int fildes, int cookie,
+           struct picotm_error* error)
 {
     struct regfile_tx* self = regfile_tx_of_file_tx(base);
     struct seekbuf_tx* seekbuf_tx = self->seekbuf_tx;
@@ -798,9 +796,9 @@ do_pwrite_and_lseek(int fildes, const void* buf, size_t nbyte, off_t offset,
 }
 
 static ssize_t
-write_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-           const void* buf, size_t nbyte, bool isnoundo, int* cookie,
-           struct picotm_error* error)
+write_exec(struct file_tx* base,
+           int fildes, const void* buf, size_t nbyte,
+           bool isnoundo, int* cookie, struct picotm_error* error)
 {
     assert(*cookie);
 
@@ -865,8 +863,8 @@ write_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
 }
 
 static void
-write_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-            int cookie, struct picotm_error* error)
+write_apply(struct file_tx* base, int fildes, int cookie,
+            struct picotm_error* error)
 {
     struct regfile_tx* self = regfile_tx_of_file_tx(base);
     struct seekbuf_tx* seekbuf_tx = self->seekbuf_tx;
@@ -885,7 +883,7 @@ write_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
         return;
     }
 
-    /* TODO: error is less than len bytes were written */
+    /* TODO: error if less than len bytes were written */
 }
 
 /*

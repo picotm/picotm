@@ -1,6 +1,7 @@
 /*
  * picotm - A system-level transaction manager
  * Copyright (c) 2018-2019  Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2020       Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -70,9 +71,9 @@ finish(struct file_tx* base)
  */
 
 static int
-fcntl_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, int cmd,
-           union fcntl_arg* arg, bool isnoundo, int* cookie,
-           struct picotm_error* error)
+fcntl_exec(struct file_tx* base,
+           int fildes, int cmd, union fcntl_arg* arg,
+           bool isnoundo, int* cookie, struct picotm_error* error)
 {
     struct chrdev_tx* self = chrdev_tx_of_file_tx(base);
     struct seekbuf_tx* seekbuf_tx = self->seekbuf_tx;
@@ -154,9 +155,9 @@ fcntl_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, int cmd,
  */
 
 static int
-fstat_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-           struct stat* buf, bool isnoundo, int* cookie,
-           struct picotm_error* error)
+fstat_exec(struct file_tx* base,
+           int fildes, struct stat* buf,
+           bool isnoundo, int* cookie, struct picotm_error* error)
 {
     struct chrdev_tx* self = chrdev_tx_of_file_tx(base);
 
@@ -215,9 +216,9 @@ do_read(int fildes, void* buf, size_t nbyte, struct picotm_error* error)
 }
 
 static ssize_t
-read_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, void* buf,
-          size_t nbyte, bool isnoundo, int* cookie,
-          struct picotm_error* error)
+read_exec(struct file_tx* base,
+          int fildes, void* buf, size_t nbyte,
+          bool isnoundo, int* cookie, struct picotm_error* error)
 {
     if (!isnoundo) {
         picotm_error_set_revocable(error);
@@ -271,9 +272,9 @@ do_write(int fildes, const void* buf, size_t nbyte,
 }
 
 static ssize_t
-write_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-           const void* buf, size_t nbyte, bool isnoundo, int* cookie,
-           struct picotm_error* error)
+write_exec(struct file_tx* base,
+           int fildes, const void* buf, size_t nbyte,
+           bool isnoundo, int* cookie, struct picotm_error* error)
 {
     struct chrdev_tx* self = chrdev_tx_of_file_tx(base);
     struct seekbuf_tx* seekbuf_tx = self->seekbuf_tx;
@@ -314,8 +315,8 @@ write_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
 }
 
 static void
-write_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-            int cookie, struct picotm_error* error)
+write_apply(struct file_tx* base, int fildes, int cookie,
+            struct picotm_error* error)
 {
     struct chrdev_tx* self = chrdev_tx_of_file_tx(base);
     struct seekbuf_tx* seekbuf_tx = self->seekbuf_tx;

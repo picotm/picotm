@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2018-2019  Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2018-2020  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -69,9 +69,9 @@ finish(struct file_tx* base)
  */
 
 static int
-accept_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
-            struct sockaddr* address, socklen_t* address_len, bool isnoundo,
-            int* cookie, struct picotm_error* error)
+accept_exec(struct file_tx* base,
+            int sockfd, struct sockaddr* address, socklen_t* address_len,
+            bool isnoundo, int* cookie, struct picotm_error* error)
 {
     if (!isnoundo) {
         picotm_error_set_revocable(error);
@@ -91,8 +91,8 @@ accept_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
  */
 
 static int
-bind_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
-          const struct sockaddr* address, socklen_t address_len,
+bind_exec(struct file_tx* base,
+          int sockfd, const struct sockaddr* address, socklen_t address_len,
           bool isnoundo, int* cookie, struct picotm_error* error)
 {
     if (!isnoundo) {
@@ -113,8 +113,8 @@ bind_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
  */
 
 static int
-connect_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
-             const struct sockaddr* address, socklen_t address_len,
+connect_exec(struct file_tx* base,
+             int sockfd, const struct sockaddr* address, socklen_t address_len,
              bool isnoundo, int* cookie, struct picotm_error* error)
 {
     if (!isnoundo) {
@@ -135,9 +135,9 @@ connect_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
  */
 
 static int
-fcntl_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, int cmd,
-           union fcntl_arg* arg, bool isnoundo, int* cookie,
-           struct picotm_error* error)
+fcntl_exec(struct file_tx* base,
+           int fildes, int cmd, union fcntl_arg* arg,
+           bool isnoundo, int* cookie, struct picotm_error* error)
 {
     struct socket_tx* self = socket_tx_of_file_tx(base);
 
@@ -217,9 +217,9 @@ fcntl_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, int cmd,
  */
 
 static int
-fstat_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-           struct stat* buf, bool isnoundo, int* cookie,
-           struct picotm_error* error)
+fstat_exec(struct file_tx* base,
+           int fildes, struct stat* buf,
+           bool isnoundo, int* cookie, struct picotm_error* error)
 {
     struct socket_tx* self = socket_tx_of_file_tx(base);
 
@@ -243,9 +243,9 @@ fstat_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
  */
 
 static int
-listen_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
-            int backlog, bool isnoundo, int* cookie,
-            struct picotm_error* error)
+listen_exec(struct file_tx* base,
+            int sockfd, int backlog,
+            bool isnoundo, int* cookie, struct picotm_error* error)
 {
     if (!isnoundo) {
         picotm_error_set_revocable(error);
@@ -300,9 +300,9 @@ do_read(int fildes, void* buf, size_t nbyte, struct picotm_error* error)
 }
 
 static ssize_t
-read_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes, void* buf,
-          size_t nbyte, bool isnoundo, int* cookie,
-          struct picotm_error* error)
+read_exec(struct file_tx* base,
+          int fildes, void* buf, size_t nbyte,
+          bool isnoundo, int* cookie, struct picotm_error* error)
 {
     if (!isnoundo) {
         picotm_error_set_revocable(error);
@@ -359,9 +359,9 @@ do_recv(int sockfd, void* buffer, size_t length, int flags,
 }
 
 static ssize_t
-recv_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
-          void* buffer, size_t length, int flags, bool isnoundo, int* cookie,
-          struct picotm_error* error)
+recv_exec(struct file_tx* base,
+          int sockfd, void* buffer, size_t length, int flags,
+          bool isnoundo, int* cookie, struct picotm_error* error)
 {
     if (!isnoundo) {
         picotm_error_set_revocable(error);
@@ -416,9 +416,9 @@ do_send(int sockfd, const void* buffer, size_t length, int flags,
 }
 
 static ssize_t
-send_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
-          const void* buffer, size_t length, int flags, bool isnoundo,
-          int* cookie, struct picotm_error* error)
+send_exec(struct file_tx* base,
+          int sockfd, const void* buffer, size_t length, int flags,
+          bool isnoundo, int* cookie, struct picotm_error* error)
 {
     struct socket_tx* self = socket_tx_of_file_tx(base);
     struct sockbuf_tx* sockbuf_tx = self->sockbuf_tx;
@@ -468,8 +468,8 @@ send_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
 }
 
 static void
-send_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
-           int cookie, struct picotm_error* error)
+send_apply(struct file_tx* base, int sockfd, int cookie,
+           struct picotm_error* error)
 {
     static const int flags = 0;
 
@@ -491,8 +491,9 @@ send_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
  */
 
 static int
-shutdown_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int sockfd,
-              int how, bool isnoundo, int* cookie, struct picotm_error* error)
+shutdown_exec(struct file_tx* base,
+              int sockfd, int how,
+              bool isnoundo, int* cookie, struct picotm_error* error)
 {
     if (!isnoundo) {
         picotm_error_set_revocable(error);
@@ -540,9 +541,9 @@ do_write(int fildes, const void* buf, size_t nbyte,
 }
 
 static ssize_t
-write_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-           const void* buf, size_t nbyte, bool isnoundo, int* cookie,
-           struct picotm_error* error)
+write_exec(struct file_tx* base,
+           int fildes, const void* buf, size_t nbyte,
+           bool isnoundo, int* cookie, struct picotm_error* error)
 {
     struct socket_tx* self = socket_tx_of_file_tx(base);
     struct sockbuf_tx* sockbuf_tx = self->sockbuf_tx;
@@ -581,8 +582,8 @@ write_exec(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
 }
 
 static void
-write_apply(struct file_tx* base, struct ofd_tx* ofd_tx, int fildes,
-            int cookie, struct picotm_error* error)
+write_apply(struct file_tx* base, int fildes, int cookie,
+            struct picotm_error* error)
 {
     struct socket_tx* self = socket_tx_of_file_tx(base);
     struct sockbuf_tx* sockbuf_tx = self->sockbuf_tx;
