@@ -95,40 +95,6 @@ ofd_tx_holds_ref(struct ofd_tx* self);
 int
 ofd_tx_cmp_with_id(const struct ofd_tx* self, const struct ofd_id* id);
 
-#define _ofd_tx_file_op(_op, _file_op, _ofd_tx, ...) \
-    (_ofd_tx)->file_tx->ops->_op ## _ ## _file_op((_ofd_tx)->file_tx, \
-                                                  __VA_ARGS__)
-
-/**
- * \brief Invokes an exec() operation.
- * \param   _op     The name of the operation.
- * \param   _ofd_tx The transaction-local open file description.
- */
-#define ofd_tx_exec(_op, _ofd_tx, ...) \
-    _ofd_tx_file_op(_op, exec, (_ofd_tx), __VA_ARGS__)
-
-/**
- * \brief Invokes an apply() operation.
- * \param       _op     The name of the operation.
- * \param       _ofd_tx The transaction-local open file description.
- * \param       _fildes The file descriptor.
- * \param       _cookie Invocation-specific user data.
- * \param[out]  _error  Returns an error to the caller.
- */
-#define ofd_tx_apply(_op, _ofd_tx, _fildes, _cookie, _error) \
-    _ofd_tx_file_op(_op, apply, (_ofd_tx), (_fildes), (_cookie), (_error))
-
-/**
- * \brief Invokes an undo() operation.
- * \param       _op     The name of the operation.
- * \param       _ofd_tx The transaction-local open file description.
- * \param       _fildes The file descriptor.
- * \param       _cookie Invocation-specific user data.
- * \param[out]  _error  Returns an error to the caller.
- */
-#define ofd_tx_undo(_op, _ofd_tx, _fildes, _cookie, _error) \
-    _ofd_tx_file_op(_op, undo, (_ofd_tx), (_fildes), (_cookie), (_error))
-
 /*
  * Reference counting
  */
