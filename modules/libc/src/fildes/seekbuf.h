@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2019  Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2019-2020  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -99,8 +99,8 @@ seekbuf_ref_or_set_up(struct seekbuf* self, int fildes,
  * \param       fildes      The seekbuf's seekbuf descriptor.
  * \param       id          The id to compare to.
  * \param[out]  error       Returns an error ot the caller.
- * \returns A value less than, equal to, or greater than if the ofd's id is
- *          less than, equal to, or greater than the given id.
+ * \returns A value less than, equal to, or greater than if the seekbuf's
+ *          id is less than, equal to, or greater than the given id.
  */
 int
 seekbuf_ref_or_set_up_if_id(struct seekbuf* self, int fildes,

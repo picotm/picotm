@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2019   Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2019-2020  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -95,7 +95,7 @@ pipebuf_ref_or_set_up(struct pipebuf* self, int fildes,
  * \param       fildes      The pipebuf's pipebuf descriptor.
  * \param       id          The id to compare to.
  * \param[out]  error       Returns an error ot the caller.
- * \returns A value less than, equal to, or greater than if the ofd's id is
+ * \returns A value less than, equal to, or greater than if the pipebuf's id is
  *          less than, equal to, or greater than the given id.
  */
 int
@@ -116,8 +116,8 @@ pipebuf_ref(struct pipebuf* self, struct picotm_error* error);
  *        id's are equal.
  * \param   self    The pipebuf instance.
  * \param   id      The id to compare to.
- * \returns A value less than, equal to, or greater than if the pipebuf's id
- *          is less than, equal to, or greater than the given id.
+ * \returns A value less than, equal to, or greater than if the pipebuf's
+ *          id is less than, equal to, or greater than the given id.
  */
 int
 pipebuf_ref_if_id(struct pipebuf* self, const struct filebuf_id* id);
