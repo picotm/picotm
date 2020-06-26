@@ -29,11 +29,6 @@ fildes_init(struct fildes* self, struct picotm_error* error)
         return;
     }
 
-    fildes_ofdtab_init(&self->ofdtab, error);
-    if (picotm_error_is_set(error)) {
-        goto err_fildes_ofdtab_init;
-    }
-
     fildes_chrdevtab_init(&self->chrdevtab, error);
     if (picotm_error_is_set(error)) {
         goto err_fildes_chrdevtab_init;
@@ -85,8 +80,6 @@ err_fildes_fifotab_init:
 err_fildes_dirtab_init:
     fildes_chrdevtab_uninit(&self->chrdevtab);
 err_fildes_chrdevtab_init:
-    fildes_ofdtab_uninit(&self->ofdtab);
-err_fildes_ofdtab_init:
     fildes_fdtab_uninit(&self->fdtab);
 }
 
@@ -102,8 +95,6 @@ fildes_uninit(struct fildes* self)
     fildes_fifotab_uninit(&self->fifotab);
     fildes_dirtab_uninit(&self->dirtab);
     fildes_chrdevtab_uninit(&self->chrdevtab);
-
-    fildes_ofdtab_uninit(&self->ofdtab);
 
     fildes_fdtab_uninit(&self->fdtab);
 }
@@ -146,24 +137,6 @@ void
 fildes_unlock_fdtab(struct fildes* self, struct picotm_rwstate* lock_state)
 {
     fildes_fdtab_unlock(&self->fdtab, lock_state);
-}
-
-/*
- * ofdtab
- */
-
-struct ofd*
-fildes_ref_ofd(struct fildes* self, int fildes, bool newly_created,
-               struct picotm_error* error)
-{
-    return fildes_ofdtab_ref_fildes(&self->ofdtab, fildes, newly_created,
-                                    error);
-}
-
-size_t
-fildes_ofd_index(struct fildes* self, struct ofd* ofd)
-{
-    return fildes_ofdtab_index(&self->ofdtab, ofd);
 }
 
 /*
