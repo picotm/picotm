@@ -245,18 +245,6 @@ file_tx_retype(struct file_tx* self, enum picotm_libc_file_type type)
     }
 }
 
-static struct ofd_tx*
-ofd_tx_create(struct picotm_error* error)
-{
-    struct ofd_tx* ofd_tx = malloc(sizeof(*ofd_tx));
-    if (!ofd_tx) {
-        picotm_error_set_errno(error, errno);
-        return NULL;
-    }
-    ofd_tx_init(ofd_tx);
-    return ofd_tx;
-}
-
 static void
 ofd_tx_destroy(struct ofd_tx* self)
 {
@@ -1066,113 +1054,6 @@ get_file_tx_with_ref(struct fildes_tx* self, int fildes, bool new_file,
     }
 }
 
-static bool
-true_if_eq_ofd_id_cb(const struct picotm_slist* item, void* data)
-{
-    const struct ofd_tx* ofd_tx =
-        ofd_tx_of_list_entry((struct picotm_slist*)item);
-    assert(ofd_tx);
-    assert(ofd_tx->ofd);
-
-    const struct ofd_id* id = data;
-    assert(id);
-
-    return !ofd_id_cmp(&ofd_tx->ofd->id, id);
-}
-
-static struct ofd_tx*
-get_ofd_tx(struct fildes_tx* self, const struct ofd_id* id,
-           struct picotm_error* error)
-{
-    /* Let's see if we already have the open file description in use.*/
-
-    struct picotm_slist* pos = picotm_slist_find_1(&self->ofd_tx_active_list,
-                                                   true_if_eq_ofd_id_cb,
-                                                   (void*)id);
-    if (pos != picotm_slist_end(&self->ofd_tx_active_list)) {
-        struct ofd_tx* ofd_tx = ofd_tx_of_list_entry(pos);
-        return ofd_tx;
-    }
-
-    /* If not, we allocate a new entry either from our LRU
-     * list or from heap memory.
-     */
-
-    struct ofd_tx* ofd_tx;
-
-    pos = picotm_slist_front(&self->ofd_tx_alloced_list);
-    if (pos) {
-        picotm_slist_dequeue_front(&self->ofd_tx_alloced_list);
-        ofd_tx = ofd_tx_of_list_entry(pos);
-    } else {
-        ofd_tx = ofd_tx_create(error);
-        if (picotm_error_is_set(error)) {
-            return NULL;
-        }
-    }
-
-    return ofd_tx;
-}
-
-static struct ofd_tx*
-get_ofd_tx_with_ref(struct fildes_tx* self, int fildes, bool newly_created,
-                    struct picotm_error* error)
-{
-    struct ofd_id id;
-    ofd_id_init_from_fildes(&id, fildes, error);
-    if (picotm_error_is_set(error)) {
-        return NULL;
-    }
-
-    struct ofd_tx* ofd_tx = get_ofd_tx(self, &id, error);
-    if (picotm_error_is_set(error)) {
-        goto err_get_ofd_tx;
-    }
-
-    if (ofd_tx_holds_ref(ofd_tx)) {
-        return ofd_tx; /* fast path: already holds a reference */
-    }
-
-    struct file_tx* file_tx = get_file_tx_with_ref(self, fildes,
-                                                   newly_created,
-                                                   error);
-    if (picotm_error_is_set(error)) {
-        goto err_get_file_tx_with_ref;
-    }
-
-    struct ofd* ofd = fildes_ref_ofd(self->fildes, fildes, newly_created,
-                                     error);
-    if (picotm_error_is_set(error)) {
-        goto err_ofdtab_ref_fildes;
-    }
-
-    ofd_tx_ref_or_set_up(ofd_tx, ofd, file_tx, error);
-    if (picotm_error_is_set(error)) {
-        goto err_ofd_tx_ref_or_set_up;
-    }
-
-    picotm_slist_enqueue_front(&self->ofd_tx_active_list,
-                               &ofd_tx->list_entry);
-
-    /* In |struct fildes_tx| we hold at most one reference to the
-     * transaction state of each open file description. This reference is
-     * released in fildes_tx_finish().
-     */
-    ofd_unref(ofd);
-
-    ofd_id_uninit(&id);
-
-    return ofd_tx;
-
-err_ofd_tx_ref_or_set_up:
-    ofd_unref(ofd);
-err_ofdtab_ref_fildes:
-err_get_file_tx_with_ref:
-err_get_ofd_tx:
-    ofd_id_uninit(&id);
-    return NULL;
-}
-
 static struct fd_tx*
 get_existing_fd_tx(struct fildes_tx* self, int fildes)
 {
@@ -1199,8 +1080,8 @@ get_fd_tx(struct fildes_tx* self, int fildes)
 }
 
 static struct fd_tx*
-find_fd_tx_with_ref(struct fildes_tx* self, int fildes, int ofd_fildes,
-                    bool newly_created_ofd, struct picotm_error* error)
+find_fd_tx_with_ref(struct fildes_tx* self, int fildes, int old_fildes,
+                    bool new_file, struct picotm_error* error)
 {
     struct fd_tx* fd_tx = get_fd_tx(self, fildes);
 
@@ -1224,14 +1105,13 @@ find_fd_tx_with_ref(struct fildes_tx* self, int fildes, int ofd_fildes,
         return NULL;
     }
 
-    struct ofd_tx* ofd_tx = get_ofd_tx_with_ref(self, ofd_fildes,
-                                                newly_created_ofd,
-                                                error);
+    struct file_tx* file_tx = get_file_tx_with_ref(self, old_fildes,
+                                                   new_file, error);
     if (picotm_error_is_set(error)) {
-        goto err_get_ofd_tx_with_ref;
+        goto err_get_file_tx_with_ref;
     }
 
-    fd_tx_ref_or_set_up(fd_tx, fd, ofd_tx, error);
+    fd_tx_ref_or_set_up(fd_tx, fd, file_tx, error);
     if (picotm_error_is_set(error)) {
         goto err_fd_tx_ref;
     }
@@ -1243,8 +1123,8 @@ find_fd_tx_with_ref(struct fildes_tx* self, int fildes, int ofd_fildes,
     return fd_tx;
 
 err_fd_tx_ref:
-    ofd_tx_unref(ofd_tx);
-err_get_ofd_tx_with_ref:
+    file_tx_unref(file_tx);
+err_get_file_tx_with_ref:
     fd_unref(fd);
     return NULL;
 }
@@ -1257,10 +1137,10 @@ get_fd_tx_with_ref(struct fildes_tx* self, int fildes,
 }
 
 static struct fd_tx*
-add_new_fd_tx_with_ref(struct fildes_tx* self, int fildes, bool newly_created_ofd,
+add_new_fd_tx_with_ref(struct fildes_tx* self, int fildes, bool new_file,
                        struct picotm_error* error)
 {
-    return find_fd_tx_with_ref(self, fildes, fildes, newly_created_ofd, error);
+    return find_fd_tx_with_ref(self, fildes, fildes, new_file, error);
 }
 
 static struct fd_tx*
