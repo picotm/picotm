@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2017-2019  Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2017-2020  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -26,7 +26,6 @@
 #include "fdtab_tx.h"
 #include "fd_tx.h"
 #include "fildes_event.h"
-#include "ofd_tx.h"
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -59,12 +58,6 @@ struct fildes_tx {
 
     /** Active instances of `struct file_tx` */
     struct picotm_slist  file_tx_active_list;
-
-    /** Allocated instances of `struct ofd_tx` */
-    struct picotm_slist  ofd_tx_alloced_list;
-
-    /** Active instances of `struct ofd_tx` */
-    struct picotm_slist  ofd_tx_active_list;
 
     /** Allocated instances of `struct pipebuf_tx` */
     struct picotm_slist  pipebuf_tx_alloced_list;

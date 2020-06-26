@@ -24,7 +24,6 @@
 #include "dirtab.h"
 #include "fdtab.h"
 #include "fifotab.h"
-#include "ofdtab.h"
 #include "pipebuftab.h"
 #include "regfiletab.h"
 #include "seekbuftab.h"
@@ -43,7 +42,6 @@ struct chrdev;
 struct dir;
 struct fd;
 struct fifo;
-struct ofd;
 struct picotm_error;
 struct picotm_rwstate;
 struct regfile;
@@ -51,8 +49,6 @@ struct socket;
 
 struct fildes {
     struct fildes_fdtab fdtab;
-
-    struct fildes_ofdtab ofdtab;
 
     struct fildes_chrdevtab chrdevtab;
     struct fildes_dirtab dirtab;
@@ -95,47 +91,6 @@ fildes_try_wrlock_fdtab(struct fildes* self,
 
 void
 fildes_unlock_fdtab(struct fildes* self, struct picotm_rwstate* lock_state);
-
-/*
- * ofdtab
- */
-
-/**
- * Returns a reference to an ofd structure for the given file descriptor.
- *
- * \param       fildes          A file descriptor.
- * \param       newly_created   True if the open file description has been
- *                              newly created.
- * \param[out]  error           Returns an error.
- * \returns A referenced instance of `struct ofd` that refers to the file
- *          descriptor's open file description.
- *
- * We cannot distiguish between open file descriptions. Two
- * file descriptors refering to the same buffer might share
- * the same open file description, or not.
- *
- * As a workaround, we only allow one file descriptor per file
- * buffer at the same time. If we see a second file descriptor
- * refering to a buffer that is already in use, the look-up
- * fails.
- *
- * For a solution, Linux (or any other Unix) has to provide a
- * unique id for each open file description, or at least give
- * us a way of figuring out the relationship between file descriptors
- * and open file descriptions.
- */
-struct ofd*
-fildes_ref_ofd(struct fildes* self, int fildes, bool newly_created,
-               struct picotm_error* error);
-
-/**
- * Returns the index of an ofd structure within the ofd table.
- *
- * \param   ofd An ofd structure.
- * \returns The ofd structure's index in the ofd table.
- */
-size_t
-fildes_ofd_index(struct fildes* self, struct ofd* ofd);
 
 /*
  * chrdevtab

@@ -40,7 +40,6 @@
 #include "fifo_tx.h"
 #include "fildes.h"
 #include "fildes_log.h"
-#include "ofdtab.h"
 #include "openop.h"
 #include "openoptab.h"
 #include "pipebuf.h"
@@ -245,13 +244,6 @@ file_tx_retype(struct file_tx* self, enum picotm_libc_file_type type)
     }
 }
 
-static void
-ofd_tx_destroy(struct ofd_tx* self)
-{
-    ofd_tx_uninit(self);
-    free(self);
-}
-
 void
 fildes_tx_init(struct fildes_tx* self, struct fildes* fildes,
                struct fildes_log* log)
@@ -269,9 +261,6 @@ fildes_tx_init(struct fildes_tx* self, struct fildes* fildes,
 
     picotm_slist_init_head(&self->file_tx_alloced_list);
     picotm_slist_init_head(&self->file_tx_active_list);
-
-    picotm_slist_init_head(&self->ofd_tx_alloced_list);
-    picotm_slist_init_head(&self->ofd_tx_active_list);
 
     picotm_slist_init_head(&self->pipebuf_tx_alloced_list);
     picotm_slist_init_head(&self->pipebuf_tx_active_list);
@@ -311,13 +300,6 @@ cleanup_pipebuf_tx_alloced_list_cb(struct picotm_slist* item)
 }
 
 static void
-cleanup_ofd_tx_alloced_list_cb(struct picotm_slist* item)
-{
-    struct ofd_tx* ofd_tx = ofd_tx_of_list_entry(item);
-    ofd_tx_destroy(ofd_tx);
-}
-
-static void
 cleanup_file_tx_alloced_list_cb(struct picotm_slist* item)
 {
     struct file_tx* file_tx = file_tx_of_list_entry(item);
@@ -350,12 +332,6 @@ fildes_tx_uninit(struct fildes_tx* self)
                            cleanup_file_tx_alloced_list_cb);
     picotm_slist_uninit_head(&self->file_tx_alloced_list);
     picotm_slist_uninit_head(&self->file_tx_active_list);
-
-    /* Uninit allocated instances of |struct ofd_tx| */
-    picotm_slist_cleanup_0(&self->ofd_tx_alloced_list,
-                           cleanup_ofd_tx_alloced_list_cb);
-    picotm_slist_uninit_head(&self->ofd_tx_alloced_list);
-    picotm_slist_uninit_head(&self->ofd_tx_active_list);
 
     /* Uninit fd_txs */
 
@@ -3475,22 +3451,6 @@ finish_file_tx_cb(struct picotm_slist* item, void* data)
 }
 
 static void
-finish_ofd_tx(struct ofd_tx* ofd_tx, struct fildes_tx* fildes_tx)
-{
-    ofd_tx_finish(ofd_tx);
-    ofd_tx_unref(ofd_tx);
-
-    picotm_slist_enqueue_front(&fildes_tx->ofd_tx_alloced_list,
-                               &ofd_tx->list_entry);
-}
-
-static void
-finish_ofd_tx_cb(struct picotm_slist* item, void* data)
-{
-    finish_ofd_tx(ofd_tx_of_list_entry(item), data);
-}
-
-static void
 finish_fd_tx(struct fd_tx* fd_tx)
 {
     fd_tx_finish(fd_tx);
@@ -3521,9 +3481,6 @@ fildes_tx_finish(struct fildes_tx* self, struct picotm_error* error)
     /* Unref files */
     picotm_slist_cleanup_1(&self->file_tx_active_list,
                            finish_file_tx_cb, self);
-
-    /* Unref open file descriptions */
-    picotm_slist_cleanup_1(&self->ofd_tx_active_list, finish_ofd_tx_cb, self);
 
     /* Unref file descriptors */
     picotm_slist_cleanup_0(&self->fd_tx_active_list, finish_fd_tx_cb);

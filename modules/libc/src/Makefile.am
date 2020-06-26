@@ -122,14 +122,6 @@ libpicotm_c_la_SOURCES = allocator/allocator_event.c \
                          fildes/iooptab.h \
                          fildes/module.c \
                          fildes/module.h \
-                         fildes/ofd.c \
-                         fildes/ofd.h \
-                         fildes/ofd_id.c \
-                         fildes/ofd_id.h \
-                         fildes/ofdtab.c \
-                         fildes/ofdtab.h \
-                         fildes/ofd_tx.c \
-                         fildes/ofd_tx.h \
                          fildes/openop.c \
                          fildes/openop.h \
                          fildes/openoptab.c \
