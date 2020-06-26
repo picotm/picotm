@@ -44,7 +44,7 @@
 #define FDTX_FL_LOCALSTATE 1L /** \brief Signals local state changes */
 
 struct fcntlop;
-struct ofd_tx;
+struct file_tx;
 struct picotm_error;
 struct stat;
 
@@ -61,7 +61,7 @@ struct fd_tx {
 
     struct fd* fd;
 
-    struct ofd_tx* ofd_tx;
+    struct file_tx* file_tx;
     enum picotm_libc_cc_mode cc_mode;
 
     /** Reader/writer state for file descriptor */
@@ -109,7 +109,7 @@ fd_tx_finish(struct fd_tx* self);
  */
 void
 fd_tx_ref_or_set_up(struct fd_tx* self, struct fd* fd,
-                    struct ofd_tx* ofd_tx,
+                    struct file_tx* file_tx,
                     struct picotm_error* error);
 
 /**
