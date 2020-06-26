@@ -1,6 +1,7 @@
 /*
  * picotm - A system-level transaction manager
  * Copyright (c) 2017-2018  Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2020       Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -82,7 +83,7 @@ file_tx_file_type(const struct file_tx* self);
  * \brief Sets up a file transaction or acquires a reference on an
  *        already set-up instance.
  * \param       self    A file transaction.
- * \param       ofd     The global file state.
+ * \param       file    The global file state.
  * \param       data    User-data.
  * \param[out]  error   Returns an error to the caller.
  */
