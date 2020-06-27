@@ -21,72 +21,26 @@
 
 #pragma once
 
-#include <pthread.h>
-#include <stdbool.h>
-#include <stddef.h>
 #include "dir.h"
-
-/**
- * \cond impl || libc_impl || libc_impl_fd
- * \ingroup libc_impl
- * \ingroup libc_impl_fd
- * \file
- * \endcond
- */
-
-struct picotm_error;
+#include "filetab.h"
 
 struct fildes_dirtab {
-    struct dir       tab[MAXNUMFD];
-    size_t           len;
-    pthread_rwlock_t rwlock;
+    struct dir            tab[MAXNUMFD];
+    struct fildes_filetab filetab;
 };
 
-#define FILDES_DIRTAB_INITIALIZER           \
-{                                           \
-    .len = 0,                               \
-    .rwlock = PTHREAD_RWLOCK_INITIALIZER    \
-}
+void
+fildes_dirtab_init(struct fildes_dirtab self[static 1],
+                   struct picotm_error error[static 1]);
 
 void
-fildes_dirtab_init(struct fildes_dirtab* self, struct picotm_error* error);
+fildes_dirtab_uninit(struct fildes_dirtab self[static 1]);
 
-void
-fildes_dirtab_uninit(struct fildes_dirtab* self);
-
-/**
- * Returns a reference to an dir structure for the given file descriptor.
- * \param       self        The dir table.
- * \param       fildes      A file descriptor.
- * \param       new_file    True if the open file description has been
- *                          newly created.
- * \param[out]  error       Returns an error.
- * \returns A referenced instance of `struct dir` that refers to the file
- *          descriptor's open file description.
- *
- * We cannot distiguish between open file descriptions. Two
- * file descriptors refering to the same buffer might share
- * the same open file description, or not.
- *
- * As a workaround, we only allow one file descriptor per file
- * buffer at the same time. If we see a second file descriptor
- * refering to a buffer that is already in use, the look-up
- * fails.
- *
- * For a solution, Linux (or any other Unix) has to provide a
- * unique id for each open file description, or at least give
- * us a way of figuring out the relationship between file descriptors
- * and open file descriptions.
- */
 struct dir*
-fildes_dirtab_ref_fildes(struct fildes_dirtab* self, int fildes,
-                         bool new_file, struct picotm_error* error);
+fildes_dirtab_ref_fildes(struct fildes_dirtab self[static 1],
+                         int fildes, bool new_file,
+                         struct picotm_error error[static 1]);
 
-/**
- * Returns the index of an dir structure within the dir table.
- * \param   self    The dir table.
- * \param   dir     An dir structure.
- * \returns The dir structure's index in the dir table.
- */
 size_t
-fildes_dirtab_index(struct fildes_dirtab* self, struct dir* dir);
+fildes_dirtab_index(struct fildes_dirtab self[static 1],
+                    struct dir dir[static 1]);

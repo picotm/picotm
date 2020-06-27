@@ -21,73 +21,26 @@
 
 #pragma once
 
-#include <pthread.h>
-#include <stdbool.h>
-#include <stddef.h>
+#include "filetab.h"
 #include "socket.h"
 
-/**
- * \cond impl || libc_impl || libc_impl_fd
- * \ingroup libc_impl
- * \ingroup libc_impl_fd
- * \file
- * \endcond
- */
-
-struct picotm_error;
-
 struct fildes_sockettab {
-    struct socket    tab[MAXNUMFD];
-    size_t           len;
-    pthread_rwlock_t rwlock;
+    struct socket         tab[MAXNUMFD];
+    struct fildes_filetab filetab;
 };
 
-#define FILDES_SOCKETTAB_INITIALIZER        \
-{                                           \
-    .len = 0,                               \
-    .rwlock = PTHREAD_RWLOCK_INITIALIZER    \
-}
+void
+fildes_sockettab_init(struct fildes_sockettab self[static 1],
+                      struct picotm_error error[static 1]);
 
 void
-fildes_sockettab_init(struct fildes_sockettab* self,
-                      struct picotm_error* error);
+fildes_sockettab_uninit(struct fildes_sockettab self[static 1]);
 
-void
-fildes_sockettab_uninit(struct fildes_sockettab* self);
-
-/**
- * Returns a reference to an socket structure for the given file descriptor.
- * \param       self        The socket table.
- * \param       fildes      A file descriptor.
- * \param       new_file    True if the open file description has been
- *                          newly created.
- * \param[out]  error       Returns an error.
- * \returns A referenced instance of `struct socket` that refers to the file
- *          descriptor's open file description.
- *
- * We cannot distiguish between open file descriptions. Two
- * file descriptors refering to the same buffer might share
- * the same open file description, or not.
- *
- * As a workaround, we only allow one file descriptor per file
- * buffer at the same time. If we see a second file descriptor
- * refering to a buffer that is already in use, the look-up
- * fails.
- *
- * For a solution, Linux (or any other Unix) has to provide a
- * unique id for each open file description, or at least give
- * us a way of figuring out the relationship between file descriptors
- * and open file descriptions.
- */
 struct socket*
-fildes_sockettab_ref_fildes(struct fildes_sockettab* self, int fildes,
-                            bool new_file, struct picotm_error* error);
+fildes_sockettab_ref_fildes(struct fildes_sockettab self[static 1],
+                            int fildes, bool new_file,
+                            struct picotm_error error[static 1]);
 
-/**
- * Returns the index of an socket structure within the socket table.
- * \param   self    The socket table.
- * \param   socket     An socket structure.
- * \returns The socket structure's index in the socket table.
- */
 size_t
-fildes_sockettab_index(struct fildes_sockettab* self, struct socket* socket);
+fildes_sockettab_index(struct fildes_sockettab self[static 1],
+                       struct socket socket[static 1]);
