@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2019   Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2019-2020  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -21,24 +21,14 @@
 #include "pipebuf.h"
 #include "picotm/picotm-error.h"
 #include "picotm/picotm-lib-array.h"
-#include "picotm/picotm-lib-rwstate.h"
+#include "picotm/picotm-lib-tab.h"
 
-static void
-init_rwlocks(struct picotm_rwlock* beg, const struct picotm_rwlock* end)
+static size_t
+init_rwlock(void* data, struct picotm_error error[static 1])
 {
-    while (beg < end) {
-        picotm_rwlock_init(beg);
-        ++beg;
-    }
-}
+    picotm_rwlock_init(data);
 
-static void
-uninit_rwlocks(struct picotm_rwlock* beg, const struct picotm_rwlock* end)
-{
-    while (beg < end) {
-        picotm_rwlock_uninit(beg);
-        ++beg;
-    }
+    return 1;
 }
 
 void
@@ -46,158 +36,38 @@ pipebuf_init(struct pipebuf* self, struct picotm_error* error)
 {
     assert(self);
 
-    picotm_shared_ref16_obj_init(&self->ref_obj, error);
-    if (picotm_error_is_set(error)) {
+    filebuf_init(&self->base, error);
+    if (picotm_error_is_set(error))
         return;
-    }
 
-    filebuf_id_clear(&self->id);
+    picotm_tabwalk_1(self->rwlock, picotm_arraylen(self->rwlock),
+                     sizeof(self->rwlock[0]), init_rwlock, error);
+    if (picotm_error_is_set(error))
+        goto err_filebuf_uninit;
 
-    init_rwlocks(picotm_arraybeg(self->rwlock),
-                 picotm_arrayend(self->rwlock));
+    return;
+
+err_filebuf_uninit:
+    filebuf_uninit(&self->base);
+}
+
+static size_t
+uninit_rwlock(void* data, struct picotm_error error[static 1])
+{
+    picotm_rwlock_uninit(data);
+
+    return 1;
 }
 
 void
 pipebuf_uninit(struct pipebuf* self)
 {
-    assert(self);
+    struct picotm_error ignored = PICOTM_ERROR_INITIALIZER;
 
-    uninit_rwlocks(picotm_arraybeg(self->rwlock),
-                   picotm_arrayend(self->rwlock));
+    picotm_tabwalk_1(self->rwlock, picotm_arraylen(self->rwlock),
+                     sizeof(self->rwlock[0]), uninit_rwlock, &ignored);
 
-    picotm_shared_ref16_obj_uninit(&self->ref_obj);
-}
-
-/*
- * Reference counting
- */
-
-static struct pipebuf*
-pipebuf_of_ref_obj(struct picotm_shared_ref16_obj* ref_obj)
-{
-    return picotm_containerof(ref_obj, struct pipebuf, ref_obj);
-}
-
-struct ref_obj_data {
-    const struct filebuf_id* id;
-    int fildes;
-    int cmp;
-};
-
-#define REF_OBJ_DATA_INITIALIZER(id_, fildes_, cmp_)    \
-    {                                                   \
-        .id = (id_),                                    \
-        .fildes = (fildes_),                            \
-        .cmp = (cmp_),                                  \
-    }
-
-static void
-first_ref(struct picotm_shared_ref16_obj* ref_obj, void* data,
-          struct picotm_error* error)
-{
-    struct pipebuf* self = pipebuf_of_ref_obj(ref_obj);
-    assert(self);
-
-    const struct ref_obj_data* ref_obj_data = data;
-    assert(ref_obj_data);
-
-    filebuf_id_init_from_fildes(&self->id, ref_obj_data->fildes, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
-}
-
-void
-pipebuf_ref_or_set_up(struct pipebuf* self, int fildes,
-                      struct picotm_error* error)
-{
-    assert(self);
-
-    struct ref_obj_data data = REF_OBJ_DATA_INITIALIZER(NULL, fildes, 0);
-    picotm_shared_ref16_obj_up(&self->ref_obj, &data, NULL, first_ref,
-                               error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
-}
-
-static bool
-cond_ref(struct picotm_shared_ref16_obj* ref_obj, void* data,
-         struct picotm_error* error)
-{
-    struct pipebuf* self = pipebuf_of_ref_obj(ref_obj);
-    assert(self);
-
-    struct ref_obj_data* ref_obj_data = data;
-    assert(ref_obj_data);
-
-    ref_obj_data->cmp = filebuf_id_cmp(&self->id, ref_obj_data->id);
-
-    return !ref_obj_data->cmp;
-}
-
-int
-pipebuf_ref_or_set_up_if_id(struct pipebuf* self, int fildes,
-                            const struct filebuf_id* id,
-                            struct picotm_error* error)
-{
-    assert(self);
-
-    struct ref_obj_data data = REF_OBJ_DATA_INITIALIZER(id, fildes, 0);
-    picotm_shared_ref16_obj_up(&self->ref_obj, &data, cond_ref, first_ref,
-                               error);
-    if (picotm_error_is_set(error)) {
-        return 0;
-    }
-
-    return data.cmp;
-}
-
-int
-pipebuf_ref_if_id(struct pipebuf* self, const struct filebuf_id* id)
-{
-    assert(self);
-
-    struct ref_obj_data data = REF_OBJ_DATA_INITIALIZER(id, -1, 0);
-    struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    picotm_shared_ref16_obj_up(&self->ref_obj, &data, cond_ref, NULL, &error);
-    if (picotm_error_is_set(&error)) {
-        return 0;
-    }
-
-    return data.cmp;
-}
-
-void
-pipebuf_ref(struct pipebuf* self, struct picotm_error* error)
-{
-    assert(self);
-
-    picotm_shared_ref16_obj_up(&self->ref_obj, NULL, NULL, NULL, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
-}
-
-static void
-final_ref(struct picotm_shared_ref16_obj* ref_obj, void* data,
-          struct picotm_error* error)
-{
-    struct pipebuf* self = pipebuf_of_ref_obj(ref_obj);
-    assert(self);
-
-    /* We clear the id on releasing the final reference. This
-     * instance remains initialized, but is available for later
-     * use. */
-    filebuf_id_clear(&self->id);
-}
-
-void
-pipebuf_unref(struct pipebuf* self)
-{
-    assert(self);
-
-    picotm_shared_ref16_obj_down(&self->ref_obj, NULL, NULL, final_ref);
+    filebuf_uninit(&self->base);
 }
 
 /*
@@ -205,16 +75,12 @@ pipebuf_unref(struct pipebuf* self)
  */
 
 void
-pipebuf_try_rdlock_field(struct pipebuf* self, enum pipebuf_field field,
-                         struct picotm_rwstate* rwstate,
-                         struct picotm_error* error)
+pipebuf_try_rdlock_field(struct pipebuf self[static 1],
+                         enum pipebuf_field field,
+                         struct picotm_rwstate rwstate[static 1],
+                         struct picotm_error error[static 1])
 {
-    assert(self);
-
     picotm_rwstate_try_rdlock(rwstate, self->rwlock + field, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
 }
 
 void
@@ -222,19 +88,12 @@ pipebuf_try_wrlock_field(struct pipebuf* self, enum pipebuf_field field,
                          struct picotm_rwstate* rwstate,
                          struct picotm_error* error)
 {
-    assert(self);
-
     picotm_rwstate_try_wrlock(rwstate, self->rwlock + field, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
 }
 
 void
 pipebuf_unlock_field(struct pipebuf* self, enum pipebuf_field field,
                      struct picotm_rwstate* rwstate)
 {
-    assert(self);
-
     picotm_rwstate_unlock(rwstate, self->rwlock + field);
 }

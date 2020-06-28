@@ -20,25 +20,10 @@
 
 #pragma once
 
-#include "picotm/picotm-lib-ptr.h"
 #include "picotm/picotm-lib-rwlock.h"
-#include "picotm/picotm-lib-shared-ref-obj.h"
-#include "filebuf_id.h"
+#include "picotm/picotm-lib-rwstate.h"
+#include "filebuf.h"
 
-/**
- * \cond impl || libc_impl || libc_impl_fd
- * \ingroup libc_impl
- * \ingroup libc_impl_fd
- * \file
- * \endcond
- */
-
-struct picotm_error;
-struct picotm_rwstate;
-
-/**
- * Enumerates fields of `struct sockbuf`.
- */
 enum sockbuf_field {
     SOCKBUF_FIELD_RECV_END,
     SOCKBUF_FIELD_SEND_END,
@@ -46,119 +31,30 @@ enum sockbuf_field {
     NUMBER_OF_SOCKBUF_FIELDS
 };
 
-/**
- * Represents a sockbuf's open file description.
- */
 struct sockbuf {
-
-    /** Reference-counting base object. */
-    struct picotm_shared_ref16_obj ref_obj;
-
-    /** The socket buffer's unique id. */
-    struct filebuf_id id;
-
-    /** Reader/writer state locks. */
-    struct picotm_rwlock  rwlock[NUMBER_OF_SOCKBUF_FIELDS];
+    struct filebuf base;
+    struct picotm_rwlock rwlock[NUMBER_OF_SOCKBUF_FIELDS];
 };
 
-/**
- * \brief Initializes a sockbuf instance.
- * \param       self    The sockbuf instance to initialize.
- * \param[out]  error   Returns an error to the caller.
- */
 void
-sockbuf_init(struct sockbuf* self, struct picotm_error* error);
+sockbuf_init(struct sockbuf self[static 1],
+             struct picotm_error error[static 1]);
 
-/**
- * \brief Uninitializes a sockbuf instance.
- * \param   self    The sockbuf instance to uninitialize.
- */
 void
-sockbuf_uninit(struct sockbuf* self);
+sockbuf_uninit(struct sockbuf self[static 1]);
 
-/**
- * \brief Sets up an instance of `struct sockbuf` or acquires a reference
- *        on an already set-up instance.
- * \param       self    The sockbuf instance.
- * \param       fildes  The sockbuf's sockbuf descriptor.
- * \param[out]  error   Returns an error to the caller.
- */
 void
-sockbuf_ref_or_set_up(struct sockbuf* self, int fildes,
-                      struct picotm_error* error);
+sockbuf_try_rdlock_field(struct sockbuf self[static 1],
+                         enum sockbuf_field field,
+                         struct picotm_rwstate rwstate[static 1],
+                         struct picotm_error error[static 1]);
 
-/**
- * \brief Compares the sockbuf's id to an id and acquires a reference if both
- *        id's are equal. The sockbuf instance is set up from the provided
- *        file descriptor if necessary.
- * \param       self        The sockbuf instance.
- * \param       fildes      The sockbuf's sockbuf descriptor.
- * \param       id          The id to compare to.
- * \param[out]  error       Returns an error ot the caller.
- * \returns A value less than, equal to, or greater than if the sockbuf's
- *          id is less than, equal to, or greater than the given id.
- */
-int
-sockbuf_ref_or_set_up_if_id(struct sockbuf* self, int fildes,
-                            const struct filebuf_id* id,
-                            struct picotm_error* error);
-
-/**
- * \brief Acquires a reference on an instance of `struct sockbuf`.
- * \param       self    The sockbuf instance.
- * \param[out]  error   Returns an error to the caller.
- */
 void
-sockbuf_ref(struct sockbuf* self, struct picotm_error* error);
+sockbuf_try_wrlock_field(struct sockbuf self[static 1],
+                         enum sockbuf_field field,
+                         struct picotm_rwstate rwstate[static 1],
+                         struct picotm_error error[static 1]);
 
-/**
- * \brief Compares the sockbuf's id to an id and acquires a reference if both
- *        id's are equal.
- * \param   self    The sockbuf instance.
- * \param   id      The id to compare to.
- * \returns A value less than, equal to, or greater than if the sockbuf's id
- *          is less than, equal to, or greater than the given id.
- */
-int
-sockbuf_ref_if_id(struct sockbuf* self, const struct filebuf_id* id);
-
-/**
- * \brief Unreferences a sockbuf.
- * \param   self    The sockbuf instance.
- */
 void
-sockbuf_unref(struct sockbuf* self);
-
-/**
- * \brief Tries to acquire a reader lock on a sockbuf.
- * \param       self        The sockbuf instance.
- * \param       field       The reader lock's field.
- * \param       rwstate     The transaction's reader/writer state.
- * \param[out]  error       Returns an error ot the caller.
- */
-void
-sockbuf_try_rdlock_field(struct sockbuf* self, enum sockbuf_field field,
-                         struct picotm_rwstate* rwstate,
-                         struct picotm_error* error);
-
-/**
- * \brief Tries to acquire a writer lock on a sockbuf.
- * \param       self        The sockbuf instance.
- * \param       field       The writer lock's field.
- * \param       rwstate     The transaction's reader/writer state.
- * \param[out]  error       Returns an error ot the caller.
- */
-void
-sockbuf_try_wrlock_field(struct sockbuf* self, enum sockbuf_field field,
-                         struct picotm_rwstate* rwstate,
-                         struct picotm_error* error);
-
-/**
- * \brief Releases a lock on a sockbuf.
- * \param   self    The sockbuf instance.
- * \param   field   The reader/writer lock's field.
- * \param   rwstate The transaction's reader/writer state.
- */
-void
-sockbuf_unlock_field(struct sockbuf* self, enum sockbuf_field field,
-                     struct picotm_rwstate* rwstate);
+sockbuf_unlock_field(struct sockbuf self[static 1], enum sockbuf_field field,
+                     struct picotm_rwstate rwstate[static 1]);

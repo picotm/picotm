@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2019   Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2019-2020  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -104,7 +104,7 @@ pipebuf_tx_ref_or_set_up(struct pipebuf_tx* self,
     }
 
     /* acquire reference on shared file state */
-    pipebuf_ref(pipebuf, error);
+    filebuf_ref(&pipebuf->base, error);
     if (picotm_error_is_set(error)) {
         goto err_pipebuf_ref;
     }
@@ -137,7 +137,7 @@ pipebuf_tx_unref(struct pipebuf_tx* self)
         return;
     }
 
-    pipebuf_unref(self->pipebuf);
+    filebuf_unref(&self->pipebuf->base);
     self->pipebuf = NULL;
 }
 

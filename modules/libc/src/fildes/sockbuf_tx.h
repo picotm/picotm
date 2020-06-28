@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2019   Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2019-2020  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -20,9 +20,10 @@
 
 #pragma once
 
+#include "picotm/picotm-lib-ptr.h"
 #include "picotm/picotm-lib-rwstate.h"
-#include "picotm/picotm-libc.h"
 #include "picotm/picotm-lib-slist.h"
+#include "picotm/picotm-libc.h"
 #include <sys/types.h>
 #include "sockbuf.h"
 

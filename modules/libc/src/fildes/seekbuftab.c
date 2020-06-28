@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2019   Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2019-2020  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -128,7 +128,7 @@ find_by_id(struct fildes_seekbuftab* seekbuftab, const struct filebuf_id* id)
 
     while (seekbuf_beg < seekbuf_end) {
 
-        const int cmp = seekbuf_ref_if_id(seekbuf_beg, id);
+        const int cmp = filebuf_ref_if_id(&seekbuf_beg->base, id);
         if (!cmp) {
             return seekbuf_beg;
         }
@@ -150,8 +150,8 @@ search_by_id(struct fildes_seekbuftab* seekbuftab, const struct filebuf_id* id,
 
     while (seekbuf_beg < seekbuf_end) {
 
-        const int cmp = seekbuf_ref_or_set_up_if_id(seekbuf_beg, fildes,
-                                                    id, error);
+        const int cmp = filebuf_ref_or_set_up_if_id(&seekbuf_beg->base,
+                                                    fildes, id, error);
         if (!cmp) {
             if (picotm_error_is_set(error)) {
                 return NULL;
@@ -231,7 +231,7 @@ fildes_seekbuftab_ref_fildes(struct fildes_seekbuftab* self, int fildes,
 
     /* To perform the setup, we must have acquired a writer lock at
      * this point. No other transaction may interfere. */
-    seekbuf_ref_or_set_up(seekbuf, fildes, error);
+    filebuf_ref_or_set_up(&seekbuf->base, fildes, error);
     if (picotm_error_is_set(error)) {
         goto err_seekbuf_ref_or_set_up;
     }
