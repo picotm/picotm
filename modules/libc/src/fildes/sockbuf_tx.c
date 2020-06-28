@@ -1,6 +1,6 @@
 /*
  * picotm - A system-level transaction manager
- * Copyright (c) 2019   Thomas Zimmermann <contact@tzimmermann.org>
+ * Copyright (c) 2019-2020  Thomas Zimmermann <contact@tzimmermann.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -104,7 +104,7 @@ sockbuf_tx_ref_or_set_up(struct sockbuf_tx* self,
     }
 
     /* acquire reference on shared file state */
-    sockbuf_ref(sockbuf, error);
+    filebuf_ref(&sockbuf->base, error);
     if (picotm_error_is_set(error)) {
         goto err_sockbuf_ref;
     }
@@ -137,7 +137,7 @@ sockbuf_tx_unref(struct sockbuf_tx* self)
         return;
     }
 
-    sockbuf_unref(self->sockbuf);
+    filebuf_unref(&self->sockbuf->base);
     self->sockbuf = NULL;
 }
 

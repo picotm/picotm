@@ -360,7 +360,7 @@ true_if_eq_pipebuf_id_cb(const struct picotm_slist* item, void* data)
     const struct filebuf_id* id = data;
     assert(id);
 
-    return !filebuf_id_cmp(&pipebuf_tx->pipebuf->id, id);
+    return !filebuf_id_cmp(&pipebuf_tx->pipebuf->base.id, id);
 }
 
 static struct pipebuf_tx*
@@ -432,12 +432,12 @@ get_pipebuf_tx_with_ref(struct fildes_tx* self, int fildes, bool new_file,
      * transaction state of each seekable buffer. This reference is
      * released in fildes_tx_finish().
      */
-    pipebuf_unref(pipebuf);
+    filebuf_unref(&pipebuf->base);
 
     return pipebuf_tx;
 
 err_pipebuf_tx_ref_or_set_up:
-    pipebuf_unref(pipebuf);
+    filebuf_unref(&pipebuf->base);
 err_fildes_ref_pipebuf:
 err_get_pipebuf_tx:
     return NULL;
@@ -454,7 +454,7 @@ true_if_eq_seekbuf_id_cb(const struct picotm_slist* item, void* data)
     const struct filebuf_id* id = data;
     assert(id);
 
-    return !filebuf_id_cmp(&seekbuf_tx->seekbuf->id, id);
+    return !filebuf_id_cmp(&seekbuf_tx->seekbuf->base.id, id);
 }
 
 static struct seekbuf_tx*
@@ -526,12 +526,12 @@ get_seekbuf_tx_with_ref(struct fildes_tx* self, int fildes, bool new_file,
      * transaction state of each seekable buffer. This reference is
      * released in fildes_tx_finish().
      */
-    seekbuf_unref(seekbuf);
+    filebuf_unref(&seekbuf->base);
 
     return seekbuf_tx;
 
 err_seekbuf_tx_ref_or_set_up:
-    seekbuf_unref(seekbuf);
+    filebuf_unref(&seekbuf->base);
 err_fildes_ref_seekbuf:
 err_get_seekbuf_tx:
     return NULL;
@@ -562,7 +562,7 @@ true_if_eq_sockbuf_id_cb(const struct picotm_slist* item, void* data)
     const struct filebuf_id* id = data;
     assert(id);
 
-    return !filebuf_id_cmp(&sockbuf_tx->sockbuf->id, id);
+    return !filebuf_id_cmp(&sockbuf_tx->sockbuf->base.id, id);
 }
 
 static struct sockbuf_tx*
@@ -634,12 +634,12 @@ get_sockbuf_tx_with_ref(struct fildes_tx* self, int fildes, bool new_file,
      * transaction state of each socket buffer. This reference is
      * released in fildes_tx_finish().
      */
-    sockbuf_unref(sockbuf);
+    filebuf_unref(&sockbuf->base);
 
     return sockbuf_tx;
 
 err_sockbuf_tx_ref_or_set_up:
-    sockbuf_unref(sockbuf);
+    filebuf_unref(&sockbuf->base);
 err_fildes_ref_sockbuf:
 err_get_sockbuf_tx:
     return NULL;
