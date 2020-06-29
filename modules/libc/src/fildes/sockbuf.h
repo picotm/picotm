@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include "picotm/picotm-lib-ptr.h"
 #include "picotm/picotm-lib-rwlock.h"
 #include "picotm/picotm-lib-rwstate.h"
 #include "filebuf.h"
@@ -35,6 +36,12 @@ struct sockbuf {
     struct filebuf base;
     struct picotm_rwlock rwlock[NUMBER_OF_SOCKBUF_FIELDS];
 };
+
+static inline struct sockbuf*
+sockbuf_of_base(struct filebuf base[static 1])
+{
+    return picotm_containerof(base, struct sockbuf, base);
+}
 
 void
 sockbuf_init(struct sockbuf self[static 1],

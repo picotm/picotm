@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include "picotm/picotm-lib-ptr.h"
 #include "picotm/picotm-lib-rwlock.h"
 #include "picotm/picotm-lib-rwstate.h"
 #include "filebuf.h"
@@ -37,6 +38,12 @@ struct seekbuf {
     struct picotm_rwlock  rwlock[NUMBER_OF_SEEKBUF_FIELDS];
     struct rwlockmap rwlockmap;
 };
+
+static inline struct seekbuf*
+seekbuf_of_base(struct filebuf base[static 1])
+{
+    return picotm_containerof(base, struct seekbuf, base);
+}
 
 void
 seekbuf_init(struct seekbuf self[static 1],
