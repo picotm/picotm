@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include "picotm/picotm-lib-ptr.h"
 #include "picotm/picotm-lib-rwlock.h"
 #include "picotm/picotm-lib-rwstate.h"
 #include "filebuf.h"
@@ -38,6 +39,12 @@ struct pipebuf {
     struct filebuf base;
     struct picotm_rwlock rwlock[NUMBER_OF_PIPEBUF_FIELDS];
 };
+
+static inline struct pipebuf*
+pipebuf_of_base(struct filebuf base[static 1])
+{
+    return picotm_containerof(base, struct pipebuf, base);
+}
 
 void
 pipebuf_init(struct pipebuf self[static 1],
