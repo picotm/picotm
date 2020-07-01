@@ -1,6 +1,7 @@
 #
 # picotm - A system-level transaction manager
 # Copyright (c) 2017-2018   Thomas Zimmermann <contact@tzimmermann.org>
+# Copyright (c) 2020        Thomas Zimmermann <contact@tzimmermann.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,46 +19,14 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 
-dist: trusty
+dist: bionic
 
 language: c
 
 matrix:
   include:
-    # GCC 4.9
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - gcc-4.9
-      env:
-         - MATRIX_EVAL="CC=gcc-4.9 && SKIP_MAKE_CHECK=1"
 
-    # GCC 5
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - gcc-5
-      env:
-         - MATRIX_EVAL="CC=gcc-5 && SKIP_MAKE_CHECK=1"
-
-    # GCC 6
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - gcc-6
-      env:
-        - MATRIX_EVAL="CC=gcc-6 && SKIP_MAKE_CHECK=1"
-
-    # GCC 7
+    # GCC 7 (Ubuntu default)
     - os: linux
       addons:
         apt:
@@ -68,64 +37,86 @@ matrix:
       env:
         - MATRIX_EVAL="CC=gcc-7"
 
-    # clang 3.6
+    # GCC 8
     - os: linux
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - clang-3.6
+            - gcc-8
       env:
-        - MATRIX_EVAL="CC=clang-3.6 && SKIP_MAKE_CHECK=1"
+        - MATRIX_EVAL="CC=gcc-8"
 
-    # clang 3.7 not available
-
-    # clang 3.8
+    # GCC 9
     - os: linux
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - clang-3.8
+            - gcc-9
       env:
-        - MATRIX_EVAL="CC=clang-3.8 && SKIP_MAKE_CHECK=1"
+        - MATRIX_EVAL="CC=gcc-9"
 
-    # clang 3.9
+    # GCC 10
     - os: linux
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - clang-3.9
+            - gcc-10
       env:
-        - MATRIX_EVAL="CC=clang-3.9 && SKIP_MAKE_CHECK=1"
+        - MATRIX_EVAL="CC=gcc-10"
 
-    # clang 4.0
+    # clang 6.0 (Ubuntu default)
     - os: linux
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-4.0
+            - llvm-toolchain-bionic-6.0
           packages:
-            - clang-4.0
+            - clang-6.0
       env:
-        - MATRIX_EVAL="CC=clang-4.0 && SKIP_MAKE_CHECK=1"
+        - MATRIX_EVAL="CC=clang"
 
-    # clang 5.0
+    # clang 8.0
     - os: linux
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-5.0
+            - llvm-toolchain-bionic-8.0
           packages:
-            - clang-5.0
+            - clang-8
       env:
-        - MATRIX_EVAL="CC=clang-5.0"
+        - MATRIX_EVAL="CC=clang-8"
+
+    # clang 9.0
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-bionic-9.0
+          packages:
+            - clang-9
+      env:
+        - MATRIX_EVAL="CC=clang-9"
+
+    # clang 10.0
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-bionic-10.0
+          packages:
+            - clang-10
+      env:
+        - MATRIX_EVAL="CC=clang-10"
 
 install:
     - sudo apt-get install -y autoconf-archive doxygen graphviz optipng valgrind
