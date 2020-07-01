@@ -1,6 +1,6 @@
 dnl
 dnl picotm - A system-level transaction manager
-dnl Copyright (c) 2017-2019 Thomas Zimmermann <contact@tzimmermann.org>
+dnl Copyright (c) 2017-2020 Thomas Zimmermann <contact@tzimmermann.org>
 dnl
 dnl This program is free software: you can redistribute it and/or modify
 dnl it under the terms of the GNU Lesser General Public License as published by
@@ -52,9 +52,12 @@ AS_VAR_APPEND([CFLAGS], [" $PTHREAD_CFLAGS"])
 AS_VAR_APPEND([LDFLAGS], [" $PTHREAD_LDFLAGS"])
 AS_VAR_SET([LIBS], ["$PTHREAD_LIBS $LIBS"])
 
-dnl Request C11
-AX_CHECK_COMPILE_FLAG([-std=c11],
-                      [AS_VAR_APPEND([CFLAGS], [" -std=c11"])])
+dnl Request C17, or fall back to C11
+AX_CHECK_COMPILE_FLAG([-std=c17],
+                      [AS_VAR_APPEND([CFLAGS], [" -std=c17"])],
+                      [AX_CHECK_COMPILE_FLAG(
+                        [-std=c11],
+                        [AS_VAR_APPEND([CFLAGS], [" -std=c11"])])])
 
 dnl By default, all symbols are hidden. Public symbols have to
 dnl exported explicitly.
