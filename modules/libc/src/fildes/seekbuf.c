@@ -108,8 +108,8 @@ seekbuf_try_wrlock_field(struct seekbuf self[static 1], enum seekbuf_field field
 }
 
 void
-seekbuf_unlock_field(struct seekbuf* self, enum seekbuf_field field,
-                     struct picotm_rwstate* rwstate)
+seekbuf_unlock_field(struct seekbuf self[static 1], enum seekbuf_field field,
+                     struct picotm_rwstate rwstate[static 1])
 {
     picotm_rwstate_unlock(rwstate, self->rwlock + field);
 }

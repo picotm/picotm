@@ -40,8 +40,8 @@ static const struct fildes_filetab_ops regfiletab_ops = {
 };
 
 void
-fildes_regfiletab_init(struct fildes_regfiletab* self,
-                       struct picotm_error* error)
+fildes_regfiletab_init(struct fildes_regfiletab self[static 1],
+                       struct picotm_error error[static 1])
 {
     fildes_filetab_init(&self->filetab, &regfiletab_ops, sizeof(self->tab),
                         (void*)&self->tab, sizeof(self->tab[0]), error);
