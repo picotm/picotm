@@ -54,8 +54,8 @@ fildes_chrdevtab_uninit(struct fildes_chrdevtab self[static 1])
 }
 
 struct chrdev*
-fildes_chrdevtab_ref_fildes(struct fildes_chrdevtab* self, int fildes,
-                            bool new_file, struct picotm_error* error)
+fildes_chrdevtab_ref_fildes(struct fildes_chrdevtab self[static 1], int fildes,
+                            bool new_file, struct picotm_error error[static 1])
 {
     struct file* file = fildes_filetab_ref_fildes(&self->filetab, fildes,
                                                   new_file, error);
@@ -66,7 +66,8 @@ fildes_chrdevtab_ref_fildes(struct fildes_chrdevtab* self, int fildes,
 }
 
 size_t
-fildes_chrdevtab_index(struct fildes_chrdevtab* self, struct chrdev* chrdev)
+fildes_chrdevtab_index(struct fildes_chrdevtab self[static 1],
+                       struct chrdev chrdev[static 1])
 {
     return fildes_filetab_index(&self->filetab, &chrdev->base);
 }

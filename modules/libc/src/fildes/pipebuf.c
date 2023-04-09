@@ -32,7 +32,8 @@ init_rwlock(void* data, struct picotm_error error[static 1])
 }
 
 void
-pipebuf_init(struct pipebuf* self, struct picotm_error* error)
+pipebuf_init(struct pipebuf self[static 1],
+             struct picotm_error error[static 1])
 {
     assert(self);
 
@@ -60,7 +61,7 @@ uninit_rwlock(void* data, struct picotm_error error[static 1])
 }
 
 void
-pipebuf_uninit(struct pipebuf* self)
+pipebuf_uninit(struct pipebuf self[static 1])
 {
     struct picotm_error ignored = PICOTM_ERROR_INITIALIZER;
 
@@ -84,16 +85,16 @@ pipebuf_try_rdlock_field(struct pipebuf self[static 1],
 }
 
 void
-pipebuf_try_wrlock_field(struct pipebuf* self, enum pipebuf_field field,
-                         struct picotm_rwstate* rwstate,
-                         struct picotm_error* error)
+pipebuf_try_wrlock_field(struct pipebuf self[static 1], enum pipebuf_field field,
+                         struct picotm_rwstate rwstate[static 1],
+                         struct picotm_error error[static 1])
 {
     picotm_rwstate_try_wrlock(rwstate, self->rwlock + field, error);
 }
 
 void
-pipebuf_unlock_field(struct pipebuf* self, enum pipebuf_field field,
-                     struct picotm_rwstate* rwstate)
+pipebuf_unlock_field(struct pipebuf self[static 1], enum pipebuf_field field,
+                     struct picotm_rwstate rwstate[static 1])
 {
     picotm_rwstate_unlock(rwstate, self->rwlock + field);
 }
