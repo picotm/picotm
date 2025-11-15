@@ -6,7 +6,7 @@
 # LICENSE
 #
 #   picotm - A system-level transaction manager
-#   Copyright (c) 2018  Thomas Zimmermann <contact@tzimmermann.org>
+#   Copyright (c) 2018  Thomas Zimmermann
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU Lesser General Public License as published by
