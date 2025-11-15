@@ -1,6 +1,6 @@
 dnl
 dnl picotm - A system-level transaction manager
-dnl Copyright (c) 2017-2020 Thomas Zimmermann <contact@tzimmermann.org>
+dnl Copyright (c) 2017-2020 Thomas Zimmermann
 dnl
 dnl This program is free software: you can redistribute it and/or modify
 dnl it under the terms of the GNU Lesser General Public License as published by
