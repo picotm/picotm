@@ -51,12 +51,10 @@ AS_VAR_APPEND([CFLAGS], [" $PTHREAD_CFLAGS"])
 AS_VAR_APPEND([LDFLAGS], [" $PTHREAD_LDFLAGS"])
 AS_VAR_SET([LIBS], ["$PTHREAD_LIBS $LIBS"])
 
-dnl Request C17, or fall back to C11
-AX_CHECK_COMPILE_FLAG([-std=c17],
-                      [AS_VAR_APPEND([CFLAGS], [" -std=c17"])],
-                      [AX_CHECK_COMPILE_FLAG(
-                        [-std=c11],
-                        [AS_VAR_APPEND([CFLAGS], [" -std=c11"])])])
+dnl Request C23
+AX_CHECK_COMPILE_FLAG([-std=c23],
+                      [AS_VAR_APPEND([CFLAGS], [" -std=c23"])],
+                      [AC_MSG_FAILURE(no compiler found)])
 
 dnl By default, all symbols are hidden. Public symbols have to
 dnl exported explicitly.
