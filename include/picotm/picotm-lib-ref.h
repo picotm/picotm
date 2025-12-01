@@ -107,9 +107,9 @@ struct picotm_shared_ref16 {
  * Initializes a static reference counter with the given value.
  * \param   count   The initial reference count
  */
-#define PICOTM_SHARED_REF16_INITIALIZER(count)  \
-{                                               \
-    .count = ATOMIC_VAR_INIT(count)             \
+#define PICOTM_SHARED_REF16_INITIALIZER(__count)    \
+{                                                   \
+    .count = (__count),                             \
 }
 
 /**
@@ -190,7 +190,7 @@ __picotm_shared_ref16_count(const struct picotm_shared_ref16* self)
  */
 #define PICOTM_SHARED_REF_INITIALIZER(__count)  \
 {                                               \
-    .count = ATOMIC_VAR_INIT(__count)           \
+    .count = (__count),                         \
 }
 
 /**
