@@ -27,7 +27,7 @@ picotm_os_mutex_init(struct picotm_os_mutex* self, struct picotm_error* error)
 {
     assert(self);
 
-    int err = pthread_mutex_init(&self->instance, NULL);
+    int err = pthread_mutex_init(&self->instance, nullptr);
     if (err) {
         picotm_error_set_errno(error, err);
         return;

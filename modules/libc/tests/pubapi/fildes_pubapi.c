@@ -1996,7 +1996,7 @@ static const struct test_func fildes_test[] = {
     {"fildes_test_10", fildes_test_10, fildes_test_10_pre, fildes_test_10_post},
     {"fildes_test_11", fildes_test_11, fildes_test_11_pre, fildes_test_11_post},
     {"fildes_test_12", fildes_test_12, fildes_test_12_pre, fildes_test_12_post},
-    {"fildes_test_13", fildes_test_13, NULL, NULL},
+    {"fildes_test_13", fildes_test_13, nullptr, nullptr},
     {"fildes_test_14", fildes_test_14, fildes_test_14_pre, fildes_test_14_post},
     {"fildes_test_15", fildes_test_15, fildes_test_15_pre, fildes_test_15_post},
     {"fildes_test_16", fildes_test_16, fildes_test_16_pre, fildes_test_16_post},

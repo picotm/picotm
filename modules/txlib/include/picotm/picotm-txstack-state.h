@@ -61,7 +61,7 @@ struct txstack_entry {
  * \ingroup group_txlib
  * \brief Initializer macro for `struct txstack_entry`.
  */
-#define TXSTACK_ENTRY_INITIALIZER   __TXSTACK_ENTRY_INITIALIZER(NULL)
+#define TXSTACK_ENTRY_INITIALIZER   __TXSTACK_ENTRY_INITIALIZER(nullptr)
 
 PICOTM_NOTHROW
 /**

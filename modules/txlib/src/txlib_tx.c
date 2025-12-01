@@ -40,7 +40,7 @@ txlib_tx_init(struct txlib_tx* self, unsigned long module)
     picotm_slist_init_head(&self->acquired_queue_tx);
     picotm_slist_init_head(&self->acquired_stack_tx);
 
-    self->event = NULL;
+    self->event = nullptr;
     self->nevents = 0;
 }
 
@@ -94,7 +94,7 @@ allocate_txlib_tx_entry(struct txlib_tx* self, struct picotm_error* error)
         entry = malloc(sizeof(*entry));
         if (!entry) {
             picotm_error_set_errno(error, errno);
-            return NULL;
+            return nullptr;
         }
         picotm_slist_init_item(&entry->slist_entry);
 
@@ -136,7 +136,7 @@ txlib_tx_acquire_txlist_of_state(struct txlib_tx* self,
 
     struct txlib_tx_entry* entry = allocate_txlib_tx_entry(self, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     txlist_tx_init(&entry->data.list_tx, list_state, self);
@@ -177,7 +177,7 @@ txlib_tx_acquire_txmultiset_of_state(struct txlib_tx* self,
 
     struct txlib_tx_entry* entry = allocate_txlib_tx_entry(self, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     txmultiset_tx_init(&entry->data.multiset_tx, multiset_state, self);
@@ -218,7 +218,7 @@ txlib_tx_acquire_txqueue_of_state(struct txlib_tx* self,
 
     struct txlib_tx_entry* entry = allocate_txlib_tx_entry(self, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     txqueue_tx_init(&entry->data.queue_tx, queue_state, self);
@@ -258,7 +258,7 @@ txlib_tx_acquire_txstack_of_state(struct txlib_tx* self,
 
     struct txlib_tx_entry* entry = allocate_txlib_tx_entry(self, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     txstack_tx_init(&entry->data.stack_tx, stack_state, self);

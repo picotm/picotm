@@ -183,24 +183,24 @@ cwd_tx_getcwd_exec(struct cwd_tx* self, char* buf, size_t size,
 
     cwd_tx_try_rdlock_field(self, CWD_FIELD_STRING, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     char* cwd = getcwd(buf, size);
     if (!cwd) {
         picotm_error_set_errno(error, errno);
-        return NULL;
+        return nullptr;
     }
 
     char* alloced_cwd;
 
     if (!buf && cwd) {
         /* Some implementations of getcwd() return a newly allocated
-         * buffer if 'buf' is NULL. We free this buffer during a roll-
+         * buffer if 'buf' is nullptr. We free this buffer during a roll-
          * back. */
         alloced_cwd = cwd;
     } else {
-        alloced_cwd = NULL;
+        alloced_cwd = nullptr;
     }
 
     cwd_log_append(self->log, CWD_OP_GETCWD, alloced_cwd, error);
@@ -214,7 +214,7 @@ err_append_event:
     if (!buf && cwd) {
         free(cwd);
     }
-    return NULL;
+    return nullptr;
 }
 
 void
@@ -245,24 +245,24 @@ cwd_tx_realpath_exec(struct cwd_tx* self, const char* path,
 
     cwd_tx_try_rdlock_field(self, CWD_FIELD_STRING, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     char* res = realpath(path, resolved_path);
     if (!res) {
         picotm_error_set_errno(error, errno);
-        return NULL;
+        return nullptr;
     }
 
     char* alloced_res;
 
     if (!resolved_path && res) {
         /* Calls to realpath() return a newly allocated buffer if
-         * 'resolved_path' is NULL. We free this buffer during a roll-
+         * 'resolved_path' is nullptr. We free this buffer during a roll-
          * back. */
         alloced_res = res;
     } else {
-        alloced_res = NULL;
+        alloced_res = nullptr;
     }
 
     cwd_log_append(self->log, CWD_OP_REALPATH, alloced_res, error);
@@ -276,7 +276,7 @@ err_append_event:
     if (!resolved_path && res) {
         free(res);
     }
-    return NULL;
+    return nullptr;
 }
 
 void

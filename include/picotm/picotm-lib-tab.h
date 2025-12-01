@@ -85,7 +85,7 @@ PICOTM_NOTHROW
  * \param       newnelems   The new number of elements in the table.
  * \param       siz         The number of bytes per element.
  * \param[out]  error       Returns an error from the module.
- * \returns A pointer to the resized table on success, or NULL otherwise.
+ * \returns A pointer to the resized table on success, or nullptr otherwise.
  */
 void*
 picotm_tabresize(void* base, size_t nelems, size_t newnelems, size_t siz,

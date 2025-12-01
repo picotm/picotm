@@ -57,15 +57,15 @@ regfile_tx_init(struct regfile_tx* self)
 
     file_tx_init(&self->base, &regfile_tx_ops);
 
-    self->seekbuf_tx = NULL;
+    self->seekbuf_tx = nullptr;
 
-    self->fchmodtab = NULL;
+    self->fchmodtab = nullptr;
     self->fchmodtablen = 0;
 
-    self->fcntltab = NULL;
+    self->fcntltab = nullptr;
     self->fcntltablen = 0;
 
-    self->seektab = NULL;
+    self->seektab = nullptr;
     self->seektablen = 0;
 
     self->offset = 0;
@@ -93,7 +93,7 @@ regfile_tx_prepare(struct regfile_tx* self, struct regfile* regfile,
 {
     assert(self);
 
-    self->seekbuf_tx = NULL;
+    self->seekbuf_tx = nullptr;
     self->fchmodtablen = 0;
     self->fcntltablen = 0;
     self->seektablen = 0;

@@ -122,7 +122,7 @@ ptrdata_clear_shared_data(struct ptrdata* self, const void* ptr,
 
     uintptr_t value = picotm_shared_treemap_find_value(&self->map,
                                                        key_for_ptr(ptr),
-                                                       NULL, NULL, error);
+                                                       nullptr, nullptr, error);
     if (picotm_error_is_set(error)) {
         return;
     } else if (!value) {
@@ -141,9 +141,9 @@ ptrdata_get_shared_data(struct ptrdata* self, const void* ptr,
 
     uintptr_t value = picotm_shared_treemap_find_value(&self->map,
                                                        key_for_ptr(ptr),
-                                                       NULL, NULL, error);
+                                                       nullptr, nullptr, error);
     if (!value) {
-        return NULL;
+        return nullptr;
     }
     struct value* val = (struct value*)value;
 

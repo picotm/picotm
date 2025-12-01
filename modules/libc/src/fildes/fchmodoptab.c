@@ -50,6 +50,6 @@ fchmodoptab_clear(struct fchmodop** tab, size_t* nelems)
     assert(nelems);
 
     picotm_tabfree(*tab);
-    *tab = NULL;
+    *tab = nullptr;
     *nelems = 0;
 }

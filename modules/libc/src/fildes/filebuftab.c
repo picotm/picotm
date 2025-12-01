@@ -34,7 +34,7 @@ fildes_filebuftab_init(struct fildes_filebuftab self[static 1],
     self->tab = tab;
     self->stride = stride;
 
-    int err = pthread_rwlock_init(&self->rwlock, NULL);
+    int err = pthread_rwlock_init(&self->rwlock, nullptr);
     if (err) {
         picotm_error_set_errno(error, err);
         return;
@@ -134,15 +134,15 @@ filebuftab_append(struct fildes_filebuftab filebuftab[static 1],
 {
     if ((filebuftab->len * filebuftab->stride) >= filebuftab->siz) {
         /* Return error if not enough ids available */
-        picotm_error_set_conflicting(error, NULL);
-        return NULL;
+        picotm_error_set_conflicting(error, nullptr);
+        return nullptr;
     }
 
     struct filebuf* filebuf = filebuftab_at(filebuftab, filebuftab->len);
 
     filebuftab->ops->init_filebuf(filebuf, error);
     if (picotm_error_is_set(error))
-        return NULL;
+        return nullptr;
 
     ++filebuftab->len;
 
@@ -165,7 +165,7 @@ find_by_id(struct fildes_filebuftab filebuftab[static 1],
         filebuf_beg = filebuftab_next(filebuftab, filebuf_beg);
     }
 
-    return NULL;
+    return nullptr;
 }
 
 /* requires writer lock */
@@ -180,14 +180,14 @@ search_by_id(struct fildes_filebuftab filebuftab[static 1],
     while (filebuf_beg < filebuf_end) {
         int cmp = filebuf_ref_or_set_up_if_id(filebuf_beg, fildes, id, error);
         if (picotm_error_is_set(error))
-            return NULL;
+            return nullptr;
         else if (!cmp)
             return filebuf_beg; /* set-up filebuf structure; return */
 
         filebuf_beg = filebuftab_next(filebuftab, filebuf_beg);
     }
 
-    return NULL;
+    return nullptr;
 }
 
 struct filebuf*
@@ -198,14 +198,14 @@ fildes_filebuftab_ref_fildes(struct fildes_filebuftab self[static 1],
     struct filebuf_id id;
     filebuf_id_init_from_fildes(&id, fildes, error);
     if (picotm_error_is_set(error))
-        return NULL;
+        return nullptr;
 
     /* Try to find an existing filebuf structure with the given id.
      */
 
     rdlock_filebuftab(self, error);
     if (picotm_error_is_set(error))
-        return NULL;
+        return nullptr;
 
     struct filebuf* filebuf = find_by_id(self, &id);
     if (filebuf)
@@ -219,7 +219,7 @@ fildes_filebuftab_ref_fildes(struct fildes_filebuftab self[static 1],
 
     wrlock_filebuftab(self, error);
     if (picotm_error_is_set(error))
-        return NULL;
+        return nullptr;
 
     /* Re-try find operation; maybe element was added meanwhile. */
     filebuf = find_by_id(self, &id);
@@ -261,7 +261,7 @@ out_unlock_filebuftab:
 
 err_unlock_filebuftab:
     unlock_filebuftab(self);
-    return NULL;
+    return nullptr;
 }
 
 size_t

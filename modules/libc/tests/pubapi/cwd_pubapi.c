@@ -51,13 +51,13 @@ test_dir_format_string(char format[PATH_MAX], unsigned long test)
 static void
 cwd_test_1(unsigned int tid)
 {
-    char* cwd = safe_getcwd(NULL, 0);
+    char* cwd = safe_getcwd(nullptr, 0);
 
     picotm_begin
 
         privatize_c_tx(cwd, '\0', PICOTM_TM_PRIVATIZE_LOAD);
 
-        char* cwd_tx = getcwd_tx(NULL, 0);
+        char* cwd_tx = getcwd_tx(nullptr, 0);
 
         if (strcmp(cwd, cwd_tx)) {
             tap_error("working directories did not match:"
@@ -167,7 +167,7 @@ cwd_test_2_post(unsigned long nthreads, enum loop_mode loop,
 }
 
 static const struct test_func cwd_test[] = {
-    {"cwd_test_1", cwd_test_1, NULL,           NULL},
+    {"cwd_test_1", cwd_test_1, nullptr,           nullptr},
     {"cwd_test_2", cwd_test_2, cwd_test_2_pre, cwd_test_2_post},
 };
 

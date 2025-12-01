@@ -185,7 +185,7 @@ txqueue_test_2(unsigned int tid)
 
     txqueue_state_clear_and_uninit_entries(&queue_state,
                                            uninit_txqueue_entry_cb,
-                                           NULL);
+                                           nullptr);
     txqueue_state_uninit(&queue_state);
 }
 
@@ -392,9 +392,9 @@ txqueue_test_4_post(unsigned long nthreads, enum loop_mode loop,
 }
 
 static const struct test_func txqueue_test[] = {
-    {"txqueue_test_1", txqueue_test_1, NULL,               NULL},
-    {"txqueue_test_2", txqueue_test_2, NULL,               NULL},
-    {"txqueue_test_3", txqueue_test_3, NULL,               NULL},
+    {"txqueue_test_1", txqueue_test_1, nullptr,               nullptr},
+    {"txqueue_test_2", txqueue_test_2, nullptr,               nullptr},
+    {"txqueue_test_3", txqueue_test_3, nullptr,               nullptr},
     {"txqueue_test_4", txqueue_test_4, txqueue_test_4_pre, txqueue_test_4_post}
 };
 

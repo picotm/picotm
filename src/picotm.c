@@ -134,9 +134,9 @@ get_tx(bool initialize, struct picotm_error* error)
                                                               initialize,
                                                               error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     } else if (!thread) {
-        return NULL; /* not yet initialized */
+        return nullptr; /* not yet initialized */
     }
     return &thread->tx;
 }

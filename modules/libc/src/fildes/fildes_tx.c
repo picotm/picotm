@@ -61,7 +61,7 @@ pipebuf_tx_create(struct picotm_error* error)
     struct pipebuf_tx* pipebuf_tx = malloc(sizeof(*pipebuf_tx));
     if (!pipebuf_tx) {
         picotm_error_set_errno(error, errno);
-        return NULL;
+        return nullptr;
     }
     pipebuf_tx_init(pipebuf_tx);
     return pipebuf_tx;
@@ -80,7 +80,7 @@ seekbuf_tx_create(struct picotm_error* error)
     struct seekbuf_tx* seekbuf_tx = malloc(sizeof(*seekbuf_tx));
     if (!seekbuf_tx) {
         picotm_error_set_errno(error, errno);
-        return NULL;
+        return nullptr;
     }
     seekbuf_tx_init(seekbuf_tx);
     return seekbuf_tx;
@@ -99,7 +99,7 @@ sockbuf_tx_create(struct picotm_error* error)
     struct sockbuf_tx* sockbuf_tx = malloc(sizeof(*sockbuf_tx));
     if (!sockbuf_tx) {
         picotm_error_set_errno(error, errno);
-        return NULL;
+        return nullptr;
     }
     sockbuf_tx_init(sockbuf_tx);
     return sockbuf_tx;
@@ -142,7 +142,7 @@ file_tx_mem_of_entry_base(struct file_tx* base)
             return picotm_containerof(base, struct file_tx_mem,
                                       entry.socket_tx.base);
     }
-    return NULL;
+    return nullptr;
 }
 
 static struct file_tx*
@@ -151,7 +151,7 @@ file_tx_create(enum picotm_libc_file_type type, struct picotm_error* error)
     struct file_tx_mem* mem = malloc(sizeof(*mem));
     if (!mem) {
         picotm_error_set_errno(error, errno);
-        return NULL;
+        return nullptr;
     }
     switch (type) {
         case PICOTM_LIBC_FILE_TYPE_CHRDEV:
@@ -170,7 +170,7 @@ file_tx_create(enum picotm_libc_file_type type, struct picotm_error* error)
             socket_tx_init(&mem->entry.socket_tx);
             return &mem->entry.socket_tx.base;
     }
-    return NULL;
+    return nullptr;
 }
 
 static void
@@ -270,10 +270,10 @@ fildes_tx_init(struct fildes_tx* self, struct fildes* fildes,
     picotm_slist_init_head(&self->sockbuf_tx_alloced_list);
     picotm_slist_init_head(&self->sockbuf_tx_active_list);
 
-    self->openoptab = NULL;
+    self->openoptab = nullptr;
     self->openoptablen = 0;
 
-    self->pipeoptab = NULL;
+    self->pipeoptab = nullptr;
     self->pipeoptablen = 0;
 }
 
@@ -388,7 +388,7 @@ get_pipebuf_tx(struct fildes_tx* self, const struct filebuf_id* id,
 
     struct pipebuf_tx* pipebuf_tx = pipebuf_tx_create(error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     return pipebuf_tx;
@@ -401,7 +401,7 @@ get_pipebuf_tx_with_ref(struct fildes_tx* self, int fildes, bool new_file,
     struct filebuf_id id;
     filebuf_id_init_from_fildes(&id, fildes, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     struct pipebuf_tx* pipebuf_tx = get_pipebuf_tx(self, &id, error);
@@ -439,7 +439,7 @@ err_pipebuf_tx_ref_or_set_up:
     filebuf_unref(&pipebuf->base);
 err_fildes_ref_pipebuf:
 err_get_pipebuf_tx:
-    return NULL;
+    return nullptr;
 }
 
 static bool
@@ -482,7 +482,7 @@ get_seekbuf_tx(struct fildes_tx* self, const struct filebuf_id* id,
 
     struct seekbuf_tx* seekbuf_tx = seekbuf_tx_create(error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     return seekbuf_tx;
@@ -495,7 +495,7 @@ get_seekbuf_tx_with_ref(struct fildes_tx* self, int fildes, bool new_file,
     struct filebuf_id id;
     filebuf_id_init_from_fildes(&id, fildes, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     struct seekbuf_tx* seekbuf_tx = get_seekbuf_tx(self, &id, error);
@@ -533,7 +533,7 @@ err_seekbuf_tx_ref_or_set_up:
     filebuf_unref(&seekbuf->base);
 err_fildes_ref_seekbuf:
 err_get_seekbuf_tx:
-    return NULL;
+    return nullptr;
 }
 
 static bool
@@ -590,7 +590,7 @@ get_sockbuf_tx(struct fildes_tx* self, const struct filebuf_id* id,
 
     struct sockbuf_tx* sockbuf_tx = sockbuf_tx_create(error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     return sockbuf_tx;
@@ -603,7 +603,7 @@ get_sockbuf_tx_with_ref(struct fildes_tx* self, int fildes, bool new_file,
     struct filebuf_id id;
     filebuf_id_init_from_fildes(&id, fildes, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     struct sockbuf_tx* sockbuf_tx = get_sockbuf_tx(self, &id, error);
@@ -641,7 +641,7 @@ err_sockbuf_tx_ref_or_set_up:
     filebuf_unref(&sockbuf->base);
 err_fildes_ref_sockbuf:
 err_get_sockbuf_tx:
-    return NULL;
+    return nullptr;
 }
 
 static struct file_tx*
@@ -652,7 +652,7 @@ get_file_tx(struct fildes_tx* self, int fildes,
     struct file_id id;
     file_id_init_from_fildes(&id, fildes, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     /* Let's see if we already have the file in use.*/
@@ -679,7 +679,7 @@ get_file_tx(struct fildes_tx* self, int fildes,
     } else {
         file_tx = file_tx_create(type, error);
         if (picotm_error_is_set(error)) {
-            return NULL;
+            return nullptr;
         }
     }
 
@@ -693,7 +693,7 @@ get_chrdev_tx(struct fildes_tx* self, int fildes, struct picotm_error* error)
                                           PICOTM_LIBC_FILE_TYPE_CHRDEV,
                                           error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
     return chrdev_tx_of_file_tx(file_tx);
 }
@@ -704,7 +704,7 @@ get_chrdev_tx_with_ref(struct fildes_tx* self, int fildes, bool new_file,
 {
     struct chrdev_tx* chrdev_tx = get_chrdev_tx(self, fildes, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     } else if (file_tx_holds_ref(&chrdev_tx->base)) {
         return chrdev_tx;
     }
@@ -716,10 +716,10 @@ get_chrdev_tx_with_ref(struct fildes_tx* self, int fildes, bool new_file,
     struct chrdev* chrdev = fildes_ref_chrdev(self->fildes, fildes,
                                               new_file, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
-    file_tx_ref_or_set_up(&chrdev_tx->base, &chrdev->base, NULL, error);
+    file_tx_ref_or_set_up(&chrdev_tx->base, &chrdev->base, nullptr, error);
     if (picotm_error_is_set(error)) {
         goto err_file_tx_ref_or_set_up;
     }
@@ -733,7 +733,7 @@ get_chrdev_tx_with_ref(struct fildes_tx* self, int fildes, bool new_file,
 
 err_file_tx_ref_or_set_up:
     file_unref(&chrdev->base);
-    return NULL;
+    return nullptr;
 }
 
 static struct fifo_tx*
@@ -743,7 +743,7 @@ get_fifo_tx(struct fildes_tx* self, int fildes, struct picotm_error* error)
                                           PICOTM_LIBC_FILE_TYPE_FIFO,
                                           error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
     return fifo_tx_of_file_tx(file_tx);
 }
@@ -754,7 +754,7 @@ get_fifo_tx_with_ref(struct fildes_tx* self, int fildes, bool new_file,
 {
     struct fifo_tx* fifo_tx = get_fifo_tx(self, fildes, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     } else if (file_tx_holds_ref(&fifo_tx->base)) {
         return fifo_tx;
     }
@@ -766,7 +766,7 @@ get_fifo_tx_with_ref(struct fildes_tx* self, int fildes, bool new_file,
     struct fifo* fifo = fildes_ref_fifo(self->fildes, fildes,
                                         new_file, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     struct pipebuf_tx* pipebuf_tx = get_pipebuf_tx_with_ref(self,
@@ -777,7 +777,7 @@ get_fifo_tx_with_ref(struct fildes_tx* self, int fildes, bool new_file,
         goto err_get_pipebuf_tx_with_ref;
     }
 
-    file_tx_ref_or_set_up(&fifo_tx->base, &fifo->base, NULL, error);
+    file_tx_ref_or_set_up(&fifo_tx->base, &fifo->base, nullptr, error);
     if (picotm_error_is_set(error)) {
         goto err_file_tx_ref_or_set_up;
     }
@@ -793,7 +793,7 @@ get_fifo_tx_with_ref(struct fildes_tx* self, int fildes, bool new_file,
 err_file_tx_ref_or_set_up:
 err_get_pipebuf_tx_with_ref:
     file_unref(&fifo->base);
-    return NULL;
+    return nullptr;
 }
 
 static struct regfile_tx*
@@ -803,7 +803,7 @@ get_regfile_tx(struct fildes_tx* self, int fildes, struct picotm_error* error)
                                           PICOTM_LIBC_FILE_TYPE_REGULAR,
                                           error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
     return regfile_tx_of_file_tx(file_tx);
 }
@@ -814,7 +814,7 @@ get_regfile_tx_with_ref(struct fildes_tx* self, int fildes, bool new_file,
 {
     struct regfile_tx* regfile_tx = get_regfile_tx(self, fildes, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     } else if (file_tx_holds_ref(&regfile_tx->base)) {
         return regfile_tx;
     }
@@ -826,7 +826,7 @@ get_regfile_tx_with_ref(struct fildes_tx* self, int fildes, bool new_file,
     struct regfile* regfile = fildes_ref_regfile(self->fildes, fildes,
                                                  new_file, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     struct seekbuf_tx* seekbuf_tx = get_seekbuf_tx_with_ref(self, fildes,
@@ -835,7 +835,7 @@ get_regfile_tx_with_ref(struct fildes_tx* self, int fildes, bool new_file,
         goto err_get_seekbuf_tx_with_ref;
     }
 
-    file_tx_ref_or_set_up(&regfile_tx->base, &regfile->base, NULL, error);
+    file_tx_ref_or_set_up(&regfile_tx->base, &regfile->base, nullptr, error);
     if (picotm_error_is_set(error)) {
         goto err_file_tx_ref_or_set_up;
     }
@@ -851,7 +851,7 @@ get_regfile_tx_with_ref(struct fildes_tx* self, int fildes, bool new_file,
 err_file_tx_ref_or_set_up:
 err_get_seekbuf_tx_with_ref:
     file_unref(&regfile->base);
-    return NULL;
+    return nullptr;
 }
 
 static struct dir_tx*
@@ -861,7 +861,7 @@ get_dir_tx(struct fildes_tx* self, int fildes, struct picotm_error* error)
                                           PICOTM_LIBC_FILE_TYPE_DIR,
                                           error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
     return dir_tx_of_file_tx(file_tx);
 }
@@ -872,7 +872,7 @@ get_dir_tx_with_ref(struct fildes_tx* self, int fildes, bool new_file,
 {
     struct dir_tx* dir_tx = get_dir_tx(self, fildes, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     } else if (file_tx_holds_ref(&dir_tx->base)) {
         return dir_tx;
     }
@@ -883,10 +883,10 @@ get_dir_tx_with_ref(struct fildes_tx* self, int fildes, bool new_file,
      */
     struct dir* dir = fildes_ref_dir(self->fildes, fildes, new_file, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
-    file_tx_ref_or_set_up(&dir_tx->base, &dir->base, NULL, error);
+    file_tx_ref_or_set_up(&dir_tx->base, &dir->base, nullptr, error);
     if (picotm_error_is_set(error)) {
         goto err_file_tx_ref_or_set_up;
     }
@@ -900,7 +900,7 @@ get_dir_tx_with_ref(struct fildes_tx* self, int fildes, bool new_file,
 
 err_file_tx_ref_or_set_up:
     file_unref(&dir->base);
-    return NULL;
+    return nullptr;
 }
 
 static struct socket_tx*
@@ -910,7 +910,7 @@ get_socket_tx(struct fildes_tx* self, int fildes, struct picotm_error* error)
                                           PICOTM_LIBC_FILE_TYPE_SOCKET,
                                           error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
     return socket_tx_of_file_tx(file_tx);
 }
@@ -921,7 +921,7 @@ get_socket_tx_with_ref(struct fildes_tx* self, int fildes, bool new_file,
 {
     struct socket_tx* socket_tx = get_socket_tx(self, fildes, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     } else if (file_tx_holds_ref(&socket_tx->base)) {
         return socket_tx;
     }
@@ -933,7 +933,7 @@ get_socket_tx_with_ref(struct fildes_tx* self, int fildes, bool new_file,
     struct socket* socket = fildes_ref_socket(self->fildes, fildes,
                                               new_file, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     struct sockbuf_tx* sockbuf_tx = get_sockbuf_tx_with_ref(self, fildes,
@@ -942,7 +942,7 @@ get_socket_tx_with_ref(struct fildes_tx* self, int fildes, bool new_file,
         goto err_get_sockbuf_tx_with_ref;
     }
 
-    file_tx_ref_or_set_up(&socket_tx->base, &socket->base, NULL, error);
+    file_tx_ref_or_set_up(&socket_tx->base, &socket->base, nullptr, error);
     if (picotm_error_is_set(error)) {
         goto err_file_tx_ref_or_set_up;
     }
@@ -958,7 +958,7 @@ get_socket_tx_with_ref(struct fildes_tx* self, int fildes, bool new_file,
 err_file_tx_ref_or_set_up:
 err_get_sockbuf_tx_with_ref:
     file_unref(&socket->base);
-    return NULL;
+    return nullptr;
 }
 
 static struct file_tx*
@@ -969,7 +969,7 @@ get_file_tx_with_ref(struct fildes_tx* self, int fildes, bool new_file,
     int res = fstat(fildes, &buf);
     if (res < 0) {
         picotm_error_set_errno(error, errno);
-        return NULL;
+        return nullptr;
     }
 
     switch (buf.st_mode & S_IFMT) {
@@ -979,7 +979,7 @@ get_file_tx_with_ref(struct fildes_tx* self, int fildes, bool new_file,
                                                                  new_file,
                                                                  error);
             if (picotm_error_is_set(error)) {
-                return NULL;
+                return nullptr;
             }
             return &chrdev_tx->base;
         }
@@ -989,7 +989,7 @@ get_file_tx_with_ref(struct fildes_tx* self, int fildes, bool new_file,
                                                            new_file,
                                                            error);
             if (picotm_error_is_set(error)) {
-                return NULL;
+                return nullptr;
             }
             return &fifo_tx->base;
         }
@@ -999,7 +999,7 @@ get_file_tx_with_ref(struct fildes_tx* self, int fildes, bool new_file,
                                                                     new_file,
                                                                     error);
             if (picotm_error_is_set(error)) {
-                return NULL;
+                return nullptr;
             }
             return &regfile_tx->base;
         }
@@ -1009,7 +1009,7 @@ get_file_tx_with_ref(struct fildes_tx* self, int fildes, bool new_file,
                                                         new_file,
                                                         error);
             if (picotm_error_is_set(error)) {
-                return NULL;
+                return nullptr;
             }
             return &dir_tx->base;
         }
@@ -1019,13 +1019,13 @@ get_file_tx_with_ref(struct fildes_tx* self, int fildes, bool new_file,
                                                                  new_file,
                                                                  error);
             if (picotm_error_is_set(error)) {
-                return NULL;
+                return nullptr;
             }
             return &socket_tx->base;
         }
         default:
             picotm_error_set_errno(error, EINVAL); /* unsupported file type */
-            return NULL;
+            return nullptr;
     }
 }
 
@@ -1069,7 +1069,7 @@ find_fd_tx_with_ref(struct fildes_tx* self, int fildes, int old_fildes,
         /* Validate reference or return error if fd has been closed */
         fd_tx_validate(fd_tx, error);
         if (picotm_error_is_set(error)) {
-            return NULL;
+            return nullptr;
         }
 
         return fd_tx;
@@ -1077,7 +1077,7 @@ find_fd_tx_with_ref(struct fildes_tx* self, int fildes, int old_fildes,
 
     struct fd* fd = fdtab_tx_ref_fildes(&self->fdtab_tx, fildes, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     struct file_tx* file_tx = get_file_tx_with_ref(self, old_fildes,
@@ -1101,7 +1101,7 @@ err_fd_tx_ref:
     file_tx_unref(file_tx);
 err_get_file_tx_with_ref:
     fd_unref(fd);
-    return NULL;
+    return nullptr;
 }
 
 static struct fd_tx*
@@ -1136,16 +1136,16 @@ fildes_path(int fildes, struct picotm_error* error)
     int res = snprintf(symlink, sizeof(symlink), "/proc/self/fd/%d", fildes);
     if (res < 0) {
         picotm_error_set_errno(error, errno);
-        return NULL;
+        return nullptr;
     } else if ((size_t)res >= sizeof(symlink)) {
         picotm_error_set_error_code(error, PICOTM_OUT_OF_MEMORY);
-        return NULL;
+        return nullptr;
     }
 
-    char* path = realpath(symlink, NULL);
+    char* path = realpath(symlink, nullptr);
     if (!path) {
         picotm_error_set_errno(error, errno);
-        return NULL;
+        return nullptr;
     }
 
     return path;
@@ -1166,16 +1166,16 @@ absolute_path(const char* path, struct picotm_error* error)
         char* abs_path = strdup(path);
         if (!abs_path) {
             picotm_error_set_errno(error, errno);
-            return NULL;
+            return nullptr;
         }
         return abs_path;
     }
 
     /* Construct absolute pathname */
 
-    char* cwd = cwd_module_getcwd(NULL, 0, error);
+    char* cwd = cwd_module_getcwd(nullptr, 0, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     size_t pathlen = strlen(path);
@@ -1204,7 +1204,7 @@ absolute_path(const char* path, struct picotm_error* error)
 err_allocator_module_free:
     free(abs_path);
     picotm_error_mark_as_non_recoverable(error);
-    return NULL;
+    return nullptr;
 err_malloc:
     {
         struct picotm_error tmp_error = PICOTM_ERROR_INITIALIZER;
@@ -1213,7 +1213,7 @@ err_malloc:
             picotm_error_mark_as_non_recoverable(error);
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 /* Unlink a file descriptor's file in a quite reliable, but Linux-only,
@@ -1433,7 +1433,7 @@ int
 fildes_tx_exec_chmod(struct fildes_tx* self, const char* path, mode_t mode,
                      struct picotm_error* error)
 {
-    char* real_path = cwd_module_realpath(path, NULL, error);
+    char* real_path = cwd_module_realpath(path, nullptr, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -2002,7 +2002,7 @@ int
 fildes_tx_exec_link(struct fildes_tx* self, const char* path1, const char* path2,
                     struct picotm_error* error)
 {
-    char* real_path1 = cwd_module_realpath(path1, NULL, error);
+    char* real_path1 = cwd_module_realpath(path1, nullptr, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -2179,7 +2179,7 @@ int
 fildes_tx_exec_lstat(struct fildes_tx* self, const char* path, struct stat* buf,
                      struct picotm_error* error)
 {
-    char* real_path = cwd_module_realpath(path, NULL, error);
+    char* real_path = cwd_module_realpath(path, nullptr, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -3109,7 +3109,7 @@ int
 fildes_tx_exec_stat(struct fildes_tx* self, const char* path,
                     struct stat* buf, struct picotm_error* error)
 {
-    char* real_path = cwd_module_realpath(path, NULL, error);
+    char* real_path = cwd_module_realpath(path, nullptr, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }
@@ -3182,7 +3182,7 @@ int
 fildes_tx_exec_unlink(struct fildes_tx* self, const char* path,
                       struct picotm_error* error)
 {
-    char* real_path = cwd_module_realpath(path, NULL, error);
+    char* real_path = cwd_module_realpath(path, nullptr, error);
     if (picotm_error_is_set(error)) {
         return -1;
     }

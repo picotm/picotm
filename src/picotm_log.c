@@ -29,7 +29,7 @@ picotm_log_init(struct picotm_log* self)
 {
     assert(self);
 
-    self->eventtab = NULL;
+    self->eventtab = nullptr;
     self->eventtablen = 0;
     self->eventtabsiz = 0;
 }
@@ -80,7 +80,7 @@ picotm_log_end_alloc(struct picotm_log* self, struct picotm_error* error)
                           sizeof(self->eventtab[0]),
                           error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
     self->eventtab = tmp;
     self->eventtabsiz = neweventtabsiz;

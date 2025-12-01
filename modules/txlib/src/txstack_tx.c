@@ -146,7 +146,7 @@ txstack_tx_exec_top(struct txstack_tx* self, struct picotm_error* error)
                               &self->stack_state->internal.lock,
                               error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     return txstack_state_top(self->stack_state);

@@ -32,7 +32,7 @@
 #include "taputils.h"
 
 static const char  g_template_string[] = "/picotm-XXXXXX";
-static char*       g_path = NULL;
+static char*       g_path = nullptr;
 
 static const char*
 find_tmpdir(void)
@@ -115,7 +115,7 @@ temp_path()
     build_path_template(path_template, sizeof(path_template), tmpdir);
     char* path = safe_mkdtemp(path_template);
 
-    g_path = safe_realpath(path, NULL);
+    g_path = safe_realpath(path, nullptr);
 
     atexit(atexit_path);
 

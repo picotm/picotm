@@ -53,9 +53,9 @@ fifo_tx_init(struct fifo_tx* self)
 
     file_tx_init(&self->base, &fifo_tx_ops);
 
-    self->pipebuf_tx = NULL;
+    self->pipebuf_tx = nullptr;
 
-    self->fcntltab = NULL;
+    self->fcntltab = nullptr;
     self->fcntltablen = 0;
 
     init_rwstates(picotm_arraybeg(self->rwstate),
@@ -82,7 +82,7 @@ fifo_tx_prepare(struct fifo_tx* self, struct fifo* fifo,
 {
     assert(self);
 
-    self->pipebuf_tx = NULL;
+    self->pipebuf_tx = nullptr;
     self->fcntltablen = 0;
 }
 

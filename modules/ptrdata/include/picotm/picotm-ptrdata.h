@@ -150,7 +150,7 @@ PICOTM_END_DECLS
  *  }
  * ~~~
  *
- * By default, the value returned by `ptr_get_data()`is NULL for address
+ * By default, the value returned by `ptr_get_data()`is nullptr for address
  * without data. Data can be cleared with a call to `ptr_clear_data()`.
  *
  * ~~~{.c}
@@ -168,8 +168,8 @@ PICOTM_END_DECLS
  *  free(data);
  * ~~~
  *
- * This call resets the address' data to NULL. It's equivalent to
- * `ptr_set_data()` with a data value of NULL, but faster if address
+ * This call resets the address' data to nullptr. It's equivalent to
+ * `ptr_set_data()` with a data value of nullptr, but faster if address
  * has no data already associated with it. The function only clears
  * the entry, the associated data itself has to be cleaned up by the
  * caller.
@@ -206,7 +206,7 @@ PICOTM_END_DECLS
  * address' data concurrently, exactly one will succeed. The atomic
  * test-and-set function `ptr_test_and_set_shared_data()` is available.
  * The example below replaces an address data only if the current data
- * is NULL.
+ * is nullptr.
  *
  * ~~~{.c}
  *  struct picotm_error error = PICOTM_ERROR_INITIALIZER;
@@ -216,14 +216,14 @@ PICOTM_END_DECLS
  *  int* data = malloc(sizeof(int));
  *  *data = 0x1234;
  *
- *  succ = ptr_test_and_set_shared_data(ptr, NULL, data, &error);
+ *  succ = ptr_test_and_set_shared_data(ptr, nullptr, data, &error);
  *  if (picotm_error_is_set(&error)) {
  *      // handle error
  *  }
  *  if (succ) {
- *      // NULL has been replaced by the value of data
+ *      // nullptr has been replaced by the value of data
  *  } else {
- *      // the previous non-NULL value remained in place
+ *      // the previous non-nullptr value remained in place
  *  }
  * ~~~
  *

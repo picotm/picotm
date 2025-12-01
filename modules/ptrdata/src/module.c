@@ -183,9 +183,9 @@ ptrdata_module_get_shared_data(const void* ptr, struct picotm_error* error)
     struct ptrdata_module* module =
         PICOTM_THREAD_STATE_ACQUIRE(ptrdata_module, false, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     } else if (!module) {
-        return NULL;
+        return nullptr;
     }
     return ptrdata_get_shared_data(module->global, ptr, error);
 }
@@ -221,9 +221,9 @@ ptrdata_module_get_data(const void* ptr, struct picotm_error* error)
     struct ptrdata_module* module =
         PICOTM_THREAD_STATE_ACQUIRE(ptrdata_module, false, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     } else if (!module) {
-        return NULL;
+        return nullptr;
     }
     return ptrdata_tx_get_data(&module->tx, ptr, error);
 }

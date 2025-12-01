@@ -59,7 +59,7 @@ fildes_fifotab_ref_fildes(struct fildes_fifotab self[static 1],
     struct file* file = fildes_filetab_ref_fildes(&self->filetab, fildes,
                                                   new_file, error);
     if (!file)
-        return NULL;
+        return nullptr;
 
     return fifo_of_base(file);
 }

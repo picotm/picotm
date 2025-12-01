@@ -132,7 +132,7 @@ tm_frame_map_lookup(struct tm_frame_map* self, uintptr_t addr,
         tm_frame_tbl_create, tm_frame_tbl_destroy,
         error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
     struct tm_frame_tbl* tbl = (struct tm_frame_tbl*)value;
 

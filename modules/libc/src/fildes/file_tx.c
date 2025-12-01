@@ -31,7 +31,7 @@ file_tx_init(struct file_tx* self,  const struct file_tx_ops* ops)
 
     picotm_ref_init(&self->ref, 0);
     picotm_slist_init_item(&self->list_entry);
-    self->file = NULL;
+    self->file = nullptr;
     self->ops = ops;
 }
 
@@ -84,7 +84,7 @@ file_tx_ref_or_set_up(struct file_tx* self, struct file* file,
     return;
 
 err_self_ops_acquire_file:
-    self->file = NULL;
+    self->file = nullptr;
     file_unref(file);
 err_file_ref:
     picotm_ref_down(&self->ref);
@@ -110,7 +110,7 @@ file_tx_unref(struct file_tx* self)
     self->ops->release(self);
 
     file_unref(self->file);
-    self->file = NULL;
+    self->file = nullptr;
 }
 
 bool

@@ -58,7 +58,7 @@ struct picotm_error {
     union {
         /**
          * The conflicting lock for PICOTM_CONFLICTING if known, or
-         * NULL otherwise.
+         * nullptr otherwise.
          */
         struct picotm_rwlock* conflicting_lock;
 
@@ -97,7 +97,7 @@ struct picotm_error {
     { \
         .status = 0, \
         .is_non_recoverable = false, \
-        .description = NULL \
+        .description = nullptr \
     }
 
 PICOTM_NOTHROW
@@ -114,7 +114,7 @@ PICOTM_NOTHROW
  * Sets an error of type PICOTM_CONFLICTING.
  *
  * \param error             The error to set.
- * \param conflicting_lock  The conflicting lock if known, or NULL
+ * \param conflicting_lock  The conflicting lock if known, or nullptr
  *                          otherwise.
  */
 void
@@ -260,7 +260,7 @@ PICOTM_NOTHROW
  * Returns an error's description.
  *
  * \param error The error.
- * \returns     The error description if set, or NULL otherwise.
+ * \returns     The error description if set, or nullptr otherwise.
  */
 const char*
 picotm_error_get_description(const struct picotm_error* error);

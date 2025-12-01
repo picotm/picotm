@@ -73,7 +73,7 @@ run_threads(struct thread_state* state, unsigned long nthreads,
 
     while (beg < end) {
         beg->test_aborted = false;
-        safe_pthread_create(&beg->thread, NULL, thread_func, beg);
+        safe_pthread_create(&beg->thread, nullptr, thread_func, beg);
         ++beg;
     }
 
@@ -83,7 +83,7 @@ run_threads(struct thread_state* state, unsigned long nthreads,
     end = state + nthreads;
 
     while (beg < end) {
-        safe_pthread_join(beg->thread, NULL);
+        safe_pthread_join(beg->thread, nullptr);
         test_aborted |= beg->test_aborted;
         ++beg;
     }
@@ -110,11 +110,11 @@ inner_loop_func_cycles(struct thread_state* state)
 static void
 inner_loop_func_time(struct thread_state* state)
 {
-    const unsigned long long beg_ms = getmsofday(NULL);
+    const unsigned long long beg_ms = getmsofday(nullptr);
 
     for (unsigned long long ms = 0;
                             ms < state->limit;
-                            ms = getmsofday(NULL) - beg_ms) {
+                            ms = getmsofday(nullptr) - beg_ms) {
         state->func(state->tid, state->data);
     }
 }
@@ -127,7 +127,7 @@ inner_loop_func(struct thread_state* state)
         inner_loop_func_time
     };
 
-    pthread_cleanup_push(cleanup_picotm_cb, NULL);
+    pthread_cleanup_push(cleanup_picotm_cb, nullptr);
 
     begin_safe_block(state->test_aborted)
 
@@ -143,7 +143,7 @@ static void*
 inner_loop_func_cb(void* arg)
 {
     inner_loop_func(arg);
-    return NULL;
+    return nullptr;
 }
 
 static void
@@ -162,7 +162,7 @@ run_inner_loop(enum boundary_type btype, unsigned long long limit,
 static void
 outer_loop_func(struct thread_state* state)
 {
-    pthread_cleanup_push(cleanup_picotm_cb, NULL);
+    pthread_cleanup_push(cleanup_picotm_cb, nullptr);
 
     begin_safe_block(state->test_aborted)
 
@@ -178,7 +178,7 @@ static void*
 outer_loop_func_cb(void* arg)
 {
     outer_loop_func(arg);
-    return NULL;
+    return nullptr;
 }
 
 static void
@@ -195,11 +195,11 @@ static void
 run_outer_loop_time(unsigned long long limit_ms, struct thread_state* state,
                     unsigned long nthreads)
 {
-    const unsigned long long beg_ms = getmsofday(NULL);
+    const unsigned long long beg_ms = getmsofday(nullptr);
 
     for (unsigned long long ms = 0;
                             ms < limit_ms;
-                            ms = getmsofday(NULL) - beg_ms) {
+                            ms = getmsofday(nullptr) - beg_ms) {
         run_threads(state, nthreads, outer_loop_func_cb);
     }
 }
@@ -235,7 +235,7 @@ spawn_threads(unsigned long nthreads,
     /* Helgrind 3.3 does not support barriers, so you might
      * get a warning here. */
     pthread_barrier_t sync_begin;
-    safe_pthread_barrier_init(&sync_begin, NULL, nthreads);
+    safe_pthread_barrier_init(&sync_begin, nullptr, nthreads);
 
     struct thread_state* state = safe_malloc(nthreads * sizeof(state[0]));
 

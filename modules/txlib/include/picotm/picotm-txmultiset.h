@@ -357,7 +357,7 @@ PICOTM_END_DECLS
  *          // call free() if item was malloc()'ed
  *      }
  *
- *      txmultiset_state_clear_and_uninit_entries(&multiset_state, ulong_item_uninit_cb, NULL);
+ *      txmultiset_state_clear_and_uninit_entries(&multiset_state, ulong_item_uninit_cb, nullptr);
  *      txmultiset_state_uninit(&multiset_state);
  * ~~~
  *

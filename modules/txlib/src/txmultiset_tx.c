@@ -61,7 +61,7 @@ txmultiset_tx_exec_begin(struct txmultiset_tx* self,
                               &self->multiset_state->internal.lock,
                               error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     return txmultiset_state_begin(self->multiset_state);

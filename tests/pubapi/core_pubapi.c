@@ -126,10 +126,10 @@ core_test_4(unsigned int tid)
 }
 
 static const struct test_func core_test[] = {
-    {core_test_1_desc, core_test_1, NULL, NULL},
-    {core_test_2_desc, core_test_2, NULL, NULL},
-    {core_test_3_desc, core_test_3, NULL, NULL},
-    {core_test_4_desc, core_test_4, NULL, NULL}
+    {core_test_1_desc, core_test_1, nullptr, nullptr},
+    {core_test_2_desc, core_test_2, nullptr, nullptr},
+    {core_test_3_desc, core_test_3, nullptr, nullptr},
+    {core_test_4_desc, core_test_4, nullptr, nullptr}
 };
 
 /*

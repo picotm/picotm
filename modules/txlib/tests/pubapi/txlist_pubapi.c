@@ -176,7 +176,7 @@ txlist_test_2(unsigned int tid)
 
     txlist_state_clear_and_uninit_entries(&list_state,
                                           uninit_txlist_entry_cb,
-                                          NULL);
+                                          nullptr);
     txlist_state_uninit(&list_state);
 }
 
@@ -316,7 +316,7 @@ txlist_test_4(unsigned int tid)
 
     txlist_state_clear_and_uninit_entries(&list_state,
                                           uninit_txlist_entry_cb,
-                                          NULL);
+                                          nullptr);
     txlist_state_uninit(&list_state);
 }
 
@@ -383,7 +383,7 @@ txlist_test_5(unsigned int tid)
 
     txlist_state_clear_and_uninit_entries(&list_state,
                                           uninit_txlist_entry_cb,
-                                          NULL);
+                                          nullptr);
     txlist_state_uninit(&list_state);
 }
 
@@ -597,12 +597,12 @@ txlist_test_7_post(unsigned long nthreads, enum loop_mode loop,
 }
 
 static const struct test_func txlist_test[] = {
-    {"txlist_test_1", txlist_test_1, NULL,              NULL},
-    {"txlist_test_2", txlist_test_2, NULL,              NULL},
-    {"txlist_test_3", txlist_test_3, NULL,              NULL},
-    {"txlist_test_4", txlist_test_4, NULL,              NULL},
-    {"txlist_test_5", txlist_test_5, NULL,              NULL},
-    {"txlist_test_6", txlist_test_6, NULL,              NULL},
+    {"txlist_test_1", txlist_test_1, nullptr,              nullptr},
+    {"txlist_test_2", txlist_test_2, nullptr,              nullptr},
+    {"txlist_test_3", txlist_test_3, nullptr,              nullptr},
+    {"txlist_test_4", txlist_test_4, nullptr,              nullptr},
+    {"txlist_test_5", txlist_test_5, nullptr,              nullptr},
+    {"txlist_test_6", txlist_test_6, nullptr,              nullptr},
     {"txlist_test_7", txlist_test_7, txlist_test_7_pre, txlist_test_7_post}
 };
 

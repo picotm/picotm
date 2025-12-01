@@ -95,7 +95,7 @@ ptrdata_tx_clear_data(struct ptrdata_tx* self, const void* ptr,
     assert(self);
 
     uintptr_t value = picotm_treemap_find_value(&self->map, key_for_ptr(ptr),
-                                                NULL, error);
+                                                nullptr, error);
     if (picotm_error_is_set(error)) {
         return;
     } else if (!value) {
@@ -113,11 +113,11 @@ ptrdata_tx_get_data(struct ptrdata_tx* self, const void* ptr,
     assert(self);
 
     uintptr_t value = picotm_treemap_find_value(&self->map, key_for_ptr(ptr),
-                                                NULL, error);
+                                                nullptr, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     } else if (!value) {
-        return NULL;
+        return nullptr;
     }
     struct value* val = (struct value*)value;
 

@@ -199,7 +199,7 @@ get_cwd_tx(struct picotm_error* error)
     struct cwd_module* module = PICOTM_THREAD_STATE_ACQUIRE(cwd_module, true,
                                                             error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
     return &module->tx;
 }
@@ -223,7 +223,7 @@ cwd_module_getcwd(char* buf, size_t size, struct picotm_error* error)
 {
     struct cwd_tx* cwd_tx = get_cwd_tx(error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
     return cwd_tx_getcwd_exec(cwd_tx, buf, size, error);
 }
@@ -234,7 +234,7 @@ cwd_module_realpath(const char* path, char* resolved_path,
 {
     struct cwd_tx* cwd_tx = get_cwd_tx(error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
     return cwd_tx_realpath_exec(cwd_tx, path, resolved_path, error);
 }

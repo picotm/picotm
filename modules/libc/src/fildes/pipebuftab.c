@@ -60,7 +60,7 @@ fildes_pipebuftab_ref_fildes(struct fildes_pipebuftab self[static 1],
     struct filebuf* filebuf = fildes_filebuftab_ref_fildes(&self->filebuftab,
                                                            fildes, error);
     if (!filebuf)
-        return NULL;
+        return nullptr;
 
     return pipebuf_of_base(filebuf);
 }

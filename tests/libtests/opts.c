@@ -54,7 +54,7 @@ opt_cycles(const char *optarg)
 {
     errno = 0;
 
-    g_cycles = strtoul(optarg, NULL, 0);
+    g_cycles = strtoul(optarg, nullptr, 0);
 
     if (errno) {
         perror("strtoul()");
@@ -77,7 +77,7 @@ opt_nthreads(const char* optarg)
 {
     errno = 0;
 
-    g_nthreads = strtoul(optarg, NULL, 0);
+    g_nthreads = strtoul(optarg, nullptr, 0);
 
     if (errno) {
         perror("strtoul()");
@@ -92,7 +92,7 @@ opt_num(const char* optarg)
 {
     errno = 0;
 
-    g_num = strtoul(optarg, NULL, 0);
+    g_num = strtoul(optarg, nullptr, 0);
 
     if (errno) {
         perror("strtoul()");
@@ -107,7 +107,7 @@ opt_off(const char* optarg)
 {
     errno = 0;
 
-    g_off = strtoul(optarg, NULL, 0);
+    g_off = strtoul(optarg, nullptr, 0);
 
     if (errno) {
         perror("strtoul()");
@@ -136,7 +136,7 @@ opt_tx_cycles(const char* optarg)
 {
     errno = 0;
 
-    g_txcycles = strtoul(optarg, NULL, 0);
+    g_txcycles = strtoul(optarg, nullptr, 0);
 
     if (errno) {
         perror("strtoul()");
@@ -151,7 +151,7 @@ opt_verbose(const char* optarg)
 {
     errno = 0;
 
-    g_tap_verbosity = strtoul(optarg, NULL, 0);
+    g_tap_verbosity = strtoul(optarg, nullptr, 0);
 
     if (errno) {
         perror("strtoul()");

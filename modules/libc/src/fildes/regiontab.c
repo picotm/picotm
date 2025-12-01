@@ -70,7 +70,7 @@ regiontab_clear(struct region** tab, size_t* nelems)
                      &error);
 
     picotm_tabfree(*tab);
-    *tab = NULL;
+    *tab = nullptr;
     *nelems = 0;
 }
 

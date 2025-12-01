@@ -115,7 +115,7 @@ try_lock_or_wait(struct picotm_rwlock* self,
 
     assert(try_lock);
 
-    struct picotm_lock_owner* waiter = NULL;
+    struct picotm_lock_owner* waiter = nullptr;
 
     unsigned int nretries = 0;
 

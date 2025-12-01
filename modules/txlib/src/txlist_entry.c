@@ -27,8 +27,8 @@ txlist_entry_init(struct txlist_entry* self)
 {
     assert(self);
 
-    self->internal.next = NULL;
-    self->internal.prev = NULL;
+    self->internal.next = nullptr;
+    self->internal.prev = nullptr;
 }
 
 void
@@ -126,8 +126,8 @@ txlist_entry_erase(struct txlist_entry* self)
     self->internal.next->internal.prev = self->internal.prev;
     self->internal.prev->internal.next = self->internal.next;
 
-    self->internal.next = NULL;
-    self->internal.prev = NULL;
+    self->internal.next = nullptr;
+    self->internal.prev = nullptr;
 }
 
 /*

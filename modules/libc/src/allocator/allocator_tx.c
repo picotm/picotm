@@ -84,7 +84,7 @@ allocator_tx_exec_malloc(struct allocator_tx* self, size_t size,
 
     void* mem = malloc(rnd2wb(size));
     if (!mem) {
-        /* ISO C specifies allocator functions to return NULL in the
+        /* ISO C specifies allocator functions to return nullptr in the
          * case of an error. We report the errno code on all systems
          * that support it, otherwise we set a picotm error code. */
 #if defined(ENOMEM)
@@ -92,7 +92,7 @@ allocator_tx_exec_malloc(struct allocator_tx* self, size_t size,
 #else
         picotm_error_set_error_code(error, PICOTM_OUT_OF_MEMORY);
 #endif
-        return NULL;
+        return nullptr;
     }
 
     allocator_log_append(self->log, ALLOCATOR_OP_MALLOC, mem, error);
@@ -104,7 +104,7 @@ allocator_tx_exec_malloc(struct allocator_tx* self, size_t size,
 
 err_allocator_log_append:
     free(mem);
-    return NULL;
+    return nullptr;
 }
 
 static void
@@ -160,7 +160,7 @@ apply_posix_memalign(struct allocator_tx* self, void* ptr,
                      struct picotm_error* error)
 { }
 #else
-#define apply_posix_memalign    NULL
+#define apply_posix_memalign    nullptr
 #endif
 
 #if defined(HAVE_POSIX_MEMALIGN) && HAVE_POSIX_MEMALIGN
@@ -171,7 +171,7 @@ undo_posix_memalign(struct allocator_tx* self, void* ptr,
     free(ptr);
 }
 #else
-#define undo_posix_memalign    NULL
+#define undo_posix_memalign    nullptr
 #endif
 
 /*

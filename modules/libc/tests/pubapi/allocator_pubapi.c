@@ -398,15 +398,15 @@ allocator_test_9(unsigned int tid)
 }
 
 static const struct test_func allocator_test[] = {
-    {"allocator_test_1", allocator_test_1, NULL, NULL},
-    {"allocator_test_2", allocator_test_2, NULL, NULL},
-    {"allocator_test_3", allocator_test_3, NULL, NULL},
-    {"allocator_test_4", allocator_test_4, NULL, NULL},
-    {"allocator_test_5", allocator_test_5, NULL, NULL},
-    {"allocator_test_6", allocator_test_6, NULL, NULL},
-    {"allocator_test_7", allocator_test_7, allocator_test_7_pre, NULL},
-    {"allocator_test_8", allocator_test_8, allocator_test_8_pre, NULL},
-    {"allocator_test_9", allocator_test_9, allocator_test_9_pre, NULL}
+    {"allocator_test_1", allocator_test_1, nullptr, nullptr},
+    {"allocator_test_2", allocator_test_2, nullptr, nullptr},
+    {"allocator_test_3", allocator_test_3, nullptr, nullptr},
+    {"allocator_test_4", allocator_test_4, nullptr, nullptr},
+    {"allocator_test_5", allocator_test_5, nullptr, nullptr},
+    {"allocator_test_6", allocator_test_6, nullptr, nullptr},
+    {"allocator_test_7", allocator_test_7, allocator_test_7_pre, nullptr},
+    {"allocator_test_8", allocator_test_8, allocator_test_8_pre, nullptr},
+    {"allocator_test_9", allocator_test_9, allocator_test_9_pre, nullptr}
 };
 
 /*

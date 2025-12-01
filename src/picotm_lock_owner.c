@@ -40,7 +40,7 @@ picotm_lock_owner_init(struct picotm_lock_owner* self,
     }
 
     self->flags = 0;
-    self->next = NULL;
+    self->next = nullptr;
 
     return;
 

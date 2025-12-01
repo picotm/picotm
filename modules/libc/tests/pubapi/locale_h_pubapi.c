@@ -42,7 +42,7 @@ static void
 locale_h_test_1(unsigned int tid)
 {
     picotm_begin
-        setlocale_tx(LC_ALL, NULL); /* query locale */
+        setlocale_tx(LC_ALL, nullptr); /* query locale */
     picotm_commit
         abort_transaction_on_error(__func__);
     picotm_end
@@ -52,7 +52,7 @@ static void
 locale_h_test_2(unsigned int tid)
 {
     picotm_begin
-        char* locale1 = strdup_tx(setlocale_tx(LC_ALL, NULL));
+        char* locale1 = strdup_tx(setlocale_tx(LC_ALL, nullptr));
         char* locale2 = strdup_tx(setlocale_tx(LC_ALL, test_locale));
 
         /* check for correctly updated locale */
@@ -193,12 +193,12 @@ locale_h_test_6(unsigned int tid)
  */
 
 static const struct test_func locale_h_test[] = {
-    {"Test setlocale(NULL)",               locale_h_test_1, NULL, NULL},
-    {"Test setlocale(<test locale>)",      locale_h_test_2, NULL, NULL},
-    {"Test localeconv()",                  locale_h_test_3, NULL, NULL},
-    {"Create and free locale",             locale_h_test_4, NULL, NULL},
-    {"Create, duplicate and free locale",  locale_h_test_5, NULL, NULL},
-    {"Create and use thread-local locale", locale_h_test_6, NULL, NULL}
+    {"Test setlocale(nullptr)",               locale_h_test_1, nullptr, nullptr},
+    {"Test setlocale(<test locale>)",      locale_h_test_2, nullptr, nullptr},
+    {"Test localeconv()",                  locale_h_test_3, nullptr, nullptr},
+    {"Create and free locale",             locale_h_test_4, nullptr, nullptr},
+    {"Create, duplicate and free locale",  locale_h_test_5, nullptr, nullptr},
+    {"Create and use thread-local locale", locale_h_test_6, nullptr, nullptr}
 };
 
 #include "opts.h"

@@ -37,7 +37,7 @@ memccpy_tx(void* restrict dest, const void* restrict src, int c, size_t n)
     uint8_t* dest8 = dest;
     const uint8_t* src8 = src;
 
-    dest = NULL; /* Return NULL by default */
+    dest = nullptr; /* Return nullptr by default */
 
     while (n) {
 

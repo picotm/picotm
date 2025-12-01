@@ -77,8 +77,8 @@ filebuf_ref_or_set_up(struct filebuf self[static 1], int fildes,
 {
     assert(self);
 
-    struct ref_obj_data data = REF_OBJ_DATA_INITIALIZER(NULL, fildes, 0);
-    picotm_shared_ref16_obj_up(&self->ref_obj, &data, NULL, first_ref,
+    struct ref_obj_data data = REF_OBJ_DATA_INITIALIZER(nullptr, fildes, 0);
+    picotm_shared_ref16_obj_up(&self->ref_obj, &data, nullptr, first_ref,
                                error);
     if (picotm_error_is_set(error))
         return;
@@ -121,7 +121,7 @@ filebuf_ref_if_id(struct filebuf self[static 1],
     struct ref_obj_data data = REF_OBJ_DATA_INITIALIZER(id, -1, 0);
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
 
-    picotm_shared_ref16_obj_up(&self->ref_obj, &data, cond_ref, NULL, &error);
+    picotm_shared_ref16_obj_up(&self->ref_obj, &data, cond_ref, nullptr, &error);
     if (picotm_error_is_set(&error))
         return 0;
 
@@ -132,7 +132,7 @@ void
 filebuf_ref(struct filebuf self[static 1],
             struct picotm_error error[static 1])
 {
-    picotm_shared_ref16_obj_up(&self->ref_obj, NULL, NULL, NULL, error);
+    picotm_shared_ref16_obj_up(&self->ref_obj, nullptr, nullptr, nullptr, error);
     if (picotm_error_is_set(error))
         return;
 }
@@ -154,5 +154,5 @@ final_ref(struct picotm_shared_ref16_obj ref_obj[static 1], void* data,
 void
 filebuf_unref(struct filebuf self[static 1])
 {
-    picotm_shared_ref16_obj_down(&self->ref_obj, NULL, NULL, final_ref);
+    picotm_shared_ref16_obj_down(&self->ref_obj, nullptr, nullptr, final_ref);
 }

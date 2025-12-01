@@ -339,7 +339,7 @@ PICOTM_END_DECLS
  *          // call free() if item was malloc()'ed
  *      }
  *
- *      txlist_state_clear_and_uninit_entries(&list_state, ulong_item_uninit_cb, NULL);
+ *      txlist_state_clear_and_uninit_entries(&list_state, ulong_item_uninit_cb, nullptr);
  *      txlist_state_uninit(&list_state);
  * ~~~
  *

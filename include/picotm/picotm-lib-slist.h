@@ -247,7 +247,7 @@ struct picotm_slist {
  * \ingroup group_lib
  * \internal
  * Static-initializer macro for `struct picotm_slist`.
- * \param   next_   A pointer to the next entry, or NULL.
+ * \param   next_   A pointer to the next entry, or nullptr.
  */
 #define __PICOTM_SLIST_INITIALIZER(next_)   \
     {                                       \
@@ -259,7 +259,7 @@ struct picotm_slist {
  * Static-initializer macro for singly-linked list items.
  */
 #define PICOTM_SLIST_ITEM_INITIALIZER   \
-    __PIOTM_SLIST_INITIALIZER(NULL)
+    __PIOTM_SLIST_INITIALIZER(nullptr)
 
 /**
  * \ingroup group_lib
@@ -278,7 +278,7 @@ struct picotm_slist {
 static inline struct picotm_slist*
 picotm_slist_init_item(struct picotm_slist* item)
 {
-    item->next = NULL;
+    item->next = nullptr;
     return item;
 }
 
@@ -489,7 +489,7 @@ picotm_slist_dequeue(struct picotm_slist* item)
 {
     struct picotm_slist* prev = picotm_slist_prev(item);
     prev->next = picotm_slist_next(item);
-    item->next = NULL;
+    item->next = nullptr;
 }
 
 /**
@@ -502,7 +502,7 @@ picotm_slist_dequeue_front(struct picotm_slist* head)
 {
     struct picotm_slist* next = picotm_slist_next(head);
     head->next = picotm_slist_next(next);
-    next->next = NULL;
+    next->next = nullptr;
 }
 
 /**
@@ -516,7 +516,7 @@ static inline struct picotm_slist*
 picotm_slist_front(const struct picotm_slist* head)
 {
     if (picotm_slist_is_empty(head)) {
-        return NULL;
+        return nullptr;
     }
     return picotm_slist_begin(head);
 }
@@ -532,7 +532,7 @@ static inline struct picotm_slist*
 picotm_slist_back(const struct picotm_slist* head)
 {
     if (picotm_slist_is_empty(head)) {
-        return NULL;
+        return nullptr;
     }
     return picotm_slist_prev(picotm_slist_end(head));
 }

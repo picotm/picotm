@@ -30,7 +30,7 @@ fildes_fdtab_init(struct fildes_fdtab* self, struct picotm_error* error)
 {
     self->len = 0;
 
-    int err = pthread_rwlock_init(&self->rwlock, NULL);
+    int err = pthread_rwlock_init(&self->rwlock, nullptr);
     if (err) {
         picotm_error_set_errno(error, err);
         return;
@@ -99,14 +99,14 @@ static struct fd*
 find_by_id(struct fildes_fdtab* fdtab, int fildes, struct picotm_error* error)
 {
     if (fdtab->len <= (size_t)fildes) {
-        return NULL;
+        return nullptr;
     }
 
     struct fd* fd = fdtab->tab + fildes;
 
     fd_ref_or_set_up(fd, fildes, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     return fd;
@@ -124,7 +124,7 @@ search_by_id(struct fildes_fdtab* fdtab, int fildes,
 
         fd_init(fd_beg, error);
         if (picotm_error_is_set(error)) {
-            return NULL;
+            return nullptr;
         }
 
         ++fdtab->len;
@@ -135,7 +135,7 @@ search_by_id(struct fildes_fdtab* fdtab, int fildes,
 
     fd_ref_or_set_up(fd, fildes, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     return fd;
@@ -152,7 +152,7 @@ fildes_fdtab_ref_fildes(struct fildes_fdtab* self, int fildes,
 
     rdlock_fdtab(self, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     struct fd* fd = find_by_id(self, fildes, error);
@@ -170,13 +170,13 @@ fildes_fdtab_ref_fildes(struct fildes_fdtab* self, int fildes,
 
     wrlock_fdtab(self, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     fd = search_by_id(self, fildes, error);
     if (picotm_error_is_set(error)) {
         goto err_search_by_id;
-        return NULL;
+        return nullptr;
     }
 
 unlock:
@@ -187,7 +187,7 @@ unlock:
 err_search_by_id:
 err_find_by_id:
     unlock_fdtab(self);
-    return NULL;
+    return nullptr;
 }
 
 struct fd*

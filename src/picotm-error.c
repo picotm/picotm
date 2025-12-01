@@ -26,7 +26,7 @@ picotm_error_clear(struct picotm_error* error)
 {
     error->status = 0;
     error->is_non_recoverable = false;
-    error->description = NULL;
+    error->description = nullptr;
 }
 
 PICOTM_EXPORT
@@ -36,7 +36,7 @@ picotm_error_set_conflicting(struct picotm_error* error,
 {
     error->status = PICOTM_CONFLICTING;
     error->is_non_recoverable = false;
-    error->description = NULL;
+    error->description = nullptr;
     error->value.conflicting_lock = conflicting_lock;
 }
 
@@ -46,7 +46,7 @@ picotm_error_set_revocable(struct picotm_error* error)
 {
     error->status = PICOTM_REVOCABLE;
     error->is_non_recoverable = false;
-    error->description = NULL;
+    error->description = nullptr;
 }
 
 PICOTM_EXPORT
@@ -56,7 +56,7 @@ picotm_error_set_error_code(struct picotm_error* error,
 {
     error->status = PICOTM_ERROR_CODE;
     error->is_non_recoverable = false;
-    error->description = NULL;
+    error->description = nullptr;
     error->value.error_hint = error_hint;
 }
 
@@ -66,7 +66,7 @@ picotm_error_set_errno(struct picotm_error* error, int errno_hint)
 {
     error->status = PICOTM_ERRNO;
     error->is_non_recoverable = false;
-    error->description = NULL;
+    error->description = nullptr;
     error->value.errno_hint = errno_hint;
 }
 
@@ -78,7 +78,7 @@ picotm_error_set_kern_return_t(struct picotm_error* error,
 {
     error->status = PICOTM_KERN_RETURN_T;
     error->is_non_recoverable = false;
-    error->description = NULL;
+    error->description = nullptr;
     error->value.kern_return_t_value = value;
 }
 #endif
@@ -90,7 +90,7 @@ picotm_error_set_siginfo_t(struct picotm_error* error, const siginfo_t* info)
 {
     error->status = PICOTM_SIGINFO_T;
     error->is_non_recoverable = false;
-    error->description = NULL;
+    error->description = nullptr;
     memcpy(&error->value.siginfo_t_info, info, sizeof(*info));
 }
 #endif

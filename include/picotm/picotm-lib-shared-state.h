@@ -201,11 +201,11 @@ struct picotm_error;
         struct picotm_error* error)                                         \
     {                                                                       \
         picotm_shared_ref16_obj_up(                                         \
-            &self->ref_obj, NULL, NULL,                                     \
+            &self->ref_obj, nullptr, nullptr,                                     \
             __PICOTM_SHARED_STATE_FIRST_REF_CB(_name),                      \
             error);                                                         \
         if (picotm_error_is_set(error)) {                                   \
-            return NULL;                                                    \
+            return nullptr;                                                    \
         }                                                                   \
         return &(self->_name);                                              \
     }                                                                       \
@@ -225,7 +225,7 @@ struct picotm_error;
         PICOTM_SHARED_STATE_TYPE(_name)* self)                              \
     {                                                                       \
         picotm_shared_ref16_obj_down(                                       \
-            &self->ref_obj, NULL, NULL,                                     \
+            &self->ref_obj, nullptr, nullptr,                                     \
             __PICOTM_SHARED_STATE_FINAL_REF_CB(_name));                     \
     }
 
@@ -246,7 +246,7 @@ struct picotm_error;
  * \param       _name   The state name.
  * \param       _self   The state's instance.
  * \param[out]  _error  Returns an error to the caller.
- * \returns The acquired state on success, or NULL on error.
+ * \returns The acquired state on success, or nullptr on error.
  */
 #define PICOTM_SHARED_STATE_REF(_name, _self, _error)   \
     __PICOTM_SHARED_STATE_REF(_name)(_self, _error)

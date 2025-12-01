@@ -36,7 +36,7 @@ _safe_block_set_jmpbuf(sigjmp_buf* jmpbuf, sigjmp_buf** old_jmpbuf);
 
 #define end_safe_block                              \
         }                                           \
-        _safe_block_set_jmpbuf(_old_jmpbuf, NULL);  \
+        _safe_block_set_jmpbuf(_old_jmpbuf, nullptr);  \
     }
 
 void

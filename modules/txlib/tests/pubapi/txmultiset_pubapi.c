@@ -242,7 +242,7 @@ txmultiset_test_2(unsigned int tid)
 
     txmultiset_state_clear_and_uninit_entries(&multiset_state,
                                               uninit_txmultiset_entry_cb,
-                                              NULL);
+                                              nullptr);
     txmultiset_state_uninit(&multiset_state);
 }
 
@@ -336,7 +336,7 @@ txmultiset_test_3(unsigned int tid)
 
     txmultiset_state_clear_and_uninit_entries(&multiset_state,
                                               uninit_txmultiset_entry_cb,
-                                              NULL);
+                                              nullptr);
     txmultiset_state_uninit(&multiset_state);
 }
 
@@ -433,7 +433,7 @@ txmultiset_test_4(unsigned int tid)
 
     txmultiset_state_clear_and_uninit_entries(&multiset_state,
                                               uninit_txmultiset_entry_cb,
-                                              NULL);
+                                              nullptr);
     txmultiset_state_uninit(&multiset_state);
 }
 
@@ -714,7 +714,7 @@ txmultiset_test_7(unsigned int tid)
 
     txmultiset_state_clear_and_uninit_entries(&multiset_state,
                                               uninit_txmultiset_entry_cb,
-                                              NULL);
+                                              nullptr);
     txmultiset_state_uninit(&multiset_state);
 }
 
@@ -862,13 +862,13 @@ txmultiset_test_8_post(unsigned long nthreads, enum loop_mode loop,
 }
 
 static const struct test_func txmultiset_test[] = {
-    {"txmultiset_test_1", txmultiset_test_1, NULL,                  NULL},
-    {"txmultiset_test_2", txmultiset_test_2, NULL,                  NULL},
-    {"txmultiset_test_3", txmultiset_test_3, NULL,                  NULL},
-    {"txmultiset_test_4", txmultiset_test_4, NULL,                  NULL},
-    {"txmultiset_test_5", txmultiset_test_5, NULL,                  NULL},
-    {"txmultiset_test_6", txmultiset_test_6, NULL,                  NULL},
-    {"txmultiset_test_7", txmultiset_test_7, NULL,                  NULL},
+    {"txmultiset_test_1", txmultiset_test_1, nullptr,                  nullptr},
+    {"txmultiset_test_2", txmultiset_test_2, nullptr,                  nullptr},
+    {"txmultiset_test_3", txmultiset_test_3, nullptr,                  nullptr},
+    {"txmultiset_test_4", txmultiset_test_4, nullptr,                  nullptr},
+    {"txmultiset_test_5", txmultiset_test_5, nullptr,                  nullptr},
+    {"txmultiset_test_6", txmultiset_test_6, nullptr,                  nullptr},
+    {"txmultiset_test_7", txmultiset_test_7, nullptr,                  nullptr},
     {"txmultiset_test_8", txmultiset_test_8, txmultiset_test_8_pre, txmultiset_test_8_post},
 };
 

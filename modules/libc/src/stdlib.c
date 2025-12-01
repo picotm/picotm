@@ -210,7 +210,7 @@ realloc_tx(void* ptr, size_t size)
         picotm_recover_from_error(&error);
     } while (true);
 
-    void* mem = NULL;
+    void* mem = nullptr;
 
     if (size) {
         do {

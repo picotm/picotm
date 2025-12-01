@@ -182,11 +182,11 @@ struct picotm_error;
         if (self->is_initialized) {                                     \
             goto out;                                                   \
         } else if (!initialize) {                                       \
-            return NULL;                                                \
+            return nullptr;                                                \
         } else {                                                        \
             (_init)(&(self->_name), error);                             \
             if (picotm_error_is_set(error)) {                           \
-                return NULL;                                            \
+                return nullptr;                                            \
             }                                                           \
         }                                                               \
         self->is_initialized = 1;                                       \
@@ -231,7 +231,7 @@ struct picotm_error;
  * \param       _initialize True to initialize if necessary.
  * \param       _self       The state's instance.
  * \param[out]  _error      Returns an error to the caller.
- * \returns The acquired state on success, or NULL if not
+ * \returns The acquired state on success, or nullptr if not
  *          initialized or on error.
  */
 #define PICOTM_STATE_ACQUIRE(_name, _self, _initialize, _error) \

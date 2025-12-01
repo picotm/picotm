@@ -62,7 +62,7 @@ struct txlist_entry {
  * \ingroup group_txlib
  * \brief Initializer macro for `struct txlist_entry`.
  */
-#define TXLIST_ENTRY_INITIALIZER    __TXLIST_ENTRY_INITIALIZER(NULL)
+#define TXLIST_ENTRY_INITIALIZER    __TXLIST_ENTRY_INITIALIZER(nullptr)
 
 PICOTM_NOTHROW
 /**

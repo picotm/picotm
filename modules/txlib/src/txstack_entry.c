@@ -26,7 +26,7 @@ txstack_entry_init(struct txstack_entry* self)
 {
     assert(self);
 
-    self->internal.prev = NULL;
+    self->internal.prev = nullptr;
 }
 
 void
@@ -92,7 +92,7 @@ txstack_entry_erase(struct txstack_entry* self, struct txstack_entry* next)
     struct txstack_entry* prev = txstack_entry_prev(self);
 
     next->internal.prev = prev;
-    self->internal.prev = NULL;
+    self->internal.prev = nullptr;
 }
 
 /*

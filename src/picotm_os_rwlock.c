@@ -28,7 +28,7 @@ picotm_os_rwlock_init(struct picotm_os_rwlock* self,
 {
     assert(self);
 
-    int err = pthread_rwlock_init(&self->instance, NULL);
+    int err = pthread_rwlock_init(&self->instance, nullptr);
     if (err) {
         picotm_error_set_errno(error, err);
         return;

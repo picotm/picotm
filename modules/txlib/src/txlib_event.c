@@ -81,14 +81,14 @@ txlib_event_apply(struct txlib_event* self, struct picotm_error* error)
 {
     static void (* const apply[])(struct txlib_event*,
                                   struct picotm_error*) = {
-        [TXLIB_LIST_INSERT] = NULL,
-        [TXLIB_LIST_ERASE] = NULL,
-        [TXLIB_MULTISET_INSERT] = NULL,
-        [TXLIB_MULTISET_ERASE] = NULL,
+        [TXLIB_LIST_INSERT] = nullptr,
+        [TXLIB_LIST_ERASE] = nullptr,
+        [TXLIB_MULTISET_INSERT] = nullptr,
+        [TXLIB_MULTISET_ERASE] = nullptr,
         [TXLIB_QUEUE_PUSH] = apply_queue_push,
-        [TXLIB_QUEUE_POP] = NULL,
+        [TXLIB_QUEUE_POP] = nullptr,
         [TXLIB_STACK_PUSH] = apply_stack_push,
-        [TXLIB_STACK_POP] = NULL
+        [TXLIB_STACK_POP] = nullptr
     };
 
     process_event(self, apply, error);
