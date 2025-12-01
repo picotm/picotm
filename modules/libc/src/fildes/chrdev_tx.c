@@ -53,9 +53,9 @@ chrdev_tx_init(struct chrdev_tx* self)
 
     file_tx_init(&self->base, &chrdev_tx_ops);
 
-    self->seekbuf_tx = NULL;
+    self->seekbuf_tx = nullptr;
 
-    self->fcntltab = NULL;
+    self->fcntltab = nullptr;
     self->fcntltablen = 0;
 
     init_rwstates(picotm_arraybeg(self->rwstate),
@@ -82,7 +82,7 @@ chrdev_tx_prepare(struct chrdev_tx* self, struct chrdev* chrdev,
 {
     assert(self);
 
-    self->seekbuf_tx = NULL;
+    self->seekbuf_tx = nullptr;
     self->fcntltablen = 0;
 }
 

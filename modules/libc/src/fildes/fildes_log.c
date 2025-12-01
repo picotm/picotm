@@ -29,7 +29,7 @@ fildes_log_init(struct fildes_log* self, unsigned long module)
     assert(self);
 
     self->module = module;
-    self->eventtab = NULL;
+    self->eventtab = nullptr;
     self->eventtablen = 0;
     self->eventtabsiz = 0;
 }
@@ -65,7 +65,7 @@ fildes_log_end_alloc(struct fildes_log* self, struct picotm_error* error)
                                  neweventtabsiz, sizeof(self->eventtab[0]),
                                  error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
     self->eventtab = tmp;
     self->eventtabsiz = neweventtabsiz;

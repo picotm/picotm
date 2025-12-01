@@ -99,7 +99,7 @@ char*
 setlocale_tx(int category, const char* locale)
 {
     if (locale) {
-        /* locale is be NULL when caller queries current setting */
+        /* locale is be nullptr when caller queries current setting */
         privatize_c_tx(locale, '\0', PICOTM_TM_PRIVATIZE_LOAD);
     }
     return setlocale_tm(category, locale);

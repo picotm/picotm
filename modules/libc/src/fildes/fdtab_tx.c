@@ -70,13 +70,13 @@ fdtab_tx_ref_fildes(struct fdtab_tx* self, int fildes,
 
     fildes_try_rdlock_fdtab(self->fildes, &self->rwstate, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     struct fd* fd = fildes_ref_fd(self->fildes, fildes, &self->rwstate,
                                   error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     return fd;

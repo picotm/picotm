@@ -55,10 +55,10 @@ dir_tx_init(struct dir_tx* self)
 
     self->wrmode = PICOTM_LIBC_WRITE_THROUGH;
 
-    self->fchmodtab = NULL;
+    self->fchmodtab = nullptr;
     self->fchmodtablen = 0;
 
-    self->fcntltab = NULL;
+    self->fcntltab = nullptr;
     self->fcntltablen = 0;
 
     init_rwstates(picotm_arraybeg(self->rwstate),

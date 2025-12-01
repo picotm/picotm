@@ -173,7 +173,7 @@ static struct locale_state*
 acquire_locale_state(locale_t locobj, struct locale* global,
                      struct picotm_error* error)
 {
-    struct locale_state* lstate = NULL;
+    struct locale_state* lstate = nullptr;
 
     do {
         picotm_spinlock_lock(&global->locale_state_lock);
@@ -188,11 +188,11 @@ acquire_locale_state(locale_t locobj, struct locale* global,
         lstate = malloc(sizeof(*lstate));
         if (!lstate) {
             picotm_error_set_errno(error, ENOMEM);
-            return NULL;
+            return nullptr;
         }
         locale_state_init(lstate);
 
-        bool succ = ptr_test_and_set_shared_data(locobj, NULL, lstate, error);
+        bool succ = ptr_test_and_set_shared_data(locobj, nullptr, lstate, error);
         if (picotm_error_is_set(error)) {
             goto err_ptr_test_and_set_shared_data;
         } else if (succ) {
@@ -209,7 +209,7 @@ acquire_locale_state(locale_t locobj, struct locale* global,
 err_ptr_test_and_set_shared_data:
     locale_state_uninit(lstate);
     free(lstate);
-    return NULL;
+    return nullptr;
 }
 
 static void
@@ -225,7 +225,7 @@ release_locale_state(locale_t locobj, struct locale_state* lstate,
         picotm_spinlock_unlock(&global->locale_state_lock);
         return;
     }
-    bool succ = ptr_test_and_set_shared_data(locobj, lstate, NULL, error);
+    bool succ = ptr_test_and_set_shared_data(locobj, lstate, nullptr, error);
     picotm_spinlock_unlock(&global->locale_state_lock);
 
     if (picotm_error_is_set(error)) {
@@ -246,7 +246,7 @@ acquire_locale_state_tx(locale_t locobj, struct locale_tx* tx,
 
     struct locale_state_tx* lstate_tx = ptr_get_data(locobj, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     } else if (lstate_tx) {
         return lstate_tx;
     }
@@ -254,7 +254,7 @@ acquire_locale_state_tx(locale_t locobj, struct locale_tx* tx,
     struct locale_state* lstate = acquire_locale_state(locobj, tx->locale,
                                                        error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     lstate_tx = malloc(sizeof(*lstate_tx));
@@ -284,7 +284,7 @@ err_malloc:
             picotm_error_mark_as_non_recoverable(error);
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 static void
@@ -410,7 +410,7 @@ locale_tx_duplocale_exec(struct locale_tx* self, locale_t locobj,
 
 err_locale_log_append:
     freelocale(newlocobj);
-    return NULL;
+    return nullptr;
 }
 
 static void
@@ -427,8 +427,8 @@ undo_duplocale(struct locale_tx* self, const struct locale_event* arg,
     freelocale(arg->arg.duplocale.result);
 }
 #else
-#define apply_duplocale NULL
-#define undo_duplocale  NULL
+#define apply_duplocale nullptr
+#define undo_duplocale  nullptr
 #endif
 
 /*
@@ -481,8 +481,8 @@ undo_freelocale(struct locale_tx* self, const struct locale_event* arg,
                 struct picotm_error* error)
 { }
 #else
-#define apply_freelocale    NULL
-#define undo_freelocale     NULL
+#define apply_freelocale    nullptr
+#define undo_freelocale     nullptr
 #endif
 
 /*
@@ -496,7 +496,7 @@ locale_tx_localeconv_exec(struct locale_tx* self, struct picotm_error* error)
                                        locale_tx_try_rdlock_field,
                                        error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
     return localeconv();
 }
@@ -547,7 +547,7 @@ locale_tx_newlocale_exec(struct locale_tx* self, int category_mask,
 
 err_locale_log_append:
     freelocale(locobj);
-    return NULL;
+    return nullptr;
 }
 
 static void
@@ -564,8 +564,8 @@ undo_newlocale(struct locale_tx* self, const struct locale_event* arg,
     freelocale(arg->arg.newlocale.result);
 }
 #else
-#define apply_newlocale NULL
-#define undo_newlocale  NULL
+#define apply_newlocale nullptr
+#define undo_newlocale  nullptr
 #endif
 
 /*
@@ -580,19 +580,19 @@ setlocale_rd_exec(struct locale_tx* self, int category,
                                        locale_tx_try_rdlock_field,
                                        error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
     picotm_spinlock_lock(&self->locale->setlocale_lock);
-    char* locale = setlocale(category, NULL);
+    char* locale = setlocale(category, nullptr);
     picotm_spinlock_unlock(&self->locale->setlocale_lock);
 
     if (!locale)
-        return NULL; /* TODO: should this be an error? */
+        return nullptr; /* TODO: should this be an error? */
 
     char* duplocale = strdup(locale);
     if (!duplocale) {
         picotm_error_set_errno(error, errno);
-        return NULL;
+        return nullptr;
     }
 
     struct locale_event arg;
@@ -612,7 +612,7 @@ setlocale_rd_exec(struct locale_tx* self, int category,
 
 err_free_duplocale:
     free(duplocale);
-    return NULL;
+    return nullptr;
 }
 
 static char*
@@ -625,21 +625,21 @@ setlocale_wr_exec(struct locale_tx* self, int category, const char* locale,
                                        locale_tx_try_wrlock_field,
                                        error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     picotm_spinlock_lock(&self->locale->setlocale_lock);
-    char* curlocale = setlocale(category, NULL);
+    char* curlocale = setlocale(category, nullptr);
     picotm_spinlock_unlock(&self->locale->setlocale_lock);
     if (!curlocale) {
         picotm_error_set_error_code(error, PICOTM_GENERAL_ERROR);
-        return NULL;
+        return nullptr;
     }
 
     char* oldlocale = strdup(curlocale);
     if (!oldlocale) {
         picotm_error_set_errno(error, errno);
-        return NULL;
+        return nullptr;
     }
 
     picotm_spinlock_lock(&self->locale->setlocale_lock);
@@ -673,7 +673,7 @@ err_locale_log_append:
     }
 err_setlocale:
     free(oldlocale);
-    return NULL;
+    return nullptr;
 }
 
 char*
@@ -797,8 +797,8 @@ undo_uselocale(struct locale_tx* self, const struct locale_event* arg,
     }
 }
 #else
-#define apply_uselocale NULL
-#define undo_uselocale  NULL
+#define apply_uselocale nullptr
+#define undo_uselocale  nullptr
 #endif
 
 /*

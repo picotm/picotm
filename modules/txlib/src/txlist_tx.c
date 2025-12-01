@@ -59,7 +59,7 @@ txlist_tx_exec_begin(struct txlist_tx* self, struct picotm_error* error)
                               &self->list_state->internal.lock,
                               error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     return txlist_state_begin(self->list_state);
@@ -128,7 +128,7 @@ txlist_tx_exec_front(struct txlist_tx* self, struct picotm_error* error)
                               &self->list_state->internal.lock,
                               error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     return txlist_state_front(self->list_state);
@@ -147,7 +147,7 @@ txlist_tx_exec_back(struct txlist_tx* self, struct picotm_error* error)
                               &self->list_state->internal.lock,
                               error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     return txlist_state_back(self->list_state);

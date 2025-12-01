@@ -53,8 +53,8 @@ socket_tx_init(struct socket_tx* self)
 
     file_tx_init(&self->base, &socket_tx_ops);
 
-    self->sockbuf_tx = NULL;
-    self->fcntltab = NULL;
+    self->sockbuf_tx = nullptr;
+    self->fcntltab = nullptr;
     self->fcntltablen = 0;
 
     init_rwstates(picotm_arraybeg(self->rwstate),
@@ -82,7 +82,7 @@ socket_tx_prepare(struct socket_tx* self, struct socket* socket,
 {
     assert(self);
 
-    self->sockbuf_tx = NULL;
+    self->sockbuf_tx = nullptr;
     self->fcntltablen = 0;
 }
 

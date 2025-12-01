@@ -170,7 +170,7 @@ get_txlib_tx(struct picotm_error* error)
     struct txlib_module* module = PICOTM_THREAD_STATE_ACQUIRE(txlib_module,
                                                               true, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
     return &module->tx;
 }
@@ -185,12 +185,12 @@ txlib_module_acquire_txlist_of_state(struct txlist_state* list_state,
 {
     struct txlib_tx* txl_tx = get_txlib_tx(error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
     struct txlist_tx* list_tx =
         txlib_tx_acquire_txlist_of_state(txl_tx, list_state, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
     return list_tx;
 }
@@ -202,12 +202,12 @@ txlib_module_acquire_txmultiset_of_state(
 {
     struct txlib_tx* txl_tx = get_txlib_tx(error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
     struct txmultiset_tx* multiset_tx =
         txlib_tx_acquire_txmultiset_of_state(txl_tx, multiset_state, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
     return multiset_tx;
 }
@@ -218,12 +218,12 @@ txlib_module_acquire_txqueue_of_state(struct txqueue_state* queue_state,
 {
     struct txlib_tx* txl_tx = get_txlib_tx(error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
     struct txqueue_tx* queue_tx =
         txlib_tx_acquire_txqueue_of_state(txl_tx, queue_state, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
     return queue_tx;
 }
@@ -234,12 +234,12 @@ txlib_module_acquire_txstack_of_state(struct txstack_state* stack_state,
 {
     struct txlib_tx* txl_tx = get_txlib_tx(error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
     struct txstack_tx* stack_tx =
         txlib_tx_acquire_txstack_of_state(txl_tx, stack_state, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
     return stack_tx;
 }

@@ -94,14 +94,14 @@ fd_tx_init(struct fd_tx* self)
 
     picotm_slist_init_item(&self->active_list);
 
-    self->fd = NULL;
-    self->file_tx = NULL;
+    self->fd = nullptr;
+    self->file_tx = nullptr;
     self->cc_mode = PICOTM_LIBC_CC_MODE_2PL;
 
     init_rwstates(picotm_arraybeg(self->rwstate),
                   picotm_arrayend(self->rwstate));
 
-    self->fcntltab = NULL;
+    self->fcntltab = nullptr;
     self->fcntltablen = 0;
 }
 
@@ -168,7 +168,7 @@ fd_tx_unref(struct fd_tx* self)
     file_tx_unref(self->file_tx);
     fd_unref(self->fd);
 
-    self->fd = NULL;
+    self->fd = nullptr;
 }
 
 bool
@@ -198,7 +198,7 @@ fd_tx_validate(struct fd_tx* self, struct picotm_error* error)
 
     /* file descriptor is still open; previously locked */
     if (!fd_is_open_nl(self->fd)) {
-        picotm_error_set_conflicting(error, NULL);
+        picotm_error_set_conflicting(error, nullptr);
         return;
     }
 }
@@ -392,7 +392,7 @@ fd_tx_close_undo(struct fd_tx* self, int fildes, int cookie,
                                         int,
                                         int,
                                         struct picotm_error*) = {
-        NULL,
+        nullptr,
         close_undo_ts
     };
 

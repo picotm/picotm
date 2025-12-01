@@ -55,15 +55,15 @@ pipebuf_tx_init(struct pipebuf_tx* self)
     picotm_ref_init(&self->ref, 0);
     picotm_slist_init_item(&self->list_entry);
 
-    self->pipebuf = NULL;
+    self->pipebuf = nullptr;
 
     self->wrmode = PICOTM_LIBC_WRITE_BACK;
 
-    self->wrbuf = NULL;
+    self->wrbuf = nullptr;
     self->wrbuflen = 0;
     self->wrbufsiz = 0;
 
-    self->wrtab = NULL;
+    self->wrtab = nullptr;
     self->wrtablen = 0;
     self->wrtabsiz = 0;
 
@@ -137,7 +137,7 @@ pipebuf_tx_unref(struct pipebuf_tx* self)
     }
 
     filebuf_unref(&self->pipebuf->base);
-    self->pipebuf = NULL;
+    self->pipebuf = nullptr;
 }
 
 bool

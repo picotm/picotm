@@ -137,7 +137,7 @@ txqueue_tx_exec_front(struct txqueue_tx* self, struct picotm_error* error)
                               &self->queue_state->internal.lock,
                               error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     if (txqueue_state_is_empty(self->queue_state)) {
@@ -162,7 +162,7 @@ txqueue_tx_exec_back(struct txqueue_tx* self, struct picotm_error* error)
                               &self->queue_state->internal.lock,
                               error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     return txqueue_state_back(self->queue_state);

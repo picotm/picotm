@@ -157,7 +157,7 @@ realloc_tm(void* ptr, size_t size)
 
     size_t usiz = malloc_usable_size(ptr);
 
-    void* mem = NULL;
+    void* mem = nullptr;
 
     if (size) {
         do {

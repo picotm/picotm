@@ -174,7 +174,7 @@
     }
 
 #define TEST_SUCCESS_FUNC(_func) \
-    {"Test " #_func "_tx()", __TEST_SUCCESS_SYMBOL(_func), NULL, NULL}
+    {"Test " #_func "_tx()", __TEST_SUCCESS_SYMBOL(_func), nullptr, nullptr}
 
 /*
  * Test for errno code
@@ -226,7 +226,7 @@
 
 #define TEST_E_ERRNO_FUNC(_errno, _func)                            \
     {"Test " #_func "_tx() for " #_errno,                           \
-        __TEST_E_ERRNO_SYMBOL(errno_ ## _errno, _func), NULL, NULL}
+        __TEST_E_ERRNO_SYMBOL(errno_ ## _errno, _func), nullptr, nullptr}
 
 /*
  * Test for floating-point exception
@@ -282,4 +282,4 @@ errno_of_flag(int flag);
 
 #define TEST_E_EXCPT_FUNC(_flag, _func)                             \
     {"Test " #_func "_tx() for " #_flag,                            \
-        __TEST_E_EXCPT_SYMBOL(excpt_ ## _flag, _func), NULL, NULL}
+        __TEST_E_EXCPT_SYMBOL(excpt_ ## _flag, _func), nullptr, nullptr}

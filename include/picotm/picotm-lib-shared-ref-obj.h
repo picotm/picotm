@@ -127,7 +127,7 @@
  *      void
  *      ref_counted_up(struct ref_counted* self, struct picotm_error* error)
  *      {
- *          picotm_shared_ref16_obj_up(&self->ref_obj, NULL, up_cond,
+ *          picotm_shared_ref16_obj_up(&self->ref_obj, nullptr, up_cond,
  *                                     first_ref, error);
  *      }
  * ~~~
@@ -166,7 +166,7 @@
  *      void
  *      ref_counted_down(struct ref_counted* self)
  *      {
- *          picotm_shared_ref16_obj_down(&self->ref_obj, NULL, down_cond,
+ *          picotm_shared_ref16_obj_down(&self->ref_obj, nullptr, down_cond,
  *                                       final_ref);
  *      }
  * ~~~

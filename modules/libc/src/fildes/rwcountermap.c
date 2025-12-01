@@ -43,7 +43,7 @@ rwcountermap_page_init(struct rwcountermap_page* self)
 {
     assert(self);
 
-    self->lockpg = NULL;
+    self->lockpg = nullptr;
 
     struct rwcounter* counter_beg = picotm_arraybeg(self->counter);
     struct rwcounter* counter_end = picotm_arrayend(self->counter);
@@ -74,7 +74,7 @@ rwcountermap_page_get_rwlockmap_page(struct rwcountermap_page* self,
 
     self->lockpg = rwlockmap_find_page(rwlockmap, offset, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     return self->lockpg;

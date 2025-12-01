@@ -39,7 +39,7 @@ picotm_lock_manager_init(struct picotm_lock_manager* self,
         return;
     }
 
-    self->lo = NULL;
+    self->lo = nullptr;
     self->nlos = 0;
 
     picotm_os_rwlock_init(&self->exclusive_lo_lock, error);
@@ -47,7 +47,7 @@ picotm_lock_manager_init(struct picotm_lock_manager* self,
         goto err_picotm_os_rwlock_init;
     }
 
-    self->exclusive_lo = NULL;
+    self->exclusive_lo = nullptr;
 
     return;
 
@@ -90,7 +90,7 @@ grow_lo_array(struct picotm_lock_manager* self, struct picotm_error* error)
     struct picotm_lock_owner* const * end = picotm_arrayat(new_lo, new_nlos);
 
     while (beg < end) {
-        *beg = NULL;
+        *beg = nullptr;
         ++beg;
     }
 
@@ -118,7 +118,7 @@ static struct picotm_lock_owner**
 find_lo(struct picotm_lock_manager* self, struct picotm_lock_owner* lo,
         struct picotm_error* error)
 {
-    static const struct picotm_lock_owner* key = NULL;
+    static const struct picotm_lock_owner* key = nullptr;
     size_t nlos = self->nlos - !!(self->nlos);
 
     struct picotm_lock_owner** pos = lfind(&key, self->lo + (!!nlos), &nlos,
@@ -131,7 +131,7 @@ find_lo(struct picotm_lock_manager* self, struct picotm_lock_owner* lo,
 
     grow_lo_array(self, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     pos = self->lo + (!nlos) + nlos;
@@ -154,7 +154,7 @@ picotm_lock_manager_register_owner(struct picotm_lock_manager* self,
         return;
     }
 
-    struct picotm_lock_owner** pos = find_lo(self, NULL, error);
+    struct picotm_lock_owner** pos = find_lo(self, nullptr, error);
     if (picotm_error_is_set(error)) {
         goto err_find_lo;
     }
@@ -188,7 +188,7 @@ picotm_lock_manager_unregister_owner(struct picotm_lock_manager* self,
         break;
     } while (true);
 
-    self->lo[picotm_lock_owner_get_index(lo)] = NULL;
+    self->lo[picotm_lock_owner_get_index(lo)] = nullptr;
 
     picotm_os_rwlock_unlock(&self->lo_rwlock);
 }
@@ -233,7 +233,7 @@ picotm_lock_manager_release_irrevocability(struct picotm_lock_manager* self,
     assert(self->exclusive_lo == lo || !self->exclusive_lo);
 
     if (self->exclusive_lo == lo)
-        self->exclusive_lo = NULL;
+        self->exclusive_lo = nullptr;
     picotm_os_rwlock_unlock(&self->exclusive_lo_lock);
 }
 
@@ -260,7 +260,7 @@ lock_and_prepend_waiter(struct picotm_lock_manager* self,
     unsigned long index = picotm_lock_owner_get_index(waiter);
 
     unsigned long first_index = slist_funcs->get_first_index(slist);
-    struct picotm_lock_owner* first_waiter = NULL;
+    struct picotm_lock_owner* first_waiter = nullptr;
 
     do {
 
@@ -293,7 +293,7 @@ lock_and_prepend_waiter(struct picotm_lock_manager* self,
             /* The first list element changed, so we do the look-up
              * again. */
             first_index = old_first_index;
-            first_waiter = NULL;
+            first_waiter = nullptr;
             continue;
         }
         break;
@@ -312,7 +312,7 @@ get_first_waiter(struct picotm_lock_manager* self,
                  const struct picotm_lock_slist_funcs* slist_funcs,
                  void* slist, struct picotm_error* error)
 {
-    struct picotm_lock_owner* first_waiter = NULL;
+    struct picotm_lock_owner* first_waiter = nullptr;
 
     unsigned long first_index = slist_funcs->get_first_index(slist);
 
@@ -329,7 +329,7 @@ get_first_waiter(struct picotm_lock_manager* self,
 
         picotm_lock_owner_lock(first_waiter, error);
         if (picotm_error_is_set(error)) {
-            return NULL;
+            return nullptr;
         }
 
         first_index = slist_funcs->get_first_index(slist);
@@ -342,7 +342,7 @@ get_first_waiter(struct picotm_lock_manager* self,
             /* The first list element changed, so we do the look-up
              * again. */
             picotm_lock_owner_unlock(first_waiter);
-            first_waiter = NULL;
+            first_waiter = nullptr;
             continue;
         }
     }
@@ -360,10 +360,10 @@ find_prec_waiter(struct picotm_lock_manager* self,
     assert(first_waiter || !waiter);
 
     if (first_waiter == waiter) {
-        return NULL; /* no previous list element */
+        return nullptr; /* no previous list element */
     }
 
-    struct picotm_lock_owner* prec_waiter = NULL;
+    struct picotm_lock_owner* prec_waiter = nullptr;
 
     while (first_waiter->next) {
 
@@ -469,7 +469,7 @@ remove_waiter(struct picotm_lock_manager* self,
          * lock will be re-acquired by find_prec_waiter(). */
         picotm_lock_owner_unlock(waiter);
 
-        struct picotm_lock_owner* first_waiter = NULL;
+        struct picotm_lock_owner* first_waiter = nullptr;
 
         do {
             struct picotm_error error = PICOTM_ERROR_INITIALIZER;
@@ -574,7 +574,7 @@ picotm_lock_manager_wait(struct picotm_lock_manager* self,
         goto err_picotm_lock_owner_locked_wait;
     }
 
-    struct picotm_lock_owner* prec_waiter = remove_waiter(self, waiter, NULL,
+    struct picotm_lock_owner* prec_waiter = remove_waiter(self, waiter, nullptr,
                                                           slist_funcs, slist);
     if (prec_waiter) {
         picotm_lock_owner_unlock(prec_waiter);
@@ -587,7 +587,7 @@ picotm_lock_manager_wait(struct picotm_lock_manager* self,
     return woken_up;
 
 err_picotm_lock_owner_locked_wait:
-    prec_waiter = remove_waiter(self, waiter, NULL, slist_funcs, slist);
+    prec_waiter = remove_waiter(self, waiter, nullptr, slist_funcs, slist);
     if (prec_waiter) {
         picotm_lock_owner_unlock(prec_waiter);
     }
@@ -617,7 +617,7 @@ pick_waiter(struct picotm_lock_owner* first_waiter,
 {
     /* pick longest waiting */
 
-    struct picotm_lock_owner* picked_waiter = NULL;
+    struct picotm_lock_owner* picked_waiter = nullptr;
 
     struct picotm_lock_owner* waiter = first_waiter;
 
@@ -652,7 +652,7 @@ pick_waiter(struct picotm_lock_owner* first_waiter,
                         && (picked_waiter != waiter)) {
                     picotm_lock_owner_unlock(picked_waiter);
                 }
-                return NULL;
+                return nullptr;
             }
         }
 
@@ -764,7 +764,7 @@ picotm_lock_manager_wake_up(struct picotm_lock_manager* self,
         /* Wake up all readers if a reader was selected. */
 
         struct picotm_lock_owner* waiter = first_waiter;
-        struct picotm_lock_owner* prec_waiter = NULL;
+        struct picotm_lock_owner* prec_waiter = nullptr;
 
         while (waiter) {
 

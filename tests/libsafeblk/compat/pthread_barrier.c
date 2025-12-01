@@ -34,11 +34,11 @@ __picotm_pthread_barrier_init(
         return EINVAL;
     }
 
-    int err = pthread_mutex_init(&barrier->mutex, NULL);
+    int err = pthread_mutex_init(&barrier->mutex, nullptr);
     if (err) {
         return err;
     }
-    err = pthread_cond_init(&barrier->cond, NULL);
+    err = pthread_cond_init(&barrier->cond, nullptr);
     if (err) {
         goto err_pthread_cond_init;
     }

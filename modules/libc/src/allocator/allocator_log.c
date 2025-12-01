@@ -29,7 +29,7 @@ allocator_log_init(struct allocator_log* self, unsigned long module)
     assert(self);
 
     self->module = module;
-    self->eventtab = NULL;
+    self->eventtab = nullptr;
     self->eventtablen = 0;
     self->eventtabsiz = 0;
 }
@@ -66,7 +66,7 @@ allocator_log_end_alloc(struct allocator_log* self,
                                  neweventtabsiz, sizeof(self->eventtab[0]),
                                  error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
     self->eventtab = tmp;
     self->eventtabsiz = neweventtabsiz;

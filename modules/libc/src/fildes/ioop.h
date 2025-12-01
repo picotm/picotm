@@ -47,7 +47,7 @@ ioop_uninit(struct ioop* self);
  * \param   buf     The output buffer.
  * \param   nbyte   The output-buffer length.
  * \param   offset  The read offset.
- * \param   iobuf   The ioop data buffer, can be NULL if no data has been written.
+ * \param   iobuf   The ioop data buffer, can be nullptr if no data has been written.
  * \returns The number of bytes read.
  */
 ssize_t

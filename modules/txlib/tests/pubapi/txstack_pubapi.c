@@ -167,7 +167,7 @@ txstack_test_2(unsigned int tid)
 
     txstack_state_clear_and_uninit_entries(&stack_state,
                                            uninit_txstack_entry_cb,
-                                           NULL);
+                                           nullptr);
     txstack_state_uninit(&stack_state);
 }
 
@@ -376,9 +376,9 @@ txstack_test_4_post(unsigned long nthreads, enum loop_mode loop,
 }
 
 static const struct test_func txstack_test[] = {
-    {"txstack_test_1", txstack_test_1, NULL,               NULL},
-    {"txstack_test_2", txstack_test_2, NULL,               NULL},
-    {"txstack_test_3", txstack_test_3, NULL,               NULL},
+    {"txstack_test_1", txstack_test_1, nullptr,               nullptr},
+    {"txstack_test_2", txstack_test_2, nullptr,               nullptr},
+    {"txstack_test_3", txstack_test_3, nullptr,               nullptr},
     {"txstack_test_4", txstack_test_4, txstack_test_4_pre, txstack_test_4_post}
 };
 

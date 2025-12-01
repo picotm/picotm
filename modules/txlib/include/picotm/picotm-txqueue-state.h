@@ -63,7 +63,7 @@ struct txqueue_entry {
  * \ingroup group_txlib
  * \brief Initializer macro for `struct txqueue_entry`.
  */
-#define TXQUEUE_ENTRY_INITIALIZER   __TXQUEUE_ENTRY_INITIALIZER(NULL)
+#define TXQUEUE_ENTRY_INITIALIZER   __TXQUEUE_ENTRY_INITIALIZER(nullptr)
 
 PICOTM_NOTHROW
 /**

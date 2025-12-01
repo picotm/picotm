@@ -170,7 +170,7 @@ PICOTM_NOTHROW
  * Instructs the transaction management system to resolve a conflict between
  * transactions.
  *
- * \param   conflicting_lock  The conflicting lock, or NULL if unknown.
+ * \param   conflicting_lock  The conflicting lock, or nullptr if unknown.
  *
  * \attention   This function will not return if picotm aborts the
  *              transaction. If the function returns, the caller shall restart
@@ -301,7 +301,7 @@ PICOTM_END_DECLS
  *
  *  struct picotm_error error = PICOTM_ERROR_INITIALIZER;
  *
- *  unsigned long module_number = picotm_register_module(&ops, NULL, &error);
+ *  unsigned long module_number = picotm_register_module(&ops, nullptr, &error);
  *  if (picotm_error_is_set(&error)) {
  *      // abort with an error
  *  }
@@ -334,12 +334,12 @@ PICOTM_END_DECLS
  *      void* ptr = malloc(siz);
  *      if (!ptr) {
  *          // In real-world code, do error handling here!
- *          return NULL;
+ *          return nullptr;
  *      }
  *      int res = picotm_inject_event(module_number, CMD_MALLOC, ptr);
  *      if (res < 0) {
  *          // In real-world code, do error handling here!
- *          return NULL;
+ *          return nullptr;
  *      }
  *      return ptr;
  *  }
@@ -351,7 +351,7 @@ PICOTM_END_DECLS
  *      int res = picotm_inject_event(module_number, CMD_FREE, ptr);
  *      if (res < 0) {
  *          // In real-world code, do error handling here!
- *          return NULL;
+ *          return nullptr;
  *      }
  *      return ptr;
  *  }

@@ -34,7 +34,7 @@ fildes_filetab_init(struct fildes_filetab self[static 1],
     self->tab = tab;
     self->stride = stride;
 
-    int err = pthread_rwlock_init(&self->rwlock, NULL);
+    int err = pthread_rwlock_init(&self->rwlock, nullptr);
     if (err) {
         picotm_error_set_errno(error, err);
         return;
@@ -134,15 +134,15 @@ filetab_append(struct fildes_filetab filetab[static 1],
 {
     if ((filetab->len * filetab->stride) >= filetab->siz) {
         /* Return error if not enough ids available */
-        picotm_error_set_conflicting(error, NULL);
-        return NULL;
+        picotm_error_set_conflicting(error, nullptr);
+        return nullptr;
     }
 
     struct file* file = filetab_at(filetab, filetab->len);
 
     filetab->ops->init_file(file, error);
     if (picotm_error_is_set(error))
-        return NULL;
+        return nullptr;
 
     ++filetab->len;
 
@@ -181,7 +181,7 @@ find_by_id(struct fildes_filetab filetab[static 1],
     if (picotm_error_is_set(&saved_error))
         memcpy(error, &saved_error, sizeof(*error));
 
-    return NULL;
+    return nullptr;
 }
 
 /* requires writer lock */
@@ -198,14 +198,14 @@ search_by_id(struct fildes_filetab filetab[static 1],
         int cmp = file_ref_or_set_up_if_id(file_beg, fildes, false, id,
                                            error);
         if (picotm_error_is_set(error))
-            return NULL;
+            return nullptr;
         else if (!cmp)
             return file_beg; /* set-up file structure; return */
 
         file_beg = filetab_next(filetab, file_beg);
     }
 
-    return NULL;
+    return nullptr;
 }
 
 static bool
@@ -221,7 +221,7 @@ fildes_filetab_ref_fildes(struct fildes_filetab self[static 1], int fildes,
     struct file_id id;
     file_id_init_from_fildes(&id, fildes, error);
     if (picotm_error_is_set(error))
-        return NULL;
+        return nullptr;
 
     struct file* file;
 
@@ -232,7 +232,7 @@ fildes_filetab_ref_fildes(struct fildes_filetab self[static 1], int fildes,
     if (!new_file) {
         rdlock_filetab(self, error);
         if (picotm_error_is_set(error))
-            return NULL;
+            return nullptr;
 
         file = find_by_id(self, &id, error_ne_fildes(new_file), error);
         if (picotm_error_is_set(error))
@@ -248,7 +248,7 @@ fildes_filetab_ref_fildes(struct fildes_filetab self[static 1], int fildes,
      */
     wrlock_filetab(self, error);
     if (picotm_error_is_set(error))
-        return NULL;
+        return nullptr;
 
     if (!new_file) {
         /* Re-try find operation; maybe element was added meanwhile. */
@@ -293,7 +293,7 @@ out:
 
 err_unlock_filetab:
     unlock_filetab(self);
-    return NULL;
+    return nullptr;
 }
 
 size_t

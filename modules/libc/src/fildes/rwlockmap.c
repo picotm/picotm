@@ -124,7 +124,7 @@ rwlockmap_find_page(struct rwlockmap* self, unsigned long long record_offset,
         rwlockmap_create_page_fn,
         rwlockmap_destroy_page_fn, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     return (struct rwlockmap_page*)value;

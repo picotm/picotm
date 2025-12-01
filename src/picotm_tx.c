@@ -43,7 +43,7 @@ picotm_tx_init(struct picotm_tx* self, struct picotm_lock_manager* lm,
 
     picotm_log_init(&self->log);
 
-    self->env = NULL;
+    self->env = nullptr;
     self->mode = TX_MODE_REVOCABLE;
     self->nretries = 0;
     self->nmodules = 0;

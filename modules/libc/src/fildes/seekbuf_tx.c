@@ -61,19 +61,19 @@ seekbuf_tx_init(struct seekbuf_tx* self)
     picotm_ref_init(&self->ref, 0);
     picotm_slist_init_item(&self->list_entry);
 
-    self->seekbuf = NULL;
+    self->seekbuf = nullptr;
 
     self->wrmode = PICOTM_LIBC_WRITE_BACK;
 
-    self->wrbuf = NULL;
+    self->wrbuf = nullptr;
     self->wrbuflen = 0;
     self->wrbufsiz = 0;
 
-    self->wrtab = NULL;
+    self->wrtab = nullptr;
     self->wrtablen = 0;
     self->wrtabsiz = 0;
 
-    self->rdtab = NULL;
+    self->rdtab = nullptr;
     self->rdtablen = 0;
     self->rdtabsiz = 0;
 
@@ -84,7 +84,7 @@ seekbuf_tx_init(struct seekbuf_tx* self)
 
     rwcountermap_init(&self->rwcountermap);
 
-    self->locktab = NULL;
+    self->locktab = nullptr;
     self->locktablen = 0;
     self->locktabsiz = 0;
 }
@@ -156,7 +156,7 @@ seekbuf_tx_unref(struct seekbuf_tx* self)
 
     filebuf_unref(&self->seekbuf->base);
 
-    self->seekbuf = NULL;
+    self->seekbuf = nullptr;
 }
 
 bool

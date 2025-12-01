@@ -261,7 +261,7 @@ PICOTM_END_DECLS
  *          // call free() if item was malloc()'ed
  *      }
  *
- *      txqueue_state_clear_and_uninit_entries(&queue_state, ulong_item_uninit_cb, NULL);
+ *      txqueue_state_clear_and_uninit_entries(&queue_state, ulong_item_uninit_cb, nullptr);
  *      txqueue_state_uninit(&queue_state);
  * ~~~
  *

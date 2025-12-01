@@ -50,7 +50,7 @@ static void
 signal_test_pre(int signum)
 {
     struct picotm_error error = PICOTM_ERROR_INITIALIZER;
-    picotm_libc_acquire_proc_signal(signum, NULL, &error);
+    picotm_libc_acquire_proc_signal(signum, nullptr, &error);
     if (picotm_error_is_set(&error)) {
         tap_error("Failed to acquire signal %d.", signum);
         abort_safe_block();
@@ -210,7 +210,7 @@ NO_OPTIMIZE
 static void
 gen_SIGSEGV(int signum)
 {
-    long* null_ptr = NULL;
+    long* null_ptr = nullptr;
     if (*null_ptr == signum) /* triggers SIGSEGV */
         *null_ptr = 0;
 }

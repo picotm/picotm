@@ -27,7 +27,7 @@ __picotm_libc_get_current_dir_name()
 {
     size_t siz = PATH_MAX;
 
-    char* buf = NULL;
+    char* buf = nullptr;
 
     do {
         void* mem = malloc(siz);
@@ -44,5 +44,5 @@ __picotm_libc_get_current_dir_name()
 
     free(buf);
 
-    return NULL;
+    return nullptr;
 }

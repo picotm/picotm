@@ -208,8 +208,8 @@ test_ptrdata_clear_data_tx(const void* ptr)
     clear_ptr_data_tx(ptr);
 
     data = get_ptr_data_tx(ptr);
-    if (data != NULL) {
-        tap_error("%s, Incorrect data: got %p, expected NULL.", __func__,
+    if (data != nullptr) {
+        tap_error("%s, Incorrect data: got %p, expected nullptr.", __func__,
                   data);
         struct picotm_error error = PICOTM_ERROR_INITIALIZER;
         picotm_error_set_error_code(&error, PICOTM_GENERAL_ERROR);
@@ -297,8 +297,8 @@ test_ptrdata_clear_shared_data_tx(const void* ptr)
     clear_shared_ptr_data_tx(ptr);
 
     data = get_shared_ptr_data_tx(ptr);
-    if (data != NULL) {
-        tap_error("%s, Incorrect data: got %p, expected NULL.", __func__,
+    if (data != nullptr) {
+        tap_error("%s, Incorrect data: got %p, expected nullptr.", __func__,
                   data);
         struct picotm_error error = PICOTM_ERROR_INITIALIZER;
         picotm_error_set_error_code(&error, PICOTM_GENERAL_ERROR);
@@ -334,7 +334,7 @@ test_ptrdata_test_and_set_shared_data_tx(const void* ptr)
         picotm_recover_from_error(&error);
     }
 
-    bool succ = test_and_set_shared_ptr_data_tx(ptr, ptr, NULL);
+    bool succ = test_and_set_shared_ptr_data_tx(ptr, ptr, nullptr);
     if (!succ) {
         tap_error("%s, Test-and-set failed for %p.", __func__, ptr);
         struct picotm_error error = PICOTM_ERROR_INITIALIZER;
@@ -343,8 +343,8 @@ test_ptrdata_test_and_set_shared_data_tx(const void* ptr)
     }
 
     data = get_shared_ptr_data_tx(ptr);
-    if (data != NULL) {
-        tap_error("%s, Incorrect data: got %p, expected NULL.", __func__,
+    if (data != nullptr) {
+        tap_error("%s, Incorrect data: got %p, expected nullptr.", __func__,
                   data);
         struct picotm_error error = PICOTM_ERROR_INITIALIZER;
         picotm_error_set_error_code(&error, PICOTM_GENERAL_ERROR);
@@ -363,13 +363,13 @@ ptrdata_test_ptrdata_test_and_set_shared_data(unsigned int tid)
 }
 
 static const struct test_func signal_test[] = {
-    {"Test ptrdata_set_data()",   ptrdata_test_ptrdata_set_data,   NULL, NULL},
-    {"Test ptrdata_get_data()",   ptrdata_test_ptrdata_get_data,   NULL, NULL},
-    {"Test ptrdata_clear_data()", ptrdata_test_ptrdata_clear_data, NULL, NULL},
-    {"Test ptrdata_set_shared_data()",   ptrdata_test_ptrdata_set_shared_data,   NULL, NULL},
-    {"Test ptrdata_get_shared_data()",   ptrdata_test_ptrdata_get_shared_data,   NULL, NULL},
-    {"Test ptrdata_clear_shared_data()", ptrdata_test_ptrdata_clear_shared_data, NULL, NULL},
-    {"Test ptrdata_test_and_set_shared_data()", ptrdata_test_ptrdata_test_and_set_shared_data, NULL, NULL},
+    {"Test ptrdata_set_data()",   ptrdata_test_ptrdata_set_data,   nullptr, nullptr},
+    {"Test ptrdata_get_data()",   ptrdata_test_ptrdata_get_data,   nullptr, nullptr},
+    {"Test ptrdata_clear_data()", ptrdata_test_ptrdata_clear_data, nullptr, nullptr},
+    {"Test ptrdata_set_shared_data()",   ptrdata_test_ptrdata_set_shared_data,   nullptr, nullptr},
+    {"Test ptrdata_get_shared_data()",   ptrdata_test_ptrdata_get_shared_data,   nullptr, nullptr},
+    {"Test ptrdata_clear_shared_data()", ptrdata_test_ptrdata_clear_shared_data, nullptr, nullptr},
+    {"Test ptrdata_test_and_set_shared_data()", ptrdata_test_ptrdata_test_and_set_shared_data, nullptr, nullptr},
 };
 
 /*

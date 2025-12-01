@@ -222,7 +222,7 @@ get_fildes_tx(struct picotm_error* error)
     struct fildes_module* module = PICOTM_THREAD_STATE_ACQUIRE(fildes_module,
                                                                true, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
     return &module->tx;
 }

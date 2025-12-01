@@ -141,7 +141,7 @@ cond_ref(struct picotm_shared_ref16_obj* ref_obj, void* data,
 
     if (self->state == FD_STATE_CLOSING) {
         /* fd is about to be closed; don't allow new references */
-        picotm_error_set_conflicting(error, NULL);
+        picotm_error_set_conflicting(error, nullptr);
         return false;
     }
 
@@ -172,7 +172,7 @@ fd_ref(struct fd* self, struct picotm_error* error)
         -1
     };
 
-    picotm_shared_ref16_obj_up(&self->ref_obj, &data, cond_ref, NULL, error);
+    picotm_shared_ref16_obj_up(&self->ref_obj, &data, cond_ref, nullptr, error);
     if (picotm_error_is_set(error)) {
         return;
     }
@@ -221,7 +221,7 @@ fd_unref(struct fd* self)
 {
     assert(self);
 
-    picotm_shared_ref16_obj_down(&self->ref_obj, NULL, NULL, final_ref);
+    picotm_shared_ref16_obj_down(&self->ref_obj, nullptr, nullptr, final_ref);
 }
 
 void

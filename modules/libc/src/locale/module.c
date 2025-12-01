@@ -200,7 +200,7 @@ get_locale_tx(struct picotm_error* error)
     struct locale_module* module = PICOTM_THREAD_STATE_ACQUIRE(locale_module,
                                                                true, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
     return &module->tx;
 }
@@ -238,7 +238,7 @@ locale_module_localeconv(struct picotm_error* error)
 {
     struct locale_tx* locale_tx = get_locale_tx(error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
     return locale_tx_localeconv_exec(locale_tx, error);
 }
@@ -263,7 +263,7 @@ locale_module_setlocale(int category, const char* locale,
 {
     struct locale_tx* locale_tx = get_locale_tx(error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
     return locale_tx_setlocale_exec(locale_tx, category, locale, error);
 }

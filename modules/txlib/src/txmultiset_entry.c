@@ -27,9 +27,9 @@ txmultiset_entry_init(struct txmultiset_entry* self)
 {
     assert(self);
 
-    self->internal.lt = NULL;
-    self->internal.ge = NULL;
-    self->internal.parent = NULL;
+    self->internal.lt = nullptr;
+    self->internal.ge = nullptr;
+    self->internal.parent = nullptr;
 }
 
 void
@@ -37,8 +37,8 @@ txmultiset_entry_init_head(struct txmultiset_entry* self)
 {
     assert(self);
 
-    self->internal.lt = NULL;
-    self->internal.ge = NULL;
+    self->internal.lt = nullptr;
+    self->internal.ge = nullptr;
     self->internal.parent = self;
 }
 
@@ -308,18 +308,18 @@ txmultiset_entry_erase(struct txmultiset_entry* self)
     } else {
 
         if (parent->internal.lt == self) {
-            parent->internal.lt = NULL;
+            parent->internal.lt = nullptr;
         } else {
             assert(parent->internal.ge == self);
-            parent->internal.ge = NULL;
+            parent->internal.ge = nullptr;
         }
     }
 
     /* Remove 'self' from tree */
 
-    self->internal.lt = NULL;
-    self->internal.ge = NULL;
-    self->internal.parent = NULL;
+    self->internal.lt = nullptr;
+    self->internal.ge = nullptr;
+    self->internal.parent = nullptr;
 }
 
 struct txmultiset_entry*

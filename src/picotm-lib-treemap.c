@@ -64,7 +64,7 @@ dir_create(unsigned long nentries, struct picotm_error* error)
     struct treemap_dir* dir = malloc(sizeof_dir(nentries));
     if (!dir) {
         picotm_error_set_errno(error, errno);
-        return NULL;
+        return nullptr;
     }
 
     dir_init(dir, nentries);
@@ -89,7 +89,7 @@ picotm_treemap_init(struct picotm_treemap* self, unsigned long level_nbits)
 {
     assert(self);
 
-    self->root = (uintptr_t)NULL;
+    self->root = (uintptr_t)(void*)nullptr;
     self->depth = 0;
     self->level_nbits = level_nbits;
 }
@@ -201,12 +201,12 @@ retrieve_dir(uintptr_t* entry_ptr, bool create_dirs,
     }
 
     if (!create_dirs) {
-        return NULL; /* don't create new directory */
+        return nullptr; /* don't create new directory */
     }
 
     struct treemap_dir* dir = dir_create(level_nentries, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     *entry_ptr = (uintptr_t)dir;
@@ -250,10 +250,10 @@ lookup_value_entry(uintptr_t* entry_ptr, unsigned long depth,
                                                level_nentries(level_nbits),
                                                error);
         if (picotm_error_is_set(error)) {
-            return NULL;
+            return nullptr;
         } else if (!dir) {
             assert(!create_dirs);
-            return NULL;
+            return nullptr;
         }
 
         entry_ptr = dir->entry + entry_index(key, depth, level_nbits);

@@ -145,7 +145,7 @@ feql(long double lhs, long double rhs)
 #define TEST_SUCCESS(_i, _name, _value, _func)                  \
     {__TEST_SUCCESS_STRSYM(_func, _name, _i ## _ ## _value),         \
         __TEST_SUCCESS_SYMBOL(_func, _name, _i ## _ ## _value), \
-        NULL, NULL}
+        nullptr, nullptr}
 
 /*
  * Test for error
@@ -208,7 +208,7 @@ feql(long double lhs, long double rhs)
 #define TEST_E_ERRNO(_i, _name, _errno, _func)                      \
     {__TEST_ERROR_STRSYM(errno_ ## _errno, _func, _name, _i),       \
         __TEST_ERROR_SYMBOL(errno_ ## _errno, _func, _name, _i),    \
-        NULL, NULL}
+        nullptr, nullptr}
 
 /*
  * Test constants

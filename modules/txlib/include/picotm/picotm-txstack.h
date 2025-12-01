@@ -145,7 +145,7 @@ PICOTM_BEGIN_DECLS
  *          // call free() if item was malloc()'ed
  *      }
  *
- *      txstack_state_clear_and_uninit_entries(&stack_state, ulong_item_uninit_cb, NULL);
+ *      txstack_state_clear_and_uninit_entries(&stack_state, ulong_item_uninit_cb, nullptr);
  *      txstack_state_uninit(&stack_state);
  * ~~~
  *

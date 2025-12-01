@@ -81,7 +81,7 @@ err_sigaction:
     /* No other thread could have modified the fields; simply
      * clear them on errors. */
     picotm_spinlock_lock(&self->lock);
-    self->nontx_sigaction = NULL;
+    self->nontx_sigaction = nullptr;
     self->acquired = false;
     picotm_spinlock_unlock(&self->lock);
 }
@@ -96,7 +96,7 @@ sigstate_entry_release(struct sigstate_entry* self, int signum,
 
     /* First, we restore old signal-handler state. After sigaction()
      * returned, no module-internal signal handler can run on this thread. */
-    int res = sigaction(signum, &self->old_action, NULL);
+    int res = sigaction(signum, &self->old_action, nullptr);
     if (res < 0) {
         picotm_error_set_errno(error, errno);
         return;
@@ -112,7 +112,7 @@ sigstate_entry_release(struct sigstate_entry* self, int signum,
         goto out;
     }
     self->acquired = false;
-    self->nontx_sigaction = NULL;
+    self->nontx_sigaction = nullptr;
 
 out:
     picotm_spinlock_unlock(&self->lock);
@@ -125,7 +125,7 @@ static void
     (int, siginfo_t*, void*)
 {
     if (!self->acquired) {
-        return NULL;
+        return nullptr;
     }
 
     /* The construction of the acquire and release functions guarantees
@@ -133,7 +133,7 @@ static void
      * signal handler. It is safe to acquire this lock here. */
     picotm_spinlock_lock(&self->lock);
 
-    void (*nontx_sigaction)(int, siginfo_t*, void*) = NULL;
+    void (*nontx_sigaction)(int, siginfo_t*, void*) = nullptr;
     if (!self->acquired) {
         goto out;
     }

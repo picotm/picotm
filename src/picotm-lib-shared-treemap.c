@@ -65,7 +65,7 @@ dir_create(unsigned long nentries, struct picotm_error* error)
     struct shared_treemap_dir* dir = malloc(sizeof_dir(nentries));
     if (!dir) {
         picotm_error_set_errno(error, errno);
-        return NULL;
+        return nullptr;
     }
 
     dir_init(dir, nentries, error);
@@ -77,7 +77,7 @@ dir_create(unsigned long nentries, struct picotm_error* error)
 
 err_dir_init:
     free(dir);
-    return NULL;
+    return nullptr;
 }
 
 static void
@@ -167,7 +167,7 @@ picotm_shared_treemap_init(struct picotm_shared_treemap* self,
 {
     assert(self);
 
-    atomic_init(&self->root, (uintptr_t)NULL);
+    atomic_init(&self->root, (uintptr_t)(void*)nullptr);
     self->depth = tree_depth(key_nbits, level_nbits);
     self->level_nbits = level_nbits;
 }
@@ -212,18 +212,18 @@ retrieve_dir(atomic_uintptr_t* entry_ptr, bool create_dirs,
     }
 
     if (!create_dirs) {
-        return NULL; /* don't create new directory */
+        return nullptr; /* don't create new directory */
     }
 
     /* insert missing directory */
 
     struct shared_treemap_dir* dir = dir_create(level_nentries, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     entry = (uintptr_t)dir;
-    uintptr_t expected = (uintptr_t)NULL;
+    uintptr_t expected = (uintptr_t)(void*)nullptr;
     bool succ = atomic_compare_exchange_strong_explicit(entry_ptr,
                                                         &expected,
                                                         entry,
@@ -265,10 +265,10 @@ lookup_value_entry(atomic_uintptr_t* entry_ptr, unsigned long depth,
         struct shared_treemap_dir* dir  = retrieve_dir(
             entry_ptr, create_dirs, level_nentries(level_nbits), error);
         if (picotm_error_is_set(error)) {
-            return NULL;
+            return nullptr;
         } else if (!dir) {
             assert(!create_dirs);
-            return NULL;
+            return nullptr;
         }
 
         entry_ptr = dir->entry + entry_index(key, depth, level_nbits);
@@ -301,7 +301,7 @@ retrieve_value(
         return 0;
     }
 
-    uintptr_t expected = (uintptr_t)NULL;
+    uintptr_t expected = (uintptr_t)(void*)nullptr;
     bool succ = atomic_compare_exchange_strong_explicit(entry_ptr,
                                                         &expected,
                                                         entry,

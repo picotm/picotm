@@ -750,14 +750,14 @@ static const struct test_func tm_test[] = {
     {"tm_test_1", tm_test_1, tm_test_1_pre, tm_test_1_post},
     {"tm_test_2", tm_test_2, tm_test_2_pre, tm_test_2_post},
     {"tm_test_3", tm_test_3, tm_test_3_pre, tm_test_3_post},
-    {"tm_test_4", tm_test_4, tm_test_4_pre, NULL},
-    {"tm_test_5", tm_test_5, tm_test_5_pre, NULL},
-    {"tm_test_6", tm_test_6, NULL, NULL},
-    {"tm_test_7", tm_test_7, NULL, NULL},
-    {"tm_test_8", tm_test_8, NULL, NULL},
-    {"Byte-wise load/store", tm_test_9, NULL, NULL},
-    {"Byte-wise conditional-load/store", tm_test_10, NULL, NULL},
-    {"Byte-wise load/conditional-store", tm_test_11, NULL, NULL}
+    {"tm_test_4", tm_test_4, tm_test_4_pre, nullptr},
+    {"tm_test_5", tm_test_5, tm_test_5_pre, nullptr},
+    {"tm_test_6", tm_test_6, nullptr, nullptr},
+    {"tm_test_7", tm_test_7, nullptr, nullptr},
+    {"tm_test_8", tm_test_8, nullptr, nullptr},
+    {"Byte-wise load/store", tm_test_9, nullptr, nullptr},
+    {"Byte-wise conditional-load/store", tm_test_10, nullptr, nullptr},
+    {"Byte-wise load/conditional-store", tm_test_11, nullptr, nullptr}
 };
 
 /*

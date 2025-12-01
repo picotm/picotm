@@ -55,15 +55,15 @@ sockbuf_tx_init(struct sockbuf_tx* self)
     picotm_ref_init(&self->ref, 0);
     picotm_slist_init_item(&self->list_entry);
 
-    self->sockbuf = NULL;
+    self->sockbuf = nullptr;
 
     self->wrmode = PICOTM_LIBC_WRITE_BACK;
 
-    self->wrbuf = NULL;
+    self->wrbuf = nullptr;
     self->wrbuflen = 0;
     self->wrbufsiz = 0;
 
-    self->wrtab = NULL;
+    self->wrtab = nullptr;
     self->wrtablen = 0;
     self->wrtabsiz = 0;
 
@@ -137,7 +137,7 @@ sockbuf_tx_unref(struct sockbuf_tx* self)
     }
 
     filebuf_unref(&self->sockbuf->base);
-    self->sockbuf = NULL;
+    self->sockbuf = nullptr;
 }
 
 bool

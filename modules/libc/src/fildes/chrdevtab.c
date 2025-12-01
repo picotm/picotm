@@ -58,7 +58,7 @@ fildes_chrdevtab_ref_fildes(struct fildes_chrdevtab self[static 1], int fildes,
     struct file* file = fildes_filetab_ref_fildes(&self->filetab, fildes,
                                                   new_file, error);
     if (!file)
-        return NULL;
+        return nullptr;
 
     return chrdev_of_base(file);
 }

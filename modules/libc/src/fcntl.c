@@ -96,7 +96,7 @@ fcntl_tx(int fildes, int cmd, ...)
                 break;
             }
             default:
-                res = fildes_module_fcntl(fildes, cmd, NULL, &error);
+                res = fildes_module_fcntl(fildes, cmd, nullptr, &error);
                 break;
         }
         if (!picotm_error_is_set(&error)) {

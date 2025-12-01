@@ -63,7 +63,7 @@ alloc_page(struct tm_vmem_tx* vmem_tx, struct picotm_error* error)
         page = malloc(sizeof(*page));
         if (!page) {
             picotm_error_set_error_code(error, PICOTM_OUT_OF_MEMORY);
-            return NULL;
+            return nullptr;
         }
     } else {
         page = tm_page_of_slist(picotm_slist_front(&vmem_tx->alloced_pages));
@@ -106,7 +106,7 @@ acquire_page_by_block(struct tm_vmem_tx* vmem_tx, size_t block_index,
 {
     /* Return existing page, if there is one... */
 
-    struct tm_page* prev = NULL;
+    struct tm_page* prev = nullptr;
 
     struct picotm_slist* pos = picotm_slist_find_2(&vmem_tx->active_pages,
                                                    find_page_by_block_index_cb,
@@ -122,7 +122,7 @@ acquire_page_by_block(struct tm_vmem_tx* vmem_tx, size_t block_index,
 
     struct tm_page* page = alloc_page(vmem_tx, error);
     if (picotm_error_is_set(error)) {
-        return NULL;
+        return nullptr;
     }
 
     tm_page_init(page, block_index);

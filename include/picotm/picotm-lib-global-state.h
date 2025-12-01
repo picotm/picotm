@@ -151,7 +151,7 @@ struct picotm_error;
  * Acquires a reference to an instance of a global state.
  * \param       _name   The state name.
  * \param[out]  _error  Returns an error to the caller.
- * \returns The acquired state on success, or NULL on error.
+ * \returns The acquired state on success, or nullptr on error.
  */
 #define PICOTM_GLOBAL_STATE_REF(_name, _error)                          \
     PICOTM_SHARED_STATE_REF(_name, __PICOTM_GLOBAL_STATE_GET(_name)(),  \

@@ -60,7 +60,7 @@ fildes_seekbuftab_ref_fildes(struct fildes_seekbuftab self[static 1],
     struct filebuf* filebuf = fildes_filebuftab_ref_fildes(&self->filebuftab,
                                                            fildes, error);
     if (!filebuf)
-        return NULL;
+        return nullptr;
 
     return seekbuf_of_base(filebuf);
 }

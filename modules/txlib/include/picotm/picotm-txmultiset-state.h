@@ -55,8 +55,8 @@ struct txmultiset_entry {
 #define __TXMULTISET_ENTRY_INITIALIZER(_parent) \
     {                                           \
         {                                       \
-            NULL,                               \
-            NULL,                               \
+            nullptr,                               \
+            nullptr,                               \
             (_parent)                           \
         }                                       \
     }
@@ -65,7 +65,7 @@ struct txmultiset_entry {
  * \ingroup group_txlib
  * \brief Initializer macro for `struct txmultiset_entry`.
  */
-#define TXMULTISET_ENTRY_INITIALIZER    __TXMULTISET_ENTRY_INITIALIZER(NULL)
+#define TXMULTISET_ENTRY_INITIALIZER    __TXMULTISET_ENTRY_INITIALIZER(nullptr)
 
 PICOTM_NOTHROW
 /**

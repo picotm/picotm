@@ -108,7 +108,7 @@
 #define TEST_SUCCESS(_sname, _dname, _value)                        \
     {"Test cast_" #_sname "_to_" #_dname "_tx(" #_value ")",        \
         __TEST_SUCCESS_SYMBOL(_sname, _dname, value_ ## _value),    \
-        NULL, NULL}
+        nullptr, nullptr}
 
 /*
  * Test for error
@@ -191,7 +191,7 @@
     {"Test cast_" #_sname "_to_" #_dname "_tx(" #_value ") for " #_errno,   \
         __TEST_ERROR_SYMBOL(errno_ ## _errno, _sname, _dname,               \
                             value_ ## _value),                              \
-        NULL, NULL}
+        nullptr, nullptr}
 
 /*
  * Test constants

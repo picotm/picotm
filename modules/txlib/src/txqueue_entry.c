@@ -26,8 +26,8 @@ txqueue_entry_init(struct txqueue_entry* self)
 {
     assert(self);
 
-    self->internal.next = NULL;
-    self->internal.prev = NULL;
+    self->internal.next = nullptr;
+    self->internal.prev = nullptr;
 }
 
 void
@@ -109,8 +109,8 @@ txqueue_entry_erase(struct txqueue_entry* self)
     next->internal.prev = prev;
     prev->internal.next = next;
 
-    self->internal.next = NULL;
-    self->internal.prev = NULL;
+    self->internal.next = nullptr;
+    self->internal.prev = nullptr;
 }
 
 /*

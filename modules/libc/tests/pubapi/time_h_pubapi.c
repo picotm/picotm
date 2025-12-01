@@ -104,8 +104,8 @@ time_h_test_2(unsigned int tid)
 }
 
 static const struct test_func time_h_test[] = {
-    {"Test strftime()", time_h_test_1, NULL, NULL},
-    {"Test strptime()", time_h_test_2, NULL, NULL}
+    {"Test strftime()", time_h_test_1, nullptr, nullptr},
+    {"Test strptime()", time_h_test_2, nullptr, nullptr}
 };
 
 /*
