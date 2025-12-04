@@ -86,39 +86,39 @@ cmp_fildes(int lhs, int rhs)
     return (lhs > rhs) - (lhs < rhs);
 }
 
-int
-file_id_cmp(const struct file_id* lhs, const struct file_id* rhs)
+bool
+file_id_cmp_eq(const struct file_id* lhs, const struct file_id* rhs)
 {
     int cmp = cmp_dev_t(lhs->dev, rhs->dev);
     if (cmp)
-        return cmp;
+        return false;
 
     cmp = cmp_ino_t(lhs->ino, rhs->ino);
     if (cmp)
-        return cmp;
+        return false;
 
-    return cmp_fildes(lhs->fildes, rhs->fildes);
+    return !cmp_fildes(lhs->fildes, rhs->fildes);
 }
 
-int
+bool
 file_id_cmp_eq_fildes(const struct file_id lhs[static 1],
                       const struct file_id rhs[static 1],
                       struct picotm_error error[static 1])
 {
     int cmp = cmp_dev_t(lhs->dev, rhs->dev);
     if (cmp)
-        return cmp;
+        return false;
 
     cmp = cmp_ino_t(lhs->ino, rhs->ino);
     if (cmp)
-        return cmp;
+        return false;
 
     cmp = cmp_fildes(lhs->fildes, rhs->fildes);
     if (cmp) {
         /* file descriptors are different; return error */
         picotm_error_set_errno(error, EBADF);
-        return cmp;
+        return false;
     }
 
-    return 0;
+    return true;
 }

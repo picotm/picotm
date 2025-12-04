@@ -164,14 +164,14 @@ find_by_id(struct fildes_filetab filetab[static 1],
 
         struct picotm_error cmp_error = PICOTM_ERROR_INITIALIZER;
 
-        int cmp = file_ref_if_id(file_beg, id, ne_fildes, &cmp_error);
+        bool found = file_ref_if_id(file_beg, id, ne_fildes, &cmp_error);
         if (picotm_error_is_set(&cmp_error)) {
             /* An error might be reported if the id's file descriptors don't
              * match. We save the error, but continue the loops. If we later
              * find a full match, the function succeeds. Otherwise, it reports
              * the last error. */
             memcpy(&saved_error, &cmp_error, sizeof(saved_error));
-        } else if (!cmp) {
+        } else if (found) {
             return file_beg;
         }
 
@@ -194,12 +194,10 @@ search_by_id(struct fildes_filetab filetab[static 1],
     const struct file* file_end = filetab_end(filetab);
 
     while (file_beg < file_end) {
-
-        int cmp = file_ref_or_set_up_if_id(file_beg, fildes, false, id,
-                                           error);
+        bool found = file_ref_or_set_up_if_id(file_beg, fildes, false, id, error);
         if (picotm_error_is_set(error))
             return nullptr;
-        else if (!cmp)
+        else if (found)
             return file_beg; /* set-up file structure; return */
 
         file_beg = filetab_next(filetab, file_beg);
