@@ -18,9 +18,11 @@
  */
 
 #include "fileid.h"
+#include "compat/cmp_eq_files.h"
 #include <assert.h>
 #include <errno.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 void
 file_id_init(struct file_id* self, dev_t dev, ino_t ino)
@@ -69,56 +71,24 @@ file_id_is_empty(const struct file_id* self)
 }
 
 static int
-cmp_dev_t(dev_t lhs, dev_t rhs)
-{
-    return (lhs > rhs) - (lhs < rhs);
-}
-
-static int
-cmp_ino_t(ino_t lhs, ino_t rhs)
-{
-    return (lhs > rhs) - (lhs < rhs);
-}
-
-static int
 cmp_fildes(int lhs, int rhs)
 {
     return (lhs > rhs) - (lhs < rhs);
 }
 
 bool
-file_id_cmp_eq(const struct file_id* lhs, const struct file_id* rhs)
+file_id_cmp_eq(const struct file_id* lhs, const struct file_id* rhs, struct picotm_error* error)
 {
-    int cmp = cmp_dev_t(lhs->dev, rhs->dev);
-    if (cmp)
+    int cmp = cmp_fildes(lhs->fildes, rhs->fildes);
+
+    if (!cmp) { /* both file descriptors are equal or invalid */
+        return true;
+    } else if (lhs->fildes < 0) { /* lhs is invalid */
         return false;
-
-    cmp = cmp_ino_t(lhs->ino, rhs->ino);
-    if (cmp)
-        return false;
-
-    return !cmp_fildes(lhs->fildes, rhs->fildes);
-}
-
-bool
-file_id_cmp_eq_fildes(const struct file_id lhs[static 1],
-                      const struct file_id rhs[static 1],
-                      struct picotm_error error[static 1])
-{
-    int cmp = cmp_dev_t(lhs->dev, rhs->dev);
-    if (cmp)
-        return false;
-
-    cmp = cmp_ino_t(lhs->ino, rhs->ino);
-    if (cmp)
-        return false;
-
-    cmp = cmp_fildes(lhs->fildes, rhs->fildes);
-    if (cmp) {
-        /* file descriptors are different; return error */
-        picotm_error_set_errno(error, EBADF);
+    } else if (rhs->fildes < 0) { /* rhs is invalid */
         return false;
     }
 
-    return true;
+    /* both file descriptors are distinct and valid */
+    return cmp_eq_files(lhs->fildes, rhs->fildes, error);
 }

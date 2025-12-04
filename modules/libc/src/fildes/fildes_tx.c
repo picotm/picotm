@@ -537,19 +537,6 @@ err_get_seekbuf_tx:
 }
 
 static bool
-true_if_eq_id_cb(const struct picotm_slist* item, void* data)
-{
-    const struct file_tx* file_tx =
-        file_tx_of_list_entry((struct picotm_slist*)item);
-    assert(file_tx);
-
-    const struct file_id* id = data;
-    assert(id);
-
-    return file_id_cmp_eq(&file_tx->file->id, id);
-}
-
-static bool
 true_if_eq_sockbuf_id_cb(const struct picotm_slist* item, void* data)
 {
     const struct sockbuf_tx* sockbuf_tx =
@@ -643,6 +630,22 @@ err_get_sockbuf_tx:
     return nullptr;
 }
 
+static bool
+true_if_eq_file_id_cb(const struct picotm_slist* item, void* data1, void* data2)
+{
+    const struct file_tx* file_tx =
+        file_tx_of_list_entry((struct picotm_slist*)item);
+    assert(file_tx);
+
+    const struct file_id* id = data1;
+    assert(id);
+
+    struct picotm_error *error = data2;
+    assert(error);
+
+    return file_id_cmp_eq(&file_tx->file->id, id, error);
+}
+
 static struct file_tx*
 get_file_tx(struct fildes_tx* self, int fildes,
             enum picotm_libc_file_type type,
@@ -656,8 +659,11 @@ get_file_tx(struct fildes_tx* self, int fildes,
 
     /* Let's see if we already have the file in use.*/
 
-    struct picotm_slist* pos = picotm_slist_find_1(&self->file_tx_active_list,
-                                                   true_if_eq_id_cb, &id);
+    struct picotm_slist* pos = picotm_slist_find_2(&self->file_tx_active_list,
+                                                   true_if_eq_file_id_cb, &id, error);
+    if (picotm_error_is_set(error))
+            return nullptr;
+
     if (pos != picotm_slist_end(&self->file_tx_active_list)) {
         struct file_tx* file_tx = file_tx_of_list_entry(pos);
         assert(file_tx_file_type(file_tx) == type);
