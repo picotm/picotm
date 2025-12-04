@@ -94,17 +94,4 @@ file_id_is_empty(const struct file_id* self);
  * always compare as equal.
  */
 bool
-file_id_cmp_eq(const struct file_id* lhs, const struct file_id* rhs);
-
-/**
- * \brief Compares two file ids for equality. Signals
- *        an error if file descriptors are different.
- * \param       lhs     The left-hand-side file id.
- * \param       rhs     The right-hand-side file id.
- * \param[out]  error   Returns an error to the caller.
- * \returns True if the file ids are equal, or false otherwise.
- */
-bool
-file_id_cmp_eq_fildes(const struct file_id lhs[static 1],
-                      const struct file_id rhs[static 1],
-                      struct picotm_error error[static 1]);
+file_id_cmp_eq(const struct file_id* lhs, const struct file_id* rhs, struct picotm_error* error);

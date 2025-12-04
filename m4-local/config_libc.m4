@@ -324,6 +324,18 @@ AC_DEFUN([_CHECK_LIBC_SYS_STAT_H], [
     ])
 ])
 
+AC_DEFUN([_CHECK_LIBC_SYS_SYSCALL_H], [
+    AC_CHECK_HEADERS([sys/syscall.h])
+    AS_VAR_IF([ac_cv_header_sys_syscall_h], [yes], [
+
+        #
+        # Public interfaces
+        #
+
+        _CHECK_MODULE_INTF([libc], [syscall], [[@%:@include <sys/syscall.h>]])
+    ])
+])
+
 AC_DEFUN([_CHECK_LIBC_SYS_TYPES_H], [
     AC_CHECK_HEADERS([sys/types.h])
     AS_VAR_IF([ac_cv_header_sys_types_h], [yes], [
@@ -455,6 +467,7 @@ AC_DEFUN([_CONFIG_LIBC], [
         _CHECK_LIBC_STRING_H
         _CHECK_LIBC_SYS_SOCKET_H
         _CHECK_LIBC_SYS_STAT_H
+        _CHECK_LIBC_SYS_SYSCALL_H
         _CHECK_LIBC_SYS_TYPES_H
         _CHECK_LIBC_TIME_H
         _CHECK_LIBC_UNISTD_H

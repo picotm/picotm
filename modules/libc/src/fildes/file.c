@@ -110,10 +110,7 @@ cond_ref(struct picotm_shared_ref16_obj* ref_obj, void* data,
     const struct file_id* lhs = &self->id;
     const struct file_id* rhs = ref_obj_data->id;
 
-    if (ref_obj_data->new_file)
-        ref_obj_data->found = file_id_cmp_eq_fildes(lhs, rhs, error);
-    else
-        ref_obj_data->found = file_id_cmp_eq(lhs, rhs);
+    ref_obj_data->found = file_id_cmp_eq(lhs, rhs, error);
 
     return ref_obj_data->found;
 }
@@ -126,10 +123,9 @@ file_ref_or_set_up_if_id(struct file* self, int fildes, bool new_file,
     assert(self);
 
     struct ref_obj_data data = REF_OBJ_DATA_INITIALIZER(id, fildes, new_file);
-    picotm_shared_ref16_obj_up(&self->ref_obj, &data, cond_ref, first_ref,
-                               error);
+    picotm_shared_ref16_obj_up(&self->ref_obj, &data, cond_ref, first_ref, error);
     if (picotm_error_is_set(error)) {
-        return 0;
+        return false;
     }
 
     return data.found;
