@@ -84,27 +84,27 @@ bool
 file_id_is_empty(const struct file_id* self);
 
 /**
- * \return Compares two file ids, returns value as for strcmp.
+ * \brief Compares two file ids for equality.
  * \param   lhs The left-hand-side file id.
  * \param   rhs The right-hand-side file id.
- * \returns A value less than, equal to or greater than zero of the value
- *          of lhs is less than, equal to or greater than the value of
- *          rhws.
+ * \param[out]  error   Returns an error to the caller.
+ * \returns True if the file ids are equal, or false otherwise.
+ *
+ * Compares file ids. Also works for file ids that have been cleared, which
+ * always compare as equal.
  */
-int
-file_id_cmp(const struct file_id* lhs, const struct file_id* rhs);
+bool
+file_id_cmp_eq(const struct file_id* lhs, const struct file_id* rhs);
 
 /**
- * \brief Compares two file ids, returns value as for strcmp. Signals
+ * \brief Compares two file ids for equality. Signals
  *        an error if file descriptors are different.
  * \param       lhs     The left-hand-side file id.
  * \param       rhs     The right-hand-side file id.
  * \param[out]  error   Returns an error to the caller.
- * \returns A value less than, equal to or greater than zero if the value
- *          of lhs is less than, equal to or greater than the value of
- *          rhs.
+ * \returns True if the file ids are equal, or false otherwise.
  */
-int
+bool
 file_id_cmp_eq_fildes(const struct file_id lhs[static 1],
                       const struct file_id rhs[static 1],
                       struct picotm_error error[static 1]);

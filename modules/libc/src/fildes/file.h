@@ -78,10 +78,9 @@ file_ref_or_set_up(struct file* self, int fildes, struct picotm_error* error);
  * \param       new_file    True if the file was create by the transaction;
  *                          false otherwise.
  * \param[out]  error       Returns an error ot the caller.
- * \returns A value less than, equal to, or greater than if the file's id is
- *          less than, equal to, or greater than the given id.
+ * \returns True if the reference has been acquired, or false otherwise.
  */
-int
+bool
 file_ref_or_set_up_if_id(struct file* self, int fildes, bool new_file,
                          const struct file_id* id,
                          struct picotm_error* error);
@@ -101,10 +100,9 @@ file_ref(struct file* self, struct picotm_error* error);
  * \param   id          The id to compare to.
  * \param   new_file    True if the file was create by the transaction;
  *                      false otherwise.
- * \returns A value less than, equal to, or greater than if the file's id
- *          is less than, equal to, or greater than the given id.
+ * \returns True if the reference has been acquired, or false otherwise.
  */
-int
+bool
 file_ref_if_id(struct file* self, const struct file_id* id, bool new_file,
                struct picotm_error* error);
 

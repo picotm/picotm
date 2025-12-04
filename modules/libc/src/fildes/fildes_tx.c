@@ -546,8 +546,7 @@ true_if_eq_id_cb(const struct picotm_slist* item, void* data)
     const struct file_id* id = data;
     assert(id);
 
-    int cmp = file_id_cmp(&file_tx->file->id, id);
-    return !cmp;
+    return file_id_cmp_eq(&file_tx->file->id, id);
 }
 
 static bool
