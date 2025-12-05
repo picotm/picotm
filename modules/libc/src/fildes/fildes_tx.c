@@ -651,11 +651,7 @@ get_file_tx(struct fildes_tx* self, int fildes,
             enum picotm_libc_file_type type,
             struct picotm_error* error)
 {
-    struct file_id id;
-    file_id_init_from_fildes(&id, fildes, error);
-    if (picotm_error_is_set(error)) {
-        return nullptr;
-    }
+    struct file_id id = FILE_ID_INITIALIZER(fildes);
 
     /* Let's see if we already have the file in use.*/
 

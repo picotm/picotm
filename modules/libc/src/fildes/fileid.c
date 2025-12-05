@@ -20,43 +20,18 @@
 #include "fileid.h"
 #include "compat/cmp_eq_files.h"
 #include <assert.h>
-#include <errno.h>
-#include <sys/stat.h>
-#include <unistd.h>
 
 void
-file_id_init(struct file_id* self, dev_t dev, ino_t ino)
+file_id_init(struct file_id* self, int fildes)
 {
     assert(self);
 
-    self->dev = dev;
-    self->ino = ino;
-}
-
-void
-file_id_init_from_fildes(struct file_id* self, int fildes,
-                         struct picotm_error* error)
-{
-    assert(self);
-
-    struct stat buf;
-
-    int res = fstat(fildes, &buf);
-    if (res < 0) {
-        picotm_error_set_errno(error, errno);
-        return;
-    }
-
-    self->dev = buf.st_dev;
-    self->ino = buf.st_ino;
     self->fildes = fildes;
 }
 
 void
 file_id_clear(struct file_id* self)
 {
-    self->dev = (dev_t)-1;
-    self->ino = (ino_t)-1;
     self->fildes = -1;
 }
 
@@ -65,9 +40,7 @@ file_id_is_empty(const struct file_id* self)
 {
     assert(self);
 
-    return (self->dev == (dev_t)-1) &&
-           (self->ino == (ino_t)-1) &&
-           (self->fildes == -1);
+    return (self->fildes == -1);
 }
 
 static int

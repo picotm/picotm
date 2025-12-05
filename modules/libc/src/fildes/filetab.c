@@ -216,11 +216,7 @@ struct file*
 fildes_filetab_ref_fildes(struct fildes_filetab self[static 1], int fildes,
                           bool new_file, struct picotm_error error[static 1])
 {
-    struct file_id id;
-    file_id_init_from_fildes(&id, fildes, error);
-    if (picotm_error_is_set(error))
-        return nullptr;
-
+    struct file_id id = FILE_ID_INITIALIZER(fildes);
     struct file* file;
 
     /* Try to find an existing file structure with the given id; iff
