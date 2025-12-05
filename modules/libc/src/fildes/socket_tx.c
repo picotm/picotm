@@ -40,21 +40,13 @@
 #include <unistd.h>
 
 static void
-init_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end)
+socket_tx_try_rdlock_field(struct socket_tx* self, enum socket_field field,
+                           struct picotm_error* error)
 {
-    while (beg < end) {
-        picotm_rwstate_init(beg);
-        ++beg;
-    }
-}
+    assert(self);
 
-static void
-uninit_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end)
-{
-    while (beg < end) {
-        picotm_rwstate_uninit(beg);
-        ++beg;
-    }
+    socket_try_rdlock_field(socket_of_base(self->base.file), field,
+                            self->rwstate + field, error);
 }
 
 /*
@@ -65,20 +57,38 @@ static void
 socket_tx_op_prepare(struct file_tx* file_tx, struct file* file, void* data,
                      struct picotm_error* error)
 {
-    socket_tx_prepare(socket_tx_of_file_tx(file_tx), socket_of_base(file),
-                      error);
+    struct socket_tx* self = socket_tx_of_file_tx(file_tx);
+
+    self->sockbuf_tx = nullptr;
+    self->fcntltablen = 0;
 }
 
 static void
 socket_tx_op_release(struct file_tx* file_tx)
+{ }
+
+static void
+unlock_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end,
+                struct socket* socket)
 {
-    socket_tx_release(socket_tx_of_file_tx(file_tx));
+    enum socket_field field = 0;
+
+    while (beg < end) {
+        socket_unlock_field(socket, field, beg);
+        ++field;
+        ++beg;
+    }
 }
 
 static void
 socket_tx_op_finish(struct file_tx* base)
 {
-    socket_tx_finish(socket_tx_of_file_tx(base));
+    struct socket_tx* self = socket_tx_of_file_tx(base);
+
+    /* release reader/writer locks on socket state */
+    unlock_rwstates(picotm_arraybeg(self->rwstate),
+                    picotm_arrayend(self->rwstate),
+                    socket_of_base(self->base.file));
 }
 
 /* accept() */
@@ -644,6 +654,15 @@ static const struct file_tx_ops socket_tx_ops = {
  * Public interface
  */
 
+static void
+init_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end)
+{
+    while (beg < end) {
+        picotm_rwstate_init(beg);
+        ++beg;
+    }
+}
+
 void
 socket_tx_init(struct socket_tx* self)
 {
@@ -659,6 +678,15 @@ socket_tx_init(struct socket_tx* self)
                   picotm_arrayend(self->rwstate));
 }
 
+static void
+uninit_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end)
+{
+    while (beg < end) {
+        picotm_rwstate_uninit(beg);
+        ++beg;
+    }
+}
+
 void
 socket_tx_uninit(struct socket_tx* self)
 {
@@ -668,64 +696,4 @@ socket_tx_uninit(struct socket_tx* self)
 
     uninit_rwstates(picotm_arraybeg(self->rwstate),
                     picotm_arrayend(self->rwstate));
-}
-
-/*
- * File handling
- */
-
-void
-socket_tx_prepare(struct socket_tx* self, struct socket* socket,
-                  struct picotm_error* error)
-{
-    assert(self);
-
-    self->sockbuf_tx = nullptr;
-    self->fcntltablen = 0;
-}
-
-void
-socket_tx_release(struct socket_tx* self)
-{ }
-
-void
-socket_tx_try_rdlock_field(struct socket_tx* self, enum socket_field field,
-                           struct picotm_error* error)
-{
-    assert(self);
-
-    socket_try_rdlock_field(socket_of_base(self->base.file), field,
-                            self->rwstate + field, error);
-}
-
-void
-socket_tx_try_wrlock_field(struct socket_tx* self, enum socket_field field,
-                           struct picotm_error* error)
-{
-    assert(self);
-
-    socket_try_wrlock_field(socket_of_base(self->base.file), field,
-                            self->rwstate + field, error);
-}
-
-static void
-unlock_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end,
-                struct socket* socket)
-{
-    enum socket_field field = 0;
-
-    while (beg < end) {
-        socket_unlock_field(socket, field, beg);
-        ++field;
-        ++beg;
-    }
-}
-
-void
-socket_tx_finish(struct socket_tx* self)
-{
-    /* release reader/writer locks on socket state */
-    unlock_rwstates(picotm_arraybeg(self->rwstate),
-                    picotm_arrayend(self->rwstate),
-                    socket_of_base(self->base.file));
 }

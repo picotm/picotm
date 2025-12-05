@@ -41,21 +41,13 @@
 #include <unistd.h>
 
 static void
-init_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end)
+fifo_tx_try_rdlock_field(struct fifo_tx* self, enum fifo_field field,
+                         struct picotm_error* error)
 {
-    while (beg < end) {
-        picotm_rwstate_init(beg);
-        ++beg;
-    }
-}
+    assert(self);
 
-static void
-uninit_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end)
-{
-    while (beg < end) {
-        picotm_rwstate_uninit(beg);
-        ++beg;
-    }
+    fifo_try_rdlock_field(fifo_of_base(self->base.file), field,
+                          self->rwstate + field, error);
 }
 
 /*
@@ -66,19 +58,38 @@ static void
 fifo_tx_op_prepare(struct file_tx* file_tx, struct file* file, void* data,
         struct picotm_error* error)
 {
-    fifo_tx_prepare(fifo_tx_of_file_tx(file_tx), fifo_of_base(file), error);
+    struct fifo_tx* self = fifo_tx_of_file_tx(file_tx);
+
+    self->pipebuf_tx = nullptr;
+    self->fcntltablen = 0;
 }
 
 static void
 fifo_tx_op_release(struct file_tx* file_tx)
+{ }
+
+static void
+unlock_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end,
+                struct fifo* fifo)
 {
-    fifo_tx_release(fifo_tx_of_file_tx(file_tx));
+    enum fifo_field field = 0;
+
+    while (beg < end) {
+        fifo_unlock_field(fifo, field, beg);
+        ++field;
+        ++beg;
+    }
 }
 
 static void
 fifo_tx_op_finish(struct file_tx* base)
 {
-    fifo_tx_finish(fifo_tx_of_file_tx(base));
+    struct fifo_tx* self = fifo_tx_of_file_tx(base);
+
+    /* release reader/writer locks on FIFO state */
+    unlock_rwstates(picotm_arraybeg(self->rwstate),
+                    picotm_arrayend(self->rwstate),
+                    fifo_of_base(self->base.file));
 }
 
 /* fcntl() */
@@ -377,6 +388,15 @@ static const struct file_tx_ops fifo_tx_ops = {
  * Public interfaces
  */
 
+static void
+init_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end)
+{
+    while (beg < end) {
+        picotm_rwstate_init(beg);
+        ++beg;
+    }
+}
+
 void
 fifo_tx_init(struct fifo_tx* self)
 {
@@ -393,6 +413,15 @@ fifo_tx_init(struct fifo_tx* self)
                   picotm_arrayend(self->rwstate));
 }
 
+static void
+uninit_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end)
+{
+    while (beg < end) {
+        picotm_rwstate_uninit(beg);
+        ++beg;
+    }
+}
+
 void
 fifo_tx_uninit(struct fifo_tx* self)
 {
@@ -401,64 +430,4 @@ fifo_tx_uninit(struct fifo_tx* self)
     fcntloptab_clear(&self->fcntltab, &self->fcntltablen);
     uninit_rwstates(picotm_arraybeg(self->rwstate),
                     picotm_arrayend(self->rwstate));
-}
-
-/*
- * File handling
- */
-
-void
-fifo_tx_prepare(struct fifo_tx* self, struct fifo* fifo,
-                struct picotm_error* error)
-{
-    assert(self);
-
-    self->pipebuf_tx = nullptr;
-    self->fcntltablen = 0;
-}
-
-void
-fifo_tx_release(struct fifo_tx* self)
-{ }
-
-void
-fifo_tx_try_rdlock_field(struct fifo_tx* self, enum fifo_field field,
-                         struct picotm_error* error)
-{
-    assert(self);
-
-    fifo_try_rdlock_field(fifo_of_base(self->base.file), field,
-                          self->rwstate + field, error);
-}
-
-void
-fifo_tx_try_wrlock_field(struct fifo_tx* self, enum fifo_field field,
-                         struct picotm_error* error)
-{
-    assert(self);
-
-    fifo_try_wrlock_field(fifo_of_base(self->base.file), field,
-                          self->rwstate + field, error);
-}
-
-static void
-unlock_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end,
-                struct fifo* fifo)
-{
-    enum fifo_field field = 0;
-
-    while (beg < end) {
-        fifo_unlock_field(fifo, field, beg);
-        ++field;
-        ++beg;
-    }
-}
-
-void
-fifo_tx_finish(struct fifo_tx* self)
-{
-    /* release reader/writer locks on FIFO state */
-    unlock_rwstates(picotm_arraybeg(self->rwstate),
-                    picotm_arrayend(self->rwstate),
-                    fifo_of_base(self->base.file));
 }

@@ -71,28 +71,3 @@ socket_tx_init(struct socket_tx* self);
  */
 void
 socket_tx_uninit(struct socket_tx* self);
-
-/**
- * Preapre after acquiring the first reference on the transaction-local
- * socket state.
- */
-void
-socket_tx_prepare(struct socket_tx* self, struct socket* socket,
-                  struct picotm_error* error);
-
-/**
- * Clean up after releasing final reference
- */
-void
-socket_tx_release(struct socket_tx* self);
-
-void
-socket_tx_try_rdlock_field(struct socket_tx* self, enum socket_field field,
-                           struct picotm_error* error);
-
-void
-socket_tx_try_wrlock_field(struct socket_tx* self, enum socket_field field,
-                           struct picotm_error* error);
-
-void
-socket_tx_finish(struct socket_tx* self);

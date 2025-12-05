@@ -77,36 +77,3 @@ regfile_tx_init(struct regfile_tx* self);
  */
 void
 regfile_tx_uninit(struct regfile_tx* self);
-
-/**
- * Prepare after acquiring the first reference on the transaction-local
- * regular-file state.
- */
-void
-regfile_tx_prepare(struct regfile_tx* self, struct regfile* regfile,
-                   struct picotm_error* error);
-
-/**
- * Clean up after releasing reference.
- */
-void
-regfile_tx_release(struct regfile_tx* self);
-
-void
-regfile_tx_try_rdlock_field(struct regfile_tx* self, enum regfile_field field,
-                            struct picotm_error* error);
-
-void
-regfile_tx_try_wrlock_field(struct regfile_tx* self, enum regfile_field field,
-                            struct picotm_error* error);
-
-void
-regfile_tx_finish(struct regfile_tx* self);
-
-off_t
-regfile_tx_get_file_offset(struct regfile_tx* self, int fildes,
-                           struct picotm_error* error);
-
-void
-regfile_tx_set_file_offset(struct regfile_tx* self, off_t offset,
-                           struct picotm_error* error);
