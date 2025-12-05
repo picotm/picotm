@@ -70,31 +70,3 @@ chrdev_tx_init(struct chrdev_tx* self);
  */
 void
 chrdev_tx_uninit(struct chrdev_tx* self);
-
-/**
- * Prepare after acquiring the first reference on a transaction-local
- * character device.
- */
-void
-chrdev_tx_prepare(struct chrdev_tx* self, struct chrdev* chrdev,
-                  struct picotm_error* error);
-
-/**
- * Clean up after releasing the current transaction-local character device.
- */
-void
-chrdev_tx_release(struct chrdev_tx* self);
-
-void
-chrdev_tx_try_rdlock_field(struct chrdev_tx* self, enum chrdev_field field,
-                           struct picotm_error* error);
-
-void
-chrdev_tx_try_wrlock_field(struct chrdev_tx* self, enum chrdev_field field,
-                           struct picotm_error* error);
-
-/**
- * Finish operation for transaction-local character device.
- */
-void
-chrdev_tx_finish(struct chrdev_tx* self);

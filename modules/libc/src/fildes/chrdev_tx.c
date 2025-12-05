@@ -41,21 +41,23 @@
 #include <unistd.h>
 
 static void
-init_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end)
+chrdev_tx_try_rdlock_field(struct chrdev_tx* self, enum chrdev_field field,
+                           struct picotm_error* error)
 {
-    while (beg < end) {
-        picotm_rwstate_init(beg);
-        ++beg;
-    }
+    assert(self);
+
+    chrdev_try_rdlock_field(chrdev_of_base(self->base.file), field,
+                            self->rwstate + field, error);
 }
 
 static void
-uninit_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end)
+chrdev_tx_try_wrlock_field(struct chrdev_tx* self, enum chrdev_field field,
+                           struct picotm_error* error)
 {
-    while (beg < end) {
-        picotm_rwstate_uninit(beg);
-        ++beg;
-    }
+    assert(self);
+
+    chrdev_try_wrlock_field(chrdev_of_base(self->base.file), field,
+                            self->rwstate + field, error);
 }
 
 /*
@@ -66,20 +68,38 @@ static void
 chrdev_tx_op_prepare(struct file_tx* file_tx, struct file* file, void* data,
                      struct picotm_error* error)
 {
-    chrdev_tx_prepare(chrdev_tx_of_file_tx(file_tx), chrdev_of_base(file),
-                      error);
+    struct chrdev_tx* self = chrdev_tx_of_file_tx(file_tx);
+
+    self->seekbuf_tx = nullptr;
+    self->fcntltablen = 0;
 }
 
 static void
 chrdev_tx_op_release(struct file_tx* file_tx)
+{ }
+
+static void
+unlock_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end,
+                struct chrdev* chrdev)
 {
-    chrdev_tx_release(chrdev_tx_of_file_tx(file_tx));
+    enum chrdev_field field = 0;
+
+    while (beg < end) {
+        chrdev_unlock_field(chrdev, field, beg);
+        ++field;
+        ++beg;
+    }
 }
 
 static void
 chrdev_tx_op_finish(struct file_tx* base)
 {
-    chrdev_tx_finish(chrdev_tx_of_file_tx(base));
+    struct chrdev_tx* self = chrdev_tx_of_file_tx(base);
+
+    /* release reader/writer locks on character-device state */
+    unlock_rwstates(picotm_arraybeg(self->rwstate),
+                    picotm_arrayend(self->rwstate),
+                    chrdev_of_base(self->base.file));
 }
 
 /* fcntl() */
@@ -377,6 +397,15 @@ static const struct file_tx_ops chrdev_tx_ops = {
  * Public interface
  */
 
+static void
+init_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end)
+{
+    while (beg < end) {
+        picotm_rwstate_init(beg);
+        ++beg;
+    }
+}
+
 void
 chrdev_tx_init(struct chrdev_tx* self)
 {
@@ -393,6 +422,15 @@ chrdev_tx_init(struct chrdev_tx* self)
                   picotm_arrayend(self->rwstate));
 }
 
+static void
+uninit_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end)
+{
+    while (beg < end) {
+        picotm_rwstate_uninit(beg);
+        ++beg;
+    }
+}
+
 void
 chrdev_tx_uninit(struct chrdev_tx* self)
 {
@@ -402,63 +440,4 @@ chrdev_tx_uninit(struct chrdev_tx* self)
 
     uninit_rwstates(picotm_arraybeg(self->rwstate),
                     picotm_arrayend(self->rwstate));
-}
-
-/* Referencing
- */
-
-void
-chrdev_tx_prepare(struct chrdev_tx* self, struct chrdev* chrdev,
-                  struct picotm_error* error)
-{
-    assert(self);
-
-    self->seekbuf_tx = nullptr;
-    self->fcntltablen = 0;
-}
-
-void
-chrdev_tx_release(struct chrdev_tx* self)
-{ }
-
-void
-chrdev_tx_try_rdlock_field(struct chrdev_tx* self, enum chrdev_field field,
-                           struct picotm_error* error)
-{
-    assert(self);
-
-    chrdev_try_rdlock_field(chrdev_of_base(self->base.file), field,
-                            self->rwstate + field, error);
-}
-
-void
-chrdev_tx_try_wrlock_field(struct chrdev_tx* self, enum chrdev_field field,
-                           struct picotm_error* error)
-{
-    assert(self);
-
-    chrdev_try_wrlock_field(chrdev_of_base(self->base.file), field,
-                            self->rwstate + field, error);
-}
-
-static void
-unlock_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end,
-                struct chrdev* chrdev)
-{
-    enum chrdev_field field = 0;
-
-    while (beg < end) {
-        chrdev_unlock_field(chrdev, field, beg);
-        ++field;
-        ++beg;
-    }
-}
-
-void
-chrdev_tx_finish(struct chrdev_tx* self)
-{
-    /* release reader/writer locks on character-device state */
-    unlock_rwstates(picotm_arraybeg(self->rwstate),
-                    picotm_arrayend(self->rwstate),
-                    chrdev_of_base(self->base.file));
 }

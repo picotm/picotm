@@ -68,28 +68,3 @@ fifo_tx_init(struct fifo_tx* self);
  */
 void
 fifo_tx_uninit(struct fifo_tx* self);
-
-/**
- * Prepare after acquiring the first reference on the transaction-local
- * FIFO state.
- */
-void
-fifo_tx_prepare(struct fifo_tx* self, struct fifo* fifo,
-                struct picotm_error* error);
-
-/**
- * Clean up after releasing final reference.
- */
-void
-fifo_tx_release(struct fifo_tx* self);
-
-void
-fifo_tx_try_rdlock_field(struct fifo_tx* self, enum fifo_field field,
-                         struct picotm_error* error);
-
-void
-fifo_tx_try_wrlock_field(struct fifo_tx* self, enum fifo_field field,
-                         struct picotm_error* error);
-
-void
-fifo_tx_finish(struct fifo_tx* self);

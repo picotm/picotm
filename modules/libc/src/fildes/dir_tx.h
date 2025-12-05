@@ -74,28 +74,3 @@ dir_tx_init(struct dir_tx* self);
  */
 void
 dir_tx_uninit(struct dir_tx* self);
-
-/**
- * Prepare after acquiring the first reference on the transaction-local
- * directory state.
- */
-void
-dir_tx_prepare(struct dir_tx* self, struct dir* dir,
-               struct picotm_error* error);
-
-/**
- * Clean up after releasing final reference.
- */
-void
-dir_tx_release(struct dir_tx* self);
-
-void
-dir_tx_try_rdlock_field(struct dir_tx* self, enum dir_field field,
-                        struct picotm_error* error);
-
-void
-dir_tx_try_wrlock_field(struct dir_tx* self, enum dir_field field,
-                        struct picotm_error* error);
-
-void
-dir_tx_finish(struct dir_tx* self);

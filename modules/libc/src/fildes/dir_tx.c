@@ -42,21 +42,23 @@
 #include <unistd.h>
 
 static void
-init_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end)
+dir_tx_try_rdlock_field(struct dir_tx* self, enum dir_field field,
+                        struct picotm_error* error)
 {
-    while (beg < end) {
-        picotm_rwstate_init(beg);
-        ++beg;
-    }
+    assert(self);
+
+    dir_try_rdlock_field(dir_of_base(self->base.file), field,
+                         self->rwstate + field, error);
 }
 
 static void
-uninit_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end)
+dir_tx_try_wrlock_field(struct dir_tx* self, enum dir_field field,
+                        struct picotm_error* error)
 {
-    while (beg < end) {
-        picotm_rwstate_uninit(beg);
-        ++beg;
-    }
+    assert(self);
+
+    dir_try_wrlock_field(dir_of_base(self->base.file), field,
+                         self->rwstate + field, error);
 }
 
 /*
@@ -67,19 +69,44 @@ static void
 dir_tx_op_prepare(struct file_tx* file_tx, struct file* file, void* data,
                   struct picotm_error* error)
 {
-    dir_tx_prepare(dir_tx_of_file_tx(file_tx), dir_of_base(file), error);
+    struct dir_tx* self = dir_tx_of_file_tx(file_tx);
+
+    /* Regular files use write-back mode, but a directory might contain
+     * files in write-through mode. to ensure their fsyncs reach disk, we
+     * set the directory to write-through mode by default. Fsyncs will be
+     * performed during execution and apply phases. */
+    self->wrmode = PICOTM_LIBC_WRITE_THROUGH;
+
+    self->fchmodtablen = 0;
+    self->fcntltablen = 0;
 }
 
 static void
 dir_tx_op_release(struct file_tx* file_tx)
+{ }
+
+static void
+unlock_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end,
+                struct dir* dir)
 {
-    dir_tx_release(dir_tx_of_file_tx(file_tx));
+    enum dir_field field = 0;
+
+    while (beg < end) {
+        dir_unlock_field(dir, field, beg);
+        ++field;
+        ++beg;
+    }
 }
 
 static void
 dir_tx_op_finish(struct file_tx* base)
 {
-    dir_tx_finish(dir_tx_of_file_tx(base));
+    struct dir_tx* self = dir_tx_of_file_tx(base);
+
+    /* release reader/writer locks on directory state */
+    unlock_rwstates(picotm_arraybeg(self->rwstate),
+                    picotm_arrayend(self->rwstate),
+                    dir_of_base(self->base.file));
 }
 
 /* fchmod() */
@@ -282,10 +309,6 @@ dir_tx_op_fsync_apply(struct file_tx* base,
     }
 }
 
-/*
- * Public interface
- */
-
 static const struct file_tx_ops dir_tx_ops = {
     PICOTM_LIBC_FILE_TYPE_DIR,
     /* file handling */
@@ -324,6 +347,15 @@ static const struct file_tx_ops dir_tx_ops = {
  * Public interface
  */
 
+static void
+init_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end)
+{
+    while (beg < end) {
+        picotm_rwstate_init(beg);
+        ++beg;
+    }
+}
+
 void
 dir_tx_init(struct dir_tx* self)
 {
@@ -343,6 +375,15 @@ dir_tx_init(struct dir_tx* self)
                   picotm_arrayend(self->rwstate));
 }
 
+static void
+uninit_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end)
+{
+    while (beg < end) {
+        picotm_rwstate_uninit(beg);
+        ++beg;
+    }
+}
+
 void
 dir_tx_uninit(struct dir_tx* self)
 {
@@ -353,70 +394,4 @@ dir_tx_uninit(struct dir_tx* self)
 
     uninit_rwstates(picotm_arraybeg(self->rwstate),
                     picotm_arrayend(self->rwstate));
-}
-
-/*
- * File handling
- */
-
-void
-dir_tx_prepare(struct dir_tx* self, struct dir* dir,
-               struct picotm_error* error)
-{
-    assert(self);
-
-    /* Regular files use write-back mode, but a directory might contain
-     * files in write-through mode. to ensure their fsyncs reach disk, we
-     * set the directory to write-through mode by default. Fsyncs will be
-     * performed during execution and apply phases. */
-    self->wrmode = PICOTM_LIBC_WRITE_THROUGH;
-
-    self->fchmodtablen = 0;
-    self->fcntltablen = 0;
-}
-
-void
-dir_tx_release(struct dir_tx* self)
-{ }
-
-void
-dir_tx_try_rdlock_field(struct dir_tx* self, enum dir_field field,
-                        struct picotm_error* error)
-{
-    assert(self);
-
-    dir_try_rdlock_field(dir_of_base(self->base.file), field,
-                         self->rwstate + field, error);
-}
-
-void
-dir_tx_try_wrlock_field(struct dir_tx* self, enum dir_field field,
-                        struct picotm_error* error)
-{
-    assert(self);
-
-    dir_try_wrlock_field(dir_of_base(self->base.file), field,
-                         self->rwstate + field, error);
-}
-
-static void
-unlock_rwstates(struct picotm_rwstate* beg, const struct picotm_rwstate* end,
-                struct dir* dir)
-{
-    enum dir_field field = 0;
-
-    while (beg < end) {
-        dir_unlock_field(dir, field, beg);
-        ++field;
-        ++beg;
-    }
-}
-
-void
-dir_tx_finish(struct dir_tx* self)
-{
-    /* release reader/writer locks on directory state */
-    unlock_rwstates(picotm_arraybeg(self->rwstate),
-                    picotm_arrayend(self->rwstate),
-                    dir_of_base(self->base.file));
 }
