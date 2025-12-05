@@ -19,6 +19,7 @@
 
 #include "cmp_eq_files.h"
 #include "picotm/picotm-error.h"
+#include <fcntl.h>
 #if defined(HAVE_SYS_SYSCALL_H) && HAVE_SYS_SYSCALL_H
 #include <sys/syscall.h>
 #endif
@@ -53,11 +54,44 @@ cmp_eq_files_kcmp(int lhs, int rhs, struct picotm_error *error)
 }
 #endif
 
+#if defined(F_DUPFD_QUERY)
+#include <errno.h>
+
+static bool cmp_eq_files_dupfd(int lhs, int rhs, struct picotm_error *error)
+{
+    int ret = fcntl(lhs, F_DUPFD_QUERY, rhs);
+    if (ret < 0) {
+        picotm_error_set_errno(error, errno);
+        return false;
+    }
+
+    return !!ret;
+}
+#endif
+
 bool
 cmp_eq_files(int lhs, int rhs, struct picotm_error* error)
 {
 #if defined(SYS_kcmp)
-    return cmp_eq_files_kcmp(lhs, rhs, error);
+    bool eq = cmp_eq_files_kcmp(lhs, rhs, error);
+#if defined(F_DUPFD_QUERY)
+    if (picotm_error_is_set(error)) {
+        switch(error->status) {
+            case PICOTM_ERRNO:
+                if (error->value.errno_hint == -ENOSYS) {
+                    picotm_error_clear(error);
+                    /* kcmp isn't available, but maybe F_DUPFD_QUERY is */
+                    return cmp_eq_files_dupfd(lhs, rhs, error);
+                }
+                [[fallthrough]];
+            default:
+                break;
+        }
+    }
+#endif
+    return eq;
+#elif defined(F_DUPFD_QUERY)
+    return cmp_eq_files_dupfd(lhs, rhs, error);
 #else
 #error file_id_cmp not implemented
 #endif
