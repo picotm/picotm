@@ -21,7 +21,6 @@
 
 #include "picotm/picotm-error.h"
 #include <stdbool.h>
-#include <sys/types.h>
 
 /**
  * \cond impl || libc_impl || libc_impl_fd
@@ -34,39 +33,26 @@
 /**
  * A unique id for a file.
  *
- * By default, an open file does not have an id by itself. Picotm
- * constructs the id from the id of the file's file buffer and the
- * file descriptor that refers to the file.
- *
- * If two file descriptors refer to the same file, they create two
- * different ids. Even though the file may be the same, these ids
- * must compare as *different.* It's a shortcoming resulting from the
- * non-existence of unique ids for open files.
+ * An open file does not have an id by itself. Picotm constructs
+ * the id by querying the operating system for equality of the file
+ * descriptor's file.
  */
 struct file_id {
-    dev_t  dev;
-    ino_t  ino;
     int fildes;
 };
 
-/**
- * Initializes a file id with values
- * \param[out]  self    The file id to initialize.
- * \param       dev     The device number.
- * \param       ino     The inode number.
- */
-void
-file_id_init(struct file_id* self, dev_t dev, ino_t ino);
+#define FILE_ID_INITIALIZER(__fildes)   \
+    {                                   \
+        .fildes = (__fildes),           \
+    }
 
 /**
  * \brief Initializes a file id from file descriptor.
  * \param[out]  self    The file id to initialize.
  * \param       fildes  The file descriptor.
- * \param[out]  error   Returns an error to the caller.
  */
 void
-file_id_init_from_fildes(struct file_id* self, int fildes,
-                            struct picotm_error* error);
+file_id_init(struct file_id* self, int fildes);
 
 /**
  * \brief Clears a file id.

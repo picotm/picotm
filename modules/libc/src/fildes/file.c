@@ -78,10 +78,7 @@ first_ref(struct picotm_shared_ref16_obj* ref_obj, void* data,
     const struct ref_obj_data* ref_obj_data = data;
     assert(ref_obj_data);
 
-    file_id_init_from_fildes(&self->id, ref_obj_data->fildes, error);
-    if (picotm_error_is_set(error)) {
-        return;
-    }
+    file_id_init(&self->id, ref_obj_data->fildes);
 }
 
 void
