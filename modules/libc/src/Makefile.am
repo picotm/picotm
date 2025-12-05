@@ -65,16 +65,12 @@ libpicotm_c_la_SOURCES = allocator/allocator_event.c \
                          fildes/chrdevtab.h \
                          fildes/chrdev_tx.c \
                          fildes/chrdev_tx.h \
-                         fildes/chrdev_tx_ops.c \
-                         fildes/chrdev_tx_ops.h \
                          fildes/dir.c \
                          fildes/dir.h \
                          fildes/dirtab.c \
                          fildes/dirtab.h \
                          fildes/dir_tx.c \
                          fildes/dir_tx.h \
-                         fildes/dir_tx_ops.c \
-                         fildes/dir_tx_ops.h \
                          fildes/fchmodop.c \
                          fildes/fchmodop.h \
                          fildes/fchmodoptab.c \
@@ -97,8 +93,6 @@ libpicotm_c_la_SOURCES = allocator/allocator_event.c \
                          fildes/fifotab.h \
                          fildes/fifo_tx.c \
                          fildes/fifo_tx.h \
-                         fildes/fifo_tx_ops.c \
-                         fildes/fifo_tx_ops.h \
                          fildes/fildes.c \
                          fildes/fildes.h \
                          fildes/fildes_event.c \
@@ -151,8 +145,6 @@ libpicotm_c_la_SOURCES = allocator/allocator_event.c \
                          fildes/regfiletab.h \
                          fildes/regfile_tx.c \
                          fildes/regfile_tx.h \
-                         fildes/regfile_tx_ops.c \
-                         fildes/regfile_tx_ops.h \
                          fildes/region.c \
                          fildes/region.h \
                          fildes/regiontab.c \
@@ -185,8 +177,6 @@ libpicotm_c_la_SOURCES = allocator/allocator_event.c \
                          fildes/sockettab.h \
                          fildes/socket_tx.c \
                          fildes/socket_tx.h \
-                         fildes/socket_tx_ops.c \
-                         fildes/socket_tx_ops.h \
                          libc.c \
                          libc.h \
                          locale-tm.c \
