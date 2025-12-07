@@ -19,13 +19,14 @@
 
 #include "cmp_neq_files.h"
 #include "picotm/picotm-error.h"
+#include <errno.h>
 #include <fcntl.h>
+#include <sys/stat.h>
 #if defined(HAVE_SYS_SYSCALL_H) && HAVE_SYS_SYSCALL_H
 #include <sys/syscall.h>
 #endif
 
 #if defined(SYS_kcmp)
-#include <errno.h>
 #include <linux/kcmp.h>
 #include <unistd.h>
 
@@ -57,7 +58,8 @@ cmp_eq_files_kcmp(int lhs, int rhs, struct picotm_error *error)
 #if defined(F_DUPFD_QUERY)
 #include <errno.h>
 
-static bool cmp_eq_files_dupfd(int lhs, int rhs, struct picotm_error *error)
+static bool
+cmp_eq_files_dupfd(int lhs, int rhs, struct picotm_error *error)
 {
     int ret = fcntl(lhs, F_DUPFD_QUERY, rhs);
     if (ret < 0) {
@@ -69,30 +71,96 @@ static bool cmp_eq_files_dupfd(int lhs, int rhs, struct picotm_error *error)
 }
 #endif
 
+static int
+cmp_dev_t(dev_t lhs, dev_t rhs)
+{
+    return (lhs > rhs) - (lhs < rhs);
+}
+
+static int
+cmp_ino_t(ino_t lhs, ino_t rhs)
+{
+    return (lhs > rhs) - (lhs < rhs);
+}
+
+static bool
+cmp_neq_files_fstat(int lhs, int rhs, struct picotm_error *error)
+{
+    struct stat lhs_buf;
+    int res = fstat(lhs, &lhs_buf);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return false;
+    }
+
+    struct stat rhs_buf;
+    res = fstat(rhs, &rhs_buf);
+    if (res < 0) {
+        picotm_error_set_errno(error, errno);
+        return false;
+    }
+
+    if (cmp_dev_t(lhs_buf.st_dev, rhs_buf.st_dev))
+        return true;
+    if (cmp_ino_t(lhs_buf.st_ino, rhs_buf.st_ino))
+        return true;
+
+    /*
+     * Both file descriptors refer to the same file buffer. The
+     * files could still be distinct, but we return 'equal' to make
+     * this helper work as a fallback. Having false positives here
+     * limits concurrency; missing equal files breaks isolation
+     * among transactions.
+     */
+    return false;
+}
+
 bool
 cmp_neq_files(int lhs, int rhs, struct picotm_error* error)
 {
+    bool neq = false;
+
 #if defined(SYS_kcmp)
-    bool neq = !cmp_eq_files_kcmp(lhs, rhs, error);
-#if defined(F_DUPFD_QUERY)
+    neq = !cmp_eq_files_kcmp(lhs, rhs, error);
     if (picotm_error_is_set(error)) {
         switch(error->status) {
             case PICOTM_ERRNO:
                 if (error->value.errno_hint == -ENOSYS) {
                     picotm_error_clear(error);
-                    /* kcmp isn't available, but maybe F_DUPFD_QUERY is */
-                    return !cmp_eq_files_dupfd(lhs, rhs, error);
+                    goto try_next_kcmp;
                 }
                 [[fallthrough]];
             default:
                 break;
         }
+        return false;
     }
-#endif
     return neq;
-#elif defined(F_DUPFD_QUERY)
-    return !cmp_eq_files_dupfd(lhs, rhs, error);
-#else
-#error file_id_cmp not implemented
+
+try_next_kcmp:
 #endif
+
+#if defined(F_DUPFD_QUERY)
+    neq = !cmp_eq_files_dupfd(lhs, rhs, error);
+    if (picotm_error_is_set(error)) {
+        switch(error->status) {
+            case PICOTM_ERRNO:
+                if (error->value.errno_hint == -EINVAL) {
+                    picotm_error_clear(error);
+                    goto try_next_dupfd;
+                }
+                [[fallthrough]];
+            default:
+                break;
+        }
+        return false;
+    }
+    return neq;
+
+try_next_dupfd:
+#endif
+
+    neq = cmp_neq_files_fstat(lhs, rhs, error);
+
+    return neq;
 }
