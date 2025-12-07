@@ -17,7 +17,7 @@
  * SPDX-License-Identifier: LGPL-3.0-or-later
  */
 
-#include "cmp_eq_files.h"
+#include "cmp_neq_files.h"
 #include "picotm/picotm-error.h"
 #include <fcntl.h>
 #if defined(HAVE_SYS_SYSCALL_H) && HAVE_SYS_SYSCALL_H
@@ -70,10 +70,10 @@ static bool cmp_eq_files_dupfd(int lhs, int rhs, struct picotm_error *error)
 #endif
 
 bool
-cmp_eq_files(int lhs, int rhs, struct picotm_error* error)
+cmp_neq_files(int lhs, int rhs, struct picotm_error* error)
 {
 #if defined(SYS_kcmp)
-    bool eq = cmp_eq_files_kcmp(lhs, rhs, error);
+    bool neq = !cmp_eq_files_kcmp(lhs, rhs, error);
 #if defined(F_DUPFD_QUERY)
     if (picotm_error_is_set(error)) {
         switch(error->status) {
@@ -81,7 +81,7 @@ cmp_eq_files(int lhs, int rhs, struct picotm_error* error)
                 if (error->value.errno_hint == -ENOSYS) {
                     picotm_error_clear(error);
                     /* kcmp isn't available, but maybe F_DUPFD_QUERY is */
-                    return cmp_eq_files_dupfd(lhs, rhs, error);
+                    return !cmp_eq_files_dupfd(lhs, rhs, error);
                 }
                 [[fallthrough]];
             default:
@@ -89,9 +89,9 @@ cmp_eq_files(int lhs, int rhs, struct picotm_error* error)
         }
     }
 #endif
-    return eq;
+    return neq;
 #elif defined(F_DUPFD_QUERY)
-    return cmp_eq_files_dupfd(lhs, rhs, error);
+    return !cmp_eq_files_dupfd(lhs, rhs, error);
 #else
 #error file_id_cmp not implemented
 #endif

@@ -24,7 +24,7 @@
 struct picotm_error;
 
 /**
- * \brief Tests two file descriptor's files for equality
+ * \brief Tests two file descriptor's files for non-equality.
  */
 bool
-cmp_eq_files(int lhs, int rhs, struct picotm_error* error);
+cmp_neq_files(int lhs, int rhs, struct picotm_error* error);

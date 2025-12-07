@@ -74,7 +74,7 @@ file_id_is_empty(const struct file_id* self);
  * \param   lhs The left-hand-side file id.
  * \param   rhs The right-hand-side file id.
  * \param[out]  error   Returns an error to the caller.
- * \returns True if the file ids are equal, or false otherwise.
+ * \returns False if the file ids are not equal, or true otherwise.
  *
  * Compares file ids. Also works for file ids that have been cleared, which
  * always compare as equal.

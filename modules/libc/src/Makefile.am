@@ -34,8 +34,8 @@ libpicotm_c_la_SOURCES = allocator/allocator_event.c \
                          allocator/allocator_tx.h \
                          allocator/module.c \
                          allocator/module.h \
-                         compat/cmp_eq_files.c \
-                         compat/cmp_eq_files.h \
+                         compat/cmp_neq_files.c \
+                         compat/cmp_neq_files.h \
                          compat/get_current_dir_name.c \
                          compat/get_current_dir_name.h \
                          compat/malloc_usable_size.c \
