@@ -18,7 +18,7 @@
  */
 
 #include "fileid.h"
-#include "compat/cmp_eq_files.h"
+#include "compat/cmp_neq_files.h"
 #include <assert.h>
 
 void
@@ -63,5 +63,5 @@ file_id_cmp_eq(const struct file_id* lhs, const struct file_id* rhs, struct pico
     }
 
     /* both file descriptors are distinct and valid */
-    return cmp_eq_files(lhs->fildes, rhs->fildes, error);
+    return !cmp_neq_files(lhs->fildes, rhs->fildes, error);
 }
